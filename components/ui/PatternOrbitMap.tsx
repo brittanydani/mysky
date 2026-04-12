@@ -48,7 +48,7 @@ const DIMENSIONS = [
   { key: 'creativity', label: 'CREATIVITY',            icon: '✦',  color: '#D4B872',  glow: '#FFF6DC' },
   { key: 'connection', label: 'CONNECTION',             icon: '◎',  color: '#9D76C1',  glow: '#E8D5F5' },
   { key: 'stress',     label: 'STRESS &\nRELEASE',     icon: '❋',  color: '#CD7F5D',  glow: '#F5E0D6' },
-  { key: 'rest',       label: 'REST &\nRECOVERY',      icon: '☽',  color: '#C9AE78',  glow: '#D6EEFF' },
+  { key: 'rest',       label: 'REST &\nRECOVERY',      icon: '☽',  color: '#D4AF37',  glow: '#D6EEFF' },
   { key: 'trust',      label: 'SELF-\nTRUST',          icon: '◈',  color: '#6EBF8B',  glow: '#D6F5E3' },
   { key: 'clarity',    label: 'CLARITY\n& FOCUS',      icon: '◉',  color: '#A89BC8',  glow: '#E0D6F0' },
 ];

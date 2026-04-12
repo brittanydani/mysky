@@ -35,14 +35,14 @@ import { useAppTheme, useThemedStyles, useThemePreference } from '../context/The
 
 const PALETTE_DARK = {
   gold: '#C5B5A1',
-  silverBlue: '#C9AE78',
+  silverBlue: '#A2C2E1',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.08)',
   surface: 'rgba(255,255,255,0.04)',
 };
 const PALETTE_LIGHT = {
-  gold: '#B8935A',
-  silverBlue: '#B8935A',
+  gold: '#D4AF37',
+  silverBlue: '#D4AF37',
   textMain: '#1A1815',
   glassBorder: 'rgba(0,0,0,0.04)',
   surface: 'rgba(0,0,0,0.03)',
@@ -450,7 +450,7 @@ export default function BirthDataModal({
                   style={({ pressed }) => [styles.generateBtn, pressed && { opacity: 0.85 }]}
                 >
                   <LinearGradient
-                    colors={['#C9AE78', '#A07840', '#C9AE78']}
+                    colors={['#D4AF37', '#A07840', '#D4AF37']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.generateBtnGradient}
@@ -552,7 +552,7 @@ const createStyles = (theme: AppTheme) => {
   fieldLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: theme.isDark ? 'rgba(197, 181, 161, 0.8)' : 'rgba(184, 147, 90, 0.9)',
+    color: theme.isDark ? 'rgba(197, 181, 161, 0.8)' : 'rgba(212, 175, 55, 0.9)',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     marginBottom: 10,
@@ -564,10 +564,10 @@ const createStyles = (theme: AppTheme) => {
     marginBottom: 10,
   },
   textInput: {
-    backgroundColor: theme.inputBackground,
+    backgroundColor: PALETTE.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: theme.inputBorder,
+    borderColor: PALETTE.glassBorder,
     paddingHorizontal: 20,
     paddingVertical: 14,
     color: theme.textPrimary,
@@ -577,10 +577,10 @@ const createStyles = (theme: AppTheme) => {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: theme.inputBackground,
+    backgroundColor: PALETTE.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: theme.inputBorder,
+    borderColor: PALETTE.glassBorder,
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
@@ -616,10 +616,10 @@ const createStyles = (theme: AppTheme) => {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: theme.inputBackground,
+    backgroundColor: PALETTE.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: theme.inputBorder,
+    borderColor: PALETTE.glassBorder,
     paddingVertical: 10,
   },
   timeColumn: {
@@ -671,10 +671,10 @@ const createStyles = (theme: AppTheme) => {
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.inputBackground,
+    backgroundColor: PALETTE.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: theme.inputBorder,
+    borderColor: PALETTE.glassBorder,
     paddingHorizontal: 20,
   },
   inputIcon: {
@@ -691,10 +691,10 @@ const createStyles = (theme: AppTheme) => {
   },
   suggestions: {
     marginTop: 6,
-    backgroundColor: theme.isDark ? 'rgba(12, 18, 32, 0.97)' : theme.surface,
+    backgroundColor: theme.isDark ? 'rgba(12, 18, 32, 0.97)' : PALETTE.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: theme.inputBorder,
+    borderColor: PALETTE.glassBorder,
     overflow: 'hidden',
   },
   suggestion: {
@@ -775,7 +775,7 @@ const createStyles = (theme: AppTheme) => {
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   pickerSheet: {
-    backgroundColor: theme.isDark ? '#0D1117' : theme.surface,
+    backgroundColor: theme.isDark ? '#0D1117' : PALETTE.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 24,

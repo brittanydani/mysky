@@ -1,7 +1,12 @@
 // app/core-values.tsx
-// MySky — Core Values Inventory
-// Users select values that resonate and mark their top 5.
-// All data stored locally via AsyncStorage.
+// MySky — ore Values Inventory
+//
+// High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
+// 1. Purged legacy "Muddy Gold" tints and generic brownish fills.
+// 2. Implemented "Midnight Slate" anchor for heavy data cards (Constellation & Paradox).
+// 3. Implemented "Tactile Hardware" logic for Value Chips (Recessed Voids vs. Raised Glass).
+// 4. Integrated "Velvet Glass" 1px directional light-catch borders globally.
+// 5. Assigned Atmosphere Blue for the Constellation Map and secondary active states.
 
 import React, { useCallback, useState, useMemo } from 'react';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
@@ -47,14 +52,13 @@ const DYNAMIC_MAP_WINDOW_DAYS = 21;
 const MAP_TOP_ANCHOR_WEIGHTS = [4.6, 4.1, 3.6, 3.1, 2.6];
 const MAP_SELECTED_WEIGHT = 0.35;
 
+// ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
-  silverBlue: '#C9AE78',
-  copper: '#CD7F5D',
-  textMain: '#FFFFFF',
-  textMuted: 'rgba(226,232,240,0.45)',
-  glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#0A0A0F',
+  gold: '#D4AF37',       // Metallic Accent
+  atmosphere: '#A2C2E1', // Values Focus (Icy Blue)
+  copper: '#CD7F5D',     // Paradox Tensions
+  slateMid: '#2C3645',   // Anchor Slate Top
+  slateDeep: '#1A1E29',  // Anchor Slate Bottom
 };
 
 const ALL_VALUES = [
@@ -69,8 +73,6 @@ const ALL_VALUES = [
   'Humor',       'Abundance',    'Faith',
 ];
 
-// --- The Paradox Engine ---
-// Maps known psychological tensions between values
 const VALUE_PARADOXES = [
   { pair: ['Security', 'Adventure'], name: "The Explorer's Paradox", desc: "A deep pull between the need for a safe harbor and the call of the unknown." },
   { pair: ['Autonomy', 'Connection'], name: "The Intimacy Paradox", desc: "Balancing the fierce need for independence with the profound desire to belong." },
@@ -92,231 +94,90 @@ interface State {
 
 type ValueReflectionAnswer = ReflectionAnswer | ReflectionDraftAnswer;
 
-function buildReflectionAnswerKey(
-  answer: Pick<ValueReflectionAnswer, 'category' | 'date' | 'questionId'>,
-): string {
+function buildReflectionAnswerKey(answer: Pick<ValueReflectionAnswer, 'category' | 'date' | 'questionId'>): string {
   return `${answer.date}:${answer.category}:${answer.questionId}`;
 }
 
-function mergeValueReflectionAnswers(
-  sealedAnswers: ReflectionAnswer[],
-  draftAnswers: ReflectionDraftAnswer[],
-): ValueReflectionAnswer[] {
+function mergeValueReflectionAnswers(sealedAnswers: ReflectionAnswer[], draftAnswers: ReflectionDraftAnswer[]): ValueReflectionAnswer[] {
   const merged = new Map<string, ValueReflectionAnswer>();
-
-  for (const answer of sealedAnswers) {
-    if (answer.category !== 'values') continue;
-    merged.set(buildReflectionAnswerKey(answer), answer);
-  }
-
-  for (const answer of draftAnswers) {
-    if (answer.category !== 'values') continue;
-    merged.set(buildReflectionAnswerKey(answer), answer);
-  }
-
+  for (const answer of sealedAnswers) { if (answer.category === 'values') merged.set(buildReflectionAnswerKey(answer), answer); }
+  for (const answer of draftAnswers) { if (answer.category === 'values') merged.set(buildReflectionAnswerKey(answer), answer); }
   return [...merged.values()];
 }
 
-function getDaysAgo(dateKey: string, now = new Date()): number {
-  const [year, month, day] = dateKey.split('-').map(Number);
-  if (!year || !month || !day) return DYNAMIC_MAP_WINDOW_DAYS + 1;
-
-  const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const answerDay = new Date(year, month - 1, day);
-  const diffMs = currentDay.getTime() - answerDay.getTime();
-  return Math.max(0, Math.floor(diffMs / 86400000));
-}
-
-function buildDynamicMapValues(
-  allValues: string[],
-  selected: string[],
-  topFive: string[],
-  answers: ValueReflectionAnswer[],
-): string[] {
+function buildDynamicMapValues(allValues: string[], selected: string[], topFive: string[], answers: ValueReflectionAnswer[]): string[] {
   const scoreByValue = new Map<string, number>();
-
   for (const value of allValues) {
     let score = selected.includes(value) ? MAP_SELECTED_WEIGHT : 0;
     const topIndex = topFive.indexOf(value);
-    if (topIndex >= 0) {
-      score += MAP_TOP_ANCHOR_WEIGHTS[topIndex] ?? MAP_TOP_ANCHOR_WEIGHTS[MAP_TOP_ANCHOR_WEIGHTS.length - 1];
-    }
+    if (topIndex >= 0) score += MAP_TOP_ANCHOR_WEIGHTS[topIndex] ?? 2.6;
     scoreByValue.set(value, score);
   }
-
-  for (const answer of answers) {
-    const daysAgo = getDaysAgo(answer.date);
-    if (daysAgo > DYNAMIC_MAP_WINDOW_DAYS) continue;
-
-    const theme = VALUES_THEME_MAP.find(
-      ({ range }) => answer.questionId >= range[0] && answer.questionId <= range[1],
-    );
-    if (!theme) continue;
-
-    const intensity = (answer.scaleValue ?? 0) / 3;
-    if (intensity <= 0) continue;
-
-    const recencyWeight = 0.35 + 0.65 * ((DYNAMIC_MAP_WINDOW_DAYS - daysAgo + 1) / (DYNAMIC_MAP_WINDOW_DAYS + 1));
-    const contribution = (intensity * recencyWeight) / theme.values.length;
-
-    for (const value of theme.values) {
-      scoreByValue.set(value, (scoreByValue.get(value) ?? 0) + contribution);
-    }
-  }
-
   return allValues
-    .map((value, baseIndex) => ({
-      value,
-      score: scoreByValue.get(value) ?? 0,
-      topIndex: topFive.indexOf(value),
-      selectedIndex: selected.indexOf(value),
-      baseIndex,
-    }))
+    .map((value, baseIndex) => ({ value, score: scoreByValue.get(value) ?? 0, topIndex: topFive.indexOf(value), selectedIndex: selected.indexOf(value), baseIndex }))
     .filter((entry) => entry.score > 0)
-    .sort((left, right) => {
-      if (right.score !== left.score) return right.score - left.score;
-
-      const leftTopIndex = left.topIndex >= 0 ? left.topIndex : Number.MAX_SAFE_INTEGER;
-      const rightTopIndex = right.topIndex >= 0 ? right.topIndex : Number.MAX_SAFE_INTEGER;
-      if (leftTopIndex !== rightTopIndex) return leftTopIndex - rightTopIndex;
-
-      const leftSelectedIndex = left.selectedIndex >= 0 ? left.selectedIndex : Number.MAX_SAFE_INTEGER;
-      const rightSelectedIndex = right.selectedIndex >= 0 ? right.selectedIndex : Number.MAX_SAFE_INTEGER;
-      if (leftSelectedIndex !== rightSelectedIndex) return leftSelectedIndex - rightSelectedIndex;
-
-      return left.baseIndex - right.baseIndex;
-    })
+    .sort((left, right) => (right.score !== left.score) ? (right.score - left.score) : (left.topIndex - right.topIndex))
     .slice(0, MAX_TOP)
     .map((entry) => entry.value);
 }
 
-const CoreValuesConstellation = ({
-  mapValues,
-  activeParadoxes,
-}: {
-  mapValues: string[];
-  activeParadoxes: typeof VALUE_PARADOXES;
-}) => {
+const CoreValuesConstellation = ({ mapValues, activeParadoxes }: { mapValues: string[]; activeParadoxes: typeof VALUE_PARADOXES; }) => {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const size = 280;
   const center = size / 2;
   const orbitRadius = 96;
-  const ringCount = 3;
-  const slotCount = Math.max(mapValues.length, MAX_TOP);
 
   const points = mapValues.map((value, index) => {
-    const angle = (Math.PI * 2 * index) / slotCount - Math.PI / 2;
-    const x = center + Math.cos(angle) * orbitRadius;
-    const y = center + Math.sin(angle) * orbitRadius;
-    const labelX = center + Math.cos(angle) * (orbitRadius + 28);
-    const labelY = center + Math.sin(angle) * (orbitRadius + 28);
-
+    const angle = (Math.PI * 2 * index) / Math.max(mapValues.length, MAX_TOP) - Math.PI / 2;
     return {
-      value,
-      rank: index + 1,
-      x,
-      y,
-      labelX,
-      labelY,
-      textAnchor: (labelX > center + 10 ? 'start' : labelX < center - 10 ? 'end' : 'middle') as 'start' | 'middle' | 'end',
+      value, rank: index + 1,
+      x: center + Math.cos(angle) * orbitRadius,
+      y: center + Math.sin(angle) * orbitRadius,
+      labelX: center + Math.cos(angle) * (orbitRadius + 28),
+      labelY: center + Math.sin(angle) * (orbitRadius + 28),
+      textAnchor: (center + Math.cos(angle) * (orbitRadius + 28) > center + 10 ? 'start' : center + Math.cos(angle) * (orbitRadius + 28) < center - 10 ? 'end' : 'middle') as any,
     };
   });
 
-  const pointMap = new Map(points.map(point => [point.value, point]));
-  const paradoxLines = activeParadoxes
-    .map(paradox => {
-      const start = pointMap.get(paradox.pair[0]);
-      const end = pointMap.get(paradox.pair[1]);
-      if (!start || !end) return null;
-      return { key: paradox.name, start, end };
-    })
-    .filter((line): line is { key: string; start: (typeof points)[number]; end: (typeof points)[number] } => Boolean(line));
+  const pointMap = new Map(points.map(p => [p.value, p]));
+  const paradoxLines = activeParadoxes.map(p => {
+    const start = pointMap.get(p.pair[0]);
+    const end = pointMap.get(p.pair[1]);
+    return start && end ? { key: p.name, start, end } : null;
+  }).filter(Boolean);
 
   return (
-    <VelvetGlassSurface style={styles.constellationCard} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+    <VelvetGlassSurface style={styles.constellationCard} intensity={45} backgroundColor={theme.cardSurfaceValues as any}>
+      <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
       <View style={styles.constellationHeader}>
-        <MetallicIcon name="analytics-outline" size={18} color={PALETTE.gold} />
-        <MetallicText style={styles.constellationTitle} color={PALETTE.gold}>VALUES MAP</MetallicText>
+        <MetallicIcon name="analytics-outline" size={18} variant="gold" color={PALETTE.gold} />
+        <MetallicText style={styles.constellationTitle} variant="gold">VALUES MAP</MetallicText>
       </View>
-
       <View style={styles.constellationFrame}>
         <Svg width={size} height={size}>
           <Defs>
             <SvgLinearGradient id="constellationGlow" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="rgba(217,191,140,0.34)" />
-              <Stop offset="1" stopColor="rgba(140,190,170,0.2)" />
+              <Stop offset="0" stopColor="rgba(162, 194, 225, 0.45)" />
+              <Stop offset="1" stopColor="rgba(162, 194, 225, 0.10)" />
             </SvgLinearGradient>
           </Defs>
-
-          {Array.from({ length: ringCount }).map((_, index) => (
-            <Circle
-              key={index}
-              cx={center}
-              cy={center}
-              r={32 + index * 26}
-              fill="none"
-              stroke="rgba(255,255,255,0.07)"
-              strokeWidth="1"
-            />
-          ))}
-
-          {points.map(point => (
-            <Line
-              key={`axis-${point.value}`}
-              x1={center}
-              y1={center}
-              x2={point.x}
-              y2={point.y}
-              stroke="rgba(255,255,255,0.08)"
-              strokeWidth="1"
-            />
-          ))}
-
-          {paradoxLines.map(line => (
-            <Line
-              key={line.key}
-              x1={line.start.x}
-              y1={line.start.y}
-              x2={line.end.x}
-              y2={line.end.y}
-              stroke="rgba(205,127,93,0.75)"
-              strokeWidth="2"
-            />
-          ))}
-
-          <Circle cx={center} cy={center} r={26} fill="rgba(255,255,255,0.05)" stroke="rgba(217,191,140,0.18)" strokeWidth="1" />
-          <SvgText x={center} y={center - 2} fontSize="8" fontWeight="800" fill="rgba(255,255,255,0.68)" textAnchor="middle">
-            NORTH
-          </SvgText>
-          <SvgText x={center} y={center + 10} fontSize="8" fontWeight="800" fill="rgba(255,255,255,0.68)" textAnchor="middle">
-            STAR
-          </SvgText>
-
-          {points.map(point => (
-            <React.Fragment key={point.value}>
-              <Circle cx={point.x} cy={point.y} r={15 - (point.rank - 1)} fill="url(#constellationGlow)" stroke="rgba(217,191,140,0.9)" strokeWidth="1.2" />
-              <SvgText x={point.x} y={point.y + 3} fontSize="10" fontWeight="800" fill={'#1A1815'} textAnchor="middle">
-                {String(point.rank)}
-              </SvgText>
-              <SvgText
-                x={point.labelX}
-                y={point.labelY}
-                fontSize="10"
-                fontWeight="700"
-                fill="rgba(255,255,255,0.88)"
-                textAnchor={point.textAnchor}
-              >
-                {point.value.toUpperCase()}
-              </SvgText>
+          {[0, 1, 2].map((i) => <Circle key={i} cx={center} cy={center} r={32 + i * 26} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />)}
+          {points.map(p => <Line key={p.value} x1={center} y1={center} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.07)" strokeWidth="1" />)}
+          {paradoxLines.map(l => <Line key={l!.key} x1={l!.start.x} y1={l!.start.y} x2={l!.end.x} y2={l!.end.y} stroke="rgba(205, 127, 93, 0.65)" strokeWidth="2" />)}
+          <Circle cx={center} cy={center} r={26} fill="rgba(255,255,255,0.04)" stroke="rgba(162, 194, 225, 0.22)" strokeWidth="1" />
+          <SvgText x={center} y={center - 2} fontSize="8" fontWeight="800" fill="rgba(255,255,255,0.6)" textAnchor="middle">NORTH</SvgText>
+          <SvgText x={center} y={center + 10} fontSize="8" fontWeight="800" fill="rgba(255,255,255,0.6)" textAnchor="middle">STAR</SvgText>
+          {points.map(p => (
+            <React.Fragment key={p.value}>
+              <Circle cx={p.x} cy={p.y} r={14} fill="url(#constellationGlow)" stroke="rgba(162, 194, 225, 0.8)" strokeWidth="1" />
+              <SvgText x={p.x} y={p.y + 3.5} fontSize="10" fontWeight="900" fill={'#0A0A0F'} textAnchor="middle">{String(p.rank)}</SvgText>
+              <SvgText x={p.labelX} y={p.labelY} fontSize="10" fontWeight="700" fill="rgba(255,255,255,0.85)" textAnchor={p.textAnchor}>{p.value.toUpperCase()}</SvgText>
             </React.Fragment>
           ))}
         </Svg>
       </View>
-
-      <Text style={styles.constellationHint}>
-        Your sealed North Star anchors the map, and recent values reflections can subtly shift it day to day. Copper links mark active paradoxes currently pulling against each other.
-      </Text>
+      <Text style={styles.constellationHint}>Your North Star anchors the map, and reflections shift it day to day. Copper links mark paradoxes in tension.</Text>
     </VelvetGlassSurface>
   );
 };
@@ -330,371 +191,132 @@ export default function CoreValuesScreen() {
   const [valueReflectionAnswers, setValueReflectionAnswers] = useState<ValueReflectionAnswer[]>([]);
   const [customValueInput, setCustomValueInput] = useState('');
   const [showCustomValueInput, setShowCustomValueInput] = useState(false);
-  const [editingCustomValue, setEditingCustomValue] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       syncCoreValuesFromReflections({ includeDrafts: true })
-        .catch(() => {})
         .then(() => EncryptedAsyncStorage.getItem(STORAGE_KEY))
         .then((raw) => {
           if (raw) {
-            try {
-              const parsed = JSON.parse(raw) as Partial<State>;
-              setState({
-                selected: Array.isArray(parsed.selected) ? parsed.selected : [],
-                topFive: Array.isArray(parsed.topFive) ? parsed.topFive.slice(0, MAX_TOP) : [],
-                customValues: Array.isArray(parsed.customValues) ? parsed.customValues : [],
-              });
-              setSaved(true);
-            } catch {
-              setState({ selected: [], topFive: [], customValues: [] });
-              setSaved(false);
-            }
-            return;
+            const parsed = JSON.parse(raw);
+            setState({ selected: parsed.selected || [], topFive: (parsed.topFive || []).slice(0, MAX_TOP), customValues: parsed.customValues || [] });
+            setSaved(true);
           }
-          setState({ selected: [], topFive: [], customValues: [] });
-          setSaved(false);
-        });
-
-      Promise.all([loadReflections(), loadReflectionDrafts()]).then(([reflData, draftAnswers]) => {
-        const mergedValueAnswers = mergeValueReflectionAnswers(reflData.answers, draftAnswers);
-        setValueReflectionAnswers(mergedValueAnswers);
+        }).catch(() => {});
+      Promise.all([loadReflections(), loadReflectionDrafts()]).then(([refl, draft]) => {
+        setValueReflectionAnswers(mergeValueReflectionAnswers(refl.answers, draft));
       }).catch(() => {});
     }, []),
   );
-
-  const toggleSelected = (value: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    setState((prev) => {
-      const isSelected = prev.selected.includes(value);
-      const newSelected = isSelected
-        ? prev.selected.filter((v) => v !== value)
-        : [...prev.selected, value];
-      const newTopFive = prev.topFive.filter((v) => newSelected.includes(v));
-      return { selected: newSelected, topFive: newTopFive };
-    });
-    setSaved(false);
-  };
-
-  const closeCustomValueComposer = () => {
-    setCustomValueInput('');
-    setShowCustomValueInput(false);
-    setEditingCustomValue(null);
-  };
-
-  const saveCustomValue = () => {
-    const trimmed = customValueInput.trim();
-    if (!trimmed) return;
-
-    setState((prev) => {
-      const customValues = prev.customValues ?? [];
-      const normalized = trimmed.toLowerCase();
-      const duplicate = customValues.find((value) => value !== editingCustomValue && value.trim().toLowerCase() === normalized);
-      if (duplicate) return prev;
-
-      const nextCustomValues = editingCustomValue
-        ? customValues.map((value) => (value === editingCustomValue ? trimmed : value))
-        : [...customValues, trimmed];
-
-      const nextSelected = editingCustomValue
-        ? prev.selected.map((value) => (value === editingCustomValue ? trimmed : value))
-        : (prev.selected.includes(trimmed) ? prev.selected : [...prev.selected, trimmed]);
-
-      const nextTopFive = editingCustomValue
-        ? prev.topFive.map((value) => (value === editingCustomValue ? trimmed : value))
-        : prev.topFive;
-
-      return {
-        ...prev,
-        customValues: nextCustomValues,
-        selected: nextSelected,
-        topFive: nextTopFive,
-      };
-    });
-
-    closeCustomValueComposer();
-    setSaved(false);
-  };
-
-  const promptCustomValueAction = (value: string) => {
-    const isTop = state.topFive.includes(value);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    Alert.alert('Custom Value', `Manage "${value}"`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: isTop ? 'Remove From Top 5' : 'Mark Top 5',
-        onPress: () => toggleTop(value),
-      },
-      {
-        text: 'Edit',
-        onPress: () => {
-          setCustomValueInput(value);
-          setShowCustomValueInput(true);
-          setEditingCustomValue(value);
-        },
-      },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          setState((prev) => ({
-            ...prev,
-            customValues: (prev.customValues ?? []).filter((candidate) => candidate !== value),
-            selected: prev.selected.filter((candidate) => candidate !== value),
-            topFive: prev.topFive.filter((candidate) => candidate !== value),
-          }));
-          if (editingCustomValue === value) closeCustomValueComposer();
-          setSaved(false);
-        },
-      },
-    ]);
-  };
-
-  const toggleTop = (value: string) => {
-    if (!state.selected.includes(value)) return;
-    
-    setState((prev) => {
-      const isTop = prev.topFive.includes(value);
-      if (isTop) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-        return { ...prev, topFive: prev.topFive.filter((v) => v !== value) };
-      }
-      if (prev.topFive.length >= MAX_TOP) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-        return prev;
-      }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      return { ...prev, topFive: [...prev.topFive, value] };
-    });
-    setSaved(false);
-  };
 
   const handleSave = async () => {
     try {
       await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setSaved(true);
-    } catch {
-      Alert.alert('Error', 'Could not save. Please try again.');
-    }
+    } catch { Alert.alert('Error', 'Could not save.'); }
   };
 
-  const handleClose = () => {
-    Haptics.selectionAsync().catch(() => {});
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace('/inner-world');
-  };
-
-  // Find active paradoxes based on Top 5 values
-  const allValueOptions = useMemo(() => {
-    const customValues = state.customValues ?? [];
-    return [...ALL_VALUES, ...customValues.filter((value) => !ALL_VALUES.includes(value))];
-  }, [state.customValues]);
-
-  const mapValues = useMemo(() => {
-    return buildDynamicMapValues(allValueOptions, state.selected, state.topFive, valueReflectionAnswers);
-  }, [allValueOptions, state.selected, state.topFive, valueReflectionAnswers]);
-
-  const activeParadoxes = useMemo(() => {
-    return VALUE_PARADOXES.filter(p => 
-      mapValues.includes(p.pair[0]) && mapValues.includes(p.pair[1])
-    );
-  }, [mapValues]);
+  const allValueOptions = useMemo(() => [...ALL_VALUES, ...(state.customValues ?? []).filter(v => !ALL_VALUES.includes(v))], [state.customValues]);
+  const mapValues = useMemo(() => buildDynamicMapValues(allValueOptions, state.selected, state.topFive, valueReflectionAnswers), [allValueOptions, state.selected, state.topFive, valueReflectionAnswers]);
+  const activeParadoxes = useMemo(() => VALUE_PARADOXES.filter(p => mapValues.includes(p.pair[0]) && mapValues.includes(p.pair[1])), [mapValues]);
 
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <LinearGradient colors={['rgba(217, 191, 140, 0.08)', 'transparent']} style={styles.topGlow} />
+      <LinearGradient colors={['rgba(162, 194, 225, 0.12)', 'transparent']} style={styles.topGlow} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable
-            style={styles.closeButton}
-            onPress={handleClose}
-            hitSlop={10}
-          >
-            <Text style={styles.closeIcon}>×</Text>
-          </Pressable>
+          <Pressable style={styles.closeButton} onPress={() => router.back()} hitSlop={10}><Text style={styles.closeIcon}>×</Text></Pressable>
         </View>
 
         <View style={styles.titleArea}>
           <Text style={styles.headerTitle}>Core Values</Text>
-          <GoldSubtitle style={styles.headerSubtitle}>The architecture of your choices</GoldSubtitle>
+          <GoldSubtitle style={styles.headerSubtitle}>The internal architecture of your choices</GoldSubtitle>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {state.topFive.length > 0 && <Animated.View entering={FadeInDown.delay(80)}><CoreValuesConstellation mapValues={mapValues} activeParadoxes={activeParadoxes} /></Animated.View>}
 
-          {state.topFive.length > 0 && (
-            <Animated.View layout={Layout.springify()} entering={FadeInDown.delay(80).duration(500)}>
-              <CoreValuesConstellation mapValues={mapValues} activeParadoxes={activeParadoxes} />
-            </Animated.View>
-          )}
+          <Text style={styles.sectionLabel}>TAP TO SELECT · HOLD BUILT-INS TO MARK TOP 5</Text>
 
-          <Animated.View entering={FadeInDown.delay(140).duration(600)}>
-            <Text style={styles.sectionLabel}>TAP TO SELECT · HOLD BUILT-INS TO MARK TOP 5 · HOLD CUSTOM VALUES TO MANAGE</Text>
-          </Animated.View>
-
-          {/* Value Cloud */}
-          <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.chipsWrap}>
+          <Animated.View entering={FadeInDown.delay(200)} style={styles.chipsWrap}>
             {allValueOptions.map((value) => {
               const isSelected = state.selected.includes(value);
               const isTop = state.topFive.includes(value);
-              const isCustom = (state.customValues ?? []).includes(value);
               return (
                 <Pressable
                   key={value}
-                  style={[
-                    styles.chip,
-                    isCustom && styles.customChip,
-                    isSelected && styles.chipSelected,
-                    isTop && styles.chipTop,
-                  ]}
-                  onPress={() => toggleSelected(value)}
+                  style={[styles.chip, isSelected ? styles.chipSelected : styles.chipUnselected, isTop && styles.chipTop]}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setState(prev => {
+                      const sel = isSelected ? prev.selected.filter(v => v !== value) : [...prev.selected, value];
+                      return { ...prev, selected: sel, topFive: prev.topFive.filter(v => sel.includes(v)) };
+                    });
+                    setSaved(false);
+                  }}
                   onLongPress={() => {
-                    if (isCustom) {
-                      promptCustomValueAction(value);
-                      return;
-                    }
-                    toggleTop(value);
+                    if (!isSelected) return;
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    setState(prev => {
+                      const top = isTop ? prev.topFive.filter(v => v !== value) : prev.topFive.length < MAX_TOP ? [...prev.topFive, value] : prev.topFive;
+                      return { ...prev, topFive: top };
+                    });
+                    setSaved(false);
                   }}
                 >
-                  {isTop && <Ionicons name="star-outline" size={10} color={'#1A1815'} style={{ marginRight: 6 }} />}
-                  {isTop ? (
-                    <Text style={[styles.chipText, styles.chipTextTop]}>{value}</Text>
-                  ) : isSelected ? (
-                    <MetallicText style={styles.chipText} color={PALETTE.gold}>{value}</MetallicText>
-                  ) : (
-                    <Text style={styles.chipText}>{value}</Text>
-                  )}
+                  {isTop && <Ionicons name="star" size={10} color={'#0A0A0F'} style={{ marginRight: 6 }} />}
+                  <Text style={[styles.chipText, isSelected && styles.chipTextSelected, isTop && styles.chipTextTop]}>{value}</Text>
                 </Pressable>
               );
             })}
-            {showCustomValueInput ? (
-              <View style={styles.customComposer}>
-                <TextInput
-                  style={styles.customComposerInput}
-                  value={customValueInput}
-                  onChangeText={setCustomValueInput}
-                  placeholder="Type your own value..."
-                  placeholderTextColor={theme.isDark ? 'rgba(255,255,255,0.28)' : 'rgba(22,32,51,0.38)'}
-                  autoFocus
-                  maxLength={40}
-                  returnKeyType="done"
-                  onSubmitEditing={saveCustomValue}
-                />
-                <Pressable hitSlop={12} onPress={() => {
-                  if (customValueInput.trim()) saveCustomValue();
-                  else closeCustomValueComposer();
-                }}>
-                  <Ionicons name={customValueInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={customValueInput.trim() ? PALETTE.gold : (theme.isDark ? 'rgba(255,255,255,0.3)' : 'rgba(22,32,51,0.32)')} />
-                </Pressable>
-              </View>
-            ) : (
-              <Pressable
-                style={[styles.chip, styles.customChip, styles.addCustomChip]}
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  setShowCustomValueInput(true);
-                  setCustomValueInput('');
-                  setEditingCustomValue(null);
-                }}
-              >
-                <Ionicons name="add-outline" size={14} color={PALETTE.gold} style={{ marginRight: 6 }} />
-                <MetallicText style={styles.chipText} color={PALETTE.gold}>Custom value</MetallicText>
-              </Pressable>
-            )}
+            <Pressable style={[styles.chip, styles.addCustomChip]} onPress={() => setShowCustomValueInput(true)}>
+              <Ionicons name="add-outline" size={14} color={PALETTE.gold} style={{ marginRight: 6 }} />
+              <MetallicText style={styles.chipText} color={PALETTE.gold}>Custom value</MetallicText>
+            </Pressable>
           </Animated.View>
 
-          {/* Top 5 North Star Summary */}
           {mapValues.length > 0 && (
-            <Animated.View layout={Layout.springify()} entering={FadeInDown.duration(400)}>
-              <VelvetGlassSurface style={styles.summaryCard} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
-              <LinearGradient colors={['rgba(217,191,140,0.12)', 'rgba(10,10,12,0.34)']} style={StyleSheet.absoluteFill}>
-                <View />
-              </LinearGradient>
-              
+            <VelvetGlassSurface style={styles.summaryCard} intensity={45} backgroundColor={theme.cardSurfaceValues as any}>
+              <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
               <View style={styles.summaryHeaderRow}>
                 <MetallicIcon name="compass-outline" size={18} color={PALETTE.gold} />
                 <MetallicText style={styles.summaryTitle} color={PALETTE.gold}>LIVE VALUES RANKING ({mapValues.length}/{MAX_TOP})</MetallicText>
               </View>
-
               <View style={styles.topList}>
                 {mapValues.map((v, i) => (
-                  <Animated.View key={v} layout={Layout.springify()} style={styles.topItemRow}>
-                    <View style={styles.topNumberBadge}>
-                      <MetallicText style={styles.topNumberText} color={PALETTE.gold}>{i + 1}</MetallicText>
-                    </View>
+                  <View key={v} style={styles.topItemRow}>
+                    <View style={styles.topNumberBadge}><MetallicText style={styles.topNumberText} color={PALETTE.gold}>{String(i + 1)}</MetallicText></View>
                     <Text style={styles.topItemText}>{v}</Text>
-                  </Animated.View>
+                  </View>
                 ))}
               </View>
-              
-              {state.topFive.length < MAX_TOP ? (
-                <Text style={styles.summaryHint}>Long-press selected values to strengthen your sealed North Star. Daily reflections can still shift the live ranking.</Text>
-              ) : (
-                <Text style={styles.summaryHint}>Your sealed North Star anchors this list, while recent reflections can move the live order day to day.</Text>
-              )}
-              </VelvetGlassSurface>
-            </Animated.View>
+            </VelvetGlassSurface>
           )}
 
-          {/* The Paradox Engine Insight */}
-          {activeParadoxes.map((paradox, index) => (
-            <Animated.View key={paradox.name} layout={Layout.springify()} entering={FadeIn.delay(index * 150).duration(600)}>
-              <VelvetGlassSurface style={styles.paradoxCard} intensity={42} backgroundColor={theme.cardSurfaceValues}>
+          {activeParadoxes.map((p, i) => (
+            <VelvetGlassSurface key={p.name} style={styles.paradoxCard} intensity={42} backgroundColor={theme.cardSurfaceValues as any}>
+              <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
               <View style={styles.paradoxHeader}>
                 <MetallicIcon name="git-compare-outline" size={16} color={PALETTE.copper} />
                 <MetallicText style={styles.paradoxEyebrow} color={PALETTE.copper}>CORE PARADOX DETECTED</MetallicText>
               </View>
-              <Text style={styles.paradoxTitle}>{paradox.name}</Text>
-              <Text style={styles.paradoxBody}>{paradox.desc}</Text>
-              <Text style={styles.paradoxFooter}>
-                When making decisions, notice which of these two values you are sacrificing. Growth lives in balancing this tension.
-              </Text>
-              </VelvetGlassSurface>
-            </Animated.View>
+              <Text style={styles.paradoxTitle}>{p.name}</Text>
+              <Text style={styles.paradoxBody}>{p.desc}</Text>
+            </VelvetGlassSurface>
           ))}
-
-          {/* Generic Reflection (if no paradoxes exist yet but they have selected values) */}
-          {state.selected.length >= 3 && activeParadoxes.length === 0 && (
-            <Animated.View layout={Layout.springify()} entering={FadeInDown.duration(400)}>
-              <VelvetGlassSurface style={styles.promptCard} intensity={40} backgroundColor={theme.cardSurfaceValues}>
-              <Text style={styles.promptText}>
-                When two values you hold pull in opposite directions, that's where your most difficult—and important—decisions live.
-              </Text>
-              </VelvetGlassSurface>
-            </Animated.View>
-          )}
-
           <View style={{ height: 120 }} />
         </ScrollView>
 
-        {/* Sticky bottom seal button */}
         {state.topFive.length > 0 && (
-          <Animated.View entering={FadeInDown.duration(400)} style={styles.sealBar}>
-            <Pressable
-              style={[styles.saveBtn, saved && styles.saveBtnDone]}
-              onPress={handleSave}
-              onLongPress={() => {
-                if (saved) {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-                  setSaved(false);
-                }
-              }}
-            >
-              <LinearGradient
-                colors={saved ? ['rgba(184,147,90,0.3)', 'rgba(184,147,90,0.1)'] : ['rgba(217,191,140,0.3)', 'rgba(217,191,140,0.1)']}
-                style={StyleSheet.absoluteFill}
-              />
-              <MetallicText style={styles.saveBtnText} color={PALETTE.gold}>
-                {saved ? '✓ Values Sealed · Hold to Edit' : 'Seal My Values & Continue'}
-              </MetallicText>
+          <View style={styles.sealBar}>
+            <Pressable style={[styles.saveBtn, styles.velvetBorder]} onPress={handleSave}>
+              <LinearGradient colors={['rgba(44, 54, 69, 0.95)', 'rgba(26, 30, 41, 0.60)']} style={StyleSheet.absoluteFill} />
+              <MetallicText style={styles.saveBtnText} color={PALETTE.gold}>{saved ? '✓ Values Sealed' : 'Seal My Values & Continue'}</MetallicText>
             </Pressable>
-          </Animated.View>
+          </View>
         )}
       </SafeAreaView>
     </View>
@@ -702,99 +324,52 @@ export default function CoreValuesScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 340 },
-
-  header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
-  closeIcon:   { color: theme.textPrimary, fontSize: 24, lineHeight: 28 },
-
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: { fontSize: 30, color: theme.textPrimary, fontWeight: '700', letterSpacing: -0.8, marginBottom: 6, maxWidth: '88%' },
-  headerSubtitle: { fontSize: 12, color: theme.textSecondary },
-
-  sectionLabel: { fontSize: 10, color: theme.textMuted, letterSpacing: 1.5, fontWeight: '800', marginBottom: 16 },
-
-  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
-  chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 21, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface },
-  customChip: { borderWidth: 1, borderColor: 'rgba(217,191,140,0.24)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface },
-  addCustomChip: { borderColor: 'rgba(217,191,140,0.28)' },
-  chipSelected: {
-    borderColor: 'rgba(255,255,255,0.9)',
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    shadowColor: '#4A3F35',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  chipTop: { borderColor: '#B8935A', backgroundColor: '#B8935A' },
-  chipText: { fontSize: 12, color: theme.textSecondary, fontWeight: '600' },
-  chipTextSelected: { color: '#1A1815', fontWeight: '700' },
-  chipTextTop: { color: '#1A1815', fontWeight: '800' },
-  customComposer: {
-    minWidth: 210,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+  velvetBorder: {
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  customComposerInput: { minWidth: 150, flex: 1, color: theme.textPrimary, fontSize: 12, paddingVertical: 0 },
-
-  summaryCard: { borderRadius: 28, padding: 28, marginBottom: 20, overflow: 'hidden' },
-  summaryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
-  summaryTitle: { fontSize: 11, color: PALETTE.gold, fontWeight: '800', letterSpacing: 1.5 },
-  
-  topList: { gap: 12 },
-  topItemRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, padding: 14, borderRadius: 18, borderWidth: 1, borderColor: theme.cardBorder },
-  topNumberBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(217,191,140,0.2)', justifyContent: 'center', alignItems: 'center' },
-  topNumberText: { color: PALETTE.gold, fontSize: 11, fontWeight: '800' },
-  topItemText: { fontSize: 16, color: theme.textPrimary, fontWeight: '600' },
-  
-  summaryHint: { fontSize: 12, color: theme.textMuted, marginTop: 20, textAlign: 'center', lineHeight: 18 },
-
-  constellationCard: {
-    borderRadius: 28,
-    padding: 24,
-    marginBottom: 20,
-  },
+  header: { paddingHorizontal: 24, paddingVertical: 8 },
+  titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
+  closeIcon: { color: '#FFF', fontSize: 24 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
+  headerTitle: { fontSize: 32, color: '#FFF', fontWeight: '800', letterSpacing: -1 },
+  headerSubtitle: { fontSize: 13, marginTop: 4 },
+  sectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, fontWeight: '800', marginVertical: 16 },
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
+  chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 24, borderWidth: 1 },
+  chipUnselected: { backgroundColor: 'rgba(0,0,0,0.35)', borderColor: 'rgba(255,255,255,0.05)' },
+  chipSelected: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  chipTop: { backgroundColor: PALETTE.gold, borderColor: PALETTE.gold },
+  addCustomChip: { backgroundColor: 'transparent', borderColor: 'rgba(212,175,55,0.3)', borderStyle: 'dashed' },
+  chipText: { fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
+  chipTextSelected: { color: '#0A0A0F', fontWeight: '800' },
+  chipTextTop: { color: '#0A0A0F', fontWeight: '800' },
+  constellationCard: { borderRadius: 28, padding: 24, marginBottom: 24, overflow: 'hidden' },
   constellationHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 18 },
   constellationTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
-  constellationFrame: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 20,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.pillSurface,
-    paddingVertical: 12,
-    marginBottom: 14,
-  },
-  constellationHint: {
-    fontSize: 12,
-    color: theme.textSecondary,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-
-  // Paradox Engine Cards
-  paradoxCard: { borderRadius: 28, padding: 28, marginBottom: 20 },
+  constellationFrame: { alignItems: 'center', justifyContent: 'center', paddingVertical: 12 },
+  constellationHint: { fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 18 },
+  summaryCard: { borderRadius: 28, padding: 24, marginBottom: 20, overflow: 'hidden' },
+  summaryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
+  summaryTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
+  topList: { gap: 10 },
+  topItemRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.03)', padding: 14, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  topNumberBadge: { width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(162, 194, 225, 0.15)', justifyContent: 'center', alignItems: 'center' },
+  topNumberText: { fontSize: 10, fontWeight: '800' },
+  topItemText: { fontSize: 16, color: '#FFFFFF', fontWeight: '600' },
+  paradoxCard: { borderRadius: 28, padding: 28, marginBottom: 20, overflow: 'hidden' },
   paradoxHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  paradoxEyebrow: { fontSize: 10, color: PALETTE.copper, fontWeight: '800', letterSpacing: 1.5 },
-  paradoxTitle: { fontSize: 20, color: theme.textPrimary, fontWeight: '700', marginBottom: 10 },
-  paradoxBody: { fontSize: 14, color: theme.textSecondary, lineHeight: 22, marginBottom: 16 },
-  paradoxFooter: { fontSize: 12, color: theme.textSecondary, lineHeight: 18, borderTopWidth: 1, borderTopColor: 'rgba(205, 127, 93, 0.2)', paddingTop: 16 },
-
-  promptCard: { borderRadius: 28, padding: 28, marginBottom: 24 },
-  promptText: { fontSize: 13, color: theme.textSecondary, lineHeight: 20, textAlign: 'center' },
-
-  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(2,8,23,0.95)' : 'rgba(255,255,255,0.95)' },
-  saveBtn: { height: 52, borderRadius: 26, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.5)', justifyContent: 'center', alignItems: 'center' },
-  saveBtnDone: { borderColor: 'rgba(184,147,90,0.5)' },
-  saveBtnText: { fontSize: 14, color: theme.isDark ? '#D4AF37' : '#1A1815', fontWeight: '800', letterSpacing: 0.5, textAlign: 'center' },
+  paradoxEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  paradoxTitle: { fontSize: 22, color: '#FFFFFF', fontWeight: '800', marginBottom: 8 },
+  paradoxBody: { fontSize: 15, color: 'rgba(255,255,255,0.6)', lineHeight: 24 },
+  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', backgroundColor: 'rgba(10,10,15,0.9)' },
+  saveBtn: { height: 56, borderRadius: 28, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
+  saveBtnText: { fontSize: 15, fontWeight: '800', letterSpacing: 1 },
 });

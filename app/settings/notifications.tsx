@@ -272,9 +272,9 @@ export default function NotificationSettings() {
             <Switch
               value={isRhythmEnabled}
               onValueChange={toggleRhythm}
-              trackColor={{ false: theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(146, 124, 88, 0.22)', true: '#D9BF8C' }}
+              trackColor={{ false: theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(212, 175, 55, 0.22)', true: '#D9BF8C' }}
               thumbColor={isRhythmEnabled ? '#050507' : (theme.isDark ? '#FFF' : '#FFF9F2')}
-              ios_backgroundColor={theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(146, 124, 88, 0.22)'}
+              ios_backgroundColor={theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(212, 175, 55, 0.22)'}
             />
           </View>
         </View>
@@ -344,8 +344,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(217,191,140,0.35)',
-    backgroundColor: 'rgba(217,191,140,0.07)',
+    borderColor: 'rgba(212, 175, 55,0.35)',
+    backgroundColor: 'rgba(212, 175, 55,0.07)',
   },
   timeBadgeDim: {
     borderColor: theme.cardBorder,
@@ -360,7 +360,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     paddingVertical: 8,
     marginTop: 4,
     borderRadius: 10,
-    backgroundColor: 'rgba(217,191,140,0.12)',
+    backgroundColor: 'rgba(212, 175, 55,0.12)',
   },
   doneText: { color: theme.textPrimary, fontSize: 14, fontWeight: '600' },
 
@@ -372,7 +372,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     height: 20,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: theme.isDark ? 'rgba(255,255,255,0.2)' : 'rgba(146, 124, 88, 0.24)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.2)' : 'rgba(212, 175, 55, 0.24)',
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
@@ -380,9 +380,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   checkboxActive: {
     borderColor: '#D9BF8C',
-    backgroundColor: 'rgba(217,191,140,0.15)',
+    backgroundColor: 'rgba(212, 175, 55,0.15)',
   },
-  checkmark: { fontSize: 12, color: '#C9AE78', lineHeight: 14 },
+  checkmark: { fontSize: 12, color: '#D4AF37', lineHeight: 14 },
   unknownLabel: { fontSize: 13, color: theme.textMuted, flex: 1 },
 
   privacyNote: {

@@ -426,9 +426,9 @@ export default function HomeScreen() {
         <Text style={styles.loadingText}>Set up your birth profile to get started</Text>
         <Pressable
           onPress={() => setShowEditBirth(true)}
-          style={{ marginTop: 20, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 28, borderWidth: 1, borderColor: 'rgba(201,174,120,0.4)', backgroundColor: 'rgba(162, 194, 225, 0.08)' }}
+          style={{ marginTop: 20, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 28, borderWidth: 1, borderColor: 'rgba(212, 175, 55,0.4)', backgroundColor: 'rgba(162, 194, 225, 0.08)' }}
         >
-          <Text style={{ color: '#C9AE78', fontWeight: '600', fontSize: 16 }}>Add Birth Data</Text>
+          <Text style={{ color: '#D4AF37', fontWeight: '600', fontSize: 16 }}>Add Birth Data</Text>
         </Pressable>
         <BirthDataModal
           visible={showEditBirth}
@@ -451,7 +451,7 @@ export default function HomeScreen() {
       {/* Nebula depth — atmospheric glow orbs */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(212, 175, 55, 0.06)' }]} />
       </View>
 
       {/* LAYER 3: Interactive UI */}
@@ -758,16 +758,16 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
           />
         </Path>
         {/* Glow halo */}
-        <Path path={linePath} color="rgba(201,174,120,0.2)" style="stroke" strokeWidth={10}>
+        <Path path={linePath} color="rgba(212, 175, 55,0.2)" style="stroke" strokeWidth={10}>
           <BlurMask blur={10} style="normal" />
         </Path>
         {/* Main line */}
-        <Path path={linePath} color="rgba(201,174,120,0.85)" style="stroke" strokeWidth={2} />
+        <Path path={linePath} color="rgba(212, 175, 55,0.85)" style="stroke" strokeWidth={2} />
         {/* Data point dots */}
         {pts.map((pt, i) => (
           <React.Fragment key={i}>
             {i === 6 && (
-              <Circle cx={pt.x} cy={pt.y} r={10} color="rgba(201,174,120,0.14)">
+              <Circle cx={pt.x} cy={pt.y} r={10} color="rgba(212, 175, 55,0.14)">
                 <BlurMask blur={6} style="normal" />
               </Circle>
             )}
@@ -775,7 +775,7 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
               cx={pt.x}
               cy={pt.y}
               r={i === 6 ? 4.5 : 2}
-              color={i === 6 ? '#C9AE78' : 'rgba(255,255,255,0.2)'}
+              color={i === 6 ? '#D4AF37' : 'rgba(255,255,255,0.2)'}
             />
           </React.Fragment>
         ))}
@@ -795,7 +795,7 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
             key={i}
             style={{
               fontSize: 10,
-              color: i === 6 ? 'rgba(201,174,120,0.85)' : 'rgba(255,255,255,0.28)',
+              color: i === 6 ? 'rgba(212, 175, 55,0.85)' : 'rgba(255,255,255,0.28)',
               fontWeight: '700',
               width: 20,
               textAlign: 'center',
@@ -1290,7 +1290,7 @@ const createStyles = (theme: AppTheme) => {
   },
   graphBadgeText: {
     fontSize: 9,
-    color: theme.isDark ? 'rgba(201,174,120,0.74)' : theme.textSecondary,
+    color: theme.isDark ? 'rgba(212, 175, 55,0.74)' : theme.textSecondary,
     fontWeight: '700',
     letterSpacing: 1.5,
   },

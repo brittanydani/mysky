@@ -1365,7 +1365,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderColor: theme.isDark ? 'rgba(212,175,55,0.14)' : 'rgba(181,138,58,0.18)',
   },
   syncButtonDisabled: { opacity: 0.6 },
-  syncButtonText: { fontSize: 14, color: '#C9AE78', fontWeight: '600' },
+  syncButtonText: { fontSize: 14, color: '#D4AF37', fontWeight: '600' },
 
   // ── Identity ──
   identityCard: {
@@ -1384,7 +1384,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(201, 174, 120, 0.2)',
+    borderColor: 'rgba(212, 175, 55, 0.2)',
   },
   identityInfo: {
     flex: 1,
@@ -1409,15 +1409,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'rgba(162, 194, 225, 0.10)',
     borderWidth: 1,
-    borderTopColor: 'rgba(201, 174, 120, 0.28)',
-    borderLeftColor: 'rgba(201, 174, 120, 0.18)',
-    borderRightColor: 'rgba(201, 174, 120, 0.12)',
-    borderBottomColor: 'rgba(201, 174, 120, 0.08)',
+    borderTopColor: 'rgba(212, 175, 55, 0.28)',
+    borderLeftColor: 'rgba(212, 175, 55, 0.18)',
+    borderRightColor: 'rgba(212, 175, 55, 0.12)',
+    borderBottomColor: 'rgba(212, 175, 55, 0.08)',
   },
   identityEditText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#C9AE78',
+    color: '#D4AF37',
   },
 
   premiumCard: {

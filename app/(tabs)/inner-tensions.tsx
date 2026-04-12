@@ -63,7 +63,7 @@ import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 // ─── Palette ──────────────────────────────────────────────────────────────────
 
 const PALETTE = {
-  gold:        '#C9AE78',
+  gold:        '#D4AF37',
   rose:        '#D4A3B3',
   sage:        '#8CBEAA',
   lavender:    '#A89BC8',
@@ -596,7 +596,7 @@ export default function InnerTensionsScreen() {
       {/* Nebula depth — atmospheric glow orbs */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(212, 175, 55, 0.06)' }]} />
       </View>
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -766,7 +766,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   lockWrap: { marginTop: 8 },
   lockBanner: {
     borderRadius: 24, padding: 28, marginBottom: 16,
-    borderWidth: 1, borderColor: 'rgba(201,174,120,0.2)',
+    borderWidth: 1, borderColor: 'rgba(212, 175, 55,0.2)',
     overflow: 'hidden',
   },
   lockBannerRow:        { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },

@@ -27,7 +27,7 @@ interface AspectRowProps {
 const CATEGORY_CONFIG: Record<AspectCategory, { color: string; gradient: readonly [string, string]; label: string }> = {
   connection: { color: '#D4A3B3', gradient: ['#F2D4DF', '#A86C82'], label: 'Harmony' },
   chemistry:  { color: '#FFFFFF', gradient: ['#FFF0B3', '#9A7B1C'], label: 'Chemistry' },
-  growth:     { color: '#C9AE78', gradient: ['#BEE0F5', '#4A87A8'], label: 'Growth' },
+  growth:     { color: '#D4AF37', gradient: ['#BEE0F5', '#4A87A8'], label: 'Growth' },
   challenge:  { color: '#C87878', gradient: ['#E8A9A9', '#8A3A3A'], label: 'Challenge' }, // Fixed label
 };
 

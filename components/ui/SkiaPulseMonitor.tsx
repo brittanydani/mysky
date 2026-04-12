@@ -1,15 +1,13 @@
-// File: components/ui/SkiaPulseMonitor.tsx
+// components/ui/SkiaPulseMonitor.tsx
 //
 // "Hold to Seal" — Haptic Energy Ring
 //
-// Physics-driven biometric-lock interaction for sealing sleep data.
-// Hold the orb for 2.5 seconds:
-//   1. Gold arc sweeps clockwise around the orbit ring.
-//   2. Haptic pulses accelerate (heartbeat ramp: 400ms → 55ms).
-//   3. At completion → white flash + heavy "thud" haptic + success state.
-//   4. Release early → ring rewinds, haptic loop stops.
-//
-// Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
+// High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
+// 1. Purged legacy "Muddy Gold" and static Navy backgrounds.
+// 2. Implemented "Midnight Slate" core with "Lunar Gold" specular arcs.
+// 3. Assigned "Atmosphere Blue" for idle discovery cues.
+// 4. Intensified bioluminescent bloom during the 2.5s hold sequence.
+// 5. Applied high-precision haptic heartbeat ramp (400ms → 55ms).
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
@@ -20,6 +18,8 @@ import {
   BlurMask,
   Path,
   Skia,
+  RadialGradient,
+  vec,
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,
@@ -37,22 +37,21 @@ import {
 } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 
-// ── Layout constants ──────────────────────────────────────────────────────────
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#D4AF37',       // Lunar Gold Core
+  specular: '#FFF9EA',   // Light Peak
+  atmosphere: '#A2C2E1', // Discovery Cue (Icy Blue)
+  emerald: '#6EBF8B',    // Success
+  slateDeep: '#1A1E29',  // Anchor Bottom
+};
 
 const SIZE     = 200;
 const CENTER   = SIZE / 2;
-const RING_R   = 76;      // progress sweep ring radius
-const CORE_R   = 36;      // inner orb radius
-const ORBIT_R  = RING_R + 16; // tick-mark orbit radius
-const HOLD_MS  = 2500;    // milliseconds to hold before sealing
-
-// ── Palette ───────────────────────────────────────────────────────────────────
-
-const GOLD      = '#C9AE78';
-const EMERALD   = '#6EBF8B';
-const NAVY      = '#030C1E';
-
-// ── Precomputed tick-mark paths for the outer orbit (static, no SharedValues) ──
+const RING_R   = 76;      
+const CORE_R   = 36;      
+const ORBIT_R  = RING_R + 16; 
+const HOLD_MS  = 2500;    
 
 const TICK_PATHS = Array.from({ length: 48 }, (_, i) => {
   const angle    = (i / 48) * Math.PI * 2 - Math.PI / 2;
@@ -65,8 +64,6 @@ const TICK_PATHS = Array.from({ length: 48 }, (_, i) => {
   return { path: p, isMajor };
 });
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 export default function SkiaPulseMonitor({
   onSyncComplete,
   isSaving = false,
@@ -76,13 +73,11 @@ export default function SkiaPulseMonitor({
 }) {
   const [complete, setComplete] = useState(false);
 
-  // Reanimated shared values
   const progress     = useSharedValue(0);
   const breathe      = useSharedValue(0);
   const discoveryPulse = useSharedValue(0);
   const flashOpacity = useSharedValue(0);
 
-  // After saving finishes (isSaving true→false), reset so user can re-seal.
   const prevSaving = useRef(isSaving);
   useEffect(() => {
     if (prevSaving.current && !isSaving) {
@@ -95,32 +90,16 @@ export default function SkiaPulseMonitor({
     prevSaving.current = isSaving;
   }, [isSaving, progress]);
 
-  // ── Idle breathing animation ──────────────────────────────────────────────
   useEffect(() => {
-    breathe.value = withRepeat(
-      withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
-    );
-  }, [breathe]);
+    breathe.value = withRepeat(withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sin) }), -1, true);
+    discoveryPulse.value = withRepeat(withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sin) }), -1, false);
+  }, []);
 
-  useEffect(() => {
-    discoveryPulse.value = withRepeat(
-      withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      false,
-    );
-  }, [discoveryPulse]);
-
-  // ── Accelerating haptic heartbeat ─────────────────────────────────────────
   const hapticTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hapticMs    = useRef(400);
 
   const stopHaptics = useCallback(() => {
-    if (hapticTimer.current) {
-      clearTimeout(hapticTimer.current);
-      hapticTimer.current = null;
-    }
+    if (hapticTimer.current) { clearTimeout(hapticTimer.current); hapticTimer.current = null; }
     hapticMs.current = 400;
   }, []);
 
@@ -134,7 +113,6 @@ export default function SkiaPulseMonitor({
     tick();
   }, [stopHaptics]);
 
-  // ── Seal completion ───────────────────────────────────────────────────────
   const handleComplete = useCallback(() => {
     stopHaptics();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
@@ -145,14 +123,9 @@ export default function SkiaPulseMonitor({
     };
     if (result instanceof Promise) {
       result.then((ok) => { if (ok === false) revert(); else setComplete(true); }).catch(revert);
-    } else if (result === false) {
-      revert();
-    } else {
-      setComplete(true);
-    }
+    } else if (result === false) { revert(); } else { setComplete(true); }
   }, [stopHaptics, onSyncComplete, progress]);
 
-  // ── Gesture ───────────────────────────────────────────────────────────────
   const tapGesture = Gesture.LongPress()
     .minDuration(HOLD_MS)
     .maxDistance(60)
@@ -163,7 +136,6 @@ export default function SkiaPulseMonitor({
     })
     .onStart(() => {
       'worklet';
-      // White flash then fade
       flashOpacity.value = withSequence(
         withTiming(0.85, { duration: 70, easing: Easing.out(Easing.quad) }),
         withTiming(0, { duration: 500, easing: Easing.in(Easing.quad) }),
@@ -179,47 +151,18 @@ export default function SkiaPulseMonitor({
       }
     });
 
-  // ── Derived Skia values ───────────────────────────────────────────────────
-
-  // Ambient aura: grows and brightens as progress advances
   const auraR  = useDerivedValue(() => CORE_R + 8 + breathe.value * 6 + progress.value * 22);
-  const auraOp = useDerivedValue(() => 0.10 + breathe.value * 0.08 + progress.value * 0.22);
-  const cueOuterR = useDerivedValue(() => ORBIT_R + 4 + discoveryPulse.value * 12);
-  const cueOuterOp = useDerivedValue(() => (complete || isSaving ? 0 : 0.16 - discoveryPulse.value * 0.12));
-  const cueInnerR = useDerivedValue(() => ORBIT_R - 2 + discoveryPulse.value * 8);
-  const cueInnerOp = useDerivedValue(() => (complete || isSaving ? 0 : 0.10 - discoveryPulse.value * 0.07));
+  const auraOp = useDerivedValue(() => 0.12 + breathe.value * 0.05 + progress.value * 0.25);
+  const cueOuterOp = useDerivedValue(() => (complete || isSaving ? 0 : 0.20 - discoveryPulse.value * 0.15));
+  const cueInnerOp = useDerivedValue(() => (complete || isSaving ? 0 : 0.15 - discoveryPulse.value * 0.10));
 
-  // Gold progress arc (sweeps −90° → +270°)
   const arcPath = useDerivedValue(() => {
-    const p     = Skia.Path.Make();
-    const sweep = 360 * progress.value;
-    if (sweep > 0.5) {
-      p.addArc(
-        { x: CENTER - RING_R, y: CENTER - RING_R, width: RING_R * 2, height: RING_R * 2 },
-        -90,
-        sweep,
-      );
-    }
+    const p = Skia.Path.Make(); const sweep = 360 * progress.value;
+    if (sweep > 0.5) p.addArc({ x: CENTER - RING_R, y: CENTER - RING_R, width: RING_R * 2, height: RING_R * 2 }, -90, sweep);
     return p;
   });
 
-  // Fluid fill inside the orb grows with progress
-  const fluidR   = useDerivedValue(() => (CORE_R - 3) * progress.value);
-
-  // Arc glow blur intensifies as the ring fills
-  const arcBlur  = useDerivedValue(() => 3 + progress.value * 9);
-
-  // Ring border alpha brightens
-  const coreOp   = useDerivedValue(() => 0.55 + progress.value * 0.40);
-
-  // Success pulse after completion
-  const sGlowR   = useDerivedValue(() => CORE_R + 6 + breathe.value * 12);
-  const sGlowOp  = useDerivedValue(() => 0.20 + breathe.value * 0.22);
-
-  // Flash overlay
-  const flashOp  = useDerivedValue(() => flashOpacity.value);
-
-  const accentColor = complete ? EMERALD : GOLD;
+  const accentColor = complete ? PALETTE.emerald : PALETTE.gold;
 
   return (
     <View style={styles.wrapper}>
@@ -227,129 +170,64 @@ export default function SkiaPulseMonitor({
         <View style={styles.container} collapsable={false}>
           <Canvas style={{ width: SIZE, height: SIZE }}>
             <Group>
-
-              {/* ── 1. Ambient aura glow ── */}
-              <Circle cx={CENTER} cy={CENTER} r={auraR}
-                color={accentColor} opacity={auraOp}>
-                <BlurMask blur={24} style="outer" />
+              {/* 1. Ambient Bloom */}
+              <Circle cx={CENTER} cy={CENTER} r={auraR} color={accentColor} opacity={auraOp}>
+                <BlurMask blur={30} style="outer" />
               </Circle>
 
-              {/* ── 1b. Idle pulse hints that the control responds to a sustained hold ── */}
-              <Circle
-                cx={CENTER}
-                cy={CENTER}
-                r={cueOuterR}
-                style="stroke"
-                strokeWidth={1.4}
-                color={GOLD}
-                opacity={cueOuterOp}
-              >
-                <BlurMask blur={8} style="solid" />
-              </Circle>
-              <Circle
-                cx={CENTER}
-                cy={CENTER}
-                r={cueInnerR}
-                style="stroke"
-                strokeWidth={1}
-                color="rgba(255,255,255,0.9)"
-                opacity={cueInnerOp}
-              />
+              {/* 2. Atmosphere Discovery Cues */}
+              <Circle cx={CENTER} cy={CENTER} r={ORBIT_R + 4 + discoveryPulse.value * 10} style="stroke" strokeWidth={1.5} color={PALETTE.atmosphere} opacity={cueOuterOp} />
+              <Circle cx={CENTER} cy={CENTER} r={ORBIT_R - 2 + discoveryPulse.value * 6} style="stroke" strokeWidth={1} color="#FFF" opacity={cueInnerOp} />
 
-              {/* ── 2. Outer orbit tick marks ── */}
+              {/* 3. Orbit Hardware */}
               {TICK_PATHS.map(({ path, isMajor }, i) => (
-                <Path
-                  key={i}
-                  path={path}
-                  style="stroke"
-                  strokeWidth={isMajor ? 1.4 : 0.7}
-                  color={`rgba(255,255,255,${isMajor ? 0.18 : 0.12})`}
-                />
+                <Path key={i} path={path} style="stroke" strokeWidth={isMajor ? 1.5 : 0.8} color={`rgba(255,255,255,${isMajor ? 0.2 : 0.1})`} />
               ))}
 
-              {/* ── 3. Static track ring ── */}
-              <Circle cx={CENTER} cy={CENTER} r={RING_R}
-                style="stroke" strokeWidth={2}
-                color="rgba(255,255,255,0.10)" />
+              {/* 4. Tracking Ring */}
+              <Circle cx={CENTER} cy={CENTER} r={RING_R} style="stroke" strokeWidth={2} color="rgba(255,255,255,0.08)" />
 
-              {/* ── 4. Gold progress arc (glow layer) ── */}
-              <Path path={arcPath} style="stroke" strokeWidth={5} strokeCap="round"
-                color={accentColor}>
-                <BlurMask blur={arcBlur} style="solid" />
+              {/* 5. Progress Arcs */}
+              <Path path={arcPath} style="stroke" strokeWidth={6} strokeCap="round" color={accentColor}>
+                <BlurMask blur={useDerivedValue(() => 4 + progress.value * 10)} style="solid" />
               </Path>
+              <Path path={arcPath} style="stroke" strokeWidth={2.5} strokeCap="round" color={accentColor} />
 
-              {/* ── 5. Gold progress arc (crisp layer) ── */}
-              <Path path={arcPath} style="stroke" strokeWidth={2.5} strokeCap="round"
-                color={accentColor} />
+              {/* 6. Slate Core */}
+              <Circle cx={CENTER} cy={CENTER} r={CORE_R} color={PALETTE.slateDeep} />
 
-              {/* ── 6. Core orb background ── */}
-              <Circle cx={CENTER} cy={CENTER} r={CORE_R} color={NAVY} />
-
-              {/* ── 7. Fluid fill (grows with progress) ── */}
-              <Circle cx={CENTER} cy={CENTER} r={fluidR}
-                color={accentColor} opacity={0.20}>
-                <BlurMask blur={7} style="normal" />
+              {/* 7. Bioluminescent Fluid */}
+              <Circle cx={CENTER} cy={CENTER} r={useDerivedValue(() => (CORE_R - 3) * progress.value)} color={accentColor} opacity={0.25}>
+                <BlurMask blur={8} style="normal" />
               </Circle>
 
-              {/* ── 8. Core border brightens as ring fills ── */}
-              <Circle cx={CENTER} cy={CENTER} r={CORE_R - 1}
-                style="stroke" strokeWidth={1.5}
-                color={accentColor} opacity={coreOp} />
+              {/* 8. Core Border (Hardware) */}
+              <Circle cx={CENTER} cy={CENTER} r={CORE_R - 1} style="stroke" strokeWidth={1.5} color={accentColor} opacity={useDerivedValue(() => 0.4 + progress.value * 0.6)} />
 
-              {/* ── 9. Catch-light ── */}
-              <Circle cx={CENTER - 10} cy={CENTER - 12} r={5}
-                color="rgba(255,255,255,0.13)">
-                <BlurMask blur={4} style="solid" />
+              {/* 9. Specular Catch-light */}
+              <Circle cx={CENTER - 10} cy={CENTER - 12} r={6} color="rgba(255,255,255,0.15)">
+                <BlurMask blur={5} style="solid" />
               </Circle>
 
-              {/* ── 10. Success pulse glow (post-seal) ── */}
-              {complete && (
-                <Circle cx={CENTER} cy={CENTER} r={sGlowR}
-                  color={EMERALD} opacity={sGlowOp}>
-                  <BlurMask blur={20} style="outer" />
-                </Circle>
-              )}
-
-              {/* ── 11. Completion flash burst ── */}
-              <Circle cx={CENTER} cy={CENTER} r={ORBIT_R + 10}
-                color="rgba(255,255,255,1)" opacity={flashOp}>
-                <BlurMask blur={28} style="outer" />
+              {/* 10. White Flash Burst */}
+              <Circle cx={CENTER} cy={CENTER} r={ORBIT_R + 15} color="#FFF" opacity={useDerivedValue(() => flashOpacity.value)}>
+                <BlurMask blur={32} style="outer" />
               </Circle>
-
             </Group>
           </Canvas>
         </View>
       </GestureDetector>
 
       <Text style={[styles.label, complete && styles.labelComplete]}>
-        {complete ? 'SEALED  ✶' : 'HOLD  TO  SEAL'}
+        {complete ? 'LOG  SEALED' : 'HOLD  TO  SEAL'}
       </Text>
     </View>
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  wrapper: {
-    alignItems:    'center',
-    marginVertical: 8,
-  },
-  container: {
-    width:          SIZE,
-    height:         SIZE,
-  },
-  label: {
-    marginTop:     10,
-    color:         'rgba(255,255,255,0.68)',
-    fontSize:      11,
-    fontWeight:    '800',
-    letterSpacing: 3.8,
-    textTransform: 'uppercase',
-    textAlign:     'center',
-  },
-  labelComplete: {
-    color:         '#6EBF8B',
-    opacity:       1,
-  },
+  wrapper: { alignItems: 'center', marginVertical: 8 },
+  container: { width: SIZE, height: SIZE },
+  label: { marginTop: 12, color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: '900', letterSpacing: 4, textTransform: 'uppercase', textAlign: 'center' },
+  labelComplete: { color: '#6EBF8B' },
 });

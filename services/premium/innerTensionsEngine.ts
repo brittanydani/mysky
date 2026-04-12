@@ -32,7 +32,7 @@ export const NS_BRANCH_COLORS: Record<NervousSystemBranch, string> = {
   flight:         '#A89BC8', // lavender
   freeze:         '#6BAED6', // clear blue (distinct from lavender)
   collapse:       '#C8A4A4', // muted rose
-  mixed:          '#C9AE78', // gold
+  mixed:          '#D4AF37', // gold
 };
 
 export const NS_BRANCH_LABELS: Record<NervousSystemBranch, string> = {

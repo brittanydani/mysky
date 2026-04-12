@@ -82,9 +82,9 @@ const DREAM_TEXT_MAX_LENGTH = 10000;
 const PALETTE = {
   bg: '#0A0A0F',
   cardBg: 'rgba(15, 18, 25, 0.65)',
-  gold: '#C9AE78',
-  goldGlow: 'rgba(201, 174, 120, 0.15)',
-  silverBlue: '#C9AE78',
+  gold: '#D4AF37',
+  goldGlow: 'rgba(212, 175, 55, 0.15)',
+  silverBlue: '#A2C2E1',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   amethyst: '#9D76C1',
@@ -669,7 +669,7 @@ export default function SleepScreen() {
       {/* Nebula depth — atmospheric glow orbs */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(212, 175, 55, 0.06)' }]} />
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -1262,7 +1262,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // Featured editorial entry card (first/most recent)
   featuredEntryCard: { marginBottom: 12 },
-  featuredEntryInner: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(201,174,120,0.2)' },
+  featuredEntryInner: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(212, 175, 55,0.2)' },
   featuredEntryTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
   featuredEntryLead: { flex: 1, marginRight: 12 },
   featuredEyebrow: { fontSize: 10, fontWeight: '800', color: PALETTE.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 },
@@ -1307,11 +1307,11 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // Dream journal glass card
   dreamGlassCard: { borderRadius: 24, borderWidth: 1, borderTopColor: theme.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.68)', borderLeftColor: theme.cardBorder, borderRightColor: theme.cardBorder, borderBottomColor: theme.cardBorder, padding: 24, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.cardSurface, minHeight: 120 },
-  dreamGlassCardActive: { borderColor: 'rgba(217, 191, 140, 0.4)', backgroundColor: 'rgba(217, 191, 140, 0.05)' },
+  dreamGlassCardActive: { borderColor: 'rgba(212, 175, 55, 0.4)', backgroundColor: 'rgba(212, 175, 55, 0.05)' },
   dreamInputInner: { fontSize: 16, color: theme.textPrimary, lineHeight: 24, paddingTop: 16, textAlignVertical: 'top' },
 
   // Premium lock cards
-  premiumLockCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217, 191, 140, 0.2)', padding: 28 },
+  premiumLockCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)', padding: 28 },
   premiumLockTitle: { fontSize: 15, fontWeight: '700', color: PALETTE.gold, marginBottom: 4 },
   premiumLockSub: { fontSize: 13, color: theme.textMuted, lineHeight: 18 },
   deeperSkyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(157, 118, 193, 0.15)', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.3)' },
@@ -1372,7 +1372,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   sealSection: { alignItems: 'center', marginTop: 48, paddingTop: 32, borderTopWidth: 1, borderTopColor: theme.cardBorder },
   pulseSection: { alignItems: 'center', position: 'relative' },
   pulseLabel: { color: theme.textPrimary, fontSize: 14, fontWeight: '800', letterSpacing: 1.7, textTransform: 'uppercase', marginBottom: 24, textAlign: 'center' },
-  unlockBtn: { marginTop: 12, paddingVertical: 13, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(217,191,140,0.28)', backgroundColor: 'rgba(217,191,140,0.10)' },
+  unlockBtn: { marginTop: 12, paddingVertical: 13, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212, 175, 55,0.28)', backgroundColor: 'rgba(212, 175, 55,0.10)' },
   unlockText: { color: theme.textPrimary, fontWeight: '700', fontSize: 12, letterSpacing: 1 },
 
   errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(205, 127, 93, 0.15)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 14, marginTop: 16 },
@@ -1391,7 +1391,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   statSub: { fontSize: 11, color: theme.textSecondary, marginTop: 4, textAlign: 'center' },
 
   // Obsidian graph / cluster cards
-  obsidianCard: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.20)', overflow: 'hidden', alignItems: 'center', shadowColor: '#D9BF8C', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 24, elevation: 6 },
+  obsidianCard: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.20)', overflow: 'hidden', alignItems: 'center', shadowColor: '#D9BF8C', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 24, elevation: 6 },
   obsidianCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 12 },
   obsidianCardEyebrow: { fontSize: 11, fontWeight: '800', color: PALETTE.silverBlue, letterSpacing: 1.5 },
   obsidianCardFooter: { marginTop: 10, alignSelf: 'center' },
@@ -1426,8 +1426,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   sitWithText: { fontSize: 16, color: theme.textPrimary, lineHeight: 24,  },
 
   // AI Gemini interpretation
-  aiSection: { marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(201, 174, 120, 0.15)' },
-  aiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(162, 194, 225, 0.08)', borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.25)' },
+  aiSection: { marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(212, 175, 55, 0.15)' },
+  aiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(162, 194, 225, 0.08)', borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.25)' },
   aiBtnPressed: { opacity: 0.7 },
   aiBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
   aiLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },

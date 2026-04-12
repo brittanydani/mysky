@@ -22,7 +22,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
   const router = useRouter();
   const PALETTE = {
     gold: theme.textGold,
-    silverBlue: '#C9AE78',
+    silverBlue: '#A2C2E1',
     copper: '#CD7F5D',
     textMain: theme.textPrimary,
     glassBorder: theme.cardBorder,

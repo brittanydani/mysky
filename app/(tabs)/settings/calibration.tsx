@@ -53,17 +53,17 @@ const RING_RADIUS = CENTER - 20;
 
 /** Colors that map to the sweep gradient stops on the spectrum ring */
 const SPECTRUM_COLORS = [
-  '#C9AE78', // Gold
+  '#D4AF37', // Gold
   '#CD7F5D', // Amber
   '#E07A7A', // Rose
   '#C97BBF', // Orchid
   '#4A3B6B', // Indigo
   '#5B8FD4', // Cobalt
-  '#C9AE78', // Azure
+  '#D4AF37', // Azure
   '#6EBF8B', // Emerald
   '#A4C97B', // Sage
   '#E8D38B', // Champagne
-  '#C9AE78', // Gold (wraps)
+  '#D4AF37', // Gold (wraps)
 ];
 
 const STORAGE_KEY = 'visual_calibration_profiles';  // stores all categories
@@ -143,7 +143,7 @@ function getCalibrationProfile(
 
   if (hue < 0.10) {
     label = 'Gold';
-    color = '#C9AE78';
+    color = '#D4AF37';
   } else if (hue < 0.20) {
     label = 'Amber';
     color = '#CD7F5D';
@@ -161,7 +161,7 @@ function getCalibrationProfile(
     color = '#5B8FD4';
   } else if (hue < 0.70) {
     label = 'Azure';
-    color = '#C9AE78';
+    color = '#D4AF37';
   } else if (hue < 0.80) {
     label = 'Emerald';
     color = '#6EBF8B';
@@ -445,7 +445,7 @@ export default function VisualCalibration() {
                   accessibilityLabel={`Edit ${cat.label} color`}
                 >
                   {isCurrent ? (
-                    <MetallicIcon name={cat.icon} size={16} color="#C9AE78" />
+                    <MetallicIcon name={cat.icon} size={16} color="#D4AF37" />
                   ) : (
                     <Ionicons name={cat.icon} size={16} color="rgba(255,255,255,0.4)" />
                   )}

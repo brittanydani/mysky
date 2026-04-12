@@ -97,7 +97,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
   // Atmosphere Wash for Journal entries
   const entryGradient: [string, string] = theme.isDark
     ? ['rgba(162, 194, 225, 0.12)', 'rgba(162, 194, 225, 0.03)']
-    : ['rgba(217,191,140,0.12)', theme.cardSurfaceStrong];
+    : ['rgba(212, 175, 55,0.12)', theme.cardSurfaceStrong];
 
   return (
     <View style={styles.wrapper}>

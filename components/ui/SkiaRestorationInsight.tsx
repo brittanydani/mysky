@@ -43,7 +43,7 @@ function barColors(quality: number, isDark: boolean): [string, string] {
   if (isDark) {
     if (quality <= 2) return ['rgba(60, 50, 120, 0.6)', 'rgba(40, 35, 90, 0.15)'];
     if (quality <= 3) return ['rgba(120, 80, 180, 0.6)', 'rgba(80, 60, 140, 0.15)'];
-    return ['rgba(201, 174, 120, 0.7)', 'rgba(100, 160, 210, 0.15)'];
+    return ['rgba(212, 175, 55, 0.7)', 'rgba(100, 160, 210, 0.15)'];
   }
   // Light mode — more opaque, ink-on-paper feel
   if (quality <= 2) return ['rgba(80, 60, 160, 0.75)', 'rgba(60, 50, 130, 0.25)'];
@@ -197,7 +197,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
       {/* Legend */}
       <View style={styles.legend}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: 'rgba(201, 174, 120, 0.7)' }]} />
+          <View style={[styles.legendDot, { backgroundColor: 'rgba(212, 175, 55, 0.7)' }]} />
           <Text style={styles.legendText}>Restorative</Text>
         </View>
         <View style={styles.legendItem}>

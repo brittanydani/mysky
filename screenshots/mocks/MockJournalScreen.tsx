@@ -23,7 +23,7 @@ const PALETTE = {
   indigo: '#2D3A5C',
   rose: '#D4A3B3',
   amethyst: '#9D76C1',
-  silverBlue: '#C9AE78',
+  silverBlue: '#A2C2E1',
   text: '#F8FAFC',
   textMuted: 'rgba(255,255,255,0.5)',
   glassBorder: 'rgba(255,255,255,0.06)',

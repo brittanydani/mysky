@@ -5,85 +5,82 @@
 // in the MySky design system. Each palette follows the pattern:
 //   light → mid → core → mid → light
 // to create a brushed-metal / foil reflection effect.
+//
+// Updated to "Lunar Sky" Aesthetic:
+// 1. Purged muddy golds, flat tans, and brown-leaning coppers.
+// 2. Unified gold variants to the high-contrast Lunar Gold (#D4AF37).
+// 3. Implemented Atmosphere, Nebula, Sage, and Ember as core colorful variants.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Champagne-gold metallic — matches existing GoldSubtitle. */
-export const METALLIC_GOLD = ['#FFF4D6', '#E9D9B8', '#C9AE78', '#E9D9B8', '#FFF4D6'] as const;
+/** Lunar Gold metallic (replaces muddy champagne). */
+export const METALLIC_GOLD = ['#F4EBD0', '#DDC488', '#D4AF37', '#DDC488', '#F4EBD0'] as const;
 
-/** Champagne-gold metallic for light mode — reduced white, stronger body/shadow. */
-export const METALLIC_GOLD_LIGHT = ['#E9C97E', '#D7A758', '#B57F35', '#D7A758', '#E9C97E'] as const;
+/** Lunar Gold for light mode — reduced white, stronger body/shadow. */
+export const METALLIC_GOLD_LIGHT = ['#DDC488', '#B5892D', '#8C631F', '#B5892D', '#DDC488'] as const;
 
-/** Amethyst / deep purple metallic. */
-export const METALLIC_PURPLE = ['#E8D5F5', '#C9A8E0', '#9D76C1', '#C9A8E0', '#E8D5F5'] as const;
+/** Nebula (Amethyst) metallic. */
+export const METALLIC_PURPLE = ['#EBE4F9', '#CDBCF4', '#A88BEB', '#CDBCF4', '#EBE4F9'] as const;
 
-/** Silver-blue metallic. */
-export const METALLIC_BLUE = ['#D6EEFF', '#B0D8F0', '#C9AE78', '#B0D8F0', '#D6EEFF'] as const;
+/** Atmosphere (Icy Blue) metallic. */
+export const METALLIC_BLUE = ['#E8F0F8', '#C5D9ED', '#A2C2E1', '#C5D9ED', '#E8F0F8'] as const;
 
-/** Emerald-green metallic. */
-export const METALLIC_GREEN = ['#D6F5E3', '#A8E0BD', '#6EBF8B', '#A8E0BD', '#D6F5E3'] as const;
+/** Sage (Emerald) metallic. */
+export const METALLIC_GREEN = ['#D9E6DF', '#A3C2B4', '#6B9080', '#A3C2B4', '#D9E6DF'] as const;
 
 /** Copper metallic. */
-export const METALLIC_COPPER = ['#F5E0D6', '#E0AA90', '#CD7F5D', '#E0AA90', '#F5E0D6'] as const;
+export const METALLIC_COPPER = ['#F4E2DA', '#E2BBA9', '#CD7F5D', '#E2BBA9', '#F4E2DA'] as const;
 
-/** Rose / soft pink metallic. */
-export const METALLIC_ROSE = ['#F5D6E0', '#E0B0C1', '#D4A3B3', '#E0B0C1', '#F5D6E0'] as const;
+/** Rose metallic. */
+export const METALLIC_ROSE = ['#F7E5EB', '#E6C0CD', '#D4A3B3', '#E6C0CD', '#F7E5EB'] as const;
 
-/** Error-red metallic. */
-export const METALLIC_RED = ['#F5D6D6', '#E0A0A0', '#E07A7A', '#E0A0A0', '#F5D6D6'] as const;
+/** Ember (Red) metallic. */
+export const METALLIC_RED = ['#F7D9D9', '#EB9B9B', '#DC5050', '#EB9B9B', '#F7D9D9'] as const;
 
-/** Lavender / soft violet metallic. */
-export const METALLIC_LAVENDER = ['#E0D6F0', '#C4B5DC', '#A89BC8', '#C4B5DC', '#E0D6F0'] as const;
+/** Lavender metallic. */
+export const METALLIC_LAVENDER = ['#F0EBF8', '#D5CAEE', '#A89BC8', '#D5CAEE', '#F0EBF8'] as const;
 
-/** Love-pink metallic (deeper than rose). */
-export const METALLIC_LOVE = ['#F5D0DA', '#E09FB4', '#E07A98', '#E09FB4', '#F5D0DA'] as const;
+/** Love-pink metallic. */
+export const METALLIC_LOVE = ['#F7DFE6', '#EBB0C4', '#D4A3B3', '#EBB0C4', '#F7DFE6'] as const;
 
-/** Warm yellow / solar metallic. */
-export const METALLIC_YELLOW = ['#FFF8D6', '#F0E5B0', '#E0D07A', '#F0E5B0', '#FFF8D6'] as const;
+/** Warm yellow / solar metallic (Pushed toward Lunar Gold). */
+export const METALLIC_YELLOW = ['#FFFBE6', '#F5E49C', '#D4AF37', '#F5E49C', '#FFFBE6'] as const;
 
-/** Deep blue / throat-chakra metallic. */
-export const METALLIC_DEEP_BLUE = ['#D6E4FF', '#AAC4F0', '#7AA8E0', '#AAC4F0', '#D6E4FF'] as const;
+/** Deep blue / Stratosphere metallic. */
+export const METALLIC_DEEP_BLUE = ['#E2EAF4', '#A5BEE0', '#5C7CAA', '#A5BEE0', '#E2EAF4'] as const;
 
-/** Deep purple / third-eye metallic. */
-export const METALLIC_DEEP_PURPLE = ['#DCD0F5', '#BCA8E8', '#9B7AE0', '#BCA8E8', '#DCD0F5'] as const;
+/** Deep purple metallic. */
+export const METALLIC_DEEP_PURPLE = ['#E6E0F5', '#BCA8E8', '#8B6BE8', '#BCA8E8', '#E6E0F5'] as const;
 
-/** Light lavender / crown metallic. */
-export const METALLIC_CROWN = ['#EDE6F8', '#DDD0EE', '#D0C8E8', '#DDD0EE', '#EDE6F8'] as const;
+/** Crown metallic. */
+export const METALLIC_CROWN = ['#F2EDF8', '#DDD0EE', '#C4B5DC', '#DDD0EE', '#F2EDF8'] as const;
 
-/** Tan / sacral metallic. */
-export const METALLIC_TAN = ['#F5EDD6', '#E8DDB8', '#D8C39A', '#E8DDB8', '#F5EDD6'] as const;
+/** Platinum/Silver (Replaces the muddy tan palette). */
+export const METALLIC_TAN = ['#FFFFFF', '#E2E8F0', '#94A3B8', '#E2E8F0', '#FFFFFF'] as const;
 
-/** Teal / aqua metallic. */
-export const METALLIC_TEAL = ['#CCF5F0', '#80E8DD', '#48D1CC', '#80E8DD', '#CCF5F0'] as const;
+/** Teal metallic. */
+export const METALLIC_TEAL = ['#E0F7F4', '#99E8DF', '#3DD9CF', '#99E8DF', '#E0F7F4'] as const;
 
-/** Amber / orange metallic. */
-export const METALLIC_ORANGE = ['#FFE4CC', '#FFB880', '#FF8C00', '#FFB880', '#FFE4CC'] as const;
+/** Orange metallic. */
+export const METALLIC_ORANGE = ['#FCECD9', '#F0C797', '#CD7F5D', '#F0C797', '#FCECD9'] as const;
 
-/** Bright cyan metallic. */
-export const METALLIC_CYAN = ['#D6F8FF', '#8EEEFF', '#49DFFF', '#8EEEFF', '#D6F8FF'] as const;
+/** Cyan metallic. */
+export const METALLIC_CYAN = ['#E6F9FC', '#A8EDF5', '#A2C2E1', '#A8EDF5', '#E6F9FC'] as const;
 
-/** Indigo / Jupiter metallic. */
-export const METALLIC_INDIGO = ['#E0D6F5', '#BBA8E8', '#9370DB', '#BBA8E8', '#E0D6F5'] as const;
+/** Indigo metallic. */
+export const METALLIC_INDIGO = ['#E8E4F5', '#BCA8E8', '#8B6BE8', '#BCA8E8', '#E8E4F5'] as const;
 
-/** Violet / slate-blue metallic. */
-export const METALLIC_VIOLET = ['#E6D6F5', '#C4A8ED', '#7B68EE', '#C4A8ED', '#E6D6F5'] as const;
+/** Violet metallic. */
+export const METALLIC_VIOLET = ['#EBE4F9', '#CDBCF4', '#A88BEB', '#CDBCF4', '#EBE4F9'] as const;
 
-/** Warm gold accent (#D4B872). */
-export const METALLIC_WARM_GOLD = ['#FFF6DC', '#ECDDBA', '#D4B872', '#ECDDBA', '#FFF6DC'] as const;
+// ── Unified Gold Aliases (killing the mud) ──
+export const METALLIC_WARM_GOLD = METALLIC_GOLD;
+export const METALLIC_PALE_GOLD = METALLIC_GOLD;
+export const METALLIC_HERO_GOLD = METALLIC_GOLD;
+export const METALLIC_FEATURE_GOLD = METALLIC_GOLD;
 
-/** Pale gold accent (#D9BF8C). */
-export const METALLIC_PALE_GOLD = ['#FFF8E6', '#EDE0C4', '#D9BF8C', '#EDE0C4', '#FFF8E6'] as const;
-
-/** Hero gold (#E8C97A) metallic. */
-export const METALLIC_HERO_GOLD = ['#FFF8E0', '#F2E4BA', '#E8C97A', '#F2E4BA', '#FFF8E0'] as const;
-
-/** Feature-icon gold (#E3CFA4) metallic. */
-export const METALLIC_FEATURE_GOLD = ['#FFF8EA', '#F0E3C8', '#E3CFA4', '#F0E3C8', '#FFF8EA'] as const;
-
-/** Challenge-red metallic (#C87878). */
-export const METALLIC_CHALLENGE = ['#F2D6D6', '#DCA8A8', '#C87878', '#DCA8A8', '#F2D6D6'] as const;
-
-/** Warning-red (#D98C8C) metallic. */
-export const METALLIC_WARNING = ['#F5DCDC', '#E4B0B0', '#D98C8C', '#E4B0B0', '#F5DCDC'] as const;
+// ── Unified Alert Aliases ──
+export const METALLIC_CHALLENGE = METALLIC_COPPER;
+export const METALLIC_WARNING = METALLIC_RED;
 
 // ── Lookup by hex-code — for dynamic/runtime colour matching ────────────
 export type MetallicVariant =
@@ -97,7 +94,7 @@ export type MetallicVariant =
 export const METALLIC_VARIANTS: Record<MetallicVariant, readonly string[]> = {
   gold: METALLIC_GOLD,
   purple: METALLIC_PURPLE,
-  blue: METALLIC_GOLD,
+  blue: METALLIC_BLUE,
   green: METALLIC_GREEN,
   copper: METALLIC_COPPER,
   rose: METALLIC_ROSE,
@@ -124,18 +121,35 @@ export const METALLIC_VARIANTS: Record<MetallicVariant, readonly string[]> = {
 
 /**
  * Given a flat hex colour, return the closest metallic gradient stops.
- * Falls back to gold if no match is found.
+ * Falls back to Lunar Gold if no match is found.
  */
 export function metallicForHex(hex: string): readonly string[] {
   const map: Record<string, readonly string[]> = {
-    '#C9AE78': METALLIC_GOLD,
-    '#DDBA6A': METALLIC_GOLD,
+    // Legacy Muddy Golds -> Lunar Gold
     '#D4AF37': METALLIC_GOLD,
+    '#DDBA6A': METALLIC_GOLD,
     '#E8C97A': METALLIC_GOLD,
     '#E3CFA4': METALLIC_GOLD,
     '#D9BF8C': METALLIC_GOLD,
     '#D4B872': METALLIC_GOLD,
     '#E8D6AE': METALLIC_GOLD,
+    '#D4AF37': METALLIC_GOLD,
+    '#C3CAD6': METALLIC_GOLD,
+    '#F0C87E': METALLIC_GOLD,
+    '#E2C27A': METALLIC_GOLD,
+    
+    // Core Lunar Sky Palette
+    '#D4AF37': METALLIC_GOLD,
+    '#F4EBD0': METALLIC_GOLD,
+    '#A2C2E1': METALLIC_BLUE,
+    '#A88BEB': METALLIC_PURPLE,
+    '#6B9080': METALLIC_GREEN,
+    '#DC5050': METALLIC_RED,
+    '#5C7CAA': METALLIC_DEEP_BLUE,
+    '#2C3645': METALLIC_DEEP_BLUE,
+    '#1A1E29': METALLIC_DEEP_BLUE,
+    
+    // Auxiliary Mappings
     '#9D76C1': METALLIC_PURPLE,
     '#A89BC8': METALLIC_LAVENDER,
     '#4A3B6B': METALLIC_PURPLE,
@@ -151,14 +165,10 @@ export function metallicForHex(hex: string): readonly string[] {
     '#9B7AE0': METALLIC_DEEP_PURPLE,
     '#D0C8E8': METALLIC_CROWN,
     '#D8C39A': METALLIC_TAN,
-    '#CFAE73': METALLIC_GOLD,
-    '#C3CAD6': METALLIC_GOLD,
-    '#F0C87E': METALLIC_GOLD,
-    '#E2C27A': METALLIC_GOLD,
-    '#6E8CB4': METALLIC_GOLD,
+    '#6E8CB4': METALLIC_BLUE,
     '#8CBEAA': METALLIC_GREEN,
     '#D4826A': METALLIC_COPPER,
-    '#6BAED6': METALLIC_GOLD,
+    '#6BAED6': METALLIC_BLUE,
     '#C8A4A4': METALLIC_ROSE,
     '#FF7A5C': METALLIC_RED,
     '#9ACD32': METALLIC_GREEN,
@@ -168,6 +178,7 @@ export function metallicForHex(hex: string): readonly string[] {
     '#FFEA70': METALLIC_YELLOW,
     '#48D1CC': METALLIC_TEAL,
     '#FF8C00': METALLIC_ORANGE,
+    
     // Core Force Map palette
     '#E8A838': METALLIC_ORANGE,
     '#3DD9CF': METALLIC_TEAL,

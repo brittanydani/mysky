@@ -1,7 +1,13 @@
 // app/intelligence-profile.tsx
 // MySky — Intelligence Profile
 // Based on Howard Gardner's Multiple Intelligences theory.
-// Users rate themselves on eight intelligence dimensions to discover their
+//
+// High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
+// 1. Purged "Muddy Gold" remnants from radar paths and buttons.
+// 2. Assigned vibrant Lavender & Atmosphere for the intelligence radar.
+// 3. Implemented "Tactile Hardware" logic for selection pills (Recessed vs. Raised).
+// 4. Anchored profile synthesis in Midnight Slate for physical presence.
+// 5. Integrated "Velvet Glass" 1px directional light-catch borders globally.
 // unique intelligence fingerprint. Results stored locally via EncryptedAsyncStorage.
 
 import React, { useCallback, useState } from 'react';
@@ -20,7 +26,7 @@ import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
-import { Canvas, Circle, Group, Path, Skia, BlurMask } from '@shopify/react-native-skia';
+import { Canvas, Circle, Group, Path, Skia, BlurMask, RadialGradient, vec, Shadow } from '@shopify/react-native-skia';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
@@ -36,16 +42,11 @@ import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 const STORAGE_KEY = '@mysky:intelligence_profile';
 
 const PALETTE = {
-  gold: '#D4AF37',
-  silverBlue: '#C9AE78',
-  sage: '#8CBEAA',
-  lavender: '#A89BC8',
-  rose: '#C88BA8',
-  teal: '#6EB5BF',
-  textMain: '#FFFFFF',
-  textMuted: 'rgba(226,232,240,0.45)',
-  glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#0A0A0F',
+  gold: '#D4AF37',          // Hardware icons
+  atmosphere: '#A2C2E1', // Icy Blue
+  nebula: '#A88BEB',     // Intelligence Map (Lavender)
+  slateMid: '#2C3645',   // Anchor Slate Top
+  slateDeep: '#1A1E29',  // Anchor Slate Bottom
 };
 
 interface IntelligenceDimension {
@@ -210,17 +211,17 @@ const IntelligenceRadar = ({ scores }: { scores: Scores }) => {
     <View style={styles.radarContainer}>
       <Canvas style={styles.radarCanvas}>
         <Group>
-          {[5, 4, 3, 2, 1].map((ring) => (
+          {[5, 3, 1].map((ring) => (
             <Path
               key={ring}
               path={makePolygonPath(ring)}
               color={
                 ring === 5
-                  ? theme.isDark ? 'rgba(255,255,255,0.11)' : 'rgba(146,124,88,0.22)'
-                  : theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(146,124,88,0.12)'
+                  ? theme.isDark ? 'rgba(255,255,255,0.11)' : 'rgba(212, 175, 55,0.22)'
+                  : theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(212, 175, 55,0.12)'
               }
               style="stroke"
-              strokeWidth={ring === 5 ? 1.2 : 1}
+              strokeWidth={1}
             />
           ))}
 
@@ -228,18 +229,18 @@ const IntelligenceRadar = ({ scores }: { scores: Scores }) => {
             <Path
               key={`axis-${i}`}
               path={makeAxisPath(i)}
-              color={theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(146,124,88,0.16)'}
+              color={theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(212, 175, 55,0.16)'}
               style="stroke"
               strokeWidth={1}
             />
           ))}
 
-          <Path path={userPath} color="rgba(168,155,200,0.24)">
+          <Path path={userPath} color="rgba(168, 139, 235, 0.4)">
             <BlurMask blur={14} style="normal" />
           </Path>
           <Path
             path={userPath}
-            color="rgba(217,191,140,0.14)"
+            color="rgba(168, 139, 235, 0.4)"
           />
           <Path
             path={userPath}
@@ -247,11 +248,11 @@ const IntelligenceRadar = ({ scores }: { scores: Scores }) => {
             style="stroke"
             strokeWidth={2.2}
           >
-            <BlurMask blur={6} style="solid" />
+            <Shadow dx={0} dy={0} blur={10} color={PALETTE.nebula} />
           </Path>
           <Path
             path={userPath}
-            color={PALETTE.lavender}
+            color={PALETTE.nebula}
             style="stroke"
             strokeWidth={1.4}
           />
@@ -260,7 +261,7 @@ const IntelligenceRadar = ({ scores }: { scores: Scores }) => {
             const p = getPoint(scores[d.id] ?? 3, i);
             return (
               <Group key={d.id}>
-                <Circle cx={p.x} cy={p.y} r={7} color="rgba(217,191,140,0.16)">
+                <Circle cx={p.x} cy={p.y} r={7} color="rgba(162, 194, 225, 0.3)">
                   <BlurMask blur={10} style="solid" />
                 </Circle>
                 <Circle cx={p.x} cy={p.y} r={4.2} color={PALETTE.gold} />
@@ -404,7 +405,7 @@ export default function IntelligenceProfileScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
       <LinearGradient
-        colors={['rgba(168,155,200,0.08)', 'transparent']}
+        colors={['rgba(168, 139, 235, 0.12)', 'transparent']}
         style={styles.topGlow}
       />
 
@@ -431,7 +432,8 @@ export default function IntelligenceProfileScreen() {
               entering={FadeIn.duration(600)}
               layout={Layout.springify()}
             >
-              <VelvetGlassSurface style={styles.synthesisCard} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+              <VelvetGlassSurface style={styles.synthesisCard} intensity={45}>
+              <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
                 <View style={styles.synthesisHeader}>
                   <MetallicIcon name="sparkles-outline" size={18} color={PALETTE.gold} />
                   <MetallicText style={styles.synthesisEyebrow} color={PALETTE.gold}>INTELLIGENCE FINGERPRINT</MetallicText>
@@ -466,7 +468,7 @@ export default function IntelligenceProfileScreen() {
                   key={dim.id}
                   entering={FadeInDown.delay(200 + i * 60).duration(500)}
                 >
-                  <VelvetGlassSurface style={styles.dimensionBlock} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+                  <VelvetGlassSurface style={styles.dimensionBlock} intensity={45}>
                     <View style={styles.dimInner}>
                       <View style={styles.dimHeader}>
                         <MetallicIcon name={dim.icon as any} size={20} color={PALETTE.gold} />
@@ -484,9 +486,9 @@ export default function IntelligenceProfileScreen() {
                         }}
                         style={styles.scaleRow}
                         buttonStyle={styles.scaleBtn}
-                        selectedButtonStyle={saved ? styles.scaleBtnSealed : undefined}
+                        selectedButtonStyle={saved ? styles.scaleBtnActive : undefined}
                         labelStyle={styles.scaleBtnText}
-                        selectedLabelStyle={styles.scaleBtnTextSelected}
+                        selectedLabelStyle={styles.scaleBtnTextActive}
                       />
 
                       <View style={styles.dimLabels}>
@@ -517,7 +519,7 @@ export default function IntelligenceProfileScreen() {
         {anySet && (
           <Animated.View entering={FadeInDown.duration(400)} style={styles.sealBar}>
             <Pressable
-              style={[styles.saveBtn, styles.saveBtnFull, saved && styles.saveBtnDone]}
+              style={[styles.saveBtn, styles.velvetBorder]}
               onPress={handleSave}
               onLongPress={() => {
                 if (saved) {
@@ -526,7 +528,8 @@ export default function IntelligenceProfileScreen() {
                 }
               }}
             >
-              <Text style={[styles.saveBtnText, saved && styles.saveBtnTextDone]}>
+              <LinearGradient colors={['rgba(44, 54, 69, 0.95)', 'rgba(26, 30, 41, 0.60)']} style={StyleSheet.absoluteFill} />
+              <Text style={[styles.saveBtnText]}>
                 {saved ? '✓ Profile Sealed · Hold to Edit' : 'Seal Profile & Continue'}
               </Text>
             </Pressable>
@@ -538,7 +541,14 @@ export default function IntelligenceProfileScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  velvetBorder: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
@@ -566,9 +576,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   synthesisBody: { fontSize: 14, color: theme.textSecondary, lineHeight: 23, textAlign: 'center', marginBottom: 4 },
 
   sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(10,10,15,0.95)' : 'rgba(252,248,241,0.96)' },
-  saveBtn: { height: 50, paddingHorizontal: 32, borderRadius: 25, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.cardBorder },
+  saveBtn: { height: 50, paddingHorizontal: 32, borderRadius: 25, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center', backgroundColor: theme.cardBorder },
   saveBtnFull: { width: '100%' },
-  saveBtnDone: { borderColor: '#B8935A', backgroundColor: '#B8935A' },
+  saveBtnDone: { borderColor: PALETTE.nebula, backgroundColor: PALETTE.nebula },
   saveBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', color: theme.textPrimary },
   saveBtnTextDone: { color: '#0A0A0F' },
 
@@ -581,10 +591,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   dimQuestion: { fontSize: 16, fontWeight: '400', color: theme.textPrimary, lineHeight: 24, marginBottom: 22 },
 
   scaleRow: { marginBottom: 14 },
-  scaleBtn: { borderRadius: 14, backgroundColor: theme.pillSurface, borderColor: theme.cardBorder },
-  scaleBtnSealed: { backgroundColor: '#B8935A', borderColor: '#B8935A' },
+  scaleBtn: { borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.35)', borderColor: 'rgba(255,255,255,0.05)' },
+  scaleBtnActive: { backgroundColor: PALETTE.nebula, borderColor: PALETTE.nebula },
   scaleBtnText: { fontSize: 15, color: theme.textSecondary, fontWeight: '700' },
-  scaleBtnTextSelected: { fontSize: 15, fontWeight: '800', color: '#0A0A0F' },
+  scaleBtnTextActive: { fontSize: 15, fontWeight: '800', color: '#0A0A0F' },
 
   dimLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
   dimLabelBlockLeft: { flex: 1, alignItems: 'flex-start' },

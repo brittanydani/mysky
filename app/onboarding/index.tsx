@@ -35,7 +35,7 @@ export default function OnboardingIndex() {
       {/* Ethereal Background Glow */}
       <SkiaDynamicCosmos />
       <LinearGradient
-        colors={['rgba(217,191,140,0.1)', 'transparent']}
+        colors={['rgba(212, 175, 55,0.1)', 'transparent']}
         style={styles.glow}
       />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -84,7 +84,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
   title: { fontSize: 34, fontWeight: '800', color: theme.textPrimary, marginBottom: 40, letterSpacing: -0.5 },
-  input: { fontSize: 24, color: theme.textPrimary, borderBottomWidth: 1, borderColor: 'rgba(201,174,120,0.3)', paddingBottom: 16 },
+  input: { fontSize: 24, color: theme.textPrimary, borderBottomWidth: 1, borderColor: 'rgba(212, 175, 55,0.3)', paddingBottom: 16 },
   footer: { paddingHorizontal: 24 },
 });
 

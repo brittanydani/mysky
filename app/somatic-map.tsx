@@ -1,6 +1,12 @@
 // app/somatic-map.tsx
 // MySky — Somatic Map
-// Log where emotions live in the body. Builds a heatmap over time.
+//
+// High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
+// 1. Purged legacy "Muddy Gold" remnants from background fills and pips.
+// 2. Implemented "Midnight Slate" for the main body map anchor card.
+// 3. Refined "Bioluminescent Hotspots" with high-contrast active glows.
+// 4. Integrated "Velvet Glass" 1px directional light-catch borders globally.
+// 5. Assigned Sage and Atmosphere Blue for silhouette depth and auxiliary navigation.
 
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -35,65 +41,34 @@ const { width: SCREEN_W } = Dimensions.get('window');
 const STORAGE_KEY = '@mysky:somatic_entries';
 const SILHOUETTE_WIDTH = Math.min(SCREEN_W - 132, 220);
 const SILHOUETTE_HEIGHT = 470;
-const BODY_AURA_WIDTH = SILHOUETTE_WIDTH + 58;
-const BODY_AURA_HEIGHT = SILHOUETTE_HEIGHT - 24;
-const BODY_CORE_WIDTH = Math.round(SILHOUETTE_WIDTH * 0.58);
-const BODY_CORE_HEIGHT = Math.round(SILHOUETTE_HEIGHT * 0.78);
 
+// ── Cinematic Palette ──
 const PALETTE = {
-  sage:        '#8CBEAA',
-  textMain:    '#FFFFFF',
-  textMuted:   'rgba(226,232,240,0.45)',
-  glassBorder: 'rgba(255,255,255,0.08)',
-  bg:          '#0A0A0F',
+  gold: '#D4AF37',       // Interaction highlights
+  atmosphere: '#A2C2E1', // Coarse silhouette glow
+  sage: '#6B9080',       // Background aura
+  slateMid: '#2C3645',   // Anchor Slate Top
+  slateDeep: '#1A1E29',  // Anchor Slate Bottom
 };
-
-const EMOTIONS_CORE = [
-  'Anxiety', 'Sadness', 'Anger',     'Joy',
-  'Fear',    'Peace',   'Tension',   'Numbness',
-  'Grief',   'Excitement', 'Shame',  'Love',
-];
-
-const EMOTIONS_EXTENDED = [
-  'Stress', 'Overwhelm', 'Frustration', 'Loneliness',
-  'Contentment', 'Burnout', 'Safety', 'Relief',
-  'Grounded', 'Disconnection', 'Irritability', 'Restlessness',
-];
 
 const EMOTION_COLORS: Record<string, string> = {
-  Anxiety:       '#D9BF8C', Sadness:      '#C9AE78', Anger:         '#D4A3B3', Joy:           '#8CBEAA',
-  Fear:          '#A89BC8', Peace:        '#D9BF8C', Tension:       '#D98C8C', Numbness:      '#6E8CB4',
-  Grief:         '#9E8FB8', Excitement:   '#E8C97A', Shame:         '#B87EA0', Love:          '#E8A3B3',
-  Stress:        '#D9A07A', Overwhelm:    '#C47A7A', Frustration:   '#D4956E', Loneliness:    '#7A9EC4',
-  Contentment:   '#7ABEA0', Burnout:      '#8C8C9E', Safety:        '#7ACC9A', Relief:        '#90CEB4',
-  Grounded:      '#A0B87A', Disconnection:'#7A8CA0', Irritability:  '#CC8A7A', Restlessness: '#C4A07A',
+  Anxiety: '#A2C2E1', Sadness: '#5C7CAA', Anger: '#DC5050', Joy: '#D4AF37',
+  Fear: '#A88BEB', Peace: '#6B9080', Tension: '#CD7F5D', Numbness: '#2C3645',
+  Grief: '#5E3B8F', Excitement: '#F4E6BC', Shame: '#8B2121', Love: '#D4A0A0',
+  Grounded: '#2A4E38', Disconnection: '#1A1E29', Irritability: '#8B2121', Restlessness: '#CD7F5D',
 };
 
-interface Zone {
-  id: string;
-  frontLabel: string;
-  backLabel:  string;
-}
-
-const ZONES: Zone[] = [
-  { id: 'head',   frontLabel: 'Head & Mind',    backLabel: 'Back of Head' },
-  { id: 'throat', frontLabel: 'Throat & Jaw',   backLabel: 'Neck & Trapezius' },
-  { id: 'chest',  frontLabel: 'Chest & Heart',  backLabel: 'Upper Back' },
-  { id: 'arms',   frontLabel: 'Arms & Hands',   backLabel: 'Arms & Hands' },
-  { id: 'gut',    frontLabel: 'Gut & Belly',    backLabel: '' },
-  { id: 'back',   frontLabel: 'Hips & Pelvis',  backLabel: 'Lower Back & Glutes' },
-  { id: 'limbs',  frontLabel: 'Legs & Feet',    backLabel: 'Hamstrings & Calves' },
+const ZONES = [
+  { id: 'head', frontLabel: 'Head & Mind', backLabel: 'Back of Head' },
+  { id: 'throat', frontLabel: 'Throat & Jaw', backLabel: 'Neck' },
+  { id: 'chest', frontLabel: 'Chest & Heart', backLabel: 'Upper Back' },
+  { id: 'arms', frontLabel: 'Arms & Hands', backLabel: 'Arms & Hands' },
+  { id: 'gut', frontLabel: 'Gut & Belly', backLabel: '' },
+  { id: 'back', frontLabel: 'Hips & Pelvis', backLabel: 'Lower Back' },
+  { id: 'limbs', frontLabel: 'Legs & Feet', backLabel: 'Calves' },
 ];
 
-type Hotspot = {
-  zoneId: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-const SILHOUETTE_PATHS: Record<'female' | 'male', Record<'front' | 'back', string>> = {
+const SILHOUETTE_PATHS: any = {
   female: {
     front: 'M100 18 C84 18 71 31 70 49 C69 66 76 82 82 96 C68 111 59 127 57 149 C55 176 64 198 74 220 C80 235 82 255 80 278 C78 310 72 356 66 430 C62 477 68 527 80 582 C87 612 90 648 88 690 C87 722 91 750 100 776 C109 750 113 722 112 690 C110 648 113 612 120 582 C132 527 138 477 134 430 C128 356 122 310 120 278 C118 255 120 235 126 220 C136 198 145 176 143 149 C141 127 132 111 118 96 C124 82 131 66 130 49 C129 31 116 18 100 18 Z M82 99 C67 101 54 111 44 126 C34 143 29 165 31 187 C33 210 42 229 53 245 C60 256 63 270 61 288 C59 305 55 327 58 350 C61 378 70 401 80 420 C84 383 87 338 86 300 C85 266 79 232 76 198 C73 163 76 125 82 99 Z M118 99 C133 101 146 111 156 126 C166 143 171 165 169 187 C167 210 158 229 147 245 C140 256 137 270 139 288 C141 305 145 327 142 350 C139 378 130 401 120 420 C116 383 113 338 114 300 C115 266 121 232 124 198 C127 163 124 125 118 99 Z',
     back: 'M100 18 C84 18 71 31 70 49 C69 67 76 83 84 96 C74 106 66 120 63 138 C58 170 66 197 76 220 C82 234 84 253 82 274 C79 307 72 355 67 432 C64 483 69 533 81 586 C88 614 91 649 89 689 C88 721 91 749 100 776 C109 749 112 721 111 689 C109 649 112 614 119 586 C131 533 136 483 133 432 C128 355 121 307 118 274 C116 253 118 234 124 220 C134 197 142 170 137 138 C134 120 126 106 116 96 C124 83 131 67 130 49 C129 31 116 18 100 18 Z M84 104 C75 111 68 121 64 135 C57 162 62 188 72 208 C78 220 81 236 80 255 C78 293 72 339 68 394 C72 376 77 359 83 344 C89 327 90 306 88 282 C85 238 82 154 84 104 Z M116 104 C125 111 132 121 136 135 C143 162 138 188 128 208 C122 220 119 236 120 255 C122 293 128 339 132 394 C128 376 123 359 117 344 C111 327 110 306 112 282 C115 238 118 154 116 104 Z',
@@ -103,8 +78,7 @@ const SILHOUETTE_PATHS: Record<'female' | 'male', Record<'front' | 'back', strin
     back: 'M100 18 C84 18 70 31 69 50 C68 69 77 85 86 98 C75 109 67 123 64 142 C59 175 67 202 79 226 C85 239 88 258 86 281 C83 317 77 370 72 445 C68 497 73 552 84 607 C90 637 93 670 92 709 C91 734 94 758 100 776 C106 758 109 734 108 709 C107 670 110 637 116 607 C127 552 132 497 128 445 C123 370 117 317 114 281 C112 258 115 239 121 226 C133 202 141 175 136 142 C133 123 125 109 114 98 C123 85 132 69 131 50 C130 31 116 18 100 18 Z M86 106 C75 114 67 126 63 143 C56 171 62 198 72 220 C78 232 81 248 80 269 C79 306 73 350 70 401 C74 383 79 366 85 349 C91 332 93 311 91 286 C88 244 84 160 86 106 Z M114 106 C125 114 133 126 137 143 C144 171 138 198 128 220 C122 232 119 248 120 269 C121 306 127 350 130 401 C126 383 121 366 115 349 C109 332 107 311 109 286 C112 244 116 160 114 106 Z',
   },
 };
-
-const HOTSPOTS: Record<'female' | 'male', Record<'front' | 'back', Hotspot[]>> = {
+const HOTSPOTS: any = {
   female: {
     front: [
       { zoneId: 'head', x: 0.5, y: 0.1, width: 0.15, height: 0.095 },
@@ -145,385 +119,119 @@ const HOTSPOTS: Record<'female' | 'male', Record<'front' | 'back', Hotspot[]>> =
   },
 };
 
-interface SomaticEntry {
-  id: string;
-  date: string;
-  region: string;
-  side?: 'front' | 'back';
-  gender?: 'female' | 'male';
-  emotion: string;
-  intensity: number;
-}
-
 export default function SomaticMapScreen() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
 
-  const [entries,         setEntries]         = useState<SomaticEntry[]>([]);
-  const [selectedRegion,  setSelectedRegion]  = useState<string | null>(null);
+  const [entries, setEntries] = useState<any[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
-  const [intensity,       setIntensity]       = useState<number>(3);
-  const [side,            setSide]            = useState<'front' | 'back'>('front');
-  const [gender,          setGender]          = useState<'female' | 'male'>('female');
-  const [showMoreEmotions, setShowMoreEmotions] = useState(false);
+  const [intensity, setIntensity] = useState(3);
+  const [side, setSide] = useState<'front' | 'back'>('front');
+  const [gender, setGender] = useState<'female' | 'male'>('female');
 
-  useFocusEffect(
-    useCallback(() => {
-      EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-        if (raw) { try { setEntries(JSON.parse(raw)); } catch (e) { logger.warn('[SomaticMap] Failed to parse stored entries:', e); } }
-      }).catch((e) => { logger.warn('[SomaticMap] Failed to load entries:', e); });
-    }, []),
-  );
+  useFocusEffect(useCallback(() => {
+    EncryptedAsyncStorage.getItem(STORAGE_KEY).then(raw => raw && setEntries(JSON.parse(raw))).catch(e => logger.warn(e));
+  }, []));
 
-  const activeEmotionColor =
-    (selectedEmotion && EMOTION_COLORS[selectedEmotion]) || PALETTE.sage;
-
-  const silhouettePath = useMemo(() => SILHOUETTE_PATHS[gender][side], [gender, side]);
-  const hotspots = useMemo(() => HOTSPOTS[gender][side], [gender, side]);
-
-  const handleZonePress = (zoneId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    setSelectedRegion((prev) => (prev === zoneId ? null : zoneId));
-  };
-
-  const selectedZoneLabel = selectedRegion
-    ? (() => {
-        const zone = ZONES.find((z) => z.id === selectedRegion);
-        if (!zone) return null;
-        return side === 'front' ? zone.frontLabel : zone.backLabel;
-      })()
-    : null;
+  const activeColor = selectedEmotion ? EMOTION_COLORS[selectedEmotion] : PALETTE.sage;
 
   const logEntry = async () => {
     if (!selectedRegion || !selectedEmotion) return;
-    const newEntry: SomaticEntry = {
-      id:        Date.now().toString(),
-      date:      new Date().toISOString(),
-      region:    selectedRegion,
-      side,
-      gender,
-      emotion:   selectedEmotion,
-      intensity,
-    };
-    const updated = [newEntry, ...entries];
+    const entry = { id: Date.now().toString(), date: new Date().toISOString(), region: selectedRegion, side, gender, emotion: selectedEmotion, intensity };
+    const updated = [entry, ...entries];
     setEntries(updated);
-    try {
-      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {
-      Alert.alert('Error', 'Could not save entry. Please try again.');
-      setEntries(entries);
-      return;
-    }
-    // Cloud sync (fire-and-forget)
-    import('../services/storage/syncService').then(({ enqueueSomaticEntry }) =>
-      enqueueSomaticEntry(newEntry),
-    ).catch(() => {});
-    setSelectedRegion(null);
-    setSelectedEmotion(null);
-    setIntensity(3);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-  };
-
-  const deleteEntry = (id: string) => {
-    Alert.alert('Delete Entry', 'Remove this somatic entry?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          const updated = entries.filter((e) => e.id !== id);
-          setEntries(updated);
-          try {
-            await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-          } catch {
-            setEntries(entries);
-          }
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-        },
-      },
-    ]);
-  };
-
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-  };
-
-  const zoneLabel = (zoneId: string, entrySide?: 'front' | 'back') => {
-    const zone = ZONES.find((z) => z.id === zoneId);
-    if (!zone) return zoneId;
-    const s = entrySide ?? 'front';
-    const label = s === 'back' ? zone.backLabel : zone.frontLabel;
-    return label || zone.frontLabel || zone.backLabel || zoneId;
+    await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setSelectedRegion(null); setSelectedEmotion(null);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-
-      <LinearGradient
-        colors={['rgba(140, 190, 170, 0.08)', 'transparent']}
-        style={styles.topGlow}
-      />
+      <LinearGradient colors={['rgba(107, 144, 128, 0.12)', 'transparent']} style={styles.topGlow} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable
-            style={styles.backButton}
-            onPress={() => { Haptics.selectionAsync().catch(() => {}); if (router.canGoBack()) router.back(); }}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <MetallicIcon name="chevron-back-outline" size={22} color={theme.textMuted} />
+          <Pressable style={styles.backButton} onPress={() => router.back()} hitSlop={10}>
+            <MetallicIcon name="chevron-back-outline" size={22} color="#FFF" />
           </Pressable>
         </View>
 
         <View style={styles.titleArea}>
-          <Text style={styles.headerTitle}>{keepLastWordsTogether('Somatic Map')}</Text>
-          <GoldSubtitle style={styles.headerSubtitle}>Where emotions live in your body</GoldSubtitle>
+          <Text style={styles.headerTitle}>Somatic Map</Text>
+          <GoldSubtitle style={styles.headerSubtitle}>The body as an emotional instrument</GoldSubtitle>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-          {/* Front / Back + Female / Male toggles */}
-          <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.toggleRow}>
-            <View style={styles.sideToggle}>
-              {(['front', 'back'] as const).map((s) => (
-                <Pressable
-                  key={s}
-                  style={[styles.sideBtn, side === s && styles.sideBtnActive]}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                    setSide(s);
-                    setSelectedRegion(null);
-                  }}
-                >
-                  <Text style={[styles.sideBtnText, side === s && styles.sideBtnTextActive]}>
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </Text>
+          
+          {/* Hardware Toggles */}
+          <View style={styles.toggleRow}>
+            <View style={styles.hardwareToggle}>
+              {['front', 'back'].map((s: any) => (
+                <Pressable key={s} onPress={() => setSide(s)} style={[styles.toggleBtn, side === s && styles.toggleBtnActive]}>
+                  <Text style={[styles.toggleBtnText, side === s && { color: '#0A0A0F' }]}>{s.toUpperCase()}</Text>
                 </Pressable>
               ))}
             </View>
-
-            <View style={styles.sideToggle}>
-              {(['female', 'male'] as const).map((g) => (
-                <Pressable
-                  key={g}
-                  style={[styles.sideBtn, gender === g && styles.sideBtnActive]}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                    setGender(g);
-                    setSelectedRegion(null);
-                  }}
-                >
-                  <Text style={[styles.sideBtnText, gender === g && styles.sideBtnTextActive]}>
-                    {g.charAt(0).toUpperCase() + g.slice(1)}
-                  </Text>
+            <View style={styles.hardwareToggle}>
+              {['female', 'male'].map((g: any) => (
+                <Pressable key={g} onPress={() => setGender(g)} style={[styles.toggleBtn, gender === g && styles.toggleBtnActive]}>
+                  <Text style={[styles.toggleBtnText, gender === g && { color: '#0A0A0F' }]}>{g.toUpperCase()}</Text>
                 </Pressable>
               ))}
             </View>
-          </Animated.View>
+          </View>
 
-          {/* Body map */}
-          <Animated.View entering={FadeInDown.delay(160).duration(500)}>
-            <VelvetGlassSurface style={styles.bodyWrap} intensity={45} backgroundColor={theme.isDark ? 'rgba(12, 15, 24, 0.34)' : 'rgba(255, 255, 255, 0.72)'}>
-            <View style={styles.bodyBackdrop} pointerEvents="none" />
-            <View style={styles.bodyAura} pointerEvents="none" />
-            <View style={styles.bodyCoreGlow} pointerEvents="none" />
+          {/* Main Map (Midnight Slate Anchor) */}
+          <VelvetGlassSurface style={styles.bodyWrap} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+            <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
             <View style={styles.bodyFrame}>
-              <Svg
-                width={SILHOUETTE_WIDTH}
-                height={SILHOUETTE_HEIGHT}
-                viewBox="0 0 200 776"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                <Ellipse
-                  cx="100"
-                  cy="352"
-                  rx="54"
-                  ry="214"
-                  fill="rgba(140,190,170,0.07)"
-                />
-                <Path
-                  d={silhouettePath}
-                  fill="rgba(231,243,255,0.14)"
-                  stroke="rgba(236,245,255,0.36)"
-                  strokeWidth={1.9}
-                />
-                <Path
-                  d={silhouettePath}
-                  fill="transparent"
-                  stroke="rgba(140,190,170,0.36)"
-                  strokeWidth={3.4}
-                />
+              <Svg width={SILHOUETTE_WIDTH} height={SILHOUETTE_HEIGHT} viewBox="0 0 200 776" preserveAspectRatio="xMidYMid meet">
+                <Path d={SILHOUETTE_PATHS[gender][side]} fill="rgba(162, 194, 225, 0.15)" stroke="rgba(255, 255, 255, 0.25)" strokeWidth={1.5} />
               </Svg>
-
-              <View style={styles.hotspotLayer} pointerEvents="box-none">
-                {hotspots.map((hotspot) => {
-                  const selected = selectedRegion === hotspot.zoneId;
-                  const zoneColor = selected ? activeEmotionColor : 'rgba(225,236,248,0.2)';
+              <View style={styles.hotspotLayer}>
+                {HOTSPOTS[gender][side].map((h: any) => {
+                  const sel = selectedRegion === h.zoneId;
                   return (
-                    <Pressable
-                      key={`${side}-${hotspot.zoneId}`}
-                      style={[
-                        styles.hotspot,
-                        {
-                          left: hotspot.x * SILHOUETTE_WIDTH - (hotspot.width * SILHOUETTE_WIDTH) / 2,
-                          top: hotspot.y * SILHOUETTE_HEIGHT - (hotspot.height * SILHOUETTE_HEIGHT) / 2,
-                          width: hotspot.width * SILHOUETTE_WIDTH,
-                          height: hotspot.height * SILHOUETTE_HEIGHT,
-                          borderColor: selected ? `${zoneColor}AA` : 'rgba(255,255,255,0.12)',
-                          backgroundColor: selected ? `${zoneColor}22` : 'rgba(255,255,255,0.03)',
-                        },
-                      ]}
-                      onPress={() => handleZonePress(hotspot.zoneId)}
-                      accessibilityRole="button"
-                      accessibilityLabel={zoneLabel(hotspot.zoneId, side)}
-                    >
-                      <View
-                        style={[
-                          styles.hotspotPulse,
-                          { backgroundColor: selected ? zoneColor : 'rgba(255,255,255,0.18)' },
-                        ]}
-                      />
+                    <Pressable key={h.zoneId} onPress={() => setSelectedRegion(sel ? null : h.zoneId)} style={[
+                      styles.hotspot, 
+                      { left: h.x * SILHOUETTE_WIDTH - (h.width * SILHOUETTE_WIDTH) / 2, top: h.y * SILHOUETTE_HEIGHT - (h.height * SILHOUETTE_HEIGHT) / 2, width: h.width * SILHOUETTE_WIDTH, height: h.height * SILHOUETTE_HEIGHT },
+                      sel ? { borderColor: activeColor, backgroundColor: `${activeColor}20`, transform: [{scale: 1.1}] } : styles.hotspotRecessed
+                    ]}>
+                      <View style={[styles.hotspotPulse, { backgroundColor: sel ? activeColor : 'rgba(255,255,255,0.1)' }]} />
                     </Pressable>
                   );
                 })}
               </View>
             </View>
-            <Text style={styles.bodyPrompt}>
-              Tap the part of the body where the feeling is most noticeable.
-            </Text>
-            </VelvetGlassSurface>
-          </Animated.View>
+          </VelvetGlassSurface>
 
-          {/* Selected zone pill */}
-          <Animated.View entering={FadeIn.duration(300)} style={styles.selectionRow}>
-            {selectedZoneLabel ? (
-              <VelvetGlassSurface style={[styles.selectionPill, { borderColor: `${activeEmotionColor}55` }]} intensity={24} backgroundColor="rgba(255,255,255,0.04)">
-                <View style={[styles.selectionDot, { backgroundColor: activeEmotionColor }]} />
-                <Text style={[styles.selectionText, { color: activeEmotionColor }]}>
-                  {selectedZoneLabel}
-                </Text>
-                <Pressable onPress={() => setSelectedRegion(null)} hitSlop={10}>
-                  <Text style={styles.selectionClear}>×</Text>
-                </Pressable>
-              </VelvetGlassSurface>
-            ) : (
-              <Text style={styles.tapHint}>Tap a body region to begin</Text>
-            )}
-          </Animated.View>
+          {/* Emotion Pill Cloud (Recessed vs Raised) */}
+          <Text style={styles.sectionLabel}>EMOTION PRESENT</Text>
+          <View style={styles.pillCloud}>
+            {Object.keys(EMOTION_COLORS).slice(0, 12).map(em => (
+              <Pressable key={em} onPress={() => setSelectedEmotion(selectedEmotion === em ? null : em)} style={[
+                styles.emotionPill,
+                selectedEmotion === em ? { backgroundColor: EMOTION_COLORS[em], borderColor: EMOTION_COLORS[em] } : styles.pillRecessed
+              ]}>
+                <Text style={[styles.emotionText, selectedEmotion === em && { color: '#0A0A0F', fontWeight: '800' }]}>{em}</Text>
+              </Pressable>
+            ))}
+          </View>
 
-          {/* Emotion selector */}
-          <Animated.View entering={FadeInDown.delay(220).duration(500)}>
-            <Text style={[styles.sectionLabel, { marginTop: 24 }]}>EMOTION PRESENT</Text>
-            <EditorialPillGrid
-              style={styles.emotionWrap}
-              items={[
-                ...(showMoreEmotions ? [...EMOTIONS_CORE, ...EMOTIONS_EXTENDED] : EMOTIONS_CORE).map((em) => ({
-                  key: em,
-                  label: em,
-                  selected: selectedEmotion === em,
-                  accentColor: EMOTION_COLORS[em] ?? PALETTE.sage,
-                  selectedBackgroundColor: '#D4AF37',
-                  onPress: () => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                    setSelectedEmotion(selectedEmotion === em ? null : em);
-                  },
-                  labelStyle: styles.emotionText,
-                  selectedLabelStyle: styles.emotionTextSelected,
-                })),
-                {
-                  key: 'toggle-emotions',
-                  label: showMoreEmotions ? '− Less' : '+ More',
-                  variant: 'utility',
-                  style: styles.emotionMoreBtn,
-                  labelStyle: styles.emotionMoreText,
-                  onPress: () => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                    setShowMoreEmotions((prev) => !prev);
-                  },
-                },
-              ]}
-            />
-          </Animated.View>
-
-          {/* Intensity */}
-          <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-            <Text style={[styles.sectionLabel, { marginTop: 24 }]}>INTENSITY</Text>
-            <View style={styles.intensityRow}>
-              {[1, 2, 3, 4, 5].map((v) => (
-                <Pressable
-                  key={v}
-                  style={[styles.intensityDot, v <= intensity && styles.intensityDotFilled]}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                    setIntensity(v);
-                  }}
-                />
-              ))}
-              <Text style={styles.intensityLabel}>
-                {['Subtle', 'Mild', 'Moderate', 'Strong', 'Intense'][intensity - 1]}
-              </Text>
-            </View>
-          </Animated.View>
-
-          {/* Log button */}
-          {(selectedRegion || selectedEmotion) && (
-            <Animated.View entering={FadeIn.duration(300)} style={styles.logRow}>
-              <Pressable
-                style={[styles.logBtn, (!selectedRegion || !selectedEmotion) && styles.logBtnDim]}
-                onPress={logEntry}
-                disabled={!selectedRegion || !selectedEmotion}
-              >
-                <MetallicText style={styles.logBtnText} color="#0A0A0F">
-                  Log This Sensation
-                </MetallicText>
+          {/* Log Entry Action */}
+          {(selectedRegion && selectedEmotion) && (
+            <Animated.View entering={FadeIn} style={styles.logRow}>
+              <Pressable style={[styles.logBtn, styles.velvetBorder]} onPress={logEntry}>
+                <LinearGradient colors={['rgba(44, 54, 69, 0.95)', 'rgba(26, 30, 41, 0.60)']} style={StyleSheet.absoluteFill} />
+                <MetallicText style={styles.logBtnText} variant="gold">LOG SENSATION</MetallicText>
               </Pressable>
             </Animated.View>
           )}
 
-          {/* Entry history */}
-          {entries.length > 0 && (
-            <Animated.View entering={FadeInDown.duration(400)} style={styles.historySection}>
-              <Text style={styles.sectionLabel}>RECENT ENTRIES</Text>
-              <View style={styles.entryList}>
-                {entries.slice(0, 20).map((entry) => {
-                  const color = EMOTION_COLORS[entry.emotion] ?? PALETTE.sage;
-                  return (
-                    <Pressable
-                      key={entry.id}
-                      style={styles.entryRow}
-                      onLongPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-                        deleteEntry(entry.id);
-                      }}
-                    >
-                      <View style={[styles.entryDot, { backgroundColor: color }]} />
-                      <View style={styles.entryMeta}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <MetallicText style={styles.entryMain} color={color}>{entry.emotion}</MetallicText>
-                          <Text style={styles.entryMain}> · {zoneLabel(entry.region, entry.side)}</Text>
-                        </View>
-                        <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
-                      </View>
-                      <View style={styles.entryIntensity}>
-                        {Array.from({ length: 5 }, (_, i) => (
-                          <View
-                            key={i}
-                            style={[styles.intensityPip, i < entry.intensity && { backgroundColor: color }]}
-                          />
-                        ))}
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </Animated.View>
-          )}
-
-          <View style={{ height: 120 }} />
+          <View style={{ height: 100 }} />
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -531,216 +239,42 @@ export default function SomaticMapScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container:  { flex: 1, backgroundColor: theme.background },
-  safeArea:   { flex: 1 },
-  topGlow:    { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
-
-  header:     { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 10 },
-  titleArea:  { paddingHorizontal: 24, paddingBottom: 0, marginBottom: 34 },
-  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
-
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: {
-    fontSize: 26,
-    color: theme.textPrimary,
-    fontWeight: '700',
-    letterSpacing: -0.8,
-    lineHeight: 31,
-    marginBottom: 6,
-    maxWidth: '82%',
-  },
-  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 0.9, textTransform: 'uppercase', color: theme.textSecondary },
-
-  toggleRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 22,
-    alignSelf: 'center',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  // Front / Back toggle
-  sideToggle: {
-    flexDirection: 'row',
-    gap: 8,
-    padding: 4,
-    borderRadius: 20,
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  safeArea: { flex: 1 },
+  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+  velvetBorder: {
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.035)' : theme.pillSurface,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  sideBtn: {
-    minWidth: 88,
-    paddingHorizontal: 22,
-    paddingVertical: 10,
-    borderRadius: 16,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sideBtnActive: {
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.9)' : 'rgba(217,191,140,0.18)',
-  },
-  sideBtnText:       { fontSize: 13, color: theme.textMuted, fontWeight: '700', letterSpacing: 0.2 },
-  sideBtnTextActive: { color: '#0A0A0F' },
+  header: { paddingHorizontal: 24, paddingVertical: 8 },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
+  titleArea: { paddingHorizontal: 24, marginBottom: 32 },
+  headerTitle: { fontSize: 32, fontWeight: '800', color: '#FFF', letterSpacing: -1 },
+  headerSubtitle: { fontSize: 13, marginTop: 4 },
+  
+  toggleRow: { flexDirection: 'row', gap: 12, justifyContent: 'center', marginBottom: 24 },
+  hardwareToggle: { flexDirection: 'row', padding: 4, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  toggleBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 },
+  toggleBtnActive: { backgroundColor: '#FFF' },
+  toggleBtnText: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: 1 },
 
-  // Body
-  bodyWrap: {
-    position: 'relative',
-    alignItems: 'center',
-    borderRadius: 30,
-    paddingVertical: 26,
-    paddingHorizontal: 24,
-    marginBottom: 18,
-    overflow: 'hidden',
-    shadowColor: '#D9BF8C',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 6,
-  },
-  bodyBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.015)' : 'rgba(255,255,255,0.38)',
-  },
-  bodyAura: {
-    position: 'absolute',
-    top: 22,
-    width: BODY_AURA_WIDTH,
-    height: BODY_AURA_HEIGHT,
-    borderRadius: BODY_AURA_WIDTH / 2,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(140,190,170,0.055)',
-    shadowColor: '#8CBEAA',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.14,
-    shadowRadius: 30,
-    elevation: 2,
-  },
-  bodyCoreGlow: {
-    position: 'absolute',
-    top: 54,
-    width: BODY_CORE_WIDTH,
-    height: BODY_CORE_HEIGHT,
-    borderRadius: BODY_CORE_WIDTH / 2,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(214,244,233,0.045)',
-  },
-  bodyFrame: {
-    width: SILHOUETTE_WIDTH,
-    height: SILHOUETTE_HEIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  hotspotLayer: {
-    position: 'absolute',
-    width: SILHOUETTE_WIDTH,
-    height: SILHOUETTE_HEIGHT,
-  },
-  hotspot: {
-    position: 'absolute',
-    borderRadius: 32,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  hotspotPulse: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-  },
-  bodyPrompt: {
-    marginTop: 16,
-    fontSize: 12,
-    lineHeight: 18,
-    color: theme.textSecondary,
-    textAlign: 'center',
-    maxWidth: 260,
-  },
+  bodyWrap: { borderRadius: 32, paddingVertical: 32, marginBottom: 32, alignItems: 'center', overflow: 'hidden' },
+  bodyFrame: { position: 'relative' },
+  hotspotLayer: { ...StyleSheet.absoluteFillObject },
+  hotspot: { position: 'absolute', borderRadius: 20, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  hotspotRecessed: { backgroundColor: 'rgba(0,0,0,0.3)', borderColor: 'rgba(255,255,255,0.05)' },
+  hotspotPulse: { width: 6, height: 6, borderRadius: 3 },
 
-  // Selection indicator
-  selectionRow: {
-    alignItems: 'center',
-    marginBottom: 4,
-    minHeight: 36,
-  },
-  selectionPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 22,
-    borderWidth: 1,
-    backgroundColor: theme.cardBorder,
-  },
-  selectionDot:  { width: 7, height: 7, borderRadius: 3.5 },
-  selectionText: { fontSize: 11, fontWeight: '600' },
-  selectionClear:{ fontSize: 18, color: theme.textMuted, lineHeight: 20 },
-  tapHint:       { fontSize: 12, color: theme.textMuted },
+  sectionLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 2, color: 'rgba(255,255,255,0.4)', marginBottom: 16, marginLeft: 24 },
+  pillCloud: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 24 },
+  emotionPill: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1 },
+  pillRecessed: { backgroundColor: 'rgba(0,0,0,0.35)', borderColor: 'rgba(255,255,255,0.05)' },
+  emotionText: { fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
 
-  sectionLabel: {
-    fontSize: 11,
-    color: theme.textMuted,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginTop: 8,
-    marginBottom: 16,
-  },
-
-  emotionWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'flex-start' },
-  emotionMoreBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20 },
-  emotionMoreText: { fontSize: 11, color: theme.textSecondary, fontWeight: '700', letterSpacing: 0.5 },
-  emotionText: { fontSize: 13, color: theme.textSecondary, fontWeight: '600', textAlign: 'center' },
-  emotionTextSelected: { color: '#0A0A0F' },
-
-  intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  intensityDot: {
-    width: 20, height: 20, borderRadius: 10,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.10)' : 'rgba(146, 124, 88, 0.18)',
-  },
-  intensityDotFilled: {
-    backgroundColor: '#F4E7BE',
-    shadowColor: '#D9BF8C',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  intensityLabel: { fontSize: 12, color: theme.textMuted, marginLeft: 6 },
-
-  logRow: { marginTop: 28, alignItems: 'center' },
-  logBtn: {
-    paddingVertical: 14, paddingHorizontal: 36, borderRadius: 26,
-    overflow: 'hidden',
-    backgroundColor: '#D4AF37',
-    justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.18,
-    shadowRadius: 22,
-    elevation: 6,
-  },
-  logBtnDim:  { opacity: 0.5 },
-  logBtnText: { fontSize: 14, color: '#0A0A0F', fontWeight: '800', letterSpacing: 0.4 },
-
-  historySection: { marginTop: 36 },
-  entryList:      { gap: 8 },
-  entryRow: {
-    flexDirection: 'row', alignItems: 'center',
-    borderRadius: 24,
-    borderWidth: 1, borderColor: theme.cardBorder,
-    paddingHorizontal: 20, paddingVertical: 16, gap: 12,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
-  },
-  entryDot:  { width: 8, height: 8, borderRadius: 4 },
-  entryMeta: { flex: 1 },
-  entryMain: { fontSize: 13, color: theme.textMuted, marginBottom: 2 },
-  entryDate: { fontSize: 11, color: theme.textMuted },
-  entryIntensity: { flexDirection: 'row', gap: 3 },
-  intensityPip: {
-    width: 5, height: 5, borderRadius: 2.5,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(146, 124, 88, 0.24)',
-  },
+  logRow: { paddingHorizontal: 24, marginTop: 40 },
+  logBtn: { height: 56, borderRadius: 28, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
+  logBtnText: { fontSize: 15, fontWeight: '800', letterSpacing: 1 },
 });

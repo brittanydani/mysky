@@ -17,15 +17,15 @@ interface PremiumRequiredScreenProps {
 
 // ── Cinematic Palette ──
 const PALETTE_DARK = {
-  gold: '#C9AE78',
-  silverBlue: '#C9AE78',
+  gold: '#D4AF37',
+  silverBlue: '#A2C2E1',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
 const PALETTE_LIGHT = {
-  gold: '#B8935A',
-  silverBlue: '#B8935A',
+  gold: '#D4AF37',
+  silverBlue: '#D4AF37',
   textMain: '#1A1815',
   glassBorder: 'rgba(0,0,0,0.04)',
   glassHighlight: 'rgba(255,255,255,0.6)',
@@ -185,11 +185,11 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: 'rgba(201, 174, 120, 0.1)',
+    backgroundColor: 'rgba(212, 175, 55, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(201, 174, 120, 0.15)',
+    borderColor: 'rgba(212, 175, 55, 0.15)',
   },
   perkText: {
     color: theme.textPrimary,

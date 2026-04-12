@@ -45,15 +45,15 @@ export { CHAKRA_COLORS };
 // Elegant Champagne Gold Base
 export const GOLD = {
   main: 'rgba(232, 214, 174, 0.4)',
-  highlight: '#C9AE78',
+  highlight: '#D4AF37',
   glow: 'rgba(232, 214, 174, 0.8)',
   dark: '#6B532E',
   aura: 'rgba(240, 234, 214, 0.15)',
 };
 
 const STATE_COLORS: Record<ChakraState, string> = {
-  Flowing: '#C9AE78',             // Gold
-  Sensitive: '#C9AE78',           // Silver/Blue
+  Flowing: '#D4AF37',             // Gold
+  Sensitive: '#D4AF37',           // Silver/Blue
   'Grounding Needed': '#CD7F5D',  // Copper
   Quiet: 'rgba(255,255,255,0.3)', // Frosted Glass
 };
@@ -261,8 +261,8 @@ export function ChakraLegend() {
   const styles = useThemedStyles(createStyles);
   const states: ChakraState[] = ['Flowing', 'Sensitive', 'Grounding Needed', 'Quiet'];
   const dotColors: Record<ChakraState, string> = {
-    Flowing: '#C9AE78',             // Gold
-    Sensitive: '#C9AE78',           // Silver/Blue
+    Flowing: '#D4AF37',             // Gold
+    Sensitive: '#D4AF37',           // Silver/Blue
     'Grounding Needed': '#CD7F5D',  // Copper
     Quiet: 'rgba(255,255,255,0.3)', // Frosted
   };

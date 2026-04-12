@@ -7,7 +7,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -15,6 +14,8 @@ import * as Haptics from 'expo-haptics';
 import DailyReflectionSection from '../components/DailyReflectionSection';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
@@ -26,30 +27,39 @@ export default function DailyReflectionScreen() {
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
+      <LinearGradient colors={['rgba(162, 194, 225, 0.12)', 'transparent']} style={styles.topGlow} />
 
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
-            <View style={styles.headerRow}>
-              <View style={styles.headerText}>
-                <Text style={styles.title}>Today&apos;s Questions</Text>
-                <GoldSubtitle style={styles.subtitle}>A daily reflection checkpoint across your inner world</GoldSubtitle>
-              </View>
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  router.back();
-                }}
-                style={styles.closeButton}
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-              >
-                <Ionicons name="close-outline" size={22} color={theme.textMuted} />
-              </Pressable>
-            </View>
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
+        
+        {/* Hardware Header */}
+        <View style={styles.header}>
+          <Pressable
+            onPress={() => {
+              Haptics.selectionAsync().catch(() => {});
+              router.back();
+            }}
+            style={styles.closeButton}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          >
+            <MetallicIcon name="close-outline" size={24} color="#FFF" />
+          </Pressable>
+        </View>
+
+        {/* Cinematic Title Area */}
+        <View style={styles.titleArea}>
+          <Text style={styles.title}>Today's Questions</Text>
+          <GoldSubtitle style={styles.subtitle}>A daily reflection checkpoint across your inner world</GoldSubtitle>
+        </View>
+
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <Animated.View entering={FadeInDown.delay(100).duration(500)}>
+            {/* Note: The actual cards and inputs are rendered inside DailyReflectionSection. 
+              Ensure that component is also updated to use the Velvet Glass and Midnight Slate styles. 
+            */}
+            <DailyReflectionSection subtitle="Record each category when you are ready" />
           </Animated.View>
-
-          <DailyReflectionSection subtitle="Record each category when you are ready" />
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -57,37 +67,48 @@ export default function DailyReflectionScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  header: { marginBottom: 20 },
-  headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  headerText: { flex: 1, paddingRight: 16 },
-  closeButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
+  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+  
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingTop: 8, 
+    paddingHorizontal: 24, 
+    paddingBottom: 8 
+  },
+  closeButton: { 
+    width: 44, 
+    height: 44, 
+    borderRadius: 22, 
+    backgroundColor: 'rgba(255,255,255,0.05)', 
+    borderWidth: 1, 
+    borderColor: 'rgba(255,255,255,0.1)', 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  
+  titleArea: { 
+    paddingHorizontal: 24, 
+    paddingBottom: 16 
   },
   title: {
-    fontSize: 31,
+    fontSize: 32,
     fontWeight: '800',
-    color: theme.textPrimary,
-    letterSpacing: -0.9,
+    color: '#FFF',
+    letterSpacing: -1,
     marginBottom: 4,
-    maxWidth: '88%',
   },
   subtitle: {
-    fontSize: 12,
-    fontStyle: 'normal',
-    fontWeight: '600',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: theme.textSecondary,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 4,
+  },
+
+  scrollContent: { 
+    paddingHorizontal: 24, 
+    paddingTop: 16, 
+    paddingBottom: 140 
   },
 });

@@ -180,7 +180,7 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
   const areaFillBottom = isDark ? 'rgba(16,22,35,0)' : 'rgba(255,255,255,0)';
   const areaSecondaryBottom = isDark ? 'rgba(10, 14, 22, 0.00)' : 'rgba(255, 255, 255, 0.00)';
   const orb1Color = isDark ? COLORS.moonlightBright : 'rgba(160, 148, 200, 0.08)';
-  const orb2Color = isDark ? COLORS.moonlightDim : 'rgba(201, 174, 120, 0.06)';
+  const orb2Color = isDark ? COLORS.moonlightDim : 'rgba(212, 175, 55, 0.06)';
 
   const gridValues = Array.from({ length: 4 }, (_, index) => {
     const ratio = index / 3;

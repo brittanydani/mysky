@@ -90,7 +90,7 @@ export const AURORA = {
   silverBlue: '#7A90A8',
   copper: '#B4765B',
   amethyst: '#8B77AA',
-  gold: '#B8935A',
+  gold: '#D4AF37',
 } as const;
 
 type ThemePalette = typeof MYSTIC | typeof AURORA;
@@ -114,6 +114,7 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
     textSecondary: palette.body,
     textMuted: palette.muted,
     textInk: isDark ? '#FFFFFF' : '#1A1815', // Pure white data in Dark mode
+    textGold: isDark ? METALLIC_GOLD.mid : (palette as typeof AURORA).gold,
 
     // Semantic Colors
     success: palette.success,
@@ -146,6 +147,7 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
     // Generic Smoked Glass
     cardSurface: isDark ? palette.cardBg : 'rgba(255, 255, 255, 0.75)',
     cardBorder: palette.cardBorder,
+    cardHighlight: isDark ? 'rgba(255, 255, 255, 0.20)' : 'rgba(255, 255, 255, 0.90)',
     pillSurface: isDark ? 'rgba(255, 255, 255, 0.08)' : '#FFFFFF',
 
     // ── Velvet Glass Directional Light Catch ──────────────────────────────────

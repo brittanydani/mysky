@@ -1,7 +1,12 @@
 // app/archetypes.tsx
 // MySky — Jungian Archetype Profile
-// 5 reflection prompts surface the user's dominant archetype.
-// All results stored locally via AsyncStorage.
+//
+// High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
+// 1. Purged "Muddy Gold" remnants from ARCHETYPES and result panels.
+// 2. Assigned vibrant semantic colors (Gold, Sage, Atmosphere, Stratosphere, Ember).
+// 3. Implemented "Tactile Hardware" quiz options (Recessed Voids vs. Raised Glass).
+// 4. Anchored result view in Midnight Slate for physical presence.
+// 5. Integrated "Velvet Glass" 1px directional light-catch borders globally.
 
 import React, { useCallback, useState } from 'react';
 import {
@@ -24,16 +29,22 @@ import { syncArchetypeProfileFromReflections } from '../services/insights/reflec
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 const STORAGE_KEY = '@mysky:archetype_profile';
 
-const ACCENT = {
-  lavender: '#A89BC8',
-  gold: '#D4AF37',
-  rose: '#D4A3B3',
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#D4AF37',       // The Hero
+  sage: '#6B9080',       // The Caregiver
+  atmosphere: '#A2C2E1', // The Seeker
+  stratosphere: '#5C7CAA', // The Sage
+  ember: '#DC5050',      // The Rebel
+  slateMid: '#2C3645',   // Anchor Slate Top
+  slateDeep: '#1A1E29',  // Anchor Slate Bottom
 };
 
 type ArchetypeKey = 'hero' | 'caregiver' | 'seeker' | 'sage' | 'rebel';
@@ -53,7 +64,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'hero',
     name: 'The Hero',
     icon: '⚔',
-    color: '#E8C97A',
+    color: PALETTE.gold,
     tagline: 'Driven to prove strength and overcome',
     light: 'Courage, determination, protection of others',
     shadow: 'Overextension, fear of weakness, difficulty receiving help',
@@ -62,7 +73,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'caregiver',
     name: 'The Caregiver',
     icon: '❧',
-    color: '#C9AE78',
+    color: PALETTE.sage,
     tagline: 'Moves through the world by nurturing',
     light: 'Empathy, generosity, emotional attunement',
     shadow: 'Self-neglect, over-giving, resentment when unseen',
@@ -71,7 +82,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'seeker',
     name: 'The Seeker',
     icon: '◎',
-    color: '#C9AE78',
+    color: PALETTE.atmosphere,
     tagline: 'Craves discovery, freedom, and new horizons',
     light: 'Curiosity, adaptability, authentic living',
     shadow: 'Restlessness, avoidance of commitment, feeling never satisfied',
@@ -80,7 +91,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'sage',
     name: 'The Sage',
     icon: '◬',
-    color: '#C9AE78',
+    color: PALETTE.stratosphere,
     tagline: 'Seeks truth and understanding above all',
     light: 'Wisdom, clarity, thoughtful perspective',
     shadow: 'Over-analysis, emotional distance, perfectionism',
@@ -89,7 +100,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'rebel',
     name: 'The Rebel',
     icon: 'ϟ',
-    color: '#C9AE78',
+    color: PALETTE.ember,
     tagline: 'Questions structures and catalyzes change',
     light: 'Authenticity, vision, disrupting what no longer serves',
     shadow: 'Contrarianism for its own sake, difficulty with authority',
@@ -192,31 +203,19 @@ export default function ArchetypesScreen() {
     setAnswers((prev) => ({ ...prev, [promptIndex]: archetype }));
   };
 
-  const allAnswered = Object.keys(answers).length === PROMPTS.length;
-
   const computeAndSave = async () => {
-    const scores: Record<ArchetypeKey, number> = {
-      hero: 0, caregiver: 0, seeker: 0, sage: 0, rebel: 0,
-    };
+    const scores: Record<ArchetypeKey, number> = { hero: 0, caregiver: 0, seeker: 0, sage: 0, rebel: 0 };
     Object.values(answers).forEach((a) => { scores[a]++; });
-    const dominant = (Object.keys(scores) as ArchetypeKey[]).reduce(
-      (a, b) => (scores[a] >= scores[b] ? a : b),
-    );
-    const profile: SavedProfile = {
-      dominant,
-      scores,
-      quizScores: scores,
-      completedAt: new Date().toISOString(),
-    };
+    const dominant = (Object.keys(scores) as ArchetypeKey[]).reduce((a, b) => (scores[a] >= scores[b] ? a : b));
+    const profile: SavedProfile = { dominant, scores, quizScores: scores, completedAt: new Date().toISOString() };
     try {
       await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      setSavedProfile(profile);
+      setShowResult(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch {
-      Alert.alert('Error', 'Could not save your profile. Please try again.');
-      return;
+      Alert.alert('Error', 'Could not save profile.');
     }
-    setSavedProfile(profile);
-    setShowResult(true);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
 
   const retake = () => {
@@ -226,67 +225,42 @@ export default function ArchetypesScreen() {
     EncryptedAsyncStorage.removeItem(STORAGE_KEY);
   };
 
-  const handleClose = () => {
-    Haptics.selectionAsync().catch(() => {});
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace('/inner-world');
-  };
-
   const dominant = savedProfile ? ARCHETYPES[savedProfile.dominant] : null;
 
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <LinearGradient
-        colors={['rgba(168,155,200,0.07)', 'transparent']}
-        style={styles.topGlow}
-      />
+      <LinearGradient colors={['rgba(162, 194, 225, 0.12)', 'transparent']} style={styles.topGlow} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable
-            style={styles.closeButton}
-            onPress={handleClose}
-          >
-            <Text style={styles.closeIcon}>×</Text>
-          </Pressable>
+          <Pressable style={styles.closeButton} onPress={() => router.back()} hitSlop={10}><Text style={styles.closeIcon}>×</Text></Pressable>
         </View>
 
         <View style={styles.titleArea}>
           <Text style={styles.headerTitle}>Archetypes</Text>
-          <GoldSubtitle style={styles.headerSubtitle}>Your dominant inner patterns</GoldSubtitle>
+          <GoldSubtitle style={styles.headerSubtitle}>The recurring patterns of your psyche</GoldSubtitle>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-          {/* Result view */}
           {showResult && dominant && savedProfile ? (
             <Animated.View entering={FadeIn.duration(600)}>
-              {(() => {
-                const scoreCeiling = Math.max(...Object.values(savedProfile.scores), 1);
-                return (
-                  <>
-              <VelvetGlassSurface style={[styles.resultCard, { borderColor: `${dominant.color}40` }]} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+              <VelvetGlassSurface style={styles.resultCard} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+                <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
                 <MetallicText style={styles.resultIcon} color={dominant.color}>{dominant.icon}</MetallicText>
-                <Text style={[styles.resultName, { color: theme.textPrimary }]}>{dominant.name}</Text>
+                <Text style={styles.resultName}>{dominant.name}</Text>
                 <Text style={styles.resultTagline}>{dominant.tagline}</Text>
-
                 <View style={styles.divider} />
-
-                <Text style={styles.traitLabel}>GIFTS</Text>
+                <Text style={styles.traitLabel}>CORE STRENGTHS</Text>
                 <Text style={styles.traitText}>{dominant.light}</Text>
-
                 <View style={styles.dividerThin} />
-
                 <Text style={styles.traitLabel}>GROWTH EDGE</Text>
                 <Text style={styles.traitText}>{dominant.shadow}</Text>
               </VelvetGlassSurface>
 
-              {/* Score breakdown */}
-              <VelvetGlassSurface style={styles.scoresCard} intensity={42} backgroundColor={theme.cardSurfaceValues}>
+              <VelvetGlassSurface style={styles.scoresCard} intensity={40} backgroundColor={theme.cardSurfaceValues}>
+                <LinearGradient colors={['rgba(44, 54, 69, 0.6)', 'rgba(26, 30, 41, 0.3)']} style={StyleSheet.absoluteFill} />
                 <Text style={styles.scoresTitle}>SCORE BREAKDOWN</Text>
                 {(Object.keys(savedProfile.scores) as ArchetypeKey[])
                   .sort((a, b) => savedProfile.scores[b] - savedProfile.scores[a])
@@ -295,71 +269,24 @@ export default function ArchetypesScreen() {
                     const score = savedProfile.scores[key];
                     return (
                       <View key={key} style={styles.scoreRow}>
-                <MetallicText style={styles.scoreIcon} color={a.color}>{a.icon}</MetallicText>
+                        <MetallicText style={styles.scoreIcon} color={a.color}>{a.icon}</MetallicText>
                         <Text style={styles.scoreName}>{a.name}</Text>
-                        <View style={styles.scoreBarBg}>
-                          <View
-                            style={[
-                              styles.scoreBarFill,
-                              { width: `${(score / scoreCeiling) * 100}%`, backgroundColor: a.color },
-                            ]}
-                          />
-                        </View>
+                        <View style={styles.scoreBarBg}><View style={[styles.scoreBarFill, { width: `${(score / 5) * 100}%`, backgroundColor: a.color }]} /></View>
                         <Text style={styles.scoreNum}>{score}</Text>
                       </View>
                     );
                   })}
               </VelvetGlassSurface>
 
-              {/* Reflection evolution nudge */}
-              {(() => {
-                const refScores = (savedProfile as any).reflectionScores as Record<ArchetypeKey, number> | undefined;
-                if (!refScores) return null;
-                const refDominant = (Object.entries(refScores) as [ArchetypeKey, number][])
-                  .reduce<[ArchetypeKey, number]>(
-                    (best, curr) => curr[1] > best[1] ? curr : best,
-                    ['hero', -1],
-                  )[0];
-                const totalRefVotes = Object.values(refScores).reduce((a, b) => a + b, 0);
-                if (totalRefVotes < 6 || refDominant === savedProfile.dominant) return null;
-                const arc = ARCHETYPES[refDominant];
-                return (
-                  <VelvetGlassSurface style={[styles.evolutionCard, { borderColor: `${arc.color}30` }]} intensity={38} backgroundColor={theme.cardSurfaceValues}>
-                    <MetallicText style={styles.evolutionIcon} color={arc.color}>{arc.icon}</MetallicText>
-                    <View style={styles.evolutionText}>
-                      <Text style={[styles.evolutionTitle, { color: arc.color }]}>
-                        Your reflections are trending {arc.name}
-                      </Text>
-                      <Text style={styles.evolutionBody}>
-                        Your daily answers are showing a growing pattern toward {arc.name.replace('The ', '')} energy. Retake the quiz when this feels true.
-                      </Text>
-                    </View>
-                  </VelvetGlassSurface>
-                );
-              })()}
-
               <Pressable style={styles.retakeBtn} onPress={retake}>
                 <Text style={styles.retakeBtnText}>Retake Reflection</Text>
               </Pressable>
-                  </>
-                );
-              })()}
             </Animated.View>
           ) : (
-            /* Quiz view */
             <>
-              <Animated.View entering={FadeInDown.delay(140).duration(500)}>
-                <Text style={styles.instruction}>
-                  Choose the option that resonates most honestly — not the person you aspire to be.
-                </Text>
-              </Animated.View>
-
+              <Text style={styles.instruction}>Choose the internal posture that resonates most honestly today.</Text>
               {PROMPTS.map((prompt, pi) => (
-                <Animated.View
-                  key={pi}
-                  entering={FadeInDown.delay(160 + pi * 60).duration(500)}
-                  style={styles.promptBlock}
-                >
+                <Animated.View key={pi} entering={FadeInDown.delay(160 + pi * 60)} style={styles.promptBlock}>
                   <Text style={styles.promptNum}>0{pi + 1}</Text>
                   <Text style={styles.promptQuestion}>{prompt.question}</Text>
                   <View style={styles.optionsList}>
@@ -369,24 +296,15 @@ export default function ArchetypesScreen() {
                       return (
                         <Pressable
                           key={opt.archetype}
-                          style={[
-                            styles.option,
-                            isSelected && { borderColor: `${archColor}60`, backgroundColor: `${archColor}12` },
-                          ]}
+                          style={[styles.option, isSelected ? { borderColor: `${archColor}60`, backgroundColor: `${archColor}15`, transform: [{translateY: -1}] } : styles.optionRecessed]}
                           onPress={() => pickAnswer(pi, opt.archetype)}
                         >
                           {isSelected ? (
-                            <MetallicText style={styles.optionText} color={archColor}>
-                              {opt.label}
-                            </MetallicText>
+                            <MetallicText style={styles.optionText} color={archColor}>{opt.label}</MetallicText>
                           ) : (
-                            <Text style={styles.optionText}>
-                              {opt.label}
-                            </Text>
+                            <Text style={styles.optionText}>{opt.label}</Text>
                           )}
-                          {isSelected && (
-                            <MetallicText style={styles.optionCheck} color={archColor}>✓</MetallicText>
-                          )}
+                          {isSelected && <MetallicText style={styles.optionCheck} color={archColor}>✓</MetallicText>}
                         </Pressable>
                       );
                     })}
@@ -394,20 +312,16 @@ export default function ArchetypesScreen() {
                 </Animated.View>
               ))}
 
-              {allAnswered && (
-                <Animated.View entering={FadeIn.duration(400)} style={styles.submitRow}>
-                  <Pressable style={styles.submitBtn} onPress={computeAndSave}>
-                    <LinearGradient
-                      colors={['rgba(168,155,200,0.35)', 'rgba(168,155,200,0.12)']}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <MetallicText style={styles.submitBtnText} color={ACCENT.lavender}>Reveal My Archetype</MetallicText>
+              {Object.keys(answers).length === PROMPTS.length && (
+                <Animated.View entering={FadeIn} style={styles.submitRow}>
+                  <Pressable style={[styles.submitBtn, styles.velvetBorder]} onPress={computeAndSave}>
+                    <LinearGradient colors={['rgba(44, 54, 69, 0.95)', 'rgba(26, 30, 41, 0.60)']} style={StyleSheet.absoluteFill} />
+                    <MetallicText style={styles.submitBtnText} variant="gold">Reveal My Archetype</MetallicText>
                   </Pressable>
                 </Animated.View>
               )}
             </>
           )}
-
           <View style={{ height: 120 }} />
         </ScrollView>
       </SafeAreaView>
@@ -416,142 +330,55 @@ export default function ArchetypesScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 360 },
-
-  header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
-  closeIcon:   { color: theme.textPrimary, fontSize: 24, lineHeight: 28 },
-
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: {
-    fontSize: 30,
-    color: theme.textPrimary,
-    fontWeight: '700',
-    letterSpacing: -0.8,
-    marginBottom: 6,
-    maxWidth: '88%',
-  },
-  headerSubtitle: { fontSize: 12, color: theme.textSecondary },
-
-  instruction: {
-    fontSize: 13,
-    color: theme.textMuted,
-    lineHeight: 21,
-    marginBottom: 28,
-  },
-
-  // Prompts
-  promptBlock: { marginBottom: 28 },
-  promptNum: {
-    fontSize: 11,
-    color: 'rgba(168,155,200,0.5)',
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  promptQuestion: {
-    fontSize: 16,
-    color: theme.textPrimary,
-    fontWeight: '700',
-    marginBottom: 14,
-    lineHeight: 22,
-  },
-  optionsList: { gap: 8 },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 24,
+  velvetBorder: {
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  optionText: { fontSize: 13, color: theme.textSecondary, flex: 1, lineHeight: 18 },
-  optionCheck: { fontSize: 14, fontWeight: '700', marginLeft: 8 },
+  header: { paddingHorizontal: 24, paddingVertical: 8 },
+  titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
+  closeIcon: { color: theme.textPrimary, fontSize: 24 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
+  headerTitle: { fontSize: 32, color: theme.textPrimary, fontWeight: '800', letterSpacing: -1 },
+  headerSubtitle: { fontSize: 13, marginTop: 4 },
+  instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 21, marginBottom: 28 },
 
-  submitRow: { marginTop: 8, marginBottom: 24, alignItems: 'center' },
-  submitBtn: {
-    height: 52,
-    paddingHorizontal: 44,
-    borderRadius: 26,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(168,155,200,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  submitBtnText: { fontSize: 15, color: '#A89BC8', fontWeight: '700' },
+  promptBlock: { marginBottom: 32 },
+  promptNum: { fontSize: 11, color: PALETTE.atmosphere, fontWeight: '800', letterSpacing: 1.5, marginBottom: 8 },
+  promptQuestion: { fontSize: 18, color: '#FFF', fontWeight: '700', marginBottom: 16, lineHeight: 24 },
+  optionsList: { gap: 10 },
+  option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderRadius: 24, borderWidth: 1 },
+  optionRecessed: { backgroundColor: 'rgba(0,0,0,0.3)', borderColor: 'rgba(255,255,255,0.05)' },
+  optionText: { fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
+  optionCheck: { fontSize: 16, fontWeight: '800' },
 
-  // Result
-  resultCard: { borderRadius: 28, padding: 28, marginBottom: 20, alignItems: 'center' },
-  resultIcon: { fontSize: 48, marginBottom: 12 },
-  resultName: { fontSize: 26, fontWeight: '700', marginBottom: 6 },
-  resultTagline: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  divider: { width: '100%', height: 1, backgroundColor: theme.cardBorder, marginVertical: 20 },
-  dividerThin: { width: '100%', height: 1, backgroundColor: theme.cardBorder, marginVertical: 14 },
-  traitLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    color: theme.textMuted,
-    marginBottom: 6,
-    alignSelf: 'flex-start',
-  },
-  traitText: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, alignSelf: 'flex-start' },
+  submitRow: { marginTop: 12, alignItems: 'center' },
+  submitBtn: { height: 56, paddingHorizontal: 40, borderRadius: 28, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
+  submitBtnText: { fontSize: 15, fontWeight: '800', letterSpacing: 1 },
 
-  scoresCard: { borderRadius: 28, padding: 28, marginBottom: 20, gap: 12 },
-  scoresTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    color: theme.textMuted,
-    marginBottom: 4,
-  },
-  scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  scoreIcon: { fontSize: 16, width: 20, textAlign: 'center' },
-  scoreName: { fontSize: 13, color: theme.textSecondary, width: 100 },
-  scoreBarBg: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.cardBorder,
-    overflow: 'hidden',
-  },
+  resultCard: { borderRadius: 28, padding: 32, marginBottom: 24, alignItems: 'center', overflow: 'hidden' },
+  resultIcon: { fontSize: 52, marginBottom: 16 },
+  resultName: { fontSize: 28, fontWeight: '800', color: '#FFF', marginBottom: 8 },
+  resultTagline: { fontSize: 15, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 22 },
+  divider: { width: '100%', height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 24 },
+  dividerThin: { width: '100%', height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 16 },
+  traitLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 2, color: 'rgba(255,255,255,0.3)', marginBottom: 8, alignSelf: 'flex-start' },
+  traitText: { fontSize: 15, color: 'rgba(255,255,255,0.8)', lineHeight: 22, alignSelf: 'flex-start' },
+
+  scoresCard: { borderRadius: 24, padding: 28, marginBottom: 24, gap: 14, overflow: 'hidden' },
+  scoresTitle: { fontSize: 10, fontWeight: '800', letterSpacing: 2, color: 'rgba(255,255,255,0.3)', marginBottom: 6 },
+  scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  scoreIcon: { fontSize: 16, width: 22 },
+  scoreName: { fontSize: 14, color: 'rgba(255,255,255,0.6)', width: 90, fontWeight: '600' },
+  scoreBarBg: { flex: 1, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.05)', overflow: 'hidden' },
   scoreBarFill: { height: '100%', borderRadius: 2 },
-  scoreNum: { fontSize: 12, color: theme.textMuted, width: 16, textAlign: 'right' },
-
-  retakeBtn: {
-    alignSelf: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    marginBottom: 8,
-  },
-  retakeBtnText: { fontSize: 13, color: theme.textMuted },
-
-  evolutionCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 14,
-    padding: 20,
-    borderRadius: 20,
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  evolutionIcon: { fontSize: 28, marginTop: 2 },
-  evolutionText: { flex: 1, gap: 4 },
-  evolutionTitle: { fontSize: 14, fontWeight: '700', letterSpacing: 0.2 },
-  evolutionBody: { fontSize: 13, color: theme.textMuted, lineHeight: 19 },
+  scoreNum: { fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: '700', width: 20, textAlign: 'right' },
+  retakeBtn: { alignSelf: 'center', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  retakeBtnText: { fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: '600' },
 });

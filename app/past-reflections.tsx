@@ -42,10 +42,13 @@ import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 const PALETTE = {
   gold: '#D4AF37',
-  lavender: '#A89BC8',
-  silverBlue: '#C9AE78',
+  nebula: '#A88BEB',
+  atmosphere: '#A2C2E1',
+  sage: '#6B9080',
   emerald: '#6EBF8B',
-  rose: '#C88BA8',
+  slateMid: '#2C3645',
+  slateDeep: '#1A1E29',
+  ember: '#DC5050',
   textMain: '#FFFFFF',
   textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
@@ -54,9 +57,9 @@ const PALETTE = {
 
 const CATEGORY_COLORS: Record<ReflectionCategory, string> = {
   values: PALETTE.gold,
-  archetypes: PALETTE.lavender,
-  cognitive: PALETTE.silverBlue,
-  intelligence: PALETTE.rose,
+  archetypes: PALETTE.nebula,
+  cognitive: PALETTE.atmosphere,
+  intelligence: PALETTE.sage,
 };
 
 type FilterOption = 'all' | ReflectionCategory;
@@ -213,7 +216,7 @@ export default function PastReflectionsScreen() {
       <SkiaDynamicCosmos />
 
       <LinearGradient
-        colors={['rgba(217, 191, 140, 0.06)', 'transparent']}
+        colors={['rgba(162, 194, 225, 0.12)', 'transparent']}
         style={styles.topGlow}
       />
 
@@ -250,7 +253,7 @@ export default function PastReflectionsScreen() {
                   key: f.key,
                   label: f.label,
                   selected: filter === f.key,
-                  accentColor: f.key === 'all' ? theme.textPrimary : CATEGORY_COLORS[f.key as ReflectionCategory],
+                  accentColor: f.key === 'all' ? '#FFF' : CATEGORY_COLORS[f.key as ReflectionCategory],
                   onPress: () => applyFilter(f.key),
                   labelStyle: styles.filterLabel,
                   selectedLabelStyle: styles.filterLabelSelected,
@@ -260,7 +263,7 @@ export default function PastReflectionsScreen() {
                       key: 'trends',
                       label: 'Trends',
                       selected: showTrends,
-                      accentColor: PALETTE.lavender,
+                      accentColor: PALETTE.nebula,
                       onPress: () => {
                         Haptics.selectionAsync().catch(() => {});
                         setShowTrends((value) => !value);
@@ -276,8 +279,9 @@ export default function PastReflectionsScreen() {
           {/* Trends View */}
           {showTrends && trends.length > 0 && (
             <Animated.View entering={FadeInDown.delay(60).duration(400)}>
-              <VelvetGlassSurface style={styles.trendsSection} intensity={42} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
-              <Text style={styles.trendsSectionHeader}>HOW YOU'VE CHANGED</Text>
+              <VelvetGlassSurface style={[styles.trendsSection, styles.velvetBorder]} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+              <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
+              <Text style={styles.trendsSectionHeader}>GROWTH PATTERNS</Text>
               <Text style={styles.trendsSectionSub}>
                 Comparing your earliest vs. most recent values reflections
               </Text>
@@ -286,7 +290,7 @@ export default function PastReflectionsScreen() {
                 const arrowColor = t.direction === 'rising'
                   ? PALETTE.emerald
                   : t.direction === 'falling'
-                    ? PALETTE.rose
+                    ? PALETTE.ember
                     : theme.textMuted;
                 return (
                   <View key={t.theme} style={styles.trendRow}>
@@ -313,7 +317,8 @@ export default function PastReflectionsScreen() {
           {/* Empty State */}
           {groups.length === 0 && (
             <Animated.View entering={FadeIn.duration(500)}>
-              <VelvetGlassSurface style={styles.emptyCard} intensity={40} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.58)' : 'rgba(255, 255, 255, 0.80)'}>
+              <VelvetGlassSurface style={[styles.emptyCard, styles.velvetBorder]} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+              <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
               <MetallicIcon name="document-text-outline" size={36} color={theme.textMuted} />
               <Text style={styles.emptyText}>
                 No sealed reflections yet.{'\n'}Complete your first daily reflection to see them here.
@@ -335,7 +340,7 @@ export default function PastReflectionsScreen() {
                   <Text style={styles.dayLabel}>{group.label}</Text>
                   <Text style={styles.dayDate}>{group.date}</Text>
                 </View>
-                <View style={styles.dayBadge}>
+                <View style={[styles.dayBadge, styles.velvetBorder]}>
                   <Text style={styles.dayBadgeText}>{group.answers.length}</Text>
                 </View>
               </View>
@@ -354,12 +359,10 @@ export default function PastReflectionsScreen() {
                   return (
                     <VelvetGlassSurface
                       key={`${a.date}-${a.category}-${a.questionId}`}
-                      style={styles.answerCard}
-                      intensity={42}
-                      backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.60)' : 'rgba(255, 255, 255, 0.82)'}
+                      style={[styles.answerCard, styles.velvetBorder]} intensity={40} backgroundColor={theme.cardSurfaceValues}
                     >
                       <LinearGradient
-                        colors={[`${catColor}14`, 'rgba(10,10,12,0.10)']}
+                        colors={[`${catColor}15`, 'rgba(10,10,12,0.15)']}
                         style={StyleSheet.absoluteFill}
                       >
                         <View />
@@ -403,7 +406,14 @@ export default function PastReflectionsScreen() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  velvetBorder: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
@@ -427,7 +437,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   filterRow: { marginBottom: 32 },
   filterLabel: {
     fontSize: 13,
-    color: theme.textMuted,
+    color: 'rgba(255,255,255,0.4)',
     fontWeight: '700',
     letterSpacing: 0.5,
   },
@@ -464,16 +474,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   dayDate: {
     fontSize: 12,
-    color: theme.textMuted,
+    color: 'rgba(255,255,255,0.4)',
     fontWeight: '500',
   },
   dayBadge: {
-    backgroundColor: 'rgba(217, 191, 140, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(217, 191, 140, 0.15)',
+    
   },
   dayBadgeText: {
     fontSize: 11,
@@ -511,7 +521,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   answerNote: {
     marginTop: 12,
     fontSize: 13,
-    color: theme.textMuted,
+    color: 'rgba(255,255,255,0.4)',
     fontStyle: 'italic',
     lineHeight: 19,
   },
@@ -524,14 +534,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     gap: 14,
   },
   trendsSectionHeader: {
+    color: PALETTE.nebula,
     fontSize: 10,
-    color: PALETTE.lavender,
+    color: PALETTE.nebula,
     fontWeight: '800',
     letterSpacing: 1.5,
   },
   trendsSectionSub: {
     fontSize: 12,
-    color: theme.textMuted,
+    color: 'rgba(255,255,255,0.4)',
     lineHeight: 17,
     marginBottom: 4,
   },
@@ -552,7 +563,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     flex: 1,
     height: 6,
     borderRadius: 3,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(146, 124, 88, 0.16)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(212, 175, 55, 0.16)',
     overflow: 'hidden',
   },
   trendBarFill: {
@@ -568,7 +579,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   trendScore: {
     fontSize: 12,
-    color: theme.textMuted,
+    color: 'rgba(255,255,255,0.4)',
     fontWeight: '700',
     width: 28,
     textAlign: 'right',

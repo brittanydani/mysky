@@ -215,7 +215,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     height: 24,
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: theme.isDark ? 'rgba(255,255,255,0.3)' : 'rgba(146, 124, 88, 0.22)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.3)' : 'rgba(212, 175, 55, 0.22)',
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',

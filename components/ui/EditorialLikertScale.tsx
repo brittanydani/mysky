@@ -100,8 +100,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buttonSelected: {
-    backgroundColor: '#B8935A',
-    borderColor: '#B8935A',
+    backgroundColor: '#D4AF37',
+    borderColor: '#D4AF37',
     shadowColor: '#4A3F35',
     shadowOpacity: 0.18,
     shadowRadius: 8,

@@ -16,7 +16,7 @@ export interface AstrologyIconProps {
  */
 export function PholusIcon({
   size = 24,
-  color = '#C9AE78',
+  color = '#D4AF37',
   glow = true,
 }: AstrologyIconProps) {
   const elements = (
@@ -59,7 +59,7 @@ export function PholusIcon({
  */
 export function ChironIcon({
   size = 24,
-  color = '#C9AE78',
+  color = '#D4AF37',
   glow = true,
 }: AstrologyIconProps) {
   const elements = (
@@ -102,7 +102,7 @@ export function ChironIcon({
  */
 export function NorthNodeIcon({
   size = 24,
-  color = '#C9AE78',
+  color = '#D4AF37',
   glow = true,
 }: AstrologyIconProps) {
   const elements = (
@@ -146,7 +146,7 @@ export function NorthNodeIcon({
  */
 export function SouthNodeIcon({
   size = 24,
-  color = '#C9AE78',
+  color = '#D4AF37',
   glow = true,
 }: AstrologyIconProps) {
   const elements = (
@@ -190,7 +190,7 @@ export function SouthNodeIcon({
  */
 export function LilithIcon({
   size = 24,
-  color = '#C9AE78',
+  color = '#D4AF37',
   glow = true,
 }: AstrologyIconProps) {
   const elements = (
@@ -235,7 +235,7 @@ export function LilithIcon({
  */
 export function PartOfFortuneIcon({
   size = 24,
-  color = '#C9AE78',
+  color = '#D4AF37',
   glow = true,
 }: AstrologyIconProps) {
   const elements = (
@@ -277,7 +277,7 @@ export function PartOfFortuneIcon({
  */
 export function VertexIcon({
   size = 24,
-  color = '#C9AE78',
+  color = '#D4AF37',
   glow = true,
 }: AstrologyIconProps) {
   const elements = (

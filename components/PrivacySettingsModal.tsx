@@ -22,8 +22,8 @@ import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#C9AE78',
+  gold: '#D4AF37',
+  silverBlue: '#A2C2E1',
   copper: '#CD7F5D',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -229,7 +229,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                 {hasData ? (
                   <View style={styles.actionGrid}>
                     <Pressable style={styles.actionCard} onPress={handleExportData} disabled={isLoading}>
-                      <LinearGradient colors={['rgba(201, 174, 120, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
+                      <LinearGradient colors={['rgba(212, 175, 55, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                         <MetallicIcon name="download-outline" size={22} color={PALETTE.silverBlue} />
                         <Text style={styles.actionTitle}>Export Archive</Text>
                         <Text style={styles.actionSub}>Create a readable backup of all entries.</Text>

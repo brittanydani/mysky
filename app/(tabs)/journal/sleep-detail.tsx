@@ -205,7 +205,7 @@ export default function SleepDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator color="#C9AE78" />
+        <ActivityIndicator color="#D4AF37" />
       </View>
     );
   }
@@ -248,12 +248,12 @@ export default function SleepDetailScreen() {
                 {(!!entry.quality || !!entry.durationHours) && (
                   <View style={styles.dreamMeta}>
                     {!!entry.quality && (
-                      <MetallicText color="#C9AE78" style={styles.dreamMoons}>
+                      <MetallicText color="#D4AF37" style={styles.dreamMoons}>
                         {'☽'.repeat(entry.quality)}
                       </MetallicText>
                     )}
                     {!!entry.quality && (
-                      <MetallicText color="#C9AE78" style={styles.dreamQualityLabel}>
+                      <MetallicText color="#D4AF37" style={styles.dreamQualityLabel}>
                         {QUALITY_LABELS[(entry.quality ?? 1) - 1]}
                       </MetallicText>
                     )}
@@ -263,7 +263,7 @@ export default function SleepDetailScreen() {
                   </View>
                 )}
               </View>
-              <MetallicLucideIcon icon={Moon} color="#C9AE78" size={16} />
+              <MetallicLucideIcon icon={Moon} color="#D4AF37" size={16} />
             </View>
           )}
           {dreamText.trim() ? (
@@ -278,35 +278,35 @@ export default function SleepDetailScreen() {
           colors={theme.isDark ? ['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.03)'] : ['rgba(162, 194, 225, 0.18)', 'transparent']}
           style={[styles.premiumSection, theme.isDark && styles.premiumSectionDark]}
         >
-          <MetallicLucideIcon icon={Sparkles} color="#C9AE78" size={20} />
-          <MetallicText color="#C9AE78" style={styles.premiumTitle}>AI Dream Interpretation</MetallicText>
+          <MetallicLucideIcon icon={Sparkles} color="#D4AF37" size={20} />
+          <MetallicText color="#D4AF37" style={styles.premiumTitle}>AI Dream Interpretation</MetallicText>
           <Text style={styles.modelHint}>
             {isPremium
               ? 'Deeper Sky uses a richer Gemini model for dream readings.'
               : 'Free accounts use a faster Gemini model. Deeper Sky upgrades the depth and nuance.'}
           </Text>
           {interpreting ? (
-            <ActivityIndicator color="#C9AE78" style={{ marginTop: 8 }} />
+            <ActivityIndicator color="#D4AF37" style={{ marginTop: 8 }} />
           ) : interpretation ? (
             <View style={{ gap: 16, width: '100%' }}>
               {aiResult ? (
                 <>
                   <Text style={styles.interpretationParagraph}>{aiResult.paragraph}</Text>
-                  <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{aiResult.question}</MetallicText>
+                  <MetallicText color="#D4AF37" style={styles.reflectionQuestion}>{aiResult.question}</MetallicText>
                 </>
               ) : aiLoading ? (
                 <>
                   <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
-                  <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
+                  <MetallicText color="#D4AF37" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
                   <View style={styles.aiLoadingRow}>
-                    <ActivityIndicator color="#C9AE78" size="small" />
+                    <ActivityIndicator color="#D4AF37" size="small" />
                     <Text style={styles.aiLoadingText}>Consulting Gemini...</Text>
                   </View>
                 </>
               ) : (
                 <>
                   <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
-                  <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
+                  <MetallicText color="#D4AF37" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
                   {aiError && (
                     <Text style={styles.aiErrorText}>{aiError}</Text>
                   )}
@@ -326,7 +326,7 @@ export default function SleepDetailScreen() {
                   }
                 }}
               >
-                <MetallicText color="#C9AE78" style={styles.rerunBtnText}>
+                <MetallicText color="#D4AF37" style={styles.rerunBtnText}>
                   {hasReachedDreamReinterpretLimit ? 'RE-INTERPRET LIMIT REACHED' : 'RE-INTERPRET'}
                 </MetallicText>
               </Pressable>
@@ -411,9 +411,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 0.3, textTransform: 'uppercase', marginBottom: 4,
   },
   dreamMeta: { flexDirection: 'row', alignItems: 'center' },
-  dreamMoons: { fontSize: 14, color: '#C9AE78', letterSpacing: 1 },
+  dreamMoons: { fontSize: 14, color: '#D4AF37', letterSpacing: 1 },
   dreamQualityLabel: {
-    fontSize: 12, color: 'rgba(201,174,120,0.7)', textTransform: 'uppercase',
+    fontSize: 12, color: 'rgba(212, 175, 55,0.7)', textTransform: 'uppercase',
     letterSpacing: 0.8, fontWeight: '600', marginLeft: 6,
   },
   dreamDuration: { fontSize: 12, color: theme.textMuted },
@@ -462,19 +462,19 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     color: theme.textPrimary, fontSize: 14,
     lineHeight: 22,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(201,174,120,0.2)',
+    borderTopColor: 'rgba(212, 175, 55,0.2)',
     paddingTop: 16, marginTop: 4,
   },
   rerunBtn: {
     alignSelf: 'flex-end', paddingHorizontal: 16, paddingVertical: 8,
-    borderRadius: 16, borderWidth: 1, borderColor: 'rgba(217,191,140,0.3)',
+    borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212, 175, 55,0.3)',
   },
   rerunBtnText: { color: theme.textPrimary, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   reinterpretHint: { color: theme.textMuted, fontSize: 12, textAlign: 'right' },
 
   // AI Gemini interpretation
-  aiSection: { marginTop: 16, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(217,191,140,0.2)', width: '100%' },
-  aiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(217,191,140,0.08)', borderWidth: 1, borderColor: 'rgba(217,191,140,0.25)' },
+  aiSection: { marginTop: 16, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(212, 175, 55,0.2)', width: '100%' },
+  aiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(212, 175, 55,0.08)', borderWidth: 1, borderColor: 'rgba(212, 175, 55,0.25)' },
   aiBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
   aiLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
   aiLoadingText: { fontSize: 13, color: theme.textMuted,  },

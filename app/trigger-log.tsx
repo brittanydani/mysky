@@ -899,7 +899,7 @@ export default function TriggerLogScreen() {
             <Pressable
               style={[
                 styles.sealBtn,
-                { backgroundColor: (!eventText.trim() || !selectedState || saving || saved) ? (theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(146, 124, 88, 0.18)') : activeColor },
+                { backgroundColor: (!eventText.trim() || !selectedState || saving || saved) ? (theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(212, 175, 55, 0.18)') : activeColor },
               ]}
               onPress={handleSeal}
               disabled={!eventText.trim() || !selectedState || saving || saved}
@@ -932,8 +932,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
 
   viewToggle: { flexDirection: 'row', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.035)' : theme.pillSurface, borderRadius: 14, padding: 4, borderWidth: 1, borderColor: theme.cardBorder },
-  viewToggleBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 11, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : theme.pillSurfaceMuted, borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(146, 124, 88, 0.12)' },
-  viewToggleBtnActive: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.72)', borderColor: theme.isDark ? 'rgba(255,255,255,0.16)' : 'rgba(146, 124, 88, 0.2)' },
+  viewToggleBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 11, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : theme.pillSurfaceMuted, borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(212, 175, 55, 0.12)' },
+  viewToggleBtnActive: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.72)', borderColor: theme.isDark ? 'rgba(255,255,255,0.16)' : 'rgba(212, 175, 55, 0.2)' },
   viewToggleText: { fontSize: 13, color: theme.textMuted, fontWeight: '600' },
   viewToggleTextActive: { color: theme.textPrimary },
 

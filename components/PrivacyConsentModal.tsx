@@ -15,8 +15,8 @@ import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#C9AE78',
+  gold: '#D4AF37',
+  silverBlue: '#A2C2E1',
   emerald: '#6EBF8B',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -137,7 +137,7 @@ export default function PrivacyConsentModal({
                     onPress={handleAccept}
                   >
                     <LinearGradient
-                      colors={['#FFF4D6', '#C9AE78', '#6B532E']}
+                      colors={['#FFF4D6', '#D4AF37', '#6B532E']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.btnGradient}
@@ -171,8 +171,8 @@ export default function PrivacyConsentModal({
 
 const createStyles = (theme: AppTheme) => {
   const glassSurface = theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255, 252, 247, 0.92)';
-  const glassBorder = theme.isDark ? theme.cardBorder : 'rgba(146, 124, 88, 0.14)';
-  const mutedGold = theme.isDark ? 'rgba(201, 174, 120, 0.2)' : 'rgba(181, 138, 58, 0.24)';
+  const glassBorder = theme.isDark ? theme.cardBorder : 'rgba(255, 255, 255, 0.20)';
+  const mutedGold = theme.isDark ? 'rgba(212, 175, 55, 0.2)' : 'rgba(212, 175, 55, 0.24)';
   const mutedEmerald = theme.isDark ? 'rgba(110, 191, 139, 0.2)' : 'rgba(78, 138, 100, 0.24)';
 
   return StyleSheet.create({

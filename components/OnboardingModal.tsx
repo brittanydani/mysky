@@ -77,7 +77,7 @@ const LIQUID_GOLD: string[] = [
   '#FFFFFF',   // 0 — Specular white glint
   '#F7E7C2',   // 1 — Champagne gold
   '#EED9A7',   // 2 — Base gold
-  '#CFAE73',   // 3 — Amber mid-tone
+  '#D4AF37',   // 3 — Amber mid-tone
   '#9B7A46',   // 4 — Deep bronze shadow
 ];
 
@@ -974,7 +974,7 @@ export default function OnboardingModal({
                       style={({ pressed }) => [st.termsAcceptBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
                     >
                       <LinearGradient
-                        colors={['#FFF4D6', '#C9AE78', '#6B532E']}
+                        colors={['#FFF4D6', '#D4AF37', '#6B532E']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={st.termsBtnGradient}

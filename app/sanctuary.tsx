@@ -143,7 +143,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   wordCount: { color: theme.textMuted, fontSize: 12 },
   autoSaveText: { color: '#8CBEAA', fontSize: 10, fontWeight: 'bold', letterSpacing: 1, textTransform: 'uppercase' },
 
-  aiPromptButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(217, 191, 140, 0.1)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 },
+  aiPromptButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(212, 175, 55, 0.1)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 },
   aiPromptIcon: { color: theme.textGold, fontSize: 14, marginRight: 6 },
   aiPromptText: { color: theme.textGold, fontSize: 12, fontWeight: '600' }
 });

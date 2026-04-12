@@ -26,11 +26,11 @@ import * as Haptics from '../../utils/haptics';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const GOLD           = '#C9AE78';
-const GOLD_BG        = 'rgba(201,174,120,0.18)';
+const GOLD           = '#D4AF37';
+const GOLD_BG        = 'rgba(212, 175, 55,0.18)';
 const INACTIVE_BG    = 'rgba(255,255,255,0.05)';
 const INACTIVE_BORDER = 'rgba(255,255,255,0.10)';
-const ACTIVE_BORDER  = 'rgba(201,174,120,0.70)';
+const ACTIVE_BORDER  = 'rgba(212, 175, 55,0.70)';
 
 const SPRING = {
   mass:             0.5,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     borderRadius:    6,
   },
   descriptor: {
-    color:         'rgba(201,174,120,0.65)',
+    color:         'rgba(212, 175, 55,0.65)',
     fontSize:      10,
     fontWeight:    '600',
     letterSpacing: 0.8,

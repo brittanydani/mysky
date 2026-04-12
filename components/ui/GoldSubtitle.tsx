@@ -8,7 +8,7 @@ import { SkiaGradient } from './SkiaGradient';
  * Drop-in replacement for a <Text> subtitle element.
  */
 
-const CHAMPAGNE_GOLD = ['#FFF4D6', '#E9D9B8', '#C9AE78', '#E9D9B8', '#FFF4D6'];
+const CHAMPAGNE_GOLD = ['#FFF4D6', '#E9D9B8', '#D4AF37', '#E9D9B8', '#FFF4D6'];
 
 interface GoldSubtitleProps {
   children: React.ReactNode;

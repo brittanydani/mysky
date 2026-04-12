@@ -474,11 +474,11 @@ export default function RelationshipsScreen() {
               </Pressable>
 
               <Pressable
-                style={[styles.personPill, styles.personPillPartner, summaryPerson === 'them' && { borderColor: `${'#C9AE78'}60`, backgroundColor: `${'#C9AE78'}15` }]}
+                style={[styles.personPill, styles.personPillPartner, summaryPerson === 'them' && { borderColor: `${'#D4AF37'}60`, backgroundColor: `${'#D4AF37'}15` }]}
                 onPress={() => { setSummaryPerson('them'); Haptics.selectionAsync().catch(() => {}); }}
               >
-                {summaryPerson === 'them' ? <MetallicIcon name="layers-outline" size={13} color="#C9AE78" /> : <Ionicons name="layers-outline" size={13} color={theme.textMuted} />}
-                {summaryPerson === 'them' ? <MetallicText style={styles.personPillText} color="#C9AE78">{selectedRelationship.name}</MetallicText> : <Text style={styles.personPillText}>{selectedRelationship.name}</Text>}
+                {summaryPerson === 'them' ? <MetallicIcon name="layers-outline" size={13} color="#D4AF37" /> : <Ionicons name="layers-outline" size={13} color={theme.textMuted} />}
+                {summaryPerson === 'them' ? <MetallicText style={styles.personPillText} color="#D4AF37">{selectedRelationship.name}</MetallicText> : <Text style={styles.personPillText}>{selectedRelationship.name}</Text>}
                 <Text style={styles.personPillType}>{RELATIONSHIP_LABELS[selectedRelationship.relationship]}</Text>
               </Pressable>
 
@@ -491,7 +491,7 @@ export default function RelationshipsScreen() {
             {chartViewMode === 'synastry' && <View style={styles.filterRow}>
               {([
                 { key: 'person1' as const, label: 'Your planets', activeColor: theme.textGold },
-                { key: 'person2' as const, label: `${selectedRelationship.name}'s`, activeColor: '#C9AE78' },
+                { key: 'person2' as const, label: `${selectedRelationship.name}'s`, activeColor: '#D4AF37' },
                 { key: 'cross' as const, label: 'Cross-aspects', activeColor: '#E5E4E2' },
               ] as const).map(pill => {
                 const active = filterMode[pill.key];
@@ -583,7 +583,7 @@ export default function RelationshipsScreen() {
 
                 <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <MetallicIcon name="trending-up-outline" size={20} color="#C9AE78" />
+                    <MetallicIcon name="trending-up-outline" size={20} color="#D4AF37" />
                     <Text style={styles.insightCardTitle}>Your Growth Edge</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.primaryChallenge}</Text>
@@ -718,7 +718,7 @@ export default function RelationshipsScreen() {
       {/* Nebula depth — atmospheric glow orbs */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(212, 175, 55, 0.06)' }]} />
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -752,7 +752,7 @@ export default function RelationshipsScreen() {
                         <View style={styles.previewSection}>
                           <View style={styles.previewDivider} />
                           {preview.aspects.map((aspect, i) => {
-                            const catColors: Record<string, string> = { connection: '#7A90A8', chemistry: '#D4A3B3', growth: '#C9AE78', challenge: '#CD7F5D' };
+                            const catColors: Record<string, string> = { connection: '#7A90A8', chemistry: '#D4A3B3', growth: '#D4AF37', challenge: '#CD7F5D' };
                             const catColor = catColors[aspect.category] || theme.textMuted;
                             return (
                               <View key={i} style={styles.previewAspectRow}>
@@ -781,7 +781,7 @@ export default function RelationshipsScreen() {
               {(['partner', 'ex', 'parent', 'child', 'friend', 'sibling', 'other'] as RelationshipType[]).map(type => (
                 <Pressable key={type} style={styles.typeButton} onPress={() => handleAddRelationship(type)}>
                   <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']} style={styles.typeIconContainer}>
-                    <MetallicIcon name={RELATIONSHIP_ICONS[type]} size={24} color="#C9AE78" />
+                    <MetallicIcon name={RELATIONSHIP_ICONS[type]} size={24} color="#D4AF37" />
                   </LinearGradient>
                   <Text style={styles.typeLabel}>{RELATIONSHIP_LABELS[type]}</Text>
                 </Pressable>
@@ -805,7 +805,7 @@ export default function RelationshipsScreen() {
               <Text style={styles.discoverTitle}>What You'll Discover</Text>
               
               <View style={styles.discoverItem}>
-                <MetallicIcon name="chatbubbles-outline" size={20} color="#C9AE78" />
+                <MetallicIcon name="chatbubbles-outline" size={20} color="#D4AF37" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Communication Styles</Text>
                   <Text style={styles.discoverItemText}>How you each process and express</Text>
@@ -874,7 +874,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   listSectionTitle: { fontSize: 22, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 6 },
   listSectionSubtitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 20 },
   
-  relationshipCardGradient: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 12 },
+  relationshipCardGradient: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.cardHighlight, marginBottom: 12 },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'center' },
   relationshipIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' },
   relationshipInfo: { flex: 1, marginLeft: 16 },
@@ -943,7 +943,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   tabText: { fontSize: 15, color: theme.textMuted, fontWeight: '600' },
   tabTextActive: { color: theme.textGold },
   
-  insightCardGradient: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 16 },
+  insightCardGradient: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.cardHighlight, marginBottom: 16 },
   insightCardTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary },
   insightCardText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   sectionHeader: { fontSize: 19, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 16 },
@@ -955,7 +955,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   upsellTitle: { fontSize: 16, fontWeight: '600', color: theme.textGold },
   upsellText: { fontSize: 14, color: theme.textSecondary, textAlign: 'center', marginTop: 10, lineHeight: 20 },
 
-  dynamicCard: { borderRadius: 24, padding: 28, marginBottom: 12, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight },
+  dynamicCard: { borderRadius: 24, padding: 28, marginBottom: 12, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.cardHighlight },
   dynamicLabel: { fontSize: 12, fontWeight: '700', color: theme.textGold, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 },
   dynamicText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   bulletItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10 },

@@ -58,8 +58,8 @@ import { useAppTheme, useThemedStyles, useThemePreference } from '../context/The
 
 // ── Cinematic Palette ──
 const PALETTE_DARK = {
-  gold: '#C9AE78',
-  silverBlue: '#C9AE78',
+  gold: '#D4AF37',
+  silverBlue: '#D4AF37',
   amethyst: '#9D76C1',
   jade: '#6BBFA3',
   textMain: '#F0EAD6',
@@ -67,8 +67,8 @@ const PALETTE_DARK = {
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
 const PALETTE_LIGHT = {
-  gold: '#B8935A',
-  silverBlue: '#B8935A',
+  gold: '#D4AF37',
+  silverBlue: '#D4AF37',
   amethyst: '#8B77AA',
   jade: '#4A5D4E',
   textMain: '#1A1815',
@@ -89,8 +89,8 @@ type EnergyKey = 'low' | 'steady' | 'high';
 
 const MOOD_OPTIONS: { key: MoodKey; label: string; color: string }[] = [
   { key: 'calm',   label: 'Calm',   color: '#6EBF8B' },
-  { key: 'soft',   label: 'Soft',   color: '#C9AE78' },
-  { key: 'okay',   label: 'Okay',   color: '#C9AE78' },
+  { key: 'soft',   label: 'Soft',   color: '#D4AF37' },
+  { key: 'okay',   label: 'Okay',   color: '#D4AF37' },
   { key: 'heavy',  label: 'Heavy',  color: '#A89BC8' },
   { key: 'stormy', label: 'Stormy', color: '#E07A7A' },
 ];
@@ -734,9 +734,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       {(
                         [
                           { key: 'calm',   label: '☽ Calm',   color: '#6EBF8B' },
-                          { key: 'soft',   label: '◌ Soft',   color: '#C9AE78' },
-                          { key: 'okay',   label: '◈ Okay',   color: '#C9AE78' },
-                          { key: 'heavy',  label: '◎ Heavy',  color: 'rgba(201,174,120,0.55)' },
+                          { key: 'soft',   label: '◌ Soft',   color: '#D4AF37' },
+                          { key: 'okay',   label: '◈ Okay',   color: '#D4AF37' },
+                          { key: 'heavy',  label: '◎ Heavy',  color: 'rgba(212,175,55,0.55)' },
                           { key: 'stormy', label: '◉ Stormy', color: '#E07A7A' },
                         ] as { key: MoodKey; label: string; color: string }[]
                       ).map(({ key, label, color }) => (
@@ -776,7 +776,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
                   <SectionHeader title="Timeline" icon="calendar-outline" />
                   <Pressable onPress={() => setShowDatePicker(true)}>
-                    <LinearGradient colors={['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
+                    <LinearGradient colors={['rgba(212,175,55,0.08)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
                       <View style={styles.cardRow}>
                         <MetallicIcon name="calendar-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.cardRowText}>{formatDate(date)}</Text>
@@ -789,7 +789,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 {/* Title Input */}
                 <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
                   <SectionHeader title="Title (Optional)" icon="text-outline" />
-                  <LinearGradient colors={['rgba(201,174,120,0.06)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
+                  <LinearGradient colors={['rgba(212,175,55,0.06)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
                     <TextInput
                       style={styles.cardTextInput}
                       value={title}
@@ -804,7 +804,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 {/* Mood Selector */}
                 <Animated.View entering={FadeInDown.delay(350)} style={styles.section}>
                   <SectionHeader title="Mood" icon="heart-outline" />
-                  <LinearGradient colors={['rgba(201,174,120,0.06)', 'rgba(10,10,12,0.9)']} style={[styles.sectionCard, { paddingVertical: 16, paddingHorizontal: 14 }]}>
+                  <LinearGradient colors={['rgba(212,175,55,0.06)', 'rgba(10,10,12,0.9)']} style={[styles.sectionCard, { paddingVertical: 16, paddingHorizontal: 14 }]}>
                     <View style={styles.moodRow}>
                       {MOOD_OPTIONS.map((m) => {
                         const isSelected = mood === m.key;
@@ -886,7 +886,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     </Animated.View>
                   ))}
 
-                  <LinearGradient colors={['rgba(201,174,120,0.06)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
+                  <LinearGradient colors={['rgba(212,175,55,0.06)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
                     <TextInput
                       style={styles.contentInput}
                       value={content}
@@ -1239,7 +1239,7 @@ function SectionHeader({ title, icon }: { title: string; icon: string }) {
   const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.sectionHeader}>
-      <MetallicIcon name={icon as any} size={18} color="#C9AE78" />
+      <MetallicIcon name={icon as any} size={18} color="#D4AF37" />
       <Text style={styles.sectionHeaderTitle}>{title}</Text>
     </View>
   );
@@ -1261,7 +1261,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   saveIndicator: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: 'rgba(110,191,139,0.12)', borderWidth: 1, borderColor: 'rgba(110,191,139,0.25)' },
   saveIndicatorDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#6EBF8B' },
   saveIndicatorText: { fontSize: 11, color: '#6EBF8B', fontWeight: '600', letterSpacing: 0.5 },
-  writingSaveBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(201,174,120,0.32)', backgroundColor: 'rgba(201,174,120,0.12)' },
+  writingSaveBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(212,175,55,0.32)', backgroundColor: 'rgba(212,175,55,0.12)' },
   writingSaveBtnText: { fontSize: 12, color: theme.isDark ? PALETTE_DARK.gold : PALETTE_LIGHT.gold, fontWeight: '700', letterSpacing: 0.3 },
 
   // ── Distraction-free writing surface ──
@@ -1365,7 +1365,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   tagSearchWrap: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: theme.inputBackground, borderWidth: 1, borderColor: theme.inputBorder, gap: 8 },
   tagSearchInput: { flex: 1, color: theme.textPrimary, fontSize: 14, padding: 0 },
   tagPickerScroll: { paddingHorizontal: 16, paddingBottom: 72, flex: 1 },
-  tagPickerSectionLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(201,174,120,0.65)', letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 18, marginBottom: 8, paddingLeft: 2 },
+  tagPickerSectionLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(212,175,55,0.65)', letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 18, marginBottom: 8, paddingLeft: 2 },
   tagPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagPickerChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.03)' },
   tagPickerChipSelected: { borderColor: 'rgba(107,191,163,0.50)', backgroundColor: 'rgba(107,191,163,0.14)' },

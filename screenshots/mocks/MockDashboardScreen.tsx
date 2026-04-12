@@ -21,7 +21,7 @@ import {
 const PALETTE = {
   gold: '#D8C39A',
   goldLight: '#F3E5AB',
-  silverBlue: '#C9AE78',
+  silverBlue: '#A2C2E1',
   emerald: '#6EBF8B',
   copper: '#CD7F5D',
   rose: '#D4A3B3',

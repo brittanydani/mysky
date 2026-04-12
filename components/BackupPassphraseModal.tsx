@@ -36,16 +36,16 @@ interface BackupPassphraseModalProps {
 
 // ── Cinematic Palette ──
 const PALETTE_DARK = {
-  gold: '#C9AE78',
-  silverBlue: '#C9AE78',
+  gold: '#D4AF37',
+  silverBlue: '#A2C2E1',
   copper: '#CD7F5D',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
 const PALETTE_LIGHT = {
-  gold: '#B8935A',
-  silverBlue: '#B8935A',
+  gold: '#D4AF37',
+  silverBlue: '#D4AF37',
   copper: '#8C4A42',
   textMain: '#1A1815',
   glassBorder: 'rgba(0,0,0,0.04)',
@@ -300,7 +300,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     padding: 16,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(201, 174, 120, 0.14)',
+    borderColor: 'rgba(212, 175, 55, 0.14)',
   },
   helperText: {
     flex: 1,

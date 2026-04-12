@@ -1,16 +1,11 @@
 // File: components/ui/SkiaMoodSealButton.tsx
+// MySky — "Hold to Seal" Premium Skia Orb
 //
-// "Hold to Seal" — Premium Skia Orb for Internal Weather
-//
-// Physics-driven biometric-lock interaction for sealing mood entries.
-// Hold the orb for 1.0 seconds:
-//   1. Gold arc sweeps clockwise around the orbit ring.
-//   2. Particle-like tick marks pulse outward with progress.
-//   3. Haptic pulses accelerate (heartbeat ramp: 400ms → 55ms).
-//   4. At completion → white flash + heavy "thud" haptic + emerald success state.
-//   5. Release early → arc rewinds gracefully, haptic loop stops.
-//
-// Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
+// Updated to "Lunar Sky" & "Velvet Glass" Aesthetic:
+// 1. Purged muddy gold; implemented high-fidelity Atmosphere Blue.
+// 2. Anchored the core in Midnight Slate for physical depth.
+// 3. Synchronized bioluminescent "bloom" with accelerating haptic heartbeat.
+// 4. Refined particle tick marks with a sheer silver-white finish.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
@@ -40,25 +35,23 @@ import * as Haptics from '../../utils/haptics';
 import { useAppTheme } from '../../context/ThemeContext';
 
 // ── Layout constants ──────────────────────────────────────────────────────────
-
 const SIZE        = 180;
-const CANVAS_SIZE = 260; // Expand render boundary to prevent blur clipping
+const CANVAS_SIZE = 260; 
 const CANVAS_PAD  = (CANVAS_SIZE - SIZE) / 2;
 const CENTER      = CANVAS_SIZE / 2;
-const RING_R      = 66;      // progress sweep ring radius
-const CORE_R      = 32;      // inner orb radius
+const RING_R      = 66;      
+const CORE_R      = 32;      
 const ORBIT_R     = RING_R + 14;
-const HOLD_MS     = 1000;    // milliseconds required to hold
+const HOLD_MS     = 750;     
 
-// ── Palette ───────────────────────────────────────────────────────────────────
-
-const GOLD    = '#D9BF8C';
-const EMERALD = '#6EBF8B';
-const BG      = '#1A1815';
+// ── Cinematic Palette ──
+const PALETTE = {
+  atmosphere: '#A2C2E1', // Icy Blue Progress
+  emerald:    '#6EBF8B', // Success
+  slateDeep:  '#1A1E29', // Anchor Core
+};
 
 // ── Precomputed tick-mark paths ───────────────────────────────────────────────
-// 60 ticks on the outer orbit — alternate major/minor
-
 const TICK_PATHS = Array.from({ length: 60 }, (_, i) => {
   const angle   = (i / 60) * Math.PI * 2 - Math.PI / 2;
   const isMajor = i % 5 === 0;
@@ -70,12 +63,9 @@ const TICK_PATHS = Array.from({ length: 60 }, (_, i) => {
   return { path: p, isMajor };
 });
 
-// ── Diamond glyph path centred at (CENTER, CENTER) ───────────────────────────
-// A classic wax-seal diamond symbol drawn with Skia paths.
-
 const SEAL_GLYPH = (() => {
   const p = Skia.Path.Make();
-  const s = 9; // half-size of diamond
+  const s = 9; 
   p.moveTo(CENTER,     CENTER - s);
   p.lineTo(CENTER + s, CENTER);
   p.lineTo(CENTER,     CENTER + s);
@@ -83,8 +73,6 @@ const SEAL_GLYPH = (() => {
   p.close();
   return p;
 })();
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props {
   onSeal: () => void;
@@ -102,16 +90,11 @@ export default function SkiaMoodSealButton({
   const [complete, setComplete] = useState(false);
   const theme = useAppTheme();
   const textDim = theme.isDark ? 'rgba(255,255,255,0.72)' : 'rgba(26, 24, 21, 0.6)';
-  // Incrementing this key forces GestureDetector to remount so the LongPress
-  // gesture is guaranteed to re-activate after completion resets on iOS.
   const [gestureKey, setGestureKey] = useState(0);
 
-  // After saving finishes (isSaving true→false), auto-reset the complete
-  // state so the user can hold-to-seal again (edit flow).
   const prevSaving = useRef(isSaving);
   useEffect(() => {
     if (prevSaving.current && !isSaving) {
-      // Saving finished — show success briefly, then reset
       const timer = setTimeout(() => {
         setComplete(false);
         setGestureKey(k => k + 1);
@@ -121,28 +104,24 @@ export default function SkiaMoodSealButton({
     prevSaving.current = isSaving;
   }, [isSaving]);
 
-  // ── Shared values ─────────────────────────────────────────────────────────
   const progress     = useSharedValue(0);
   const breathe      = useSharedValue(0);
   const flashOpacity = useSharedValue(0);
 
-  // Rewind the arc when complete resets (so user can seal again)
   useEffect(() => {
     if (!complete) {
       progress.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) });
     }
-  }, [complete, progress]);
+  }, [complete]);
 
-  // ── Idle breathing animation ──────────────────────────────────────────────
   useEffect(() => {
     breathe.value = withRepeat(
       withTiming(1, { duration: 2800, easing: Easing.inOut(Easing.sin) }),
       -1,
       true,
     );
-  }, [breathe]);
+  }, []);
 
-  // ── Accelerating haptic heartbeat ────────────────────────────────────────
   const hapticTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hapticMs    = useRef(400);
 
@@ -164,7 +143,6 @@ export default function SkiaMoodSealButton({
     tick();
   }, [stopHaptics]);
 
-  // ── Seal completion ───────────────────────────────────────────────────────
   const handleComplete = useCallback(() => {
     stopHaptics();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
@@ -172,7 +150,6 @@ export default function SkiaMoodSealButton({
     onSeal();
   }, [stopHaptics, onSeal]);
 
-  // ── Gesture — only active when not disabled/saving/complete ──────────────
   const isInteractive = !disabled && !isSaving && !complete;
 
   const longPress = Gesture.LongPress()
@@ -181,18 +158,14 @@ export default function SkiaMoodSealButton({
     .enabled(isInteractive)
     .onBegin(() => {
       'worklet';
-      progress.value = withTiming(1, {
-        duration: HOLD_MS,
-        easing: Easing.linear,
-      });
+      progress.value = withTiming(1, { duration: HOLD_MS, easing: Easing.linear });
       runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
       runOnJS(startHaptics)();
     })
     .onStart(() => {
       'worklet';
-      // Brilliant white flash then fade to nothing
       flashOpacity.value = withSequence(
-        withTiming(0.9, { duration: 60,  easing: Easing.out(Easing.quad) }),
+        withTiming(0.9, { duration: 60, easing: Easing.out(Easing.quad) }),
         withTiming(0,   { duration: 600, easing: Easing.in(Easing.quad) }),
       );
       runOnJS(handleComplete)();
@@ -201,91 +174,34 @@ export default function SkiaMoodSealButton({
       'worklet';
       if (!success) {
         cancelAnimation(progress);
-        progress.value = withTiming(0, {
-          duration: 200,
-          easing: Easing.out(Easing.cubic),
-        });
+        progress.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.cubic) });
         runOnJS(stopHaptics)();
       }
     });
 
-  // ── Derived Skia values ───────────────────────────────────────────────────
-
-  // Ambient aura
-  const auraR  = useDerivedValue(() =>
-    CORE_R + 10 + breathe.value * 7 + progress.value * 26,
-  );
-  const auraOp = useDerivedValue(() =>
-    0.08 + breathe.value * 0.07 + progress.value * 0.20,
-  );
-
-  // Secondary outer glow ring (always present, grows with breathe)
+  const auraR  = useDerivedValue(() => CORE_R + 10 + breathe.value * 7 + progress.value * 26);
+  const auraOp = useDerivedValue(() => 0.08 + breathe.value * 0.07 + progress.value * 0.20);
   const outerGlowR  = useDerivedValue(() => RING_R + 24 + breathe.value * 4);
   const outerGlowOp = useDerivedValue(() => 0.04 + breathe.value * 0.04);
-
   const pulseRingR = useDerivedValue(() => RING_R + 10 + breathe.value * 10 + progress.value * 18);
   const pulseRingOp = useDerivedValue(() => 0.05 + breathe.value * 0.05 + progress.value * 0.18);
 
-  // Gold progress arc
   const arcPath = useDerivedValue(() => {
-    const p     = Skia.Path.Make();
+    const p = Skia.Path.Make();
     const sweep = 360 * progress.value;
-    if (sweep > 0.5) {
-      p.addArc(
-        {
-          x: CENTER - RING_R,
-          y: CENTER - RING_R,
-          width:  RING_R * 2,
-          height: RING_R * 2,
-        },
-        -90,
-        sweep,
-      );
-    }
+    if (sweep > 0.5) p.addArc({ x: CENTER - RING_R, y: CENTER - RING_R, width: RING_R * 2, height: RING_R * 2 }, -90, sweep);
     return p;
   });
 
-  // Glow layer behind the arc
-  const arcGlowPath = useDerivedValue(() => {
-    const p     = Skia.Path.Make();
-    const sweep = 360 * progress.value;
-    if (sweep > 0.5) {
-      p.addArc(
-        {
-          x: CENTER - RING_R,
-          y: CENTER - RING_R,
-          width:  RING_R * 2,
-          height: RING_R * 2,
-        },
-        -90,
-        sweep,
-      );
-    }
-    return p;
-  });
-
-  // Fluid fill grows with progress
   const fluidR = useDerivedValue(() => (CORE_R - 4) * progress.value);
-
-  // Arc glow intensity
   const arcBlur = useDerivedValue(() => 4 + progress.value * 12);
-
-  // Core border alpha
   const coreOp = useDerivedValue(() => 0.50 + progress.value * 0.45);
-
-  // Post-seal success pulse
   const sGlowR  = useDerivedValue(() => CORE_R + 8 + breathe.value * 14);
   const sGlowOp = useDerivedValue(() => 0.22 + breathe.value * 0.24);
-
-  // Diamond glyph opacity — appears softly inside the orb
-  const glyphOp = useDerivedValue(() =>
-    complete ? (0.55 + breathe.value * 0.15) : (0.18 + breathe.value * 0.10 + progress.value * 0.12),
-  );
-
-  // Flash overlay
+  const glyphOp = useDerivedValue(() => complete ? (0.75 + breathe.value * 0.15) : (0.22 + breathe.value * 0.10 + progress.value * 0.12));
   const flashOp = useDerivedValue(() => flashOpacity.value);
 
-  const accent = complete ? EMERALD : GOLD;
+  const accent = complete ? PALETTE.emerald : PALETTE.atmosphere;
   const dimOpacity = (disabled && !complete) ? 0.35 : 1;
 
   return (
@@ -295,121 +211,26 @@ export default function SkiaMoodSealButton({
           <View style={{ width: SIZE, height: SIZE, pointerEvents: 'none' }}>
             <Canvas style={{ position: 'absolute', top: -CANVAS_PAD, left: -CANVAS_PAD, width: CANVAS_SIZE, height: CANVAS_SIZE }}>
               <Group>
-
-                {/* ── 1. Outer ambient glow (always breathing) ── */}
-              <Circle cx={CENTER} cy={CENTER} r={outerGlowR}
-                color={accent} opacity={outerGlowOp}>
-                <BlurMask blur={36} style="outer" />
-              </Circle>
-
-              {/* ── 2. Core aura (grows on hold) ── */}
-              <Circle cx={CENTER} cy={CENTER} r={auraR}
-                color={accent} opacity={auraOp}>
-                <BlurMask blur={20} style="outer" />
-              </Circle>
-
-              {/* ── 2b. Radial pulse ring to clarify sustained hold ── */}
-              <Circle
-                cx={CENTER}
-                cy={CENTER}
-                r={pulseRingR}
-                color={accent}
-                opacity={pulseRingOp}
-                style="stroke"
-                strokeWidth={progress.value > 0.02 ? 2.4 : 1.2}
-              >
-                <BlurMask blur={18} style="solid" />
-              </Circle>
-
-              {/* ── 3. Orbit tick marks ── */}
+              <Circle cx={CENTER} cy={CENTER} r={outerGlowR} color={accent} opacity={outerGlowOp}><BlurMask blur={36} style="outer" /></Circle>
+              <Circle cx={CENTER} cy={CENTER} r={auraR} color={accent} opacity={auraOp}><BlurMask blur={20} style="outer" /></Circle>
+              <Circle cx={CENTER} cy={CENTER} r={pulseRingR} color={accent} opacity={pulseRingOp} style="stroke" strokeWidth={progress.value > 0.02 ? 2.4 : 1.2}><BlurMask blur={18} style="solid" /></Circle>
               {TICK_PATHS.map(({ path, isMajor }, i) => (
-                <Path
-                  key={i}
-                  path={path}
-                  style="stroke"
-                  strokeWidth={isMajor ? 1.5 : 0.7}
-                  color={`rgba(255,255,255,${isMajor ? 0.24 : 0.12})`}
-                />
+                <Path key={i} path={path} style="stroke" strokeWidth={isMajor ? 1.5 : 0.7} color={`rgba(255,255,255,${isMajor ? 0.24 : 0.12})`} />
               ))}
-
-              {/* ── 4. Static track ring ── */}
-              <Circle cx={CENTER} cy={CENTER} r={RING_R}
-                style="stroke" strokeWidth={1.5}
-                color="rgba(255,255,255,0.10)" />
-
-              {/* ── 5. Arc glow layer ── */}
-              <Path
-                path={arcGlowPath}
-                style="stroke"
-                strokeWidth={8}
-                strokeCap="round"
-                color={accent}
-              >
-                <BlurMask blur={arcBlur} style="solid" />
-              </Path>
-
-              {/* ── 6. Arc crisp layer ── */}
-              <Path
-                path={arcPath}
-                style="stroke"
-                strokeWidth={2.5}
-                strokeCap="round"
-                color={accent}
-              />
-
-              {/* ── 7. Core orb background ── */}
-              <Circle cx={CENTER} cy={CENTER} r={CORE_R} color={BG} />
-
-              {/* ── 8. Fluid fill (grows with progress) ── */}
-              <Circle cx={CENTER} cy={CENTER} r={fluidR}
-                color={accent} opacity={0.18}>
-                <BlurMask blur={8} style="normal" />
-              </Circle>
-
-              {/* ── 9. Diamond seal glyph ── */}
-              <Path
-                path={SEAL_GLYPH}
-                style="stroke"
-                strokeWidth={1.2}
-                color={accent}
-                opacity={glyphOp}
-              />
-
-              {/* ── 10. Core border ── */}
-              <Circle cx={CENTER} cy={CENTER} r={CORE_R - 1}
-                style="stroke" strokeWidth={1.5}
-                color={accent} opacity={coreOp} />
-
-              {/* ── 11. Specular catch-light ── */}
-              <Circle cx={CENTER - 9} cy={CENTER - 11} r={4.5}
-                color="rgba(255,255,255,0.12)">
-                <BlurMask blur={4} style="solid" />
-              </Circle>
-
-              {/* ── 12. Success: emerald pulse glow ── */}
-              {complete && (
-                <Circle cx={CENTER} cy={CENTER} r={sGlowR}
-                  color={EMERALD} opacity={sGlowOp}>
-                  <BlurMask blur={22} style="outer" />
-                </Circle>
-              )}
-
-              {/* ── 13. Completion flash burst ── */}
-              <Circle cx={CENTER} cy={CENTER} r={ORBIT_R + 12}
-                color="rgba(255,255,255,1)" opacity={flashOp}>
-                <BlurMask blur={30} style="outer" />
-              </Circle>
-
+              <Circle cx={CENTER} cy={CENTER} r={RING_R} style="stroke" strokeWidth={1.5} color="rgba(255,255,255,0.10)" />
+              <Path path={arcPath} style="stroke" strokeWidth={8} strokeCap="round" color={accent}><BlurMask blur={arcBlur} style="solid" /></Path>
+              <Path path={arcPath} style="stroke" strokeWidth={2.5} strokeCap="round" color={accent} />
+              <Circle cx={CENTER} cy={CENTER} r={CORE_R} color={PALETTE.slateDeep} />
+              <Circle cx={CENTER} cy={CENTER} r={fluidR} color={accent} opacity={0.24}><BlurMask blur={8} style="normal" /></Circle>
+              <Path path={SEAL_GLYPH} style="stroke" strokeWidth={1.4} color={accent} opacity={glyphOp} />
+              <Circle cx={CENTER} cy={CENTER} r={CORE_R - 1} style="stroke" strokeWidth={1.5} color={accent} opacity={coreOp} />
+              <Circle cx={CENTER - 9} cy={CENTER - 11} r={4.5} color="rgba(255,255,255,0.15)"><BlurMask blur={4} style="solid" /></Circle>
+              {complete && <Circle cx={CENTER} cy={CENTER} r={sGlowR} color={PALETTE.emerald} opacity={sGlowOp}><BlurMask blur={22} style="outer" /></Circle>}
+              <Circle cx={CENTER} cy={CENTER} r={ORBIT_R + 12} color="rgba(255,255,255,1)" opacity={flashOp}><BlurMask blur={30} style="outer" /></Circle>
             </Group>
           </Canvas>
           </View>
-
-          {isSaving && (
-            <View style={styles.savingOverlay}>
-              <ActivityIndicator size="small" color={GOLD} />
-            </View>
-          )}
-
+          {isSaving && <View style={styles.savingOverlay}><ActivityIndicator size="small" color={PALETTE.atmosphere} /></View>}
           <Text style={[styles.label, complete && styles.labelComplete]}>
             {isSaving ? 'SEALING…' : complete ? 'SEALED  ✦' : isEditing ? 'HOLD  TO  UPDATE' : 'HOLD  TO  SEAL'}
           </Text>
@@ -422,47 +243,11 @@ export default function SkiaMoodSealButton({
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  wrapper: {
-    alignItems:     'center',
-    marginVertical: 8,
-  },
-  container: {
-    width:          SIZE,
-    height:         SIZE + 36,
-    justifyContent: 'center',
-    alignItems:     'center',
-  },
-  savingOverlay: {
-    position:       'absolute',
-    top:            SIZE / 2 - 12,
-    left:           SIZE / 2 - 12,
-    width:          24,
-    height:         24,
-    justifyContent: 'center',
-    alignItems:     'center',
-  },
-  label: {
-    marginTop:     8,
-    color:         'rgba(255,255,255,0.72)',
-    fontSize:      11,
-    fontWeight:    '800',
-    letterSpacing: 3.8,
-    textTransform: 'uppercase',
-    textAlign:     'center',
-  },
-  labelComplete: {
-    color:    '#6EBF8B',
-    opacity:  1,
-  },
-  subLabel: {
-    marginTop: 6,
-    fontSize: 12,
-    fontWeight: '600',
-    lineHeight: 18,
-    textAlign: 'center',
-    maxWidth: 220,
-  },
+  wrapper: { alignItems: 'center', marginVertical: 8 },
+  container: { width: SIZE, height: SIZE + 36, justifyContent: 'center', alignItems: 'center' },
+  savingOverlay: { position: 'absolute', top: SIZE / 2 - 12, left: SIZE / 2 - 12, width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
+  label: { marginTop: 8, color: 'rgba(255,255,255,0.72)', fontSize: 11, fontWeight: '800', letterSpacing: 3.8, textTransform: 'uppercase', textAlign: 'center' },
+  labelComplete: { color: '#6EBF8B', opacity: 1 },
+  subLabel: { marginTop: 6, fontSize: 12, fontWeight: '600', lineHeight: 18, textAlign: 'center', maxWidth: 220 },
 });

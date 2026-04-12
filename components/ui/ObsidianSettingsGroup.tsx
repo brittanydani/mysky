@@ -115,7 +115,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: theme.isDark ? 'rgba(201,174,120,0.06)' : 'rgba(181, 138, 58, 0.10)',
+    backgroundColor: theme.isDark ? 'rgba(212, 175, 55,0.06)' : 'rgba(181, 138, 58, 0.10)',
     marginHorizontal: 20,
     marginVertical: 8,
   },

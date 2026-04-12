@@ -43,7 +43,7 @@ import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: '#D4AF37',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
 };
@@ -375,7 +375,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.isDark ? theme.cardBorder : theme.cardBorder,
   },
-  cardSelected: { backgroundColor: theme.isDark ? 'transparent' : theme.surfaceLight, borderColor: theme.isDark ? 'rgba(232,214,174,0.25)' : 'rgba(201,174,120,0.28)' },
+  cardSelected: { backgroundColor: theme.isDark ? 'transparent' : theme.surfaceLight, borderColor: theme.isDark ? 'rgba(232,214,174,0.25)' : 'rgba(212, 175, 55,0.28)' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   optionTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
   optionSub: { fontSize: 12, color: theme.textSecondary, lineHeight: 18 },

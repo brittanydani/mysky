@@ -227,10 +227,10 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           {/* ── Value Propositions ── */}
           <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.valueSection}>
             {[
-              { icon: 'calendar-outline', title: 'Track change over time', desc: 'Weekly shifts, recurring themes, and longitudinal pattern insight', color: '#C9AE78' },
-              { icon: 'analytics-outline', title: 'Understand what helps or hurts', desc: 'See what restores you, drains you, and repeats in your reflections', color: '#C9AE78' },
-              { icon: 'sparkles-outline', title: 'Get more personal guidance', desc: 'Guidance shaped by your history, not just today\'s mood', color: '#C9AE78' },
-              { icon: 'shield-checkmark-outline', title: 'Private by design', desc: 'Core reflections stay encrypted on-device and are not sold for ads', color: '#C9AE78' },
+              { icon: 'calendar-outline', title: 'Track change over time', desc: 'Weekly shifts, recurring themes, and longitudinal pattern insight', color: '#D4AF37' },
+              { icon: 'analytics-outline', title: 'Understand what helps or hurts', desc: 'See what restores you, drains you, and repeats in your reflections', color: '#D4AF37' },
+              { icon: 'sparkles-outline', title: 'Get more personal guidance', desc: 'Guidance shaped by your history, not just today\'s mood', color: '#D4AF37' },
+              { icon: 'shield-checkmark-outline', title: 'Private by design', desc: 'Core reflections stay encrypted on-device and are not sold for ads', color: '#D4AF37' },
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
                 <View style={[styles.valueIconContainer, { borderColor: `${item.color}30` }]}>
@@ -456,7 +456,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: 'rgba(201, 174, 120, 0.06)',
+    backgroundColor: 'rgba(212, 175, 55, 0.06)',
   },
   atmosphereOrb2: {
     position: 'absolute',
@@ -465,7 +465,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 350,
     height: 350,
     borderRadius: 175,
-    backgroundColor: 'rgba(201, 174, 120, 0.05)',
+    backgroundColor: 'rgba(212, 175, 55, 0.05)',
   },
 
   backButton: {
@@ -508,8 +508,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     height: 116,
     borderRadius: 58,
     borderWidth: 1,
-    borderColor: 'rgba(201, 174, 120, 0.18)',
-    shadowColor: '#C9AE78',
+    borderColor: 'rgba(212, 175, 55, 0.18)',
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.35,
     shadowRadius: 18,
@@ -519,7 +519,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(201, 174, 120, 0.06)',
+    backgroundColor: 'rgba(212, 175, 55, 0.06)',
   },
 
   // ── Header ──
@@ -780,7 +780,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: '100%',
     borderRadius: 28,
     overflow: 'hidden',
-    shadowColor: '#C9AE78',
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.45,
     shadowRadius: 14,
