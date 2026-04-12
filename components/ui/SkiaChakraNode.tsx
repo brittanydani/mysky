@@ -13,7 +13,7 @@ import { useDerivedValue, SharedValue } from 'react-native-reanimated';
 
 // ── Chakra jewel-tone palette (source of truth for the wheel) ──
 export const CHAKRA_COLORS: Record<string, { core: string; glow: string; deep: string }> = {
-  Crown:          { core: '#E2D9F3', glow: '#F6F3FB', deep: '#A692C4' }, // Ethereal Violet
+  Crown:          { core: '#CBA6F7', glow: '#E4CCFF', deep: '#8964B8' }, // Ethereal Violet
   'Third Eye':    { core: '#A88BEB', glow: '#C8B5F4', deep: '#5E3B8F' }, // Nebula Purple
   Throat:         { core: '#5C7CAA', glow: '#B5CDE1', deep: '#264264' }, // Stratosphere Blue
   Heart:          { core: '#6B9080', glow: '#A3D2BC', deep: '#2A4E38' }, // Deep Sage
@@ -29,11 +29,11 @@ const CHAKRA_VIVID_FLAT: Record<string, string> = {
   Heart:          '#6B9080',
   Throat:         '#5C7CAA',
   'Third Eye':    '#A88BEB',
-  Crown:          '#E2D9F3',
+  Crown:          '#CBA6F7',
 };
 // ── Vivid saturated palette — used for card backgrounds in Today's Focus ──
 export const CHAKRA_VIVID: Record<string, { top: string; bottom: string }> = {
-  Crown:          { top: '#E2D9F3', bottom: '#A692C4' },
+  Crown:          { top: '#CBA6F7', bottom: '#8964B8' },
   'Third Eye':    { top: '#A88BEB', bottom: '#5E3B8F' },
   Throat:         { top: '#5C7CAA', bottom: '#264264' },
   Heart:          { top: '#6B9080', bottom: '#2A4E38' },

@@ -129,7 +129,7 @@ const CHAKRA_DEFS = [
   { name: 'Heart',        emoji: '🟢', color: '#6B9080' }, // Deep Sage
   { name: 'Throat',       emoji: '🔵', color: '#5C7CAA' }, // Stratosphere Blue
   { name: 'Third Eye',    emoji: '🟣', color: '#A88BEB' }, // Nebula Purple
-  { name: 'Crown',        emoji: '⚪', color: '#E2D9F3' }, // Ethereal Violet
+  { name: 'Crown',        emoji: '⚪', color: '#CBA6F7' }, // Ethereal Violet
 ];
 
 // Map planet → primary chakra influence

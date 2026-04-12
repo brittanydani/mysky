@@ -111,7 +111,7 @@ export const CHAKRAS: Record<ChakraTag, ChakraInfo> = {
     name: 'Crown',
     governs: 'Integration, surrender, wholeness',
     bodyArea: 'Top of the head',
-    color: '#E2D9F3',
+    color: '#CBA6F7',
     icon: '👑',
     description: 'This center holds your connection to something larger.',
     promptHint: 'What feels beyond my understanding right now — and is that okay?',

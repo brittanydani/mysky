@@ -3,7 +3,7 @@
 // "Hold to Seal" — Premium Skia Orb for Internal Weather
 //
 // Physics-driven biometric-lock interaction for sealing mood entries.
-// Hold the orb for 1.8 seconds:
+// Hold the orb for 1.0 seconds:
 //   1. Gold arc sweeps clockwise around the orbit ring.
 //   2. Particle-like tick marks pulse outward with progress.
 //   3. Haptic pulses accelerate (heartbeat ramp: 400ms → 55ms).
@@ -41,12 +41,14 @@ import { useAppTheme } from '../../context/ThemeContext';
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 
-const SIZE    = 180;
-const CENTER  = SIZE / 2;
-const RING_R  = 66;      // progress sweep ring radius
-const CORE_R  = 32;      // inner orb radius
-const ORBIT_R = RING_R + 14;
-const HOLD_MS = 1800;    // milliseconds required to hold
+const SIZE        = 180;
+const CANVAS_SIZE = 260; // Expand render boundary to prevent blur clipping
+const CANVAS_PAD  = (CANVAS_SIZE - SIZE) / 2;
+const CENTER      = CANVAS_SIZE / 2;
+const RING_R      = 66;      // progress sweep ring radius
+const CORE_R      = 32;      // inner orb radius
+const ORBIT_R     = RING_R + 14;
+const HOLD_MS     = 1000;    // milliseconds required to hold
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -290,10 +292,11 @@ export default function SkiaMoodSealButton({
     <View style={[styles.wrapper, { opacity: dimOpacity }]}>
       <GestureDetector key={gestureKey} gesture={longPress}>
         <View style={styles.container} collapsable={false}>
-          <Canvas style={{ width: SIZE, height: SIZE }}>
-            <Group>
+          <View style={{ width: SIZE, height: SIZE, pointerEvents: 'none' }}>
+            <Canvas style={{ position: 'absolute', top: -CANVAS_PAD, left: -CANVAS_PAD, width: CANVAS_SIZE, height: CANVAS_SIZE }}>
+              <Group>
 
-              {/* ── 1. Outer ambient glow (always breathing) ── */}
+                {/* ── 1. Outer ambient glow (always breathing) ── */}
               <Circle cx={CENTER} cy={CENTER} r={outerGlowR}
                 color={accent} opacity={outerGlowOp}>
                 <BlurMask blur={36} style="outer" />
@@ -399,6 +402,7 @@ export default function SkiaMoodSealButton({
 
             </Group>
           </Canvas>
+          </View>
 
           {isSaving && (
             <View style={styles.savingOverlay}>

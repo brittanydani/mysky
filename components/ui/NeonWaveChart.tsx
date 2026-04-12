@@ -212,10 +212,10 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
                 </Rect>
               )}
 
-              {/* Bright crown dot on top */}
+              {/* Bright crown dot floating above */}
               <Circle
                 cx={cx}
-                cy={day.topY}
+                cy={day.topY - (day.isToday ? 8 : 6)}
                 r={day.isToday ? 3.5 : 2.5}
                 color={day.isToday ? '#F4E6BC' : hexAlpha(MOOD_COLOR, 0.72)}
               />
@@ -223,7 +223,7 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
               {/* Top glow bloom */}
               <Circle
                 cx={cx}
-                cy={day.topY}
+                cy={day.topY - (day.isToday ? 8 : 6)}
                 r={PILLAR_W}
                 color={hexAlpha(MOOD_COLOR, day.isToday ? 0.28 : 0.10)}
               >

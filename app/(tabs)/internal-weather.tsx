@@ -1580,14 +1580,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   tagTextDangerActive: { color: '#FFF', fontWeight: '700' },
   tagTextLocked: { color: theme.textSecondary },
 
-  sealContainer: { alignItems: 'center', marginTop: 32 },
+  sealContainer: { alignItems: 'center', marginTop: 48 },
 
   slotRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,
-    marginTop: 24,
-    marginBottom: 16,
+    marginTop: 48,
+    marginBottom: 24,
   },
   slotPill: {
     alignItems: 'center',

@@ -1,11 +1,12 @@
 // File: components/DailyReflectionSection.tsx
 // MySky — Today's Questions
 //
-// Updated to "Lunar Sky" Smoked Glass Aesthetic:
-// 1. Purged "goldenish" mud and legacy RGB constants.
-// 2. Integrated Semantic Smoked Glass washes from theme.
-// 3. Implemented "Tactile Hardware" scale selectors (Recessed vs. Raised).
-// 4. Integrated "Velvet Glass" directional light-catch borders.
+// High-End "Lunar Sky" & "Velvet Glass" Aesthetic Update:
+// 1. Purged remaining "muddy" gold banners and unselected pill backgrounds.
+// 2. Implemented strict Blue, Purple, and Green semantic palette.
+// 3. Refined "Tactile Hardware" logic for scale selectors (Recessed Deep Void vs. Raised Active Glow).
+// 4. Integrated "Midnight Slate" anchor gradients for stats and record buttons.
+// 5. Applied "Velvet Glass" directional light-catch borders globally.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -65,6 +66,17 @@ import {
 } from '../constants/dailyReflectionQuestions';
 
 const CATEGORIES: ReflectionCategory[] = ['values', 'archetypes', 'cognitive', 'intelligence'];
+
+// ── Cinematic Palette (Strictly Blues, Purples, and Greens) ──
+const PALETTE = {
+  gold: '#D4AF37',       // Hardware icons
+  atmosphere: '#A2C2E1', // Values (Icy Blue)
+  nebula: '#A88BEB',     // Archetypes (Amethyst)
+  stratosphere: '#5C7CAA', // Cognitive (Deep Slate Blue)
+  sage: '#6B9080',       // Intelligence / Success (Bioluminescent Green)
+  slateMid: '#2C3645',   // Anchor Slate Top
+  slateDeep: '#1A1E29',  // Anchor Slate Bottom
+};
 
 interface DailyReflectionSectionProps {
   title?: string;
@@ -200,13 +212,11 @@ export default function DailyReflectionSection({
   };
 
   const getCategoryTheme = (cat: ReflectionCategory) => {
-    if (cat === 'values') return { wash: theme.cardSurfaceValues as readonly string[], accent: theme.silverBlue, pillBg: 'rgba(162, 194, 225, 0.15)', pillBorder: 'rgba(162, 194, 225, 0.40)' };
-    if (cat === 'archetypes') return { wash: theme.cardSurfaceRelational as readonly string[], accent: theme.amethyst, pillBg: 'rgba(168, 139, 235, 0.15)', pillBorder: 'rgba(168, 139, 235, 0.40)' };
-    if (cat === 'cognitive') return { wash: theme.cardSurfaceCognitive as readonly string[], accent: '#5C7CAA', pillBg: 'rgba(92, 124, 170, 0.15)', pillBorder: 'rgba(92, 124, 170, 0.40)' };
-    const roseWash = ['rgba(212, 163, 179, 0.20)', 'rgba(212, 163, 179, 0.05)'];
+    if (cat === 'values') return { wash: ['rgba(162, 194, 225, 0.18)', 'rgba(162, 194, 225, 0.05)'], accent: PALETTE.atmosphere, pillBg: 'rgba(162, 194, 225, 0.25)', pillBorder: 'rgba(162, 194, 225, 0.60)' };
+    if (cat === 'archetypes') return { wash: ['rgba(168, 139, 235, 0.18)', 'rgba(168, 139, 235, 0.05)'], accent: PALETTE.nebula, pillBg: 'rgba(168, 139, 235, 0.25)', pillBorder: 'rgba(168, 139, 235, 0.60)' };
+    if (cat === 'cognitive') return { wash: ['rgba(92, 124, 170, 0.18)', 'rgba(92, 124, 170, 0.05)'], accent: PALETTE.stratosphere, pillBg: 'rgba(92, 124, 170, 0.25)', pillBorder: 'rgba(92, 124, 170, 0.60)' };
     // intelligence
-    return { wash: (theme.isDark ? roseWash : ['rgba(245, 238, 240, 0.7)', 'rgba(245, 238, 240, 0.4)']) as readonly string[], accent: '#D4A3B3', pillBg: 'rgba(212, 163, 179, 0.15)', pillBorder: 'rgba(212, 163, 179, 0.40)' };
-
+    return { wash: ['rgba(107, 144, 128, 0.18)', 'rgba(107, 144, 128, 0.05)'], accent: PALETTE.sage, pillBg: 'rgba(107, 144, 128, 0.25)', pillBorder: 'rgba(107, 144, 128, 0.60)' };
   };
 
   const sealedCount = CATEGORIES.filter(c => categorySealed[c]).length;
@@ -217,19 +227,20 @@ export default function DailyReflectionSection({
         <Animated.View entering={FadeInDown.delay(100)} style={headerAnimStyle}>
           <VelvetGlassSurface style={styles.statsBar}>
             <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
-            <StatItem val={totalDays} label="reflection days" color={theme.primary} />
+            <StatItem val={totalDays} label="reflection days" color={PALETTE.gold} />
             <View style={styles.statDivider} />
-            <StatItem val={streak} label="current streak" color={theme.success} />
+            <StatItem val={streak} label="current streak" color={PALETTE.gold} />
             <View style={styles.statDivider} />
-            <StatItem val={`${sealedCount}/4`} label="categories" color={theme.silverBlue} />
+            <StatItem val={`${sealedCount}/4`} label="categories" color={PALETTE.atmosphere} />
           </VelvetGlassSurface>
         </Animated.View>
       )}
 
       {sealedCount === 4 && (
         <Animated.View entering={FadeIn} style={styles.sealedBanner}>
-          <MetallicIcon name="shield-checkmark-outline" size={16} variant="gold" />
-          <MetallicText style={styles.sealedBannerText} variant="gold">ALL CATEGORIES RECORDED TODAY</MetallicText>
+          <LinearGradient colors={['rgba(107, 144, 128, 0.20)', 'rgba(107, 144, 128, 0.05)']} style={StyleSheet.absoluteFill} />
+          <MetallicIcon name="shield-checkmark-outline" size={16} color={PALETTE.sage} />
+          <MetallicText style={styles.sealedBannerText} color={PALETTE.sage}>ALL CATEGORIES RECORDED TODAY</MetallicText>
         </Animated.View>
       )}
 
@@ -252,8 +263,8 @@ export default function DailyReflectionSection({
                 <MetallicText style={styles.categoryTitle} color={accent}>{CATEGORY_LABELS[category]}</MetallicText>
               </View>
               {isSealed && (
-                <View style={styles.categorySealedBadge}>
-                  <MetallicText style={styles.categorySealedText} variant="gold">RECORDED</MetallicText>
+                <View style={[styles.categorySealedBadge, { borderColor: `${PALETTE.sage}40`, backgroundColor: `${PALETTE.sage}15` }]}>
+                  <MetallicText style={styles.categorySealedText} color={PALETTE.sage}>RECORDED</MetallicText>
                 </View>
               )}
             </View>
@@ -264,7 +275,7 @@ export default function DailyReflectionSection({
               return (
                 <Animated.View key={q.id} entering={FadeInDown.delay(280 + idx * 100 + qIdx * 60)}>
                   <VelvetGlassSurface style={styles.questionCard} intensity={25}>
-                    <LinearGradient colors={[...wash]} style={StyleSheet.absoluteFill} />
+                    <LinearGradient colors={wash as any} style={StyleSheet.absoluteFill} />
                     <Text style={styles.questionText}>{q.text}</Text>
                     <View style={styles.scaleRow}>
                       {scale.map(opt => {
@@ -276,11 +287,18 @@ export default function DailyReflectionSection({
                           onPress={() => setAnswer(category, q.id, opt.value)}
                           style={[
                             styles.scalePill,
-                            isSelected ? { backgroundColor: pillBg, borderColor: pillBorder, transform: [{translateY: -1}] } : styles.scalePillUnselected,
+                            isSelected 
+                              ? { backgroundColor: pillBg, borderColor: pillBorder, transform: [{translateY: -1}] } 
+                              : styles.scalePillUnselected,
                             isSealed && styles.scalePillSealed,
                           ]}
                         >
-                          <Text style={[styles.scalePillText, isSelected && styles.scalePillTextActive]}>{opt.label}</Text>
+                          <Text style={[
+                            styles.scalePillText, 
+                            isSelected ? { color: '#FFFFFF', fontWeight: '700' } : { color: 'rgba(255, 255, 255, 0.4)', fontWeight: '600' }
+                          ]}>
+                            {opt.label}
+                          </Text>
                         </Pressable>
                       )})}
                     </View>
@@ -296,7 +314,7 @@ export default function DailyReflectionSection({
                   value={categoryNotes[category]}
                   onChangeText={t => setCategoryNotes(p => ({ ...p, [category]: t }))}
                   placeholder="What surfaced today? (Optional)"
-                  placeholderTextColor={theme.textMuted}
+                  placeholderTextColor="rgba(255, 255, 255, 0.4)"
                   multiline maxLength={300} returnKeyType="done" blurOnSubmit
                 />
               </View>
@@ -312,8 +330,8 @@ export default function DailyReflectionSection({
                 onPress={() => isSealed ? setCategorySealed(p => ({ ...p, [category]: false })) : handleSealCategory(category)}
                 disabled={!allAnswered && !isSealed}
               >
-                <MetallicIcon name={isSealed ? "lock-open-outline" : "shield-checkmark-outline"} size={16} color={isSealed || allAnswered ? accent : theme.textMuted} />
-                <Text style={[styles.sealButtonText, { color: isSealed || allAnswered ? accent : theme.textMuted }]}>
+                <MetallicIcon name={isSealed ? "lock-open-outline" : "shield-checkmark-outline"} size={16} color={isSealed || allAnswered ? accent : 'rgba(255,255,255,0.3)'} />
+                <Text style={[styles.sealButtonText, { color: isSealed || allAnswered ? accent : 'rgba(255,255,255,0.3)' }]}>
                   {isSealed ? 'Reopen to Edit' : `Record ${CATEGORY_LABELS[category]}`}
                 </Text>
               </Pressable>
@@ -326,11 +344,10 @@ export default function DailyReflectionSection({
 }
 
 function StatItem({ val, label, color }: { val: string | number; label: string; color: string }) {
-  const theme = useAppTheme();
   return (
     <View style={{ alignItems: 'center', flex: 1 }}>
       <MetallicText style={{ fontSize: 20, fontWeight: '700' }} color={color}>{val}</MetallicText>
-      <Text style={{ fontSize: 10, color: theme.textMuted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 }}>{label}</Text>
+      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 }}>{label}</Text>
     </View>
   );
 }
@@ -339,12 +356,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { marginBottom: 32 },
   statsBar: {
     flexDirection: 'row', alignItems: 'center',
-    borderRadius: 16, paddingVertical: 14, marginBottom: 24, overflow: 'hidden'
+    borderRadius: 16, paddingVertical: 14, marginBottom: 24, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
-  statDivider: { width: 1, height: 28, backgroundColor: theme.cardBorder },
+  statDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.1)' },
   sealedBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(212, 175, 55, 0.08)',
-    borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)', padding: 12, borderRadius: 16, marginBottom: 20,
+    flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(107, 144, 128, 0.08)',
+    borderWidth: 1, borderColor: 'rgba(107, 144, 128, 0.2)', padding: 12, borderRadius: 16, marginBottom: 20, overflow: 'hidden'
   },
   sealedBannerText: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
   dailyHeader: { marginBottom: 24 },
@@ -356,8 +374,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   categoryIcon: { fontSize: 20 },
   categoryTitle: { fontSize: 16, fontWeight: '700', letterSpacing: 0.5 },
   categorySealedBadge: {
-    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
-    backgroundColor: 'rgba(212,175,55,0.08)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.2)',
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1,
   },
   categorySealedText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
 
@@ -365,29 +382,32 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   questionCard: {
     borderRadius: 20, marginBottom: 14, padding: 28, overflow: 'hidden',
     backgroundColor: 'transparent',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    borderTopColor: 'rgba(255,255,255,0.2)', // Velvet Edge
   },
-  questionText: { fontSize: 15, color: theme.textPrimary, lineHeight: 22, marginBottom: 20 },
+  questionText: { fontSize: 16, color: '#FFFFFF', lineHeight: 24, marginBottom: 24 },
 
   // Tactile Interactive Selectors
-  scaleRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8 },
-  scalePill: { flexBasis: '48%', minHeight: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 1, paddingVertical: 10, paddingHorizontal: 14 },
+  scaleRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10 },
+  scalePill: { flexBasis: '48%', minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 1 },
   scalePillUnselected: {
-    backgroundColor: 'rgba(0, 0, 0, 0.30)',
-    borderColor: 'rgba(0, 0, 0, 0.60)',
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    borderColor: 'rgba(0, 0, 0, 0.50)',
   },
   scalePillSealed: { opacity: 0.6 },
-  scalePillText: { fontSize: 13, color: 'rgba(255, 255, 255, 0.4)', fontWeight: '600', textAlign: 'center' },
-  scalePillTextActive: { color: '#FFFFFF' },
+  scalePillText: { fontSize: 13, textAlign: 'center' },
 
   notesContainer: { marginTop: 4, marginBottom: 12 },
   notesInput: {
-    backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: theme.cardBorder,
-    borderRadius: 14, padding: 16, fontSize: 14, color: theme.textPrimary, minHeight: 80, textAlignVertical: 'top',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 16, padding: 16, fontSize: 15, color: '#FFFFFF', minHeight: 100, textAlignVertical: 'top',
   },
 
   // Hardware-style Action Buttons
   sealButton: {
-    borderRadius: 18, marginTop: 4, overflow: 'hidden'
+    borderRadius: 18, marginTop: 4, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    borderTopColor: 'rgba(255,255,255,0.2)',
   },
   sealButtonContent: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
