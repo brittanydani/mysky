@@ -620,7 +620,7 @@ export default function SettingsScreen() {
                   <View style={styles.identityRow}>
                     <View style={styles.identityAvatarContainer}>
                       <LinearGradient
-                        colors={['rgba(201, 174, 120, 0.25)', 'rgba(201, 174, 120, 0.05)']}
+                        colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']}
                         style={styles.identityAvatar}
                       >
                         <MetallicIcon name="person-outline" size={24} color={accentGold} />
@@ -1407,7 +1407,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     gap: 6,
     paddingVertical: 11,
     borderRadius: 12,
-    backgroundColor: 'rgba(201, 174, 120, 0.10)',
+    backgroundColor: 'rgba(162, 194, 225, 0.10)',
     borderWidth: 1,
     borderTopColor: 'rgba(201, 174, 120, 0.28)',
     borderLeftColor: 'rgba(201, 174, 120, 0.18)',
@@ -1476,7 +1476,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'center',
   },
   appearanceChipActive: {
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.82)' : 'rgba(212,175,55,0.22)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.82)' : 'rgba(162, 194, 225, 0.22)',
     borderColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(212,175,55,0.36)',
   },
   appearanceChipText: {
@@ -1496,7 +1496,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   securityGrid: { gap: 20, paddingHorizontal: 20, paddingVertical: 8 },
   securityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },
-  securityBullet: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(201, 174, 120, 0.10)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  securityBullet: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(162, 194, 225, 0.10)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   securityContent: { flex: 1 },
   securityLabel: { fontSize: 14, fontWeight: '600', color: theme.textPrimary, marginBottom: 2 },
   securityDetail: { fontSize: 12, color: theme.textSecondary, lineHeight: 17 },

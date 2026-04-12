@@ -258,7 +258,7 @@ export default function CognitiveStyleScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
       <LinearGradient
-        colors={['rgba(201,174,120,0.08)', 'transparent']}
+        colors={['rgba(162, 194, 225, 0.08)', 'transparent']}
         style={styles.topGlow}
       />
 
@@ -290,7 +290,7 @@ export default function CognitiveStyleScreen() {
               entering={FadeIn.duration(600)}
               layout={Layout.springify()}
             >
-              <VelvetGlassSurface style={styles.synthesisCard} intensity={30} backgroundColor={theme.isDark ? 'rgba(12, 15, 24, 0.34)' : 'rgba(255, 255, 255, 0.72)'}>
+              <VelvetGlassSurface style={styles.synthesisCard} intensity={30} backgroundColor={theme.cardSurfaceCognitive}>
               <View style={styles.synthesisHeader}>
                 <MetallicIcon name="git-network-outline" size={18} color={PALETTE.silverBlue} />
                 <MetallicText style={styles.synthesisEyebrow} color={PALETTE.silverBlue}>COGNITIVE BLUEPRINT</MetallicText>
@@ -325,7 +325,7 @@ export default function CognitiveStyleScreen() {
                   entering={FadeInDown.delay(200 + i * 80).duration(500)}
                   style={styles.dimensionBlock}
                 >
-                  <VelvetGlassSurface style={styles.dimInner} intensity={28} backgroundColor={theme.isDark ? 'rgba(12, 15, 24, 0.30)' : 'rgba(255, 255, 255, 0.70)'}>
+                  <VelvetGlassSurface style={styles.dimInner} intensity={28} backgroundColor={theme.cardSurfaceCognitive}>
                     <Text style={styles.dimQuestion}>{keepLastWordsTogether(dim.question)}</Text>
 
                     <EditorialLikertScale
@@ -416,7 +416,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(2,8,23,0.88)' : 'rgba(245,239,228,0.95)' },
   saveBtn: { height: 48, paddingHorizontal: 32, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface },
   saveBtnFull: { width: '100%' },
-  saveBtnDone: { borderColor: '#D4AF37', backgroundColor: '#D4AF37' },
+  saveBtnDone: { borderColor: '#B8935A', backgroundColor: '#B8935A' },
   saveBtnText: { fontSize: 13, color: theme.textPrimary, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center' },
   saveBtnTextDone: { color: '#0A0A0F' },
 
@@ -426,8 +426,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   dimQuestion: { fontSize: 15, fontWeight: '400', color: theme.textPrimary, lineHeight: 22, marginBottom: 20 },
 
   scaleRow: { marginBottom: 16 },
-  scaleBtn: { borderRadius: 12 },
-  scaleBtnSealed: { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
+  scaleBtn: { borderRadius: 12, backgroundColor: theme.pillSurface, borderColor: theme.cardBorder },
+  scaleBtnSealed: { backgroundColor: '#B8935A', borderColor: '#B8935A' },
   scaleBtnText: { fontSize: 15, color: theme.textSecondary, fontWeight: '700' },
   scaleBtnTextSelected: { fontSize: 15, fontWeight: '800', color: '#0A0A0F' },
 

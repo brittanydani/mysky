@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderTopColor: PALETTE.glassHighlight,
+    borderTopColor: 'rgba(255,255,255,0.12)',
     minHeight: 150,
   },
   nameRow: {

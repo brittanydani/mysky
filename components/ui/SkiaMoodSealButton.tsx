@@ -37,6 +37,7 @@ import {
   GestureDetector,
 } from 'react-native-gesture-handler';
 import * as Haptics from '../../utils/haptics';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 
@@ -51,8 +52,7 @@ const HOLD_MS = 1800;    // milliseconds required to hold
 
 const GOLD    = '#D9BF8C';
 const EMERALD = '#6EBF8B';
-const BG      = '#0A0A0F';
-const TEXT_DIM = 'rgba(255,255,255,0.72)';
+const BG      = '#1A1815';
 
 // ── Precomputed tick-mark paths ───────────────────────────────────────────────
 // 60 ticks on the outer orbit — alternate major/minor
@@ -98,6 +98,8 @@ export default function SkiaMoodSealButton({
   isEditing = false,
 }: Props) {
   const [complete, setComplete] = useState(false);
+  const theme = useAppTheme();
+  const textDim = theme.isDark ? 'rgba(255,255,255,0.72)' : 'rgba(26, 24, 21, 0.6)';
   // Incrementing this key forces GestureDetector to remount so the LongPress
   // gesture is guaranteed to re-activate after completion resets on iOS.
   const [gestureKey, setGestureKey] = useState(0);
@@ -407,7 +409,7 @@ export default function SkiaMoodSealButton({
           <Text style={[styles.label, complete && styles.labelComplete]}>
             {isSaving ? 'SEALING…' : complete ? 'SEALED  ✦' : isEditing ? 'HOLD  TO  UPDATE' : 'HOLD  TO  SEAL'}
           </Text>
-          <Text style={styles.subLabel}>
+          <Text style={[styles.subLabel, { color: textDim }]}>
             {isEditing ? 'Press and hold until the ring blooms to update this check-in' : 'Press and hold until the ring blooms to save this check-in'}
           </Text>
         </View>
@@ -453,7 +455,6 @@ const styles = StyleSheet.create({
   },
   subLabel: {
     marginTop: 6,
-    color: TEXT_DIM,
     fontSize: 12,
     fontWeight: '600',
     lineHeight: 18,

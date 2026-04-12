@@ -57,7 +57,7 @@ import { VelvetGlassSurface } from './ui/VelvetGlassSurface';
 import { useAppTheme, useThemedStyles, useThemePreference } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
-const PALETTE = {
+const PALETTE_DARK = {
   gold: '#C9AE78',
   silverBlue: '#C9AE78',
   amethyst: '#9D76C1',
@@ -65,6 +65,15 @@ const PALETTE = {
   textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
+};
+const PALETTE_LIGHT = {
+  gold: '#B8935A',
+  silverBlue: '#B8935A',
+  amethyst: '#8B77AA',
+  jade: '#4A5D4E',
+  textMain: '#1A1815',
+  glassBorder: 'rgba(0,0,0,0.04)',
+  glassHighlight: 'rgba(255,255,255,0.6)',
 };
 
 interface JournalEntryModalProps {
@@ -306,6 +315,7 @@ interface CustomTag {
 
 export default function JournalEntryModal({ visible, onClose, onSave, initialData, recentTags }: JournalEntryModalProps) {
   const theme = useAppTheme();
+  const PALETTE = theme.isDark ? PALETTE_DARK : PALETTE_LIGHT;
   const styles = useThemedStyles(createStyles);
   const { resolvedMode } = useThemePreference();
   const { isPremium } = usePremium();
@@ -668,7 +678,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
             {writingMode ? (
               <View style={styles.writingHeader}>
                 <Pressable style={styles.iconBtn} onPress={dismissWritingKeyboard} hitSlop={15}>
-                  <Ionicons name="chevron-down-outline" size={22} color={PALETTE.textMain} />
+                  <Ionicons name="chevron-down-outline" size={22} color={theme.textPrimary} />
                 </Pressable>
                 <Text style={styles.writingDateLabel} numberOfLines={1}>
                   {formatDate(date)}
@@ -692,7 +702,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
                   </View>
                   <Pressable style={styles.iconBtn} onPress={handleRequestClose} hitSlop={15}>
-                    <Ionicons name="close-outline" size={18} color="rgba(255,255,255,0.55)" />
+                    <Ionicons name="close-outline" size={18} color={theme.textMuted} />
                   </Pressable>
                 </View>
               </Animated.View>
@@ -707,7 +717,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     value={content}
                     onChangeText={setContent}
                     placeholder="What is surfacing for you right now?"
-                    placeholderTextColor="rgba(255,255,255,0.64)"
+                    placeholderTextColor={theme.textMuted}
                     maxLength={BODY_MAX_LENGTH}
                     multiline
                     textAlignVertical="top"
@@ -744,7 +754,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                           {mood === key ? (
                             <MetallicText style={styles.moodChipText} color={color}>{label}</MetallicText>
                           ) : (
-                            <Text style={[styles.moodChipText, { color: 'rgba(255,255,255,0.45)' }]}>{label}</Text>
+                            <Text style={[styles.moodChipText, { color: theme.textMuted }]}>{label}</Text>
                           )}
                         </Pressable>
                       ))}
@@ -770,7 +780,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       <View style={styles.cardRow}>
                         <MetallicIcon name="calendar-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.cardRowText}>{formatDate(date)}</Text>
-                        <Ionicons name="chevron-down-outline" size={16} color="rgba(255,255,255,0.42)" />
+                        <Ionicons name="chevron-down-outline" size={16} color={theme.textMuted} />
                       </View>
                     </LinearGradient>
                   </Pressable>
@@ -785,7 +795,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       value={title}
                       onChangeText={setTitle}
                       placeholder="Title this moment..."
-                      placeholderTextColor="rgba(255,255,255,0.60)"
+                      placeholderTextColor={theme.textMuted}
                       maxLength={TITLE_MAX_LENGTH}
                     />
                   </LinearGradient>
@@ -810,7 +820,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                             {isSelected ? (
                               <MetallicText style={[styles.moodPillText, { fontWeight: '700' }]} color={m.color}>{m.label}</MetallicText>
                             ) : (
-                              <Text style={[styles.moodPillText, { color: 'rgba(255,255,255,0.4)' }]}>{m.label}</Text>
+                              <Text style={[styles.moodPillText, { color: theme.textMuted }]}>{m.label}</Text>
                             )}
                           </Pressable>
                         );
@@ -882,7 +892,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       value={content}
                       onChangeText={setContent}
                       placeholder="What is surfacing for you right now?"
-                      placeholderTextColor="rgba(255,255,255,0.60)"
+                      placeholderTextColor={theme.textMuted}
                       maxLength={BODY_MAX_LENGTH}
                       multiline
                       textAlignVertical="top"
@@ -933,7 +943,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       style={styles.tagPlaceholder}
                       onPress={() => { Haptics.selectionAsync().catch(() => {}); setTagSearch(''); setShowTagPicker(true); }}
                     >
-                      <Ionicons name="pricetags-outline" size={15} color="rgba(255,255,255,0.20)" />
+                      <Ionicons name="pricetags-outline" size={15} color={theme.textMuted} />
                       <Text style={styles.tagPlaceholderText}>Healing, Growth, Parenting...</Text>
                     </Pressable>
                   )}
@@ -1006,9 +1016,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
             <VelvetGlassSurface
               style={styles.tagPickerSheet}
               intensity={50}
-              backgroundColor="rgba(11, 15, 25, 0.36)"
-              borderColor="rgba(255,255,255,0.10)"
-              highlightColor="rgba(255,255,255,0.05)"
             >
               <View style={styles.tagPickerHandle} />
               <View style={styles.tagPickerHeader}>
@@ -1020,19 +1027,19 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
               {/* Search */}
               <View style={styles.tagSearchWrap}>
-                <Ionicons name="search-outline" size={15} color="rgba(255,255,255,0.30)" />
+                <Ionicons name="search-outline" size={15} color={theme.textMuted} />
                 <TextInput
                   style={styles.tagSearchInput}
                   value={tagSearch}
                   onChangeText={setTagSearch}
                   placeholder="Search tags..."
-                  placeholderTextColor="rgba(255,255,255,0.38)"
+                  placeholderTextColor={theme.textMuted}
                   autoCorrect={false}
                   returnKeyType="search"
                 />
                 {tagSearch.length > 0 && (
                   <Pressable hitSlop={10} onPress={() => setTagSearch('')}>
-                    <Ionicons name="close-circle-outline" size={15} color="rgba(255,255,255,0.30)" />
+                    <Ionicons name="close-circle-outline" size={15} color={theme.textMuted} />
                   </Pressable>
                 )}
               </View>
@@ -1090,7 +1097,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       </View>
                     ) : (
                       <View style={{ alignItems: 'center', marginTop: 28, gap: 12 }}>
-                        <Text style={{ color: 'rgba(255,255,255,0.30)', fontSize: 14 }}>
+                        <Text style={{ color: theme.textMuted, fontSize: 14 }}>
                           No tags match "{tagSearch}"
                         </Text>
                         <Pressable
@@ -1136,7 +1143,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                               value={newTagModalInput}
                               onChangeText={setNewTagModalInput}
                               placeholder="Tag name…"
-                              placeholderTextColor="rgba(255,255,255,0.42)"
+                              placeholderTextColor={theme.textMuted}
                               autoFocus
                               maxLength={30}
                               returnKeyType="done"
@@ -1151,7 +1158,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                               if (v) saveCustomTag(v, undefined, editingCustomTagId);
                               else closeCustomTagComposer();
                             }}>
-                              <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : 'rgba(255,255,255,0.3)'} />
+                              <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : theme.textMuted} />
                             </Pressable>
                           </View>
                         ) : (
@@ -1183,7 +1190,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                                     value={newTagModalInput}
                                     onChangeText={setNewTagModalInput}
                                     placeholder="Tag name…"
-                                    placeholderTextColor="rgba(255,255,255,0.42)"
+                                    placeholderTextColor={theme.textMuted}
                                     autoFocus
                                     maxLength={30}
                                     returnKeyType="done"
@@ -1198,7 +1205,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                                     if (v) saveCustomTag(v, cat.id, editingCustomTagId);
                                     else closeCustomTagComposer();
                                   }}>
-                                    <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : 'rgba(255,255,255,0.3)'} />
+                                    <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : theme.textMuted} />
                                   </Pressable>
                                 </View>
                               ) : (
@@ -1240,67 +1247,67 @@ function SectionHeader({ title, icon }: { title: string; icon: string }) {
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   header: { paddingHorizontal: 24, paddingTop: 52, paddingBottom: 28 },
   headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
-  iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
+  headerTitle: { fontSize: 34, color: theme.textPrimary, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.06)', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
 
   // ── Writing mode header ──
-  writingHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
-  writingDateLabel: { flex: 1, fontSize: 13, color: 'rgba(240,234,214,0.50)', marginLeft: 4 },
+  writingHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' },
+  writingDateLabel: { flex: 1, fontSize: 13, color: theme.textMuted, marginLeft: 4 },
   writingHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   saveIndicator: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: 'rgba(110,191,139,0.12)', borderWidth: 1, borderColor: 'rgba(110,191,139,0.25)' },
   saveIndicatorDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#6EBF8B' },
   saveIndicatorText: { fontSize: 11, color: '#6EBF8B', fontWeight: '600', letterSpacing: 0.5 },
   writingSaveBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(201,174,120,0.32)', backgroundColor: 'rgba(201,174,120,0.12)' },
-  writingSaveBtnText: { fontSize: 12, color: PALETTE.gold, fontWeight: '700', letterSpacing: 0.3 },
+  writingSaveBtnText: { fontSize: 12, color: theme.isDark ? PALETTE_DARK.gold : PALETTE_LIGHT.gold, fontWeight: '700', letterSpacing: 0.3 },
 
   // ── Distraction-free writing surface ──
   writingModeBody: { flex: 1 },
-  focusedContentInput: { flex: 1, paddingHorizontal: 22, paddingTop: 16, paddingBottom: 12, color: PALETTE.textMain, fontSize: 17, lineHeight: 28, textAlignVertical: 'top' },
+  focusedContentInput: { flex: 1, paddingHorizontal: 22, paddingTop: 16, paddingBottom: 12, color: theme.textPrimary, fontSize: 17, lineHeight: 28, textAlignVertical: 'top' },
   bodyCounterWrap: { paddingHorizontal: 22, paddingBottom: 8, alignItems: 'flex-end' },
   bodyCounterWrapInline: { marginTop: 12, alignItems: 'flex-end' },
-  bodyCounterText: { fontSize: 12, color: 'rgba(255,255,255,0.38)', fontWeight: '500' },
+  bodyCounterText: { fontSize: 12, color: theme.textMuted, fontWeight: '500' },
 
   // ── Mood quick-pick toolbar (sits above keyboard in writing mode) ──
-  moodToolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.75)' },
-  moodChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.06)' },
-  moodChipText: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.72)' },
+  moodToolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', backgroundColor: theme.isDark ? 'rgba(2,8,23,0.75)' : 'rgba(247,245,240,0.95)' },
+  moodChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' },
+  moodChipText: { fontSize: 11, fontWeight: '600', color: theme.textSecondary },
 
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 4, paddingBottom: 60 },
   
   section: { marginBottom: 32 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
-  sectionHeaderTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
+  sectionHeaderTitle: { color: theme.textPrimary, fontSize: 18, fontWeight: '700' },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
 
-  sectionCard: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.02)' },
+  sectionCard: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardRowText: { flex: 1, color: PALETTE.textMain, fontSize: 16, fontWeight: '500' },
-  cardTextInput: { color: PALETTE.textMain, fontSize: 17, paddingVertical: 0, paddingTop: 2, minHeight: 24 },
+  cardRowText: { flex: 1, color: theme.textPrimary, fontSize: 16, fontWeight: '500' },
+  cardTextInput: { color: theme.textPrimary, fontSize: 17, paddingVertical: 0, paddingTop: 2, minHeight: 24 },
 
   promptsToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, marginBottom: 14 },
-  promptsToggleText: { fontSize: 13, color: PALETTE.gold, fontWeight: '600' },
+  promptsToggleText: { fontSize: 13, color: theme.isDark ? PALETTE_DARK.gold : PALETTE_LIGHT.gold, fontWeight: '600' },
   
   promptZone: { marginBottom: 20 },
-  transitContext: { fontSize: 13, color: PALETTE.silverBlue, marginBottom: 12, textAlign: 'center' },
-  primaryPromptCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: 'rgba(232,214,174,0.14)' },
+  transitContext: { fontSize: 13, color: theme.isDark ? PALETTE_DARK.silverBlue : PALETTE_LIGHT.silverBlue, marginBottom: 12, textAlign: 'center' },
+  primaryPromptCard: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: 'rgba(232,214,174,0.14)' },
   promptContextLabel: { fontSize: 11, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
-  primaryPromptText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24 },
-  chakraNote: { fontSize: 12, color: PALETTE.gold, marginTop: 12, opacity: 0.8 },
+  primaryPromptText: { fontSize: 16, color: theme.textPrimary, lineHeight: 24 },
+  chakraNote: { fontSize: 12, color: theme.isDark ? PALETTE_DARK.gold : PALETTE_LIGHT.gold, marginTop: 12, opacity: 0.8 },
   
-  contentInput: { color: PALETTE.textMain, fontSize: 17, lineHeight: 27, minHeight: 180, paddingTop: 16, paddingBottom: 0, textAlignVertical: 'top' },
+  contentInput: { color: theme.textPrimary, fontSize: 17, lineHeight: 27, minHeight: 180, paddingTop: 16, paddingBottom: 0, textAlignVertical: 'top' },
 
   // ── Archetype lens prompt card ──
-  archetypePromptCard: { flexDirection: 'row', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.025)', marginBottom: 16 },
+  archetypePromptCard: { flexDirection: 'row', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.02)', marginBottom: 16 },
   archetypeAccent: { width: 3 },
   archetypePromptInner: { flex: 1, padding: 14, gap: 4 },
   archetypeLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.5 },
-  archetypeContext: { fontSize: 12, color: 'rgba(255,255,255,0.40)', lineHeight: 17 },
-  archetypeQuestion: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 21, marginTop: 2 },
+  archetypeContext: { fontSize: 12, color: theme.textMuted, lineHeight: 17 },
+  archetypeQuestion: { fontSize: 14, color: theme.textSecondary, lineHeight: 21, marginTop: 2 },
   
   // ── Mood row ──
   moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-start' },
@@ -1312,19 +1319,19 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  moodPillText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.70)', textAlign: 'center', lineHeight: 16 },
+  moodPillText: { fontSize: 13, fontWeight: '600', color: theme.textSecondary, textAlign: 'center', lineHeight: 16 },
 
   // ── Tags ──
   addTagsBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(107,191,163,0.30)', backgroundColor: 'rgba(107,191,163,0.08)' },
-  addTagsBtnText: { fontSize: 12, color: PALETTE.jade, fontWeight: '600' },
+  addTagsBtnText: { fontSize: 12, color: theme.isDark ? PALETTE_DARK.jade : PALETTE_LIGHT.jade, fontWeight: '600' },
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagPlaceholder: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingHorizontal: 0 },
-  tagPlaceholderText: { fontSize: 13, color: 'rgba(255,255,255,0.60)' },
+  tagPlaceholderText: { fontSize: 13, color: theme.textMuted },
   tagChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1332,8 +1339,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
   },
   tagChipSelected: {
     backgroundColor: 'rgba(107,191,163,0.22)',
@@ -1344,49 +1351,49 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   tagChipText: { fontSize: 13, fontWeight: '600', letterSpacing: -0.2 },
 
   // ── Date Picker Sheet ──
-  datePickerSheet: { backgroundColor: '#0D1117', borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', paddingBottom: 24 },
-  datePickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  datePickerBtn: { fontSize: 16, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
+  datePickerSheet: { backgroundColor: theme.isDark ? '#0D1117' : theme.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', paddingBottom: 24 },
+  datePickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' },
+  datePickerBtn: { fontSize: 16, color: theme.textSecondary, fontWeight: '600' },
 
   // ── Tag Picker Modal ──
   tagPickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.60)', justifyContent: 'flex-end' },
   tagPickerSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '92%', minHeight: '70%', flexShrink: 1, marginBottom: 64, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: -10 }, shadowOpacity: 0.22, shadowRadius: 28, elevation: 18 },
-  tagPickerHandle: { width: 44, height: 4, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.18)', alignSelf: 'center', marginTop: 12, marginBottom: 8 },
-  tagPickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  tagPickerTitle: { fontSize: 16, color: '#FFFFFF', fontWeight: '600' },
-  tagPickerDone: { fontSize: 16, color: PALETTE.gold, fontWeight: '700' },
-  tagSearchWrap: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', gap: 8 },
-  tagSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 14, padding: 0 },
+  tagPickerHandle: { width: 44, height: 4, borderRadius: 999, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.10)', alignSelf: 'center', marginTop: 12, marginBottom: 8 },
+  tagPickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' },
+  tagPickerTitle: { fontSize: 16, color: theme.textPrimary, fontWeight: '600' },
+  tagPickerDone: { fontSize: 16, color: theme.isDark ? PALETTE_DARK.gold : PALETTE_LIGHT.gold, fontWeight: '700' },
+  tagSearchWrap: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: theme.inputBackground, borderWidth: 1, borderColor: theme.inputBorder, gap: 8 },
+  tagSearchInput: { flex: 1, color: theme.textPrimary, fontSize: 14, padding: 0 },
   tagPickerScroll: { paddingHorizontal: 16, paddingBottom: 72, flex: 1 },
   tagPickerSectionLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(201,174,120,0.65)', letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 18, marginBottom: 8, paddingLeft: 2 },
   tagPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tagPickerChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.07)' },
+  tagPickerChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.03)' },
   tagPickerChipSelected: { borderColor: 'rgba(107,191,163,0.50)', backgroundColor: 'rgba(107,191,163,0.14)' },
   tagPickerChipSelectedCustom: { borderColor: 'rgba(107,191,163,0.50)', backgroundColor: 'rgba(107,191,163,0.14)' },
-  tagPickerChipText: { fontSize: 11, color: 'rgba(255,255,255,0.74)', fontWeight: '600' },
-  tagPickerChipTextSelected: { color: PALETTE.jade, fontWeight: '700' },
-  tagPickerChipTextSelectedCustom: { color: PALETTE.jade, fontWeight: '700' },
+  tagPickerChipText: { fontSize: 11, color: theme.textSecondary, fontWeight: '600' },
+  tagPickerChipTextSelected: { color: theme.isDark ? PALETTE_DARK.jade : PALETTE_LIGHT.jade, fontWeight: '700' },
+  tagPickerChipTextSelectedCustom: { color: theme.isDark ? PALETTE_DARK.jade : PALETTE_LIGHT.jade, fontWeight: '700' },
   createTagBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.35)', backgroundColor: 'rgba(107,191,163,0.10)' },
-  createTagBtnText: { fontSize: 13, color: PALETTE.jade, fontWeight: '600' },
+  createTagBtnText: { fontSize: 13, color: theme.isDark ? PALETTE_DARK.jade : PALETTE_LIGHT.jade, fontWeight: '600' },
   newTagBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.30)', backgroundColor: 'rgba(107,191,163,0.08)' },
   inlineTagInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.50)', backgroundColor: 'rgba(107,191,163,0.10)', minWidth: 120 },
-  inlineTagInput: { flex: 1, color: '#FFFFFF', fontSize: 13, padding: 0, minWidth: 70 },
-  newTagBtnText: { fontSize: 12, color: PALETTE.jade, fontWeight: '600' },
+  inlineTagInput: { flex: 1, color: theme.textPrimary, fontSize: 13, padding: 0, minWidth: 70 },
+  newTagBtnText: { fontSize: 12, color: theme.isDark ? PALETTE_DARK.jade : PALETTE_LIGHT.jade, fontWeight: '600' },
   newTagOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.70)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
-  newTagPopup: { width: '100%', backgroundColor: '#0F1729', borderRadius: 20, padding: 24, borderWidth: 1, borderColor: 'rgba(107,191,163,0.20)' },
-  newTagPopupTitle: { fontSize: 17, fontWeight: '700', color: '#FFFFFF', marginBottom: 16, textAlign: 'center' },
-  newTagPopupInput: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#FFFFFF', marginBottom: 20 },
+  newTagPopup: { width: '100%', backgroundColor: theme.isDark ? '#0F1729' : theme.surface, borderRadius: 20, padding: 24, borderWidth: 1, borderColor: 'rgba(107,191,163,0.20)' },
+  newTagPopupTitle: { fontSize: 17, fontWeight: '700', color: theme.textPrimary, marginBottom: 16, textAlign: 'center' },
+  newTagPopupInput: { backgroundColor: theme.inputBackground, borderRadius: 12, borderWidth: 1, borderColor: theme.inputBorder, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: theme.textPrimary, marginBottom: 20 },
   newTagPopupActions: { flexDirection: 'row', gap: 12 },
-  newTagPopupCancel: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center' },
-  newTagPopupCancelText: { fontSize: 15, fontWeight: '600', color: 'rgba(255,255,255,0.60)' },
+  newTagPopupCancel: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', alignItems: 'center' },
+  newTagPopupCancelText: { fontSize: 15, fontWeight: '600', color: theme.textSecondary },
   newTagPopupCreate: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: 'rgba(107,191,163,0.22)', borderWidth: 1, borderColor: 'rgba(107,191,163,0.45)', alignItems: 'center' },
-  newTagPopupCreateText: { fontSize: 15, fontWeight: '700', color: PALETTE.jade },
+  newTagPopupCreateText: { fontSize: 15, fontWeight: '700', color: theme.isDark ? PALETTE_DARK.jade : PALETTE_LIGHT.jade },
   newTagInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.24)', backgroundColor: 'rgba(255,255,255,0.06)', minWidth: 90 },
-  newTagInput: { flex: 1, color: PALETTE.textMain, fontSize: 13, padding: 0, minWidth: 60 },
-  tagPickerHint: { fontSize: 10, color: 'rgba(255,255,255,0.20)', textAlign: 'center', marginTop: 6, marginBottom: 2,  },
+  newTagInput: { flex: 1, color: theme.textPrimary, fontSize: 13, padding: 0, minWidth: 60 },
+  tagPickerHint: { fontSize: 10, color: theme.textMuted, textAlign: 'center', marginTop: 6, marginBottom: 2,  },
 
   footer: { marginTop: 12 },
   saveBtn: { borderRadius: 16, overflow: 'hidden', },
   saveGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
-  saveBtnText: { color: '#020817', fontSize: 17, fontWeight: '700' },
+  saveBtnText: { color: theme.isDark ? '#020817' : '#1A1815', fontSize: 17, fontWeight: '700' },
 });

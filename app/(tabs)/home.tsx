@@ -66,15 +66,14 @@ const { width } = Dimensions.get('window');
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#8EB8D4',
-  copper: '#CD7F5D',
-  emerald: '#8CBEAA',
-  rose: '#D4A3B3',
+  gold: '#D4AF37',       // Metallic Champagne Gold (Icons/Text only)
+  atmosphere: '#A2C2E1', // Icy Lunar Blue
+  midnightSlate: '#2C3645', // Grounding Anchor Slate
+  slateDeep: '#1A1E29',  // Anchor Bottom
+  nebula: '#A88BEB',     // Subconscious Purple
+  emerald: '#6B9080',
   bg: '#0A0A0F',
   textMain: '#FFFFFF',
-  glassBorder: 'rgba(255,255,255,0.08)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
 // ── Balance Score Lookup Tables ──────────────────────────────────────────────
@@ -123,9 +122,7 @@ function generateInsight(
 const ACCENT_MAP: Record<string, string> = {
   gold: PALETTE.gold,
   emerald: PALETTE.emerald,
-  silverBlue: PALETTE.silverBlue,
-  copper: PALETTE.copper,
-  rose: PALETTE.rose,
+  silverBlue: PALETTE.atmosphere,
 };
 
 // ── Home Screen ─────────────────────────────────────────────────────────────
@@ -296,8 +293,6 @@ export default function HomeScreen() {
   };
 
   const insightIcon = dailyLoop?.todayInsight?.icon ?? 'analytics';
-  const insightAccent = ACCENT_MAP[dailyLoop?.todayInsight?.accentColor ?? 'emerald'] ?? PALETTE.emerald;
-  const cardLabelColor = theme.isDark ? insightAccent : theme.primaryDark;
 
   // ── Daily Affirmation ──
   const affirmation = useMemo(() => {
@@ -431,7 +426,7 @@ export default function HomeScreen() {
         <Text style={styles.loadingText}>Set up your birth profile to get started</Text>
         <Pressable
           onPress={() => setShowEditBirth(true)}
-          style={{ marginTop: 20, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 28, borderWidth: 1, borderColor: 'rgba(201,174,120,0.4)', backgroundColor: 'rgba(201,174,120,0.08)' }}
+          style={{ marginTop: 20, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 28, borderWidth: 1, borderColor: 'rgba(201,174,120,0.4)', backgroundColor: 'rgba(162, 194, 225, 0.08)' }}
         >
           <Text style={{ color: '#C9AE78', fontWeight: '600', fontSize: 16 }}>Add Birth Data</Text>
         </Pressable>
@@ -508,8 +503,12 @@ export default function HomeScreen() {
           {/* ── Daily Balance Score ── */}
           <SectionHeader title="Daily Balance" icon="pulse-outline" />
           <Animated.View entering={FadeInDown.delay(400).duration(600)}>
-            <VelvetGlassSurface style={styles.scoreCard} intensity={30} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.56)' : 'rgba(255, 255, 255, 0.82)'}>
-              <LinearGradient pointerEvents="none" colors={theme.isDark ? ['rgba(142, 184, 212, 0.10)', 'rgba(10,10,12,0.9)'] : ['rgba(225, 237, 246, 0.96)', 'rgba(245, 239, 231, 0.98)']} style={StyleSheet.absoluteFill} />
+            <VelvetGlassSurface style={styles.scoreCard} intensity={20}>
+              <LinearGradient
+                pointerEvents="none"
+                colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']}
+                style={StyleSheet.absoluteFill}
+              />
               <View style={styles.scoreHeader}>
                 <Text style={styles.cardLabel}>DAILY BALANCE</Text>
               </View>
@@ -536,8 +535,8 @@ export default function HomeScreen() {
           {/* ── 7-Day Internal Weather ── */}
           <SectionHeader title="Internal Weather" icon="cloudy-outline" />
           <Animated.View entering={FadeInDown.delay(550).duration(600)}>
-            <VelvetGlassSurface style={styles.graphCard} intensity={30} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.56)' : 'rgba(255, 255, 255, 0.82)'}>
-              <LinearGradient pointerEvents="none" colors={theme.isDark ? ['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.9)'] : ['rgba(248, 241, 225, 0.96)', 'rgba(238, 233, 225, 0.98)']} style={StyleSheet.absoluteFill} />
+            <VelvetGlassSurface style={styles.graphCard} intensity={20}>
+              <LinearGradient pointerEvents="none" colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
               <View style={styles.graphCardHeader}>
                 <View style={styles.graphBadge}>
                   <Text style={styles.graphBadgeText}>7 DAYS</Text>
@@ -549,127 +548,101 @@ export default function HomeScreen() {
 
           {/* ── Actionable Insight ── */}
           <SectionHeader title="Daily Reflection" icon="sparkles-outline" />
-          <Animated.View
-            entering={FadeInDown.delay(700).duration(600)}
-          >
-            <LinearGradient colors={theme.isDark ? [`${insightAccent}18`, 'rgba(10,10,12,0.9)'] : ['rgba(234, 242, 250, 0.97)', 'rgba(245, 239, 231, 0.98)']} style={styles.insightGradient}>
-              <View style={styles.insightHeader}>
-                <MetallicIcon name={insightIcon as any} size={16} color={cardLabelColor} />
-                {theme.isDark ? (
-                  <MetallicText style={styles.insightEyebrow} color={insightAccent}>
-                    {dailyLoop?.todayInsight?.type === 'milestone'
-                      ? 'MILESTONE'
-                      : dailyLoop?.todayInsight?.type === 'sleep-mood'
-                        ? 'SLEEP–MOOD LINK'
-                        : dailyLoop?.todayInsight?.type === 'pattern'
-                          ? 'PATTERN NOTICED'
-                          : 'DAILY REFLECTION'}
+          <Animated.View entering={FadeInDown.delay(700).duration(600)}>
+            <VelvetGlassSurface style={styles.insightCard} intensity={20}>
+              <LinearGradient
+                pointerEvents="none"
+                colors={['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.insightPadding}>
+                <View style={styles.insightHeader}>
+                  <MetallicIcon name={insightIcon as any} size={16} variant="gold" />
+                  <MetallicText style={styles.insightEyebrow} variant="gold">
+                    {dailyLoop?.todayInsight?.type?.toUpperCase() || 'REFLECTION'}
                   </MetallicText>
-                ) : (
-                  <Text style={[styles.insightEyebrow, styles.insightEyebrowLight, { color: cardLabelColor }]}>
-                    {dailyLoop?.todayInsight?.type === 'milestone'
-                      ? 'MILESTONE'
-                      : dailyLoop?.todayInsight?.type === 'sleep-mood'
-                        ? 'SLEEP–MOOD LINK'
-                        : dailyLoop?.todayInsight?.type === 'pattern'
-                          ? 'PATTERN NOTICED'
-                          : 'DAILY REFLECTION'}
-                  </Text>
-                )}
+                </View>
+                <Text style={styles.insightText}>{insightText}</Text>
               </View>
-              <Text style={styles.insightText}>{insightText}</Text>
-            </LinearGradient>
+            </VelvetGlassSurface>
           </Animated.View>
 
           {/* ── Daily Affirmation ── */}
           <SectionHeader title="Daily Affirmation" icon="sunny-outline" />
           <Animated.View entering={FadeInDown.delay(750).duration(600)}>
-            <LinearGradient colors={theme.isDark ? ['rgba(212,184,114,0.10)', 'rgba(10,10,12,0.9)'] : ['rgba(250, 242, 221, 0.97)', 'rgba(245, 239, 231, 0.98)']} style={styles.affirmationCard}>
-              <View style={styles.insightHeader}>
-                <MetallicIcon name="sunny-outline" size={16} color={theme.isDark ? PALETTE.gold : theme.primaryDark} />
-                {theme.isDark ? (
+            <VelvetGlassSurface style={styles.insightCard} intensity={20}>
+              <LinearGradient
+                pointerEvents="none"
+                colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.insightPadding}>
+                <View style={styles.insightHeader}>
+                  <MetallicIcon name="sunny-outline" size={16} variant="gold" />
                   <MetallicText style={styles.insightEyebrow} variant="gold">TODAY'S AFFIRMATION</MetallicText>
-                ) : (
-                  <Text style={[styles.insightEyebrow, styles.insightEyebrowLight, { color: theme.primaryDark }]}>TODAY'S AFFIRMATION</Text>
-                )}
+                </View>
+                <Text style={styles.affirmationText}>{affirmation.text}</Text>
               </View>
-              <Text style={styles.affirmationText}>{affirmation.text}</Text>
-            </LinearGradient>
+            </VelvetGlassSurface>
           </Animated.View>
 
           {/* ── Weekly Reflection ── */}
           {dailyLoop?.weeklyReflection?.hasEnoughData && (
-            <Animated.View
-              entering={FadeInDown.delay(800).duration(600)}
-              style={styles.weeklyCard}
-            >
-              <LinearGradient colors={theme.isDark ? ['rgba(212,184,114,0.08)', 'rgba(10,10,12,0.9)'] : ['rgba(250, 243, 225, 0.97)', 'rgba(245, 239, 231, 0.98)']} style={styles.weeklyGradient}>
-                <View style={styles.insightHeader}>
-                  <MetallicIcon name="calendar-outline" size={16} color={theme.isDark ? PALETTE.gold : theme.primaryDark} />
-                  {theme.isDark ? (
+            <Animated.View entering={FadeInDown.delay(800).duration(600)}>
+              <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
+                <LinearGradient
+                  pointerEvents="none"
+                  colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.insightPadding}>
+                  <View style={styles.insightHeader}>
+                    <MetallicIcon name="calendar-outline" size={16} variant="gold" />
                     <MetallicText style={styles.insightEyebrow} variant="gold">THIS WEEK</MetallicText>
-                  ) : (
-                    <Text style={[styles.insightEyebrow, styles.insightEyebrowLight, { color: theme.primaryDark }]}>THIS WEEK</Text>
-                  )}
-                  {dailyLoop.weeklyReflection.moodDirection === 'up' && (
-                    <View style={styles.trendBadge}>
-                      <MetallicIcon name="trending-up-outline" size={12} variant="green" />
-                    </View>
-                  )}
-                  {dailyLoop.weeklyReflection.moodDirection === 'down' && (
-                    <View style={styles.trendBadge}>
-                      <MetallicIcon name="trending-down-outline" size={12} variant="copper" />
-                    </View>
-                  )}
-                </View>
-
-                <Text style={styles.weeklySummaryText}>
-                  {dailyLoop.weeklyReflection.summary}
-                </Text>
-
-                {/* Metric chips */}
-                <View style={styles.weeklyMetrics}>
-                  <View style={styles.metricChip}>
-                    <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.avgMood.toFixed(1)}</Text>
-                    <Text style={styles.metricLabel}>Mood</Text>
+                    {dailyLoop.weeklyReflection.moodDirection === 'up' && (
+                      <View style={styles.trendBadge}>
+                        <MetallicIcon name="trending-up-outline" size={12} variant="green" />
+                      </View>
+                    )}
+                    {dailyLoop.weeklyReflection.moodDirection === 'down' && (
+                      <View style={styles.trendBadge}>
+                        <MetallicIcon name="trending-down-outline" size={12} variant="copper" />
+                      </View>
+                    )}
                   </View>
-                  {dailyLoop.weeklyReflection.avgSleep > 0 && (
-                    <View style={styles.metricChip}>
-                      <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.avgSleep.toFixed(1)}h</Text>
-                      <Text style={styles.metricLabel}>Sleep</Text>
-                    </View>
-                  )}
-                  <View style={styles.metricChip}>
-                    <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.checkInCount}</Text>
-                    <Text style={styles.metricLabel}>Check-ins</Text>
+                  <Text style={styles.weeklySummaryText}>{dailyLoop.weeklyReflection.summary}</Text>
+                  <View style={styles.weeklyMetrics}>
+                    <MetricChip value={dailyLoop.weeklyReflection.avgMood.toFixed(1)} label="Mood" />
+                    {dailyLoop.weeklyReflection.avgSleep > 0 && (
+                      <MetricChip value={`${dailyLoop.weeklyReflection.avgSleep.toFixed(1)}h`} label="Sleep" />
+                    )}
+                    <MetricChip value={String(dailyLoop.weeklyReflection.checkInCount)} label="Check-ins" />
+                    {dailyLoop.weeklyReflection.journalCount > 0 && (
+                      <MetricChip value={String(dailyLoop.weeklyReflection.journalCount)} label="Journals" />
+                    )}
                   </View>
-                  {dailyLoop.weeklyReflection.journalCount > 0 && (
-                    <View style={styles.metricChip}>
-                      <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.journalCount}</Text>
-                      <Text style={styles.metricLabel}>Journals</Text>
-                    </View>
-                  )}
                 </View>
-              </LinearGradient>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
           {/* ── Gentle CTA when not enough data ── */}
           {dailyLoop && !dailyLoop.weeklyReflection.hasEnoughData && dailyLoop.weeklyReflection.checkInCount > 0 && (
-            <Animated.View entering={FadeInDown.delay(800).duration(600)} style={styles.weeklyCard}>
-              <LinearGradient colors={theme.isDark ? ['rgba(212,184,114,0.08)', 'rgba(10,10,12,0.9)'] : ['rgba(250, 243, 225, 0.97)', 'rgba(245, 239, 231, 0.98)']} style={styles.weeklyGradient}>
-                <View style={styles.insightHeader}>
-                  <MetallicIcon name="sparkles-outline" size={16} color={theme.isDark ? PALETTE.gold : theme.primaryDark} />
-                  {theme.isDark ? (
+            <Animated.View entering={FadeInDown.delay(800).duration(600)}>
+              <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
+                <LinearGradient
+                  pointerEvents="none"
+                  colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.insightPadding}>
+                  <View style={styles.insightHeader}>
+                    <MetallicIcon name="sparkles-outline" size={16} variant="gold" />
                     <MetallicText style={styles.insightEyebrow} variant="gold">WEEKLY REFLECTION</MetallicText>
-                  ) : (
-                    <Text style={[styles.insightEyebrow, styles.insightEyebrowLight, { color: theme.primaryDark }]}>WEEKLY REFLECTION</Text>
-                  )}
+                  </View>
+                  <Text style={styles.weeklySummaryText}>{dailyLoop.weeklyReflection.summary}</Text>
                 </View>
-                <Text style={styles.weeklySummaryText}>
-                  {dailyLoop.weeklyReflection.summary}
-                </Text>
-              </LinearGradient>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
@@ -677,32 +650,29 @@ export default function HomeScreen() {
           {!isPremium && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                <LinearGradient colors={theme.isDark ? ['rgba(212,184,114,0.1)', 'rgba(10,10,12,0.9)'] : ['rgba(250, 243, 225, 0.97)', 'rgba(245, 239, 231, 0.98)']} style={styles.premiumPreviewCard}>
-                  <View style={styles.premiumPreviewHeader}>
-                    <MetallicIcon name="sparkles-outline" size={18} color={theme.isDark ? PALETTE.gold : theme.primaryDark} />
-                    {theme.isDark ? (
-                      <MetallicText style={styles.premiumPreviewLabel} variant="gold">Deeper Insight</MetallicText>
-                    ) : (
-                      <Text style={[styles.premiumPreviewLabel, styles.premiumPreviewLabelLight]}>Deeper Insight</Text>
-                    )}
+                <VelvetGlassSurface style={styles.premiumCard} intensity={20}>
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.insightPadding}>
+                    <View style={styles.premiumHeader}>
+                      <MetallicIcon name="sparkles-outline" size={18} variant="gold" />
+                      <MetallicText style={styles.premiumLabel} variant="gold">Deeper Insight</MetallicText>
+                    </View>
+                    <Text style={styles.premiumTitle}>
+                      Unlock the full Personal Reflection Engine
+                    </Text>
+                    <Text style={styles.premiumSub}>
+                      Extended pattern reflections, personal connections, guided breath journaling, and full sleep pattern insights.
+                    </Text>
+                    <View style={styles.premiumCta}>
+                      <MetallicText style={styles.premiumCtaText} variant="gold">Explore Deeper Insight</MetallicText>
+                      <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
+                    </View>
                   </View>
-                  <Text style={styles.premiumPreviewTitle}>
-                    Unlock the full Personal Reflection Engine
-                  </Text>
-                  <Text style={styles.premiumPreviewSub}>
-                    Extended pattern reflections, personal connections, guided breath journaling, and full sleep pattern insights.
-                  </Text>
-                  <View style={styles.premiumPreviewCta}>
-                    {theme.isDark ? (
-                      <MetallicText style={styles.premiumPreviewCtaText} variant="gold">
-                        Explore Deeper Insight
-                      </MetallicText>
-                    ) : (
-                      <Text style={[styles.premiumPreviewCtaText, styles.premiumPreviewLabelLight]}>Explore Deeper Insight</Text>
-                    )}
-                    <MetallicIcon name="arrow-forward-outline" size={14} color={theme.isDark ? PALETTE.gold : theme.primaryDark} />
-                  </View>
-                </LinearGradient>
+                </VelvetGlassSurface>
               </Pressable>
             </Animated.View>
           )}
@@ -784,7 +754,7 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
           <SkiaLinearGradient
             start={vec(CANVAS_W / 2, PAD_T)}
             end={vec(CANVAS_W / 2, baseY)}
-            colors={['rgba(201,174,120,0.22)', 'rgba(201,174,120,0.0)']}
+            colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.0)']}
           />
         </Path>
         {/* Glow halo */}
@@ -796,7 +766,7 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
         {/* Data point dots */}
         {pts.map((pt, i) => (
           <React.Fragment key={i}>
-            {i === 6 && hasData[i] && (
+            {i === 6 && (
               <Circle cx={pt.x} cy={pt.y} r={10} color="rgba(201,174,120,0.14)">
                 <BlurMask blur={6} style="normal" />
               </Circle>
@@ -804,8 +774,8 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
             <Circle
               cx={pt.x}
               cy={pt.y}
-              r={i === 6 ? 4.5 : hasData[i] ? 2.5 : 1.5}
-              color={i === 6 ? '#C9AE78' : hasData[i] ? 'rgba(201,174,120,0.55)' : theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(22,32,51,0.18)'}
+              r={i === 6 ? 4.5 : 2}
+              color={i === 6 ? '#C9AE78' : 'rgba(255,255,255,0.2)'}
             />
           </React.Fragment>
         ))}
@@ -825,7 +795,7 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
             key={i}
             style={{
               fontSize: 10,
-              color: i === 6 ? 'rgba(201,174,120,0.85)' : theme.isDark ? 'rgba(255,255,255,0.28)' : 'rgba(22,32,51,0.46)',
+              color: i === 6 ? 'rgba(201,174,120,0.85)' : 'rgba(255,255,255,0.28)',
               fontWeight: '700',
               width: 20,
               textAlign: 'center',
@@ -862,6 +832,16 @@ function ScorePill({ label, val, color }: { label: string; val: string; color: s
       <View style={[styles.pillDot, { backgroundColor: color }]} />
       <Text style={styles.pillLabel}>{label}</Text>
       <Text style={styles.pillVal}>{val}</Text>
+    </View>
+  );
+}
+
+function MetricChip({ value, label }: { value: string; label: string }) {
+  const styles = useThemedStyles(createStyles);
+  return (
+    <View style={styles.metricChip}>
+      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
     </View>
   );
 }
@@ -907,11 +887,11 @@ const createFabStyles = (theme: AppTheme) => StyleSheet.create({
     zIndex: 100,
   },
   glowWrapper: {
-    shadowColor: '#C9AE78',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    elevation: 12,
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 8,
   },
   glassCircle: {
     width: 60,
@@ -919,8 +899,9 @@ const createFabStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 244, 214, 0.18)',
+    borderColor: 'rgba(255, 255, 255, 0.25)',
     overflow: 'hidden',
   },
 });
@@ -928,8 +909,8 @@ const createFabStyles = (theme: AppTheme) => StyleSheet.create({
 // ── Styles ──────────────────────────────────────────────────────────────────
 
 const createStyles = (theme: AppTheme) => {
-  const raisedBorder = theme.isDark ? 'rgba(255,255,255,0.12)' : theme.cardBorder;
-  const raisedTopBorder = theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.68)';
+  const raisedBorder = theme.isDark ? 'rgba(255,255,255,0.10)' : theme.cardBorder;
+  const raisedTopBorder = theme.isDark ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.68)';
 
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
@@ -970,7 +951,7 @@ const createStyles = (theme: AppTheme) => {
     marginTop: 4,
   },
   dateLabelLight: {
-    color: theme.primaryDark,
+    color: theme.textSecondary,
   },
 
   // Insight Card
@@ -981,6 +962,11 @@ const createStyles = (theme: AppTheme) => {
     borderWidth: 1,
     borderColor: raisedBorder,
     borderTopColor: raisedTopBorder,
+    backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+    overflow: 'hidden',
+  },
+  insightPadding: {
+    padding: 24,
   },
   insightHeader: {
     flexDirection: 'row',
@@ -999,7 +985,7 @@ const createStyles = (theme: AppTheme) => {
     fontWeight: '800',
   },
   insightText: {
-    color: theme.textPrimary,
+    color: theme.isDark ? 'rgba(255, 255, 255, 0.65)' : theme.textPrimary,
     fontSize: 15,
     lineHeight: 32,
   },
@@ -1012,9 +998,11 @@ const createStyles = (theme: AppTheme) => {
     borderColor: raisedBorder,
     borderTopColor: raisedTopBorder,
     marginBottom: 32,
+    backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+    overflow: 'hidden',
   },
   affirmationText: {
-    color: theme.textPrimary,
+    color: theme.isDark ? 'rgba(255, 255, 255, 0.65)' : theme.textPrimary,
     fontSize: 12,
     lineHeight: 22,
     fontStyle: 'italic',
@@ -1032,6 +1020,8 @@ const createStyles = (theme: AppTheme) => {
     borderColor: raisedBorder,
     borderTopColor: raisedTopBorder,
     marginBottom: 32,
+    backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+    overflow: 'hidden',
   },
   premiumPreviewHeader: {
     flexDirection: 'row',
@@ -1048,7 +1038,7 @@ const createStyles = (theme: AppTheme) => {
     flex: 1,
   },
   premiumPreviewLabelLight: {
-    color: theme.primaryDark,
+    color: theme.textSecondary,
   },
   premiumPreviewTitle: {
     fontSize: 20,
@@ -1062,6 +1052,48 @@ const createStyles = (theme: AppTheme) => {
     color: theme.textSecondary,
     lineHeight: 22,
     marginBottom: 16,
+  },
+  premiumCard: {
+    marginBottom: 32,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  premiumHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  premiumLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: PALETTE.gold,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+  },
+  premiumTitle: {
+    fontSize: 18,
+    color: theme.textPrimary,
+    fontWeight: '700',
+    lineHeight: 26,
+    marginBottom: 8,
+  },
+  premiumSub: {
+    fontSize: 13,
+    color: theme.textSecondary,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  premiumCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  premiumCtaText: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   premiumPreviewCta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   premiumPreviewCtaText: { fontSize: 14, fontWeight: '600' },
@@ -1097,7 +1129,7 @@ const createStyles = (theme: AppTheme) => {
     letterSpacing: 0.5,
   },
   streakLabelLight: {
-    color: theme.primaryDark,
+    color: theme.textSecondary,
   },
 
   // Weekly reflection
@@ -1108,9 +1140,11 @@ const createStyles = (theme: AppTheme) => {
     borderWidth: 1,
     borderColor: raisedBorder,
     borderTopColor: raisedTopBorder,
+    backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+    overflow: 'hidden',
   },
   weeklySummaryText: {
-    color: theme.textPrimary,
+    color: theme.isDark ? 'rgba(255, 255, 255, 0.65)' : theme.textPrimary,
     fontSize: 14,
     lineHeight: 22,
   },
@@ -1128,13 +1162,13 @@ const createStyles = (theme: AppTheme) => {
     gap: 3,
   },
   metricValue: {
-    color: theme.textPrimary,
+    color: theme.isDark ? '#FFFFFF' : theme.textPrimary,
     fontSize: 15,
     fontWeight: '700',
     fontVariant: ['tabular-nums'] as const,
   },
   metricLabel: {
-    color: theme.textPrimary,
+    color: theme.isDark ? 'rgba(255, 255, 255, 0.40)' : theme.textPrimary,
     fontSize: 8,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -1184,7 +1218,7 @@ const createStyles = (theme: AppTheme) => {
   scoreValue: {
     fontSize: 56,
     fontWeight: '700',
-    color: theme.textPrimary,
+    color: theme.isDark ? '#FFFFFF' : theme.textPrimary,
     lineHeight: 58,
   },
   noDataText: {
@@ -1222,14 +1256,14 @@ const createStyles = (theme: AppTheme) => {
   },
   pillLabel: {
     fontSize: 8,
-    color: theme.textSecondary,
+    color: theme.isDark ? theme.textSecondary : 'rgba(26, 24, 21, 0.5)',
     textTransform: 'uppercase',
     fontWeight: '700',
     flex: 1,
   },
   pillVal: {
     fontSize: 12,
-    color: theme.textPrimary,
+    color: theme.isDark ? theme.textPrimary : '#1A1815',
     fontWeight: '700',
   },
 
@@ -1249,14 +1283,14 @@ const createStyles = (theme: AppTheme) => {
     marginBottom: 8,
   },
   graphBadge: {
-    backgroundColor: 'rgba(201,174,120,0.1)',
+    backgroundColor: 'rgba(162, 194, 225, 0.1)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
   graphBadgeText: {
     fontSize: 9,
-    color: theme.isDark ? 'rgba(201,174,120,0.74)' : theme.primaryDark,
+    color: theme.isDark ? 'rgba(201,174,120,0.74)' : theme.textSecondary,
     fontWeight: '700',
     letterSpacing: 1.5,
   },
@@ -1291,7 +1325,7 @@ const createStyles = (theme: AppTheme) => {
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: theme.cardBorder,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : theme.pillSurfaceMuted,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
   },
   quickLinkGradient: {
     padding: 14,
@@ -1320,7 +1354,7 @@ const createStyles = (theme: AppTheme) => {
 
   // Insight card CTA
   actionBtnText: {
-    color: PALETTE.bg,
+    color: '#1A1815',
     fontSize: 13,
     fontWeight: '800',
     textTransform: 'uppercase',

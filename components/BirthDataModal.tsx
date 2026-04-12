@@ -33,12 +33,19 @@ import { BirthData, HouseSystem } from '../services/astrology/types';
 import { InputValidator } from '../services/astrology/inputValidator';
 import { useAppTheme, useThemedStyles, useThemePreference } from '../context/ThemeContext';
 
-const PALETTE = {
+const PALETTE_DARK = {
   gold: '#C5B5A1',
   silverBlue: '#C9AE78',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.08)',
   surface: 'rgba(255,255,255,0.04)',
+};
+const PALETTE_LIGHT = {
+  gold: '#B8935A',
+  silverBlue: '#B8935A',
+  textMain: '#1A1815',
+  glassBorder: 'rgba(0,0,0,0.04)',
+  surface: 'rgba(0,0,0,0.03)',
 };
 
 type BirthDataModalInitial = Partial<BirthData> & { chartName?: string };
@@ -95,6 +102,7 @@ export default function BirthDataModal({
   onRestore,
 }: BirthDataModalProps) {
   const theme = useAppTheme();
+  const PALETTE = theme.isDark ? PALETTE_DARK : PALETTE_LIGHT;
   const styles = useThemedStyles(createStyles);
   const { resolvedMode } = useThemePreference();
   const [chartName, setChartName] = useState(initialData?.chartName || '');
@@ -236,7 +244,7 @@ export default function BirthDataModal({
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <View style={styles.container}>
-        <SkiaDynamicCosmos fill="#020817" />
+        <SkiaDynamicCosmos fill={theme.background} />
 
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <ScrollView
@@ -266,7 +274,7 @@ export default function BirthDataModal({
                 value={chartName}
                 onChangeText={setChartName}
                 placeholder="Your name or a nickname"
-                placeholderTextColor="rgba(255,255,255,0.25)"
+                placeholderTextColor={theme.textMuted}
               />
             </Animated.View>
 
@@ -278,7 +286,7 @@ export default function BirthDataModal({
                 <Text style={styles.selectButtonText}>
                   {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </Text>
-                <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
+                <Ionicons name="chevron-forward-outline" size={16} color={theme.textMuted} />
               </Pressable>
             </Animated.View>
 
@@ -387,7 +395,7 @@ export default function BirthDataModal({
                     searchLocation(t);
                   }}
                   placeholder="City, State, Country"
-                  placeholderTextColor="rgba(255,255,255,0.25)"
+                  placeholderTextColor={theme.textMuted}
                 />
                 {searchingLocation && (
                   <ActivityIndicator size="small" color={PALETTE.gold} style={styles.loader} />
@@ -493,10 +501,12 @@ export default function BirthDataModal({
   );
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
+const createStyles = (theme: AppTheme) => {
+  const PALETTE = theme.isDark ? PALETTE_DARK : PALETTE_LIGHT;
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#020817',
+    backgroundColor: theme.background,
   },
   safeArea: {
     flex: 1,
@@ -528,12 +538,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   mainTitle: {
     fontSize: 30,
     fontWeight: '700',
-    color: '#F8F6F2',
+    color: theme.textPrimary,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.4)',
+    color: theme.textMuted,
     lineHeight: 20,
   },
   fieldGroup: {
@@ -542,7 +552,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   fieldLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: 'rgba(197, 181, 161, 0.8)',
+    color: theme.isDark ? 'rgba(197, 181, 161, 0.8)' : 'rgba(184, 147, 90, 0.9)',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     marginBottom: 10,
@@ -554,29 +564,29 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 10,
   },
   textInput: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: theme.inputBackground,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.inputBorder,
     paddingHorizontal: 20,
     paddingVertical: 14,
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 16,
   },
   selectButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: theme.inputBackground,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.inputBorder,
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
   selectButtonText: {
     flex: 1,
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 16,
   },
   unknownToggle: {
@@ -589,7 +599,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     height: 18,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -599,18 +609,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   unknownLabel: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
-    fontWeight: '500',
+    color: theme.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(26,24,21,0.5)',
   },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: theme.inputBackground,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.inputBorder,
     paddingVertical: 10,
   },
   timeColumn: {
@@ -623,14 +632,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   timeDigit: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     minWidth: 52,
     textAlign: 'center',
   },
   timeColon: {
     fontSize: 28,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.5)',
+    color: theme.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(26,24,21,0.3)',
     marginBottom: 2,
   },
   amPmButton: {
@@ -639,8 +648,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
   },
   amPmText: {
     fontSize: 16,
@@ -655,17 +664,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     padding: 12,
   },
   unknownTimeNoteText: {
-    color: 'rgba(255,255,255,0.4)',
+    color: theme.textMuted,
     fontSize: 13,
     textAlign: 'center',
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: theme.inputBackground,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.inputBorder,
     paddingHorizontal: 20,
   },
   inputIcon: {
@@ -674,7 +683,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   locationInput: {
     flex: 1,
     paddingVertical: 14,
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 16,
   },
   loader: {
@@ -682,10 +691,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   suggestions: {
     marginTop: 6,
-    backgroundColor: 'rgba(12, 18, 32, 0.97)',
+    backgroundColor: theme.isDark ? 'rgba(12, 18, 32, 0.97)' : theme.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.inputBorder,
     overflow: 'hidden',
   },
   suggestion: {
@@ -694,10 +703,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   suggestionBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
   },
   suggestionText: {
-    color: '#E2E8F0',
+    color: theme.textSecondary,
     fontSize: 14,
   },
   errorBox: {
@@ -710,7 +719,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 16,
   },
   errorText: {
-    color: '#FF6B6B',
+    color: theme.error,
     fontSize: 13,
     flex: 1,
   },
@@ -748,7 +757,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   privacyNote: {
     textAlign: 'center',
-    color: 'rgba(255,255,255,0.25)',
+    color: theme.textMuted,
     fontSize: 12,
     marginTop: 14,
   },
@@ -766,14 +775,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   pickerSheet: {
-    backgroundColor: '#0D1117',
+    backgroundColor: theme.isDark ? '#0D1117' : theme.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 40,
     borderTopWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
   },
   pickerHeader: {
     flexDirection: 'row',
@@ -781,10 +790,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
+    borderBottomColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
   },
   pickerTitle: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -793,4 +802,5 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-});
+  });
+};

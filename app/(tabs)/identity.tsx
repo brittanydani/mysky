@@ -1,9 +1,11 @@
 // File: app/(tabs)/identity.tsx
 // MySky — Blueprint Hub
 //
-// Identity hub. Four entry cards expose the natal chart, life narrative,
-// relationships, and healing tools. Shows the user's chart name in the header
-// when available, falling back gracefully to a generic label.
+// High-End "Lunar Sky" & "Smoked Glass" Aesthetic Update:
+// 1. Purged "Muddy Gold" background gradients from all tools and headers.
+// 2. Mapped Tool Cards to specific Semantic Washes (Atmosphere, Nebula, Sage, Rose).
+// 3. Integrated "Velvet Glass" 1px directional light-catch borders globally.
+// 4. Elevated typography: Metallic Gold icons and pure white data labels.
 
 import React, { useCallback, useState } from 'react';
 import {
@@ -35,25 +37,28 @@ import { PremiumSegmentedControl } from '../../components/ui/PremiumSegmentedCon
 import { EnergyScrollContent } from '../../components/screens/EnergyScrollContent';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
+import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 
+// ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#C9AE78',
-  rose: '#D4A3B3',
-  sage: '#8CBEAA',
-  lavender: '#A89BC8',
-  emerald: '#6EBF8B',
+  gold: '#D4AF37',       // Metallic Brand Gold
+  atmosphere: '#A2C2E1', // Icy Blue
+  slateMid: '#2C3645',   // Anchor Slate Top
+  slateDeep: '#1A1E29',  // Anchor Slate Bottom
+  lavender: '#A88BEB',   // Nebula Wash
+  emerald: '#6B9080',    // Sage Wash
+  rose: '#D4A3B3',       // Identity/Intelligence
+  ember: '#DC5050',      // Stress/Tension
+  bg: '#0A0A0F',
   textMain: '#FFFFFF',
-  textMuted: 'rgba(226,232,240,0.45)',
-  glassBorder: 'rgba(255,255,255,0.08)',
 };
 
 interface BlueprintCard {
   title: string;
   description: string;
   lucideIcon: React.ComponentType<{ color: string; size: number; strokeWidth?: number }>;
-  iconStyle: TextStyle;
-  gradientColors: [string, string];
+  iconColor: string;
+  wash: [string, string];
   route: Href;
   premium?: boolean;
 }
@@ -61,34 +66,34 @@ interface BlueprintCard {
 const CARDS: BlueprintCard[] = [
   {
     title: 'Inner World',
-    description: 'Core Values, Jungian Archetypes, Cognitive Style, and Intelligence — your mind\'s blueprint.',
+    description: "Core Values, Jungian Archetypes, Cognitive Style, and Intelligence — your mind's blueprint.",
     lucideIcon: Diamond,
-    iconStyle: { color: PALETTE.lavender },
-    gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
+    iconColor: PALETTE.atmosphere,
+    wash: ['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)'], // Atmosphere
     route: '/inner-world' as Href,
   },
   {
     title: 'Body & Nervous System',
     description: 'Somatic map and trigger log — how your body holds experience.',
     lucideIcon: CircleDot,
-    iconStyle: { color: PALETTE.sage },
-    gradientColors: ['rgba(140, 190, 170, 0.1)', 'transparent'],
+    iconColor: PALETTE.emerald,
+    wash: ['rgba(107, 144, 128, 0.20)', 'rgba(107, 144, 128, 0.05)'], // Sage
     route: '/body-nervous' as Href,
   },
   {
     title: 'Relational Mirror',
     description: 'Attachment tendencies and nervous system patterns you notice in connection.',
     lucideIcon: Orbit,
-    iconStyle: { color: PALETTE.rose },
-    gradientColors: ['rgba(212, 163, 179, 0.1)', 'transparent'],
+    iconColor: PALETTE.lavender,
+    wash: ['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)'], // Nebula
     route: '/relationship-patterns' as Href,
   },
   {
     title: 'Healing Space',
     description: 'Shadow work, inner child needs, and restorative anchors.',
     lucideIcon: Sparkles,
-    iconStyle: { color: PALETTE.emerald },
-    gradientColors: ['rgba(110, 191, 139, 0.1)', 'transparent'],
+    iconColor: PALETTE.rose,
+    wash: ['rgba(212, 163, 179, 0.20)', 'rgba(212, 163, 179, 0.05)'], // Rose Glass
     route: '/(tabs)/healing' as Href,
     premium: true,
   },
@@ -96,16 +101,16 @@ const CARDS: BlueprintCard[] = [
     title: 'Inner Tensions',
     description: 'Nervous system conflict, ambivalence, and shadow triggers.',
     lucideIcon: Crosshair,
-    iconStyle: { color: PALETTE.lavender },
-    gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
+    iconColor: PALETTE.ember,
+    wash: ['rgba(220, 80, 80, 0.20)', 'rgba(220, 80, 80, 0.05)'], // Ember
     route: '/(tabs)/inner-tensions' as Href,
   },
   {
     title: 'Cosmic Blueprint',
     description: 'Planets, houses, and aspects mapping the moment of your arrival.',
     lucideIcon: Compass,
-    iconStyle: { color: 'rgba(217,191,140,0.65)' },
-    gradientColors: ['rgba(217, 191, 140, 0.07)', 'transparent'],
+    iconColor: PALETTE.gold,
+    wash: ['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)'], // Midnight Slate Anchor
     route: '/(tabs)/chart' as Href,
   },
 ];
@@ -157,26 +162,22 @@ export default function BlueprintScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
-      {/* Nebula depth — atmospheric glow orbs */}
+      {/* Nebula/Atmosphere glow orbs */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.08)' }]} />
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <View style={styles.headerRow}>
               <View style={styles.headerTextWrap}>
                 <Text style={styles.headerTitle}>Inner World</Text>
                 <GoldSubtitle style={styles.headerSubtitle}>
-                  {chartName
-                    ? `${chartName} · Know yourself deeply`
-                    : 'Values, patterns, body & mind'}
+                  {chartName ? `${chartName} · Know yourself deeply` : 'Values, patterns, body & mind'}
                 </GoldSubtitle>
               </View>
               <Pressable
@@ -185,7 +186,7 @@ export default function BlueprintScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Open inner world hub"
               >
-                <Ionicons name="arrow-forward-outline" size={18} color={theme.isDark ? 'rgba(255,255,255,0.7)' : theme.textMuted} />
+                <Ionicons name="arrow-forward-outline" size={18} color="#FFFFFF" />
               </Pressable>
             </View>
           </Animated.View>
@@ -203,32 +204,22 @@ export default function BlueprintScreen() {
             /* Cards */
             <View style={styles.grid}>
               {CARDS.map((card, i) => (
-              <Animated.View
-                key={card.route as string}
-                entering={FadeInDown.delay(160 + i * 80).duration(600)}
-              >
-                <Pressable
-                  style={({ pressed }) => [pressed && styles.cardPressed]}
-                  onPress={() => nav(card.route, card.premium)}
-                >
-                  <LinearGradient colors={card.gradientColors} style={styles.card}>
-                    <View style={styles.cardIconRow}>
-                      <View style={styles.cardIconBadge}>
-                        <MetallicLucideIcon
-                          icon={card.lucideIcon}
-                          size={20}
-                          strokeWidth={1.5}
-                          color={card.iconStyle.color as string}
-                        />
+                <Animated.View key={card.route as string} entering={FadeInDown.delay(160 + i * 80).duration(600)}>
+                  <Pressable style={({ pressed }) => [pressed && styles.cardPressed]} onPress={() => nav(card.route, card.premium)}>
+                    <VelvetGlassSurface style={styles.card} intensity={25}>
+                      <LinearGradient colors={card.wash} style={StyleSheet.absoluteFill} />
+                      <View style={styles.cardIconRow}>
+                        <View style={[styles.cardIconBadge, { borderColor: `${card.iconColor}40`, backgroundColor: `${card.iconColor}15` }]}>
+                          <MetallicLucideIcon icon={card.lucideIcon} size={20} strokeWidth={1.5} color={card.iconColor} />
+                        </View>
+                        {card.premium && <PremiumBadge />}
                       </View>
-                      {card.premium && <PremiumBadge />}
-                    </View>
-                    <Text style={styles.cardTitle}>{card.title}</Text>
-                    <Text style={styles.cardSubtitle}>{card.description}</Text>
-                  </LinearGradient>
-                </Pressable>
-              </Animated.View>
-            ))}
+                      <Text style={styles.cardTitle}>{card.title}</Text>
+                      <Text style={styles.cardSubtitle}>{card.description}</Text>
+                    </VelvetGlassSurface>
+                  </Pressable>
+                </Animated.View>
+              ))}
             </View>
           ) : (
             /* Energy Content */
@@ -242,103 +233,42 @@ export default function BlueprintScreen() {
 }
 
 // Premium lock indicator
-const PremiumBadge = () => (
-  (() => {
-    const styles = useThemedStyles(createStyles);
-
-    return (
-      <View style={styles.badgeContainer}>
-        <MetallicLucideIcon icon={Star} size={12} strokeWidth={1.5} variant="gold" />
-      </View>
-    );
-  })()
-);
+const PremiumBadge = () => {
+  const styles = useThemedStyles(createStyles);
+  return (
+    <View style={styles.badgeContainer}>
+      <MetallicLucideIcon icon={Star} size={12} strokeWidth={1.5} variant="gold" />
+    </View>
+  );
+};
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
-  glowOrb: {
-    position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    opacity: 0.6,
-  },
+  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
-  // Header
   header: { marginBottom: 32 },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   headerTextWrap: { flex: 1 },
   headerAction: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
+    width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
-  headerTitle: {
-    fontSize: 34,
-    color: theme.textPrimary,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginBottom: 4,
-  },
+  headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
-  // Grid
   grid: { gap: 20 },
 
-  // Card
-  card: {
-    padding: 28,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
-  },
+  card: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', borderTopColor: 'rgba(255,255,255,0.20)', overflow: 'hidden' },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
 
   cardIconRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+  cardIconBadge: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  cardTitle: { fontSize: 20, color: '#FFFFFF', fontWeight: '700', marginBottom: 4 },
+  cardSubtitle: { fontSize: 16, color: 'rgba(255,255,255,0.6)', lineHeight: 24 },
 
-  cardIconBadge: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.pillSurface,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-  },
-  cardTitle: {
-    fontSize: 20,
-    color: theme.textPrimary,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  cardSubtitle: {
-    fontSize: 16,
-    color: theme.textMuted,
-    lineHeight: 24,
-  },
-
-  // Premium badge
-  badgeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(217, 191, 140, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(217, 191, 140, 0.3)',
-  },
-  badgeText: { fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
+  badgeContainer: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(212,175,55,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(212,175,55,0.30)' },
 });

@@ -43,6 +43,7 @@ import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { keepLastWordsTogether } from '../../utils/textLayout';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
+import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 
 const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
@@ -66,6 +67,17 @@ interface CheckInMetaPayload {
 }
 
 const CHECKIN_META_MARKER = '||CHECKIN_META||';
+
+// ─── Semantic Palette ─────────────────────────────────────────────────────────
+const PALETTE = {
+  gold: '#D4AF37',       // Metallic hardware elements
+  atmosphere: '#A2C2E1', // Icy Blue for glass & Energy
+  ember: '#DC5050',      // Stress/Warning
+  slateMid: '#2C3645',   // Anchor Slate Top
+  slateDeep: '#1A1E29',  // Anchor Slate Bottom
+  sage: '#6B9080',       // Growth/Glimmer
+  bg: '#0A0A0F',
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -766,8 +778,8 @@ export default function MoodCheckIn() {
 
       {/* Nebula depth — atmospheric glow orbs */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
       </View>
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -790,7 +802,7 @@ export default function MoodCheckIn() {
               : `Editing ${formatDisplayDate(selectedDate)}`}
           </MetallicText>
         ) : (
-          <GoldSubtitle style={styles.headerSubtitle}>Track your mood, energy &amp; what shapes your day</GoldSubtitle>
+          <GoldSubtitle style={styles.headerSubtitle}>Mirroring your emotional and physical climate</GoldSubtitle>
         )}
       </View>
 
@@ -824,14 +836,14 @@ export default function MoodCheckIn() {
         {/* 7-Day Trend */}
         <VelvetGlassSurface
           style={styles.trendCard}
-          intensity={34}
-          backgroundColor={theme.isDark ? 'rgba(11, 14, 24, 0.32)' : 'rgba(255, 255, 255, 0.72)'}
-          borderColor="rgba(226, 194, 122, 0.18)"
-          highlightColor="rgba(255,255,255,0.035)"
+          intensity={30}
+          backgroundColor="transparent"
+          borderColor="transparent"
         >
+          <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
           <View style={styles.trendHeader}>
             <Text style={[styles.sectionLabel, styles.trendSectionLabel]}>7-DAY MOOD TREND</Text>
-            <MetallicText style={styles.trendValue} color="#E2C27A">{isLoading ? '…' : trendLabel}</MetallicText>
+            <MetallicText style={styles.trendValue} variant="gold">{isLoading ? '…' : trendLabel}</MetallicText>
           </View>
           {isLoading ? (
             <View style={styles.trendPlaceholder}>
@@ -859,26 +871,26 @@ export default function MoodCheckIn() {
         {/* 1–10 Haptic Sliders */}
         <VelvetGlassSurface
           style={styles.slidersContainer}
-          intensity={32}
-          backgroundColor={theme.isDark ? 'rgba(10, 14, 23, 0.34)' : 'rgba(255, 255, 255, 0.72)'}
-          borderColor="rgba(255,255,255,0.1)"
-          highlightColor="rgba(255,255,255,0.03)"
+          intensity={25}
+          backgroundColor="transparent"
+          borderColor="transparent"
         >
-          <CustomHapticSlider title="Mood" value={mood} setValue={setMood} color="#D9BF8C" labels={['Low', 'Neutral', 'High']} />
+          <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
+          <CustomHapticSlider title="Mood" value={mood} setValue={setMood} color={PALETTE.gold} labels={['Low', 'Neutral', 'High']} />
           <View style={styles.divider} />
-          <CustomHapticSlider title="Energy" value={energy} setValue={setEnergy} color="#6E8CB4" labels={['Exhausted', 'Steady', 'Energized']} />
+          <CustomHapticSlider title="Energy" value={energy} setValue={setEnergy} color={PALETTE.atmosphere} labels={['Exhausted', 'Steady', 'Energized']} />
           <View style={styles.divider} />
-          <CustomHapticSlider title="Stress" value={stress} setValue={setStress} color="#D98C8C" labels={['Calm', 'Balanced', 'Overwhelmed']} />
+          <CustomHapticSlider title="Stress" value={stress} setValue={setStress} color={PALETTE.ember} labels={['Calm', 'Balanced', 'Overwhelmed']} />
         </VelvetGlassSurface>
 
         {/* Influence Tags */}
         <VelvetGlassSurface
           style={styles.tagsCard}
-          intensity={32}
-          backgroundColor={theme.isDark ? 'rgba(11, 14, 24, 0.34)' : 'rgba(255, 255, 255, 0.72)'}
-          borderColor="rgba(255,255,255,0.10)"
-          highlightColor="rgba(255,255,255,0.04)"
+          intensity={25}
+          backgroundColor="transparent"
+          borderColor="transparent"
         >
+          <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
           <View style={styles.tagsSection}>
             <Text style={styles.sectionLabel}>WHAT'S INFLUENCING THIS?</Text>
             <Text style={styles.tagsHint}>Tap to cycle neutral, glimmer, or drain. Hold built-ins to clear. Hold custom pills to edit or delete.</Text>
@@ -957,11 +969,11 @@ export default function MoodCheckIn() {
         {/* Emotional Quality Tags (Deeper Sky) — collapsible dropdown */}
         <VelvetGlassSurface
           style={styles.tagsCard}
-          intensity={32}
-          backgroundColor={theme.isDark ? 'rgba(11, 14, 24, 0.34)' : 'rgba(255, 255, 255, 0.72)'}
-          borderColor="rgba(255,255,255,0.10)"
-          highlightColor="rgba(255,255,255,0.04)"
+          intensity={25}
+          backgroundColor="transparent"
+          borderColor="transparent"
         >
+          <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
           <View style={styles.tagsSection}>
             <Pressable
               style={styles.emotionDropdownHeader}
@@ -1402,7 +1414,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: '58%',
     minHeight: 44,
     borderRadius: 999,
-    backgroundColor: theme.isDark ? 'rgba(226, 194, 122, 0.16)' : 'rgba(201, 174, 120, 0.18)',
+    backgroundColor: theme.isDark ? 'rgba(162, 194, 225, 0.16)' : 'rgba(162, 194, 225, 0.18)',
     borderWidth: 1,
     borderColor: theme.isDark ? 'rgba(226, 194, 122, 0.18)' : 'rgba(201, 174, 120, 0.16)',
   },
@@ -1417,9 +1429,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   sliderValue: { fontSize: 18, fontWeight: 'bold' },
 
   trackContainer: { height: 50, justifyContent: 'center' },
-  trackBackground: { position: 'absolute', left: 0, right: 0, height: 12, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface, borderRadius: 999, borderWidth: 1, borderColor: theme.cardBorder },
+  trackBackground: { position: 'absolute', left: 0, right: 0, height: 12, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   trackTicksRow: { position: 'absolute', left: 8, right: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  trackTick: { width: 1, height: 6, borderRadius: 999, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.14)' : 'rgba(146, 124, 88, 0.2)' },
+  trackTick: { width: 1, height: 6, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.15)' },
   trackGlow: { position: 'absolute', left: 0, height: 18, borderRadius: 999 },
   trackFill: { position: 'absolute', left: 0, height: 12, borderRadius: 999, opacity: 0.9 },
   thumbHalo: {
@@ -1435,9 +1447,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: SLIDER_THUMB_WIDTH,
     height: SLIDER_THUMB_HEIGHT,
     borderRadius: 999,
-    backgroundColor: 'rgba(244,248,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderWidth: 1,
-    borderColor: theme.isDark ? 'rgba(255,255,255,0.26)' : 'rgba(146, 124, 88, 0.24)',
+    borderColor: 'rgba(255,255,255,0.3)',
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 16,
     elevation: 5,
@@ -1450,26 +1462,26 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 10,
     height: 7,
     borderRadius: 999,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.24)' : 'rgba(255,255,255,0.82)',
+    backgroundColor: 'rgba(255,255,255,0.24)',
   },
-  thumbInner: { width: 8, height: 28, borderRadius: 999 },
+  thumbInner: { width: 4, height: 20, borderRadius: 2 },
   thumbCoreHighlight: {
     position: 'absolute',
     top: 10,
     width: 4,
     height: 12,
     borderRadius: 999,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.30)',
   },
 
   labelsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
   sliderLabel: { fontSize: 8, color: theme.textMuted, textTransform: 'uppercase', fontWeight: '600', letterSpacing: 0.8, flex: 1 },
 
   customInfluenceInput: {
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0, 0, 0, 0.03)',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: theme.cardBorder,
+    borderColor: theme.isDark ? theme.cardBorder : 'rgba(0, 0, 0, 0.06)',
     paddingHorizontal: 20,
     paddingVertical: 12,
     fontSize: 13,
@@ -1514,7 +1526,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   tagsCard: { borderRadius: 24, padding: 24, marginBottom: 20 },
   tagsSection: { marginBottom: 0 },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  premiumBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(201, 174, 120, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.3)', marginTop: -16 },
+  premiumBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(162, 194, 225, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.3)', marginTop: -16 },
   premiumBadgeText: { color: '#C9AE78', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
   lockedHint: { fontSize: 11, color: 'rgba(201,174,120,0.72)', marginTop: 12, lineHeight: 16 },
 
@@ -1526,18 +1538,26 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderWidth: 1,
-    borderColor: theme.cardBorder,
+    borderColor: 'rgba(255,255,255,0.05)',
     overflow: 'hidden',
   },
   tagButtonPremiumBase: {
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
-    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0, 0, 0, 0.04)',
+    borderColor: theme.isDark ? theme.cardBorder : 'rgba(0, 0, 0, 0.06)',
   },
-  tagButtonSelected: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.94)' : 'rgba(181, 138, 58, 0.22)', borderColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(181, 138, 58, 0.32)' },
-  tagButtonPositive: { backgroundColor: 'rgba(212,175,55,0.88)', borderColor: theme.isDark ? 'rgba(255,255,255,0.24)' : 'rgba(181, 138, 58, 0.28)' },
-  tagButtonNegative: { backgroundColor: 'rgba(145,42,62,0.24)', borderColor: 'rgba(255,143,161,0.38)' },
+  tagButtonSelected: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.3)',
+    shadowColor: '#4A3F35',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: theme.isDark ? 0 : 0.12,
+    shadowRadius: 8,
+    elevation: theme.isDark ? 0 : 3,
+  },
+  tagButtonPositive: { backgroundColor: 'rgba(107, 144, 128, 0.2)', borderColor: '#6B9080' },
+  tagButtonNegative: { backgroundColor: 'rgba(220, 80, 80, 0.2)', borderColor: '#DC5050' },
   tagButtonSelectedPremium: {
     backgroundColor: 'rgba(212,175,55,0.88)',
     borderColor: theme.isDark ? 'rgba(255,255,255,0.24)' : 'rgba(181, 138, 58, 0.28)',
@@ -1555,19 +1575,19 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: theme.cardBorder,
     borderRadius: 20,
   },
-  tagText: { fontSize: 13, color: theme.textSecondary, fontWeight: '600' },
-  tagTextSelected: { color: '#050507', fontWeight: 'bold' },
-  tagTextDangerActive: { color: '#FFF4F6', fontWeight: '700' },
+  tagText: { fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
+  tagTextSelected: { color: '#FFF', fontWeight: 'bold' },
+  tagTextDangerActive: { color: '#FFF', fontWeight: '700' },
   tagTextLocked: { color: theme.textSecondary },
 
-  sealContainer: { alignItems: 'center', marginTop: 8 },
+  sealContainer: { alignItems: 'center', marginTop: 32 },
 
   slotRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,
     marginTop: 24,
-    marginBottom: 4,
+    marginBottom: 16,
   },
   slotPill: {
     alignItems: 'center',
@@ -1585,8 +1605,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderColor: 'rgba(217,191,140,0.34)',
   },
   slotPillSelected: {
-    borderColor: 'rgba(217,191,140,0.55)',
-    backgroundColor: 'rgba(217,191,140,0.08)',
+    borderColor: theme.isDark ? 'rgba(217,191,140,0.55)' : 'rgba(181, 138, 58, 0.40)',
+    backgroundColor: theme.isDark ? 'rgba(217,191,140,0.08)' : 'rgba(255, 255, 255, 0.90)',
+    shadowColor: '#4A3F35',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: theme.isDark ? 0 : 0.10,
+    shadowRadius: 6,
+    elevation: theme.isDark ? 0 : 2,
   },
   slotPillSelectedDone: {
     borderColor: theme.isDark ? 'rgba(255,255,255,0.26)' : 'rgba(146, 124, 88, 0.24)',
@@ -1604,7 +1629,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   slotIconWrapDone: {
     borderColor: 'rgba(217,191,140,0.40)',
-    backgroundColor: 'rgba(201,174,120,0.12)',
+    backgroundColor: 'rgba(162, 194, 225, 0.12)',
   },
   slotLabel: { fontSize: 10, color: theme.textMuted, fontWeight: '700', letterSpacing: 0.5 },
   slotLabelDone: { color: '#C9AE78' },

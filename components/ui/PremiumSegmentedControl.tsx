@@ -105,22 +105,22 @@ export function PremiumSegmentedControl({
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: theme.isDark ? 'rgba(10, 18, 36, 0.5)' : 'rgba(50, 30, 10, 0.03)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(50, 30, 10, 0.03)',
     borderRadius: 14,
     padding: 4,
     height: 56,
     position: 'relative',
     marginBottom: 16,
     width: '100%',
-    borderWidth: theme.isDark ? 0 : 1,
-    borderColor: theme.isDark ? 'transparent' : 'rgba(0, 0, 0, 0.06)',
+    borderWidth: theme.isDark ? 1 : 1,
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0, 0, 0, 0.06)',
   },
   indicator: {
     position: 'absolute',
     top: 4,
     bottom: 4,
     left: 4,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.10)' : theme.cardSurfaceStrong,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.12)' : theme.cardSurfaceStrong,
     borderRadius: 10,
     shadowColor: theme.isDark ? '#000' : 'rgba(111, 85, 46, 0.16)',
     shadowOffset: { width: 0, height: 2 },
@@ -137,12 +137,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: theme.textMuted,
+    color: theme.isDark ? 'rgba(255,255,255,0.4)' : theme.textMuted,
     letterSpacing: 0.4,
     textAlign: 'center',
   },
   labelActive: {
-    color: theme.isDark ? '#FFFFFF' : theme.textPrimary,
+    color: '#FFFFFF',
   },
   count: {
     fontSize: 11,

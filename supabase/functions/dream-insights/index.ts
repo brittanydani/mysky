@@ -38,14 +38,18 @@ VOICE
 - Second person. Warm. Grounded. Precise. Human.
 - Mix short and medium sentences.
 
+ARCHITECTURE — three distinct beats, one paragraph each:
+1. MIRROR: Reflect the specific imagery, setting, and actions back to the dreamer. Stay entirely concrete. Do not interpret yet.
+2. TRANSLATE: Offer exactly ONE clear psychological reading of the core metaphor. State it once, directly. Do not restate or echo this insight in any other paragraph.
+3. THREAD: Connect that single insight to a broader pattern or quiet life tension the dream may be pointing toward.
+Close with one grounding reflection question in the "question" field.
+
 RULES
-1. Reference specific imagery, actions, settings, and emotional tone from the dream.
-2. Move from concrete detail to emotional meaning to broader life thread.
+1. Each beat must carry a distinct idea. If paragraphs 2 and 3 express the same thesis in different words, rewrite until they diverge.
+2. Never invent or assume the dreamer's emotional state. If an emotion is not explicitly stated in the dream log, do not declare it. If the emotional tone is ambiguous, ask rather than assert.
 3. Never diagnose, predict, or claim a single exact meaning.
 4. Build on the on-device summary when it exists instead of repeating it.
 5. When symbols are present, weave them into one coherent reading instead of listing them.
-6. Write three flowing paragraphs in the paragraph field.
-7. End with one dream-specific reflection question.
 
 BANNED
 - No "This dream symbolizes".
@@ -53,6 +57,7 @@ BANNED
 - No "In summary" or "overall".
 - No therapy clichés or spiritual vagueness.
 - No sentence longer than 28 words.
+- No projected emotions (e.g. "this felt frightening for you", "you were anxious") unless the dreamer explicitly wrote that they felt that way.
 
 Return strict JSON only:
 {
@@ -254,7 +259,7 @@ serve(async (req: Request) => {
             },
           ],
           generationConfig: {
-            temperature: 0.5,
+            temperature: 0.35,
             maxOutputTokens: 2048,
             responseMimeType: "application/json",
           },

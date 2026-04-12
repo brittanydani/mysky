@@ -1965,7 +1965,7 @@ export default function ChartScreen() {
                         <MetallicText
                           key={el}
                           style={[styles.patternHighlightText, { fontSize: 15 }]}
-                          color={elColor}
+                          color={theme.isDark ? elColor : '#1A1815'}
                         >
                           {el}: {count as number}
                         </MetallicText>
@@ -2003,7 +2003,7 @@ export default function ChartScreen() {
                         <MetallicText
                           key={mod}
                           style={[styles.patternHighlightText, { fontSize: 15 }]}
-                          color="#CFAE73"
+                          color={theme.isDark ? "#CFAE73" : '#1A1815'}
                         >
                           {mod}: {count as number}
                         </MetallicText>
@@ -2035,7 +2035,7 @@ export default function ChartScreen() {
                     ].map(({ label, count }) => {
                       const isDominant = label === chartPatterns.polarityBalance.dominant;
                       return isDominant ? (
-                        <MetallicText key={label} style={[styles.patternHighlightText, { fontSize: 15 }]} color="#CFAE73">
+                        <MetallicText key={label} style={[styles.patternHighlightText, { fontSize: 15 }]} color={theme.isDark ? "#CFAE73" : '#1A1815'}>
                           {label}: {count}
                         </MetallicText>
                       ) : (
@@ -3172,7 +3172,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: theme.spacing.md,
     alignSelf: 'center',
   },
-  patternHighlightText: { color: '#CFAE73', fontWeight: '700', fontSize: 15, textAlign: 'center' },
+  patternHighlightText: { color: theme.isDark ? '#CFAE73' : '#1A1815', fontWeight: '700', fontSize: 15, textAlign: 'center' },
   patternDesc: { color: theme.textSecondary, fontSize: 12, lineHeight: 19, marginTop: theme.spacing.sm, textAlign: 'center' },
   tooltipBox: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', backgroundColor: 'transparent', borderRadius: theme.borderRadius.md, padding: 10, marginTop: theme.spacing.md },
   tooltipText: { color: theme.textMuted, fontSize: 11, lineHeight: 16, marginLeft: 6, flex: 1, textAlign: 'center' },
@@ -3188,12 +3188,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   personChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: theme.isDark ? 'transparent' : 'rgba(0, 0, 0, 0.04)',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 6,
-    borderWidth: 1,
+    borderWidth: theme.isDark ? 1 : 0,
     borderColor: theme.cardBorder,
   },
   personChipActive: {

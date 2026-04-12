@@ -203,7 +203,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
             <SkiaMetallicPill
               label="Create Chart"
               onPress={() => { safeHaptic(); router.push('/(tabs)/home' as Href); }}
-              icon={<Ionicons name="add-circle-outline" size={16} color="#020817" />}
+              icon={<Ionicons name="add-circle-outline" size={16} color="#1A1815" />}
               style={{ marginTop: 16 }}
               labelStyle={{ fontSize: 15 }}
             />

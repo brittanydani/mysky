@@ -1,3 +1,13 @@
+// File: app/(tabs)/journal.tsx
+// MySky — Archive (Journal) Screen
+//
+// High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
+// 1. Purged "Muddy Gold" background gradients.
+// 2. Implemented "Midnight Slate" for heavy anchor elements (Cluster Map, Action Sheet).
+// 3. Implemented "Atmosphere" and "Nebula" washes for insight cards and dream entries.
+// 4. Integrated "Velvet Glass" 1px directional light-catch borders globally.
+// 5. Reserved Metallic Gold strictly for hardware elements and icons.
+
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -64,24 +74,20 @@ function sanitizeJournalEntryForEdit(entry: JournalEntry): JournalEntry {
 
 const PAGE_SIZE = 30;
 
+// ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#C9AE78',
-  copper: '#CD7F5D',
-  emerald: '#6EBF8B',
-  rose: '#D4A3B3',
+  gold: '#D4AF37',       // Metallic Brand Gold
+  atmosphere: '#A2C2E1', // Icy Blue
+  slateMid: '#2C3645',   // Anchor Slate Top
+  slateDeep: '#1A1E29',  // Anchor Slate Bottom
+  nebula: '#A88BEB',     // Dreams
+  sage: '#6B9080',       // Growth
   bg: '#0A0A0F',
   textMain: '#FFFFFF',
-  glassBorder: 'rgba(255,255,255,0.08)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
 const LIGHT_MODE_INK = '#1A1815';
 const LIGHT_MODE_META = 'rgba(26, 24, 21, 0.5)';
-
-// ── Mood helpers ──
-
-// ── Cinematic Palette ──
 
 // ─── Dream card ───────────────────────────────────────────────────────────────
 
@@ -159,8 +165,8 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress, onLongPr
       accessibilityHint="Double tap to open. Long press for edit or delete options."
     >
       <LinearGradient
-        colors={['rgba(201,174,120,0.18)', 'transparent']}
-        style={styles.dreamCard}
+        colors={theme.isDark ? ['rgba(168, 139, 235, 0.12)', 'rgba(168, 139, 235, 0.03)'] : ['rgba(168, 139, 235, 0.18)', 'transparent']}
+        style={[styles.dreamCard, theme.isDark && styles.velvetBorder]}
       >
         <View style={styles.dreamCardHeader}>
           <View style={{ flex: 1 }}>
@@ -169,16 +175,16 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress, onLongPr
               <View style={styles.dreamMeta}>
                 {moons && (
                   <View style={styles.dreamMoonsRow}>
-                    <MetallicText color="#C9AE78" style={styles.dreamMoons}>{moons}</MetallicText>
+                    <MetallicText color={PALETTE.gold} style={styles.dreamMoons}>{moons}</MetallicText>
                     {!!remainingMoons && <Text style={[styles.dreamMoonsEmpty, !theme.isDark && styles.dreamMoonsEmptyLight]}>{remainingMoons}</Text>}
                   </View>
                 )}
-                {qualityLabel && <MetallicText color="#C9AE78" style={styles.dreamQualityLabel}>{qualityLabel}</MetallicText>}
+                {qualityLabel && <MetallicText color={PALETTE.gold} style={styles.dreamQualityLabel}>{qualityLabel}</MetallicText>}
                 {durationText && <Text style={styles.dreamDuration}> · {durationText}</Text>}
               </View>
             )}
           </View>
-          <MetallicIcon name="moon-outline" size={16} color="#C9AE78" />
+          <MetallicIcon name="moon-outline" size={16} color={PALETTE.gold} />
         </View>
         {hasDream ? (
           <Text style={styles.dreamExcerpt} numberOfLines={3}>{entry.dreamText}</Text>
@@ -237,11 +243,6 @@ export default function JournalScreen() {
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
-  const archiveSurfaceGradients = {
-    insight: theme.isDark ? ['rgba(201,174,120,0.18)', 'rgba(10,10,12,0.9)'] : ['rgba(217,191,140,0.14)', theme.cardSurfaceStrong],
-    cluster: theme.isDark ? ['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)'] : ['rgba(217,191,140,0.10)', theme.cardSurfaceStrong],
-    actionSheet: theme.isDark ? ['rgba(28,36,52,0.96)', 'rgba(8,12,22,0.98)'] : [theme.cardSurfaceStrong, 'rgba(244, 238, 229, 0.98)'],
-  } as const;
   const reflectionsListRef = useRef<FlatList<JournalEntry> | null>(null);
 
   const [showPremiumRequired] = useState(false);
@@ -316,22 +317,16 @@ export default function JournalScreen() {
       AsyncStorage.getItem('pref_mood_insights').then(v => {
         setMoodInsightsEnabled(v === null || v === '1');
       }).catch(() => {});
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   );
 
   useEffect(() => {
     if (entries.length >= 3) generatePatternInsights();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries.length, isPremium]);
 
   const moodToLevel = useCallback((mood: string): MoodLevel => {
     const map: Record<string, MoodLevel> = {
-      calm: 5,
-      soft: 4,
-      okay: 3,
-      heavy: 2,
-      stormy: 1,
+      calm: 5, soft: 4, okay: 3, heavy: 2, stormy: 1,
     };
     return map[mood] ?? 3;
   }, []);
@@ -398,7 +393,6 @@ export default function JournalScreen() {
     }
   };
 
-
   const loadSleepEntries = async () => {
     try {
       const charts = await localDb.getCharts();
@@ -433,7 +427,6 @@ export default function JournalScreen() {
       logger.error('Failed to delete journal entry:', error);
       Alert.alert('Error', 'Failed to delete entry');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const closeEntryActions = useCallback(() => {
@@ -468,25 +461,17 @@ export default function JournalScreen() {
 
   const stableFormatDate = useCallback((dateString: string) => {
     const date = parseLocalDate(dateString);
-    if (!isValidDateValue(date)) {
-      return 'Unknown date';
-    }
+    if (!isValidDateValue(date)) return 'Unknown date';
     return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
+      weekday: 'long', month: 'long', day: 'numeric',
     });
   }, []);
 
   const stableFormatTime = useCallback((dateString: string) => {
     const date = new Date(dateString);
-    if (!isValidDateValue(date)) {
-      return 'Unknown time';
-    }
+    if (!isValidDateValue(date)) return 'Unknown time';
     return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
+      hour: 'numeric', minute: '2-digit', hour12: true,
     });
   }, []);
 
@@ -544,7 +529,6 @@ export default function JournalScreen() {
     if (activeTab === 'reflections' && !loadingMore && hasMore) {
       void loadEntries(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, loadingMore, hasMore]);
 
   // ── List header ────────────────────────────────────────────────────────────
@@ -557,17 +541,13 @@ export default function JournalScreen() {
           {theme.isDark ? (
             <GoldSubtitle style={styles.dateLabel}>
               {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'short',
-                day: 'numeric',
+                weekday: 'long', month: 'short', day: 'numeric',
               })}
             </GoldSubtitle>
           ) : (
             <Text style={styles.dateLabelLight}>
               {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'short',
-                day: 'numeric',
+                weekday: 'long', month: 'short', day: 'numeric',
               })}
             </Text>
           )}
@@ -621,55 +601,50 @@ export default function JournalScreen() {
         </Animated.View>
       )}
 
-
-
+      {/* ── Pattern Insights (Atmosphere Wash) ── */}
       {activeTab === 'reflections' && isPremium && moodInsightsEnabled && patternInsights.filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline').length > 0 && (
         <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.insightsSection}>
           <SectionHeader title="Pattern Insights" icon="analytics-outline" />
           <Text style={styles.insightsSubtitle}>What your journal reveals over time</Text>
 
-          {patternInsights.filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline').map((insight, idx) => {
-            const accentColor = '#C9AE78';
-            const gradientColors: [string, string] = [...archiveSurfaceGradients.insight];
-
-            return (
-              <LinearGradient key={`${insight.title}-${idx}`} colors={gradientColors} style={styles.insightCard}>
-                <View style={styles.insightHeader}>
-                  <MetallicIcon
-                    name={(insight.icon ?? 'analytics-outline') as any}
-                    size={16}
-                    color={accentColor}
-                    style={{ marginRight: 8 }}
-                  />
-                  <View style={{ flex: 1, flexShrink: 1, overflow: 'hidden' }}>
-                    {theme.isDark ? (
-                      <MetallicText color={accentColor} style={styles.insightTitle}>{insight.title}</MetallicText>
-                    ) : (
-                      <Text style={styles.insightTitleLight}>{insight.title}</Text>
-                    )}
-                  </View>
-                  <View style={[styles.confidenceBadge, theme.isDark ? insight.confidence === 'strong' && styles.confidenceStrong : styles.confidenceLight, theme.isDark && insight.confidence === 'suggested' && styles.confidenceSuggested]}>
-                    <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && insight.confidence === 'suggested' && { color: PALETTE.gold }]}>{insight.confidence.toUpperCase()}</Text>
-                  </View>
+          {patternInsights.filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline').map((insight, idx) => (
+            <LinearGradient key={`${insight.title}-${idx}`} colors={theme.isDark ? ['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)'] : ['rgba(240, 245, 252, 0.7)', 'rgba(240, 245, 252, 0.4)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
+              <View style={styles.insightHeader}>
+                <MetallicIcon
+                  name={(insight.icon ?? 'analytics-outline') as any}
+                  size={16}
+                  color={PALETTE.gold}
+                  style={{ marginRight: 8 }}
+                />
+                <View style={{ flex: 1, flexShrink: 1, overflow: 'hidden' }}>
+                  {theme.isDark ? (
+                    <MetallicText color={PALETTE.gold} style={styles.insightTitle}>{insight.title}</MetallicText>
+                  ) : (
+                    <Text style={styles.insightTitleLight}>{insight.title}</Text>
+                  )}
                 </View>
-                <Text style={styles.insightDescription}>{insight.description}</Text>
-                {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
-                {!!insight.actionable && (
-                  <Text style={[styles.insightActionable, { color: theme.textPrimary }]}>{insight.actionable}</Text>
-                )}
-              </LinearGradient>
-            );
-          })}
+                <View style={[styles.confidenceBadge, theme.isDark ? insight.confidence === 'strong' && styles.confidenceStrong : styles.confidenceLight, theme.isDark && insight.confidence === 'suggested' && styles.confidenceSuggested]}>
+                  <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && insight.confidence === 'suggested' && { color: PALETTE.gold }]}>{insight.confidence.toUpperCase()}</Text>
+                </View>
+              </View>
+              <Text style={styles.insightDescription}>{insight.description}</Text>
+              {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
+              {!!insight.actionable && (
+                <Text style={[styles.insightActionable, { color: theme.textPrimary }]}>{insight.actionable}</Text>
+              )}
+            </LinearGradient>
+          ))}
         </Animated.View>
       )}
 
+      {/* ── Upsell ── */}
       {activeTab === 'reflections' && !isPremium && totalCount >= 5 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
-          <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
-            <LinearGradient colors={archiveSurfaceGradients.insight} style={styles.insightCard}>
+          <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+            <LinearGradient colors={theme.isDark ? ['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)'] : ['rgba(240, 245, 252, 0.7)', 'rgba(240, 245, 252, 0.4)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
               <View style={styles.insightHeader}>
                 <MetallicIcon name="analytics-outline" size={18} color={PALETTE.gold} />
-                <MetallicText color="#C9AE78" style={styles.insightTitle}>Pattern Insights</MetallicText>
+                <MetallicText color={PALETTE.gold} style={styles.insightTitle}>Pattern Insights</MetallicText>
                 <View style={[styles.premiumBadge, { marginLeft: 'auto' }]}>
                   <MetallicIcon name="sparkles-outline" size={10} color={PALETTE.gold} />
                   <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
@@ -687,15 +662,16 @@ export default function JournalScreen() {
         </Animated.View>
       )}
 
+      {/* ── Dream Cluster Map (Midnight Slate Anchor) ── */}
       {activeTab === 'dreams' && isPremium && sleepEntries.some(e => e.dreamText) && (
         <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.insightsSection}>
           <SectionHeader title="Dream Symbols" icon="planet-outline" />
-          <View style={styles.clusterCard}>
-            <LinearGradient colors={archiveSurfaceGradients.cluster} style={StyleSheet.absoluteFill} />
-            <Pressable style={styles.clusterCardHeader} onPress={() => router.push('/(tabs)/sleep' as Href)} accessibilityRole="button" accessibilityLabel="Open sleep tab from recurring themes">
-              <MetallicIcon name="planet-outline" size={14} color="#C9AE78" />
-              <MetallicText color="#C9AE78" style={styles.clusterCardEyebrow}>RECURRING THEMES</MetallicText>
-              <Ionicons name="chevron-forward-outline" size={14} color={theme.isDark ? '#C9AE78' : LIGHT_MODE_META} style={styles.clusterChevron} />
+          <View style={[styles.clusterCard, theme.isDark && styles.velvetBorder]}>
+            <LinearGradient colors={theme.isDark ? ['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)'] : ['rgba(245, 247, 250, 0.9)', 'rgba(245, 247, 250, 0.9)']} style={StyleSheet.absoluteFill} />
+            <Pressable style={styles.clusterCardHeader} onPress={() => router.push('/(tabs)/sleep' as Href)}>
+              <MetallicIcon name="planet-outline" size={14} color={PALETTE.gold} />
+              <MetallicText color={PALETTE.gold} style={styles.clusterCardEyebrow}>RECURRING THEMES</MetallicText>
+              <Ionicons name="chevron-forward-outline" size={14} color={theme.isDark ? PALETTE.gold : LIGHT_MODE_META} style={styles.clusterChevron} />
             </Pressable>
             <DreamClusterMap height={280} />
           </View>
@@ -723,7 +699,6 @@ export default function JournalScreen() {
   ), [isPremium, patternInsights, totalCount, sleepEntries, router, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, showSearch, toggleBrowseSearch, setActiveTab, moodInsightsEnabled]);
 
   // ── List footer ────────────────────────────────────────────────────────────
-
   const ListFooter = useMemo(() => {
     if (activeTab === 'reflections' && loadingMore) {
       return (
@@ -736,7 +711,6 @@ export default function JournalScreen() {
   }, [activeTab, loadingMore]);
 
   // ── List empty ─────────────────────────────────────────────────────────────
-
   const ListEmpty = useMemo(() => {
     if (loading) {
       return (
@@ -750,7 +724,7 @@ export default function JournalScreen() {
       if (sleepEntries.length > 0 && filteredSleepEntries.length === 0) {
         return (
           <View style={styles.emptyContainer}>
-            <LinearGradient colors={['rgba(201,174,120,0.07)', 'transparent']} style={styles.emptyCard}>
+            <LinearGradient colors={['rgba(168, 139, 235, 0.10)', 'transparent']} style={[styles.emptyCard, theme.isDark && styles.velvetBorder]}>
               <Ionicons name="moon-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
               <Text style={styles.emptyTitle}>No dreams found</Text>
               <Text style={styles.emptyDescription}>
@@ -764,7 +738,7 @@ export default function JournalScreen() {
       }
       return (
         <View style={styles.emptyContainer}>
-          <LinearGradient colors={['rgba(201,174,120,0.07)', 'transparent']} style={styles.emptyCard}>
+          <LinearGradient colors={['rgba(168, 139, 235, 0.10)', 'transparent']} style={[styles.emptyCard, theme.isDark && styles.velvetBorder]}>
             <Ionicons name="moon-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>No dreams logged yet</Text>
             <Text style={styles.emptyDescription}>
@@ -778,7 +752,7 @@ export default function JournalScreen() {
     if (totalCount > 0 && filteredEntries.length === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <LinearGradient colors={['rgba(212,184,114,0.07)', 'transparent']} style={styles.emptyCard}>
+          <LinearGradient colors={['rgba(162, 194, 225, 0.10)', 'transparent']} style={[styles.emptyCard, theme.isDark && styles.velvetBorder]}>
             <Ionicons name="search-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>No entries found</Text>
             <Text style={styles.emptyDescription}>
@@ -792,7 +766,7 @@ export default function JournalScreen() {
     }
     return (
       <View style={styles.emptyContainer}>
-        <LinearGradient colors={['rgba(212,184,114,0.07)', 'transparent']} style={styles.emptyCard}>
+        <LinearGradient colors={['rgba(162, 194, 225, 0.10)', 'transparent']} style={[styles.emptyCard, theme.isDark && styles.velvetBorder]}>
           <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>Start Your Journey</Text>
           <Text style={styles.emptyDescription}>Begin tracking your emotional patterns and personal insights</Text>
@@ -863,10 +837,10 @@ export default function JournalScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
-      {/* Nebula depth — atmospheric glow orbs */}
+      {/* Nebula/Atmosphere glow orbs */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.08)' }]} />
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -931,6 +905,7 @@ export default function JournalScreen() {
           initialData={editingEntry}
         />
 
+        {/* ── Entry Action Sheet ── */}
         <Modal
           visible={!!actionEntry}
           transparent
@@ -941,10 +916,10 @@ export default function JournalScreen() {
             <Pressable style={StyleSheet.absoluteFill} onPress={closeEntryActions} />
             <View style={styles.entryActionSheetWrap}>
               <LinearGradient
-                colors={archiveSurfaceGradients.actionSheet}
+                colors={theme.isDark ? ['rgba(44, 54, 69, 0.98)', 'rgba(26, 30, 41, 0.98)'] : [theme.cardSurfaceStrong, 'rgba(244, 238, 229, 0.98)']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={styles.entryActionSheet}
+                style={[styles.entryActionSheet, theme.isDark && styles.velvetBorder]}
               >
                 <View style={styles.entryActionHandle} />
                 <View style={styles.entryActionHeader}>
@@ -988,14 +963,12 @@ export default function JournalScreen() {
             </View>
           </View>
         </Modal>
-
       </SafeAreaView>
-
     </View>
   );
 }
 
-// ── Section Header (matches Today screen) ────────────────────────────────
+// ── Section Header ────────────────────────────────
 
 function SectionHeader({ title, icon }: { title: string; icon: string }) {
   const sectionHeaderStyles = useThemedStyles(createSectionHeaderStyles);
@@ -1024,7 +997,7 @@ const createSectionHeaderStyles = (theme: AppTheme) => StyleSheet.create({
   },
 });
 
-// ── Luminous Journal FAB (identical to Today) ────────────────────────────────
+// ── Luminous Journal FAB ────────────────────────────────
 
 function JournalFAB({ onPress }: { onPress: () => void }) {
   const theme = useAppTheme();
@@ -1064,7 +1037,7 @@ const createJournalFabStyles = (theme: AppTheme) => StyleSheet.create({
     zIndex: 100,
   },
   glowWrapper: {
-    shadowColor: '#D4B872',
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.45,
     shadowRadius: 14,
@@ -1087,7 +1060,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   safeArea: { flex: 1 },
   iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.10)' : theme.cardSurface, justifyContent: 'center', alignItems: 'center', marginTop: 4 },
 
-  // Header — matches Today screen
+  // Velvet Glass Mixin
+  velvetBorder: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+
+  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1132,30 +1114,11 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     fontWeight: '600',
     marginBottom: 4,
   },
-  checkInTrendSection: { marginBottom: 32 },
-  checkInTrendSubtitle: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    marginBottom: 20,
-  },
 
   premiumBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'transparent', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   premiumBadgeText: { fontSize: 10, fontWeight: '700', color: theme.textGold },
 
-  lockBox: {
-    height: 140,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 32,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
-  },
-  lockTitle: { color: theme.textGold, marginTop: 12, fontWeight: '600', fontSize: 16 },
-  lockSubtitle: { color: theme.textSecondary, fontSize: 14, marginTop: 6, textAlign: 'center', paddingHorizontal: 20 },
-
   insightsSection: { marginBottom: 32 },
-  insightsTitle: { fontSize: 20, color: theme.textPrimary, marginBottom: 6, fontWeight: '700' },
   insightsSubtitle: { fontSize: 13, color: theme.textMuted, marginBottom: 20, lineHeight: 20 },
 
   insightCard: {
@@ -1164,6 +1127,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.cardBorder,
     marginBottom: 32,
+    overflow: 'hidden',
   },
   insightHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   insightTitle: { fontSize: 14, fontWeight: '700', color: PALETTE.gold, letterSpacing: 1.5, textTransform: 'uppercase' },
@@ -1201,7 +1165,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: theme.cardBorder,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : theme.cardSurface,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
   },
   browseSectionTitle: {
     color: theme.textPrimary,
@@ -1211,7 +1175,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.cardSurface,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: theme.cardBorder,
@@ -1229,11 +1193,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   entriesSection: { marginBottom: 20 },
   entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginTop: -12 },
-  sectionTitle: {
-    color: theme.textPrimary,
-    fontSize: 19,
-    fontWeight: '700',
-  },
   entriesCount: { fontSize: 12, color: theme.textMuted, fontVariant: ['tabular-nums'], fontWeight: '600', letterSpacing: 0.5 },
 
   loadingContainer: { padding: 40, alignItems: 'center' },
@@ -1321,7 +1280,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(201,174,120,0.12)',
+    backgroundColor: 'rgba(162, 194, 225, 0.12)',
     borderWidth: 1,
     borderColor: 'rgba(201,174,120,0.18)',
   },
@@ -1362,15 +1321,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  entryCard: { borderRadius: 24, backgroundColor: 'rgba(212,184,114,0.10)', borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 16 },
-  entryGradient: { padding: 28 },
-  entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  entryDate: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
-  entryTime: { fontSize: 12, color: theme.textMuted },
-
-  entryTitle: { fontSize: 18, color: theme.textPrimary, marginBottom: 8 },
-  entryContent: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
-  expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.cardBorder },
   // ── Dream card ──
   dreamCardWrapper: {
     marginBottom: 16,
@@ -1379,7 +1329,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     padding: 28,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: theme.cardBorder,
   },
   dreamCardHeader: {
     flexDirection: 'row',
@@ -1406,12 +1356,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   dreamMoons: {
     fontSize: 14,
-    color: '#C9AE78',
+    color: PALETTE.gold,
     letterSpacing: 1,
   },
   dreamMoonsEmpty: {
     fontSize: 14,
-    color: 'rgba(201,174,120,0.26)',
+    color: 'rgba(255,255,255,0.1)',
     letterSpacing: 1,
   },
   dreamMoonsEmptyLight: {
@@ -1419,7 +1369,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   dreamQualityLabel: {
     fontSize: 12,
-    color: 'rgba(201,174,120,0.7)',
+    color: 'rgba(212,175,55,0.8)',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     fontWeight: '600',
@@ -1463,4 +1413,3 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     textTransform: 'uppercase',
   },
 });
-

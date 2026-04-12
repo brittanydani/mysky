@@ -116,7 +116,7 @@ export default function OnboardingRestoreScreen() {
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
-              <Ionicons name="chevron-back-outline" size={24} color={PALETTE.textMain} />
+              <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
             </Pressable>
             <Text style={styles.headerTitle}>Restore Backup</Text>
             <View style={styles.backButton} />
@@ -166,7 +166,7 @@ export default function OnboardingRestoreScreen() {
                 label={busy ? 'Restoring...' : 'Restore Data'}
                 onPress={restore}
                 disabled={!backupUri || busy}
-                icon={!busy ? <Ionicons name="arrow-forward-outline" size={18} color="#020817" /> : undefined}
+                icon={!busy ? <Ionicons name="arrow-forward-outline" size={18} color="#1A1815" /> : undefined}
               />
 
               <Text style={styles.note}>
@@ -277,7 +277,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderColor: 'rgba(232, 214, 174, 0.4)',
     borderRadius: 16,
   },
-  ctaText: { fontSize: 16, fontWeight: '700', color: '#020817' },
+  ctaText: { fontSize: 16, fontWeight: '700', color: '#1A1815' },
   
   note: { 
     marginTop: 20, 

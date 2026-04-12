@@ -679,7 +679,7 @@ export default function SleepScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back-outline" size={24} color={PALETTE.textMain} />
+          <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
         </Pressable>
         <ScrollView
           ref={scrollRef}
@@ -703,7 +703,7 @@ export default function SleepScreen() {
 
           {/* ── Main Form (Volumetric Glass Card) ── */}
           <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.section}>
-            <LinearGradient colors={[PALETTE.cardBg, 'rgba(10, 12, 18, 0.85)']} style={styles.formCard}>
+            <LinearGradient colors={['rgba(15, 18, 25, 0.65)', 'rgba(10, 12, 18, 0.85)']} style={styles.formCard}>
 
               <View style={styles.formInner}>
                 <View style={styles.formTitleRow}>
@@ -723,7 +723,7 @@ export default function SleepScreen() {
                       }}
                       style={styles.cancelEditBtn}
                     >
-                      <Ionicons name="close-circle-outline" size={16} color={PALETTE.textMuted} />
+                      <Ionicons name="close-circle-outline" size={16} color={theme.textMuted} />
                     </Pressable>
                   )}
                 </View>
@@ -757,14 +757,14 @@ export default function SleepScreen() {
                       style={styles.hoursStepBtn}
                       onPress={() => { Haptics.selectionAsync(); setHasDuration(true); setDurationHours(h => Math.max(0.5, parseFloat((h - 0.5).toFixed(1)))); }}
                     >
-                      <Ionicons name="remove-outline" size={22} color={PALETTE.textMain} />
+                      <Ionicons name="remove-outline" size={22} color={theme.textPrimary} />
                     </Pressable>
                     <Pressable
                       style={styles.hoursCircleDisplay}
                       onLongPress={() => { setHasDuration(false); setDurationHours(7.5); }}
                     >
                       <Text
-                        style={[styles.hoursCircleValue, !hasDuration && { color: PALETTE.textMuted }]}
+                        style={[styles.hoursCircleValue, !hasDuration && { color: theme.textMuted }]}
                         numberOfLines={1}
                         adjustsFontSizeToFit
                         minimumFontScale={0.6}
@@ -779,7 +779,7 @@ export default function SleepScreen() {
                       style={styles.hoursStepBtn}
                       onPress={() => { Haptics.selectionAsync(); setHasDuration(true); setDurationHours(h => Math.min(12, parseFloat((h + 0.5).toFixed(1)))); }}
                     >
-                      <Ionicons name="add-outline" size={22} color={PALETTE.textMain} />
+                      <Ionicons name="add-outline" size={22} color={theme.textPrimary} />
                     </Pressable>
                   </View>
 
@@ -813,7 +813,7 @@ export default function SleepScreen() {
                     >
                       <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(10, 12, 18, 0.8)']} style={styles.premiumLockCard}>
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.premiumLockTitle, { color: PALETTE.textMain }]}>AI Dream Interpretation</Text>
+                          <Text style={[styles.premiumLockTitle, { color: theme.textPrimary }]}>AI Dream Interpretation</Text>
                           <Text style={styles.premiumLockSub}>
                             {isPremium
                               ? 'Saving this dream uses the richer Deeper Sky Gemini model.'
@@ -1185,12 +1185,12 @@ export default function SleepScreen() {
             <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Sleep Trends</Text>
               <View style={styles.obsidianCard}>
-                <LinearGradient colors={['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)']} style={StyleSheet.absoluteFill} />
+                <LinearGradient colors={theme.isDark ? ['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)'] : ['rgba(255, 255, 255, 0.75)', 'rgba(255, 255, 255, 0.75)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.obsidianCardHeader}>
                   <MetallicIcon name="moon-outline" size={14} variant="gold" />
                   <MetallicText color={PALETTE.silverBlue} style={styles.obsidianCardEyebrow}>NIGHTLY ASCENT</MetallicText>
                 </View>
-                <SkiaSleepGraph data={historicalSleep} width={SCREEN_W - 80} height={176} />
+                <SkiaSleepGraph data={historicalSleep} width={SCREEN_W - 80} height={176} isDark={theme.isDark} />
                 <View style={styles.obsidianCardFooter}>
                   <Text style={styles.obsidianCardFooterText}>
                     {historicalSleep.length} night{historicalSleep.length !== 1 ? 's' : ''} · Path = duration · Glow = sleep quality
@@ -1237,7 +1237,7 @@ export default function SleepScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   glowOrb: {
     position: 'absolute',
@@ -1252,13 +1252,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   header: { marginTop: 10, marginBottom: 32, paddingHorizontal: 4 },
   backButton: { padding: 8, paddingHorizontal: 16, alignSelf: 'flex-start' },
   headerEyebrow: { fontSize: 11, fontWeight: '700', color: PALETTE.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 },
-  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.5, marginBottom: 6 },
+  title: { fontSize: 34, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.5, marginBottom: 6 },
   subtitle: { fontSize: 14 },
-  headerDesc: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 22, marginTop: 2 },
+  headerDesc: { fontSize: 15, color: theme.textMuted, lineHeight: 22, marginTop: 2 },
 
   section: { marginBottom: 32 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 16, paddingLeft: 4 },
-  editorialSectionLabel: { fontSize: 13, fontWeight: '700', color: PALETTE.textMuted, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16, paddingLeft: 2 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary, marginBottom: 16, paddingLeft: 4 },
+  editorialSectionLabel: { fontSize: 13, fontWeight: '700', color: theme.textMuted, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16, paddingLeft: 2 },
 
   // Featured editorial entry card (first/most recent)
   featuredEntryCard: { marginBottom: 12 },
@@ -1266,7 +1266,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   featuredEntryTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
   featuredEntryLead: { flex: 1, marginRight: 12 },
   featuredEyebrow: { fontSize: 10, fontWeight: '800', color: PALETTE.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 },
-  featuredDate: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain, letterSpacing: -0.3 },
+  featuredDate: { fontSize: 22, fontWeight: '700', color: theme.textPrimary, letterSpacing: -0.3 },
   featuredMeta: { alignItems: 'flex-end', gap: 6 },
   featuredMetaPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderRadius: 10, paddingVertical: 5, paddingHorizontal: 10 },
   featuredMetaText: { fontSize: 12, color: theme.textSecondary, fontWeight: '600' },
@@ -1278,18 +1278,18 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   // Editorial list row for entries after the first
   entryListRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 4, gap: 12 },
   entryListLeft: { flex: 1 },
-  entryListDate: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain, marginBottom: 3 },
-  entryListDream: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 18 },
+  entryListDate: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginBottom: 3 },
+  entryListDream: { fontSize: 13, color: theme.textMuted, lineHeight: 18 },
   entryListRight: { alignItems: 'flex-end', gap: 5 },
   entryListMeta: { fontSize: 13, color: theme.textSecondary, fontWeight: '500' },
   entryListFeelingTag: { paddingBottom: 12, paddingLeft: 4, borderBottomWidth: 1, borderBottomColor: theme.cardBorder },
-  entryListFeelingText: { fontSize: 12, color: PALETTE.textMuted, fontStyle: 'italic' },
+  entryListFeelingText: { fontSize: 12, color: theme.textMuted, fontStyle: 'italic' },
 
   // ── Form Card (deep glassmorphic volume) ──
   formCard: { borderRadius: 24, borderWidth: 1, borderTopColor: theme.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.68)', borderLeftColor: theme.cardBorder, borderRightColor: theme.cardBorder, borderBottomColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface },
   formInner: { padding: 24 },
   formTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 },
-  formTitle: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain },
+  formTitle: { fontSize: 22, fontWeight: '700', color: theme.textPrimary },
   cancelEditBtn: { padding: 8 },
 
   fieldLabel: { fontSize: 11, fontWeight: '800', color: theme.textPrimary, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 },
@@ -1302,35 +1302,35 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   hoursPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 },
   hoursStepBtn: { width: 52, height: 52, borderRadius: 26, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, alignItems: 'center', justifyContent: 'center' },
   hoursCircleDisplay: { width: 140, height: 140, borderRadius: 70, borderWidth: 1, borderColor: theme.cardBorder, alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, },
-  hoursCircleValue: { fontSize: 28, fontWeight: '700', color: PALETTE.textMain },
+  hoursCircleValue: { fontSize: 28, fontWeight: '700', color: theme.textPrimary },
   hoursCircleQuality: { fontSize: 9, fontWeight: '800', color: theme.textSecondary, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 5, textAlign: 'center', paddingHorizontal: 14 },
 
   // Dream journal glass card
   dreamGlassCard: { borderRadius: 24, borderWidth: 1, borderTopColor: theme.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.68)', borderLeftColor: theme.cardBorder, borderRightColor: theme.cardBorder, borderBottomColor: theme.cardBorder, padding: 24, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.cardSurface, minHeight: 120 },
   dreamGlassCardActive: { borderColor: 'rgba(217, 191, 140, 0.4)', backgroundColor: 'rgba(217, 191, 140, 0.05)' },
-  dreamInputInner: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24, paddingTop: 16, textAlignVertical: 'top' },
+  dreamInputInner: { fontSize: 16, color: theme.textPrimary, lineHeight: 24, paddingTop: 16, textAlignVertical: 'top' },
 
   // Premium lock cards
   premiumLockCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217, 191, 140, 0.2)', padding: 28 },
   premiumLockTitle: { fontSize: 15, fontWeight: '700', color: PALETTE.gold, marginBottom: 4 },
-  premiumLockSub: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 18 },
+  premiumLockSub: { fontSize: 13, color: theme.textMuted, lineHeight: 18 },
   deeperSkyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(157, 118, 193, 0.15)', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.3)' },
   deeperSkyBadgeText: { color: PALETTE.amethyst, fontSize: 9, fontWeight: '800', letterSpacing: 1 },
 
   // Feeling picker
   dreamMoodDropdown: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  dreamMoodDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500', flex: 1, marginRight: 8 },
+  dreamMoodDropdownText: { color: theme.textPrimary, fontSize: 15, fontWeight: '500', flex: 1, marginRight: 8 },
   dreamMoodDropdownPlaceholder: { color: theme.textSecondary, fontSize: 15 },
   dreamMoodOptions: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, borderRadius: 20, marginBottom: 12, overflow: 'hidden' },
   dreamMoodOption: { paddingVertical: 15, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: theme.cardBorder },
   dreamMoodOptionSelected: { backgroundColor: 'rgba(157, 118, 193, 0.15)' },
-  dreamMoodOptionText: { color: PALETTE.textMain, fontSize: 15 },
+  dreamMoodOptionText: { color: theme.textPrimary, fontSize: 15 },
   dreamMoodOptionTextSelected: { color: PALETTE.amethyst, fontWeight: '600' },
 
   feelingSearchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: theme.cardBorder },
-  feelingSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 15, height: 40 },
+  feelingSearchInput: { flex: 1, color: theme.textPrimary, fontSize: 15, height: 40 },
   customFeelingComposer: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: theme.cardBorder },
-  customFeelingInput: { flex: 1, color: PALETTE.textMain, fontSize: 15, minHeight: 40 },
+  customFeelingInput: { flex: 1, color: theme.textPrimary, fontSize: 15, minHeight: 40 },
   customFeelingAddBtn: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(157,118,193,0.35)', backgroundColor: 'rgba(157,118,193,0.12)' },
   customFeelingAddBtnDisabled: { opacity: 0.4 },
   customFeelingAddText: { color: PALETTE.amethyst, fontSize: 13, fontWeight: '700' },
@@ -1340,38 +1340,38 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   tierRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 16, borderBottomWidth: 1, borderBottomColor: theme.cardBorder },
   tierPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface },
   tierDot: { width: 8, height: 8, borderRadius: 4 },
-  tierPillText: { color: PALETTE.textMuted, fontSize: 13, fontWeight: '600' },
+  tierPillText: { color: theme.textMuted, fontSize: 13, fontWeight: '600' },
   tierBadge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
   tierBadgeText: { color: '#020817', fontSize: 11, fontWeight: '700' },
-  tierHint: { color: PALETTE.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 24, paddingHorizontal: 16,  },
+  tierHint: { color: theme.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 24, paddingHorizontal: 16,  },
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: theme.cardBorder },
-  intensityLabel: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
+  intensityLabel: { fontSize: 13, color: theme.textMuted, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
   intensityDots: { flexDirection: 'row', gap: 8 },
-  intensityDot: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', justifyContent: 'center' },
-  intensityDotActive: { backgroundColor: 'rgba(201, 174, 120, 0.25)', borderColor: PALETTE.amethyst },
-  intensityDotText: { fontSize: 14, color: PALETTE.textMuted, fontWeight: '600' },
+  intensityDot: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'transparent', borderWidth: 1, borderColor: theme.cardBorder, alignItems: 'center', justifyContent: 'center' },
+  intensityDotActive: { backgroundColor: 'rgba(162, 194, 225, 0.25)', borderColor: PALETTE.amethyst },
+  intensityDotText: { fontSize: 14, color: theme.textMuted, fontWeight: '600' },
   intensityDotTextActive: { color: PALETTE.amethyst },
 
   // Dream metadata
   metadataSection: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, borderRadius: 24, marginBottom: 12, padding: 24 },
   metadataRow: { marginBottom: 22 },
-  metadataLabel: { fontSize: 14, color: PALETTE.textMuted, fontWeight: '600', marginBottom: 12 },
+  metadataLabel: { fontSize: 14, color: theme.textMuted, fontWeight: '600', marginBottom: 12 },
   themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   customThemeWrap: { marginTop: 12 },
-  customThemeInput: { borderRadius: 16, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, paddingHorizontal: 16, paddingVertical: 14, color: PALETTE.textMain, fontSize: 15 },
+  customThemeInput: { borderRadius: 16, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, paddingHorizontal: 16, paddingVertical: 14, color: theme.textPrimary, fontSize: 15 },
   awakenDropdown: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  awakenDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
+  awakenDropdownText: { color: theme.textPrimary, fontSize: 15, fontWeight: '500' },
   recurringRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  toggleTrack: { width: 50, height: 28, borderRadius: 14, backgroundColor: 'transparent', justifyContent: 'center', paddingHorizontal: 3, borderWidth: 1, borderColor: PALETTE.glassBorder },
-  toggleTrackActive: { backgroundColor: 'rgba(201, 174, 120, 0.4)', borderColor: PALETTE.amethyst },
+  toggleTrack: { width: 50, height: 28, borderRadius: 14, backgroundColor: 'transparent', justifyContent: 'center', paddingHorizontal: 3, borderWidth: 1, borderColor: theme.cardBorder },
+  toggleTrackActive: { backgroundColor: 'rgba(162, 194, 225, 0.4)', borderColor: PALETTE.amethyst },
   toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: theme.isDark ? 'rgba(226,232,240,0.86)' : '#FFF9F2' },
   toggleThumbActive: { alignSelf: 'flex-end', backgroundColor: PALETTE.amethyst },
 
   // Seal artifact
   sealSection: { alignItems: 'center', marginTop: 48, paddingTop: 32, borderTopWidth: 1, borderTopColor: theme.cardBorder },
   pulseSection: { alignItems: 'center', position: 'relative' },
-  pulseLabel: { color: PALETTE.textMain, fontSize: 14, fontWeight: '800', letterSpacing: 1.7, textTransform: 'uppercase', marginBottom: 24, textAlign: 'center' },
+  pulseLabel: { color: theme.textPrimary, fontSize: 14, fontWeight: '800', letterSpacing: 1.7, textTransform: 'uppercase', marginBottom: 24, textAlign: 'center' },
   unlockBtn: { marginTop: 12, paddingVertical: 13, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(217,191,140,0.28)', backgroundColor: 'rgba(217,191,140,0.10)' },
   unlockText: { color: theme.textPrimary, fontWeight: '700', fontSize: 12, letterSpacing: 1 },
 
@@ -1381,13 +1381,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   // Today's dream reflection
   todayInterpretCard: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.25)', borderTopColor: 'rgba(157, 118, 193, 0.4)' },
   todayInterpretHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  todayInterpretTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain },
+  todayInterpretTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary },
 
   // Stats
   statsRow: { flexDirection: 'row', gap: 12 },
   statCard: { flex: 1, borderRadius: 20, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : theme.cardSurface, },
   statLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginBottom: 10 },
-  statValue: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain },
+  statValue: { fontSize: 22, fontWeight: '700', color: theme.textPrimary },
   statSub: { fontSize: 11, color: theme.textSecondary, marginTop: 4, textAlign: 'center' },
 
   // Obsidian graph / cluster cards
@@ -1399,45 +1399,45 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // Entry history
   entryCard: { borderBottomWidth: 1, borderBottomColor: theme.cardBorder, marginBottom: 0 },
-  entryCardInner: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
+  entryCardInner: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: theme.cardBorder },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  entryDate: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain },
+  entryDate: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
   entryMeta: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   entryMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  entryMetaText: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500' },
+  entryMetaText: { fontSize: 13, color: theme.textMuted, fontWeight: '500' },
   entryMoons: { flexDirection: 'row', gap: 2 },
-  entryDream: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 24, marginBottom: 8 },
+  entryDream: { fontSize: 15, color: theme.textMuted, lineHeight: 24, marginBottom: 8 },
   entryDreamMoodRow: { marginTop: 4 },
-  entryDreamMoodText: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500' },
-  deleteHint: { fontSize: 12, color: PALETTE.textMuted, textAlign: 'center', marginTop: 16 },
+  entryDreamMoodText: { fontSize: 13, color: theme.textMuted, fontWeight: '500' },
+  deleteHint: { fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: 16 },
 
   reflectBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, backgroundColor: 'rgba(157, 118, 193, 0.1)', borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.2)' },
   reflectBtnPressed: { opacity: 0.7 },
   reflectBtnText: { fontSize: 14, color: PALETTE.amethyst, fontWeight: '600' },
 
   interpretCard: { borderRadius: 24, padding: 28, marginTop: 6, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.2)' },
-  interpretBody: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 24 },
+  interpretBody: { fontSize: 15, color: theme.textMuted, lineHeight: 24 },
 
   undercurrentBox: { marginTop: 16, paddingVertical: 8, paddingHorizontal: 14, alignSelf: 'flex-start', borderRadius: 12, backgroundColor: 'rgba(157, 118, 193, 0.10)', borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.18)' },
   undercurrentLabel: { fontSize: 12, fontWeight: '600', color: PALETTE.amethyst, letterSpacing: 0.8 },
 
   sitWithBox: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(157, 118, 193, 0.15)' },
-  sitWithLabel: { fontSize: 11, fontWeight: '700', color: PALETTE.textMuted, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
-  sitWithText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24,  },
+  sitWithLabel: { fontSize: 11, fontWeight: '700', color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
+  sitWithText: { fontSize: 16, color: theme.textPrimary, lineHeight: 24,  },
 
   // AI Gemini interpretation
   aiSection: { marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(201, 174, 120, 0.15)' },
-  aiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(201, 174, 120, 0.08)', borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.25)' },
+  aiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(162, 194, 225, 0.08)', borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.25)' },
   aiBtnPressed: { opacity: 0.7 },
   aiBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
   aiLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
-  aiLoadingText: { fontSize: 13, color: PALETTE.textMuted,  },
+  aiLoadingText: { fontSize: 13, color: theme.textMuted,  },
   aiErrorText: { fontSize: 13, color: PALETTE.copper, textAlign: 'center', paddingVertical: 8 },
   aiResultBox: { marginTop: 4 },
   aiResultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   aiResultLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase' },
 
   emptyState: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
-  emptyTitle: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain, textAlign: 'center', marginBottom: 12 },
-  emptySubtitle: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22 },
+  emptyTitle: { fontSize: 22, fontWeight: '700', color: theme.textPrimary, textAlign: 'center', marginBottom: 12 },
+  emptySubtitle: { fontSize: 15, color: theme.textMuted, textAlign: 'center', lineHeight: 22 },
 });

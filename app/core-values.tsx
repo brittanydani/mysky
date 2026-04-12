@@ -234,7 +234,7 @@ const CoreValuesConstellation = ({
     .filter((line): line is { key: string; start: (typeof points)[number]; end: (typeof points)[number] } => Boolean(line));
 
   return (
-    <VelvetGlassSurface style={styles.constellationCard} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
+    <VelvetGlassSurface style={styles.constellationCard} intensity={45} backgroundColor={theme.cardSurfaceValues}>
       <View style={styles.constellationHeader}>
         <MetallicIcon name="analytics-outline" size={18} color={PALETTE.gold} />
         <MetallicText style={styles.constellationTitle} color={PALETTE.gold}>VALUES MAP</MetallicText>
@@ -296,7 +296,7 @@ const CoreValuesConstellation = ({
           {points.map(point => (
             <React.Fragment key={point.value}>
               <Circle cx={point.x} cy={point.y} r={15 - (point.rank - 1)} fill="url(#constellationGlow)" stroke="rgba(217,191,140,0.9)" strokeWidth="1.2" />
-              <SvgText x={point.x} y={point.y + 3} fontSize="10" fontWeight="800" fill={PALETTE.bg} textAnchor="middle">
+              <SvgText x={point.x} y={point.y + 3} fontSize="10" fontWeight="800" fill={'#1A1815'} textAnchor="middle">
                 {String(point.rank)}
               </SvgText>
               <SvgText
@@ -562,7 +562,7 @@ export default function CoreValuesScreen() {
                     toggleTop(value);
                   }}
                 >
-                  {isTop && <Ionicons name="star-outline" size={10} color={PALETTE.bg} style={{ marginRight: 6 }} />}
+                  {isTop && <Ionicons name="star-outline" size={10} color={'#1A1815'} style={{ marginRight: 6 }} />}
                   {isTop ? (
                     <Text style={[styles.chipText, styles.chipTextTop]}>{value}</Text>
                   ) : isSelected ? (
@@ -645,7 +645,7 @@ export default function CoreValuesScreen() {
           {/* The Paradox Engine Insight */}
           {activeParadoxes.map((paradox, index) => (
             <Animated.View key={paradox.name} layout={Layout.springify()} entering={FadeIn.delay(index * 150).duration(600)}>
-              <VelvetGlassSurface style={styles.paradoxCard} intensity={42} backgroundColor={theme.isDark ? 'rgba(28, 18, 18, 0.58)' : 'rgba(255, 249, 243, 0.88)'}>
+              <VelvetGlassSurface style={styles.paradoxCard} intensity={42} backgroundColor={theme.cardSurfaceValues}>
               <View style={styles.paradoxHeader}>
                 <MetallicIcon name="git-compare-outline" size={16} color={PALETTE.copper} />
                 <MetallicText style={styles.paradoxEyebrow} color={PALETTE.copper}>CORE PARADOX DETECTED</MetallicText>
@@ -662,7 +662,7 @@ export default function CoreValuesScreen() {
           {/* Generic Reflection (if no paradoxes exist yet but they have selected values) */}
           {state.selected.length >= 3 && activeParadoxes.length === 0 && (
             <Animated.View layout={Layout.springify()} entering={FadeInDown.duration(400)}>
-              <VelvetGlassSurface style={styles.promptCard} intensity={40} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.56)' : 'rgba(255, 255, 255, 0.80)'}>
+              <VelvetGlassSurface style={styles.promptCard} intensity={40} backgroundColor={theme.cardSurfaceValues}>
               <Text style={styles.promptText}>
                 When two values you hold pull in opposite directions, that's where your most difficult—and important—decisions live.
               </Text>
@@ -687,7 +687,7 @@ export default function CoreValuesScreen() {
               }}
             >
               <LinearGradient
-                colors={saved ? ['rgba(140,190,170,0.3)', 'rgba(140,190,170,0.1)'] : ['rgba(217,191,140,0.3)', 'rgba(217,191,140,0.1)']}
+                colors={saved ? ['rgba(184,147,90,0.3)', 'rgba(184,147,90,0.1)'] : ['rgba(217,191,140,0.3)', 'rgba(217,191,140,0.1)']}
                 style={StyleSheet.absoluteFill}
               />
               <MetallicText style={styles.saveBtnText} color={PALETTE.gold}>
@@ -721,11 +721,19 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 21, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface },
   customChip: { borderWidth: 1, borderColor: 'rgba(217,191,140,0.24)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface },
   addCustomChip: { borderColor: 'rgba(217,191,140,0.28)' },
-  chipSelected: { borderColor: 'rgba(217,191,140,0.48)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.90)' : 'rgba(217,191,140,0.18)' },
-  chipTop: { borderColor: PALETTE.gold, backgroundColor: PALETTE.gold },
+  chipSelected: {
+    borderColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    shadowColor: '#4A3F35',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  chipTop: { borderColor: '#B8935A', backgroundColor: '#B8935A' },
   chipText: { fontSize: 12, color: theme.textSecondary, fontWeight: '600' },
-  chipTextSelected: { color: PALETTE.gold, fontWeight: '600' },
-  chipTextTop: { color: PALETTE.bg, fontWeight: '800' },
+  chipTextSelected: { color: '#1A1815', fontWeight: '700' },
+  chipTextTop: { color: '#1A1815', fontWeight: '800' },
   customComposer: {
     minWidth: 210,
     flexDirection: 'row',
@@ -780,13 +788,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   paradoxEyebrow: { fontSize: 10, color: PALETTE.copper, fontWeight: '800', letterSpacing: 1.5 },
   paradoxTitle: { fontSize: 20, color: theme.textPrimary, fontWeight: '700', marginBottom: 10 },
   paradoxBody: { fontSize: 14, color: theme.textSecondary, lineHeight: 22, marginBottom: 16 },
-  paradoxFooter: { fontSize: 12, color: theme.textMuted, lineHeight: 18, borderTopWidth: 1, borderTopColor: 'rgba(205, 127, 93, 0.2)', paddingTop: 16 },
+  paradoxFooter: { fontSize: 12, color: theme.textSecondary, lineHeight: 18, borderTopWidth: 1, borderTopColor: 'rgba(205, 127, 93, 0.2)', paddingTop: 16 },
 
   promptCard: { borderRadius: 28, padding: 28, marginBottom: 24 },
   promptText: { fontSize: 13, color: theme.textSecondary, lineHeight: 20, textAlign: 'center' },
 
   sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(2,8,23,0.95)' : 'rgba(255,255,255,0.95)' },
   saveBtn: { height: 52, borderRadius: 26, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.5)', justifyContent: 'center', alignItems: 'center' },
-  saveBtnDone: { borderColor: 'rgba(140,190,170,0.4)' },
-  saveBtnText: { fontSize: 14, color: PALETTE.gold, fontWeight: '800', letterSpacing: 0.5, textAlign: 'center' },
+  saveBtnDone: { borderColor: 'rgba(184,147,90,0.5)' },
+  saveBtnText: { fontSize: 14, color: theme.isDark ? '#D4AF37' : '#1A1815', fontWeight: '800', letterSpacing: 0.5, textAlign: 'center' },
 });

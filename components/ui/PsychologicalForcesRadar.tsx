@@ -182,10 +182,10 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
                 fontSize: 12,
                 fontWeight: '600',
                 letterSpacing: 0.2,
-                color: '#FFFFFF',
-                textShadowColor: 'rgba(0,0,0,0.45)',
+                color: theme.isDark ? '#FFFFFF' : 'rgba(26, 24, 21, 0.7)',
+                textShadowColor: theme.isDark ? 'rgba(0,0,0,0.45)' : 'transparent',
                 textShadowOffset: { width: 0, height: 1 },
-                textShadowRadius: 4,
+                textShadowRadius: theme.isDark ? 4 : 0,
               }}>
               {textContent}
             </Text>

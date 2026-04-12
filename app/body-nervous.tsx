@@ -99,12 +99,14 @@ export default function BodyNervousScreen() {
 
           <Animated.View entering={FadeInDown.delay(140).duration(600)}>
             <VelvetGlassSurface style={styles.infoCard} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
+            {theme.isDark && (
             <LinearGradient
               colors={['rgba(140,190,170,0.08)', 'rgba(10,10,12,0.18)']}
               style={StyleSheet.absoluteFill}
             >
               <View />
             </LinearGradient>
+            )}
               <Text style={styles.infoText}>
                 Your body holds wisdom your mind hasn't named yet. These tools help you listen.
               </Text>
@@ -122,12 +124,14 @@ export default function BodyNervousScreen() {
                   onPress={() => nav(tool.route)}
                 >
                   <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
+                  {theme.isDark && (
                   <LinearGradient
                     colors={[`rgba(${tool.accentRgb}, 0.10)`, 'rgba(10,10,12,0.18)']}
                     style={StyleSheet.absoluteFill}
                   >
                     <View />
                   </LinearGradient>
+                  )}
                     <MetallicText style={[styles.cardIcon, { marginBottom: tool.iconOffset ?? 0, marginLeft: tool.iconLeft ?? 0 }]} color={tool.iconColor}>{tool.icon}</MetallicText>
                     <Text style={styles.cardTitle}>{tool.title}</Text>
                     <Text style={styles.cardSubtitle}>{tool.description}</Text>

@@ -343,7 +343,7 @@ export default function AstrologySettingsModal({
             label={saving ? 'Applying…' : 'Apply Changes'}
             onPress={handleSave}
             disabled={!hasChanges || saving}
-            icon={saving ? <ActivityIndicator color="#020817" size="small" /> : undefined}
+            icon={saving ? <ActivityIndicator color="#1A1815" size="small" /> : undefined}
           />
         </View>
 
@@ -373,7 +373,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 24,
     backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : theme.cardSurfaceStrong,
     borderWidth: 1,
-    borderColor: theme.isDark ? PALETTE.glassBorder : theme.cardBorder,
+    borderColor: theme.isDark ? theme.cardBorder : theme.cardBorder,
   },
   cardSelected: { backgroundColor: theme.isDark ? 'transparent' : theme.surfaceLight, borderColor: theme.isDark ? 'rgba(232,214,174,0.25)' : 'rgba(201,174,120,0.28)' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
@@ -391,13 +391,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 24,
     backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : theme.cardSurfaceStrong,
     borderWidth: 1,
-    borderColor: theme.isDark ? PALETTE.glassBorder : theme.cardBorder,
+    borderColor: theme.isDark ? theme.cardBorder : theme.cardBorder,
     alignItems: 'center',
     gap: 8,
   },
   orbLabel: { fontSize: 13, fontWeight: '700', color: theme.textSecondary },
 
-  infoNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : theme.cardSurface, padding: 20, borderRadius: 24, borderWidth: 1, borderColor: theme.isDark ? PALETTE.glassBorder : theme.cardBorder },
+  infoNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : theme.cardSurface, padding: 20, borderRadius: 24, borderWidth: 1, borderColor: theme.isDark ? theme.cardBorder : theme.cardBorder },
   infoNoteText: { flex: 1, fontSize: 12, color: theme.textSecondary },
 
   footer: { padding: 24, borderTopWidth: 1, borderTopColor: theme.isDark ? 'rgba(255,255,255,0.08)' : theme.cardBorder },

@@ -121,15 +121,15 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
   const tone = toneFromMood(mood);
   const accent = toneColor(tone);
   const previewContent = buildPreviewContent(title, content);
-  const entryGradient = theme.isDark
-    ? [accent + '14', 'rgba(10,10,12,0.9)']
+  const entryGradient: [string, string] = theme.isDark
+    ? ['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.03)']
     : ['rgba(217,191,140,0.12)', theme.cardSurfaceStrong];
 
   return (
     <View style={styles.wrapper}>
       <LinearGradient
         colors={entryGradient}
-        style={styles.card}
+        style={[styles.card, theme.isDark && styles.cardDark]}
       >
         {/* Header row */}
         <View style={styles.headerRow}>
@@ -215,6 +215,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     borderColor: theme.cardBorder,
+  },
+  cardDark: {
+    borderTopColor: 'rgba(255,255,255,0.15)',
+    borderLeftColor: 'rgba(255,255,255,0.06)',
+    borderRightColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: 'rgba(255,255,255,0.04)',
   },
   headerRow: {
     flexDirection: 'row',

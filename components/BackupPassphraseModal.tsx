@@ -35,13 +35,21 @@ interface BackupPassphraseModalProps {
 }
 
 // ── Cinematic Palette ──
-const PALETTE = {
+const PALETTE_DARK = {
   gold: '#C9AE78',
   silverBlue: '#C9AE78',
   copper: '#CD7F5D',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
+};
+const PALETTE_LIGHT = {
+  gold: '#B8935A',
+  silverBlue: '#B8935A',
+  copper: '#8C4A42',
+  textMain: '#1A1815',
+  glassBorder: 'rgba(0,0,0,0.04)',
+  glassHighlight: 'rgba(255,255,255,0.6)',
 };
 
 export default function BackupPassphraseModal({
@@ -51,6 +59,7 @@ export default function BackupPassphraseModal({
   onConfirm,
 }: BackupPassphraseModalProps) {
   const theme = useAppTheme();
+  const PALETTE = theme.isDark ? PALETTE_DARK : PALETTE_LIGHT;
   const styles = useThemedStyles(createStyles);
   const [passphrase, setPassphrase] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -99,7 +108,7 @@ export default function BackupPassphraseModal({
             {/* Header */}
             <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.header}>
               <Pressable style={styles.iconButton} onPress={onCancel}>
-                <Ionicons name="close-outline" size={24} color={PALETTE.textMain} />
+                <Ionicons name="close-outline" size={24} color={theme.textPrimary} />
               </Pressable>
               <Text style={styles.title}>
                 {mode === 'backup' ? 'Create Passphrase' : 'Unlock Backup'}
@@ -119,9 +128,6 @@ export default function BackupPassphraseModal({
                 <VelvetGlassSurface
                   style={styles.contentSurface}
                   intensity={42}
-                  backgroundColor="rgba(10, 14, 23, 0.34)"
-                  borderColor="rgba(255,255,255,0.10)"
-                  highlightColor="rgba(255,255,255,0.05)"
                 >
                   <Text style={styles.description}>
                     {mode === 'backup'
@@ -198,7 +204,7 @@ export default function BackupPassphraseModal({
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -207,13 +213,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0,0,0,0.06)',
   },
   iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -241,20 +247,20 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '700',
-    color: PALETTE.gold,
+    color: theme.isDark ? PALETTE_DARK.gold : PALETTE_LIGHT.gold,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     marginBottom: 10,
     paddingLeft: 4,
   },
   input: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: theme.inputBackground,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
+    borderColor: theme.inputBorder,
     paddingHorizontal: 20,
     paddingVertical: 16,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontSize: 16,
   },
   inputError: {
@@ -262,7 +268,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   warningText: {
     fontSize: 12,
-    color: PALETTE.copper,
+    color: theme.isDark ? PALETTE_DARK.copper : PALETTE_LIGHT.copper,
     marginTop: 8,
     paddingLeft: 4,
     fontWeight: '600',
@@ -283,14 +289,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   ctaText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#020817',
+    color: theme.isDark ? '#020817' : '#1A1815',
   },
   securityNote: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
     marginTop: 32,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
     padding: 16,
     borderRadius: 18,
     borderWidth: 1,

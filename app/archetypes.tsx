@@ -269,9 +269,9 @@ export default function ArchetypesScreen() {
                 const scoreCeiling = Math.max(...Object.values(savedProfile.scores), 1);
                 return (
                   <>
-              <VelvetGlassSurface style={[styles.resultCard, { borderColor: `${dominant.color}40` }]} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}> 
+              <VelvetGlassSurface style={[styles.resultCard, { borderColor: `${dominant.color}40` }]} intensity={45} backgroundColor={theme.cardSurfaceValues}>
                 <MetallicText style={styles.resultIcon} color={dominant.color}>{dominant.icon}</MetallicText>
-                <MetallicText style={styles.resultName} color={dominant.color}>{dominant.name}</MetallicText>
+                <Text style={[styles.resultName, { color: theme.textPrimary }]}>{dominant.name}</Text>
                 <Text style={styles.resultTagline}>{dominant.tagline}</Text>
 
                 <View style={styles.divider} />
@@ -286,7 +286,7 @@ export default function ArchetypesScreen() {
               </VelvetGlassSurface>
 
               {/* Score breakdown */}
-              <VelvetGlassSurface style={styles.scoresCard} intensity={42} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.56)' : 'rgba(255, 255, 255, 0.82)'}>
+              <VelvetGlassSurface style={styles.scoresCard} intensity={42} backgroundColor={theme.cardSurfaceValues}>
                 <Text style={styles.scoresTitle}>SCORE BREAKDOWN</Text>
                 {(Object.keys(savedProfile.scores) as ArchetypeKey[])
                   .sort((a, b) => savedProfile.scores[b] - savedProfile.scores[a])
@@ -324,7 +324,7 @@ export default function ArchetypesScreen() {
                 if (totalRefVotes < 6 || refDominant === savedProfile.dominant) return null;
                 const arc = ARCHETYPES[refDominant];
                 return (
-                  <VelvetGlassSurface style={[styles.evolutionCard, { borderColor: `${arc.color}30` }]} intensity={38} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.52)' : 'rgba(255, 255, 255, 0.82)'}> 
+                  <VelvetGlassSurface style={[styles.evolutionCard, { borderColor: `${arc.color}30` }]} intensity={38} backgroundColor={theme.cardSurfaceValues}>
                     <MetallicText style={styles.evolutionIcon} color={arc.color}>{arc.icon}</MetallicText>
                     <View style={styles.evolutionText}>
                       <Text style={[styles.evolutionTitle, { color: arc.color }]}>

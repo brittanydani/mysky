@@ -16,12 +16,19 @@ interface PremiumRequiredScreenProps {
 }
 
 // ── Cinematic Palette ──
-const PALETTE = {
+const PALETTE_DARK = {
   gold: '#C9AE78',
   silverBlue: '#C9AE78',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
+};
+const PALETTE_LIGHT = {
+  gold: '#B8935A',
+  silverBlue: '#B8935A',
+  textMain: '#1A1815',
+  glassBorder: 'rgba(0,0,0,0.04)',
+  glassHighlight: 'rgba(255,255,255,0.6)',
 };
 
 const PREVIEW_PERKS = [
@@ -36,6 +43,7 @@ export default function PremiumRequiredScreen({
   teaser,
 }: PremiumRequiredScreenProps = {}) {
   const theme = useAppTheme();
+  const PALETTE = theme.isDark ? PALETTE_DARK : PALETTE_LIGHT;
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
 
@@ -89,7 +97,7 @@ export default function PremiumRequiredScreen({
         <SkiaMetallicPill
           label="View Subscription Plans"
           onPress={() => router.push('/(tabs)/premium' as Href)}
-          icon={<Ionicons name="arrow-forward-outline" size={18} color="#020817" />}
+          icon={<Ionicons name="arrow-forward-outline" size={18} color={theme.isDark ? '#020817' : '#1A1815'} />}
         />
 
         <Text style={styles.priceHint}>Deeper Sky subscription required • Private & Secure</Text>
@@ -122,7 +130,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#020817',
+    backgroundColor: theme.background,
     padding: 24,
   },
   heroSection: {
@@ -143,7 +151,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: '800',
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     marginBottom: 12,
     textAlign: 'center',
     letterSpacing: -0.5,
@@ -161,8 +169,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.isDark ? PALETTE_DARK.glassBorder : PALETTE_LIGHT.glassBorder,
+    borderTopColor: theme.isDark ? PALETTE_DARK.glassHighlight : PALETTE_LIGHT.glassHighlight,
   },
   perksGradient: {
     padding: 28,
@@ -184,7 +192,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderColor: 'rgba(201, 174, 120, 0.15)',
   },
   perkText: {
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontSize: 14,
     fontWeight: '500',
     flex: 1,
@@ -233,7 +241,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   legalLink: {
     fontSize: 12,
-    color: PALETTE.silverBlue,
+    color: theme.isDark ? PALETTE_DARK.silverBlue : PALETTE_LIGHT.silverBlue,
     opacity: 0.8,
   },
   legalSeparator: {

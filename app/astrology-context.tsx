@@ -696,7 +696,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderColor: 'rgba(110,183,155,0.28)',
   },
   confidenceSuggested: {
-    backgroundColor: 'rgba(201,174,120,0.12)',
+    backgroundColor: 'rgba(162, 194, 225, 0.12)',
     borderColor: 'rgba(201,174,120,0.24)',
   },
   confidenceText: {

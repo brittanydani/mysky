@@ -431,7 +431,7 @@ export default function IntelligenceProfileScreen() {
               entering={FadeIn.duration(600)}
               layout={Layout.springify()}
             >
-              <VelvetGlassSurface style={styles.synthesisCard} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.68)' : 'rgba(255, 255, 255, 0.88)'}>
+              <VelvetGlassSurface style={styles.synthesisCard} intensity={45} backgroundColor={theme.cardSurfaceValues}>
                 <View style={styles.synthesisHeader}>
                   <MetallicIcon name="sparkles-outline" size={18} color={PALETTE.gold} />
                   <MetallicText style={styles.synthesisEyebrow} color={PALETTE.gold}>INTELLIGENCE FINGERPRINT</MetallicText>
@@ -466,7 +466,7 @@ export default function IntelligenceProfileScreen() {
                   key={dim.id}
                   entering={FadeInDown.delay(200 + i * 60).duration(500)}
                 >
-                  <VelvetGlassSurface style={styles.dimensionBlock} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
+                  <VelvetGlassSurface style={styles.dimensionBlock} intensity={45} backgroundColor={theme.cardSurfaceValues}>
                     <View style={styles.dimInner}>
                       <View style={styles.dimHeader}>
                         <MetallicIcon name={dim.icon as any} size={20} color={PALETTE.gold} />
@@ -568,7 +568,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(10,10,15,0.95)' : 'rgba(252,248,241,0.96)' },
   saveBtn: { height: 50, paddingHorizontal: 32, borderRadius: 25, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.cardBorder },
   saveBtnFull: { width: '100%' },
-  saveBtnDone: { borderColor: '#D4AF37', backgroundColor: '#D4AF37' },
+  saveBtnDone: { borderColor: '#B8935A', backgroundColor: '#B8935A' },
   saveBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', color: theme.textPrimary },
   saveBtnTextDone: { color: '#0A0A0F' },
 
@@ -581,8 +581,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   dimQuestion: { fontSize: 16, fontWeight: '400', color: theme.textPrimary, lineHeight: 24, marginBottom: 22 },
 
   scaleRow: { marginBottom: 14 },
-  scaleBtn: { borderRadius: 14 },
-  scaleBtnSealed: { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
+  scaleBtn: { borderRadius: 14, backgroundColor: theme.pillSurface, borderColor: theme.cardBorder },
+  scaleBtnSealed: { backgroundColor: '#B8935A', borderColor: '#B8935A' },
   scaleBtnText: { fontSize: 15, color: theme.textSecondary, fontWeight: '700' },
   scaleBtnTextSelected: { fontSize: 15, fontWeight: '800', color: '#0A0A0F' },
 

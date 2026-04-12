@@ -234,8 +234,8 @@ export default function SleepDetailScreen() {
 
         {/* Dream card — matching Archive DreamCard layout exactly */}
         <LinearGradient
-          colors={['rgba(201,174,120,0.18)', 'transparent']}
-          style={styles.card}
+          colors={theme.isDark ? ['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.03)'] : ['rgba(162, 194, 225, 0.18)', 'transparent']}
+          style={[styles.card, theme.isDark && styles.cardDark]}
         >
           {entry && (
             <View style={styles.dreamCardHeader}>
@@ -275,8 +275,8 @@ export default function SleepDetailScreen() {
 
         {/* Premium AI section */}
         <LinearGradient
-          colors={['rgba(201,174,120,0.18)', 'transparent']}
-          style={styles.premiumSection}
+          colors={theme.isDark ? ['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.03)'] : ['rgba(162, 194, 225, 0.18)', 'transparent']}
+          style={[styles.premiumSection, theme.isDark && styles.premiumSectionDark]}
         >
           <MetallicLucideIcon icon={Sparkles} color="#C9AE78" size={20} />
           <MetallicText color="#C9AE78" style={styles.premiumTitle}>AI Dream Interpretation</MetallicText>
@@ -397,6 +397,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 24, padding: 28,
     borderWidth: 1, borderColor: theme.cardBorder, marginBottom: 24,
   },
+  cardDark: {
+    borderTopColor: 'rgba(255,255,255,0.15)',
+    borderLeftColor: 'rgba(255,255,255,0.06)',
+    borderRightColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+  },
   dreamCardHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12,
   },
@@ -430,7 +436,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   premiumSection: {
     alignItems: 'center', padding: 32, borderRadius: 24,
-    borderWidth: 1, borderColor: '#C9AE78', gap: 12,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', gap: 12,
+  },
+  premiumSectionDark: {
+    borderTopColor: 'rgba(255,255,255,0.12)',
+    borderLeftColor: 'rgba(255,255,255,0.06)',
+    borderRightColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: 'rgba(255,255,255,0.04)',
   },
   premiumTitle: {
     color: theme.textPrimary, fontSize: 16, fontWeight: '600', textAlign: 'center',

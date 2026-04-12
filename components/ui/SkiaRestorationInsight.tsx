@@ -27,7 +27,7 @@ import {
   vec,
 } from '@shopify/react-native-skia';
 import { type AppTheme } from '../../constants/theme';
-import { useThemedStyles } from '../../context/ThemeContext';
+import { useThemedStyles, useAppTheme } from '../../context/ThemeContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const CARD_W = SCREEN_W - 32;
@@ -39,10 +39,16 @@ const BAR_GAP = 14;
 
 // ── Colour stops ────────────────────────────────────────────────────────────
 
-function barColors(quality: number): [string, string] {
-  if (quality <= 2) return ['rgba(60, 50, 120, 0.6)', 'rgba(40, 35, 90, 0.15)'];
-  if (quality <= 3) return ['rgba(120, 80, 180, 0.6)', 'rgba(80, 60, 140, 0.15)'];
-  return ['rgba(201, 174, 120, 0.7)', 'rgba(100, 160, 210, 0.15)'];
+function barColors(quality: number, isDark: boolean): [string, string] {
+  if (isDark) {
+    if (quality <= 2) return ['rgba(60, 50, 120, 0.6)', 'rgba(40, 35, 90, 0.15)'];
+    if (quality <= 3) return ['rgba(120, 80, 180, 0.6)', 'rgba(80, 60, 140, 0.15)'];
+    return ['rgba(201, 174, 120, 0.7)', 'rgba(100, 160, 210, 0.15)'];
+  }
+  // Light mode — more opaque, ink-on-paper feel
+  if (quality <= 2) return ['rgba(80, 60, 160, 0.75)', 'rgba(60, 50, 130, 0.25)'];
+  if (quality <= 3) return ['rgba(140, 90, 200, 0.75)', 'rgba(100, 70, 160, 0.25)'];
+  return ['rgba(180, 148, 72, 0.85)', 'rgba(140, 110, 50, 0.25)'];
 }
 
 function moodGlow(moodScore: number): number {
@@ -73,6 +79,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
   data,
   title = 'Sleep Quality vs. Morning Mood',
 }: Props) {
+  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const points = data.slice(-14); // max 14 days
   const barWidth = useMemo(() => {
@@ -96,7 +103,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
           width={CARD_W}
           height={CARD_H}
           r={16}
-          color="rgba(255,255,255,0.03)"
+          color={theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255, 255, 255, 0.75)'}
         />
         <RoundedRect
           x={0.5}
@@ -106,7 +113,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
           r={16}
           style="stroke"
           strokeWidth={1}
-          color="rgba(255,255,255,0.06)"
+          color={theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(26, 24, 21, 0.08)'}
         />
 
         <Rect
@@ -114,7 +121,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
           y={baselineY + 2}
           width={CARD_W - GRAPH_SIDE_PAD * 2}
           height={1}
-          color="rgba(255,255,255,0.08)"
+          color={theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0, 0, 0, 0.05)'}
         />
 
         {/* Horizon bars */}
@@ -124,7 +131,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
             const normQ = pt.quality / 5;
             const barH = Math.max(12, normQ * GRAPH_H);
             const y = GRAPH_TOP + (GRAPH_H - barH);
-            const [topColor, botColor] = barColors(pt.quality);
+            const [topColor, botColor] = barColors(pt.quality, theme.isDark);
             const glowOp = moodGlow(pt.moodScore);
             const radius = barWidth / 2;
 
@@ -214,7 +221,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 10,
@@ -230,7 +237,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: 6,
   },
   dayLabel: {
-    color: theme.textMuted,
+    color: theme.isDark ? theme.textMuted : 'rgba(26, 24, 21, 0.5)',
     fontSize: 9,
     textAlign: 'center',
     fontWeight: '500',
@@ -253,11 +260,11 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginRight: 4,
   },
   legendText: {
-    color: theme.textMuted,
+    color: theme.isDark ? theme.textMuted : 'rgba(26, 24, 21, 0.5)',
     fontSize: 10,
   },
   legendNote: {
-    color: theme.textMuted,
+    color: theme.isDark ? theme.textMuted : 'rgba(26, 24, 21, 0.5)',
     fontSize: 9,
     marginLeft: 'auto',
   },

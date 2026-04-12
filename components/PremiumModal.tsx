@@ -8,6 +8,7 @@
 import React from 'react';
 import { Modal, View, StyleSheet } from 'react-native';
 import PremiumScreen from './PremiumScreen';
+import { useAppTheme } from '../context/ThemeContext';
 
 interface PremiumModalProps {
   visible: boolean;
@@ -15,6 +16,7 @@ interface PremiumModalProps {
 }
 
 export default function PremiumModal({ visible, onClose }: PremiumModalProps) {
+  const theme = useAppTheme();
   return (
     <Modal
       visible={visible}
@@ -23,7 +25,7 @@ export default function PremiumModal({ visible, onClose }: PremiumModalProps) {
       onRequestClose={onClose}
       transparent={false}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.content}>
           <PremiumScreen onClose={onClose} />
         </View>
@@ -35,8 +37,6 @@ export default function PremiumModal({ visible, onClose }: PremiumModalProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // Using the obsidian base color for the modal background
-    backgroundColor: '#020817',
   },
   content: {
     flex: 1,

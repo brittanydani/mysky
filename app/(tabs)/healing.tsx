@@ -213,7 +213,7 @@ export default function HealingSpaceScreen() {
 
               <View style={styles.affirmationBox}>
                 <Text style={styles.affirmationLabel}>ANCHOR AFFIRMATION</Text>
-                <MetallicText style={styles.affirmationText} variant="gold">{'"' + archetypeData.affirmation + '"'}</MetallicText>
+                <MetallicText style={styles.affirmationText} variant="gold" color={theme.isDark ? undefined : '#1A1815'}>{'"' + archetypeData.affirmation + '"'}</MetallicText>
               </View>
               </VelvetGlassSurface>
             </Animated.View>
@@ -265,7 +265,7 @@ export default function HealingSpaceScreen() {
               <Text style={styles.bodyText}>
                 You recently logged a relational trigger. The next time this dynamic arises, do not react immediately.
               </Text>
-              <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700' }]} variant="rose">
+              <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700', color: theme.isDark ? undefined : '#1A1815' }]} variant="rose">
                 Step back. Take three breaths. Ask yourself: "Am I responding to the present moment, or protecting a past wound?"
               </MetallicText>
               </VelvetGlassSurface>
@@ -384,6 +384,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   affirmationBox: { marginTop: 8, paddingLeft: 16, borderLeftWidth: 2, borderLeftColor: PALETTE.lavender },
   affirmationLabel: { fontSize: 10, color: theme.textMuted, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
-  affirmationText: { fontSize: 15, color: theme.textPrimary, lineHeight: 22,  },
+  affirmationText: { fontSize: 15, color: theme.isDark ? theme.textPrimary : '#1A1815', lineHeight: 22, fontStyle: 'italic' },
 });
 

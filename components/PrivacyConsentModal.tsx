@@ -171,7 +171,7 @@ export default function PrivacyConsentModal({
 
 const createStyles = (theme: AppTheme) => {
   const glassSurface = theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255, 252, 247, 0.92)';
-  const glassBorder = theme.isDark ? PALETTE.glassBorder : 'rgba(146, 124, 88, 0.14)';
+  const glassBorder = theme.isDark ? theme.cardBorder : 'rgba(146, 124, 88, 0.14)';
   const mutedGold = theme.isDark ? 'rgba(201, 174, 120, 0.2)' : 'rgba(181, 138, 58, 0.24)';
   const mutedEmerald = theme.isDark ? 'rgba(110, 191, 139, 0.2)' : 'rgba(78, 138, 100, 0.24)';
 

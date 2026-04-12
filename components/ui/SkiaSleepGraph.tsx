@@ -44,6 +44,7 @@ interface SkiaSleepGraphProps {
   data: SleepPoint[];
   width: number;
   height: number;
+  isDark?: boolean;
 }
 
 // ─── Palette ───────────────────────────────────────────────────────────────────
@@ -82,6 +83,7 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
   data,
   width,
   height,
+  isDark = true,
 }: SkiaSleepGraphProps) {
   const [activeIdx, setActiveIdx] = useState<number | null>(data.length - 1);
 
@@ -171,6 +173,15 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
     .toString(16)
     .padStart(2, '0');
 
+  // Theme-aware colors
+  const gridLineColor = isDark ? COLORS.gridLine : 'rgba(0, 0, 0, 0.05)';
+  const axisTextColor = isDark ? COLORS.axisText : 'rgba(26, 24, 21, 0.7)';
+  const areaFillTop = isDark ? COLORS.moonlightBright : 'rgba(160, 148, 200, 0.12)';
+  const areaFillBottom = isDark ? 'rgba(16,22,35,0)' : 'rgba(255,255,255,0)';
+  const areaSecondaryBottom = isDark ? 'rgba(10, 14, 22, 0.00)' : 'rgba(255, 255, 255, 0.00)';
+  const orb1Color = isDark ? COLORS.moonlightBright : 'rgba(160, 148, 200, 0.08)';
+  const orb2Color = isDark ? COLORS.moonlightDim : 'rgba(201, 174, 120, 0.06)';
+
   const gridValues = Array.from({ length: 4 }, (_, index) => {
     const ratio = index / 3;
     return {
@@ -189,10 +200,10 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
     >
       <Canvas style={StyleSheet.absoluteFill}>
         <Group>
-          <Circle cx={width * 0.78} cy={MARGIN.top + graphH * 0.24} r={34} color={COLORS.moonlightBright}>
+          <Circle cx={width * 0.78} cy={MARGIN.top + graphH * 0.24} r={34} color={orb1Color}>
             <BlurMask blur={38} style="normal" />
           </Circle>
-          <Circle cx={width * 0.2} cy={MARGIN.top + graphH * 0.82} r={42} color={COLORS.moonlightDim}>
+          <Circle cx={width * 0.2} cy={MARGIN.top + graphH * 0.82} r={42} color={orb2Color}>
             <BlurMask blur={42} style="normal" />
           </Circle>
 
@@ -203,7 +214,7 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
               y={grid.y}
               width={graphW}
               height={1}
-              color={COLORS.gridLine}
+              color={gridLineColor}
             />
           ))}
 
@@ -211,7 +222,7 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
             <LinearGradient
               start={vec(0, MARGIN.top)}
               end={vec(0, MARGIN.top + graphH)}
-              colors={[COLORS.moonlightBright, 'rgba(16,22,35,0)']}
+              colors={[areaFillTop, areaFillBottom]}
             />
             <BlurMask blur={areaBlur} style="normal" />
           </Path>
@@ -223,7 +234,7 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
               colors={[
                 `${COLORS.deepRest}${areaAlphaHex}`,
                 'rgba(140, 184, 216, 0.08)',
-                'rgba(10, 14, 22, 0.00)',
+                areaSecondaryBottom,
               ]}
               positions={[0, 0.45, 1]}
             />
@@ -283,7 +294,7 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
 
       <View style={styles.gridLabels} pointerEvents="none">
         {gridValues.map((grid) => (
-          <Text key={grid.value} style={[styles.axisLabel, { top: grid.y - 8 }]}>
+          <Text key={grid.value} style={[styles.axisLabel, { top: grid.y - 8, color: axisTextColor }]}>
             {grid.value.toFixed(0)}h
           </Text>
         ))}
@@ -312,7 +323,9 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
               styles.dayLabel,
               {
                 left: pt.x - 16,
-                color: activeIdx === index ? 'rgba(255,255,255,0.88)' : COLORS.axisText,
+                color: activeIdx === index
+                  ? (isDark ? 'rgba(255,255,255,0.88)' : 'rgba(26, 24, 21, 0.9)')
+                  : axisTextColor,
               },
             ]}
           >

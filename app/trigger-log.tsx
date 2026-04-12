@@ -566,10 +566,10 @@ export default function TriggerLogScreen() {
           <Animated.View entering={FadeInDown.delay(160).duration(500)} style={styles.inputSection}>
             <Text style={styles.sectionLabel}>WHAT HAPPENED?</Text>
             <VelvetGlassSurface
-              style={[styles.inputGlass, { borderColor: `${activeColor}40` }]}
+              style={[styles.inputGlass, { borderColor: theme.isDark ? `${activeColor}40` : 'rgba(0, 0, 0, 0.06)' }]}
               intensity={30}
-              backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.7)' : 'rgba(255, 255, 255, 0.85)'}
-              borderColor={`${activeColor}30`}
+              backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.7)' : 'rgba(0, 0, 0, 0.03)'}
+              borderColor={theme.isDark ? `${activeColor}30` : 'rgba(0, 0, 0, 0.06)'}
               highlightColor="rgba(255,255,255,0.16)"
               topEdgeColor="rgba(255,255,255,0.24)"
             >
@@ -906,7 +906,7 @@ export default function TriggerLogScreen() {
             >
               <Text style={[
                 styles.sealBtnText,
-                { color: (!eventText.trim() || !selectedState || saving || saved) ? PALETTE.textMuted : '#0A0A0C' },
+                { color: (!eventText.trim() || !selectedState || saving || saved) ? theme.textMuted : '#0A0A0C' },
               ]}>
                 {saving ? 'SAVING…' : 'SAVE ENTRY'}
               </Text>
@@ -971,7 +971,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: '#D4AF37',
   },
   toggleText: { fontSize: 13, fontWeight: '700', color: theme.textMuted, letterSpacing: 0.35 },
-  toggleTextActiveDrain: { color: 'rgba(255,255,255,0.92)' },
+  toggleTextActiveDrain: { color: theme.isDark ? 'rgba(255,255,255,0.92)' : '#1A1815' },
   toggleTextActiveNourish: { color: '#0A0A0F' },
 
   section: { marginBottom: 32 },

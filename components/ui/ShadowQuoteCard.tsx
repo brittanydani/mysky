@@ -86,7 +86,7 @@ export default function ShadowQuoteCard({
         entering={FadeIn.delay(animationDelay).duration(1200)}
         style={styles.footerContainer}
       >
-        <View style={[styles.footerDivider, { backgroundColor: PALETTE.glassHighlight }]} />
+        <View style={[styles.footerDivider, { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.04)' }]} />
         <Text style={styles.footerText}>"{quote.text}"</Text>
       </Animated.View>
     );
@@ -102,7 +102,7 @@ export default function ShadowQuoteCard({
         <View
           style={[
             styles.card,
-            { borderColor: PALETTE.glassBorder, borderTopColor: tone.highlight, backgroundColor: tone.colors[0] },
+            { borderColor: theme.cardBorder, borderTopColor: tone.highlight, backgroundColor: tone.colors[0] },
             isCloseQuote && styles.closeCard,
           ]}
         >
@@ -144,7 +144,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   quoteText: {
     fontSize: 17,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     textAlign: 'center',
     lineHeight: 28,
     opacity: 0.95,

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { luxuryTheme } from '../../constants/luxuryTheme';
 import { MetallicIcon } from './MetallicIcon';
 import { VelvetGlassCard } from './VelvetGlassCard';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface InsightCardProps {
   title: string;
@@ -34,6 +35,7 @@ function InsightCard({
   variant = 'default',
 }: InsightCardProps) {
   const isFeatured = variant === 'featured';
+  const theme = useAppTheme();
 
   const accentColor = locked ? PALETTE.amethyst : isFeatured ? PALETTE.gold : PALETTE.silverBlue;
 
@@ -75,7 +77,7 @@ function InsightCard({
           )}
 
           <View style={styles.titleContainer}>
-            <Text style={[styles.title, { color: isFeatured ? PALETTE.gold : PALETTE.textMain }]}>
+            <Text style={[styles.title, { color: isFeatured ? PALETTE.gold : theme.textPrimary }]}>
               {title}
             </Text>
 

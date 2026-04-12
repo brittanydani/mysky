@@ -295,7 +295,7 @@ function PremiumLockBanner({ onUnlock }: { onUnlock: () => void }) {
   return (
     <Pressable style={styles.lockBanner} onPress={onUnlock}>
       <LinearGradient
-        colors={['rgba(201,174,120,0.12)', 'rgba(168,155,200,0.08)']}
+        colors={['rgba(162, 194, 225, 0.12)', 'rgba(168,155,200,0.08)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFillObject}
@@ -459,6 +459,7 @@ function DreamPatternsSection({ data }: { data: InnerTensionsData }) {
 }
 
 function TriggerReflectionsSection({ data }: { data: InnerTensionsData }) {
+  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const { topTriggers } = data;
   const [expanded, setExpanded] = useState<ShadowTrigger | null>(null);
@@ -504,9 +505,9 @@ function TriggerReflectionsSection({ data }: { data: InnerTensionsData }) {
                   <View style={styles.triggerIntensityWrap}>
                     <Text style={styles.triggerIntensityText}>{intensityPct}%</Text>
                     {isOpen ? (
-                      <ChevronUp size={14} color={PALETTE.textDim} strokeWidth={1.5} style={styles.triggerChevron} />
+                      <ChevronUp size={14} color={theme.textMuted} strokeWidth={1.5} style={styles.triggerChevron} />
                     ) : (
-                      <ChevronDown size={14} color={PALETTE.textDim} strokeWidth={1.5} style={styles.triggerChevron} />
+                      <ChevronDown size={14} color={theme.textMuted} strokeWidth={1.5} style={styles.triggerChevron} />
                     )}
                   </View>
                 </View>
@@ -715,7 +716,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // Empty state
   emptyStateText: {
-    fontSize: 13, color: PALETTE.textDim, lineHeight: 20,
+    fontSize: 13, color: theme.textMuted, lineHeight: 20,
     marginTop: 4,
   },
   seedChip: {
@@ -729,12 +730,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   conflictScoreRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 16 },
   conflictScoreRight:  { flex: 1 },
   conflictScoreLabel:  { fontSize: 15, fontWeight: '500', marginBottom: 3 },
-  conflictScoreHint:   { fontSize: 12, color: PALETTE.textDim },
+  conflictScoreHint:   { fontSize: 12, color: theme.textMuted },
   conflictGaugeWrap: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
   conflictGaugeCanvas: { width: 120, height: 120 },
   conflictGaugeCenter: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   conflictGaugeNumber: { fontSize: 28, fontWeight: '700', letterSpacing: -0.8 },
-  conflictGaugeUnit: { fontSize: 10, color: PALETTE.textDim, marginTop: 1 },
+  conflictGaugeUnit: { fontSize: 10, color: theme.textMuted, marginTop: 1 },
   conflictGaugeHint: { fontSize: 12, color: theme.textMuted, lineHeight: 18, marginTop: 12 },
 
   conflictPairHeader: { marginBottom: 12 },
@@ -743,7 +744,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   tugWrap: { marginBottom: 16 },
   tugHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 },
   tugLabel: { flex: 1, fontSize: 11, fontWeight: '700' },
-  tugHint: { fontSize: 10, color: PALETTE.textDim, textTransform: 'uppercase', letterSpacing: 1.1 },
+  tugHint: { fontSize: 10, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1.1 },
   tugTrack: { flexDirection: 'row', height: 8, borderRadius: 999, overflow: 'hidden', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface },
   tugFillLeft: { height: '100%' },
   tugFillRight: { height: '100%' },
@@ -757,7 +758,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   stateDesc:            { fontSize: 12, color: theme.textMuted, letterSpacing: 0.2, lineHeight: 17 },
   conflictInterpretation: {
     fontSize: 13, color: theme.textMuted, lineHeight: 19,
-    borderTopWidth: 1, borderTopColor: PALETTE.glassBorder,
+    borderTopWidth: 1, borderTopColor: theme.cardBorder,
     paddingTop: 14, marginTop: 4,
   },
 
@@ -779,7 +780,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // Blurred teaser
   blurPreviewWrap:    { position: 'relative', overflow: 'hidden', borderRadius: 16 },
-  blurPreviewCard: { backgroundColor: PALETTE.glassBg, borderWidth: 1, borderColor: theme.cardBorder, borderRadius: 24, padding: 28, opacity: 0.4 },
+  blurPreviewCard: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', borderWidth: 1, borderColor: theme.cardBorder, borderRadius: 24, padding: 28, opacity: 0.4 },
   blurPreviewTitle:   { fontSize: 17, fontWeight: '500', color: theme.textPrimary, marginBottom: 12 },
   blurPreviewRadar:   { height: 150, backgroundColor: 'rgba(168,155,200,0.08)', borderRadius: 16 },
   blurPreviewOverlay: {
@@ -822,17 +823,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   stateBalanceValue: { width: 28, textAlign: 'right', fontSize: 12, color: theme.textMuted, fontWeight: '600' },
 
   // Ambivalence
-  ambivalencePair:    { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: PALETTE.glassBorder },
+  ambivalencePair:    { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: theme.cardBorder },
   ambivalencePairRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   ambivalenceTriggerWrap: { flex: 1 },
   ambivalenceTrigger: { fontSize: 14, fontWeight: '600' },
-  ambivalenceArrow:   { fontSize: 14, color: PALETTE.textDim },
+  ambivalenceArrow:   { fontSize: 14, color: theme.textMuted },
   ambivalenceIntensityWrap: { minWidth: 60, alignItems: 'flex-end' },
   ambivalenceIntensity: { fontSize: 12, color: theme.textPrimary, minWidth: 36, textAlign: 'right', fontWeight: '700' },
-  ambivalenceIntensityLabel: { fontSize: 9, color: PALETTE.textDim, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 2 },
-  ambivalenceBarBg:   { height: 8, backgroundColor: PALETTE.glassBorder, borderRadius: 999, marginBottom: 10, overflow: 'hidden' },
+  ambivalenceIntensityLabel: { fontSize: 9, color: theme.textMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 2 },
+  ambivalenceBarBg:   { height: 8, backgroundColor: theme.cardBorder, borderRadius: 999, marginBottom: 10, overflow: 'hidden' },
   ambivalenceBarFill: { height: 8, backgroundColor: PALETTE.gold + '80', borderRadius: 999 },
-  ambivalenceReflection: { fontSize: 12, color: PALETTE.textDim, lineHeight: 18 },
+  ambivalenceReflection: { fontSize: 12, color: theme.textMuted, lineHeight: 18 },
 
   // Dream patterns
   patternGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
@@ -873,28 +874,28 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     flexShrink: 0,
     alignSelf: 'flex-start',
   },
-  patternChipBadgeCount: { fontSize: 12, fontWeight: '800', color: PALETTE.lavender, lineHeight: 13, textAlign: 'center' },
-  patternChipBadgeLabel: { fontSize: 8, fontWeight: '700', color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, lineHeight: 9 },
+  patternChipBadgeCount: { fontSize: 12, fontWeight: '800', color: theme.isDark ? PALETTE.lavender : '#4A3B69', lineHeight: 13, textAlign: 'center' },
+  patternChipBadgeLabel: { fontSize: 8, fontWeight: '700', color: theme.isDark ? theme.textSecondary : '#4A3B69', textTransform: 'uppercase', letterSpacing: 0.6, lineHeight: 9 },
   patternChipLabel: {
     fontSize: 12,
     color: theme.textPrimary,
     fontWeight: '600',
     lineHeight: 17,
   },
-  patternConfidenceBar: { marginTop: 'auto', height: 3, backgroundColor: PALETTE.glassBorder, borderRadius: 2 },
+  patternConfidenceBar: { marginTop: 'auto', height: 3, backgroundColor: theme.cardBorder, borderRadius: 2 },
   patternConfidenceFill: { height: 3, backgroundColor: PALETTE.lavender + '80', borderRadius: 2 },
 
   // Trigger reflections
   triggerRow: { marginTop: 0, paddingTop: 0 },
-  triggerRowSeparated: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: PALETTE.glassBorder },
+  triggerRowSeparated: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.cardBorder },
   triggerHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   triggerNameRow:     { flexDirection: 'row', alignItems: 'center', gap: 8 },
   triggerDot:         { width: 7, height: 7, borderRadius: 4 },
   triggerName:        { fontSize: 14, fontWeight: '600', color: theme.textPrimary },
   triggerIntensityWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  triggerIntensityText: { fontSize: 12, color: PALETTE.textDim, lineHeight: 16 },
+  triggerIntensityText: { fontSize: 12, color: theme.textMuted, lineHeight: 16 },
   triggerChevron: { marginTop: 0 },
-  triggerBarBg:  { height: 3, backgroundColor: PALETTE.glassBorder, borderRadius: 2, marginBottom: 0 },
+  triggerBarBg:  { height: 3, backgroundColor: theme.cardBorder, borderRadius: 2, marginBottom: 0 },
   triggerBarFill: { height: 3, backgroundColor: PALETTE.gold + '60', borderRadius: 2 },
   triggerExpanded: { marginTop: 12 },
   triggerDefinition: { fontSize: 12, color: theme.textMuted, lineHeight: 18, marginBottom: 12 },

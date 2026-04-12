@@ -250,7 +250,7 @@ export default function PastReflectionsScreen() {
                   key: f.key,
                   label: f.label,
                   selected: filter === f.key,
-                  accentColor: f.key === 'all' ? PALETTE.textMain : CATEGORY_COLORS[f.key as ReflectionCategory],
+                  accentColor: f.key === 'all' ? theme.textPrimary : CATEGORY_COLORS[f.key as ReflectionCategory],
                   onPress: () => applyFilter(f.key),
                   labelStyle: styles.filterLabel,
                   selectedLabelStyle: styles.filterLabelSelected,
@@ -287,7 +287,7 @@ export default function PastReflectionsScreen() {
                   ? PALETTE.emerald
                   : t.direction === 'falling'
                     ? PALETTE.rose
-                    : PALETTE.textMuted;
+                    : theme.textMuted;
                 return (
                   <View key={t.theme} style={styles.trendRow}>
                     <View style={styles.trendThemeBox}>

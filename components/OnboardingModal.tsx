@@ -110,9 +110,9 @@ const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
 };
 
 // ── Living Volumetric Nebula ──
-function LivingBackground() {
+function LivingBackground({ backgroundColor }: { backgroundColor: string }) {
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: '#020817' }]} pointerEvents="none" />
+    <View style={[StyleSheet.absoluteFill, { backgroundColor }]} pointerEvents="none" />
   );
 }
 
@@ -682,15 +682,14 @@ export default function OnboardingModal({
       <View style={st.container}>
         
         {/* Deep Stack Background */}
-        <LivingBackground />
+        <LivingBackground backgroundColor={theme.background} />
         
         {/* Stars sit ON TOP of the nebula blur, but UNDER the UI */}
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <SkiaDynamicCosmos fill="transparent" />
         </View>
 
-        {/* Solid OLED background across all steps */}
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#020817' }]} pointerEvents="none" />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.background }]} pointerEvents="none" />
 
         <SafeAreaView edges={['top', 'bottom']} style={st.safeArea}>
           <KeyboardAvoidingView 
@@ -803,7 +802,7 @@ export default function OnboardingModal({
                           >
                             <LinearGradient colors={LIQUID_GOLD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.liquidGoldFill} />
                             {authLoading ? (
-                              <ActivityIndicator color="#000000" />
+                              <ActivityIndicator color={theme.isDark ? '#000000' : '#1A1815'} />
                             ) : (
                               <Text style={st.primaryActionBtnText}>{authRecoveryCodeSent ? 'Reset Password' : 'Email Me a Code'}</Text>
                             )}
@@ -879,7 +878,7 @@ export default function OnboardingModal({
                           >
                             <LinearGradient colors={LIQUID_GOLD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.liquidGoldFill} />
                             {authLoading ? (
-                              <ActivityIndicator color="#000000" />
+                              <ActivityIndicator color={theme.isDark ? '#000000' : '#1A1815'} />
                             ) : (
                               <Text style={st.primaryActionBtnText}>{authMode === 'sign-in' ? 'Sign In' : 'Create Account'}</Text>
                             )}
@@ -1520,7 +1519,7 @@ const st = StyleSheet.create({
   termsFooterActions: { width: '100%', gap: 16 },
   termsAcceptBtn: { borderRadius: 28, overflow: 'hidden' },
   termsBtnGradient: { paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
-  termsAcceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817' },
+  termsAcceptBtnText: { fontSize: 14, fontWeight: '700', color: '#1A1815' },
   
   // ── Liquid Mirror Gold Primary Action Button ──
   primaryActionBtn: {

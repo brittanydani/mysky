@@ -581,7 +581,7 @@ export default function RelationshipsScreen() {
                   <Text style={styles.insightCardText}>{synastryReport.primaryConnection}</Text>
                 </LinearGradient>
 
-                <LinearGradient colors={['rgba(201, 174, 120, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
+                <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                     <MetallicIcon name="trending-up-outline" size={20} color="#C9AE78" />
                     <Text style={styles.insightCardTitle}>Your Growth Edge</Text>

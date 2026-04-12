@@ -14,9 +14,9 @@ export const luxuryTheme = {
   text: {
     white: '#FFFFFF',
     heading: '#FFFFFF',
-    body: 'rgba(226,232,240,0.78)',
-    muted: 'rgba(226,232,240,0.58)',
-    dim: 'rgba(226,232,240,0.42)',
+    body: 'rgba(255,255,255,0.65)',
+    muted: 'rgba(255,255,255,0.40)',
+    dim: 'rgba(255,255,255,0.25)',
     goldPrimary: '#FFFFFF',
     goldSecondary: '#FFFFFF',
     goldBright: '#FFFFFF',
@@ -102,13 +102,13 @@ export const luxuryTheme = {
   },
 
   card: {
-    fill: 'rgba(255,255,255,0.02)',
-    fillStronger: 'rgba(255,255,255,0.035)',
+    fill: 'rgba(255,255,255,0.03)',
+    fillStronger: 'rgba(255,255,255,0.05)',
     outline: 'rgba(255,248,220,0.24)',
     outlineBright: 'rgba(255,248,220,0.36)',
     innerGlow: 'rgba(255,248,220,0.06)',
-    border: 'rgba(255,255,255,0.06)',
-    borderTop: 'rgba(255,255,255,0.12)',
+    border: 'rgba(255,255,255,0.08)',
+    borderTop: 'rgba(255,255,255,0.15)',
     shadow: 'rgba(0,0,0,0.22)',
   },
 
@@ -128,7 +128,7 @@ export const luxuryTheme = {
     gold: 'rgba(247,231,194,0.22)',
     emerald: 'rgba(110,191,139,0.18)',
     sapphire: 'rgba(74,111,165,0.18)',
-    silverBlue: 'rgba(201,174,120,0.20)',
+    silverBlue: 'rgba(162, 194, 225, 0.20)',
   },
 
   shadow: {
