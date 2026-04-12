@@ -13,33 +13,33 @@ import { useDerivedValue, SharedValue } from 'react-native-reanimated';
 
 // ── Chakra jewel-tone palette (source of truth for the wheel) ──
 export const CHAKRA_COLORS: Record<string, { core: string; glow: string; deep: string }> = {
-  Crown:          { core: '#9D76C1', glow: '#D4A3B3', deep: '#4A3559' }, // Amethyst
-  'Third Eye':    { core: '#6A7391', glow: '#C9AE78', deep: '#2C365E' }, // Indigo/Silver
-  Throat:         { core: '#5C89A6', glow: '#BEE0F5', deep: '#26466D' }, // Sapphire
-  Heart:          { core: '#6EBF8B', glow: '#A8E6B6', deep: '#2A5C3D' }, // Emerald
-  'Solar Plexus': { core: '#C9AE78', glow: '#FFF4D6', deep: '#6B532E' }, // Champagne Gold
-  Sacral:         { core: '#CD7F5D', glow: '#E8A98C', deep: '#6B3A26' }, // Copper
-  Root:           { core: '#C87878', glow: '#E8A9A9', deep: '#6A2B2B' }, // Garnet
+  Crown:          { core: '#E2D9F3', glow: '#F6F3FB', deep: '#A692C4' }, // Ethereal Violet
+  'Third Eye':    { core: '#A88BEB', glow: '#C8B5F4', deep: '#5E3B8F' }, // Nebula Purple
+  Throat:         { core: '#5C7CAA', glow: '#B5CDE1', deep: '#264264' }, // Stratosphere Blue
+  Heart:          { core: '#6B9080', glow: '#A3D2BC', deep: '#2A4E38' }, // Deep Sage
+  'Solar Plexus': { core: '#D4AF37', glow: '#FDF1C0', deep: '#7C6213' }, // Metallic Gold
+  Sacral:         { core: '#CD7F5D', glow: '#F4BCA9', deep: '#7D442B' }, // Rich Copper
+  Root:           { core: '#DC5050', glow: '#F8B1B1', deep: '#8B2121' }, // Ember Ruby
 };
 // ── Vivid rainbow palette for card icon badges ──
 const CHAKRA_VIVID_FLAT: Record<string, string> = {
-  Root:           '#D32F2F', // bright red
-  Sacral:         '#E64A19', // bright orange
-  'Solar Plexus': '#F9A825', // bright yellow
-  Heart:          '#388E3C', // bright green
-  Throat:         '#1565C0', // bright blue
-  'Third Eye':    '#283593', // bright indigo
-  Crown:          '#6A1B9A', // bright purple
+  Root:           '#DC5050',
+  Sacral:         '#CD7F5D',
+  'Solar Plexus': '#D4AF37',
+  Heart:          '#6B9080',
+  Throat:         '#5C7CAA',
+  'Third Eye':    '#A88BEB',
+  Crown:          '#E2D9F3',
 };
 // ── Vivid saturated palette — used for card backgrounds in Today's Focus ──
 export const CHAKRA_VIVID: Record<string, { top: string; bottom: string }> = {
-  Crown:          { top: '#9C27B0', bottom: '#6A1B9A' }, // vivid purple
-  'Third Eye':    { top: '#3F51B5', bottom: '#283593' }, // vivid indigo
-  Throat:         { top: '#1E88E5', bottom: '#1565C0' }, // vivid blue
-  Heart:          { top: '#43A047', bottom: '#2E7D32' }, // vivid green
-  'Solar Plexus': { top: '#FFB300', bottom: '#F57F17' }, // vivid amber
-  Sacral:         { top: '#F4511E', bottom: '#BF360C' }, // vivid orange
-  Root:           { top: '#E53935', bottom: '#C62828' }, // vivid red
+  Crown:          { top: '#E2D9F3', bottom: '#A692C4' },
+  'Third Eye':    { top: '#A88BEB', bottom: '#5E3B8F' },
+  Throat:         { top: '#5C7CAA', bottom: '#264264' },
+  Heart:          { top: '#6B9080', bottom: '#2A4E38' },
+  'Solar Plexus': { top: '#D4AF37', bottom: '#7C6213' },
+  Sacral:         { top: '#CD7F5D', bottom: '#7D442B' },
+  Root:           { top: '#DC5050', bottom: '#8B2121' },
 };
 
 interface SkiaChakraNodeProps {

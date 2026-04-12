@@ -32,6 +32,7 @@ import { GoldSubtitle } from './ui/GoldSubtitle';
 import { MetallicIcon } from './ui/MetallicIcon';
 import { MetallicText } from './ui/MetallicText';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
+import { VelvetGlassSurface } from './ui/VelvetGlassSurface';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 import { logger } from '../utils/logger';
@@ -199,10 +200,13 @@ export default function DailyReflectionSection({
   };
 
   const getCategoryTheme = (cat: ReflectionCategory) => {
-    if (cat === 'values') return { wash: theme.cardSurfaceValues, accent: theme.silverBlue };
-    if (cat === 'archetypes') return { wash: theme.cardSurfaceRelational, accent: theme.amethyst };
-    if (cat === 'cognitive') return { wash: theme.cardSurfaceCognitive, accent: theme.silverBlue };
-    return { wash: theme.cardSurfaceSomatic, accent: theme.success };
+    if (cat === 'values') return { wash: theme.cardSurfaceValues as readonly string[], accent: theme.silverBlue, pillBg: 'rgba(162, 194, 225, 0.15)', pillBorder: 'rgba(162, 194, 225, 0.40)' };
+    if (cat === 'archetypes') return { wash: theme.cardSurfaceRelational as readonly string[], accent: theme.amethyst, pillBg: 'rgba(168, 139, 235, 0.15)', pillBorder: 'rgba(168, 139, 235, 0.40)' };
+    if (cat === 'cognitive') return { wash: theme.cardSurfaceCognitive as readonly string[], accent: '#5C7CAA', pillBg: 'rgba(92, 124, 170, 0.15)', pillBorder: 'rgba(92, 124, 170, 0.40)' };
+    const roseWash = ['rgba(212, 163, 179, 0.20)', 'rgba(212, 163, 179, 0.05)'];
+    // intelligence
+    return { wash: (theme.isDark ? roseWash : ['rgba(245, 238, 240, 0.7)', 'rgba(245, 238, 240, 0.4)']) as readonly string[], accent: '#D4A3B3', pillBg: 'rgba(212, 163, 179, 0.15)', pillBorder: 'rgba(212, 163, 179, 0.40)' };
+
   };
 
   const sealedCount = CATEGORIES.filter(c => categorySealed[c]).length;
@@ -210,19 +214,22 @@ export default function DailyReflectionSection({
   return (
     <View style={styles.container}>
       {(streak > 0 || totalDays > 0) && (
-        <Animated.View entering={FadeInDown.delay(100)} style={[styles.statsBar, headerAnimStyle]}>
-          <StatItem val={totalDays} label="reflection days" color={theme.primary} />
-          <View style={styles.statDivider} />
-          <StatItem val={streak} label="current streak" color={theme.success} />
-          <View style={styles.statDivider} />
-          <StatItem val={`${sealedCount}/4`} label="categories" color={theme.silverBlue} />
+        <Animated.View entering={FadeInDown.delay(100)} style={headerAnimStyle}>
+          <VelvetGlassSurface style={styles.statsBar}>
+            <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
+            <StatItem val={totalDays} label="reflection days" color={theme.primary} />
+            <View style={styles.statDivider} />
+            <StatItem val={streak} label="current streak" color={theme.success} />
+            <View style={styles.statDivider} />
+            <StatItem val={`${sealedCount}/4`} label="categories" color={theme.silverBlue} />
+          </VelvetGlassSurface>
         </Animated.View>
       )}
 
       {sealedCount === 4 && (
         <Animated.View entering={FadeIn} style={styles.sealedBanner}>
-          <MetallicIcon name="shield-checkmark-outline" size={16} variant="green" />
-          <MetallicText style={styles.sealedBannerText} variant="green">ALL CATEGORIES RECORDED TODAY</MetallicText>
+          <MetallicIcon name="shield-checkmark-outline" size={16} variant="gold" />
+          <MetallicText style={styles.sealedBannerText} variant="gold">ALL CATEGORIES RECORDED TODAY</MetallicText>
         </Animated.View>
       )}
 
@@ -232,7 +239,7 @@ export default function DailyReflectionSection({
       </Animated.View>
 
       {CATEGORIES.map((category, idx) => {
-        const { wash, accent } = getCategoryTheme(category);
+        const { wash, accent, pillBg, pillBorder } = getCategoryTheme(category);
         const isSealed = categorySealed[category];
         const allAnswered = categoryQuestions[category].questions.length > 0 &&
           categoryQuestions[category].questions.every(q => answers[`${category}-${q.id}`] !== undefined);
@@ -246,7 +253,7 @@ export default function DailyReflectionSection({
               </View>
               {isSealed && (
                 <View style={styles.categorySealedBadge}>
-                  <MetallicText style={styles.categorySealedText} variant="green">RECORDED</MetallicText>
+                  <MetallicText style={styles.categorySealedText} variant="gold">RECORDED</MetallicText>
                 </View>
               )}
             </View>
@@ -256,26 +263,28 @@ export default function DailyReflectionSection({
               const scale = ANSWER_SCALES[CATEGORY_SCALE[category]];
               return (
                 <Animated.View key={q.id} entering={FadeInDown.delay(280 + idx * 100 + qIdx * 60)}>
-                  <View style={[styles.questionCard, theme.velvetBorder]}>
+                  <VelvetGlassSurface style={styles.questionCard} intensity={25}>
                     <LinearGradient colors={[...wash]} style={StyleSheet.absoluteFill} />
                     <Text style={styles.questionText}>{q.text}</Text>
                     <View style={styles.scaleRow}>
-                      {scale.map(opt => (
+                      {scale.map(opt => {
+                        const isSelected = val === opt.value;
+                        return (
                         <Pressable
                           key={opt.value}
                           disabled={isSealed}
                           onPress={() => setAnswer(category, q.id, opt.value)}
                           style={[
                             styles.scalePill,
-                            val === opt.value ? styles.scalePillSelected : styles.scalePillUnselected,
+                            isSelected ? { backgroundColor: pillBg, borderColor: pillBorder, transform: [{translateY: -1}] } : styles.scalePillUnselected,
                             isSealed && styles.scalePillSealed,
                           ]}
                         >
-                          <Text style={[styles.scalePillText, val === opt.value && styles.scalePillTextActive]}>{opt.label}</Text>
+                          <Text style={[styles.scalePillText, isSelected && styles.scalePillTextActive]}>{opt.label}</Text>
                         </Pressable>
-                      ))}
+                      )})}
                     </View>
-                  </View>
+                  </VelvetGlassSurface>
                 </Animated.View>
               );
             })}
@@ -293,20 +302,22 @@ export default function DailyReflectionSection({
               </View>
             )}
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.sealButton,
-                isSealed ? styles.sealButtonReopen : (allAnswered ? styles.sealButtonActive : styles.sealButtonDisabled),
-                pressed && styles.pressed,
-              ]}
-              onPress={() => isSealed ? setCategorySealed(p => ({ ...p, [category]: false })) : handleSealCategory(category)}
-              disabled={!allAnswered && !isSealed}
-            >
-              <MetallicIcon name={isSealed ? "lock-open-outline" : "shield-checkmark-outline"} size={16} color={isSealed || allAnswered ? accent : theme.textMuted} />
-              <Text style={[styles.sealButtonText, { color: isSealed || allAnswered ? accent : theme.textMuted }]}>
-                {isSealed ? 'Reopen to Edit' : `Record ${CATEGORY_LABELS[category]}`}
-              </Text>
-            </Pressable>
+            <VelvetGlassSurface style={[styles.sealButton, (isSealed || allAnswered) ? undefined : { opacity: 0.6 }]}>
+              {allAnswered || isSealed ? <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} /> : null}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.sealButtonContent,
+                  pressed && styles.pressed,
+                ]}
+                onPress={() => isSealed ? setCategorySealed(p => ({ ...p, [category]: false })) : handleSealCategory(category)}
+                disabled={!allAnswered && !isSealed}
+              >
+                <MetallicIcon name={isSealed ? "lock-open-outline" : "shield-checkmark-outline"} size={16} color={isSealed || allAnswered ? accent : theme.textMuted} />
+                <Text style={[styles.sealButtonText, { color: isSealed || allAnswered ? accent : theme.textMuted }]}>
+                  {isSealed ? 'Reopen to Edit' : `Record ${CATEGORY_LABELS[category]}`}
+                </Text>
+              </Pressable>
+            </VelvetGlassSurface>
           </Animated.View>
         );
       })}
@@ -327,13 +338,13 @@ function StatItem({ val, label, color }: { val: string | number; label: string; 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { marginBottom: 32 },
   statsBar: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1, borderColor: theme.cardBorder, borderRadius: 16, paddingVertical: 14, marginBottom: 24,
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: 16, paddingVertical: 14, marginBottom: 24, overflow: 'hidden'
   },
   statDivider: { width: 1, height: 28, backgroundColor: theme.cardBorder },
   sealedBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(110, 191, 139, 0.08)',
-    borderWidth: 1, borderColor: 'rgba(110, 191, 139, 0.2)', padding: 12, borderRadius: 16, marginBottom: 20,
+    flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(212, 175, 55, 0.08)',
+    borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)', padding: 12, borderRadius: 16, marginBottom: 20,
   },
   sealedBannerText: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
   dailyHeader: { marginBottom: 24 },
@@ -346,7 +357,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   categoryTitle: { fontSize: 16, fontWeight: '700', letterSpacing: 0.5 },
   categorySealedBadge: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
-    backgroundColor: 'rgba(110,191,139,0.08)', borderWidth: 1, borderColor: 'rgba(110,191,139,0.2)',
+    backgroundColor: 'rgba(212,175,55,0.08)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.2)',
   },
   categorySealedText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
 
@@ -361,12 +372,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   scaleRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8 },
   scalePill: { flexBasis: '48%', minHeight: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 1, paddingVertical: 10, paddingHorizontal: 14 },
   scalePillUnselected: {
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  scalePillSelected: {
-    backgroundColor: 'rgba(162, 194, 225, 0.15)',
-    borderColor: 'rgba(162, 194, 225, 0.40)',
+    backgroundColor: 'rgba(0, 0, 0, 0.30)',
+    borderColor: 'rgba(0, 0, 0, 0.60)',
   },
   scalePillSealed: { opacity: 0.6 },
   scalePillText: { fontSize: 13, color: 'rgba(255, 255, 255, 0.4)', fontWeight: '600', textAlign: 'center' },
@@ -380,12 +387,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // Hardware-style Action Buttons
   sealButton: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    paddingVertical: 14, borderRadius: 18, borderWidth: 1, marginTop: 4,
+    borderRadius: 18, marginTop: 4, overflow: 'hidden'
   },
-  sealButtonActive: { backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.15)' },
-  sealButtonDisabled: { backgroundColor: 'transparent', borderColor: 'rgba(255,255,255,0.05)' },
-  sealButtonReopen: { backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.15)' },
+  sealButtonContent: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 14,
+  },
   sealButtonText: { fontSize: 14, fontWeight: '700', letterSpacing: 0.3 },
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
 });

@@ -123,13 +123,13 @@ const QUICK_MEANINGS: Record<string, string> = {
 // ── Chakra System ────────────────────────────────────────────
 
 const CHAKRA_DEFS = [
-  { name: 'Root',        emoji: '🔴', color: '#E07A7A' },
-  { name: 'Sacral',      emoji: '🟠', color: '#D8C39A' },
-  { name: 'Solar Plexus', emoji: '🟡', color: '#E0D07A' },
-  { name: 'Heart',       emoji: '🟢', color: '#6EBF8B' },
-  { name: 'Throat',      emoji: '🔵', color: '#7AA8E0' },
-  { name: 'Third Eye',   emoji: '🟣', color: '#9B7AE0' },
-  { name: 'Crown',       emoji: '⚪', color: '#D0C8E8' },
+  { name: 'Root',         emoji: '🔴', color: '#DC5050' }, // Ember Ruby
+  { name: 'Sacral',       emoji: '🟠', color: '#CD7F5D' }, // Rich Copper
+  { name: 'Solar Plexus', emoji: '🟡', color: '#D4AF37' }, // Metallic Gold
+  { name: 'Heart',        emoji: '🟢', color: '#6B9080' }, // Deep Sage
+  { name: 'Throat',       emoji: '🔵', color: '#5C7CAA' }, // Stratosphere Blue
+  { name: 'Third Eye',    emoji: '🟣', color: '#A88BEB' }, // Nebula Purple
+  { name: 'Crown',        emoji: '⚪', color: '#E2D9F3' }, // Ethereal Violet
 ];
 
 // Map planet → primary chakra influence
