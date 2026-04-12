@@ -5,18 +5,15 @@
  */
 
 import React, { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode, useRef } from 'react';
-// react-native-purchases is lazy-imported to avoid NativeModules/NativeEventEmitter
-// access at module eval time (crashes on iOS 26 RN New Architecture).
 import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
 import * as Haptics from 'expo-haptics';
-
 import Constants from 'expo-constants';
+
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import { revenueCatService } from '../services/premium/revenuecat';
 import { logger } from '../utils/logger';
 import { useAuth } from './AuthContext';
 
-// Key set by demoSeedService for the reviewer account only
 const DEMO_PREMIUM_KEY = '@mysky:demo_premium';
 const DEMO_REVIEWER_EMAIL = 'brittanyapps@outlook.com';
 
@@ -36,10 +33,6 @@ interface PremiumContextType {
 
 const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-// Force premium ON when betaPremium is set in app.json extra (dev builds only).
-// Ignored in production builds regardless of app.json value.
 const DEBUG_FORCE_PREMIUM = __DEV__ && Constants.expoConfig?.extra?.betaPremium === true;
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
@@ -51,6 +44,9 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   
   const isMounted = useRef(true);
+  // Track if we've already done the first haptic to avoid buzzing on every app launch
+  const initialHapticDone = useRef(false);
+
   const activeUserId = session?.user?.id ?? null;
   const activeUserEmail = session?.user?.email ?? null;
 
@@ -68,13 +64,16 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
     const premiumActive = info ? revenueCatService.isPremium(info) : false;
     
-    // Trigger haptic when user first becomes premium
     setIsPremium((prev) => {
-      if (premiumActive && !prev) {
+      // Only fire haptic if they transition from free to premium while the app is open
+      if (premiumActive && !prev && initialHapticDone.current) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       }
       return premiumActive;
     });
+
+    // Mark that the first check is complete
+    initialHapticDone.current = true;
   }, []);
 
   const refreshCustomerInfo = useCallback(async () => {
@@ -98,7 +97,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       logger.error('[PremiumContext] purchase failed:', e);
       return { success: false, error: 'Purchase encountered an unexpected error.' };
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   }, [updatePremiumState]);
 
@@ -115,7 +114,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       logger.error('[PremiumContext] restore failed:', e);
       return { success: false, error: 'Restore failed.' };
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   }, [updatePremiumState]);
 
@@ -123,7 +122,6 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     isMounted.current = true;
-
     let customerInfoListener: ((info: CustomerInfo) => void) | null = null;
 
     const init = async () => {
@@ -137,9 +135,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       }
 
       if (!activeUserId) {
-        if (isMounted.current) {
-          setIsReady(true);
-        }
+        if (isMounted.current) setIsReady(true);
         return;
       }
 
@@ -151,17 +147,10 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         await revenueCatService.initialize();
         await revenueCatService.logIn(activeUserId);
 
-        // Register listener only AFTER configure() succeeds — the native
-        // RevenueCat SDK throws an ObjC exception if a listener is added
-        // before the SDK is configured, crashing the TurboModule queue.
-        // Wrapped in try/catch: void TurboModule calls on iOS 26 New Architecture
-        // can throw synchronous ObjC exceptions uncatchable from async context.
         if (isMounted.current) {
           customerInfoListener = (info: CustomerInfo) => {
             updatePremiumState(info);
-            if (hasDemoPremiumOverride) {
-              setIsPremium(true);
-            }
+            if (hasDemoPremiumOverride) setIsPremium(true);
           };
           try {
             const { default: Purchases } = await import('react-native-purchases');
@@ -172,7 +161,6 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
           }
         }
         
-        // Parallel fetch for speed, but atomic state update
         const [info, activeOfferings] = await Promise.all([
           revenueCatService.getCustomerInfo(),
           revenueCatService.getOfferings(),
@@ -181,15 +169,13 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         if (isMounted.current) {
           setOfferings(activeOfferings);
           updatePremiumState(info);
-          if (hasDemoPremiumOverride) {
-            setIsPremium(true);
-          }
+          if (hasDemoPremiumOverride) setIsPremium(true);
           setIsReady(true);
           logger.info('[PremiumContext] System Ready');
         }
       } catch (e) {
         logger.error('[PremiumContext] Initialization failed:', e);
-        if (isMounted.current) setIsReady(true); // Don't block app boot on failure
+        if (isMounted.current) setIsReady(true);
       }
     };
 
@@ -198,18 +184,15 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     return () => {
       isMounted.current = false;
       if (customerInfoListener) {
-        try {
-          import('react-native-purchases').then(({ default: Purchases }) => {
-            Purchases.removeCustomerInfoUpdateListener(customerInfoListener!);
-          }).catch(() => {});
-        } catch {
-          // Ignore — component is unmounting
-        }
+        // Safe cleanup for the listener
+        import('react-native-purchases')
+          .then(({ default: Purchases }) => {
+            if (customerInfoListener) Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
+          })
+          .catch(() => {});
       }
     };
   }, [activeUserEmail, activeUserId, authLoading, updatePremiumState]);
-
-  // ─── Value ──────────────────────────────────────────────────────────────────
 
   const contextValue = useMemo(() => ({
     isPremium,

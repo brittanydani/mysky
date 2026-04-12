@@ -1,13 +1,11 @@
 // components/ui/NatalChartWheelSkia.tsx
-//
-// Cinematic Skia re-implementation of the natal chart wheel.
+// MySky — The Skia Chart Engine
 //
 // High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
-// 1. Purged muddy bronze and heavy gold fallback colors.
-// 2. Implemented "Midnight Slate" for the center hub core.
-// 3. Updated outer bezels and rings to crisp "Lunar Gold".
-// 4. Refined glass sphere specular highlights for a tighter, machined look.
-// 5. Unified aspect lines using Atmosphere and Lunar Gold opacities.
+// 1. Linked Skia palette to global theme tokens for perfect synchronization.
+// 2. Implemented "Machined Bezel" logic with high-contrast metallic gradients.
+// 3. Tightened specularity on the glass spheres and center hub.
+// 4. Unified the "Atmosphere Blue" outer rings with the global theme.
 
 import React, { memo, useMemo, useState, useEffect } from 'react';
 import { Dimensions, Platform, StyleSheet, View } from 'react-native';
@@ -32,6 +30,8 @@ import { AstrologySettingsService, ChartOrientation } from '../../services/astro
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
+// ── Icons ────────────────────────────────────────────────────────────────────
+
 function SkiaPholusIcon({ x, y, size = 24, color = '#D4AF37' }: { x: number, y: number, size?: number, color?: string }) {
   const s = size / 24;
   const path = Skia.Path.Make();
@@ -39,10 +39,10 @@ function SkiaPholusIcon({ x, y, size = 24, color = '#D4AF37' }: { x: number, y: 
   path.lineTo(x + 20 * s, y + 4 * s);
   const dotCx = x + 6.5 * s, dotCy = y + 17.5 * s, dotR = 2.2 * s;
   return (
-    <>
+    <Group>
       <Path path={path} style="stroke" strokeWidth={1.2 * s} color={color} strokeCap="round" />
       <Circle cx={dotCx} cy={dotCy} r={dotR} color={color} />
-    </>
+    </Group>
   );
 }
 
@@ -61,10 +61,10 @@ function SkiaLilithIcon({ x, y, size = 24, color = '#D4AF37' }: { x: number, y: 
   stemPath.moveTo(cx - 4 * s, stemBot);
   stemPath.lineTo(cx + 4 * s, stemBot);
   return (
-    <>
+    <Group>
       <Path path={cresPath} style="stroke" strokeWidth={0.9 * s} color={color} strokeCap="round" />
       <Path path={stemPath} style="stroke" strokeWidth={0.9 * s} color={color} strokeCap="round" />
-    </>
+    </Group>
   );
 }
 
@@ -95,16 +95,17 @@ function SkiaVertexIcon({ x, y, size = 24, color = '#D4AF37' }: { x: number, y: 
   x2.moveTo(x + 13 * s, y + 18 * s);
   x2.lineTo(x + 19 * s, y + 12 * s);
   return (
-    <>
+    <Group>
       <Path path={vPath} style="stroke" strokeWidth={1.1 * s} color={color} strokeCap="round" />
       <Path path={x1} style="stroke" strokeWidth={1.1 * s} color={color} strokeCap="round" />
       <Path path={x2} style="stroke" strokeWidth={1.1 * s} color={color} strokeCap="round" />
-    </>
+    </Group>
   );
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// ── Configuration ────────────────────────────────────────────────────────────
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SIZE = Math.min(SCREEN_WIDTH - 90, 310);
 const SIZE_CANVAS = SIZE + 100;
 const CX = SIZE_CANVAS / 2;
@@ -180,6 +181,8 @@ const CROSS_ASPECT_COLORS: Record<string, { tight: string; loose: string }> = {
   Challenging: { tight: 'rgba(212,163,179,0.40)', loose: 'rgba(212,163,179,0.20)' },
   Neutral: { tight: 'rgba(212,175,55,0.40)', loose: 'rgba(212,175,55,0.20)' },
 };
+
+// ── Math Helpers ─────────────────────────────────────────────────────────────
 
 function astroToAngle(longitude: number, ascLongitude: number): number {
   const offset = ascLongitude;
@@ -262,6 +265,8 @@ function spreadPlanets(planets: { label: string; longitude: number; isRetrograde
   return items;
 }
 
+// ── Main Component ───────────────────────────────────────────────────────────
+
 interface Props { chart: NatalChart; showAspects?: boolean; overlayChart?: NatalChart; overlayName?: string; filterMode?: { person1: boolean; person2: boolean; cross: boolean }; orientation?: ChartOrientation; }
 
 function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName, filterMode, orientation: orientationProp }: Props) {
@@ -271,51 +276,51 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
   
   const wheelPalette = useMemo(() => {
     return {
-      rimGlow: 'rgba(212, 175, 55, 0.15)',
-      divider: 'rgba(255, 255, 255, 0.10)',
+      rimGlow: 'rgba(212, 175, 55, 0.12)',
+      divider: 'rgba(255, 255, 255, 0.08)',
       zodiacInk: 'rgba(255, 255, 255, 0.65)',
       houseInk: 'rgba(255, 255, 255, 0.70)',
-      angularLine: 'rgba(212, 175, 55, 0.60)',
-      regularLine: 'rgba(255, 255, 255, 0.20)',
+      angularLine: 'rgba(212, 175, 55, 0.55)',
+      regularLine: 'rgba(255, 255, 255, 0.18)',
       ringStroke: [
-        'rgba(255, 255, 255, 0.08)',
-        'rgba(255, 255, 255, 0.8)',
-        'rgba(255, 255, 255, 0.08)',
-        'rgba(255, 255, 255, 0.6)',
-        'rgba(255, 255, 255, 0.08)',
+        'rgba(255, 255, 255, 0.05)',
+        'rgba(255, 255, 255, 0.85)',
+        'rgba(255, 255, 255, 0.05)',
+        'rgba(255, 255, 255, 0.65)',
+        'rgba(255, 255, 255, 0.05)',
       ],
-      specularSoft: 'rgba(255,255,255,0.25)',
-      specularMuted: 'rgba(255,255,255,0.15)',
-      specularStrong: 'rgba(255,255,255,0.45)',
-      specularPeak: 'rgba(255,255,255,0.65)',
-      bounce: 'rgba(212,175,55,0.15)',
+      specularSoft: 'rgba(255,255,255,0.20)',
+      specularMuted: 'rgba(255,255,255,0.12)',
+      specularStrong: 'rgba(255,255,255,0.40)',
+      specularPeak: 'rgba(255,255,255,0.60)',
+      bounce: 'rgba(212,175,55,0.10)',
       dottedRing: [
-        'rgba(162,194,225,0.15)',
-        'rgba(162,194,225,0.80)',
-        'rgba(162,194,225,0.15)',
-        'rgba(162,194,225,0.60)',
-        'rgba(162,194,225,0.15)',
+        'rgba(162,194,225,0.12)',
+        'rgba(162,194,225,0.85)',
+        'rgba(162,194,225,0.12)',
+        'rgba(162,194,225,0.65)',
+        'rgba(162,194,225,0.12)',
       ],
       pointText: '#FFFFFF',
       glyphText: '#0A0A0F',
       angleLabel: 'rgba(255,255,255,0.85)',
-      centerHalo: ['rgba(162, 194, 225, 0.12)', 'rgba(162, 194, 225, 0.04)', 'transparent'],
-      centerHaloStroke: 'rgba(26, 30, 41, 0.80)',
-      centerFill: ['#1A1E29', '#1A1E29', '#1A1E29'],
-      centerSparkle: 'rgba(255,255,255,0.40)',
+      centerHalo: ['rgba(162, 194, 225, 0.10)', 'rgba(162, 194, 225, 0.04)', 'transparent'],
+      centerHaloStroke: 'rgba(26, 30, 41, 0.85)',
+      centerFill: [theme.slateMid, theme.slateDeep, theme.slateDeep],
+      centerSparkle: 'rgba(255,255,255,0.35)',
       centerRing: [
         'rgba(212, 175, 55, 0.15)',
-        'rgba(255, 255, 255, 0.90)',
+        'rgba(255, 255, 255, 0.95)',
         'rgba(212, 175, 55, 0.15)',
-        'rgba(255, 255, 255, 0.50)',
+        'rgba(255, 255, 255, 0.55)',
         'rgba(212, 175, 55, 0.15)',
       ],
-      synastryLabel: 'rgba(255,255,255,0.5)',
+      synastryLabel: 'rgba(255,255,255,0.45)',
       synastryName: 'rgba(212,175,55,0.90)',
       aspectColor: (alpha: number) => `rgba(212, 175, 55, ${alpha})`,
       aspectGlow: (alpha: number) => `rgba(244, 235, 208, ${alpha})`,
     };
-  }, []);
+  }, [theme]);
 
   const [settingsOrientation, setSettingsOrientation] = useState<ChartOrientation>('standard-natal');
   useEffect(() => { AstrologySettingsService.getSettings().then((s) => setSettingsOrientation(s.chartOrientation)).catch(() => {}); }, []);
@@ -441,19 +446,14 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
         {/* ── Outer Zodiac Border (Major Ring) ── */}
         <Group>
-          {/* Underglow */}
           <Circle cx={CX} cy={CY} r={R_OUTER + 44} style="stroke" strokeWidth={4} color={wheelPalette.rimGlow}>
             <BlurMask blur={4} style="normal" />
           </Circle>
-          
-          {/* Outer edge of bezel */}
           <Circle cx={CX} cy={CY} r={R_OUTER + 45} style="stroke" strokeWidth={1} opacity={0.95}>
-            <SweepGradient c={vec(CX, CY)} colors={['#2C3645', '#F4EBD0', '#D4AF37', '#1A1E29', '#8C631F', '#F4EBD0', '#D4AF37', '#0A0A0F', '#F4EBD0', '#2C3645']} positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.62, 0.78, 0.88, 0.95, 1.0]} transform={[{ rotate: -0.1 }]} />
+            <SweepGradient c={vec(CX, CY)} colors={[theme.slateMid, theme.goldLight, theme.goldMain, theme.slateDeep, theme.goldDark, theme.goldLight, theme.goldMain, theme.textInk, theme.goldLight, theme.slateMid]} positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.62, 0.78, 0.88, 0.95, 1.0]} transform={[{ rotate: -0.1 }]} />
           </Circle>
-
-          {/* Inner edge of bezel */}
           <Circle cx={CX} cy={CY} r={R_OUTER + 43} style="stroke" strokeWidth={1} opacity={0.95}>
-            <SweepGradient c={vec(CX, CY)} colors={['#2C3645', '#F4EBD0', '#8C631F', '#1A1E29', '#D4AF37', '#F4EBD0', '#8C631F', '#0A0A0F', '#F4EBD0', '#2C3645']} positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]} transform={[{ rotate: 0.15 }]} />
+            <SweepGradient c={vec(CX, CY)} colors={[theme.slateMid, theme.goldLight, theme.goldDark, theme.slateDeep, theme.goldMain, theme.goldLight, theme.goldDark, theme.textInk, theme.goldLight, theme.slateMid]} positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]} transform={[{ rotate: 0.15 }]} />
           </Circle>
         </Group>
 
@@ -461,13 +461,13 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         <Group>
           <Circle cx={CX} cy={CY} r={R_OUTER + 2} style="stroke" strokeWidth={4} color={wheelPalette.rimGlow}><BlurMask blur={3} style="normal" /></Circle>
           <Circle cx={CX} cy={CY} r={R_OUTER + 3} style="stroke" strokeWidth={1} opacity={0.95}>
-            <SweepGradient c={vec(CX, CY)} colors={['#1A1E29', '#F4EBD0', '#8C631F', '#0A0A0F', '#D4AF37', '#F4EBD0', '#D4AF37', '#0A0A0F', '#F4EBD0', '#1A1E29']} positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.62, 0.78, 0.88, 0.95, 1.0]} transform={[{ rotate: -0.05 }]} />
+            <SweepGradient c={vec(CX, CY)} colors={[theme.slateDeep, theme.goldLight, theme.goldDark, theme.textInk, theme.goldMain, theme.goldLight, theme.goldMain, theme.textInk, theme.goldLight, theme.slateDeep]} positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.62, 0.78, 0.88, 0.95, 1.0]} transform={[{ rotate: -0.05 }]} />
           </Circle>
           <Circle cx={CX} cy={CY} r={R_OUTER + 1} style="stroke" strokeWidth={1} opacity={0.95}>
-            <SweepGradient c={vec(CX, CY)} colors={['#2C3645', '#F4EBD0', '#D4AF37', '#1A1E29', '#D4AF37', '#F4EBD0', '#8C631F', '#0A0A0F', '#F4EBD0', '#2C3645']} positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]} transform={[{ rotate: 0.2 }]} />
+            <SweepGradient c={vec(CX, CY)} colors={[theme.slateMid, theme.goldLight, theme.goldMain, theme.slateDeep, theme.goldMain, theme.goldLight, theme.goldDark, theme.textInk, theme.goldLight, theme.slateMid]} positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]} transform={[{ rotate: 0.2 }]} />
           </Circle>
           <Circle cx={CX} cy={CY} r={R_OUTER - 2} style="stroke" strokeWidth={0.8} opacity={0.95}>
-             <SweepGradient c={vec(CX, CY)} colors={['#8C631F', '#F4EBD0', '#1A1E29', '#D4AF37', '#F4EBD0', '#1A1E29', '#8C631F']} positions={[0.0, 0.15, 0.35, 0.5, 0.68, 0.85, 1.0]} transform={[{ rotate: -0.3 }]} />
+             <SweepGradient c={vec(CX, CY)} colors={[theme.goldDark, theme.goldLight, theme.slateDeep, theme.goldMain, theme.goldLight, theme.slateDeep, theme.goldDark]} positions={[0.0, 0.15, 0.35, 0.5, 0.68, 0.85, 1.0]} transform={[{ rotate: -0.3 }]} />
           </Circle>
         </Group>
 
@@ -714,15 +714,15 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           <Path path={makeArcPath(CX, CY, R_INNER, -125, 38)} style="stroke" strokeWidth={2.5} strokeCap="round" color={wheelPalette.specularStrong}><BlurMask blur={1} style="normal" /></Path>
           
           <Circle cx={CX} cy={CY} r={R_INNER + 1} style="stroke" strokeWidth={1} opacity={0.95}>
-            <SweepGradient c={vec(CX, CY)} colors={['#1A1E29', '#F4EBD0', '#8C631F', '#0A0A0F', '#D4AF37', '#F4EBD0', '#D4AF37', '#0A0A0F', '#F4EBD0', '#1A1E29']} positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.62, 0.78, 0.88, 0.95, 1.0]} transform={[{ rotate: -0.15 }]} />
+            <SweepGradient c={vec(CX, CY)} colors={[theme.slateDeep, theme.goldLight, theme.goldDark, theme.textInk, theme.goldMain, theme.goldLight, theme.goldMain, theme.textInk, theme.goldLight, theme.slateDeep]} positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.62, 0.78, 0.88, 0.95, 1.0]} transform={[{ rotate: -0.15 }]} />
           </Circle>
           <Circle cx={CX} cy={CY} r={R_INNER - 1} style="stroke" strokeWidth={1} opacity={0.95}>
-            <SweepGradient c={vec(CX, CY)} colors={['#2C3645', '#F4EBD0', '#D4AF37', '#1A1E29', '#D4AF37', '#F4EBD0', '#8C631F', '#0A0A0F', '#F4EBD0', '#2C3645']} positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]} transform={[{ rotate: 0.1 }]} />
+            <SweepGradient c={vec(CX, CY)} colors={[theme.slateMid, theme.goldLight, theme.goldMain, theme.slateDeep, theme.goldMain, theme.goldLight, theme.goldDark, theme.textInk, theme.goldLight, theme.slateMid]} positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]} transform={[{ rotate: 0.1 }]} />
           </Circle>
         </Group>
 
         <Circle cx={CX} cy={CY} r={R_INNER - 3} style="stroke" strokeWidth={0.8} opacity={0.95}>
-           <SweepGradient c={vec(CX, CY)} colors={['#8C631F', '#F4EBD0', '#1A1E29', '#D4AF37', '#F4EBD0', '#1A1E29', '#8C631F']} positions={[0.0, 0.15, 0.35, 0.5, 0.68, 0.85, 1.0]} transform={[{ rotate: -0.2 }]} />
+           <SweepGradient c={vec(CX, CY)} colors={[theme.goldDark, theme.goldLight, theme.slateDeep, theme.goldMain, theme.goldLight, theme.slateDeep, theme.goldDark]} positions={[0.0, 0.15, 0.35, 0.5, 0.68, 0.85, 1.0]} transform={[{ rotate: -0.2 }]} />
         </Circle>
 
         {/* ── Synastry label inside center hub ── */}

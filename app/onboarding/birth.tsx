@@ -1,4 +1,11 @@
-// File: app/onboarding/birth.tsx
+// app/onboarding/birth.tsx
+// MySky — Onboarding Birth Data Wrapper
+//
+// High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
+// 1. Purged generic theme backgrounds in favor of the Absolute Midnight anchor.
+// 2. Implemented atmospheric glow orbs to match the global Lunar Sky volume.
+// 3. Cleaned up unused legacy styles.
+
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, View, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -83,12 +90,21 @@ export default function OnboardingBirthScreen() {
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
+      
+      {/* Nebula depth — atmospheric glow orbs to match global space theme */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(212, 175, 55, 0.08)' }]} />
+      </View>
+
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {/* This screen exists only to host the modal as a step */}
         <BirthDataModal
           visible={visible}
           hideClose={true}
-          title="Birth Details"          initialData={savedName ? { chartName: savedName } : undefined}          onClose={() => {
+          title="Birth Details"
+          initialData={savedName ? { chartName: savedName } : undefined}
+          onClose={() => {
             // No-op: user must complete birth data to proceed
           }}
           onRestore={() => {
@@ -104,22 +120,16 @@ export default function OnboardingBirthScreen() {
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: theme.background
+    backgroundColor: '#0A0A0F' // Absolute Midnight Anchor
   },
   safeArea: { 
     flex: 1 
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-  },
-  headerText: { 
-    color: theme.textPrimary, 
-    fontSize: 34, 
-    fontWeight: '800', 
-    letterSpacing: -0.5,
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
   },
 });

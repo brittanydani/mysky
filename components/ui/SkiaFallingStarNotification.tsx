@@ -70,17 +70,23 @@ const SkiaFallingStarNotification = forwardRef<StarNotificationRef>((_, ref) => 
     transform: [{ translateY: translateY.value }],
   }));
 
+  const canvasAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: starProgress.value,
+  }));
+
   if (!visible) return null;
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.container]} pointerEvents="none">
-      <Canvas style={styles.canvas}>
-        <Group opacity={starProgress}>
-          {particles.map((p, i) => (
-            <Circle key={i} cx={p.x} cy={p.y} r={p.r} color="rgba(255,255,255,0.7)" />
-          ))}
-        </Group>
-      </Canvas>
+      <Animated.View style={[StyleSheet.absoluteFill, canvasAnimatedStyle]}>
+        <Canvas style={styles.canvas}>
+          <Group>
+            {particles.map((p, i) => (
+              <Circle key={i} cx={p.x} cy={p.y} r={p.r} color="white" opacity={0.7} />
+            ))}
+          </Group>
+        </Canvas>
+      </Animated.View>
       <Animated.View style={[styles.banner, animatedStyle]}>
         <Text style={styles.text}>{message}</Text>
       </Animated.View>

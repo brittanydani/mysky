@@ -1,11 +1,11 @@
-// File: app/(tabs)/identity.tsx
+// app/(tabs)/identity.tsx
 // MySky — Blueprint Hub
 //
-// High-End "Lunar Sky" & "Smoked Glass" Aesthetic Update:
-// 1. Purged "Muddy Gold" background gradients from all tools and headers.
-// 2. Mapped Tool Cards to specific Semantic Washes (Atmosphere, Nebula, Sage, Rose).
-// 3. Integrated "Velvet Glass" 1px directional light-catch borders globally.
-// 4. Elevated typography: Metallic Gold icons and pure white data labels.
+// High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
+// 1. Typography: Standardized screen titles with matching sizes.
+// 2. Velvet Glass: Directional 1px light-catch borders (theme-integrated).
+// 3. Midnight Slate: Heavy anchor washes for the Blueprint grid.
+// 4. Metallic Hardware: Badges with sheer metallic saturation for tool icons.
 
 import React, { useCallback, useState } from 'react';
 import {
@@ -14,24 +14,25 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  TextStyle,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { useRouter, Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { CircleDot, Compass, Crosshair, Diamond, Orbit, Sparkles, Star } from 'lucide-react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
+// ── Service & UI Layer ──
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
-import { MetallicText } from '../../components/ui/MetallicText';
 import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
 import { PremiumSegmentedControl } from '../../components/ui/PremiumSegmentedControl';
 import { EnergyScrollContent } from '../../components/screens/EnergyScrollContent';
@@ -39,26 +40,14 @@ import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 
-// ── Cinematic Palette ──
-const PALETTE = {
-  gold: '#D4AF37',       // Metallic Brand Gold
-  atmosphere: '#A2C2E1', // Icy Blue
-  slateMid: '#2C3645',   // Anchor Slate Top
-  slateDeep: '#1A1E29',  // Anchor Slate Bottom
-  lavender: '#A88BEB',   // Nebula Wash
-  emerald: '#6B9080',    // Sage Wash
-  rose: '#D4A3B3',       // Identity/Intelligence
-  ember: '#DC5050',      // Stress/Tension
-  bg: '#0A0A0F',
-  textMain: '#FFFFFF',
-};
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface BlueprintCard {
   title: string;
   description: string;
   lucideIcon: React.ComponentType<{ color: string; size: number; strokeWidth?: number }>;
   iconColor: string;
-  wash: [string, string];
+  washKey: keyof AppTheme; 
   route: Href;
   premium?: boolean;
 }
@@ -68,56 +57,56 @@ const CARDS: BlueprintCard[] = [
     title: 'Inner World',
     description: "Core Values, Jungian Archetypes, Cognitive Style, and Intelligence — your mind's blueprint.",
     lucideIcon: Diamond,
-    iconColor: PALETTE.atmosphere,
-    wash: ['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)'], // Atmosphere
+    iconColor: '#A2C2E1', // Atmosphere
+    washKey: 'cardSurfaceCognitive', 
     route: '/inner-world' as Href,
   },
   {
-    title: 'Body & Nervous System',
-    description: 'Somatic map and trigger log — how your body holds experience.',
+    title: 'Body & Somatics',
+    description: 'Somatic map and nervous system trigger log — how your body holds experience.',
     lucideIcon: CircleDot,
-    iconColor: PALETTE.emerald,
-    wash: ['rgba(107, 144, 128, 0.20)', 'rgba(107, 144, 128, 0.05)'], // Sage
+    iconColor: '#6EBF8B', // Sage
+    washKey: 'cardSurfaceSomatic',
     route: '/body-nervous' as Href,
   },
   {
     title: 'Relational Mirror',
     description: 'Attachment tendencies and nervous system patterns you notice in connection.',
     lucideIcon: Orbit,
-    iconColor: PALETTE.lavender,
-    wash: ['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)'], // Nebula
+    iconColor: '#A88BEB', // Nebula
+    washKey: 'cardSurfaceRelational',
     route: '/relationship-patterns' as Href,
   },
   {
-    title: 'Healing Space',
-    description: 'Shadow work, inner child needs, and restorative anchors.',
+    title: 'Restorative Space',
+    description: 'Shadow work, inner child needs, and restorative anchors for the soul.',
     lucideIcon: Sparkles,
-    iconColor: PALETTE.rose,
-    wash: ['rgba(212, 163, 179, 0.20)', 'rgba(212, 163, 179, 0.05)'], // Rose Glass
+    iconColor: '#D4A3B3', // Healing Rose
+    washKey: 'cardSurfaceValues', // Atmosphere
     route: '/(tabs)/healing' as Href,
     premium: true,
   },
   {
-    title: 'Inner Tensions',
-    description: 'Nervous system conflict, ambivalence, and shadow triggers.',
+    title: 'Internal Tensions',
+    description: 'Nervous system conflict, psychological ambivalence, and shadow triggers.',
     lucideIcon: Crosshair,
-    iconColor: PALETTE.ember,
-    wash: ['rgba(220, 80, 80, 0.20)', 'rgba(220, 80, 80, 0.05)'], // Ember
+    iconColor: '#DC5050', // Ember
+    washKey: 'cardSurfaceTension',
     route: '/(tabs)/inner-tensions' as Href,
   },
   {
     title: 'Cosmic Blueprint',
-    description: 'Planets, houses, and aspects mapping the moment of your arrival.',
+    description: 'Planets, houses, and aspects mapping the celestial geometry of your arrival.',
     lucideIcon: Compass,
-    iconColor: PALETTE.gold,
-    wash: ['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)'], // Midnight Slate Anchor
+    iconColor: '#D4AF37', // Gold
+    washKey: 'cardSurfaceAnchor', // Midnight Slate
     route: '/(tabs)/chart' as Href,
   },
 ];
 
 const IDENTITY_TABS = [
-  { id: 'blueprint', label: 'Blueprint' },
-  { id: 'energy',    label: 'Energy'    },
+  { id: 'blueprint', label: 'BLUEPRINT' },
+  { id: 'energy',    label: 'ENERGY'    },
 ];
 
 export default function BlueprintScreen() {
@@ -162,82 +151,115 @@ export default function BlueprintScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
-      {/* Nebula/Atmosphere glow orbs */}
+      {/* Atmospheric Nebula Depth */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.08)' }]} />
+        <View style={[styles.glowOrb, { top: -80, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 140, left: -100, backgroundColor: 'rgba(212, 175, 55, 0.08)' }]} />
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent} 
+          showsVerticalScrollIndicator={false}
+        >
           
-          {/* Header */}
-          <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <View style={styles.headerRow}>
-              <View style={styles.headerTextWrap}>
-                <Text style={styles.headerTitle}>Inner World</Text>
-                <GoldSubtitle style={styles.headerSubtitle}>
-                  {chartName ? `${chartName} · Know yourself deeply` : 'Values, patterns, body & mind'}
-                </GoldSubtitle>
+          {/* ── Apple Editorial Header ── */}
+          <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.header}>
+            <View style={styles.headerTopRow}>
+              <View style={styles.titleStack}>
+                <Text style={styles.heroTitle} numberOfLines={1} adjustsFontSizeToFit>Identity</Text>
+                <Text style={styles.heroSubtitle}>
+                   {chartName ? `${chartName.toUpperCase()} · EVOLUTIONARY PATH` : 'YOUR ARCHETYPAL ARCHITECTURE'}
+                </Text>
               </View>
               <Pressable
-                style={styles.headerAction}
+                style={styles.globalAction}
                 onPress={() => nav('/inner-world' as Href)}
                 accessibilityRole="button"
-                accessibilityLabel="Open inner world hub"
               >
-                <Ionicons name="arrow-forward-outline" size={18} color="#FFFFFF" />
+                <Ionicons name="finger-print-outline" size={22} color={theme.titanium || '#CFAE73'} />
               </Pressable>
             </View>
           </Animated.View>
 
-          {/* Tab Pill */}
-          <Animated.View entering={FadeInDown.delay(120).duration(600)}>
+          {/* ── High-End Segmented Control ── */}
+          <Animated.View entering={FadeInDown.delay(200).duration(800)} style={styles.tabSection}>
             <PremiumSegmentedControl
               options={IDENTITY_TABS}
               selectedIndex={activeTab === 'blueprint' ? 0 : 1}
-              onChange={(idx) => setActiveTab(idx === 0 ? 'blueprint' : 'energy')}
+              onChange={(idx) => {
+                Haptics.selectionAsync();
+                setActiveTab(idx === 0 ? 'blueprint' : 'energy');
+              }}
             />
           </Animated.View>
 
+          {/* ── Content Body ── */}
           {activeTab === 'blueprint' ? (
-            /* Cards */
             <View style={styles.grid}>
               {CARDS.map((card, i) => (
-                <Animated.View key={card.route as string} entering={FadeInDown.delay(160 + i * 80).duration(600)}>
-                  <Pressable style={({ pressed }) => [pressed && styles.cardPressed]} onPress={() => nav(card.route, card.premium)}>
-                    <VelvetGlassSurface style={styles.card} intensity={25}>
-                      <LinearGradient colors={card.wash} style={StyleSheet.absoluteFill} />
-                      <View style={styles.cardIconRow}>
-                        <View style={[styles.cardIconBadge, { borderColor: `${card.iconColor}40`, backgroundColor: `${card.iconColor}15` }]}>
-                          <MetallicLucideIcon icon={card.lucideIcon} size={20} strokeWidth={1.5} color={card.iconColor} />
+                <Animated.View 
+                  key={card.route as string} 
+                  entering={FadeInDown.delay(300 + i * 100).duration(800)}
+                >
+                  <Pressable 
+                    style={({ pressed }) => [pressed && styles.cardPressed]} 
+                    onPress={() => nav(card.route, card.premium)}
+                  >
+                    <VelvetGlassSurface 
+                      style={[styles.card, styles.velvetBorder]} 
+                      intensity={45}
+                    >
+                      <LinearGradient 
+                        colors={theme[card.washKey] as [string, string]} 
+                        style={StyleSheet.absoluteFill} 
+                      />
+                      
+                      <View style={styles.cardHeader}>
+                        <View style={[styles.hardwareBadge, { borderColor: `${card.iconColor}30` }]}>
+                          <MetallicLucideIcon 
+                            icon={card.lucideIcon} 
+                            size={22} 
+                            strokeWidth={1.5} 
+                            color={card.iconColor} 
+                          />
                         </View>
                         {card.premium && <PremiumBadge />}
                       </View>
-                      <Text style={styles.cardTitle}>{card.title}</Text>
-                      <Text style={styles.cardSubtitle}>{card.description}</Text>
+
+                      <View style={styles.cardTextContent}>
+                        <Text style={styles.cardTitle}>{card.title}</Text>
+                        <Text style={styles.cardDescription}>{card.description}</Text>
+                      </View>
+
+                      <View style={styles.cardActionRow}>
+                        <Text style={[styles.actionText, { color: card.iconColor }]}>EXPLORE MODULE</Text>
+                        <Ionicons name="chevron-forward" size={14} color={card.iconColor} />
+                      </View>
                     </VelvetGlassSurface>
                   </Pressable>
                 </Animated.View>
               ))}
             </View>
           ) : (
-            /* Energy Content */
-            <EnergyScrollContent embedded />
+            <Animated.View entering={FadeIn.duration(600)}>
+              <EnergyScrollContent embedded />
+            </Animated.View>
           )}
 
+          <View style={{ height: 120 }} />
         </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
 
-// Premium lock indicator
 const PremiumBadge = () => {
   const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.badgeContainer}>
-      <MetallicLucideIcon icon={Star} size={12} strokeWidth={1.5} variant="gold" />
+      <MetallicLucideIcon icon={Star} size={10} strokeWidth={2.5} variant="gold" />
+      <Text style={styles.badgeText}>PREMIUM</Text>
     </View>
   );
 };
@@ -247,28 +269,119 @@ const PremiumBadge = () => {
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
-  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
+  glowOrb: { position: 'absolute', width: 400, height: 400, borderRadius: 200, opacity: 0.5 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
 
-  header: { marginBottom: 32 },
-  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
-  headerTextWrap: { flex: 1 },
-  headerAction: {
-    width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+  // Editorial Header
+  header: { marginBottom: 40 },
+  headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  titleStack: { flex: 1 },
+  heroTitle: { 
+    fontSize: 32, 
+    color: '#FFFFFF', 
+    fontWeight: '800', 
+    letterSpacing: -0.5, 
   },
-  headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
-  headerSubtitle: { fontSize: 14 },
+  heroSubtitle: { 
+    fontSize: 12, 
+    color: 'rgba(255,255,255,0.6)', 
+    fontWeight: '600', 
+    letterSpacing: 2.5, 
+    marginTop: 4,
+    textTransform: 'uppercase'
+  },
+  globalAction: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
 
+  // Tabs
+  tabSection: { marginBottom: 32 },
+
+  // Grid
   grid: { gap: 20 },
 
-  card: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', borderTopColor: 'rgba(255,255,255,0.20)', overflow: 'hidden' },
-  cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
+  // Card Architecture
+  card: { 
+    padding: 28, 
+    borderRadius: 32, 
+    overflow: 'hidden',
+    minHeight: 220,
+    justifyContent: 'space-between'
+  },
+  velvetBorder: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.25)',
+    borderLeftColor: 'rgba(255,255,255,0.12)',
+    borderRightColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
+  },
+  cardPressed: { transform: [{ scale: 0.97 }], opacity: 0.9 },
 
-  cardIconRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
-  cardIconBadge: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-  cardTitle: { fontSize: 20, color: '#FFFFFF', fontWeight: '700', marginBottom: 4 },
-  cardSubtitle: { fontSize: 16, color: 'rgba(255,255,255,0.6)', lineHeight: 24 },
+  cardHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 20 
+  },
+  hardwareBadge: { 
+    width: 54, 
+    height: 54, 
+    borderRadius: 18, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+  },
+  
+  cardTextContent: { flex: 1 },
+  cardTitle: { 
+    fontSize: 26, 
+    color: '#FFFFFF', 
+    fontWeight: '800', 
+    letterSpacing: -1.0, 
+    marginBottom: 8 
+  },
+  cardDescription: { 
+    fontSize: 15, 
+    color: 'rgba(255,255,255,0.55)', 
+    lineHeight: 22, 
+    fontWeight: '500',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
 
-  badgeContainer: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(212,175,55,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(212,175,55,0.30)' },
+  cardActionRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 6, 
+    marginTop: 24,
+    opacity: 0.8
+  },
+  actionText: { 
+    fontSize: 10, 
+    fontWeight: '900', 
+    letterSpacing: 1.5 
+  },
+
+  // Premium Badge
+  badgeContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 6, 
+    backgroundColor: 'rgba(212,175,55,0.12)', 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 20, 
+    borderWidth: 1, 
+    borderColor: 'rgba(212,175,55,0.25)' 
+  },
+  badgeText: { fontSize: 9, fontWeight: '900', color: '#D4AF37', letterSpacing: 1.5 },
 });
+

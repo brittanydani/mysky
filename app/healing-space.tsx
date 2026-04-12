@@ -2,11 +2,10 @@
 // MySky — The Healing Space
 //
 // High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
-// 1. Purged legacy "Muddy Gold" and generic flat backgrounds.
-// 2. Implemented "Midnight Slate" for heavy anchor elements (Ritual Cards).
-// 3. Implemented "Nebula", "Sage", and "Ember" washes for deep therapeutic immersion.
-// 4. Integrated "Velvet Glass" 1px directional light-catch borders globally.
-// 5. Unified the lock screen with the high-vibrancy Emerald premium palette.
+// 1. Integrated global theme constants for semantic card surfaces.
+// 2. Implemented "Midnight Slate" anchors for all ritual modules.
+// 3. Applied "Velvet Glass" 1px directional borders globally via theme tokens.
+// 4. Refined button interactions to match "Tactile Hardware" logic.
 
 import React, { useCallback, useState } from 'react';
 import {
@@ -38,17 +37,6 @@ import { MetallicText } from '../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
-
-// ── Cinematic Palette ──
-const PALETTE = {
-  emerald: '#6EBF8B',   // Healing / Somatic (Green)
-  gold: '#D4AF37',      // Primary Accent
-  nebula: '#A88BEB',    // Shadow Work (Amethyst)
-  rose: '#D4A3B3',      // Relational Reset
-  sage: '#6B9080',      // Secure Growth
-  slateMid: '#2C3645',  // Anchor Slate Top
-  slateDeep: '#1A1E29', // Anchor Slate Bottom
-};
 
 // ── Synthesis Logic ──
 const ARCHETYPE_HEALING: Record<ArchetypeKey, { title: string; shadow: string; affirmation: string }> = {
@@ -120,7 +108,7 @@ export default function HealingSpaceScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         <SkiaDynamicCosmos />
-        <ActivityIndicator size="large" color={PALETTE.emerald} style={{ marginBottom: 16 }} />
+        <ActivityIndicator size="large" color={theme.amethyst} style={{ marginBottom: 16 }} />
         <Text style={styles.loadingText}>Synthesizing your inner world...</Text>
       </View>
     );
@@ -151,11 +139,11 @@ export default function HealingSpaceScreen() {
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.centered}>
-            <MetallicIcon name="medical-outline" size={56} color={PALETTE.emerald} />
+            <MetallicIcon name="medical-outline" size={56} color={theme.success} />
             <Text style={styles.lockTitle}>The Healing Space</Text>
             <Text style={styles.lockSub}>Deep shadow work and somatic release rituals synthesized from your Blueprint.</Text>
             <Pressable style={styles.premiumBtn} onPress={() => router.push('/(tabs)/premium' as Href)}>
-              <Ionicons name="sparkles-outline" size={16} color="#0A0A0C" />
+              <Ionicons name="sparkles-outline" size={16} color={theme.textInk} />
               <Text style={styles.premiumBtnText}>Unlock Deeper Sky</Text>
             </Pressable>
           </View>
@@ -180,7 +168,7 @@ export default function HealingSpaceScreen() {
       <SkiaDynamicCosmos />
 
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 191, 139, 0.12)' }]} />
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
         <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.08)' }]} />
       </View>
 
@@ -191,7 +179,7 @@ export default function HealingSpaceScreen() {
             onPress={() => { Haptics.selectionAsync(); router.replace('/(tabs)/identity' as Href); }}
             accessibilityRole="button"
           >
-            <MetallicIcon name="chevron-back-outline" size={24} color={PALETTE.emerald} />
+            <MetallicIcon name="chevron-back-outline" size={24} color={theme.success} />
           </Pressable>
         </View>
 
@@ -204,19 +192,19 @@ export default function HealingSpaceScreen() {
           {/* 1. ARCHETYPE SHADOW WORK */}
           {hasArchetype && archetypeData && (
             <Animated.View entering={FadeInDown.delay(140).duration(600)}>
-              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.cardSurfaceValues}>
-              <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
-              <LinearGradient colors={['rgba(168, 139, 235, 0.20)', 'transparent']} style={StyleSheet.absoluteFill} />
+              <VelvetGlassSurface style={[styles.card, theme.velvetBorder]} intensity={45}>
+              <LinearGradient colors={theme.cardSurfaceAnchor as any as string[]} style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={['rgba(168, 139, 235, 0.15)', 'transparent']} style={StyleSheet.absoluteFill} />
 
               <View style={styles.cardHeader}>
-                <MetallicIcon name="moon-outline" size={16} color={PALETTE.nebula} />
-                <MetallicText style={styles.cardEyebrow} color={PALETTE.nebula}>SHADOW WORK</MetallicText>
+                <MetallicIcon name="moon-outline" size={16} color={theme.amethyst} />
+                <MetallicText style={styles.cardEyebrow} color={theme.amethyst}>SHADOW WORK</MetallicText>
               </View>
 
               <Text style={styles.cardTitle}>{archetypeData.title}</Text>
               <Text style={styles.promptText}>{archetypeData.shadow}</Text>
 
-              <View style={[styles.affirmationBox, { borderLeftColor: PALETTE.nebula }]}>
+              <View style={[styles.affirmationBox, { borderLeftColor: theme.amethyst }]}>
                 <Text style={styles.affirmationLabel}>ANCHOR AFFIRMATION</Text>
                 <MetallicText style={styles.affirmationText} variant="gold">{'"' + archetypeData.affirmation + '"'}</MetallicText>
               </View>
@@ -227,13 +215,13 @@ export default function HealingSpaceScreen() {
           {/* 2. SOMATIC RELEASE RITUAL */}
           {hasSomatic && topRegion && SOMATIC_RITUALS[topRegion] && (
             <Animated.View entering={FadeInDown.delay(220).duration(600)}>
-              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.cardSurfaceValues}>
-              <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
-              <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'transparent']} style={StyleSheet.absoluteFill} />
+              <VelvetGlassSurface style={[styles.card, theme.velvetBorder]} intensity={45}>
+              <LinearGradient colors={theme.cardSurfaceAnchor as any as string[]} style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={['rgba(110, 191, 139, 0.12)', 'transparent']} style={StyleSheet.absoluteFill} />
 
               <View style={styles.cardHeader}>
-                <MetallicIcon name="body-outline" size={16} color={PALETTE.emerald} />
-                <MetallicText style={styles.cardEyebrow} color={PALETTE.emerald}>SOMATIC RELEASE</MetallicText>
+                <MetallicIcon name="body-outline" size={16} color={theme.success} />
+                <MetallicText style={styles.cardEyebrow} color={theme.success}>SOMATIC RELEASE</MetallicText>
               </View>
 
               <Text style={styles.cardTitle}>
@@ -243,8 +231,8 @@ export default function HealingSpaceScreen() {
                 Your somatic map indicates you are storing significant energy here. Try this physical reset:
               </Text>
 
-              <View style={[styles.affirmationBox, { borderLeftColor: PALETTE.emerald }]}>
-                <Text style={[styles.affirmationText, { fontStyle: 'normal', color: '#FFF' }]}>
+              <View style={[styles.affirmationBox, { borderLeftColor: theme.success }]}>
+                <Text style={[styles.affirmationText, { fontStyle: 'normal', color: theme.textPrimary }]}>
                   {SOMATIC_RITUALS[topRegion]}
                 </Text>
               </View>
@@ -255,20 +243,20 @@ export default function HealingSpaceScreen() {
           {/* 3. RELATIONAL PATTERN INTERVENTION */}
           {hasRelational && relationalCategories.hasStruggle && (
             <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.cardSurfaceValues}>
-              <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
+              <VelvetGlassSurface style={[styles.card, theme.velvetBorder]} intensity={45}>
+              <LinearGradient colors={theme.cardSurfaceAnchor as any as string[]} style={StyleSheet.absoluteFill} />
               <LinearGradient colors={['rgba(212, 163, 179, 0.15)', 'transparent']} style={StyleSheet.absoluteFill} />
 
               <View style={styles.cardHeader}>
-                <MetallicIcon name="git-compare-outline" size={16} color={PALETTE.rose} />
-                <MetallicText style={styles.cardEyebrow} color={PALETTE.rose}>RELATIONAL RESET</MetallicText>
+                <MetallicIcon name="git-compare-outline" size={16} color={theme.love} />
+                <MetallicText style={styles.cardEyebrow} color={theme.love}>RELATIONAL RESET</MetallicText>
               </View>
 
               <Text style={styles.cardTitle}>Pattern Interrupt</Text>
               <Text style={styles.bodyText}>
                 You recently logged a relational trigger. The next time this dynamic arises, do not react immediately.
               </Text>
-              <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700' }]} color={PALETTE.rose}>
+              <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700' }]} color={theme.love}>
                 Step back. Take three breaths. Ask yourself: "Am I responding to the present moment, or protecting a past wound?"
               </MetallicText>
               </VelvetGlassSurface>
@@ -278,20 +266,20 @@ export default function HealingSpaceScreen() {
           {/* 3b. SECURE GROWTH ACKNOWLEDGEMENT */}
           {hasRelational && relationalCategories.hasSecure && (
             <Animated.View entering={FadeInDown.delay(relationalCategories.hasStruggle ? 380 : 300).duration(600)}>
-              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.cardSurfaceValues}>
-              <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
+              <VelvetGlassSurface style={[styles.card, theme.velvetBorder]} intensity={45}>
+              <LinearGradient colors={theme.cardSurfaceAnchor as any as string[]} style={StyleSheet.absoluteFill} />
               <LinearGradient colors={['rgba(107, 144, 128, 0.15)', 'transparent']} style={StyleSheet.absoluteFill} />
 
               <View style={styles.cardHeader}>
-                <MetallicIcon name="leaf-outline" size={16} color={PALETTE.sage} />
-                <MetallicText style={styles.cardEyebrow} color={PALETTE.sage}>SECURE GROWTH</MetallicText>
+                <MetallicIcon name="leaf-outline" size={16} color={theme.success} />
+                <MetallicText style={styles.cardEyebrow} color={theme.success}>SECURE GROWTH</MetallicText>
               </View>
 
               <Text style={styles.cardTitle}>You Are Already Changing</Text>
               <Text style={styles.bodyText}>
                 You have logged moments of regulated, grounded connection. This is not small — it is evidence of real integration.
               </Text>
-              <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700' }]} color={PALETTE.sage}>
+              <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700' }]} color={theme.success}>
                 Notice what was true in those moments. That version of you is not an accident — it is who you are becoming.
               </MetallicText>
               </VelvetGlassSurface>
@@ -301,8 +289,8 @@ export default function HealingSpaceScreen() {
           {/* EMPTY STATE */}
           {!hasHealingInputs && (
             <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.cardSurfaceValues}>
-              <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
+              <VelvetGlassSurface style={[styles.card, theme.velvetBorder]} intensity={45}>
+              <LinearGradient colors={theme.cardSurfaceAnchor as any as string[]} style={StyleSheet.absoluteFill} />
               <LinearGradient colors={['rgba(212, 175, 55, 0.08)', 'transparent']} style={StyleSheet.absoluteFill} />
 
               <View style={styles.cardHeader}>
@@ -317,7 +305,7 @@ export default function HealingSpaceScreen() {
               </Text>
 
               <Pressable style={styles.actionBtn} onPress={() => router.push('/(tabs)/identity' as Href)}>
-                <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
+                <LinearGradient colors={theme.cardSurfaceAnchor as any as string[]} style={StyleSheet.absoluteFill} />
                 <MetallicText style={styles.actionBtnText} variant="gold">Open Blueprint</MetallicText>
               </Pressable>
               </VelvetGlassSurface>
@@ -332,7 +320,7 @@ export default function HealingSpaceScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   glowOrb: {
     position: 'absolute',
@@ -350,39 +338,39 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   header: { marginBottom: 36 },
   headerTitle: {
     fontSize: 32,
-    color: '#FFF',
+    color: theme.textPrimary,
     fontWeight: '800',
     letterSpacing: -1,
     marginBottom: 6,
   },
-  headerSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  headerSubtitle: { fontSize: 13, color: theme.textSecondary, marginTop: 4 },
 
-  loadingText: { color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: '600' },
+  loadingText: { color: theme.textMuted, fontSize: 14, fontWeight: '600' },
 
-  lockTitle: { fontSize: 26, fontWeight: '800', color: '#FFF', marginBottom: 12, textAlign: 'center', letterSpacing: -0.5 },
-  lockSub: { fontSize: 15, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 22, marginBottom: 32, maxWidth: 280 },
+  lockTitle: { fontSize: 26, fontWeight: '800', color: theme.textPrimary, marginBottom: 12, textAlign: 'center', letterSpacing: -0.5 },
+  lockSub: { fontSize: 15, color: theme.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32, maxWidth: 280 },
   premiumBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: PALETTE.emerald,
+    backgroundColor: theme.success,
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 28,
   },
-  premiumBtnText: { color: '#0A0A0C', fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
+  premiumBtnText: { color: theme.textInk, fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
 
   actionBtn: { marginTop: 24, height: 56, borderRadius: 28, overflow: 'hidden', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
   actionBtnText: { fontSize: 15, fontWeight: '800', letterSpacing: 1 },
 
-  card: { borderRadius: 28, padding: 32, marginBottom: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
+  card: { borderRadius: 28, padding: 32, marginBottom: 24, overflow: 'hidden' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   cardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
-  cardTitle: { fontSize: 24, fontWeight: '800', color: '#FFF', marginBottom: 12, letterSpacing: -0.5 },
-  promptText: { fontSize: 16, color: '#FFF', lineHeight: 26, marginBottom: 24, fontWeight: '600' },
-  bodyText: { fontSize: 15, color: 'rgba(255,255,255,0.6)', lineHeight: 24 },
+  cardTitle: { fontSize: 24, fontWeight: '800', color: theme.textPrimary, marginBottom: 12, letterSpacing: -0.5 },
+  promptText: { fontSize: 16, color: theme.textPrimary, lineHeight: 26, marginBottom: 24, fontWeight: '600' },
+  bodyText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
 
   affirmationBox: { marginTop: 12, paddingLeft: 16, borderLeftWidth: 2 },
-  affirmationLabel: { fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: 1.5, marginBottom: 8 },
+  affirmationLabel: { fontSize: 10, color: theme.textMuted, fontWeight: '800', letterSpacing: 1.5, marginBottom: 8 },
   affirmationText: { fontSize: 16, lineHeight: 24, fontStyle: 'italic', fontWeight: '700' },
 });

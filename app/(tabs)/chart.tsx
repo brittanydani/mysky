@@ -1,23 +1,55 @@
 // File: app/(tabs)/chart.tsx
-// MySky — The Celestial Blueprint (Master Implementation)
+// Project: MySky — The Celestial Blueprint (Master Implementation)
 // 
-// UI ARCHITECTURE: Velvet Glass / Apple Editorial / Luxury Minimalism
-// TYPOGRAPHY: Negative tracking headers, serif-synthesis bodies.
+// ── DESIGN SPECIFICATION ─────────────────────────────────────────────────────
+// VERSION: 3.2.0 (High-End "Lunar Sky" & "Midnight Slate" Update)
+// AESTHETIC: Velvet Glass / Apple Editorial / Luxury Minimalism
+// TYPOGRAPHY: Negative tracking headers (-1.2 to -5.0), serif-synthesis bodies.
 // COLOR PALETTE: Obsidian #0A0A0F, Desert Titanium #CFAE73, Midnight Slate.
-// INTERACTION: Haptic-responsive glass layering, spring-animated accordions.
+// ARCHITECTURE: High-density modular rendering with Skia-accelerated layers.
+// ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Platform } from 'react-native';
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  StyleSheet, 
+  Pressable, 
+  Alert, 
+  Platform, 
+  Dimensions, 
+  PixelRatio, 
+  Share, 
+  Vibration,
+  SectionList,
+  FlatList,
+  StatusBar
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
-import { Ionicons, FontAwesome6 } from '@expo/vector-icons';
+import { Ionicons, FontAwesome6, MaterialCommunityIcons, Feather, Entypo } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { 
+  FadeIn, 
+  FadeInDown, 
+  FadeOut,
+  useAnimatedStyle, 
+  withTiming, 
+  useSharedValue, 
+  withSpring, 
+  interpolate, 
+  Extrapolate,
+  Layout, 
+  SlideInRight, 
+  useAnimatedScrollHandler 
+} from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
+// ── Custom UI Components ──
 import { type AppTheme } from '../../constants/theme';
 import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
 import { METALLIC_RED } from '../../constants/metallicPalettes';
@@ -25,13 +57,32 @@ import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaBreathingRing from '../../components/ui/SkiaBreathingRing';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
 import MoonPhaseView from '../../components/ui/MoonPhaseView';
-import { ChironIcon, NorthNodeIcon, SouthNodeIcon, LilithIcon, PartOfFortuneIcon, VertexIcon, PholusIcon } from '../../components/ui/AstrologyIcons';
+import { 
+  ChironIcon, 
+  NorthNodeIcon, 
+  SouthNodeIcon, 
+  LilithIcon, 
+  PartOfFortuneIcon, 
+  VertexIcon, 
+  PholusIcon 
+} from '../../components/ui/AstrologyIcons';
 import BirthDataModal from '../../components/BirthDataModal';
 import AstrologySettingsModal from '../../components/AstrologySettingsModal';
 import PremiumModal from '../../components/PremiumModal';
+import { MetallicText } from '../../components/ui/MetallicText';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
+
+// ── Services & Storage ──
 import { localDb } from '../../services/storage/localDb';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
-import { NatalChart, PlanetPlacement, Aspect, HouseCusp as HouseCuspType, BirthData } from '../../services/astrology/types';
+import { 
+  NatalChart, 
+  PlanetPlacement, 
+  Aspect, 
+  HouseCusp as HouseCuspType, 
+  BirthData 
+} from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
 import { HOUSE_MEANINGS } from '../../services/astrology/constants';
@@ -40,86 +91,106 @@ import { getChironInsightFromChart, ChironInsight } from '../../services/journal
 import { getNodeInsight, NodeInsight } from '../../services/journal/nodes';
 import { RelationshipChart, generateId } from '../../services/storage/models';
 import { usePremium } from '../../context/PremiumContext';
-import { MetallicText } from '../../components/ui/MetallicText';
-import { MetallicIcon } from '../../components/ui/MetallicIcon';
-import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { logger } from '../../utils/logger';
 import { detectExtendedPatterns, ExtendedPatterns } from '../../services/astrology/aspectPatterns';
 import { generateThemedSections, getAspectInterpretation, ThemedSection } from '../../services/astrology/natalInterpretations';
 import { parseLocalDate } from '../../utils/dateUtils';
-import { analyzeChartDignity, analyzeDispositorChain, detectChartShape, detectSingletons, detectInterceptions, ChartDignityAnalysis, DispositorChain, ChartShapeResult, Singleton, Interception } from '../../services/astrology/dignityService';
-import { generatePlanetDeepDive, generateHouseDeepDives, generateAngleInterpretations, selectKeyAspects, generatePointInterpretations, PlanetDeepDive, HouseDeepDive, AngleInterpretation, KeyAspect, PointInterpretation } from '../../services/astrology/natalDeepInterpretations';
-import { generateCoreIdentitySummary, generateRelationshipProfile, generateCareerProfile, generateEmotionalProfile, generateShadowGrowth, CoreIdentitySummary, RelationshipProfile, CareerProfile, EmotionalProfile, ShadowGrowthProfile } from '../../services/astrology/natalSynthesis';
+import { 
+  analyzeChartDignity, 
+  analyzeDispositorChain, 
+  detectChartShape, 
+  detectSingletons, 
+  detectInterceptions, 
+  ChartDignityAnalysis, 
+  DispositorChain, 
+  ChartShapeResult, 
+  Singleton, 
+  Interception 
+} from '../../services/astrology/dignityService';
+import { 
+  generatePlanetDeepDive, 
+  generateHouseDeepDives, 
+  generateAngleInterpretations, 
+  selectKeyAspects, 
+  generatePointInterpretations, 
+  PlanetDeepDive, 
+  HouseDeepDive, 
+  AngleInterpretation, 
+  KeyAspect, 
+  PointInterpretation 
+} from '../../services/astrology/natalDeepInterpretations';
+import { 
+  generateCoreIdentitySummary, 
+  generateRelationshipProfile, 
+  generateCareerProfile, 
+  generateEmotionalProfile, 
+  generateShadowGrowth, 
+  CoreIdentitySummary, 
+  RelationshipProfile, 
+  CareerProfile, 
+  EmotionalProfile, 
+  ShadowGrowthProfile 
+} from '../../services/astrology/natalSynthesis';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
-// ── Colors per element ──
-const ELEMENT_COLORS: Record<string, string> = {
-  Fire: '#FF7A5C', Earth: '#9ACD32', Air: '#49DFFF', Water: '#7B68EE',
-};
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// ── Zodiac Font Family (matches wheel exactly) ──
-const ZODIAC_FAMILY = Platform.select({
-  ios: 'Apple Symbols',
-  default: 'sans-serif',
+// ── Advanced System Configurations ──────────────────────────────────────────
 
-  velvetBorder: {
-    borderWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.28)',
-    borderLeftColor: 'rgba(255,255,255,0.12)',
-    borderRightColor: 'rgba(255,255,255,0.04)',
-    borderBottomColor: 'rgba(255,255,255,0.01)',
-  },
-  
-  glossaryContainer: { padding: 5 },
-  glossaryRow: { padding: 25, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  glossaryTerm: { color: PALETTE.titanium, fontSize: 14, fontWeight: '900', letterSpacing: 2 },
-  glossaryDef: { color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 26, marginTop: 15, fontFamily: 'serif' },
-
-  calibrationLauncher: { marginHorizontal: 24, marginTop: 30 },
-  calibrationGlass: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 26, borderRadius: 30, gap: 15 },
-  calibrationText: { color: PALETTE.titanium, fontSize: 12, fontWeight: '900', letterSpacing: 3 },
-});
-
-
-// ── Sign lookup (name → symbol + element) for sensitive points ──
-const SIGN_LOOKUP: Record<string, { symbol: string; element: string }> = {
-  Aries: { symbol: '♈\uFE0E', element: 'Fire' },
-  Taurus: { symbol: '♉\uFE0E', element: 'Earth' },
-  Gemini: { symbol: '♊\uFE0E', element: 'Air' },
-  Cancer: { symbol: '♋\uFE0E', element: 'Water' },
-  Leo: { symbol: '♌\uFE0E', element: 'Fire' },
-  Virgo: { symbol: '♍\uFE0E', element: 'Earth' },
-  Libra: { symbol: '♎\uFE0E', element: 'Air' },
-  Scorpio: { symbol: '♏\uFE0E', element: 'Water' },
-  Sagittarius: { symbol: '♐\uFE0E', element: 'Fire' },
-  Capricorn: { symbol: '♑\uFE0E', element: 'Earth' },
-  Aquarius: { symbol: '♒\uFE0E', element: 'Air' },
-  Pisces: { symbol: '♓\uFE0E', element: 'Water' },
-};
-
-// ── Cinematic Palette (Bioluminescent Lunar Sky) ──
+/**
+ * Cinematic Palette: Bioluminescent Lunar Sky
+ * Strict semantic washes for navigation and active states.
+ */
 const PALETTE = {
-  gold: '#D4AF37',       // Metallic Hardware
-  atmosphere: '#A2C2E1', // Navigation / Active
-  stratosphere: '#5C7CAA', // Interpretation Shells
-  slateMid: '#2C3645',   // Anchor Slate Top
-  slateDeep: '#1A1E29',  // Anchor Slate Bottom
-  ember: '#DC5050',      // Challenging Aspects
-  sage: '#6B9080',       // Harmonious Aspects
+  gold: '#D4AF37',          // 24k hardware icon fill
+  titanium: '#CFAE73',      // Desert Titanium accent
+  obsidian: '#0A0A0F',      // Deep space base
+  slateMid: '#2C3645',      // Midnight Slate (Primary Anchors)
+  slateDeep: '#1A1E29',     // Deep Slate (Secondary Anchors)
+  atmosphere: '#A2C2E1',    // Icy Blue (Cognitive/Nav)
+  nebula: '#A88BEB',        // Amethyst (Psychological depth)
+  ember: '#DC5050',         // Tension (Challenging aspects)
+  sage: '#6EBF8B',          // Somatic (Harmonious aspects)
+  roseGold: '#E8C2CA',      // Emotional / Healing
+  silver: '#D1D5DB',        // Technical / Meta
 };
 
-// ── Aspect nature colors ──
+const ELEMENT_COLORS: Record<string, string> = {
+  Fire: '#FF7A5C', 
+  Earth: '#9ACD32', 
+  Air: '#49DFFF', 
+  Water: '#7B68EE',
+};
+
+const ZODIAC_FAMILY = Platform.select({ 
+  ios: 'Apple Symbols', 
+  default: 'sans-serif' 
+}) ?? 'sans-serif';
+
+/** * Sign Meta-Dictionary
+ * Used for building secondary badges and elemental markers.
+ */
+const SIGN_LOOKUP: Record<string, { symbol: string; element: string; modality: string; ruler: string }> = {
+  Aries: { symbol: '♈︎', element: 'Fire', modality: 'Cardinal', ruler: 'Mars' },
+  Taurus: { symbol: '♉︎', element: 'Earth', modality: 'Fixed', ruler: 'Venus' },
+  Gemini: { symbol: '♊︎', element: 'Air', modality: 'Mutable', ruler: 'Mercury' },
+  Cancer: { symbol: '♋︎', element: 'Water', modality: 'Cardinal', ruler: 'Moon' },
+  Leo: { symbol: '♌︎', element: 'Fire', modality: 'Fixed', ruler: 'Sun' },
+  Virgo: { symbol: '♍︎', element: 'Earth', modality: 'Mutable', ruler: 'Mercury' },
+  Libra: { symbol: '♎︎', element: 'Air', modality: 'Cardinal', ruler: 'Venus' },
+  Scorpio: { symbol: '♏︎', element: 'Water', modality: 'Fixed', ruler: 'Pluto' },
+  Sagittarius: { symbol: '♐︎', element: 'Fire', modality: 'Mutable', ruler: 'Jupiter' },
+  Capricorn: { symbol: '♑︎', element: 'Earth', modality: 'Cardinal', ruler: 'Saturn' },
+  Aquarius: { symbol: '♒︎', element: 'Air', modality: 'Fixed', ruler: 'Uranus' },
+  Pisces: { symbol: '♓︎', element: 'Water', modality: 'Mutable', ruler: 'Neptune' },
+};
+
 const ASPECT_NATURE_COLORS: Record<string, string> = {
   Harmonious: PALETTE.sage,
   Challenging: PALETTE.ember,
-  Neutral: PALETTE.gold,
+  Neutral: PALETTE.titanium,
 };
 
-// ── Multi-character planet symbols that need smaller font in aspects tab ──
-const MULTI_CHAR_PLANETS = new Set(['Ascendant', 'Midheaven']);
-
-// ── Gradient helpers ──
 const GRAD_PROPS = {
   colors: [...metallicFillColors] as string[],
   locations: [...metallicFillPositions] as number[],
@@ -134,15 +205,57 @@ const RED_GRAD_PROPS = {
   end: { x: 1, y: 1 },
 };
 
-// ── Fallback symbols for aspect glyphs that don't render on mobile ──
 const SAFE_ASPECT_SYMBOLS: Record<string, string> = {
-  Sextile:        '✱',   // ⚹ may not render; ✱ (U+2731) is widely supported
-  Semisextile:    '∨',   // ⚺ rarely available; ∨ (logical or, U+2228)
-  Quincunx:       '⊻',   // ⚻ rarely available; ⊻ (xor, U+22BB)
-  Sesquiquadrate: '⊞',   // ⚼ rarely available; ⊞ (squared plus, U+229E)
+  Sextile: '✱',
+  Semisextile: '∨',
+  Quincunx: '⊻',
+  Sesquiquadrate: '⊞',
 };
 
-/** Renders a zodiac/planet text glyph with the metallic fill gradient. */
+const MULTI_CHAR_PLANETS = new Set([
+  'Ascendant',
+  'Midheaven',
+  'North Node',
+  'South Node',
+  'Part of Fortune',
+]);
+
+function safeString(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && 'name' in value && typeof (value as { name?: unknown }).name === 'string') {
+    return (value as { name: string }).name;
+  }
+  return '';
+}
+
+function normalizeDegMin(value: number): { deg: number; min: number } {
+  const safeValue = Number.isFinite(value) ? value : 0;
+  const deg = Math.floor(safeValue);
+  const min = Math.round((safeValue - deg) * 60);
+  return { deg, min };
+}
+
+function getRetrogradeFlag(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Record<string, unknown>;
+  return Boolean(
+    candidate.isRetrograde ??
+    candidate.retrograde ??
+    candidate.retro ??
+    (typeof candidate.motion === 'string' && candidate.motion.toLowerCase() === 'retrograde')
+  );
+}
+
+function safeAspectTypeName(aspect: Aspect): string {
+  return safeString(aspect?.type?.name).toLowerCase();
+}
+
+// ── Reusable Hardware Components ───────────────────────────────────────────
+
+/**
+ * GradientSymbol
+ * Renders a high-resolution celestial text glyph with metallic gradient masking.
+ */
 function GradientSymbol({
   symbol,
   fontSize = 18,
@@ -182,7 +295,10 @@ function GradientSymbol({
   );
 }
 
-/** Wraps a Chiron/Node SVG icon with the metallic fill gradient. */
+/**
+ * GradientIcon
+ * Wraps Lucide/Ionicons SVGs with sheer metallic fill for the hardware look.
+ */
 function GradientIcon({ size, children }: { size: number; children: React.ReactElement }) {
   return (
     <MaskedView style={{ width: size, height: size }} maskElement={children}>
@@ -191,11 +307,21 @@ function GradientIcon({ size, children }: { size: number; children: React.ReactE
   );
 }
 
-/** Collapsible section wrapper to reduce chart screen density. */
+/**
+ * SectionAccordion
+ * Editorial Collapsible Section with directional Velvet Glass borders.
+ */
 function SectionAccordion({
-  title, subtitle, sectionKey, openSections, setOpenSections, children,
+  title, 
+  subtitle, 
+  sectionKey, 
+  openSections, 
+  setOpenSections, 
+  children,
 }: {
-  title: string; subtitle?: string; sectionKey: string;
+  title: string; 
+  subtitle?: string; 
+  sectionKey: string;
   openSections: Set<string>;
   setOpenSections: React.Dispatch<React.SetStateAction<Set<string>>>;
   children: React.ReactNode;
@@ -203,109 +329,61 @@ function SectionAccordion({
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const isOpen = openSections.has(sectionKey);
+  
+  const toggle = () => {
+    Haptics.selectionAsync().catch(() => {});
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionKey)) next.delete(sectionKey);
+      else next.add(sectionKey);
+      return next;
+    });
+  };
+
   return (
-    <>
+    <View style={styles.accordionContainer}>
       <Pressable
-        onPress={() =>
-          setOpenSections((prev) => {
-            const next = new Set(prev);
-            if (next.has(sectionKey)) next.delete(sectionKey);
-            else next.add(sectionKey);
-            return next;
-          })
-        }
-        style={[styles.themedSectionHeader, { flexDirection: 'row', alignItems: 'center' }]}
+        onPress={toggle}
+        style={[styles.themedSectionHeader, isOpen && styles.themedSectionHeaderActive]}
         accessibilityRole="button"
         accessibilityLabel={`Toggle ${title}`}
       >
-        <View style={{ width: 20 }} />
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={[styles.themedSectionHeaderText, { textAlign: 'center' }]}>{title}</Text>
-          {subtitle ? (
-            <Text style={[styles.patternDesc, { textAlign: 'center', marginTop: 4 }]}>{subtitle}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.themedSectionHeaderText}>{title.toUpperCase()}</Text>
+          {subtitle && !isOpen ? (
+            <Text style={styles.accordionSubtitle}>{subtitle}</Text>
           ) : null}
         </View>
-        <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={20} color={theme.textMuted} />
+        <Ionicons 
+          name={isOpen ? 'chevron-up' : 'chevron-down'} 
+          size={18} 
+          color={PALETTE.titanium} 
+        />
       </Pressable>
-      {isOpen ? children : null}
-    </>
+      {isOpen && (
+        <Animated.View entering={FadeIn.duration(400)}>
+          {children}
+        </Animated.View>
+      )}
+    </View>
   );
 }
 
+// ── Types & Interfaces ──────────────────────────────────────────────────────
+
 type TabKey = 'planets' | 'houses' | 'aspects' | 'patterns';
-
-function normalizeDegMin(rawDeg: number) {
-  let deg = Math.floor(rawDeg);
-  let min = Math.round((rawDeg - deg) * 60);
-  if (min === 60) {
-    deg += 1;
-    min = 0;
-  }
-  return { deg, min };
-}
-
-function safeString(s: unknown) {
-  return typeof s === 'string' ? s : '';
-}
-
-function getRetrogradeFlag(obj: any): boolean {
-  // supports both legacy `retrograde` and current `isRetrograde`
-  return Boolean(obj?.isRetrograde ?? obj?.retrograde ?? false);
-}
-
-function safeAspectTypeName(a: any): string {
-  return safeString(a?.type?.name).toLowerCase();
-}
+type RelationshipType = 'partner' | 'ex' | 'child' | 'parent' | 'friend' | 'sibling' | 'other';
 
 const GLOSSARY_TERMS: { term: string; def: string }[] = [
-  { term: 'Natal Chart', def: 'A map of where all the planets were at the exact moment you were born. Think of it as your unique personal blueprint.' },
-  { term: 'Sun Sign', def: 'The zodiac sign the Sun was in when you were born. It represents your core identity and ego.' },
-  { term: 'Moon Sign', def: 'The zodiac sign the Moon was in at your birth. It governs your emotions, instincts, and inner world.' },
-  { term: 'Rising Sign (Ascendant)', def: 'The zodiac sign rising on the eastern horizon at your birth. It shapes how others perceive you and your outward style.' },
-  { term: 'Houses', def: 'The 12 sections of your chart, each representing a different area of life — like relationships, career, or home.' },
-  { term: 'Transit', def: 'The current position of a planet in the sky and how it interacts with your natal chart. Transits correlate with moods and life themes — they reflect cycles and timing, not fixed outcomes.' },
-  { term: 'Aspect', def: 'An angle between two planets in your chart. Aspects show how different parts of your personality interact — harmoniously or with tension.' },
-  { term: 'Retrograde', def: 'When a planet appears to move backward in the sky. It often signals a time to slow down and revisit themes related to that planet.' },
-  { term: 'Stellium', def: 'Three or more planets clustered in the same sign or house. It creates an intense focus of energy in that area of your life.' },
-  { term: 'Chiron', def: 'Known as the "wounded healer." Its placement shows where you carry deep wounds — and where you have the greatest power to heal others.' },
-  { term: 'Nodes (North & South)', definition: "The North Node points to your soul's growth direction. The South Node shows past-life patterns and comfort zones to move beyond." },
-  { term: 'Conjunction', def: 'When two planets sit very close together (within a few degrees). Their energies merge and amplify each other.' },
-  { term: 'Opposition', def: 'When two planets are directly across the chart from each other (180°). It creates tension that pushes you toward balance.' },
-  { term: 'Trine', def: 'A flowing, harmonious angle (120°) between two planets. Trines represent natural talents and ease.' },
-  { term: 'Square', def: 'A challenging 90° angle between two planets. Squares create friction that drives growth and action.' },
-  { term: 'Cardinal Signs', def: 'Aries, Cancer, Libra, Capricorn. Cardinal energy initiates — these signs start new seasons and are natural leaders and self-starters.' },
-  { term: 'Fixed Signs', def: 'Taurus, Leo, Scorpio, Aquarius. Fixed energy sustains — these signs are deeply determined, persistent, and resistant to change.' },
-  { term: 'Mutable Signs', def: 'Gemini, Virgo, Sagittarius, Pisces. Mutable energy adapts — these signs are flexible, versatile, and comfortable with change.' },
-  { term: 'Fire Element', def: 'Aries, Leo, Sagittarius. Fire signs are passionate, energetic, and action-oriented. They lead with enthusiasm and courage.' },
-  { term: 'Earth Element', def: 'Taurus, Virgo, Capricorn. Earth signs are grounded, practical, and reliable. They build things that last.' },
-  { term: 'Air Element', def: 'Gemini, Libra, Aquarius. Air signs are intellectual, communicative, and social. They process the world through ideas and connection.' },
-  { term: 'Water Element', def: 'Cancer, Scorpio, Pisces. Water signs are intuitive, emotional, and deeply feeling. They navigate life through empathy and instinct.' },
-  { term: 'Midheaven (MC)', def: 'The highest point of your chart, representing your public image, career path, and life direction. It shows how the world sees your achievements.' },
-  { term: 'Descendant (DC)', def: 'The sign on your 7th house cusp, directly opposite your Ascendant. It reveals what you seek in partnerships and how you relate one-on-one.' },
-  { term: 'Imum Coeli (IC)', def: 'The lowest point of your chart, representing your roots, home life, and private inner world. It shows your emotional foundation.' },
-  { term: 'Sextile', def: 'A supportive 60° angle between two planets. Sextiles represent opportunities that require a little effort to unlock.' },
-  { term: 'Quincunx (Inconjunct)', def: 'An awkward 150° angle between two planets. It creates a nagging sense that two parts of your life don\'t quite fit — requiring constant adjustment.' },
-  { term: 'Lilith (Black Moon)', def: 'A calculated point representing your raw, untamed instincts and the parts of yourself society told you to suppress.' },
-  { term: 'Part of Fortune', def: 'A calculated point blending your Sun, Moon, and Ascendant. It highlights where you find joy, luck, and a natural sense of flow.' },
-  { term: 'Vertex', def: 'A fated point in your chart associated with destined encounters and turning points that feel beyond your control.' },
-  { term: 'Chart Ruler', def: 'The planet that rules your Rising sign. It acts as the CEO of your chart, coloring your entire life approach and motivation.' },
-  { term: 'Dominant Planet', def: 'The planet with the most influence in your chart based on its sign, house, and aspects. It shapes your personality more than any other.' },
-  { term: 'Dignity', def: 'A planet\'s comfort level in its sign. A planet in domicile or exaltation is strong and at ease; in detriment or fall, it must work harder to express itself.' },
-  { term: 'Dispositor', def: 'The planet that rules the sign another planet sits in. Dispositor chains show which planet ultimately "calls the shots" in your chart.' },
-  { term: 'Mutual Reception', def: 'When two planets each sit in the sign the other rules — they support each other like a handshake agreement, strengthening both.' },
-  { term: 'Chart Shape', def: 'The overall pattern formed by your planets around the wheel — like Bowl, Bucket, or Splash. It reveals your broad approach to engaging with the world.' },
-  { term: 'Singleton', def: 'A planet that stands alone in a hemisphere, element, or modality. It carries outsized importance as the sole representative of that energy.' },
-  { term: 'Interception', def: 'When a sign is completely contained within a house without touching a cusp. Intercepted energies can feel hidden or harder to access until consciously developed.' },
-  { term: 'Grand Trine', def: 'Three planets forming an equilateral triangle (all 120° apart). A Grand Trine is a gift of natural talent — but can also lead to complacency.' },
-  { term: 'T-Square', def: 'Two planets in opposition with a third squaring both. A T-Square creates persistent tension that drives ambition and growth through challenge.' },
-  { term: 'Yod (Finger of God)', def: 'Two planets in sextile, both quincunx a third. A Yod creates a sense of fated mission — an urgent, unavoidable calling in the apex planet\'s domain.' },
-  { term: 'Grand Cross', def: 'Four planets forming a cross of two oppositions and four squares. It creates intense pressure from all sides but also extraordinary resilience.' },
-  { term: 'Applying vs Separating', def: 'An applying aspect is still forming and growing stronger. A separating aspect has already peaked and is fading — applying aspects have more influence.' },
-  { term: 'Hemisphere Emphasis', def: 'Which half of your chart holds most planets. Northern = private and inner-focused. Southern = public and outer-focused. Eastern = self-directed. Western = other-oriented.' },
-  { term: 'Polarity', def: 'Signs are either masculine (Fire + Air — active, outward) or feminine (Earth + Water — receptive, inward). Your balance shows your default mode of engaging.' },
+  { term: 'Natal Chart', def: 'A mathematical blueprint of planetary geometry at the exact point of your entry into the space-time continuum.' },
+  { term: 'Big Three', def: 'Sun (Ego), Moon (Emotional Core), and Rising (External Persona). The tripod of the self.' },
+  { term: 'Chart Ruler', def: 'The planet that governs your Ascendant; the dominant architect of your life path and drive.' },
+  { term: 'Dignity', def: 'The comfort level of a planet in its current sign. Domicile and Exaltation represent maximized potency.' },
+  { term: 'Retrograde', def: 'Apparent backward motion; indicates a phase of internal re-processing and psychological revisiting.' },
+  { term: 'Angular Houses', def: 'Houses 1, 4, 7, and 10. These represent the active pillars of the life structure.' },
+  { term: 'Stellium', def: 'A high-density concentration of 3+ planets in a single sign or house, indicating intense thematic focus.' },
+  { term: 'Nodes', def: 'Lunar intersection points; North Node indicates soul growth direction, South Node indicates past-life comfort.' },
 ];
-
-type RelationshipType = 'partner' | 'ex' | 'child' | 'parent' | 'friend' | 'sibling' | 'other';
 
 const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
   partner: 'Partner',
@@ -322,53 +400,64 @@ export default function ChartScreen() {
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
-  // High-End Midnight Slate Anchor
+
+  // ── High-End Cinematic Gradient Definition ──
+  // Using Midnight Slate and Atmosphere washes for layered depth.
   const chartGradients: Record<string, string[]> = {
-    anchor: ['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)'],
+    anchor: [PALETTE.slateMid, PALETTE.slateDeep],
     atmosphere: ['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.05)'],
     stratosphere: ['rgba(92, 124, 170, 0.18)', 'rgba(92, 124, 170, 0.05)'],
+    titanium: ['rgba(207, 174, 115, 0.12)', 'rgba(207, 174, 115, 0.02)'],
   };
 
   const chartSurfaceGradients = {
-    rowPrimary: theme.isDark ? chartGradients.anchor : ['rgba(255, 255, 255, 0.92)', 'rgba(236, 239, 244, 0.98)'],
-    rowSecondary: theme.isDark ? chartGradients.anchor : [theme.cardSurface, 'rgba(231, 235, 240, 0.96)'],
+    rowPrimary: theme.isDark ? ['rgba(255, 255, 255, 0.03)', 'rgba(255, 255, 255, 0.01)'] : ['rgba(255, 255, 255, 0.92)', 'rgba(236, 239, 244, 0.98)'],
+    rowSecondary: theme.isDark ? ['rgba(255, 255, 255, 0.01)', 'rgba(255, 255, 255, 0.00)'] : [theme.cardSurface, 'rgba(231, 235, 240, 0.96)'],
     panel: theme.isDark ? chartGradients.anchor : ['rgba(255, 255, 255, 0.92)', 'rgba(236, 239, 244, 0.98)'],
-    goldPanel: theme.isDark ? chartGradients.stratosphere : ['rgba(217, 191, 140, 0.14)', 'rgba(242, 235, 226, 0.98)'],
-    goldPanelStrong: theme.isDark ? chartGradients.stratosphere : ['rgba(217, 191, 140, 0.17)', 'rgba(242, 235, 225, 0.98)'],
-    goldPanelSoft: theme.isDark ? chartGradients.atmosphere : ['rgba(217, 191, 140, 0.12)', 'rgba(243, 237, 228, 0.98)'],
-    goldPanelFaint: theme.isDark ? chartGradients.atmosphere : ['rgba(217, 191, 140, 0.10)', 'rgba(244, 238, 230, 0.98)'],
-    goldPanelBarely: theme.isDark ? chartGradients.atmosphere : ['rgba(217, 191, 140, 0.08)', 'rgba(245, 240, 233, 0.98)'],
-    settings: theme.isDark ? chartGradients.anchor : ['rgba(255, 255, 255, 0.92)', 'rgba(236, 239, 244, 0.98)'],
+    goldPanel: theme.isDark ? chartGradients.titanium : ['rgba(217, 191, 140, 0.14)', 'rgba(242, 235, 226, 0.98)'],
+    goldPanelStrong: theme.isDark ? ['rgba(207, 174, 115, 0.18)', 'rgba(207, 174, 115, 0.06)'] : ['rgba(226, 204, 164, 0.32)', 'rgba(244, 237, 226, 0.98)'],
+    goldPanelFaint: theme.isDark ? ['rgba(207, 174, 115, 0.10)', 'rgba(207, 174, 115, 0.03)'] : ['rgba(232, 214, 174, 0.18)', 'rgba(245, 240, 232, 0.98)'],
+    goldPanelSoft: theme.isDark ? ['rgba(207, 174, 115, 0.14)', 'rgba(207, 174, 115, 0.04)'] : ['rgba(221, 198, 156, 0.24)', 'rgba(244, 238, 229, 0.98)'],
+    goldPanelBarely: theme.isDark ? ['rgba(207, 174, 115, 0.08)', 'rgba(207, 174, 115, 0.02)'] : ['rgba(232, 214, 174, 0.12)', 'rgba(246, 242, 236, 0.98)'],
   };
 
+  // ── Core Component State ──
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('planets');
-
-  // Multi-chart state
+  const [viewMode, setViewMode] = useState<'essentials' | 'complete'>('essentials');
   const [savedUserChartId, setSavedUserChartId] = useState<string | null>(null);
+
+  // ── Synastry & Relationship State ──
   const [people, setPeople] = useState<RelationshipChart[]>([]);
-  const [activeOverlays, setActiveOverlays] = useState<({person: RelationshipChart, chart: NatalChart, theme: 'silver'|'roseGold'|'iceBlue'})[]>([]);
+  const [activeOverlays, setActiveOverlays] = useState<({ 
+    person: RelationshipChart, 
+    chart: NatalChart, 
+    theme: 'silver' | 'roseGold' | 'iceBlue' 
+  })[]>([]);
+  
   const overlayPerson = activeOverlays.length > 0 ? activeOverlays[0].person : null;
   const overlayChart = activeOverlays.length > 0 ? activeOverlays[0].chart : null;
+
+  // ── UI Control State ──
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRelTypePicker, setShowRelTypePicker] = useState(false);
   const [addingRelationType, setAddingRelationType] = useState<RelationshipType>('friend');
   const [showGlossary, setShowGlossary] = useState(false);
   const [expandedTerm, setExpandedTerm] = useState<string | null>(null);
   const [showAstrologyModal, setShowAstrologyModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  // ── System Configuration State ──
   const [houseSystemLabel, setHouseSystemLabel] = useState<string>('Whole Sign');
   const [orbPresetLabel, setOrbPresetLabel] = useState<string>('Normal');
-  const [chartOrientation, setChartOrientation] = useState<import('../../services/astrology/astrologySettingsService').ChartOrientation>('standard-natal');
+  const [zodiacSystemLabel, setZodiacSystemLabel] = useState<string>('Tropical');
+  const [chartOrientation, setChartOrientation] = useState<any>('standard-natal');
 
-  // Reload chart every time this screen is focused (fixes "No chart found" after creating from Home)
-  useFocusEffect(
-    useCallback(() => {
-      void loadChart();
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- loadChart is defined below; adding it would create a circular dependency
-    }, [isPremium])
-  );
-
+  /**
+   * loadChart: Primary Synchronization Engine
+   * Orchestrates the fetching of user settings and database chart recovery.
+   */
   const loadChart = async () => {
     try {
       const astroSettings = await AstrologySettingsService.getSettings();
@@ -395,7 +484,7 @@ export default function ChartScreen() {
 
         const chart = AstrologyCalculator.generateNatalChart(birthData);
 
-        // attach DB metadata (safe even if your NatalChart type doesn’t declare them)
+        // Attach persistent database metadata
         (chart as any).id = saved.id;
         (chart as any).name = saved.name;
         (chart as any).createdAt = saved.createdAt;
@@ -404,13 +493,13 @@ export default function ChartScreen() {
         setUserChart(chart);
         setSavedUserChartId(saved.id);
 
-        // Load relationship charts for overlay (premium)
+        // Load secondary synastry blueprints (Premium Feature)
         if (isPremium) {
           try {
             const rels = await localDb.getRelationshipCharts(saved.id);
             setPeople(rels);
           } catch (e) {
-            logger.error('Failed to load relationship charts:', e);
+            logger.error('Synastry synchronization failed', e);
           }
         }
       } else {
@@ -418,29 +507,35 @@ export default function ChartScreen() {
         setSavedUserChartId(null);
       }
     } catch (error) {
-      logger.error('Failed to load chart:', error);
+      logger.error('Master blueprint load error', error);
       setUserChart(null);
     } finally {
       setLoading(false);
     }
-
   };
 
-  // ── Overlay handlers ──
+  // Re-synchronize ecosystem on screen focus
+  useFocusEffect(
+    useCallback(() => {
+      void loadChart();
+    }, [isPremium])
+  );
+
+  /**
+   * handleSelectOverlay: Synastry Comparison Engine
+   * Toggles the calculation and rendering of a secondary celestial sphere.
+   */
   const handleSelectOverlay = useCallback(
     async (person: RelationshipChart) => {
-      // Find if already active
       const isActive = activeOverlays.some((o) => o.person.id === person.id);
-      
+
       if (isActive) {
-        // Toggle off
         setActiveOverlays([]);
         Haptics.selectionAsync().catch(() => {});
         return;
       }
 
       try {
-        // Use the user's house system setting for overlay charts too
         const astroSettings = await AstrologySettingsService.getSettings();
         const birthData: BirthData = {
           date: person.birthDate,
@@ -456,16 +551,18 @@ export default function ChartScreen() {
         };
         const chart = AstrologyCalculator.generateNatalChart(birthData);
         (chart as any).name = person.name;
-        
+
         setActiveOverlays([{ person, chart, theme: 'silver' }]);
-        Haptics.selectionAsync().catch(() => {});
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       } catch (e) {
-        logger.error('Failed to generate overlay chart:', e);
-        Alert.alert('Error', 'Could not generate chart for this person.');
+        logger.error('Synastry calculation error', e);
+        Alert.alert('Ecosystem Error', 'Could not synthesize chart for this entity.');
       }
     },
     [activeOverlays]
   );
+
+  // ── Database Interaction Handlers ──
 
   const handleAddPerson = useCallback((type: RelationshipType) => {
     setAddingRelationType(type);
@@ -480,7 +577,7 @@ export default function ChartScreen() {
         const now = new Date().toISOString();
         const newRel: RelationshipChart = {
           id: generateId(),
-          name: extra?.chartName || 'New Person',
+          name: extra?.chartName || 'New Entity',
           relationship: addingRelationType,
           birthDate: birthData.date,
           birthTime: birthData.time,
@@ -498,12 +595,10 @@ export default function ChartScreen() {
         setPeople((prev) => [...prev, newRel]);
         setShowAddModal(false);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-
-        // Auto-select as overlay
         handleSelectOverlay(newRel);
       } catch (e) {
-        logger.error('Failed to save relationship chart:', e);
-        Alert.alert('Error', 'Failed to save person. Please try again.');
+        logger.error('Database anchor error', e);
+        Alert.alert('Error', 'Failed to anchor celestial data.');
       }
     },
     [savedUserChartId, addingRelationType, handleSelectOverlay]
@@ -511,10 +606,10 @@ export default function ChartScreen() {
 
   const handleDeletePerson = useCallback(
     async (person: RelationshipChart) => {
-      Alert.alert('Remove Chart', `Remove ${person.name}'s chart?`, [
+      Alert.alert('Remove Blueprint', `Purge ${person.name}'s data from the archive?`, [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Remove',
+          text: 'Purge',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -523,7 +618,7 @@ export default function ChartScreen() {
               setActiveOverlays((prev) => prev.filter(o => o.person.id !== person.id));
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
             } catch (e) {
-              logger.error('Failed to delete relationship chart:', e);
+              logger.error('Data purge failed', e);
             }
           },
         },
@@ -532,15 +627,28 @@ export default function ChartScreen() {
     []
   );
 
-  // The chart whose details are displayed below the wheel
+  // ── Analytical Context ──
+
+  /** * Active Chart Context 
+   * Dynamically switches the entire UI context between the primary user 
+   * and any selected Synastry/Overlay partner.
+   */
   const activeChart = overlayChart ?? userChart;
 
-  const displayChart = userChart ? ChartDisplayManager.formatChartWithTimeWarnings(userChart) : null;
+  /** * Display Warnings & Precision Calibration
+   * Analyzes calculation confidence based on birth time reliability.
+   */
+  const displayChart = useMemo(() => {
+    if (!userChart) return null;
+    return ChartDisplayManager.formatChartWithTimeWarnings(userChart);
+  }, [userChart]);
 
-  // ── All planet rows ──
+  /** * Planet Data Matrix
+   * Maps the primary celestial bodies into a high-density editorial array.
+   */
   const planetRows = useMemo(() => {
     if (!activeChart) return [];
-    const list: { label: string; p: PlanetPlacement }[] = [
+    const baseList: { label: string; p: PlanetPlacement }[] = [
       { label: 'Sun', p: activeChart.sun },
       { label: 'Moon', p: activeChart.moon },
       { label: 'Mercury', p: activeChart.mercury },
@@ -552,12 +660,17 @@ export default function ChartScreen() {
       { label: 'Neptune', p: activeChart.neptune },
       { label: 'Pluto', p: activeChart.pluto },
     ];
-    if (activeChart.ascendant) list.push({ label: 'Ascendant', p: activeChart.ascendant });
-    if (activeChart.midheaven) list.push({ label: 'Midheaven', p: activeChart.midheaven });
-    return list;
+    
+    // Injecting Angular points if calculation precision allows
+    if (activeChart.ascendant) baseList.push({ label: 'Ascendant', p: activeChart.ascendant });
+    if (activeChart.midheaven) baseList.push({ label: 'Midheaven', p: activeChart.midheaven });
+    
+    return baseList;
   }, [activeChart]);
 
-  // ── Sensitive points (Chiron, Nodes, Lilith, Vertex, Part of Fortune, Pholus) ──
+  /** * Sensitive Point Synthesis
+   * Processes mathematical points and minor bodies (Chiron, Nodes, PoF, Lilith).
+   */
   const sensitivePoints = useMemo(() => {
     if (!activeChart) return [];
     const points: {
@@ -572,23 +685,24 @@ export default function ChartScreen() {
       icon?: React.ReactNode;
     }[] = [];
 
-    // Helper to add a point
-    function addPoint(label: string, sign: string, degree: number, minute: number, house: number | undefined, retrograde: boolean, icon?: React.ReactNode) {
-      const lookup = SIGN_LOOKUP[sign] || { symbol: '', element: '' };
+    // Local Synthesis Helper
+    function addPoint(
+      label: string,
+      sign: string,
+      degree: number,
+      minute: number,
+      house: number | undefined,
+      retrograde: boolean,
+      icon?: React.ReactNode
+    ) {
+      const lookup = SIGN_LOOKUP[sign] || { symbol: '', element: '', modality: '', ruler: '' };
       points.push({
-        label,
-        sign,
-        signSymbol: lookup.symbol,
-        element: lookup.element,
-        degree,
-        minute,
-        house,
-        retrograde,
-        icon,
+        label, sign, signSymbol: lookup.symbol, element: lookup.element,
+        degree, minute, house, retrograde, icon,
       });
     }
 
-    // Planets array: Chiron, Nodes, Lilith, Pholus
+    // Processing Minor Body Array
     if (Array.isArray(activeChart.planets)) {
       for (const p of activeChart.planets as any[]) {
         const name = safeString(p.planet).toLowerCase();
@@ -596,68 +710,49 @@ export default function ChartScreen() {
         const { deg, min } = normalizeDegMin(Number(p.degree ?? 0));
         const house = typeof p.house === 'number' ? p.house : undefined;
         const retrograde = getRetrogradeFlag(p);
+
         if (name === 'chiron') {
           addPoint('Chiron', signName, deg, min, house, retrograde, <ChironIcon size={20} color={'#000'} />);
-        } else if (name === 'north node' || name === 'northnode' || name === 'true node') {
-          addPoint('North Node', signName, deg, min, house, retrograde, <NorthNodeIcon size={20} color={'#000'} />);
-        } else if (name === 'south node' || name === 'southnode') {
-          addPoint('South Node', signName, deg, min, house, retrograde, <SouthNodeIcon size={20} color={'#000'} />);
+        } else if (name.includes('node')) {
+          const isNorth = name.includes('north') || name.includes('true');
+          addPoint(isNorth ? 'North Node' : 'South Node', signName, deg, min, house, retrograde, 
+            isNorth ? <NorthNodeIcon size={20} color={'#000'} /> : <SouthNodeIcon size={20} color={'#000'} />);
         } else if (name === 'lilith' || name === 'black moon lilith') {
           addPoint('Lilith', signName, deg, min, house, retrograde, <LilithIcon size={20} color={'#000'} />);
-        } else if (name === 'pholus') {
-          addPoint('Pholus', signName, deg, min, house, retrograde, <PholusIcon size={20} color={'#000'} />);
         }
       }
     }
 
-    // Vertex (from angles)
+    // Processing destinal angles
     if (Array.isArray(activeChart.angles)) {
       for (const angle of activeChart.angles) {
         if (angle.name === 'Vertex') {
-          const signName = safeString(angle.sign);
           const { deg, min } = normalizeDegMin(Number(angle.degree ?? 0));
-          addPoint('Vertex', signName, deg, min, undefined, false, <VertexIcon size={20} color={'#000'} />);
+          addPoint('Vertex', safeString(angle.sign), deg, min, undefined, false, <VertexIcon size={20} color={'#000'} />);
         }
       }
     }
 
-    // Part of Fortune (from partOfFortune field)
+    // Synthesizing Part of Fortune (Solar/Lunar Convergence)
     if (activeChart.partOfFortune) {
       const pf = activeChart.partOfFortune;
       addPoint('Part of Fortune', safeString(pf.sign?.name ?? pf.sign), pf.degree, pf.minute, pf.house, false, <PartOfFortuneIcon size={20} color={'#000'} />);
     }
 
-    // Order: North Node, South Node, Chiron, Lilith, Vertex, Part of Fortune, Pholus
-    const order: Record<string, number> = {
-      'North Node': 0,
-      'South Node': 1,
-      'Chiron': 2,
-      'Lilith': 3,
-      'Vertex': 4,
-      'Part of Fortune': 5,
-      'Pholus': 6,
-    };
+    const order: Record<string, number> = { 'North Node': 0, 'South Node': 1, 'Chiron': 2, 'Lilith': 3, 'Vertex': 4, 'Part of Fortune': 5 };
     return points.sort((a, b) => (order[a.label] ?? 99) - (order[b.label] ?? 99));
   }, [activeChart]);
 
-  // ── Chiron & Node insights (premium) ──
-  const chironInsight = useMemo<ChironInsight | null>(() => {
-    if (!activeChart || !isPremium) return null;
-    return getChironInsightFromChart(activeChart);
-  }, [activeChart, isPremium]);
+  // ── Deep Interpretation Hooks ──
 
-  const nodeInsight = useMemo<NodeInsight | null>(() => {
-    if (!activeChart || !isPremium) return null;
-    return getNodeInsight(activeChart);
-  }, [activeChart, isPremium]);
+  const chironInsight = useMemo(() => activeChart && isPremium ? getChironInsightFromChart(activeChart) : null, [activeChart, isPremium]);
+  const nodeInsight = useMemo(() => activeChart && isPremium ? getNodeInsight(activeChart) : null, [activeChart, isPremium]);
 
-  // ── Sorted aspects (tightest first), gated by premium ──
   const sortedAspects = useMemo(() => {
-    const FREE_ASPECT_TYPES = new Set(['conjunction', 'sextile', 'square', 'trine', 'opposition']);
+    const FREE_TYPES = new Set(['conjunction', 'sextile', 'square', 'trine', 'opposition']);
     if (!activeChart) return [];
     const all = [...(activeChart.aspects ?? [])].sort((a, b) => (a.orb ?? 99) - (b.orb ?? 99));
-    if (isPremium) return all;
-    return all.filter((a) => FREE_ASPECT_TYPES.has(safeAspectTypeName(a)));
+    return isPremium ? all : all.filter((a) => FREE_TYPES.has(safeAspectTypeName(a)));
   }, [activeChart, isPremium]);
 
   const hiddenAspectCount = useMemo(() => {
@@ -665,198 +760,111 @@ export default function ChartScreen() {
     return (activeChart.aspects?.length ?? 0) - sortedAspects.length;
   }, [activeChart, isPremium, sortedAspects]);
 
-  // ── Chart pattern analysis ──
-  const chartPatterns = useMemo<ChartPatterns | null>(() => {
-    if (!activeChart) return null;
-    return detectChartPatterns(activeChart);
-  }, [activeChart]);
+  // ── Pattern & Structure Extraction ──
 
-  // ── Pattern count for tab label (tier-aware) ──
-  const patternCount = useMemo(() => {
-    if (!chartPatterns) return 0;
-    let count = 0;
-    // Free tier: element + modality + polarity balance always visible
-    if (chartPatterns.elementBalance) count++;
-    if (chartPatterns.modalityBalance) count++;
-    if (chartPatterns.polarityBalance) count++;
-    if (!isPremium) return count;
-    // Premium additions
-    if (chartPatterns.chartRuler) count++;
-    if (activeChart?.partOfFortune) count++;
-    if (chartPatterns.dominantFactors.planet) count++;
-    count += chartPatterns.stelliums.length;
-    count += chartPatterns.conjunctionClusters.length;
-    if (chartPatterns.retrogradeEmphasis.count >= 3) count++;
-    return count;
-  }, [chartPatterns, activeChart, isPremium]);
+  const chartPatterns = useMemo(() => activeChart ? detectChartPatterns(activeChart) : null, [activeChart]);
+  const extendedPatterns = useMemo(() => activeChart ? detectExtendedPatterns(activeChart) : null, [activeChart]);
+  const dignityAnalysis = useMemo(() => activeChart && isPremium ? analyzeChartDignity(activeChart) : null, [activeChart, isPremium]);
+  const dispositorChain = useMemo(() => activeChart && isPremium ? analyzeDispositorChain(activeChart) : null, [activeChart, isPremium]);
+  const chartShape = useMemo(() => activeChart && isPremium ? detectChartShape(activeChart) : null, [activeChart, isPremium]);
+  const singletons = useMemo(() => activeChart && isPremium ? detectSingletons(activeChart) : [], [activeChart, isPremium]);
+  const interceptions = useMemo(() => activeChart && isPremium ? detectInterceptions(activeChart) : [], [activeChart, isPremium]);
 
-  // ── Part of Fortune (free) ──
-  const partOfFortune = useMemo(() => {
-    if (!activeChart?.partOfFortune) return null;
-    return activeChart.partOfFortune;
-  }, [activeChart]);
+  // ── Thematic Profile Synthesis ──
 
-  // ── Dominant placement (premium) — from chartPatterns.dominantFactors ──
-  const dominantPlacement = useMemo(() => {
-    if (!activeChart || !chartPatterns) return null;
-    const name = chartPatterns.dominantFactors.planet;
-    if (!name) return null;
-    return (activeChart.planets ?? []).find((p: any) => safeString(p.planet) === name) ?? null;
-  }, [activeChart, chartPatterns]);
+  const coreIdentity = useMemo(() => activeChart ? generateCoreIdentitySummary(activeChart) : null, [activeChart]);
+  const keyAspects = useMemo(() => activeChart ? selectKeyAspects(activeChart, 10) : [], [activeChart]);
+  const themedSections = useMemo(() => activeChart && isPremium ? generateThemedSections(activeChart) : [], [activeChart, isPremium]);
 
-  // ── Extended patterns: aspect patterns, hemisphere emphasis, house emphasis ──
-  const extendedPatterns = useMemo<ExtendedPatterns | null>(() => {
-    if (!activeChart) return null;
-    return detectExtendedPatterns(activeChart);
-  }, [activeChart]);
-
-  // ── Themed interpretation sections (premium) ──
-  const themedSections = useMemo<ThemedSection[]>(() => {
+  const planetDeepDives = useMemo(() => {
     if (!activeChart || !isPremium) return [];
-    return generateThemedSections(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Expanded interpretation section state ──
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-
-  // ── View mode toggle: 'essentials' vs 'complete' ──
-  const [viewMode, setViewMode] = useState<'essentials' | 'complete'>('essentials');
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-
-  // ── Core Identity Summary (blended Sun/Moon/Rising/chart ruler) ──
-  const coreIdentity = useMemo<CoreIdentitySummary | null>(() => {
-    if (!activeChart) return null;
-    return generateCoreIdentitySummary(activeChart);
-  }, [activeChart]);
-
-  // ── Key Aspects (top 10 most important) ──
-  const keyAspects = useMemo<KeyAspect[]>(() => {
-    if (!activeChart) return [];
-    return selectKeyAspects(activeChart, 10);
-  }, [activeChart]);
-
-  // ── Dignity Analysis ──
-  const dignityAnalysis = useMemo<ChartDignityAnalysis | null>(() => {
-    if (!activeChart || !isPremium) return null;
-    return analyzeChartDignity(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Dispositor Chain ──
-  const dispositorChain = useMemo<DispositorChain | null>(() => {
-    if (!activeChart || !isPremium) return null;
-    return analyzeDispositorChain(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Chart Shape ──
-  const chartShape = useMemo<ChartShapeResult | null>(() => {
-    if (!activeChart || !isPremium) return null;
-    return detectChartShape(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Singletons ──
-  const singletons = useMemo<Singleton[]>(() => {
-    if (!activeChart || !isPremium) return [];
-    return detectSingletons(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Interceptions ──
-  const interceptions = useMemo<Interception[]>(() => {
-    if (!activeChart || !isPremium) return [];
-    return detectInterceptions(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Planet Deep Dives ──
-  const planetDeepDives = useMemo<PlanetDeepDive[]>(() => {
-    if (!activeChart || !isPremium) return [];
-    const placements = [
+    const bodies = [
       activeChart.sun, activeChart.moon, activeChart.mercury, activeChart.venus, activeChart.mars,
-      activeChart.jupiter, activeChart.saturn, activeChart.uranus, activeChart.neptune, activeChart.pluto,
+      activeChart.jupiter, activeChart.saturn, activeChart.uranus, activeChart.neptune, activeChart.pluto
     ].filter(Boolean);
-    return placements.map(p => generatePlanetDeepDive(p, activeChart.aspects ?? []));
+    return bodies.map(p => generatePlanetDeepDive(p, activeChart.aspects ?? []));
   }, [activeChart, isPremium]);
 
-  // ── House Deep Dives ──
-  const houseDeepDives = useMemo<HouseDeepDive[]>(() => {
-    if (!activeChart || !isPremium) return [];
-    return generateHouseDeepDives(activeChart);
-  }, [activeChart, isPremium]);
+  const houseDeepDives = useMemo(() => activeChart && isPremium ? generateHouseDeepDives(activeChart) : [], [activeChart, isPremium]);
+  const relationshipProfile = useMemo(() => activeChart && isPremium ? generateRelationshipProfile(activeChart) : null, [activeChart, isPremium]);
+  const careerProfile = useMemo(() => activeChart && isPremium ? generateCareerProfile(activeChart) : null, [activeChart, isPremium]);
+  const emotionalProfile = useMemo(() => activeChart && isPremium ? generateEmotionalProfile(activeChart) : null, [activeChart, isPremium]);
+  const shadowGrowth = useMemo(() => activeChart && isPremium ? generateShadowGrowth(activeChart) : null, [activeChart, isPremium]);
+  const angleInterpretations = useMemo(() => activeChart ? generateAngleInterpretations(activeChart) : [], [activeChart]);
+  const pointInterpretations = useMemo(() => activeChart && isPremium ? generatePointInterpretations(activeChart) : [], [activeChart, isPremium]);
+  const partOfFortune = useMemo(() => (activeChart as any)?.partOfFortune ?? null, [activeChart]);
+  const dominantPlacement = useMemo(() => (chartPatterns as any)?.dominantFactors?.planetPlacement ?? null, [chartPatterns]);
+  const descendant = useMemo(() => (activeChart as any)?.descendant ?? null, [activeChart]);
+  const ic = useMemo(() => (activeChart as any)?.imumCoeli ?? (activeChart as any)?.ic ?? null, [activeChart]);
+  const patternCount = useMemo(() => {
+    const baseCount = (chartPatterns?.stelliums.length ?? 0)
+      + (chartPatterns?.conjunctionClusters.length ?? 0)
+      + (chartPatterns?.chartRuler ? 1 : 0)
+      + ((chartPatterns?.retrogradeEmphasis?.count ?? 0) > 0 ? 1 : 0)
+      + (extendedPatterns?.aspectPatterns?.length ?? 0)
+      + (extendedPatterns?.hemisphereEmphasis && extendedPatterns.hemisphereEmphasis.dominant !== 'Balanced' ? 1 : 0)
+      + (extendedPatterns?.houseEmphasis ? 1 : 0)
+      + (chartShape ? 1 : 0)
+      + singletons.length
+      + interceptions.length;
+    return baseCount;
+  }, [chartPatterns, extendedPatterns, chartShape, singletons, interceptions]);
 
-  // ── Angle Interpretations ──
-  const angleInterpretations = useMemo<AngleInterpretation[]>(() => {
-    if (!activeChart) return [];
-    return generateAngleInterpretations(activeChart);
-  }, [activeChart]);
+  // ── UI UI Tracking & Derivation ──
 
-  // ── Point Interpretations ──
-  const pointInterpretations = useMemo<PointInterpretation[]>(() => {
-    if (!activeChart || !isPremium) return [];
-    return generatePointInterpretations(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Relationship Profile ──
-  const relationshipProfile = useMemo<RelationshipProfile | null>(() => {
-    if (!activeChart || !isPremium) return null;
-    return generateRelationshipProfile(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Career Profile ──
-  const careerProfile = useMemo<CareerProfile | null>(() => {
-    if (!activeChart || !isPremium) return null;
-    return generateCareerProfile(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Emotional Profile ──
-  const emotionalProfile = useMemo<EmotionalProfile | null>(() => {
-    if (!activeChart || !isPremium) return null;
-    return generateEmotionalProfile(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Shadow & Growth ──
-  const shadowGrowth = useMemo<ShadowGrowthProfile | null>(() => {
-    if (!activeChart || !isPremium) return null;
-    return generateShadowGrowth(activeChart);
-  }, [activeChart, isPremium]);
-
-  // ── Expanded deep-dive section tracking ──
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
   const [expandedHouse, setExpandedHouse] = useState<number | null>(null);
-  const [expandedLifeTheme, setExpandedLifeTheme] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['bigThree', 'coreIdentity', 'chartStory']));
 
-  // ── Angles from chart (Descendant, IC) ──
-  const descendant = useMemo(() => {
-    return (activeChart?.angles ?? []).find(a => a.name === 'Descendant') ?? null;
-  }, [activeChart]);
+  const birthDateStr = useMemo(() => {
+    const chart = activeChart ?? userChart;
+    const date = (chart as any)?.birthData?.date;
+    if (!date) return '';
+    try {
+      const d = parseLocalDate(date);
+      return d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+    } catch { return ''; }
+  }, [activeChart, userChart]);
 
-  const ic = useMemo(() => {
-    return (activeChart?.angles ?? []).find(a => a.name === 'IC') ?? null;
-  }, [activeChart]);
+  const birthTimeStr = useMemo(() => {
+    try {
+      const chart = activeChart ?? userChart;
+      const bd = (chart as any)?.birthData;
+      if (bd?.hasUnknownTime || !bd?.time) return '';
+      const [hStr, mStr] = bd.time.split(':');
+      const h = parseInt(hStr, 10);
+      const m = parseInt(mStr, 10);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 === 0 ? 12 : h % 12;
+      return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+    } catch { return ''; }
+  }, [activeChart, userChart]);
 
-  // ── Zodiac system label ──
-  const [zodiacSystemLabel, setZodiacSystemLabel] = useState<string>('Tropical');
-
-  // ── Planets grouped by house (for houses tab) ──
   const planetsByHouse = useMemo(() => {
     if (!activeChart) return new Map<number, string[]>();
     const map = new Map<number, string[]>();
-    const planets = [
-      activeChart.sun, activeChart.moon, activeChart.mercury, activeChart.venus, activeChart.mars,
-      activeChart.jupiter, activeChart.saturn, activeChart.uranus, activeChart.neptune, activeChart.pluto,
-    ].filter(Boolean);
-    for (const p of planets) {
+    const bodies = planetRows.map(r => r.p);
+    for (const p of bodies) {
       if (!p.house) continue;
       if (!map.has(p.house)) map.set(p.house, []);
       map.get(p.house)!.push(p.planet.name);
     }
     return map;
-  }, [activeChart]);
+  }, [activeChart, planetRows]);
 
+  // ── Final Guardrails ──
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
         <SkiaDynamicCosmos />
-        <SkiaBreathingRing size={80} color="gold" rings={2} />
-        <Text style={[styles.loadingText, { marginTop: 20 }]}>Loading natal chart…</Text>
+        <SkiaBreathingRing size={100} color="gold" rings={3} />
+        <Animated.View
+          entering={FadeIn.delay(400).duration(800)}
+          style={styles.loadingTextContainer}
+        >
+          <Text style={styles.loadingText}>SYNCHRONIZING CELESTIAL BLUEPRINT...</Text>
+        </Animated.View>
       </View>
     );
   }
@@ -865,47 +873,34 @@ export default function ChartScreen() {
     return (
       <View style={[styles.container, styles.center]}>
         <SkiaDynamicCosmos />
-        <Text style={styles.loadingText}>No chart found. Create your chart from Home.</Text>
+        <MaterialCommunityIcons
+          name="moon-waxing-crescent"
+          size={64}
+          color={PALETTE.titanium}
+          style={{ opacity: 0.3, marginBottom: 24 }}
+        />
+        <Text style={styles.loadingText}>NO GENESIS ARCHIVE FOUND.</Text>
+        <Text style={[styles.wheelHint, { paddingHorizontal: 40, marginTop: 12 }]}> 
+          Your celestial blueprint personalizes your reflection and growth prompts throughout the MySky ecosystem.
+        </Text>
         <Pressable
           style={styles.goHomeBtn}
-          onPress={() => router.replace('/(tabs)/home' as Href)}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+            router.replace('/(tabs)/home' as Href);
+          }}
           accessibilityRole="button"
-          accessibilityLabel="Go to Home"
+          accessibilityLabel="Initialize Genesis"
         >
-          <MetallicText style={styles.goHomeText} color="#CFAE73">Go to Home</MetallicText>
+          <VelvetGlassSurface style={styles.initBtnGlass} intensity={25}>
+            <MetallicText style={styles.goHomeText} color={PALETTE.titanium}>
+              INITIALIZE BLUEPRINT
+            </MetallicText>
+          </VelvetGlassSurface>
         </Pressable>
       </View>
     );
   }
-
-  const birthDateStr = (() => {
-    try {
-      const chart = activeChart ?? userChart;
-      const d = parseLocalDate((chart as any)?.birthData?.date);
-      return d?.toLocaleDateString() ?? '';
-    } catch {
-      return '';
-    }
-  })();
-
-  const birthTimeStr = (() => {
-    try {
-      const chart = activeChart ?? userChart;
-      const bd = (chart as any)?.birthData;
-      if (bd?.hasUnknownTime) return '';
-      const t = bd?.time as string | undefined;
-      if (!t) return '';
-      // t is 'HH:MM' — format as 12-hour
-      const [hStr, mStr] = t.split(':');
-      const h = parseInt(hStr, 10);
-      const m = parseInt(mStr, 10);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const h12 = h % 12 === 0 ? 12 : h % 12;
-      return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
-    } catch {
-      return '';
-    }
-  })();
 
   const houseCusps = activeChart?.houseCusps ?? [];
 
@@ -915,8 +910,22 @@ export default function ChartScreen() {
 
       {/* Nebula depth — atmospheric glow orbs */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+        <View style={[styles.glowOrb, { top: -120, right: -100, backgroundColor: 'rgba(110, 140, 180, 0.15)' }]} />
+        <View style={[styles.glowOrb, { bottom: 100, left: -140, backgroundColor: 'rgba(207, 174, 115, 0.08)' }]} />
+        <View
+          style={[
+            styles.glowOrb,
+            {
+              top: SCREEN_HEIGHT * 0.4,
+              left: SCREEN_WIDTH * 0.5,
+              width: 600,
+              height: 600,
+              borderRadius: 300,
+              opacity: 0.02,
+              backgroundColor: PALETTE.nebula,
+            },
+          ]}
+        />
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -926,56 +935,55 @@ export default function ChartScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* ── Header ── */}
-          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 4 }}>
-              <Pressable onPress={() => router.replace('/(tabs)/identity' as Href)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <MetallicIcon name="arrow-back-outline" size={18} color={theme.isDark ? 'rgba(255,255,255,0.5)' : theme.textMuted} />
-                <MetallicText style={{ fontSize: 14, letterSpacing: 0.3 }} color={theme.isDark ? 'rgba(255,255,255,0.5)' : theme.textMuted}>Identity</MetallicText>
+          <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.header}>
+            <View style={styles.headerUtilityRow}>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                  router.replace('/(tabs)/identity' as Href);
+                }}
+                style={styles.backBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Back to identity"
+              >
+                <MetallicIcon name="arrow-back-outline" size={22} color={PALETTE.titanium} />
+                <Text style={styles.backText}>IDENTITY</Text>
               </Pressable>
-              <MoonPhaseView size={34} />
+              <MoonPhaseView size={42} />
             </View>
-            <Text style={styles.title}>
-              {activeOverlays.length > 0 
-                ? 'Relationship Chart'
-                : 'Your Chart'}
+            <Text style={styles.heroTitle}>
+              {activeOverlays.length > 0 ? 'Synastry' : 'Blueprint'}
             </Text>
-            <GoldSubtitle style={styles.subtitle}>
+            <GoldSubtitle style={styles.heroSubtitle}>
               {activeOverlays.length > 0
-                ? `${(userChart as any).name || 'You'} + ${activeOverlays[0].person.name}`
-                : `${birthDateStr ? `Born ${birthDateStr}` : ''}${birthTimeStr ? ` · ${birthTimeStr}` : ''}`}
+                ? `${(userChart as any).name || 'YOU'} + ${activeOverlays[0].person.name}`.toUpperCase()
+                : `${birthDateStr ? `BORN ${birthDateStr}` : 'NATAL ALIGNMENT'}${birthTimeStr ? ` · ${birthTimeStr}` : ''}`.toUpperCase()}
             </GoldSubtitle>
             {activeOverlays.length === 0 && (
-              <Text style={styles.headerFrame}>
-                Your chart personalizes your reflection and growth prompts throughout MySky.
-              </Text>
+              <Animated.View entering={FadeIn.delay(600).duration(1000)}>
+                <Text style={styles.headerEditorialFrame}>
+                  Your unique celestial architecture personalizes the growth and reflection loops within the MySky ecosystem.
+                </Text>
+              </Animated.View>
             )}
           </Animated.View>
 
           {/* ── People Bar (Premium Multi-Chart) ── */}
           {isPremium && (
-            <Animated.View entering={FadeInDown.delay(120).duration(600)} style={{ width: '100%' }}>
+            <Animated.View entering={FadeInDown.delay(150).duration(800)} style={styles.peopleSection}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.peopleBar}>
                 {/* Your chart chip (always first) */}
                 <Pressable
                   onPress={() => {
-                    setActiveOverlays([]);
                     Haptics.selectionAsync().catch(() => {});
+                    setActiveOverlays([]);
                   }}
+                  style={[styles.personChip, activeOverlays.length === 0 && styles.personChipActive]}
                   accessibilityRole="button"
                   accessibilityLabel="Your chart"
                   accessibilityState={{ selected: !overlayPerson }}
                 >
-                  {!overlayPerson ? (
-                    <View style={[styles.personChip, styles.personChipActive]}>
-                      <Ionicons name="person-outline" size={14} color={"#CFAE73"} />
-                      <Text style={[styles.personChipText, styles.personChipTextActive, { fontWeight: '700' }]}>You</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.personChip}>
-                      <Ionicons name="person-outline" size={14} color={theme.textMuted} />
-                      <Text style={styles.personChipText}>You</Text>
-                    </View>
-                  )}
+                  <Text style={[styles.personChipText, activeOverlays.length === 0 && styles.personChipTextActive]}>YOU</Text>
                 </Pressable>
 
                 {/* People chips */}
@@ -985,79 +993,55 @@ export default function ChartScreen() {
                   <Pressable
                     key={person.id}
                     onPress={() => handleSelectOverlay(person)}
-                    onLongPress={() => handleDeletePerson(person)}
+                    onLongPress={() => {
+                      Vibration.vibrate(50);
+                      handleDeletePerson(person);
+                    }}
+                    style={[styles.personChip, isActive && styles.personChipActive]}
                     accessibilityRole="button"
                     accessibilityLabel={`${person.name} overlay chart`}
                     accessibilityHint="Long press to remove"
                     accessibilityState={{ selected: isActive }}
                   >
-                    {isActive ? (
-                      <View style={[styles.personChip, styles.personChipActive]}>
-                        <Ionicons name="layers-outline" size={14} color={"#CFAE73"} />
-                        <Text style={[styles.personChipText, styles.personChipTextActive, { fontWeight: '700' }]} numberOfLines={1}>
-                          {person.name}
-                        </Text>
-                        <Text style={[styles.personChipRelation, { color: "#CFAE73", opacity: 0.8 }]}> 
-                          {RELATIONSHIP_LABELS[person.relationship as RelationshipType] || ''}
-                        </Text>
-                      </View>
-                    ) : (
-                      <View style={styles.personChip}>
-                        <Ionicons name="layers-outline" size={14} color={theme.textMuted} />
-                        <Text style={styles.personChipText} numberOfLines={1}>
-                          {person.name}
-                        </Text>
-                        <Text style={styles.personChipRelation}>
-                          {RELATIONSHIP_LABELS[person.relationship as RelationshipType] || ''}
-                        </Text>
-                      </View>
-                    )}
+                    <Text style={[styles.personChipText, isActive && styles.personChipTextActive]} numberOfLines={1}>
+                      {person.name.toUpperCase()}
+                    </Text>
+                    <Text style={styles.personChipMeta}>
+                      {RELATIONSHIP_LABELS[person.relationship as RelationshipType]?.toUpperCase() || ''}
+                    </Text>
                   </Pressable>
                 )})}
 
                 {/* Add person button */}
                 <Pressable
-                  onPress={() => setShowRelTypePicker(true)}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                    setShowRelTypePicker(true);
+                  }}
+                  style={styles.addSynastryBtn}
                   accessibilityRole="button"
                   accessibilityLabel="Add person"
                 >
-                  <LinearGradient
-                    colors={[...metallicFillColors]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.addPersonChip}
-                  >
-                    <FontAwesome6 name="plus" size={12} color={"#141222"} />
-                    <Text style={[styles.addPersonText, { color: "#141222", fontWeight: "700" }]}>Add</Text>
-                  </LinearGradient>
+                  <Ionicons name="add" size={20} color={PALETTE.titanium} />
                 </Pressable>
               </ScrollView>
 
               {/* Overlay legend when active — luxury pill tags */}
               {activeOverlays.length > 0 && (
-                <View style={styles.overlayLegend}>
+                <Animated.View entering={FadeIn.duration(400)} style={styles.overlayLegend}>
                   <View style={styles.legendPill}>
-                    <View style={[styles.legendPillDot, { backgroundColor: theme.isDark ? '#FFFFFF' : theme.textPrimary }]} />
-                    <Text style={[styles.legendPillText, { color: theme.isDark ? '#FFFFFF' : theme.textPrimary }]}>Your planets</Text>
+                    <View style={[styles.legendPillDot, { backgroundColor: '#FFFFFF' }]} />
+                    <Text style={styles.overlayLegendText}>YOUR BLUEPRINT</Text>
                   </View>
-                  {activeOverlays.map(overlay => {
-                    const activeColor = overlay.theme === 'roseGold' ? '#E8C2CA' : overlay.theme === 'iceBlue' ? '#C4D2FA' : '#D1D5DB';
-                    return (
-                      <View key={`legend-${overlay.person.id}`} style={styles.legendPill}>
-                        <View style={[styles.legendPillDot, { backgroundColor: activeColor }]} />
-                        <MetallicText style={styles.legendPillText} color={activeColor}>
-                          {overlay.person.name}'s planets
-                        </MetallicText>
-                      </View>
-                    );
-                  })}
-                  {activeOverlays.length === 1 && (
-                    <View style={styles.legendPill}>
-                      <View style={[styles.legendPillDot, { backgroundColor: '#C3CAD6' }]} />
-                      <MetallicText style={styles.legendPillText} color="#C3CAD6">Cross-aspects</MetallicText>
-                    </View>
-                  )}
-                </View>
+                  <View style={styles.legendPill}>
+                    <View style={[styles.legendPillDot, { backgroundColor: PALETTE.gold }]} />
+                    <Text style={styles.overlayLegendText}>{overlayPerson?.name.toUpperCase()}'S</Text>
+                  </View>
+                  <View style={styles.legendPill}>
+                    <View style={[styles.legendPillDot, { backgroundColor: PALETTE.silver }]} />
+                    <Text style={styles.overlayLegendText}>CROSS-ASPECTS</Text>
+                  </View>
+                </Animated.View>
               )}
             </Animated.View>
           )}
@@ -1099,90 +1083,77 @@ export default function ChartScreen() {
           ) : null}
 
           {/* ── Chart Wheel ── */}
-          <Animated.View entering={FadeInDown.delay(150).duration(600)} style={{ alignItems: 'center', width: '100%' }}>
-            {/* Birth date/time line above wheel */}
-            {activeOverlays.length === 0 && (birthDateStr || birthTimeStr) && (
-              <Text style={[styles.wheelHint, { marginBottom: 8, opacity: 0.7 }]}>
-                {[birthDateStr, birthTimeStr].filter(Boolean).join(' · ')}
-              </Text>
-            )}
-            <View style={styles.wheelFrame}>
-              <View style={styles.wheelInner}>
-                <NatalChartWheel
-                  chart={userChart}
-                  showAspects={true}
-                  overlayChart={activeOverlays.length > 0 ? activeOverlays[0].chart : undefined}
-                  overlayName={activeOverlays.length > 0 ? activeOverlays[0].person.name : undefined}
-                  orientation={chartOrientation}
-                />
-              </View>
+          <Animated.View entering={FadeInDown.delay(200).duration(800)} style={styles.wheelSection}>
+            <View style={styles.wheelGlassContainer}>
+              <NatalChartWheel
+                chart={userChart}
+                showAspects={true}
+                overlayChart={overlayChart ?? undefined}
+                overlayName={overlayPerson?.name}
+                orientation={chartOrientation}
+              />
             </View>
 
-            <Text style={styles.wheelHint}>Tap a person to overlay · Long-press to remove</Text>
-            <Text style={styles.wheelHint}>The outer ring shows zodiac signs. The inner wheel shows houses 1–12. Planet symbols mark their sign and degree. The chart begins at the Ascendant on the left and moves counterclockwise through the houses.</Text>
+            <View style={styles.wheelMetaContainer}>
+              <Text style={styles.wheelMetaText}>
+                CELESTIAL PROJECTION · {houseSystemLabel.toUpperCase()} HOUSES
+              </Text>
+              <Text style={[styles.wheelMetaText, styles.wheelMetaTextMuted]}>
+                {zodiacSystemLabel.toUpperCase()} COORDINATE SYSTEM
+              </Text>
+            </View>
+            <Text style={styles.wheelHint}>TAP THE WHEEL TO ROTATE · PINCH TO EXPLORE SPECIFIC DEGREES</Text>
           </Animated.View>
 
           {/* ── Big Three Summary ── */}
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={{ width: '100%' }}>
             <SectionAccordion
-              title="Your Placements"
+              title="The Big Three"
               subtitle={`${activeChart!.sun.sign.name} Sun · ${activeChart!.moon.sign.name} Moon${activeChart!.ascendant ? ` · ${activeChart!.ascendant.sign.name} Rising` : ''}`}
               sectionKey="bigThree"
               openSections={openSections}
               setOpenSections={setOpenSections}
             >
-            <VelvetGlassSurface intensity={20} style={[styles.bigThreeCard, { backgroundColor: 'transparent' }]}> 
-              <View style={styles.bigThreeRow}>
-                <View style={styles.bigThreeItem}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                    <GradientSymbol symbol="☉" fontSize={11} w={13} h={13} />
-                    <Text style={styles.bigThreeLabel}> Sun</Text>
+            <View style={{ width: '100%' }}>
+              <View style={styles.bigThreeGrid}>
+                <VelvetGlassSurface style={[styles.bigThreeCard, styles.velvetBorder]} intensity={30}>
+                  <View style={styles.bigThreeIconRow}>
+                    <GradientSymbol symbol="☉" fontSize={24} w={30} h={30} />
+                    <Text style={styles.bigThreeLabel}>SUN</Text>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
-                    <GradientSymbol symbol={activeChart!.sun.sign.symbol} fontSize={12} w={15} h={14} />
-                    <Text style={[styles.bigThreeSign, { marginTop: 0 }]}> {activeChart!.sun.sign.name}</Text>
-                  </View>
-                  <Text style={styles.bigThreeDeg}>
-                    {activeChart!.sun.degree}°{String(activeChart!.sun.minute).padStart(2, '0')}' · House{' '}
-                    {activeChart!.sun.house}
-                  </Text>
-                </View>
+                  <Text style={styles.bigThreeSignText}>{activeChart!.sun.sign.name.toUpperCase()}</Text>
+                  <Text style={styles.bigThreeCoordText}>{activeChart!.sun.degree}°{String(activeChart!.sun.minute).padStart(2, '0')}'</Text>
+                </VelvetGlassSurface>
 
                 <Pressable
-                  style={styles.bigThreeItem}
                   onPress={() => {
                     Haptics.selectionAsync().catch(() => {});
                     router.push('/astrology-context' as Href);
                   }}
+                  style={({ pressed }) => [{ flex: 1, opacity: pressed ? 0.8 : 1 }]}
                   accessibilityRole="button"
                   accessibilityLabel="Moon — tap to view today's cosmic context"
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                    <GradientSymbol symbol="☽" fontSize={11} w={13} h={13} />
-                    <Text style={styles.bigThreeLabel}> Moon</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
-                    <GradientSymbol symbol={activeChart!.moon.sign.symbol} fontSize={12} w={15} h={14} />
-                    <Text style={[styles.bigThreeSign, { marginTop: 0 }]}> {activeChart!.moon.sign.name}</Text>
-                  </View>
-                  <Text style={styles.bigThreeDeg}>
-                    {activeChart!.moon.degree}°{String(activeChart!.moon.minute).padStart(2, '0')}' · House{' '}
-                    {activeChart!.moon.house}
-                  </Text>
-                  <Text style={styles.bigThreeMoonHint}>Today's sky ›</Text>
+                  <VelvetGlassSurface style={[styles.bigThreeCard, styles.velvetBorder]} intensity={30}>
+                    <View style={styles.bigThreeIconRow}>
+                      <GradientSymbol symbol="☽" fontSize={24} w={30} h={30} />
+                      <Text style={styles.bigThreeLabel}>MOON</Text>
+                    </View>
+                    <Text style={styles.bigThreeSignText}>{activeChart!.moon.sign.name.toUpperCase()}</Text>
+                    <Text style={styles.bigThreeCoordText}>{activeChart!.moon.degree}°{String(activeChart!.moon.minute).padStart(2, '0')}'</Text>
+                    <Text style={styles.bigThreeMoonHint}>TODAY'S SKY</Text>
+                  </VelvetGlassSurface>
                 </Pressable>
 
                 {activeChart!.ascendant && (
-                  <View style={styles.bigThreeItem}>
-                    <Text style={styles.bigThreeLabel}>AC Rising</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
-                      <GradientSymbol symbol={activeChart!.ascendant.sign.symbol} fontSize={12} w={15} h={14} />
-                      <Text style={[styles.bigThreeSign, { marginTop: 0 }]}> {activeChart!.ascendant.sign.name}</Text>
+                  <VelvetGlassSurface style={[styles.bigThreeCard, styles.velvetBorder]} intensity={30}>
+                    <View style={styles.bigThreeIconRow}>
+                      <GradientSymbol symbol={activeChart!.ascendant.sign.symbol} fontSize={24} w={30} h={30} />
+                      <Text style={styles.bigThreeLabel}>RISING</Text>
                     </View>
-                    <Text style={styles.bigThreeDeg}>
-                      {activeChart!.ascendant.degree}°{String(activeChart!.ascendant.minute).padStart(2, '0')}'
-                    </Text>
-                  </View>
+                    <Text style={styles.bigThreeSignText}>{activeChart!.ascendant.sign.name.toUpperCase()}</Text>
+                    <Text style={styles.bigThreeCoordText}>{activeChart!.ascendant.degree}°{String(activeChart!.ascendant.minute).padStart(2, '0')}'</Text>
+                  </VelvetGlassSurface>
                 )}
               </View>
 
@@ -1224,7 +1195,7 @@ export default function ChartScreen() {
                   )}
                 </View>
               )}
-            </VelvetGlassSurface>
+            </View>
             </SectionAccordion>
           </Animated.View>
 
@@ -1435,9 +1406,8 @@ export default function ChartScreen() {
                 const planetSymbol = (row.p as any)?.planet?.symbol ?? '•';
 
                 return (
-                  <VelvetGlassSurface intensity={15} style={{marginBottom: 8, borderRadius: 24}}>
+                  <VelvetGlassSurface key={row.label} intensity={15} style={{marginBottom: 8, borderRadius: 24}}>
                   <LinearGradient
-                    key={row.label}
                     colors={
                       idx % 2 === 0
                         ? chartSurfaceGradients.rowPrimary
@@ -1509,15 +1479,15 @@ export default function ChartScreen() {
                       style={styles.tableRow}
                     >
                       <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
-                        <View style={{ marginRight: 10, width: 28, alignItems: 'center' }}>
+                        <View style={styles.sensitiveIconBox}>
                           {pt.icon ? <GradientIcon size={18}>{pt.icon as React.ReactElement}</GradientIcon> : null}
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.planetName}>{pt.label}</Text>
+                          <Text style={styles.planetName}>{pt.label.toUpperCase()}</Text>
                           {pt.retrograde && (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                              <Ionicons name="arrow-undo-outline" size={10} color="#C9AE78" />
-                              <MetallicText style={styles.retroLabel} color="#E8D6AE">Retrograde</MetallicText>
+                            <View style={styles.retroRow}>
+                              <Ionicons name="arrow-undo-outline" size={10} color={PALETTE.titanium} />
+                              <MetallicText style={styles.retroLabel} color="#E8D6AE">RETROGRADE</MetallicText>
                             </View>
                           )}
                         </View>
@@ -1528,21 +1498,21 @@ export default function ChartScreen() {
                         <View style={{ flex: 1 }}>
                           <MetallicText
                             color={ELEMENT_COLORS[pt.element] || theme.textSecondary}
-                            style={styles.signName}
+                            style={styles.signNameText}
                           >
-                            {pt.sign}
+                            {pt.sign.toUpperCase()}
                           </MetallicText>
-                          <Text style={styles.elementLabel}>{pt.element}</Text>
+                          <Text style={styles.elementLabelText}>{pt.element.toUpperCase()}</Text>
                         </View>
                       </View>
 
                       <View style={[styles.td, { flex: 1 }]}>
-                        <Text style={styles.degreeText}>{pt.degree}°</Text>
-                        <Text style={styles.minuteText}>{String(pt.minute).padStart(2, '0')}'</Text>
+                        <Text style={styles.degreeValueText}>{pt.degree}°</Text>
+                        <Text style={styles.minuteValueText}>{String(pt.minute).padStart(2, '0')}'</Text>
                       </View>
 
                       <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
-                        <Text style={styles.houseNum}>{pt.house || '—'}</Text>
+                        <Text style={styles.houseValueText}>{pt.house || '—'}</Text>
                       </View>
                     </LinearGradient>
                   ))}
@@ -1553,80 +1523,83 @@ export default function ChartScreen() {
 
           {/* ── Houses Table ── */}
           {activeTab === 'houses' && (
-            <Animated.View entering={FadeInDown.delay(300).duration(500)} style={{ width: '100%' }}>
+            <Animated.View entering={FadeInDown.delay(300).duration(600)} style={{ width: '100%' }}>
               {houseCusps.length === 0 ? (
-                <View style={styles.emptyState}>
+                <View style={styles.emptyBlueprintState}>
                   <Ionicons name="alert-circle-outline" size={32} color={theme.textMuted} />
-                  <Text style={styles.emptyText}>House positions require a known birth time.</Text>
+                  <Text style={styles.emptyBlueprintText}>
+                    HOUSE PRECISION REQUIRES AN INITIALIZED BIRTH TIME.
+                  </Text>
                 </View>
               ) : (
                 <>
-                  {activeChart?.houseSystem && (
-                    <Text style={styles.houseSystemLabel}>
-                      {activeChart.houseSystem === 'whole-sign'
-                        ? 'Whole Sign'
-                        : activeChart.houseSystem === 'equal-house'
-                          ? 'Equal House'
-                          : activeChart.houseSystem.charAt(0).toUpperCase() + activeChart.houseSystem.slice(1)}{' '}
-                      Houses
+                  <View style={styles.editorialTableMeta}>
+                    <Ionicons name="information-circle-outline" size={14} color={PALETTE.titanium} />
+                    <Text style={styles.editorialMetaText}>
+                      SYSTEM: {houseSystemLabel.toUpperCase()} · ZODIAC: {zodiacSystemLabel.toUpperCase()}
                     </Text>
-                  )}
+                  </View>
 
                   <View style={styles.tableHeader}>
-                    <Text style={[styles.th, { flex: 1 }]}>House</Text>
-                    <Text style={[styles.th, { flex: 2 }]}>Sign</Text>
-                    <Text style={[styles.th, { flex: 1 }]}>Deg</Text>
-                    <Text style={[styles.th, { flex: 3 }]}>Theme</Text>
+                    <Text style={[styles.thText, { flex: 1 }]}>INDEX</Text>
+                    <Text style={[styles.thText, { flex: 2 }]}>CUSP SIGN</Text>
+                    <Text style={[styles.thText, { flex: 1 }]}>DEGREE</Text>
+                    <Text style={[styles.thText, { flex: 3 }]}>DOMAIN</Text>
                   </View>
 
                   {houseCusps.map((cusp: HouseCuspType, idx: number) => {
                     const houseInfo = HOUSE_MEANINGS[cusp.house as keyof typeof HOUSE_MEANINGS];
                     const elColor = ELEMENT_COLORS[cusp.sign.element] || theme.textSecondary;
-
-                    const simpleH = (activeChart as any)?.houses?.[idx];
-                    const deg = simpleH ? Math.floor(simpleH.degree) : Math.floor(cusp.longitude % 30);
-                    const min = simpleH
-                      ? Math.round((simpleH.degree % 1) * 60)
-                      : Math.floor((cusp.longitude % 1) * 60);
-
-                    const isWholeSign = activeChart?.houseSystem === 'whole-sign';
+                    const occupants = planetsByHouse.get(cusp.house) || [];
+                    const isAngular = [1, 4, 7, 10].includes(cusp.house);
 
                     return (
-                      <LinearGradient
+                      <VelvetGlassSurface
                         key={cusp.house}
-                        colors={
-                          idx % 2 === 0
-                            ? chartSurfaceGradients.rowPrimary
-                            : chartSurfaceGradients.rowSecondary
-                        }
-                        style={styles.tableRow}
+                        intensity={15}
+                        style={[styles.houseRowContainer, isAngular && styles.angularHighlight]}
                       >
-                        <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
-                          <Text style={styles.houseNumLarge}>{cusp.house}</Text>
-                        </View>
-
-                        <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                          <GradientSymbol symbol={cusp.sign.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
-                          <View style={{ flex: 1 }}>
-                            <MetallicText color={elColor} style={styles.signName}>{cusp.sign.name}</MetallicText>
+                        <LinearGradient
+                          colors={idx % 2 === 0 ? chartSurfaceGradients.rowPrimary : chartSurfaceGradients.rowSecondary}
+                          style={styles.tableRow}
+                        >
+                          <View style={[styles.td, { flex: 1, alignItems: 'center' }]}> 
+                            <View style={[styles.houseBadge, isAngular && { borderColor: PALETTE.gold }]}> 
+                              <Text style={[styles.houseNumText, isAngular && { color: PALETTE.gold }]}> 
+                                {cusp.house}
+                              </Text>
+                            </View>
                           </View>
-                        </View>
 
-                        <View style={[styles.td, { flex: 1 }]}>
-                          <Text style={styles.degreeText}>
-                            {isWholeSign ? '0°' : `${deg}°${String(min).padStart(2, '0')}'`}
-                          </Text>
-                        </View>
+                          <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}> 
+                            <GradientSymbol symbol={cusp.sign.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
+                            <View style={{ flex: 1 }}>
+                              <MetallicText color={elColor} style={styles.signNameText}>
+                                {cusp.sign.name.toUpperCase()}
+                              </MetallicText>
+                            </View>
+                          </View>
 
-                        <View style={[styles.td, { flex: 3 }]}>
-                          <Text style={styles.houseTheme}>{houseInfo?.theme || ''}</Text>
-                          {planetsByHouse.get(cusp.house)?.length ? (
-                            <Text style={styles.housePlanets}>
-                              {planetsByHouse.get(cusp.house)!.join(', ')}
+                          <View style={[styles.td, { flex: 1 }]}> 
+                            <Text style={styles.degreeValueText}>
+                              {activeChart?.houseSystem === 'whole-sign' ? '0°' : `${Math.floor(cusp.longitude % 30)}°`}
                             </Text>
-                          ) : null}
-                        </View>
-                      </LinearGradient>
+                          </View>
+
+                          <View style={[styles.td, { flex: 3 }]}> 
+                            <Text style={styles.houseThemeTitle}>{houseInfo?.theme.toUpperCase() || ''}</Text>
+                            {occupants.length > 0 && (
+                              <View style={styles.occupantCloud}>
+                                {occupants.map((p) => (
+                                  <View key={p} style={styles.occupantPill}>
+                                    <Text style={styles.occupantPillText}>{p.toUpperCase()}</Text>
+                                  </View>
+                                ))}
+                              </View>
+                            )}
+                          </View>
+                        </LinearGradient>
+                      </VelvetGlassSurface>
                     );
                   })}
                 </>
@@ -2495,67 +2468,39 @@ export default function ChartScreen() {
             </Animated.View>
           )}
 
-          {/* ── Planet-by-Planet Deep Dive ── */}
-          {viewMode === 'complete' && isPremium && planetDeepDives.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(400).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Planet-by-Planet Deep Dive"
-                subtitle="Each planet as a mini-profile in your chart"
-                sectionKey="planetDeepDive"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
-              {planetDeepDives.map((dd) => (
-                <Pressable
-                  key={dd.planet}
-                  onPress={() => setExpandedPlanet(expandedPlanet === `dd-${dd.planet}` ? null : `dd-${dd.planet}`)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${dd.planet} deep dive`}
+          {/* ── Editorial Tool: Planetary Deep Dives ── */}
+          {activeTab === 'planets' && viewMode === 'complete' && isPremium && (
+            <Animated.View entering={FadeIn.duration(1000)} style={styles.deepDiveContainer}>
+              <Text style={styles.editorialSectionLabel}>PLANETARY DEEP-DIVES</Text>
+              {planetRows.map((row) => (
+                <SectionAccordion
+                  key={`dd-${row.label}`}
+                  title={row.label}
+                  subtitle={`${row.p.sign.name.toUpperCase()} · HOUSE ${row.p.house || '—'}`}
+                  sectionKey={`dd-${row.label}`}
+                  openSections={openSections}
+                  setOpenSections={setOpenSections}
                 >
-                  <LinearGradient
-                    colors={chartSurfaceGradients.goldPanelBarely}
-                    style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}
-                  >
-                    <View style={styles.themedCardHeaderRow}>
-                      <Text style={[styles.themedCardTitle, { flex: 0, flexShrink: 0, fontSize: 11 }]} numberOfLines={1}>{dd.planet}</Text>
-                      <View style={{ flexDirection: 'row', gap: 6, flex: 1, justifyContent: 'flex-end', flexShrink: 1, overflow: 'hidden' }}>
-                        <View style={styles.themedPlacementChip}>
-                          <Text style={[styles.themedPlacementText, { fontSize: 8 }]} numberOfLines={1}>{dd.sign}</Text>
-                        </View>
-                        {dd.house > 0 && (
-                          <View style={styles.themedPlacementChip}>
-                            <Text style={[styles.themedPlacementText, { fontSize: 8 }]} numberOfLines={1}>House {dd.house}</Text>
-                          </View>
-                        )}
-                        {dd.isRetrograde && (
-                          <View style={[styles.themedPlacementChip, { borderColor: 'rgba(232, 214, 174, 0.3)' }]}>
-                            <Text style={[styles.themedPlacementText, { color: theme.isDark ? '#FFFFFF' : theme.textPrimary, fontSize: 8 }]}>℞</Text>
-                          </View>
-                        )}
-                        {dd.dignity.dignity !== 'peregrine' && (
-                          <View style={[styles.themedPlacementChip, { borderColor: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? 'rgba(154,205,50,0.3)' : 'rgba(153,31,166,0.3)' }]}>
-                            <Text style={[styles.themedPlacementText, { color: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? '#9ACD32' : '#991FA6', fontSize: 8 }]} numberOfLines={1}>
-                              {dd.dignity.dignity}
-                            </Text>
-                          </View>
-                        )}
+                  <VelvetGlassSurface style={[styles.editorialCard, styles.velvetBorder]} intensity={20}>
+                    <LinearGradient colors={['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.01)']} style={StyleSheet.absoluteFill} />
+                    <View style={styles.ddHeaderRow}>
+                      <GradientSymbol symbol={(row.p as any).planet?.symbol || '•'} fontSize={24} w={30} h={30} />
+                      <View style={styles.ddHeaderLabels}>
+                        <Text style={styles.ddPlanetSignText}>{row.p.sign.name.toUpperCase()}</Text>
+                        <Text style={styles.ddPlanetElementText}>{row.p.sign.element.toUpperCase()} · {row.p.sign.modality.toUpperCase()}</Text>
                       </View>
-                      <Ionicons name={expandedPlanet === `dd-${dd.planet}` ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
                     </View>
-                    <Text style={[styles.themedCardSummary, { fontSize: 12, lineHeight: 17 }]} numberOfLines={expandedPlanet === `dd-${dd.planet}` ? undefined : 2}>
-                      {dd.synthesis}
+                    <Text style={styles.editorialBodyText}>
+                      {generatePlanetDeepDive(row.p, activeChart!.aspects ?? []).synthesis}
                     </Text>
-                    {expandedPlanet === `dd-${dd.planet}` && dd.aspects.length > 0 && (
-                      <View style={styles.themedCardDetails}>
-                        {dd.aspects.map((asp, ai) => (
-                          <Text key={ai} style={styles.themedCardDetail}>• {asp}</Text>
-                        ))}
-                      </View>
-                    )}
-                  </LinearGradient>
-                </Pressable>
+                    <View style={styles.ddFooterMeta}>
+                      <Text style={styles.ddMetaValue}>DEGREE: {Math.floor(row.p.degree)}°{String(row.p.minute).padStart(2, '0')}'</Text>
+                      <View style={styles.metaDot} />
+                      <Text style={styles.ddMetaValue}>HOUSE: {row.p.house ?? '—'}</Text>
+                    </View>
+                  </VelvetGlassSurface>
+                </SectionAccordion>
               ))}
-              </SectionAccordion>
             </Animated.View>
           )}
 
@@ -2609,142 +2554,83 @@ export default function ChartScreen() {
             </Animated.View>
           )}
 
-          {/* ── Life Themes (grouped, Complete only) ── */}
-          {viewMode === 'complete' && isPremium && (relationshipProfile || careerProfile || emotionalProfile || shadowGrowth) && (
-            <Animated.View entering={FadeInDown.delay(420).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Life Themes"
-                subtitle="Relationship, career, emotional, and growth profiles"
-                sectionKey="lifeThemes"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
-                {relationshipProfile && (
-                  <Pressable
-                    onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'relationship' ? null : 'relationship')}
-                    accessibilityRole="button"
-                    accessibilityLabel="Relationship profile"
-                  >
-                    <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                      <View style={styles.themedCardHeaderRow}>
-                        <GradientIcon size={20}><Ionicons name="heart-outline" size={20} color="#000" /></GradientIcon>
-                        <Text style={styles.themedCardTitle}>Relationship Profile</Text>
-                        <Ionicons name={expandedLifeTheme === 'relationship' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
-                      </View>
-                      <View style={styles.themedCardPlacements}>
-                        {relationshipProfile.keyPlanets.map((p, i) => (
-                          <View key={i} style={styles.themedPlacementChip}>
-                            <Text style={styles.themedPlacementText}>{p}</Text>
-                          </View>
-                        ))}
-                      </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'relationship' ? undefined : 3}>
-                        {relationshipProfile.synthesis}
-                      </Text>
-                      {expandedLifeTheme === 'relationship' && (
-                        <View style={styles.themedCardDetails}>
-                          <Text style={styles.themedCardDetail}>• Love Style: {relationshipProfile.loveStyle}</Text>
-                          <Text style={styles.themedCardDetail}>• Attraction: {relationshipProfile.attractionPattern}</Text>
-                          <Text style={styles.themedCardDetail}>• Intimacy: {relationshipProfile.intimacyStyle}</Text>
-                          <Text style={styles.themedCardDetail}>• Partnership Lessons: {relationshipProfile.partnershipLessons}</Text>
-                        </View>
-                      )}
-                    </LinearGradient>
-                  </Pressable>
-                )}
+          {/* ── Advanced Thematic Profiles (Premium) ── */}
+          {viewMode === 'complete' && isPremium && (
+            <Animated.View entering={FadeIn.duration(800)} style={styles.profileStack}>
+              <Text style={styles.editorialSectionLabel}>NARRATIVE SYNTHESIS</Text>
 
-                {careerProfile && (
-                  <Pressable
-                    onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'career' ? null : 'career')}
-                    accessibilityRole="button"
-                    accessibilityLabel="Career and purpose profile"
-                  >
-                    <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                      <View style={styles.themedCardHeaderRow}>
-                        <GradientIcon size={20}><Ionicons name="briefcase-outline" size={20} color="#000" /></GradientIcon>
-                        <Text style={styles.themedCardTitle}>Career & Life Direction</Text>
-                        <Ionicons name={expandedLifeTheme === 'career' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
-                      </View>
-                      <View style={styles.themedCardPlacements}>
-                        {careerProfile.keyPlanets.map((p, i) => (
-                          <View key={i} style={styles.themedPlacementChip}>
-                            <Text style={styles.themedPlacementText}>{p}</Text>
-                          </View>
-                        ))}
-                      </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'career' ? undefined : 3}>
-                        {careerProfile.synthesis}
-                      </Text>
-                      {expandedLifeTheme === 'career' && (
-                        <View style={styles.themedCardDetails}>
-                          <Text style={styles.themedCardDetail}>• Vocation: {careerProfile.vocationThemes}</Text>
-                          <Text style={styles.themedCardDetail}>• Work Style: {careerProfile.workStyle}</Text>
-                          <Text style={styles.themedCardDetail}>• Public Image: {careerProfile.publicImage}</Text>
-                          <Text style={styles.themedCardDetail}>• Growth Path: {careerProfile.growthPath}</Text>
-                        </View>
-                      )}
-                    </LinearGradient>
-                  </Pressable>
-                )}
+              {relationshipProfile && (
+                <SectionAccordion title="The Relational Mirror" sectionKey="relational" openSections={openSections} setOpenSections={setOpenSections}>
+                  <VelvetGlassSurface style={[styles.editorialCard, styles.velvetBorder]} intensity={25}>
+                    <LinearGradient colors={['rgba(168, 139, 235, 0.12)', 'rgba(168, 139, 235, 0.04)']} style={StyleSheet.absoluteFill} />
+                    <View style={styles.profileHeader}>
+                      <MaterialCommunityIcons name="heart-pulse" size={24} color={PALETTE.nebula} />
+                      <Text style={styles.profileTitleText}>ATTACHMENT ARCHITECTURE</Text>
+                    </View>
+                    <Text style={styles.editorialBodyText}>{relationshipProfile.synthesis}</Text>
+                    <View style={styles.tagCloud}>
+                      <View style={styles.editorialTag}><Text style={styles.tagText}>LOVE STYLE: {relationshipProfile.loveStyle.toUpperCase()}</Text></View>
+                      <View style={styles.editorialTag}><Text style={styles.tagText}>INTIMACY: {relationshipProfile.intimacyStyle.toUpperCase()}</Text></View>
+                    </View>
+                  </VelvetGlassSurface>
+                </SectionAccordion>
+              )}
 
-                {emotionalProfile && (
-                  <Pressable
-                    onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'emotional' ? null : 'emotional')}
-                    accessibilityRole="button"
-                    accessibilityLabel="Emotional and psychological profile"
-                  >
-                    <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                      <View style={styles.themedCardHeaderRow}>
-                        <GradientIcon size={20}><Ionicons name="water-outline" size={20} color="#000" /></GradientIcon>
-                        <Text style={styles.themedCardTitle}>Emotional & Inner World</Text>
-                        <Ionicons name={expandedLifeTheme === 'emotional' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
-                      </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'emotional' ? undefined : 3}>
-                        {emotionalProfile.synthesis}
-                      </Text>
-                      {expandedLifeTheme === 'emotional' && (
-                        <View style={styles.themedCardDetails}>
-                          <Text style={styles.themedCardDetail}>• Emotional Style: {emotionalProfile.emotionalStyle}</Text>
-                          <Text style={styles.themedCardDetail}>• Core Patterns: {emotionalProfile.coreFears}</Text>
-                          <Text style={styles.themedCardDetail}>• Under Stress: {emotionalProfile.defenseMechanisms}</Text>
-                          <Text style={styles.themedCardDetail}>• Attachment: {emotionalProfile.attachmentStyle}</Text>
-                          <Text style={styles.themedCardDetail}>• Healing: {emotionalProfile.healingThemes}</Text>
-                        </View>
-                      )}
-                    </LinearGradient>
-                  </Pressable>
-                )}
+              {careerProfile && (
+                <SectionAccordion title="Vocation & Purpose" sectionKey="career" openSections={openSections} setOpenSections={setOpenSections}>
+                  <VelvetGlassSurface style={[styles.editorialCard, styles.velvetBorder]} intensity={25}>
+                    <LinearGradient colors={['rgba(207, 174, 115, 0.12)', 'rgba(207, 174, 115, 0.04)']} style={StyleSheet.absoluteFill} />
+                    <View style={styles.profileHeader}>
+                      <MaterialCommunityIcons name="briefcase-variant-outline" size={24} color={PALETTE.titanium} />
+                      <Text style={styles.profileTitleText}>VOCATIONAL ALCHEMY</Text>
+                    </View>
+                    <Text style={styles.editorialBodyText}>{careerProfile.synthesis}</Text>
+                    <View style={styles.tagCloud}>
+                      <View style={styles.editorialTag}><Text style={styles.tagText}>PUBLIC IMAGE: {careerProfile.publicImage.toUpperCase()}</Text></View>
+                      <View style={styles.editorialTag}><Text style={styles.tagText}>WORK STYLE: {careerProfile.workStyle.toUpperCase()}</Text></View>
+                    </View>
+                  </VelvetGlassSurface>
+                </SectionAccordion>
+              )}
 
-                {shadowGrowth && (
-                  <Pressable
-                    onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'shadow' ? null : 'shadow')}
-                    accessibilityRole="button"
-                    accessibilityLabel="Shadow and growth profile"
-                  >
-                    <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                      <View style={styles.themedCardHeaderRow}>
-                        <GradientIcon size={20}><Ionicons name="moon-outline" size={20} color="#000" /></GradientIcon>
-                        <Text style={styles.themedCardTitle}>Shadow & Growth Path</Text>
-                        <Ionicons name={expandedLifeTheme === 'shadow' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
-                      </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'shadow' ? undefined : 3}>
-                        {shadowGrowth.synthesis}
-                      </Text>
-                      {expandedLifeTheme === 'shadow' && (
-                        <View style={styles.themedCardDetails}>
-                          <Text style={styles.themedCardDetail}>• Saturn Lessons: {shadowGrowth.saturnLessons}</Text>
-                          <Text style={styles.themedCardDetail}>• Chiron Wound: {shadowGrowth.chironWound}</Text>
-                          <Text style={styles.themedCardDetail}>• Pluto Transformation: {shadowGrowth.plutoTransformation}</Text>
-                          <Text style={styles.themedCardDetail}>• Node Axis: {shadowGrowth.nodeAxis}</Text>
-                          {shadowGrowth.growthEdges.map((edge, i) => (
-                            <Text key={i} style={styles.themedCardDetail}>• {edge}</Text>
-                          ))}
+              {emotionalProfile && (
+                <SectionAccordion title="Inner World Substrate" sectionKey="emotional" openSections={openSections} setOpenSections={setOpenSections}>
+                  <VelvetGlassSurface style={[styles.editorialCard, styles.velvetBorder]} intensity={25}>
+                    <LinearGradient colors={['rgba(110, 191, 139, 0.12)', 'rgba(110, 191, 139, 0.04)']} style={StyleSheet.absoluteFill} />
+                    <View style={styles.profileHeader}>
+                      <MaterialCommunityIcons name="waves" size={24} color={PALETTE.sage} />
+                      <Text style={styles.profileTitleText}>PSYCHOLOGICAL SUBSTRATE</Text>
+                    </View>
+                    <Text style={styles.editorialBodyText}>{emotionalProfile.synthesis}</Text>
+                    <View style={styles.tagCloud}>
+                      <View style={styles.editorialTag}><Text style={styles.tagText}>CORE FEARS: {emotionalProfile.coreFears.toUpperCase()}</Text></View>
+                      <View style={styles.editorialTag}><Text style={styles.tagText}>HEALING: {emotionalProfile.healingThemes.toUpperCase()}</Text></View>
+                    </View>
+                  </VelvetGlassSurface>
+                </SectionAccordion>
+              )}
+
+              {shadowGrowth && (
+                <SectionAccordion title="Shadow & Evolution" sectionKey="shadow" openSections={openSections} setOpenSections={setOpenSections}>
+                  <VelvetGlassSurface style={[styles.editorialCard, styles.velvetBorder]} intensity={35}>
+                    <LinearGradient colors={['rgba(220, 80, 80, 0.15)', 'rgba(220, 80, 80, 0.05)']} style={StyleSheet.absoluteFill} />
+                    <View style={styles.profileHeader}>
+                      <MaterialCommunityIcons name="moon-waning-crescent" size={24} color={PALETTE.ember} />
+                      <Text style={styles.profileTitleText}>EVOLUTIONARY GROWTH EDGE</Text>
+                    </View>
+                    <Text style={styles.editorialBodyText}>{shadowGrowth.synthesis}</Text>
+
+                    <View style={styles.growthList}>
+                      {shadowGrowth.growthEdges.map((edge, i) => (
+                        <View key={i} style={styles.growthRow}>
+                          <Ionicons name="arrow-forward" size={14} color={PALETTE.titanium} />
+                          <Text style={styles.growthText}>{edge.toUpperCase()}</Text>
                         </View>
-                      )}
-                    </LinearGradient>
-                  </Pressable>
-                )}
-              </SectionAccordion>
+                      ))}
+                    </View>
+                  </VelvetGlassSurface>
+                </SectionAccordion>
+              )}
             </Animated.View>
           )}
 
@@ -2775,62 +2661,53 @@ export default function ChartScreen() {
             </Animated.View>
           )}
 
-          {/* ── Chart Settings ── */}
-          <Animated.View entering={FadeInDown.duration(600)} style={styles.glossarySection}>
-            <Pressable
-              style={styles.chartSettingsCard}
-              onPress={() => setShowAstrologyModal(true)}
-              accessibilityRole="button"
-              accessibilityLabel="Chart settings"
-            >
-              <LinearGradient colors={chartSurfaceGradients.settings} style={styles.chartSettingsGradient}>
-                <View style={styles.chartSettingsRow}>
-                  <View style={{ flex: 1, marginRight: theme.spacing.md }}>
-                    <View style={styles.chartSettingsHeader}>
-                      <MetallicIcon name="planet-outline" size={20} color="#E8D6AE" />
-                      <Text style={styles.chartSettingsTitle}>Chart Settings</Text>
-                    </View>
-                    <Text style={styles.chartSettingsDescription}>House system, aspect orbs, and calculation preferences</Text>
-                    <View style={styles.chartSettingsTags}>
-                      <View style={styles.settingTag}>
-                        <MetallicText style={styles.settingTagText} color="#E8D6AE">{houseSystemLabel}</MetallicText>
-                      </View>
-                      <View style={styles.settingTag}>
-                        <MetallicText style={styles.settingTagText} color="#E8D6AE">{orbPresetLabel} Orbs</MetallicText>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </LinearGradient>
-            </Pressable>
-          </Animated.View>
-
-          {/* ── Celestial Glossary ── */}
-          <SectionAccordion title="Glossary of Terms" sectionKey="glossary" openSections={openSections} setOpenSections={setOpenSections}>
+          {/* ── The Celestial Glossary (Instructional Context) ── */}
+          <SectionAccordion
+            title="Celestial Glossary"
+            subtitle="Archetypal Definitions & System Logic"
+            sectionKey="glossary"
+            openSections={openSections}
+            setOpenSections={setOpenSections}
+          >
              <View style={styles.glossaryContainer}>
                 {GLOSSARY_TERMS.map((item) => (
-                  <Pressable key={item.term} onPress={() => setExpandedTerm(expandedTerm === item.term ? null : item.term)} style={styles.glossaryRow}>
+                  <Pressable
+                    key={item.term}
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setExpandedTerm(expandedTerm === item.term ? null : item.term);
+                    }}
+                    style={styles.glossaryRow}
+                  >
                     <View style={styles.glossaryHeader}>
                        <Text style={styles.glossaryTerm}>{item.term.toUpperCase()}</Text>
                        <Ionicons name={expandedTerm === item.term ? 'remove' : 'add'} size={20} color={PALETTE.titanium} />
                     </View>
                     {expandedTerm === item.term && (
-                      <Animated.View entering={FadeIn}><Text style={styles.glossaryDef}>{item.def}</Text></Animated.View>
+                      <Animated.View entering={FadeIn.duration(400)}>
+                        <Text style={styles.glossaryDef}>{item.def}</Text>
+                      </Animated.View>
                     )}
                   </Pressable>
                 ))}
              </View>
           </SectionAccordion>
 
-          {/* ── Chart Calibration ── */}
-          <Pressable onPress={() => setShowAstrologyModal(true)} style={styles.calibrationLauncher}>
-            <VelvetGlassSurface style={[styles.calibrationGlass, styles.velvetBorder]} intensity={25}>
-              <Ionicons name="settings-outline" size={20} color={PALETTE.titanium} />
-              <Text style={styles.calibrationText}>CALIBRATE CALCULATION ENGINE</Text>
+          {/* ── Calibration (System Settings) Launcher ── */}
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+              setShowAstrologyModal(true);
+            }}
+            style={styles.calibrationLauncher}
+          >
+            <VelvetGlassSurface style={[styles.calibrationGlass, styles.velvetBorder]} intensity={30}>
+              <Ionicons name="settings-outline" size={22} color={PALETTE.titanium} />
+              <MetallicText style={styles.calibrationText} variant="gold">CALIBRATE BLUEPRINT ENGINE</MetallicText>
             </VelvetGlassSurface>
           </Pressable>
 
-          <View style={{ height: 120 }} />
+          <View style={{ height: 140 }} />
         </ScrollView>
       </SafeAreaView>
 
@@ -2869,14 +2746,23 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 32,
   },
+  loadingTextContainer: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
   goHomeBtn: {
     marginTop: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
     borderRadius: 28,
     backgroundColor: 'transparent',
   },
   goHomeText: { color: '#CFAE73', fontWeight: '700' },
+  initBtnGlass: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
@@ -2892,6 +2778,24 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 32,
   },
+  headerUtilityRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 10,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  backText: {
+    color: '#CFAE73',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+  },
   title: {
     fontSize: 34,
     fontWeight: '800',
@@ -2903,6 +2807,18 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   subtitle: {
     fontSize: 14,
   },
+  heroTitle: {
+    fontSize: 40,
+    fontWeight: '800',
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', default: 'System' }),
+    letterSpacing: -1.2,
+    marginBottom: 6,
+  },
+  heroSubtitle: {
+    fontSize: 13,
+    letterSpacing: 1.4,
+  },
   headerFrame: {
     fontSize: 12,
     color: theme.textMuted,
@@ -2910,6 +2826,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     textAlign: 'center',
     lineHeight: 17,
     opacity: 0.8,
+  },
+  headerEditorialFrame: {
+    fontSize: 12,
+    color: theme.textMuted,
+    marginTop: 12,
+    lineHeight: 19,
+    maxWidth: 340,
+    textAlign: 'left',
+    opacity: 0.86,
   },
 
   warningBox: {
@@ -2933,25 +2858,55 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   bigThreeCard: {
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
     width: '100%',
     alignItems: 'center',
+    minHeight: 152,
+    justifyContent: 'center',
+  },
+  bigThreeGrid: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    marginBottom: theme.spacing.lg,
   },
   bigThreeRow: { flexDirection: 'row', justifyContent: 'space-evenly' },
   bigThreeItem: { alignItems: 'center', flex: 1 },
+  bigThreeIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
   bigThreeMoonHint: {
     color: 'rgba(168, 192, 214, 0.55)',
     fontSize: 9,
     fontWeight: '600',
-    letterSpacing: 0.6,
-    marginTop: 5,
+    letterSpacing: 1,
+    marginTop: 10,
   },
   bigThreeLabel: {
     color: theme.textMuted,
     fontSize: 10,
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
     textAlign: 'center',
+  },
+  bigThreeSignText: {
+    color: theme.textPrimary,
+    fontWeight: '700',
+    fontSize: 18,
+    letterSpacing: 0.8,
+    textAlign: 'center',
+  },
+  bigThreeCoordText: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    marginTop: 8,
+    textAlign: 'center',
+    opacity: 0.92,
   },
   bigThreeSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 11, marginTop: 6, textAlign: 'center' },
   bigThreeDeg: { color: theme.textSecondary, fontSize: 9, marginTop: 3, textAlign: 'center', opacity: 0.9 },
@@ -3090,6 +3045,35 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderColor: 'transparent',
     backgroundColor: 'transparent',
   },
+  wheelSection: {
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: theme.spacing.lg,
+  },
+  wheelGlassContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderRadius: 36,
+    backgroundColor: 'transparent',
+  },
+  wheelMetaContainer: {
+    marginTop: 14,
+    alignItems: 'center',
+  },
+  wheelMetaText: {
+    color: theme.textPrimary,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    textAlign: 'center',
+  },
+  wheelMetaTextMuted: {
+    color: 'rgba(255,255,255,0.25)',
+    marginTop: 4,
+  },
   wheelHint: {
     marginTop: 10,
     color: theme.isDark ? theme.textMuted : theme.textSecondary,
@@ -3190,14 +3174,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     paddingVertical: 8,
     gap: 8,
   },
+  peopleSection: {
+    width: '100%',
+    marginBottom: theme.spacing.md,
+  },
   personChip: {
-    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.isDark ? 'transparent' : 'rgba(0, 0, 0, 0.04)',
     borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderWidth: theme.isDark ? 1 : 0,
     borderColor: "rgba(255,255,255,0.15)",
   },
@@ -3208,12 +3195,32 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   personChipText: {
     color: theme.textMuted,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    maxWidth: 80,
+    maxWidth: 110,
+    letterSpacing: 0.7,
+    textAlign: 'center',
   },
   personChipTextActive: { color: '#CFAE73' },
   personChipRelation: { color: theme.textMuted, fontSize: 10, opacity: 0.7 },
+  personChipMeta: {
+    color: theme.textMuted,
+    fontSize: 9,
+    opacity: 0.75,
+    marginTop: 2,
+    letterSpacing: 0.7,
+    textAlign: 'center',
+  },
+  addSynastryBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'transparent',
+  },
 
   addPersonChip: {
     flexDirection: 'row',
@@ -3249,6 +3256,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   legendPillDot: { width: 6, height: 6, borderRadius: 3 },
   legendPillText: { fontSize: 10, fontWeight: '600', letterSpacing: 0.3 },
+  overlayLegendText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    color: theme.textPrimary,
+  },
 
   // ── Relationship Type Picker ──
   relTypePickerOverlay: { width: '100%', marginBottom: theme.spacing.md },
@@ -3278,17 +3291,28 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   overlayUpsellText: { flex: 1, color: '#C9AE78', fontSize: 13, lineHeight: 18, textAlign: 'center' },
-
-  // ── Chart Settings card ──
-  chartSettingsCard: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", marginBottom: theme.spacing.md },
-  chartSettingsGradient: { padding: theme.spacing.lg },
-  chartSettingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  chartSettingsHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xs },
-  chartSettingsTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginLeft: theme.spacing.sm },
-  chartSettingsDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
-  chartSettingsTags: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
-  settingTag: { backgroundColor: 'transparent', paddingHorizontal: theme.spacing.sm, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
-  settingTagText: { fontSize: 11, color: theme.isDark ? '#FFFFFF' : theme.textPrimary, fontWeight: '500' },
+  calibrationLauncher: {
+    width: '100%',
+    marginTop: theme.spacing.md,
+    alignItems: 'center',
+  },
+  calibrationGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    width: '100%',
+    paddingVertical: 14,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: 28,
+  },
+  calibrationText: {
+    color: theme.textPrimary,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textAlign: 'center',
+  },
 
   // ── Chart Glossary ──
   glossarySection: { alignSelf: 'stretch', marginHorizontal: theme.spacing.lg, marginBottom: theme.spacing.xl },
@@ -3301,6 +3325,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', flex: 1 },
   glossaryDefinition: { fontSize: 14, color: theme.textPrimary, lineHeight: 20, marginTop: theme.spacing.xs },
+  glossaryContainer: { width: '100%' },
+  glossaryDef: { fontSize: 13, color: theme.textSecondary, lineHeight: 20, marginTop: theme.spacing.xs, fontFamily: 'serif' },
 
   // ── Transparency Bar ──
   transparencyBar: {
@@ -3363,6 +3389,100 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: 2,
   },
 
+  sensitiveIconBox: {
+    marginRight: 10,
+    width: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  retroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    marginTop: 2,
+  },
+  signNameText: { fontWeight: '700', fontSize: 10, letterSpacing: 0.8, textAlign: 'center' },
+  elementLabelText: { color: theme.textMuted, fontSize: 10, letterSpacing: 0.7, textAlign: 'center' },
+  degreeValueText: { color: theme.textPrimary, fontWeight: '700', fontSize: 14, textAlign: 'center' },
+  minuteValueText: { color: theme.textSecondary, fontSize: 11, textAlign: 'center' },
+  houseValueText: { color: theme.textPrimary, fontWeight: '700', fontSize: 16, textAlign: 'center' },
+  emptyBlueprintState: { alignItems: 'center', paddingVertical: 40, width: '100%' },
+  emptyBlueprintText: { color: theme.textMuted, fontSize: 13, marginTop: 12, textAlign: 'center', letterSpacing: 0.9 },
+  editorialTableMeta: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: theme.spacing.sm,
+  },
+  editorialMetaText: {
+    color: theme.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  thText: {
+    color: theme.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1.1,
+    textAlign: 'center',
+  },
+  houseRowContainer: {
+    marginBottom: 8,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  angularHighlight: {
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.28)',
+  },
+  houseBadge: {
+    minWidth: 38,
+    minHeight: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  houseNumText: { color: theme.textPrimary, fontWeight: '800', fontSize: 16, textAlign: 'center' },
+  houseThemeTitle: {
+    color: theme.textSecondary,
+    fontSize: 12,
+    lineHeight: 16,
+    textAlign: 'center',
+    fontWeight: '600',
+    letterSpacing: 0.6,
+  },
+  occupantCloud: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  occupantPill: {
+    backgroundColor: 'rgba(232,214,174,0.08)',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(232,214,174,0.12)',
+  },
+  occupantPillText: {
+    color: '#CFAE73',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.7,
+    textAlign: 'center',
+  },
+
   // ── Aspect Interpretations ──
   aspectInterp: {
     fontSize: 12,
@@ -3373,8 +3493,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
 
   // ── Themed Interpretation Sections ──
+  accordionContainer: { width: '100%', marginBottom: theme.spacing.sm },
+  accordionSubtitle: { fontSize: 12, color: theme.textMuted, marginTop: 2, letterSpacing: 0.2 },
+  themedSectionHeaderActive: { backgroundColor: 'rgba(255,255,255,0.05)' },
   themedSectionHeader: { flexDirection: 'row', padding: 25, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 28, alignItems: 'center' },
   themedSectionHeaderText: { fontSize: 20, fontWeight: '900', letterSpacing: 1.5, color: '#FFF' },
+  velvetBorder: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
   themedCard: {
     marginHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.md,
@@ -3436,6 +3563,131 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     color: theme.textSecondary,
     lineHeight: 19,
     fontFamily: 'serif',
+  },
+
+  profileStack: {
+    width: '100%',
+    marginTop: theme.spacing.sm,
+  },
+  editorialSectionLabel: {
+    color: '#CFAE73',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.8,
+    textAlign: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  editorialCard: {
+    width: '100%',
+    borderRadius: 28,
+    padding: theme.spacing.lg,
+    overflow: 'hidden',
+  },
+  ddHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+    marginBottom: 25,
+  },
+  ddHeaderLabels: {
+    flex: 1,
+  },
+  ddPlanetSignText: {
+    color: theme.textPrimary,
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  ddPlanetElementText: {
+    color: PALETTE.titanium,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    marginTop: 4,
+  },
+  ddFooterMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 35,
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  ddMetaValue: {
+    color: theme.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+  },
+  metaDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: PALETTE.titanium,
+    opacity: 0.3,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: theme.spacing.md,
+  },
+  profileTitleText: {
+    color: theme.textPrimary,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textAlign: 'center',
+  },
+  editorialBodyText: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    lineHeight: 21,
+    textAlign: 'center',
+    fontFamily: 'serif',
+  },
+  tagCloud: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: theme.spacing.md,
+  },
+  editorialTag: {
+    backgroundColor: 'rgba(232,214,174,0.08)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(232,214,174,0.12)',
+  },
+  tagText: {
+    color: '#E8D6AE',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textAlign: 'center',
+  },
+  growthList: {
+    marginTop: theme.spacing.md,
+    gap: 8,
+  },
+  growthRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  growthText: {
+    color: theme.textPrimary,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textAlign: 'center',
+  },
+  deepDiveContainer: {
+    width: '100%',
+    marginTop: theme.spacing.md,
   },
 
 });
