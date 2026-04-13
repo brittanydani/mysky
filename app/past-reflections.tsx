@@ -279,7 +279,7 @@ export default function PastReflectionsScreen() {
           {/* Trends View */}
           {showTrends && trends.length > 0 && (
             <Animated.View entering={FadeInDown.delay(60).duration(400)}>
-              <VelvetGlassSurface style={[styles.trendsSection, styles.velvetBorder]} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+              <VelvetGlassSurface style={[styles.trendsSection, styles.velvetBorder]} intensity={45}>
               <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
               <Text style={styles.trendsSectionHeader}>GROWTH PATTERNS</Text>
               <Text style={styles.trendsSectionSub}>
@@ -317,7 +317,7 @@ export default function PastReflectionsScreen() {
           {/* Empty State */}
           {groups.length === 0 && (
             <Animated.View entering={FadeIn.duration(500)}>
-              <VelvetGlassSurface style={[styles.emptyCard, styles.velvetBorder]} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+              <VelvetGlassSurface style={[styles.emptyCard, styles.velvetBorder]} intensity={45}>
               <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
               <MetallicIcon name="document-text-outline" size={36} color={theme.textMuted} />
               <Text style={styles.emptyText}>
@@ -359,7 +359,7 @@ export default function PastReflectionsScreen() {
                   return (
                     <VelvetGlassSurface
                       key={`${a.date}-${a.category}-${a.questionId}`}
-                      style={[styles.answerCard, styles.velvetBorder]} intensity={40} backgroundColor={theme.cardSurfaceValues}
+                      style={[styles.answerCard, styles.velvetBorder]} intensity={40}
                     >
                       <LinearGradient
                         colors={[`${catColor}15`, 'rgba(10,10,12,0.15)']}
@@ -534,7 +534,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     gap: 14,
   },
   trendsSectionHeader: {
-    color: PALETTE.nebula,
     fontSize: 10,
     color: PALETTE.nebula,
     fontWeight: '800',

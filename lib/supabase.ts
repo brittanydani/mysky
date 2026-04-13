@@ -3,12 +3,15 @@
  *
  * Single shared Supabase client for the MySky Expo app.
  *
- * Uses expo-secure-store for session persistence so auth tokens are stored
- * in the iOS Keychain instead of plaintext AsyncStorage.
+ * Persists the Supabase auth session via encrypted AsyncStorage.
+ * The session payload can exceed Expo SecureStore's recommended size limit,
+ * so SecureStore is only used indirectly for the DEK that protects the
+ * encrypted AsyncStorage value at rest.
  * Reads project URL + anon key from EXPO_PUBLIC_ env vars.
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import { logger } from '../utils/logger';
 
 type SecureStoreModule = typeof import('expo-secure-store');
@@ -23,33 +26,46 @@ function getSecureStore(): SecureStoreModule {
   return secureStoreModule;
 }
 
-// ─── Secure session storage adapter ───────────────────────────────────────────
-// Implements the Supabase `SupportedStorage` interface backed by SecureStore
-// so that session / refresh tokens are hardware-encrypted at rest.
+// ─── Supabase session storage adapter ─────────────────────────────────────────
+// The serialized Supabase session can exceed Expo SecureStore's 2 KB guidance.
+// Persist it in encrypted AsyncStorage, and migrate any legacy SecureStore
+// value on first read so existing users keep their session.
 
-const SecureStoreAdapter = {
+const SupabaseSessionStorageAdapter = {
   async getItem(key: string): Promise<string | null> {
     try {
-      return await getSecureStore().getItemAsync(key);
+      const encryptedValue = await EncryptedAsyncStorage.getItem(key);
+      if (encryptedValue !== null) {
+        return encryptedValue;
+      }
+
+      const legacyValue = await getSecureStore().getItemAsync(key);
+      if (legacyValue !== null) {
+        await EncryptedAsyncStorage.setItem(key, legacyValue);
+        await getSecureStore().deleteItemAsync(key);
+      }
+
+      return legacyValue;
     } catch {
-      // SecureStore can fail (e.g. simulator keychain reset). Fall back to
-      // returning null so auth degrades to logged-out rather than crashing.
-      logger.warn(`[supabase] SecureStore read failed for key "${key}"`);
+      logger.warn(`[supabase] Session read failed for key "${key}"`);
       return null;
     }
   },
   async setItem(key: string, value: string): Promise<void> {
     try {
-      await getSecureStore().setItemAsync(key, value);
+      await EncryptedAsyncStorage.setItem(key, value);
     } catch {
-      logger.warn(`[supabase] SecureStore write failed for key "${key}"`);
+      logger.warn(`[supabase] Session write failed for key "${key}"`);
     }
   },
   async removeItem(key: string): Promise<void> {
     try {
-      await getSecureStore().deleteItemAsync(key);
+      await Promise.allSettled([
+        EncryptedAsyncStorage.removeItem(key),
+        getSecureStore().deleteItemAsync(key),
+      ]);
     } catch {
-      logger.warn(`[supabase] SecureStore delete failed for key "${key}"`);
+      logger.warn(`[supabase] Session delete failed for key "${key}"`);
     }
   },
 };
@@ -75,7 +91,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: SecureStoreAdapter,
+    storage: SupabaseSessionStorageAdapter,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false, // not needed in React Native

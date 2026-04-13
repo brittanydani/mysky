@@ -246,7 +246,7 @@ export default function ArchetypesScreen() {
 
           {showResult && dominant && savedProfile ? (
             <Animated.View entering={FadeIn.duration(600)}>
-              <VelvetGlassSurface style={styles.resultCard} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+              <VelvetGlassSurface style={styles.resultCard} intensity={45}>
                 <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
                 <MetallicText style={styles.resultIcon} color={dominant.color}>{dominant.icon}</MetallicText>
                 <Text style={styles.resultName}>{dominant.name}</Text>
@@ -259,7 +259,7 @@ export default function ArchetypesScreen() {
                 <Text style={styles.traitText}>{dominant.shadow}</Text>
               </VelvetGlassSurface>
 
-              <VelvetGlassSurface style={styles.scoresCard} intensity={40} backgroundColor={theme.cardSurfaceValues}>
+              <VelvetGlassSurface style={styles.scoresCard} intensity={40}>
                 <LinearGradient colors={['rgba(44, 54, 69, 0.6)', 'rgba(26, 30, 41, 0.3)']} style={StyleSheet.absoluteFill} />
                 <Text style={styles.scoresTitle}>SCORE BREAKDOWN</Text>
                 {(Object.keys(savedProfile.scores) as ArchetypeKey[])

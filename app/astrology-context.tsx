@@ -270,6 +270,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   affirmationCard: { padding: 28, borderRadius: 28, marginBottom: 24, overflow: 'hidden' },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   cardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  premiumIcon: { fontSize: 14, lineHeight: 14 },
   affirmationText: { fontSize: 19, color: '#FFF', lineHeight: 28, fontWeight: '600' },
 
   insightCard: { padding: 24, borderRadius: 24, marginBottom: 24, overflow: 'hidden' },

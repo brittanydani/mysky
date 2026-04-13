@@ -36,8 +36,6 @@ interface ToolCard {
   iconColor: string;
   accentRgb: string;
   route: Href;
-  iconOffset?: number;
-  iconLeft?: number;
 }
 
 const TOOLS: ToolCard[] = [
@@ -56,8 +54,6 @@ const TOOLS: ToolCard[] = [
     iconColor: ACCENT.emerald,
     accentRgb: '110, 191, 139',
     route: '/trigger-log' as Href,
-    iconOffset: -10,
-    iconLeft: -4,
   },
 ];
 
@@ -132,7 +128,9 @@ export default function BodyNervousScreen() {
                     <View />
                   </LinearGradient>
                   )}
-                    <MetallicText style={[styles.cardIcon, { marginBottom: tool.iconOffset ?? 0, marginLeft: tool.iconLeft ?? 0 }]} color={tool.iconColor}>{tool.icon}</MetallicText>
+                    <View style={styles.cardHeader}>
+                      <MetallicText style={styles.cardIcon} color={tool.iconColor}>{tool.icon}</MetallicText>
+                    </View>
                     <Text style={styles.cardTitle}>{tool.title}</Text>
                     <Text style={styles.cardSubtitle}>{tool.description}</Text>
                   </VelvetGlassSurface>
@@ -187,7 +185,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     overflow: 'hidden',
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
-  cardIcon: { fontSize: 32, marginBottom: 16 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+  cardIcon: { fontSize: 32 },
   cardTitle: {
     fontSize: 20,
     color: theme.textPrimary,

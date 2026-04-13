@@ -185,7 +185,7 @@ export default function SomaticMapScreen() {
           </View>
 
           {/* Main Map (Midnight Slate Anchor) */}
-          <VelvetGlassSurface style={styles.bodyWrap} intensity={45} backgroundColor={theme.cardSurfaceValues}>
+          <VelvetGlassSurface style={styles.bodyWrap} intensity={45}>
             <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
             <View style={styles.bodyFrame}>
               <Svg width={SILHOUETTE_WIDTH} height={SILHOUETTE_HEIGHT} viewBox="0 0 200 776" preserveAspectRatio="xMidYMid meet">
@@ -254,6 +254,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   titleArea: { paddingHorizontal: 24, marginBottom: 32 },
   headerTitle: { fontSize: 32, fontWeight: '800', color: '#FFF', letterSpacing: -1 },
   headerSubtitle: { fontSize: 13, marginTop: 4 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 10, paddingBottom: 140 },
   
   toggleRow: { flexDirection: 'row', gap: 12, justifyContent: 'center', marginBottom: 24 },
   hardwareToggle: { flexDirection: 'row', padding: 4, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },

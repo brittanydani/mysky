@@ -133,13 +133,11 @@ export function metallicForHex(hex: string): readonly string[] {
     '#D9BF8C': METALLIC_GOLD,
     '#D4B872': METALLIC_GOLD,
     '#E8D6AE': METALLIC_GOLD,
-    '#D4AF37': METALLIC_GOLD,
     '#C3CAD6': METALLIC_GOLD,
     '#F0C87E': METALLIC_GOLD,
     '#E2C27A': METALLIC_GOLD,
     
     // Core Lunar Sky Palette
-    '#D4AF37': METALLIC_GOLD,
     '#F4EBD0': METALLIC_GOLD,
     '#A2C2E1': METALLIC_BLUE,
     '#A88BEB': METALLIC_PURPLE,

@@ -19,6 +19,9 @@
   ],
   "exclude": [
     "node_modules",
-    "supabase/functions"
+    "supabase/functions",
+    "chart.tsx",
+    "chart_backup.tsx",
+    "chart_original.tsx"
   ]
 }

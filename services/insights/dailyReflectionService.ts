@@ -264,6 +264,13 @@ export async function loadReflectionDrafts(): Promise<ReflectionDraftAnswer[]> {
   return data.answers;
 }
 
+export async function getAnswersByCategory(
+  category: ReflectionCategory,
+): Promise<ReflectionAnswer[]> {
+  const data = await loadReflections();
+  return data.answers.filter((answer) => answer.category === category);
+}
+
 export async function getDraftAnswersByCategory(
   category: ReflectionCategory,
 ): Promise<ReflectionDraftAnswer[]> {

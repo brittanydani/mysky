@@ -99,6 +99,7 @@ export interface CoreIdentitySummary {
   chartRuler: string;
   chartRulerSign: string;
   overview: string;            // 3–6 sentence blended narrative
+  overviewParts: string[];     // Array of individual narrative paragraphs for editorial layout
   quickThemes: string[];       // 3–5 strongest chart themes
 }
 
@@ -150,7 +151,7 @@ export function generateCoreIdentitySummary(chart: NatalChart): CoreIdentitySumm
     quickThemes.push(`Sun-Moon ${sunMoonAspect.type.name.toLowerCase()} — ${rel}`);
   }
 
-  return { sunSign, moonSign, risingSign, chartRuler: chartRulerName, chartRulerSign, overview: parts.join(' '), quickThemes: quickThemes.slice(0, 5) };
+  return { sunSign, moonSign, risingSign, chartRuler: chartRulerName, chartRulerSign, overview: parts.join(' '), overviewParts: parts, quickThemes: quickThemes.slice(0, 5) };
 }
 
 // ── 2. Relationship Profile ─────────────────────────────────────────

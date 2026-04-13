@@ -9,6 +9,13 @@
 // ARCHITECTURE: High-density modular rendering with Skia-accelerated layers.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { AspectsSection } from '../../components/ui/editorial/AspectsSection';
+import { PlanetaryDeepDivesSection } from '../../components/ui/editorial/PlanetaryDeepDives';
+import { ChartBigThreeSection } from '../../components/screens/ChartBigThreeSection';
+import { ChartDataLedgerSection } from '../../components/screens/ChartDataLedgerSection';
+import { ChartDignitiesSection } from '../../components/screens/ChartDignitiesSection';
+import { ChartAspectsModuleSection } from '../../components/screens/ChartAspectsModuleSection';
+
 import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { 
   View, 
@@ -132,6 +139,9 @@ import {
   ShadowGrowthProfile 
 } from '../../services/astrology/natalSynthesis';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
+import { PlanetStrengthSection } from "../../components/ui/editorial/PlanetStrengthSection";
+import { ChartStorySection } from '../../components/ui/editorial/ChartStorySection';
+import { EditorialPlacementList, DataPlacement } from '../../components/ui/editorial/EditorialPlacementList';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -375,14 +385,51 @@ type TabKey = 'planets' | 'houses' | 'aspects' | 'patterns';
 type RelationshipType = 'partner' | 'ex' | 'child' | 'parent' | 'friend' | 'sibling' | 'other';
 
 const GLOSSARY_TERMS: { term: string; def: string }[] = [
-  { term: 'Natal Chart', def: 'A mathematical blueprint of planetary geometry at the exact point of your entry into the space-time continuum.' },
-  { term: 'Big Three', def: 'Sun (Ego), Moon (Emotional Core), and Rising (External Persona). The tripod of the self.' },
-  { term: 'Chart Ruler', def: 'The planet that governs your Ascendant; the dominant architect of your life path and drive.' },
-  { term: 'Dignity', def: 'The comfort level of a planet in its current sign. Domicile and Exaltation represent maximized potency.' },
-  { term: 'Retrograde', def: 'Apparent backward motion; indicates a phase of internal re-processing and psychological revisiting.' },
-  { term: 'Angular Houses', def: 'Houses 1, 4, 7, and 10. These represent the active pillars of the life structure.' },
-  { term: 'Stellium', def: 'A high-density concentration of 3+ planets in a single sign or house, indicating intense thematic focus.' },
-  { term: 'Nodes', def: 'Lunar intersection points; North Node indicates soul growth direction, South Node indicates past-life comfort.' },
+  { term: 'Natal Chart', def: 'A map of where all the planets were at the exact moment you were born. Think of it as your unique personal blueprint.' },
+  { term: 'Sun Sign', def: 'The zodiac sign the Sun was in when you were born. It represents your core identity and ego.' },
+  { term: 'Moon Sign', def: 'The zodiac sign the Moon was in at your birth. It governs your emotions, instincts, and inner world.' },
+  { term: 'Rising Sign (Ascendant)', def: 'The zodiac sign rising on the eastern horizon at your birth. It shapes how others perceive you and your outward style.' },
+  { term: 'Houses', def: 'The 12 sections of your chart, each representing a different area of life — like relationships, career, or home.' },
+  { term: 'Transit', def: 'The current position of a planet in the sky and how it interacts with your natal chart. Transits correlate with moods and life themes — they reflect cycles and timing, not fixed outcomes.' },
+  { term: 'Aspect', def: 'An angle between two planets in your chart. Aspects show how different parts of your personality interact — harmoniously or with tension.' },
+  { term: 'Retrograde', def: 'When a planet appears to move backward in the sky. It often signals a time to slow down and revisit themes related to that planet.' },
+  { term: 'Stellium', def: 'Three or more planets clustered in the same sign or house. It creates an intense focus of energy in that area of your life.' },
+  { term: 'Chiron', def: 'Known as the "wounded healer." Its placement shows where you carry deep wounds — and where you have the greatest power to heal others.' },
+  { term: 'Nodes (North & South)', def: "The North Node points to your soul's growth direction. The South Node shows past-life patterns and comfort zones to move beyond." },
+  { term: 'Conjunction', def: 'When two planets sit very close together (within a few degrees). Their energies merge and amplify each other.' },
+  { term: 'Opposition', def: 'When two planets are directly across the chart from each other (180°). It creates tension that pushes you toward balance.' },
+  { term: 'Trine', def: 'A flowing, harmonious angle (120°) between two planets. Trines represent natural talents and ease.' },
+  { term: 'Square', def: 'A challenging 90° angle between two planets. Squares create friction that drives growth and action.' },
+  { term: 'Cardinal Signs', def: 'Aries, Cancer, Libra, Capricorn. Cardinal energy initiates — these signs start new seasons and are natural leaders and self-starters.' },
+  { term: 'Fixed Signs', def: 'Taurus, Leo, Scorpio, Aquarius. Fixed energy sustains — these signs are deeply determined, persistent, and resistant to change.' },
+  { term: 'Mutable Signs', def: 'Gemini, Virgo, Sagittarius, Pisces. Mutable energy adapts — these signs are flexible, versatile, and comfortable with change.' },
+  { term: 'Fire Element', def: 'Aries, Leo, Sagittarius. Fire signs are passionate, energetic, and action-oriented. They lead with enthusiasm and courage.' },
+  { term: 'Earth Element', def: 'Taurus, Virgo, Capricorn. Earth signs are grounded, practical, and reliable. They build things that last.' },
+  { term: 'Air Element', def: 'Gemini, Libra, Aquarius. Air signs are intellectual, communicative, and social. They process the world through ideas and connection.' },
+  { term: 'Water Element', def: 'Cancer, Scorpio, Pisces. Water signs are intuitive, emotional, and deeply feeling. They navigate life through empathy and instinct.' },
+  { term: 'Midheaven (MC)', def: 'The highest point of your chart, representing your public image, career path, and life direction. It shows how the world sees your achievements.' },
+  { term: 'Descendant (DC)', def: 'The sign on your 7th house cusp, directly opposite your Ascendant. It reveals what you seek in partnerships and how you relate one-on-one.' },
+  { term: 'Imum Coeli (IC)', def: 'The lowest point of your chart, representing your roots, home life, and private inner world. It shows your emotional foundation.' },
+  { term: 'Sextile', def: 'A supportive 60° angle between two planets. Sextiles represent opportunities that require a little effort to unlock.' },
+  { term: 'Quincunx (Inconjunct)', def: "An awkward 150° angle between two planets. It creates a nagging sense that two parts of your life don't quite fit — requiring constant adjustment." },
+  { term: 'Lilith (Black Moon)', def: 'A calculated point representing your raw, untamed instincts and the parts of yourself society told you to suppress.' },
+  { term: 'Part of Fortune', def: 'A calculated point blending your Sun, Moon, and Ascendant. It highlights where you find joy, luck, and a natural sense of flow.' },
+  { term: 'Vertex', def: 'A fated point in your chart associated with destined encounters and turning points that feel beyond your control.' },
+  { term: 'Chart Ruler', def: 'The planet that rules your Rising sign. It acts as the CEO of your chart, coloring your entire life approach and motivation.' },
+  { term: 'Dominant Planet', def: 'The planet with the most influence in your chart based on its sign, house, and aspects. It shapes your personality more than any other.' },
+  { term: 'Dignity', def: "A planet's comfort level in its sign. A planet in domicile or exaltation is strong and at ease; in detriment or fall, it must work harder to express itself." },
+  { term: 'Dispositor', def: 'The planet that rules the sign another planet sits in. Dispositor chains show which planet ultimately "calls the shots" in your chart.' },
+  { term: 'Mutual Reception', def: 'When two planets each sit in the sign the other rules — they support each other like a handshake agreement, strengthening both.' },
+  { term: 'Chart Shape', def: 'The overall pattern formed by your planets around the wheel — like Bowl, Bucket, or Splash. It reveals your broad approach to engaging with the world.' },
+  { term: 'Singleton', def: 'A planet that stands alone in a hemisphere, element, or modality. It carries outsized importance as the sole representative of that energy.' },
+  { term: 'Interception', def: 'When a sign is completely contained within a house without touching a cusp. Intercepted energies can feel hidden or harder to access until consciously developed.' },
+  { term: 'Grand Trine', def: 'Three planets forming an equilateral triangle (all 120° apart). A Grand Trine is a gift of natural talent — but can also lead to complacency.' },
+  { term: 'T-Square', def: 'Two planets in opposition with a third squaring both. A T-Square creates persistent tension that drives ambition and growth through challenge.' },
+  { term: 'Yod (Finger of God)', def: "Two planets in sextile, both quincunx a third. A Yod creates a sense of fated mission — an urgent, unavoidable calling in the apex planet's domain." },
+  { term: 'Grand Cross', def: 'Four planets forming a cross of two oppositions and four squares. It creates intense pressure from all sides but also extraordinary resilience.' },
+  { term: 'Applying vs Separating', def: 'An applying aspect is still forming and growing stronger. A separating aspect has already peaked and is fading — applying aspects have more influence.' },
+  { term: 'Hemisphere Emphasis', def: 'Which half of your chart holds most planets. Northern = private and inner-focused. Southern = public and outer-focused. Eastern = self-directed. Western = other-oriented.' },
+  { term: 'Polarity', def: 'Signs are either masculine (Fire + Air — active, outward) or feminine (Earth + Water — receptive, inward). Your balance shows your default mode of engaging.' },
 ];
 
 const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
@@ -411,20 +458,21 @@ export default function ChartScreen() {
   };
 
   const chartSurfaceGradients = {
-    rowPrimary: theme.isDark ? ['rgba(255, 255, 255, 0.03)', 'rgba(255, 255, 255, 0.01)'] : ['rgba(255, 255, 255, 0.92)', 'rgba(236, 239, 244, 0.98)'],
-    rowSecondary: theme.isDark ? ['rgba(255, 255, 255, 0.01)', 'rgba(255, 255, 255, 0.00)'] : [theme.cardSurface, 'rgba(231, 235, 240, 0.96)'],
-    panel: theme.isDark ? chartGradients.anchor : ['rgba(255, 255, 255, 0.92)', 'rgba(236, 239, 244, 0.98)'],
-    goldPanel: theme.isDark ? chartGradients.titanium : ['rgba(217, 191, 140, 0.14)', 'rgba(242, 235, 226, 0.98)'],
-    goldPanelStrong: theme.isDark ? ['rgba(207, 174, 115, 0.18)', 'rgba(207, 174, 115, 0.06)'] : ['rgba(226, 204, 164, 0.32)', 'rgba(244, 237, 226, 0.98)'],
-    goldPanelFaint: theme.isDark ? ['rgba(207, 174, 115, 0.10)', 'rgba(207, 174, 115, 0.03)'] : ['rgba(232, 214, 174, 0.18)', 'rgba(245, 240, 232, 0.98)'],
-    goldPanelSoft: theme.isDark ? ['rgba(207, 174, 115, 0.14)', 'rgba(207, 174, 115, 0.04)'] : ['rgba(221, 198, 156, 0.24)', 'rgba(244, 238, 229, 0.98)'],
-    goldPanelBarely: theme.isDark ? ['rgba(207, 174, 115, 0.08)', 'rgba(207, 174, 115, 0.02)'] : ['rgba(232, 214, 174, 0.12)', 'rgba(246, 242, 236, 0.98)'],
+    rowPrimary: theme.cardSurfaceAnchor as unknown as string[],
+    rowSecondary: theme.cardSurfaceValues as unknown as string[],
+    panel: theme.cardSurfaceAnchor as unknown as string[],
+    goldPanel: theme.cardSurfaceCognitive as unknown as string[],
+    goldPanelStrong: theme.cardSurfaceAnchor as unknown as string[],
+    goldPanelFaint: theme.cardSurfaceValues as unknown as string[],
+    goldPanelSoft: theme.cardSurfaceRelational as unknown as string[],
+    goldPanelBarely: theme.cardSurfaceAnchor as unknown as string[],
+    settings: theme.cardSurfaceAnchor as unknown as string[],
   };
 
   // ── Core Component State ──
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabKey>('planets');
+  const [activeTab, setActiveTab] = useState<TabKey>('houses');
   const [viewMode, setViewMode] = useState<'essentials' | 'complete'>('essentials');
   const [savedUserChartId, setSavedUserChartId] = useState<string | null>(null);
 
@@ -719,6 +767,8 @@ export default function ChartScreen() {
             isNorth ? <NorthNodeIcon size={20} color={'#000'} /> : <SouthNodeIcon size={20} color={'#000'} />);
         } else if (name === 'lilith' || name === 'black moon lilith') {
           addPoint('Lilith', signName, deg, min, house, retrograde, <LilithIcon size={20} color={'#000'} />);
+        } else if (name === 'pholus') {
+          addPoint('Pholus', signName, deg, min, house, retrograde, <PholusIcon size={20} color={'#000'} />);
         }
       }
     }
@@ -739,7 +789,7 @@ export default function ChartScreen() {
       addPoint('Part of Fortune', safeString(pf.sign?.name ?? pf.sign), pf.degree, pf.minute, pf.house, false, <PartOfFortuneIcon size={20} color={'#000'} />);
     }
 
-    const order: Record<string, number> = { 'North Node': 0, 'South Node': 1, 'Chiron': 2, 'Lilith': 3, 'Vertex': 4, 'Part of Fortune': 5 };
+    const order: Record<string, number> = { 'North Node': 0, 'South Node': 1, 'Chiron': 2, 'Lilith': 3, 'Vertex': 4, 'Part of Fortune': 5, 'Pholus': 6 };
     return points.sort((a, b) => (order[a.label] ?? 99) - (order[b.label] ?? 99));
   }, [activeChart]);
 
@@ -815,6 +865,7 @@ export default function ChartScreen() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
   const [expandedHouse, setExpandedHouse] = useState<number | null>(null);
+  const [expandedLifeTheme, setExpandedLifeTheme] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['bigThree', 'coreIdentity', 'chartStory']));
 
   const birthDateStr = useMemo(() => {
@@ -904,175 +955,71 @@ export default function ChartScreen() {
 
   const houseCusps = activeChart?.houseCusps ?? [];
 
+  const handleScroll = (event: any) => {
+    const yOffset = event.nativeEvent.contentOffset.y;
+    // Example thresholds for haptic feedback
+    if (yOffset > 300 && yOffset < 310) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    } else if (yOffset > 800 && yOffset < 810) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    }
+  };
+
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
-      {/* Nebula depth — atmospheric glow orbs */}
+      {/* Atmospheric Nebula Depth */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -120, right: -100, backgroundColor: 'rgba(110, 140, 180, 0.15)' }]} />
-        <View style={[styles.glowOrb, { bottom: 100, left: -140, backgroundColor: 'rgba(207, 174, 115, 0.08)' }]} />
-        <View
-          style={[
-            styles.glowOrb,
-            {
-              top: SCREEN_HEIGHT * 0.4,
-              left: SCREEN_WIDTH * 0.5,
-              width: 600,
-              height: 600,
-              borderRadius: 300,
-              opacity: 0.02,
-              backgroundColor: PALETTE.nebula,
-            },
-          ]}
-        />
+        <View style={[styles.glowOrb, { top: -80, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 140, left: -100, backgroundColor: 'rgba(212, 175, 55, 0.08)' }]} />
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
-          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Header ── */}
+
+          {/* ── 1. Editorial Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.header}>
-            <View style={styles.headerUtilityRow}>
+            <View style={styles.headerRow}>
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
                   router.replace('/(tabs)/identity' as Href);
                 }}
-                style={styles.backBtn}
+                style={styles.backButton}
                 accessibilityRole="button"
                 accessibilityLabel="Back to identity"
               >
-                <MetallicIcon name="arrow-back-outline" size={22} color={PALETTE.titanium} />
-                <Text style={styles.backText}>IDENTITY</Text>
+                <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+                <Text style={styles.backLabel}>IDENTITY</Text>
               </Pressable>
-              <MoonPhaseView size={42} />
+              <Pressable
+                style={styles.settingsAction}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                  setShowAstrologyModal(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Chart settings"
+              >
+                <Ionicons name="options-outline" size={20} color={PALETTE.gold} />
+              </Pressable>
             </View>
-            <Text style={styles.heroTitle}>
-              {activeOverlays.length > 0 ? 'Synastry' : 'Blueprint'}
-            </Text>
-            <GoldSubtitle style={styles.heroSubtitle}>
-              {activeOverlays.length > 0
-                ? `${(userChart as any).name || 'YOU'} + ${activeOverlays[0].person.name}`.toUpperCase()
-                : `${birthDateStr ? `BORN ${birthDateStr}` : 'NATAL ALIGNMENT'}${birthTimeStr ? ` · ${birthTimeStr}` : ''}`.toUpperCase()}
-            </GoldSubtitle>
-            {activeOverlays.length === 0 && (
-              <Animated.View entering={FadeIn.delay(600).duration(1000)}>
-                <Text style={styles.headerEditorialFrame}>
-                  Your unique celestial architecture personalizes the growth and reflection loops within the MySky ecosystem.
-                </Text>
-              </Animated.View>
-            )}
+
+            <View style={styles.titleStack}>
+              <Text style={styles.heroTitle} adjustsFontSizeToFit numberOfLines={1}>
+                {activeOverlays.length > 0 ? 'Synastry' : 'Cosmic Blueprint'}
+              </Text>
+              <Text style={styles.heroSubtitle}>
+                {activeOverlays.length > 0
+                  ? `${(userChart as any).name || 'YOU'} + ${activeOverlays[0].person.name}`.toUpperCase()
+                  : `${(userChart as any).name ? `${(userChart as any).name.toUpperCase()} · ` : ''}EVOLUTIONARY PATH`}
+              </Text>
+            </View>
           </Animated.View>
-
-          {/* ── People Bar (Premium Multi-Chart) ── */}
-          {isPremium && (
-            <Animated.View entering={FadeInDown.delay(150).duration(800)} style={styles.peopleSection}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.peopleBar}>
-                {/* Your chart chip (always first) */}
-                <Pressable
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    setActiveOverlays([]);
-                  }}
-                  style={[styles.personChip, activeOverlays.length === 0 && styles.personChipActive]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Your chart"
-                  accessibilityState={{ selected: !overlayPerson }}
-                >
-                  <Text style={[styles.personChipText, activeOverlays.length === 0 && styles.personChipTextActive]}>YOU</Text>
-                </Pressable>
-
-                {/* People chips */}
-                {people.map((person) => {
-                  const isActive = overlayPerson?.id === person.id;
-                  return (
-                  <Pressable
-                    key={person.id}
-                    onPress={() => handleSelectOverlay(person)}
-                    onLongPress={() => {
-                      Vibration.vibrate(50);
-                      handleDeletePerson(person);
-                    }}
-                    style={[styles.personChip, isActive && styles.personChipActive]}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${person.name} overlay chart`}
-                    accessibilityHint="Long press to remove"
-                    accessibilityState={{ selected: isActive }}
-                  >
-                    <Text style={[styles.personChipText, isActive && styles.personChipTextActive]} numberOfLines={1}>
-                      {person.name.toUpperCase()}
-                    </Text>
-                    <Text style={styles.personChipMeta}>
-                      {RELATIONSHIP_LABELS[person.relationship as RelationshipType]?.toUpperCase() || ''}
-                    </Text>
-                  </Pressable>
-                )})}
-
-                {/* Add person button */}
-                <Pressable
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                    setShowRelTypePicker(true);
-                  }}
-                  style={styles.addSynastryBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="Add person"
-                >
-                  <Ionicons name="add" size={20} color={PALETTE.titanium} />
-                </Pressable>
-              </ScrollView>
-
-              {/* Overlay legend when active — luxury pill tags */}
-              {activeOverlays.length > 0 && (
-                <Animated.View entering={FadeIn.duration(400)} style={styles.overlayLegend}>
-                  <View style={styles.legendPill}>
-                    <View style={[styles.legendPillDot, { backgroundColor: '#FFFFFF' }]} />
-                    <Text style={styles.overlayLegendText}>YOUR BLUEPRINT</Text>
-                  </View>
-                  <View style={styles.legendPill}>
-                    <View style={[styles.legendPillDot, { backgroundColor: PALETTE.gold }]} />
-                    <Text style={styles.overlayLegendText}>{overlayPerson?.name.toUpperCase()}'S</Text>
-                  </View>
-                  <View style={styles.legendPill}>
-                    <View style={[styles.legendPillDot, { backgroundColor: PALETTE.silver }]} />
-                    <Text style={styles.overlayLegendText}>CROSS-ASPECTS</Text>
-                  </View>
-                </Animated.View>
-              )}
-            </Animated.View>
-          )}
-
-          {/* ── Relationship Type Picker Modal ── */}
-          {showRelTypePicker && (
-            <View style={styles.relTypePickerOverlay}>
-              <View style={[styles.relTypePicker, { backgroundColor: 'transparent' }]}> 
-                <Text style={styles.relTypeTitle}>What's their relationship to you?</Text>
-                {(Object.keys(RELATIONSHIP_LABELS) as RelationshipType[]).map((type) => (
-                  <Pressable
-                    key={type}
-                    style={styles.relTypeOption}
-                    onPress={() => handleAddPerson(type)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Add ${RELATIONSHIP_LABELS[type]}`}
-                  >
-                    <Text style={styles.relTypeOptionText}>{RELATIONSHIP_LABELS[type]}</Text>
-                  </Pressable>
-                ))}
-                <Pressable
-                  style={styles.relTypeCancelBtn}
-                  onPress={() => setShowRelTypePicker(false)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Cancel"
-                >
-                  <Text style={styles.relTypeCancelText}>Cancel</Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
 
           {/* ── Birth time warning ── */}
           {displayChart?.warnings?.length ? (
@@ -1082,8 +1029,41 @@ export default function ChartScreen() {
             </View>
           ) : null}
 
-          {/* ── Chart Wheel ── */}
+          {/* ── 2. The Floating Wheel ── */}
           <Animated.View entering={FadeInDown.delay(200).duration(800)} style={styles.wheelSection}>
+            {/* Synastry people bar (premium) */}
+            {isPremium && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.peopleBar} style={{ marginBottom: 20 }}>
+                <Pressable
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setActiveOverlays([]); }}
+                  style={[styles.personChip, activeOverlays.length === 0 && styles.personChipActive]}
+                >
+                  <Text style={[styles.personChipText, activeOverlays.length === 0 && styles.personChipTextActive]}>YOU</Text>
+                </Pressable>
+                {people.map((person) => {
+                  const isActive = overlayPerson?.id === person.id;
+                  return (
+                    <Pressable
+                      key={person.id}
+                      onPress={() => handleSelectOverlay(person)}
+                      onLongPress={() => { Vibration.vibrate(50); handleDeletePerson(person); }}
+                      style={[styles.personChip, isActive && styles.personChipActive]}
+                    >
+                      <Text style={[styles.personChipText, isActive && styles.personChipTextActive]} numberOfLines={1}>
+                        {person.name.toUpperCase()}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+                <Pressable
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}); setShowRelTypePicker(true); }}
+                  style={styles.addSynastryBtn}
+                >
+                  <Ionicons name="add" size={20} color={PALETTE.titanium} />
+                </Pressable>
+              </ScrollView>
+            )}
+
             <View style={styles.wheelGlassContainer}>
               <NatalChartWheel
                 chart={userChart}
@@ -1093,138 +1073,42 @@ export default function ChartScreen() {
                 orientation={chartOrientation}
               />
             </View>
-
             <View style={styles.wheelMetaContainer}>
-              <Text style={styles.wheelMetaText}>
-                CELESTIAL PROJECTION · {houseSystemLabel.toUpperCase()} HOUSES
-              </Text>
-              <Text style={[styles.wheelMetaText, styles.wheelMetaTextMuted]}>
-                {zodiacSystemLabel.toUpperCase()} COORDINATE SYSTEM
+              <Text style={styles.wheelCaption}>
+                {zodiacSystemLabel.toUpperCase()} · {houseSystemLabel.toUpperCase()} HOUSES
               </Text>
             </View>
-            <Text style={styles.wheelHint}>TAP THE WHEEL TO ROTATE · PINCH TO EXPLORE SPECIFIC DEGREES</Text>
           </Animated.View>
 
-          {/* ── Big Three Summary ── */}
-          <Animated.View entering={FadeInDown.delay(200).duration(600)} style={{ width: '100%' }}>
-            <SectionAccordion
-              title="The Big Three"
-              subtitle={`${activeChart!.sun.sign.name} Sun · ${activeChart!.moon.sign.name} Moon${activeChart!.ascendant ? ` · ${activeChart!.ascendant.sign.name} Rising` : ''}`}
-              sectionKey="bigThree"
-              openSections={openSections}
-              setOpenSections={setOpenSections}
-            >
-            <View style={{ width: '100%' }}>
-              <View style={styles.bigThreeGrid}>
-                <VelvetGlassSurface style={[styles.bigThreeCard, styles.velvetBorder]} intensity={30}>
-                  <View style={styles.bigThreeIconRow}>
-                    <GradientSymbol symbol="☉" fontSize={24} w={30} h={30} />
-                    <Text style={styles.bigThreeLabel}>SUN</Text>
-                  </View>
-                  <Text style={styles.bigThreeSignText}>{activeChart!.sun.sign.name.toUpperCase()}</Text>
-                  <Text style={styles.bigThreeCoordText}>{activeChart!.sun.degree}°{String(activeChart!.sun.minute).padStart(2, '0')}'</Text>
-                </VelvetGlassSurface>
+          {/* ── 3. Your Chart Story ── */}
+          <ChartStorySection coreIdentity={coreIdentity} />
 
-                <Pressable
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    router.push('/astrology-context' as Href);
-                  }}
-                  style={({ pressed }) => [{ flex: 1, opacity: pressed ? 0.8 : 1 }]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Moon — tap to view today's cosmic context"
-                >
-                  <VelvetGlassSurface style={[styles.bigThreeCard, styles.velvetBorder]} intensity={30}>
-                    <View style={styles.bigThreeIconRow}>
-                      <GradientSymbol symbol="☽" fontSize={24} w={30} h={30} />
-                      <Text style={styles.bigThreeLabel}>MOON</Text>
-                    </View>
-                    <Text style={styles.bigThreeSignText}>{activeChart!.moon.sign.name.toUpperCase()}</Text>
-                    <Text style={styles.bigThreeCoordText}>{activeChart!.moon.degree}°{String(activeChart!.moon.minute).padStart(2, '0')}'</Text>
-                    <Text style={styles.bigThreeMoonHint}>TODAY'S SKY</Text>
-                  </VelvetGlassSurface>
-                </Pressable>
+          {/* ── 4. Big Three Modules ── */}
+          <ChartBigThreeSection
+            chart={activeChart!}
+            onMoonPress={() => router.push('/astrology-context' as Href)}
+          />
 
-                {activeChart!.ascendant && (
-                  <VelvetGlassSurface style={[styles.bigThreeCard, styles.velvetBorder]} intensity={30}>
-                    <View style={styles.bigThreeIconRow}>
-                      <GradientSymbol symbol={activeChart!.ascendant.sign.symbol} fontSize={24} w={30} h={30} />
-                      <Text style={styles.bigThreeLabel}>RISING</Text>
-                    </View>
-                    <Text style={styles.bigThreeSignText}>{activeChart!.ascendant.sign.name.toUpperCase()}</Text>
-                    <Text style={styles.bigThreeCoordText}>{activeChart!.ascendant.degree}°{String(activeChart!.ascendant.minute).padStart(2, '0')}'</Text>
-                  </VelvetGlassSurface>
-                )}
-              </View>
+          {/* ── 5. Dignity & Friction ── */}
+          {isPremium && <ChartDignitiesSection dignityAnalysis={dignityAnalysis} />}
 
-              {activeChart!.midheaven && (
-                <View style={styles.mcRow}>
-                  <Text style={styles.mcLabel}>MC Midheaven</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
-                    <GradientSymbol symbol={activeChart!.midheaven.sign.symbol} fontSize={16} w={20} h={18} />
-                    <Text style={[styles.mcSign, { marginTop: 0 }]}> {activeChart!.midheaven.sign.name}</Text>
-                  </View>
-                  <Text style={styles.mcDeg}>
-                    {activeChart!.midheaven.degree}°{String(activeChart!.midheaven.minute).padStart(2, '0')}'
-                  </Text>
-                </View>
-              )}
+          {/* ── 6. Complete Placements Ledger ── */}
+          <ChartDataLedgerSection
+            title="Complete Placements"
+            subtitle={`${zodiacSystemLabel.toUpperCase()} · ${houseSystemLabel.toUpperCase()}`}
+            rows={planetRows.map(row => ({
+              id: row.label,
+              glyph: (row.p as any)?.planet?.symbol || '•',
+              planetName: row.label,
+              signName: row.p.sign.name,
+              degree: `${row.p.degree}°${String(row.p.minute).padStart(2, '0')}'`,
+              house: row.p.house,
+              isRetrograde: !!(row.p as any).isRetrograde,
+            }))}
+          />
 
-              {/* ── Descendant + IC ── */}
-              {(descendant || ic) && (
-                <View style={styles.anglesRow}>
-                  {descendant && (
-                    <View style={styles.angleItem}>
-                      <Text style={styles.angleLabel}>DC Descendant</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 3 }}>
-                        <GradientSymbol symbol={SIGN_LOOKUP[typeof descendant.sign === 'string' ? descendant.sign : descendant.sign.name]?.symbol ?? ''} fontSize={12} w={15} h={14} />
-                        <Text style={[styles.bigThreeSign, { marginTop: 0, fontSize: 11 }]}> {typeof descendant.sign === 'string' ? descendant.sign : descendant.sign.name}</Text>
-                      </View>
-                      <Text style={styles.bigThreeDeg}>{descendant.degree}°</Text>
-                    </View>
-                  )}
-                  {ic && (
-                    <View style={styles.angleItem}>
-                      <Text style={styles.angleLabel}>IC Imum Coeli</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 3 }}>
-                        <GradientSymbol symbol={SIGN_LOOKUP[typeof ic.sign === 'string' ? ic.sign : ic.sign.name]?.symbol ?? ''} fontSize={12} w={15} h={14} />
-                        <Text style={[styles.bigThreeSign, { marginTop: 0, fontSize: 11 }]}> {typeof ic.sign === 'string' ? ic.sign : ic.sign.name}</Text>
-                      </View>
-                      <Text style={styles.bigThreeDeg}>{ic.degree}°</Text>
-                    </View>
-                  )}
-                </View>
-              )}
-            </View>
-            </SectionAccordion>
-          </Animated.View>
-
-          {/* ── Core Identity Summary ── */}
-          {coreIdentity && (
-            <Animated.View entering={FadeInDown.delay(210).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Your Chart at a Glance"
-                sectionKey="coreIdentity"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
-                <View style={[styles.patternCard, { backgroundColor: 'transparent' }]}>
-                  <Text style={[styles.patternDesc, { fontSize: 13, lineHeight: 20 }]}>
-                    {coreIdentity.overview}
-                  </Text>
-                  {coreIdentity.quickThemes.length > 0 && (
-                    <View style={{ marginTop: 14, gap: 6, alignItems: 'center' }}>
-                      {coreIdentity.quickThemes.map((t, i) => (
-                        <View key={i} style={styles.themedPlacementChip}>
-                          <Text style={styles.themedPlacementText}>{t}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              </SectionAccordion>
-            </Animated.View>
-          )}
+          {/* ── 7. Strongest Aspects ── */}
+          <ChartAspectsModuleSection aspects={sortedAspects} limit={isPremium ? 8 : 5} />
 
           {/* ── View Mode Toggle ── */}
           <Animated.View entering={FadeInDown.delay(215).duration(600)} style={{ width: '100%' }}>
@@ -1248,11 +1132,7 @@ export default function ChartScreen() {
               <Pressable
                 style={[styles.tabBtn, viewMode === 'complete' && styles.tabBtnActive]}
                 onPress={() => {
-                  if (!isPremium) {
-                    setShowPremiumModal(true);
-                  } else {
-                    setViewMode('complete');
-                  }
+                  if (!isPremium) { setShowPremiumModal(true); } else { setViewMode('complete'); }
                 }}
                 accessibilityRole="tab"
                 accessibilityLabel="Complete view"
@@ -1267,46 +1147,7 @@ export default function ChartScreen() {
             </View>
           </Animated.View>
 
-          {/* ── Calculation Transparency ── */}
-          <Animated.View entering={FadeInDown.delay(220).duration(600)} style={{ width: '100%' }}>
-            <SectionAccordion
-              title="Chart Details"
-              subtitle={`${zodiacSystemLabel} · ${houseSystemLabel}`}
-              sectionKey="chartDetails"
-              openSections={openSections}
-              setOpenSections={setOpenSections}
-            >
-              <View style={styles.transparencyBar}>
-                {activeChart?.birthData?.date && (
-                  <Text style={styles.transparencyText}>
-                    {(() => {
-                      try {
-                        const d = parseLocalDate(activeChart.birthData.date);
-                        return d?.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) ?? '';
-                      } catch { return ''; }
-                    })()}
-                    {activeChart.birthData.time ? ` at ${activeChart.birthData.time}` : ' (time unknown)'}
-                  </Text>
-                )}
-                {activeChart?.birthData?.place ? (
-                  <Text style={styles.transparencyText}>{activeChart.birthData.place}</Text>
-                ) : null}
-                {activeChart?.birthData?.timezone ? (
-                  <Text style={styles.transparencyTextMuted}>Timezone: {activeChart.birthData.timezone}</Text>
-                ) : null}
-                <Text style={styles.transparencyTextMuted}>
-                  {zodiacSystemLabel} · {houseSystemLabel}
-                </Text>
-                {activeChart?.birthData?.hasUnknownTime && (
-                  <Text style={styles.transparencyNote}>
-                    Birth time is unknown — houses, Ascendant, and angles may not be accurate.
-                  </Text>
-                )}
-              </View>
-            </SectionAccordion>
-          </Animated.View>
-
-          {/* ── Sensitive Points (Premium, Complete only) ── */}
+          {/* ── Sensitive Points (premium, complete only) ── */}
           {viewMode === 'complete' && isPremium && sensitivePoints.length > 0 && (
             <Animated.View entering={FadeInDown.delay(250).duration(600)} style={{ width: '100%' }}>
               <SectionAccordion
@@ -1316,7 +1157,8 @@ export default function ChartScreen() {
                 openSections={openSections}
                 setOpenSections={setOpenSections}
               >
-                <View style={[styles.sensitiveCard, { backgroundColor: 'transparent' }]}>
+                <VelvetGlassSurface style={styles.sensitiveCard} intensity={45}>
+                  <LinearGradient colors={theme.cardSurfaceAnchor as unknown as string[]} style={StyleSheet.absoluteFill} />
                   <View style={styles.sensitiveGrid}>
                     {sensitivePoints.map((pt) => (
                       <View key={pt.label} style={styles.sensitiveItem}>
@@ -1334,22 +1176,20 @@ export default function ChartScreen() {
                       </View>
                     ))}
                   </View>
-
                   {chironInsight && (
                     <View style={styles.insightBox}>
                       <Text style={styles.insightLabel}>Chiron Theme</Text>
-                      <MetallicText style={styles.insightTitle} color="#E8D6AE">{chironInsight.title}</MetallicText>
+                      <Text style={styles.insightTitle}>{chironInsight.title}</Text>
                       <Text style={styles.insightText}>{chironInsight.theme}</Text>
                     </View>
                   )}
-
                   {nodeInsight && (
                     <View style={styles.insightBox}>
                       <Text style={styles.insightLabel}>Node Axis</Text>
                       <Text style={styles.insightText}>{nodeInsight.fusionLine}</Text>
                     </View>
                   )}
-                </View>
+                </VelvetGlassSurface>
               </SectionAccordion>
             </Animated.View>
           )}
@@ -1367,23 +1207,17 @@ export default function ChartScreen() {
               >
                 {activeTab === tab ? (
                   <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#CFAE73">
-                    {tab === 'planets'
-                      ? `Planets (${viewMode === 'essentials' ? 7 : planetRows.length})`
-                      : tab === 'houses'
-                        ? `Houses (${houseCusps.length})`
-                        : tab === 'aspects'
-                          ? `Aspects (${sortedAspects.length})`
-                          : `Patterns (${patternCount})`}
+                    {tab === 'planets' ? `Planets (${viewMode === 'essentials' ? 7 : planetRows.length})` :
+                     tab === 'houses' ? `Houses (${houseCusps.length})` :
+                     tab === 'aspects' ? `Aspects (${sortedAspects.length})` :
+                     `Patterns (${patternCount})`}
                   </MetallicText>
                 ) : (
                   <Text style={styles.tabText}>
-                    {tab === 'planets'
-                      ? `Planets (${viewMode === 'essentials' ? 7 : planetRows.length})`
-                      : tab === 'houses'
-                        ? `Houses (${houseCusps.length})`
-                        : tab === 'aspects'
-                          ? `Aspects (${sortedAspects.length})`
-                          : `Patterns (${patternCount})`}
+                    {tab === 'planets' ? `Planets (${viewMode === 'essentials' ? 7 : planetRows.length})` :
+                     tab === 'houses' ? `Houses (${houseCusps.length})` :
+                     tab === 'aspects' ? `Aspects (${sortedAspects.length})` :
+                     `Patterns (${patternCount})`}
                   </Text>
                 )}
               </Pressable>
@@ -1393,128 +1227,102 @@ export default function ChartScreen() {
           {/* ── Planets Table ── */}
           {activeTab === 'planets' && (
             <Animated.View entering={FadeInDown.delay(300).duration(500)} style={{ width: '100%' }}>
-              <View style={styles.tableHeader}>
+              <View style={[styles.tableHeader, styles.blueprintTableHeader]}>
                 <Text style={[styles.th, { width: 140 }]}>Planet</Text>
                 <Text style={[styles.th, { flex: 2 }]}>Sign</Text>
                 <Text style={[styles.th, { flex: 1 }]}>Deg</Text>
                 <Text style={[styles.th, { flex: 1 }]}>House</Text>
               </View>
-
               {(viewMode === 'essentials' ? planetRows.slice(0, 7) : planetRows).map((row, idx) => {
                 const elColor = ELEMENT_COLORS[row.p.sign.element] || theme.textSecondary;
                 const retro = getRetrogradeFlag(row.p as any);
                 const planetSymbol = (row.p as any)?.planet?.symbol ?? '•';
-
                 return (
-                  <VelvetGlassSurface key={row.label} intensity={15} style={{marginBottom: 8, borderRadius: 24}}>
-                  <LinearGradient
-                    colors={
-                      idx % 2 === 0
-                        ? chartSurfaceGradients.rowPrimary
-                        : chartSurfaceGradients.rowSecondary
-                    }
-                    style={styles.tableRow}
-                  >
-                    <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
-                      <GradientSymbol
-                        symbol={planetSymbol}
-                        fontSize={planetSymbol.length > 1 ? 13 : 18}
-                        w={28}
-                        h={24}
-                        style={{ marginRight: 10 }}
-                      />
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.planetName, MULTI_CHAR_PLANETS.has(row.label) && { fontSize: 11 }]}>
-                          {row.label}
-                        </Text>
-                        {retro && (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                            <Ionicons name="arrow-undo-outline" size={10} color="#C9AE78" />
-                            <MetallicText style={styles.retroLabel} color="#E8D6AE">Retrograde</MetallicText>
-                          </View>
-                        )}
+                  <VelvetGlassSurface key={row.label} intensity={45} style={styles.blueprintRowShell}>
+                    <LinearGradient
+                      colors={idx % 2 === 0 ? chartSurfaceGradients.rowPrimary : chartSurfaceGradients.rowSecondary}
+                      style={styles.tableRow}
+                    >
+                      <View style={[styles.td, styles.blueprintLeadCell, { width: 140 }]}> 
+                        <View style={styles.blueprintIconSlot}>
+                          <GradientSymbol symbol={planetSymbol} fontSize={planetSymbol.length > 1 ? 13 : 18} w={28} h={24} />
+                        </View>
+                        <View style={styles.blueprintTextStack}>
+                          <Text style={[styles.planetName, MULTI_CHAR_PLANETS.has(row.label) && { fontSize: 11 }]}>{row.label}</Text>
+                          {retro && (
+                            <View style={styles.retroRow}>
+                              <Ionicons name="arrow-undo-outline" size={10} color="#C9AE78" />
+                              <MetallicText style={styles.retroLabel} color="#E8D6AE">Retrograde</MetallicText>
+                            </View>
+                          )}
+                        </View>
                       </View>
-                    </View>
-
-                    <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                      <GradientSymbol symbol={row.p.sign.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
-                      <View style={{ flex: 1 }}>
-                        <MetallicText color={elColor} style={styles.signName}>{row.p.sign.name}</MetallicText>
-                        {viewMode === 'complete' && (
-                          <Text style={styles.elementLabel}>
-                            {row.p.sign.element} · {row.p.sign.modality}
-                          </Text>
-                        )}
+                      <View style={[styles.td, styles.blueprintLeadCell, { flex: 2 }]}> 
+                        <View style={styles.blueprintSymbolSlot}>
+                          <GradientSymbol symbol={row.p.sign.symbol} fontSize={18} w={24} h={24} />
+                        </View>
+                        <View style={styles.blueprintTextStack}>
+                          <MetallicText color={elColor} style={styles.signName}>{row.p.sign.name}</MetallicText>
+                          {viewMode === 'complete' && (
+                            <Text style={styles.elementLabel}>{row.p.sign.element} · {row.p.sign.modality}</Text>
+                          )}
+                        </View>
                       </View>
-                    </View>
-
-                    <View style={[styles.td, { flex: 1 }]}>
-                      <Text style={styles.degreeText}>{row.p.degree}°</Text>
-                      <Text style={styles.minuteText}>{String(row.p.minute).padStart(2, '0')}'</Text>
-                    </View>
-
-                    <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
-                      <Text style={styles.houseNum}>{row.p.house || '—'}</Text>
-                    </View>
-                  </LinearGradient>
-                </VelvetGlassSurface>
+                      <View style={[styles.td, { flex: 1 }]}>
+                        <Text style={styles.degreeText}>{row.p.degree}°</Text>
+                        <Text style={styles.minuteText}>{String(row.p.minute).padStart(2, '0')}'</Text>
+                      </View>
+                      <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
+                        <Text style={styles.houseNum}>{row.p.house || '—'}</Text>
+                      </View>
+                    </LinearGradient>
+                  </VelvetGlassSurface>
                 );
               })}
-
-              {/* Sensitive Points (table section — premium, complete only) */}
+              {/* Sensitive Points in planets table (complete, premium) */}
               {viewMode === 'complete' && isPremium && sensitivePoints.length > 0 && (
                 <>
                   <View style={styles.pointsDivider}>
                     <Text style={styles.pointsLabel}>Sensitive Points</Text>
                   </View>
-
                   {sensitivePoints.map((pt, idx) => (
-                    <LinearGradient
-                      key={pt.label}
-                      colors={
-                        idx % 2 === 0
-                          ? chartSurfaceGradients.rowPrimary
-                          : chartSurfaceGradients.rowSecondary
-                      }
-                      style={styles.tableRow}
-                    >
-                      <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
-                        <View style={styles.sensitiveIconBox}>
-                          {pt.icon ? <GradientIcon size={18}>{pt.icon as React.ReactElement}</GradientIcon> : null}
+                    <VelvetGlassSurface key={pt.label} intensity={45} style={styles.blueprintRowShell}>
+                      <LinearGradient
+                        colors={idx % 2 === 0 ? chartSurfaceGradients.rowPrimary : chartSurfaceGradients.rowSecondary}
+                        style={styles.tableRow}
+                      >
+                        <View style={[styles.td, styles.blueprintLeadCell, { width: 140 }]}> 
+                          <View style={styles.sensitiveIconBox}>
+                            {pt.icon ? <GradientIcon size={18}>{pt.icon as React.ReactElement}</GradientIcon> : null}
+                          </View>
+                          <View style={styles.blueprintTextStack}>
+                            <Text style={styles.planetName}>{pt.label}</Text>
+                            {pt.retrograde && (
+                              <View style={styles.retroRow}>
+                                <Ionicons name="arrow-undo-outline" size={10} color="#C9AE78" />
+                                <MetallicText style={styles.retroLabel} color="#E8D6AE">Retrograde</MetallicText>
+                              </View>
+                            )}
+                          </View>
                         </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.planetName}>{pt.label.toUpperCase()}</Text>
-                          {pt.retrograde && (
-                            <View style={styles.retroRow}>
-                              <Ionicons name="arrow-undo-outline" size={10} color={PALETTE.titanium} />
-                              <MetallicText style={styles.retroLabel} color="#E8D6AE">RETROGRADE</MetallicText>
-                            </View>
-                          )}
+                        <View style={[styles.td, styles.blueprintLeadCell, { flex: 2 }]}> 
+                          <View style={styles.blueprintSymbolSlot}>
+                            <GradientSymbol symbol={pt.signSymbol} fontSize={18} w={24} h={24} />
+                          </View>
+                          <View style={styles.blueprintTextStack}>
+                            <MetallicText color={ELEMENT_COLORS[pt.element] || theme.textSecondary} style={styles.signName}>{pt.sign}</MetallicText>
+                            <Text style={styles.elementLabel}>{pt.element}</Text>
+                          </View>
                         </View>
-                      </View>
-
-                      <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                        <GradientSymbol symbol={pt.signSymbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
-                        <View style={{ flex: 1 }}>
-                          <MetallicText
-                            color={ELEMENT_COLORS[pt.element] || theme.textSecondary}
-                            style={styles.signNameText}
-                          >
-                            {pt.sign.toUpperCase()}
-                          </MetallicText>
-                          <Text style={styles.elementLabelText}>{pt.element.toUpperCase()}</Text>
+                        <View style={[styles.td, { flex: 1 }]}> 
+                          <Text style={styles.degreeText}>{pt.degree}°</Text>
+                          <Text style={styles.minuteText}>{String(pt.minute).padStart(2, '0')}'</Text>
                         </View>
-                      </View>
-
-                      <View style={[styles.td, { flex: 1 }]}>
-                        <Text style={styles.degreeValueText}>{pt.degree}°</Text>
-                        <Text style={styles.minuteValueText}>{String(pt.minute).padStart(2, '0')}'</Text>
-                      </View>
-
-                      <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
-                        <Text style={styles.houseValueText}>{pt.house || '—'}</Text>
-                      </View>
-                    </LinearGradient>
+                        <View style={[styles.td, { flex: 1, alignItems: 'center' }]}> 
+                          <Text style={styles.houseNum}>{pt.house || '—'}</Text>
+                        </View>
+                      </LinearGradient>
+                    </VelvetGlassSurface>
                   ))}
                 </>
               )}
@@ -1523,80 +1331,66 @@ export default function ChartScreen() {
 
           {/* ── Houses Table ── */}
           {activeTab === 'houses' && (
-            <Animated.View entering={FadeInDown.delay(300).duration(600)} style={{ width: '100%' }}>
+            <Animated.View entering={FadeInDown.delay(300).duration(500)} style={{ width: '100%' }}>
               {houseCusps.length === 0 ? (
-                <View style={styles.emptyBlueprintState}>
+                <View style={styles.emptyState}>
                   <Ionicons name="alert-circle-outline" size={32} color={theme.textMuted} />
-                  <Text style={styles.emptyBlueprintText}>
-                    HOUSE PRECISION REQUIRES AN INITIALIZED BIRTH TIME.
-                  </Text>
+                  <Text style={styles.emptyText}>House positions require a known birth time.</Text>
                 </View>
               ) : (
                 <>
-                  <View style={styles.editorialTableMeta}>
-                    <Ionicons name="information-circle-outline" size={14} color={PALETTE.titanium} />
-                    <Text style={styles.editorialMetaText}>
-                      SYSTEM: {houseSystemLabel.toUpperCase()} · ZODIAC: {zodiacSystemLabel.toUpperCase()}
+                  {activeChart?.houseSystem && (
+                    <Text style={styles.houseSystemLabel}>
+                      {activeChart.houseSystem === 'whole-sign' ? 'Whole Sign' :
+                       activeChart.houseSystem === 'equal-house' ? 'Equal House' :
+                       activeChart.houseSystem.charAt(0).toUpperCase() + activeChart.houseSystem.slice(1)} Houses
                     </Text>
+                  )}
+                  <View style={[styles.tableHeader, styles.blueprintTableHeader]}>
+                    <Text style={[styles.th, { flex: 1 }]}>House</Text>
+                    <Text style={[styles.th, { flex: 2 }]}>Sign</Text>
+                    <Text style={[styles.th, { flex: 1 }]}>Deg</Text>
+                    <Text style={[styles.th, { flex: 3 }]}>Theme</Text>
                   </View>
-
-                  <View style={styles.tableHeader}>
-                    <Text style={[styles.thText, { flex: 1 }]}>INDEX</Text>
-                    <Text style={[styles.thText, { flex: 2 }]}>CUSP SIGN</Text>
-                    <Text style={[styles.thText, { flex: 1 }]}>DEGREE</Text>
-                    <Text style={[styles.thText, { flex: 3 }]}>DOMAIN</Text>
-                  </View>
-
                   {houseCusps.map((cusp: HouseCuspType, idx: number) => {
                     const houseInfo = HOUSE_MEANINGS[cusp.house as keyof typeof HOUSE_MEANINGS];
                     const elColor = ELEMENT_COLORS[cusp.sign.element] || theme.textSecondary;
-                    const occupants = planetsByHouse.get(cusp.house) || [];
+                    const simpleH = (activeChart as any)?.houses?.[idx];
+                    const deg = simpleH ? Math.floor(simpleH.degree) : Math.floor(cusp.longitude % 30);
+                    const min = simpleH ? Math.round((simpleH.degree % 1) * 60) : Math.floor((cusp.longitude % 1) * 60);
+                    const isWholeSign = activeChart?.houseSystem === 'whole-sign';
                     const isAngular = [1, 4, 7, 10].includes(cusp.house);
-
                     return (
-                      <VelvetGlassSurface
-                        key={cusp.house}
-                        intensity={15}
-                        style={[styles.houseRowContainer, isAngular && styles.angularHighlight]}
-                      >
+                      <VelvetGlassSurface key={cusp.house} intensity={45} style={[styles.houseRowContainer, isAngular && styles.angularHighlight]}>
                         <LinearGradient
                           colors={idx % 2 === 0 ? chartSurfaceGradients.rowPrimary : chartSurfaceGradients.rowSecondary}
                           style={styles.tableRow}
                         >
                           <View style={[styles.td, { flex: 1, alignItems: 'center' }]}> 
-                            <View style={[styles.houseBadge, isAngular && { borderColor: PALETTE.gold }]}> 
-                              <Text style={[styles.houseNumText, isAngular && { color: PALETTE.gold }]}> 
-                                {cusp.house}
-                              </Text>
+                            <View style={styles.houseBadge}><Text style={styles.houseNumText}>{cusp.house}</Text></View>
+                          </View>
+                          <View style={[styles.td, styles.blueprintLeadCell, { flex: 2 }]}> 
+                            <View style={styles.blueprintSymbolSlot}>
+                              <GradientSymbol symbol={cusp.sign.symbol} fontSize={18} w={24} h={24} />
+                            </View>
+                            <View style={styles.blueprintTextStack}>
+                              <MetallicText color={elColor} style={styles.signName}>{cusp.sign.name}</MetallicText>
                             </View>
                           </View>
-
-                          <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}> 
-                            <GradientSymbol symbol={cusp.sign.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
-                            <View style={{ flex: 1 }}>
-                              <MetallicText color={elColor} style={styles.signNameText}>
-                                {cusp.sign.name.toUpperCase()}
-                              </MetallicText>
-                            </View>
-                          </View>
-
                           <View style={[styles.td, { flex: 1 }]}> 
-                            <Text style={styles.degreeValueText}>
-                              {activeChart?.houseSystem === 'whole-sign' ? '0°' : `${Math.floor(cusp.longitude % 30)}°`}
-                            </Text>
+                            <Text style={styles.degreeText}>{isWholeSign ? '0°' : `${deg}°${String(min).padStart(2, '0')}'`}</Text>
                           </View>
-
                           <View style={[styles.td, { flex: 3 }]}> 
-                            <Text style={styles.houseThemeTitle}>{houseInfo?.theme.toUpperCase() || ''}</Text>
-                            {occupants.length > 0 && (
+                            <Text style={styles.houseTheme}>{houseInfo?.theme || ''}</Text>
+                            {planetsByHouse.get(cusp.house)?.length ? (
                               <View style={styles.occupantCloud}>
-                                {occupants.map((p) => (
-                                  <View key={p} style={styles.occupantPill}>
-                                    <Text style={styles.occupantPillText}>{p.toUpperCase()}</Text>
+                                {planetsByHouse.get(cusp.house)!.map((planet) => (
+                                  <View key={`${cusp.house}-${planet}`} style={styles.occupantPill}>
+                                    <Text style={styles.occupantPillText}>{planet}</Text>
                                   </View>
                                 ))}
                               </View>
-                            )}
+                            ) : null}
                           </View>
                         </LinearGradient>
                       </VelvetGlassSurface>
@@ -1617,149 +1411,72 @@ export default function ChartScreen() {
                 </View>
               ) : (
                 <>
-                  <View style={styles.tableHeader}>
+                  <View style={[styles.tableHeader, styles.blueprintTableHeader]}>
                     <Text style={[styles.th, { flex: 2 }]}>Planet 1</Text>
                     <Text style={[styles.th, { flex: 2 }]}>Aspect</Text>
                     <Text style={[styles.th, { flex: 2 }]}>Planet 2</Text>
                     <Text style={[styles.th, { flex: 1 }]}>Orb</Text>
                   </View>
-
                   {sortedAspects.map((asp: Aspect, idx: number) => {
                     const natureColor = ASPECT_NATURE_COLORS[asp.type.nature] || theme.textSecondary;
-
                     const renderPlanetIcon = (planet: { name: string; symbol: string }) => {
-                      if (planet.name === 'Chiron') {
-                        return (
-                          <View style={styles.aspectIconWrap}>
-                            <GradientIcon size={18}><ChironIcon size={18} color={'#000'} /></GradientIcon>
-                          </View>
-                        );
-                      }
-                      if (planet.name === 'North Node') {
-                        return (
-                          <View style={styles.aspectIconWrap}>
-                            <GradientIcon size={18}><NorthNodeIcon size={18} color={'#000'} /></GradientIcon>
-                          </View>
-                        );
-                      }
-                      if (planet.name === 'South Node') {
-                        return (
-                          <View style={styles.aspectIconWrap}>
-                            <GradientIcon size={18}><SouthNodeIcon size={18} color={'#000'} /></GradientIcon>
-                          </View>
-                        );
-                      }
-                      if (MULTI_CHAR_PLANETS.has(planet.name)) {
-                        return <GradientSymbol symbol={planet.symbol} fontSize={11} w={24} h={24} style={{ marginRight: 6 }} />;
-                      }
-                      return <GradientSymbol symbol={planet.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />;
+                      if (planet.name === 'Chiron') return <View style={styles.aspectIconWrap}><GradientIcon size={18}><ChironIcon size={18} color={'#000'} /></GradientIcon></View>;
+                      if (planet.name === 'North Node') return <View style={styles.aspectIconWrap}><GradientIcon size={18}><NorthNodeIcon size={18} color={'#000'} /></GradientIcon></View>;
+                      if (planet.name === 'South Node') return <View style={styles.aspectIconWrap}><GradientIcon size={18}><SouthNodeIcon size={18} color={'#000'} /></GradientIcon></View>;
+                      if (MULTI_CHAR_PLANETS.has(planet.name)) return <GradientSymbol symbol={planet.symbol} fontSize={11} w={24} h={24} />;
+                      return <GradientSymbol symbol={planet.symbol} fontSize={18} w={24} h={24} />;
                     };
-
                     return (
                       <React.Fragment key={`${asp.planet1.name}-${asp.type.name}-${asp.planet2.name}-${idx}`}>
-                      <LinearGradient
-                        colors={
-                          idx % 2 === 0
-                            ? chartSurfaceGradients.rowPrimary
-                            : chartSurfaceGradients.rowSecondary
-                        }
-                        style={styles.tableRow}
-                      >
-                        <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                          {renderPlanetIcon(asp.planet1)}
-                          <Text
-                            style={[
-                              styles.aspectPlanetName,
-                              { flex: 1 },
-                              MULTI_CHAR_PLANETS.has(asp.planet1.name) && { fontSize: 10 },
-                            ]}
+                        <VelvetGlassSurface intensity={45} style={styles.blueprintRowShell}>
+                          <LinearGradient
+                            colors={idx % 2 === 0 ? chartSurfaceGradients.rowPrimary : chartSurfaceGradients.rowSecondary}
+                            style={styles.tableRow}
                           >
-                            {asp.planet1.name}
-                          </Text>
-                        </View>
-
-                        <View style={[styles.td, { flex: 2, alignItems: 'center' }]}>
-                          <GradientSymbol
-                            symbol={SAFE_ASPECT_SYMBOLS[asp.type.name] ?? asp.type.symbol}
-                            fontSize={18}
-                            w={24}
-                            h={24}
-                            gradient={asp.type.nature === 'Challenging' ? RED_GRAD_PROPS : undefined}
-                          />
-                          <MetallicText color={natureColor} style={styles.aspectName}>{asp.type.name}</MetallicText>
-                          <MetallicText color={natureColor} style={styles.aspectNature}>{asp.type.nature}</MetallicText>
-                        </View>
-
-                        <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                          {renderPlanetIcon(asp.planet2)}
-                          <Text
-                            style={[
-                              styles.aspectPlanetName,
-                              { flex: 1 },
-                              MULTI_CHAR_PLANETS.has(asp.planet2.name) && { fontSize: 10 },
-                            ]}
-                          >
-                            {asp.planet2.name}
-                          </Text>
-                        </View>
-
-                        <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
-                          {asp.orb < 2 ? (
-                            <MetallicText color="#9ACD32" style={styles.orbText}>
-                              {asp.orb.toFixed(1)}°
-                            </MetallicText>
-                          ) : (
-                            <Text
-                              style={[
-                                styles.orbText,
-                                {
-                                  color: asp.orb < 5 ? theme.primary : theme.textSecondary,
-                                },
-                              ]}
-                            >
-                              {asp.orb.toFixed(1)}°
-                            </Text>
-                          )}
-                          {asp.isApplying && <Text style={styles.applyingLabel}>applying</Text>}
-                        </View>
-                      </LinearGradient>
-                      {isPremium && (
-                        <Text style={styles.aspectInterp}>
-                          {getAspectInterpretation(asp)}
-                        </Text>
-                      )}
-                    </React.Fragment>
+                            <View style={[styles.td, styles.blueprintLeadCell, { flex: 2 }]}> 
+                              <View style={styles.aspectIconWrap}>{renderPlanetIcon(asp.planet1)}</View>
+                              <View style={styles.blueprintTextStack}>
+                                <Text style={[styles.aspectPlanetName, MULTI_CHAR_PLANETS.has(asp.planet1.name) && { fontSize: 10 }]}>{asp.planet1.name}</Text>
+                              </View>
+                            </View>
+                            <View style={[styles.td, { flex: 2, alignItems: 'center' }]}> 
+                              <GradientSymbol symbol={SAFE_ASPECT_SYMBOLS[asp.type.name] ?? asp.type.symbol} fontSize={18} w={24} h={24} gradient={asp.type.nature === 'Challenging' ? RED_GRAD_PROPS : undefined} />
+                              <MetallicText color={natureColor} style={styles.aspectName}>{asp.type.name}</MetallicText>
+                              <Text style={[styles.aspectNature, { color: natureColor }]}>{asp.type.nature}</Text>
+                            </View>
+                            <View style={[styles.td, styles.blueprintLeadCell, { flex: 2 }]}> 
+                              <View style={styles.aspectIconWrap}>{renderPlanetIcon(asp.planet2)}</View>
+                              <View style={styles.blueprintTextStack}>
+                                <Text style={[styles.aspectPlanetName, MULTI_CHAR_PLANETS.has(asp.planet2.name) && { fontSize: 10 }]}>{asp.planet2.name}</Text>
+                              </View>
+                            </View>
+                            <View style={[styles.td, { flex: 1, alignItems: 'center' }]}> 
+                              {asp.orb < 2 ? (
+                                <MetallicText color="#9ACD32" style={styles.orbText}>{asp.orb.toFixed(1)}°</MetallicText>
+                              ) : (
+                                <Text style={[styles.orbText, { color: asp.orb < 5 ? theme.primary : theme.textSecondary }]}>{asp.orb.toFixed(1)}°</Text>
+                              )}
+                              {asp.isApplying && <Text style={styles.applyingLabel}>applying</Text>}
+                            </View>
+                          </LinearGradient>
+                          {isPremium && <Text style={styles.aspectInterp}>{getAspectInterpretation(asp)}</Text>}
+                        </VelvetGlassSurface>
+                      </React.Fragment>
                     );
                   })}
-
-                  <View style={styles.legend}>
+                  <VelvetGlassSurface style={styles.legend} intensity={45}>
+                    <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={StyleSheet.absoluteFill} />
                     <Text style={styles.legendTitle}>Aspect Legend</Text>
-                    <View style={styles.legendRow}>
-                      <View style={[styles.legendDot, { backgroundColor: '#9ACD32' }]} />
-                      <Text style={styles.legendText}>Harmonious (trines, sextiles)</Text>
-                    </View>
-                    <View style={styles.legendRow}>
-                      <View style={[styles.legendDot, { backgroundColor: '#E07A7A' }]} />
-                      <Text style={styles.legendText}>Challenging (squares, oppositions)</Text>
-                    </View>
-                    <View style={styles.legendRow}>
-                      <View style={[styles.legendDot, { backgroundColor: theme.isDark ? '#FFFFFF' : theme.textPrimary }]} />
-                      <Text style={styles.legendText}>Neutral (conjunctions)</Text>
-                    </View>
+                    <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: '#9ACD32' }]} /><Text style={styles.legendText}>Harmonious (trines, sextiles)</Text></View>
+                    <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: '#E07A7A' }]} /><Text style={styles.legendText}>Challenging (squares, oppositions)</Text></View>
+                    <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: theme.isDark ? '#FFFFFF' : theme.textPrimary }]} /><Text style={styles.legendText}>Neutral (conjunctions)</Text></View>
                     <Text style={styles.legendNote}>Tighter orbs (lower numbers) = stronger influence</Text>
-                  </View>
-
+                  </VelvetGlassSurface>
                   {!isPremium && hiddenAspectCount > 0 && (
-                    <Pressable
-                      onPress={() => router.push('/(tabs)/premium' as Href)}
-                      accessibilityRole="button"
-                      accessibilityLabel="Unlock more aspects"
-                    >
-                      <LinearGradient colors={['rgba(232, 214, 174,0.1)', 'rgba(232, 214, 174,0.05)']} style={styles.aspectUpsell}>
+                    <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock more aspects">
+                      <LinearGradient colors={chartSurfaceGradients.panel} style={styles.aspectUpsell}>
                         <Ionicons name="sparkles-outline" size={16} color={theme.textPrimary} />
-                        <MetallicText style={styles.aspectUpsellText} color="#CFAE73">
-                          {hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more
-                        </MetallicText>
+                        <MetallicText style={styles.aspectUpsellText} color="#CFAE73">{hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more</MetallicText>
                         <Ionicons name="chevron-forward-outline" size={16} color={theme.textPrimary} />
                       </LinearGradient>
                     </Pressable>
@@ -1772,13 +1489,10 @@ export default function ChartScreen() {
           {/* ── Patterns Tab ── */}
           {activeTab === 'patterns' && chartPatterns && (
             <Animated.View entering={FadeInDown.delay(300).duration(500)} style={{ width: '100%' }}>
-              {/* Chart Ruler (premium) */}
               {isPremium && chartPatterns.chartRuler && (
-                <LinearGradient colors={chartSurfaceGradients.goldPanelStrong} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="ribbon-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                    <Text style={styles.patternTitle}>Chart Ruler</Text>
-                  </View>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.goldPanelStrong} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="ribbon-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Chart Ruler</Text></View>
                   <View style={styles.patternHighlight}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <GradientSymbol symbol={chartPatterns.chartRuler.planetSymbol} fontSize={15} w={18} h={17} />
@@ -1790,437 +1504,207 @@ export default function ChartScreen() {
                   <Text style={styles.patternDesc}>{chartPatterns.chartRuler.description}</Text>
                   <View style={styles.tooltipBox}>
                     <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                    <Text style={styles.tooltipText}>
-                      Your chart ruler is the planet that rules your rising sign (<Text style={{ fontFamily: ZODIAC_FAMILY, color: theme.isDark ? '#FFFFFF' : theme.textPrimary }}>{chartPatterns.chartRuler.risingSymbol}</Text>{' '}
-                      {chartPatterns.chartRuler.risingSign}). Its placement colors your entire life path.
-                    </Text>
+                    <Text style={styles.tooltipText}>Your chart ruler is the planet that rules your rising sign (<Text style={{ fontFamily: ZODIAC_FAMILY, color: theme.isDark ? '#FFFFFF' : theme.textPrimary }}>{chartPatterns.chartRuler.risingSymbol}</Text> {chartPatterns.chartRuler.risingSign}). Its placement colors your entire life path.</Text>
                   </View>
-                </LinearGradient>
+                </VelvetGlassSurface>
               )}
-
-              {/* Part of Fortune (premium) */}
               {isPremium && partOfFortune && (
-                <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="sunny-outline" size={20} color={theme.textPrimary} style={{ marginRight: 10 }} />
-                    <Text style={styles.patternTitle}>Point of Flow</Text>
-                  </View>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="sunny-outline" size={20} color={theme.textPrimary} style={{ marginRight: 10 }} /><Text style={styles.patternTitle}>Point of Flow</Text></View>
                   <View style={styles.patternHighlight}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <GradientSymbol symbol={partOfFortune.sign?.symbol ?? ''} fontSize={15} w={18} h={17} />
                       <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°{partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}</MetallicText>
                     </View>
                   </View>
-                  <Text style={styles.patternDesc}>
-                    This point (traditionally "Part of Fortune") reflects where you tend to find ease, natural resilience,
-                    and a felt sense of alignment. Its sign and house shape how this feels in daily life.
-                  </Text>
-                  <View style={styles.tooltipBox}>
-                    <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                    <Text style={styles.tooltipText}>Calculated from your Sun, Moon, and Ascendant. A reflective archetype — not a prediction.</Text>
-                  </View>
-                </LinearGradient>
+                  <Text style={styles.patternDesc}>This point reflects where you tend to find ease, natural resilience, and a felt sense of alignment. Its sign and house shape how this feels in daily life.</Text>
+                  <View style={styles.tooltipBox}><Ionicons name="information-circle-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>Calculated from your Sun, Moon, and Ascendant. A reflective archetype — not a prediction.</Text></View>
+                </VelvetGlassSurface>
               )}
-
-              {/* Dominant Planet (premium) */}
               {isPremium && dominantPlacement && chartPatterns && (
-                <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="star-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                    <Text style={styles.patternTitle}>Dominant Planet</Text>
-                  </View>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="star-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Dominant Planet</Text></View>
                   <View style={styles.patternHighlight}>
                     <MetallicText style={styles.patternHighlightText} color="#CFAE73">
-                      {safeString((dominantPlacement as any).planet)} in {(dominantPlacement as any).sign?.name ?? safeString((dominantPlacement as any).sign)} ·{' '}
-                      {Math.floor((dominantPlacement as any).degree ?? 0)}°
-                      {(dominantPlacement as any).house ? ` · House ${(dominantPlacement as any).house}` : ''}
+                      {safeString((dominantPlacement as any).planet)} in {(dominantPlacement as any).sign?.name ?? safeString((dominantPlacement as any).sign)} · {Math.floor((dominantPlacement as any).degree ?? 0)}°{(dominantPlacement as any).house ? ` · House ${(dominantPlacement as any).house}` : ''}
                     </MetallicText>
                   </View>
-                  <Text style={styles.patternDesc}>
-                    {chartPatterns.dominantFactors.descriptions.planet}
-                  </Text>
-                  <View style={styles.tooltipBox}>
-                    <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                    <Text style={styles.tooltipText}>Scored by aspect count, tight aspects (under 2{'\u00b0'}), and angular house placement.</Text>
-                  </View>
-                </LinearGradient>
+                  <Text style={styles.patternDesc}>{chartPatterns.dominantFactors.descriptions.planet}</Text>
+                  <View style={styles.tooltipBox}><Ionicons name="information-circle-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>Scored by aspect count, tight aspects (under 2°), and angular house placement.</Text></View>
+                </VelvetGlassSurface>
               )}
-
-              {/* Pattern Depth Upsell (free users only) */}
               {!isPremium && (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock pattern depth">
-                  <LinearGradient
-                    colors={['rgba(232,214,174,0.08)', 'rgba(232,214,174,0.03)']}
-                    style={[styles.patternCard, { borderWidth: 1, borderColor: 'rgba(232, 214, 174,0.18)' }]}
-                  >
+                  <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.patternCard, { borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }]}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Ionicons name="lock-closed-outline" size={16} color={theme.textPrimary} />
                       <View style={{ flex: 1 }}>
                         <MetallicText style={{ fontSize: 14, fontWeight: '600' }} color="#CFAE73">More patterns in your chart</MetallicText>
-                        <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 3, lineHeight: 18 }}>
-                          Chart ruler, dominant planet, sensitive points, stelliums, retrogrades, and Point of Flow
-                        </Text>
+                        <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 3, lineHeight: 18 }}>Chart ruler, dominant planet, sensitive points, stelliums, retrogrades, and Point of Flow</Text>
                       </View>
                       <Ionicons name="arrow-forward-outline" size={16} color={theme.textPrimary} />
                     </View>
                   </LinearGradient>
                 </Pressable>
               )}
-
-              {/* Stelliums (premium) */}
-              {isPremium &&
-                chartPatterns.stelliums.map((stellium, idx) => (
-                  <LinearGradient
-                    key={`stellium-${idx}`}
-                    colors={chartSurfaceGradients.goldPanel}
-                    style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}
-                  >
-                    <View style={styles.patternHeader}>
-                      <Ionicons name="flash-outline" size={16} color="#C9AE78" style={styles.patternIcon} />
-                      <Text style={styles.patternTitle}>{stellium.cardTitle}</Text>
-                    </View>
-                    <View style={styles.patternHighlight}>
-                      <MetallicText style={styles.patternHighlightText} color="#CFAE73">{stellium.planets.join(', ')}</MetallicText>
-                    </View>
-                    <Text style={styles.patternDesc}>{stellium.subtitle}</Text>
-                    <Text style={[styles.patternDesc, { marginTop: 8 }]}>{stellium.description}</Text>
-                    {stellium.narrative ? (
-                      <Text style={[styles.patternDesc, { marginTop: 10, lineHeight: 22 }]}>{stellium.narrative}</Text>
-                    ) : null}
-                    {stellium.planetMixNote && (
-                      <Text style={[styles.patternDesc, { marginTop: 6, opacity: 0.8 }]}>{stellium.planetMixNote}</Text>
-                    )}
-                    {stellium.retroNote && (
-                      <Text style={[styles.patternDesc, { marginTop: 6, opacity: 0.8 }]}>{stellium.retroNote}</Text>
-                    )}
-                    {stellium.elementCloser && (
-                      <View style={styles.tooltipBox}>
-                        <Ionicons name="leaf-outline" size={14} color={theme.textMuted} />
-                        <Text style={styles.tooltipText}>{stellium.elementCloser}</Text>
-                      </View>
-                    )}
-                  </LinearGradient>
-                ))}
-
-              {isPremium && chartPatterns.stelliumOverflow && (
-                <View style={styles.tooltipBox}>
-                  <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                  <Text style={styles.tooltipText}>Additional stelliums detected but not shown — your chart has several concentrated areas.</Text>
-                </View>
-              )}
-
-              {/* Conjunction Clusters (premium) */}
-              {isPremium &&
-                chartPatterns.conjunctionClusters.map((cluster, idx) => (
-                  <LinearGradient
-                    key={`cluster-${idx}`}
-                    colors={chartSurfaceGradients.panel}
-                    style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}
-                  >
-                    <View style={styles.patternHeader}>
-                      <Ionicons name="link-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                      <Text style={styles.patternTitle}>Conjunction Cluster</Text>
-                    </View>
-                    <View style={styles.patternHighlight}>
-                      <MetallicText style={styles.patternHighlightText} color="#CFAE73">{cluster.planets.join(' · ')}</MetallicText>
-                    </View>
-                    <Text style={styles.patternDesc}>{cluster.description}</Text>
-                    <View style={styles.tooltipBox}>
-                      <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                      <Text style={styles.tooltipText}>Tightest orb: {cluster.tightestOrb.toFixed(1)}° — these planets blend their energies closely.</Text>
-                    </View>
-                  </LinearGradient>
-                ))}
-
-              {/* Retrograde Emphasis (premium) */}
+              {isPremium && chartPatterns.stelliums.map((stellium, idx) => (
+                <VelvetGlassSurface key={`stellium-${idx}`} style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.goldPanel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="flash-outline" size={16} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>{stellium.cardTitle}</Text></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{stellium.planets.join(', ')}</MetallicText></View>
+                  <Text style={styles.patternDesc}>{stellium.subtitle}</Text>
+                  <Text style={[styles.patternDesc, { marginTop: 8 }]}>{stellium.description}</Text>
+                  {stellium.narrative ? <Text style={[styles.patternDesc, { marginTop: 10, lineHeight: 22 }]}>{stellium.narrative}</Text> : null}
+                  {stellium.planetMixNote && <Text style={[styles.patternDesc, { marginTop: 6, opacity: 0.8 }]}>{stellium.planetMixNote}</Text>}
+                  {stellium.retroNote && <Text style={[styles.patternDesc, { marginTop: 6, opacity: 0.8 }]}>{stellium.retroNote}</Text>}
+                  {stellium.elementCloser && <View style={styles.tooltipBox}><Ionicons name="leaf-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>{stellium.elementCloser}</Text></View>}
+                </VelvetGlassSurface>
+              ))}
+              {isPremium && chartPatterns.conjunctionClusters.map((cluster, idx) => (
+                <VelvetGlassSurface key={`cluster-${idx}`} style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="link-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Conjunction Cluster</Text></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{cluster.planets.join(' · ')}</MetallicText></View>
+                  <Text style={styles.patternDesc}>{cluster.description}</Text>
+                  <View style={styles.tooltipBox}><Ionicons name="information-circle-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>Tightest orb: {cluster.tightestOrb.toFixed(1)}° — these planets blend their energies closely.</Text></View>
+                </VelvetGlassSurface>
+              ))}
               {isPremium && chartPatterns.retrogradeEmphasis.count >= 3 && (
-                <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="arrow-undo-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                    <Text style={styles.patternTitle}>Retrograde Emphasis</Text>
-                  </View>
-                  <View style={styles.patternHighlight}>
-                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
-                      {chartPatterns.retrogradeEmphasis.count} planets retrograde: {chartPatterns.retrogradeEmphasis.planets.join(', ')}
-                    </MetallicText>
-                  </View>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="arrow-undo-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Retrograde Emphasis</Text></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{chartPatterns.retrogradeEmphasis.count} planets retrograde: {chartPatterns.retrogradeEmphasis.planets.join(', ')}</MetallicText></View>
                   <Text style={styles.patternDesc}>{chartPatterns.retrogradeEmphasis.description}</Text>
-                </LinearGradient>
+                </VelvetGlassSurface>
               )}
-
-              {/* Element Balance (free) */}
               {chartPatterns.elementBalance && (
-                <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="flame-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                    <Text style={styles.patternTitle}>Element Balance</Text>
-                  </View>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="flame-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Element Balance</Text></View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }]}>
                     {Object.entries(chartPatterns.elementBalance.counts).map(([el, count]) => {
                       const isDominant = el === chartPatterns.elementBalance.dominant;
                       const elColor = ELEMENT_COLORS[el] || theme.primary;
                       return isDominant ? (
-                        <MetallicText
-                          key={el}
-                          style={[styles.patternHighlightText, { fontSize: 15 }]}
-                          color={theme.isDark ? elColor : '#1A1815'}
-                        >
-                          {el}: {count as number}
-                        </MetallicText>
+                        <MetallicText key={el} style={[styles.patternHighlightText, { fontSize: 15 }]} color={theme.isDark ? elColor : '#1A1815'}>{el}: {count as number}</MetallicText>
                       ) : (
-                        <Text
-                          key={el}
-                          style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}
-                        >
-                          {el}: {count as number}
-                        </Text>
+                        <Text key={el} style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}>{el}: {count as number}</Text>
                       );
                     })}
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.elementBalance.description}</Text>
-                  {chartPatterns.elementBalance.missing && (
-                    <View style={styles.tooltipBox}>
-                      <Ionicons name="water-outline" size={14} color={theme.textMuted} />
-                      <Text style={styles.tooltipText}>No planets in {chartPatterns.elementBalance.missing} — this element's themes may require more conscious effort.</Text>
-                    </View>
-                  )}
-                </LinearGradient>
+                  {chartPatterns.elementBalance.missing && <View style={styles.tooltipBox}><Ionicons name="water-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>No planets in {chartPatterns.elementBalance.missing} — this element's themes may require more conscious effort.</Text></View>}
+                </VelvetGlassSurface>
               )}
-
-              {/* Modality Balance (free) */}
               {chartPatterns.modalityBalance && (
-                <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="options-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                    <Text style={styles.patternTitle}>Modality Balance</Text>
-                  </View>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="options-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Modality Balance</Text></View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 16, justifyContent: 'center' }]}>
                     {Object.entries(chartPatterns.modalityBalance.counts).map(([mod, count]) => {
                       const isDominant = mod === chartPatterns.modalityBalance.dominant;
                       return isDominant ? (
-                        <MetallicText
-                          key={mod}
-                          style={[styles.patternHighlightText, { fontSize: 15 }]}
-                          color={theme.isDark ? "#CFAE73" : '#1A1815'}
-                        >
-                          {mod}: {count as number}
-                        </MetallicText>
+                        <MetallicText key={mod} style={[styles.patternHighlightText, { fontSize: 15 }]} color={theme.isDark ? '#CFAE73' : '#1A1815'}>{mod}: {count as number}</MetallicText>
                       ) : (
-                        <Text
-                          key={mod}
-                          style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}
-                        >
-                          {mod}: {count as number}
-                        </Text>
+                        <Text key={mod} style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}>{mod}: {count as number}</Text>
                       );
                     })}
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.modalityBalance.description}</Text>
-                </LinearGradient>
+                </VelvetGlassSurface>
               )}
-
-              {/* Polarity Balance (free) */}
               {chartPatterns.polarityBalance && (
-                <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="git-compare-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                    <Text style={styles.patternTitle}>Polarity Balance</Text>
-                  </View>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="git-compare-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Polarity Balance</Text></View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 24, justifyContent: 'center' }]}>
-                    {[
-                      { label: 'Masculine', count: chartPatterns.polarityBalance.masculine },
-                      { label: 'Feminine', count: chartPatterns.polarityBalance.feminine },
-                    ].map(({ label, count }) => {
+                    {[{ label: 'Masculine', count: chartPatterns.polarityBalance.masculine }, { label: 'Feminine', count: chartPatterns.polarityBalance.feminine }].map(({ label, count }) => {
                       const isDominant = label === chartPatterns.polarityBalance.dominant;
                       return isDominant ? (
-                        <MetallicText key={label} style={[styles.patternHighlightText, { fontSize: 15 }]} color={theme.isDark ? "#CFAE73" : '#1A1815'}>
-                          {label}: {count}
-                        </MetallicText>
+                        <MetallicText key={label} style={[styles.patternHighlightText, { fontSize: 15 }]} color={theme.isDark ? '#CFAE73' : '#1A1815'}>{label}: {count}</MetallicText>
                       ) : (
-                        <Text key={label} style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}>
-                          {label}: {count}
-                        </Text>
+                        <Text key={label} style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}>{label}: {count}</Text>
                       );
                     })}
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.polarityBalance.description}</Text>
-                  <View style={styles.tooltipBox}>
-                    <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                    <Text style={styles.tooltipText}>Masculine = Fire + Air signs. Feminine = Earth + Water signs. Based on your 10 core planets.</Text>
-                  </View>
-                </LinearGradient>
+                  <View style={styles.tooltipBox}><Ionicons name="information-circle-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>Masculine = Fire + Air signs. Feminine = Earth + Water signs. Based on your 10 core planets.</Text></View>
+                </VelvetGlassSurface>
               )}
-
-              {/* Aspect Patterns (premium) — Grand Trine, T-Square, Yod, etc. */}
               {isPremium && extendedPatterns?.aspectPatterns?.map((pattern, idx) => (
-                <LinearGradient
-                  key={`aspat-${idx}`}
-                  colors={chartSurfaceGradients.goldPanel}
-                  style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}
-                >
+                <VelvetGlassSurface key={`aspat-${idx}`} style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.goldPanel} style={StyleSheet.absoluteFill} />
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>
-                      {pattern.name === 'Grand Trine' ? '△' :
-                       pattern.name === 'T-Square' ? '⊤' :
-                       pattern.name === 'Grand Cross' ? '✚' :
-                       pattern.name === 'Yod' ? '☞' :
-                       pattern.name === 'Kite' ? '◇' :
-                       pattern.name === 'Mystic Rectangle' ? '▭' : '⬡'}
-                    </Text>
+                    <Text style={styles.patternIcon}>{pattern.name === 'Grand Trine' ? '△' : pattern.name === 'T-Square' ? '⊤' : pattern.name === 'Grand Cross' ? '✚' : pattern.name === 'Yod' ? '☞' : pattern.name === 'Kite' ? '◇' : pattern.name === 'Mystic Rectangle' ? '▭' : '⬡'}</Text>
                     <Text style={styles.patternTitle}>{pattern.name}</Text>
                   </View>
-                  <View style={styles.patternHighlight}>
-                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
-                      {pattern.planets.join(' · ')}
-                    </MetallicText>
-                  </View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{pattern.planets.join(' · ')}</MetallicText></View>
                   <Text style={styles.patternDesc}>{pattern.description}</Text>
-                </LinearGradient>
+                </VelvetGlassSurface>
               ))}
-
-              {/* Hemisphere Emphasis (premium) */}
               {isPremium && extendedPatterns?.hemisphereEmphasis && extendedPatterns.hemisphereEmphasis.dominant !== 'Balanced' && (
-                <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="contrast-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                    <Text style={styles.patternTitle}>Hemisphere Emphasis</Text>
-                  </View>
-                  <View style={styles.patternHighlight}>
-                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
-                      {extendedPatterns.hemisphereEmphasis.dominant} emphasis
-                    </MetallicText>
-                  </View>
-                  <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }]}>
-                    <Text style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 12 }]}>
-                      E: {extendedPatterns.hemisphereEmphasis.eastern}  W: {extendedPatterns.hemisphereEmphasis.western}  N: {extendedPatterns.hemisphereEmphasis.northern}  S: {extendedPatterns.hemisphereEmphasis.southern}
-                    </Text>
-                  </View>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="contrast-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Hemisphere Emphasis</Text></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{extendedPatterns.hemisphereEmphasis.dominant} emphasis</MetallicText></View>
                   <Text style={styles.patternDesc}>{extendedPatterns.hemisphereEmphasis.description}</Text>
-                </LinearGradient>
+                </VelvetGlassSurface>
               )}
-
-              {/* House Type Emphasis (premium) */}
               {isPremium && extendedPatterns?.houseEmphasis && (
-                <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="home-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                    <Text style={styles.patternTitle}>House Emphasis</Text>
-                  </View>
-                  <View style={styles.patternHighlight}>
-                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
-                      {extendedPatterns.houseEmphasis.dominant} houses dominant
-                    </MetallicText>
-                  </View>
-                  <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 14, justifyContent: 'center' }]}>
-                    <Text style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 12 }]}>
-                      Angular: {extendedPatterns.houseEmphasis.angularCount}  Succedent: {extendedPatterns.houseEmphasis.succedentCount}  Cadent: {extendedPatterns.houseEmphasis.cadentCount}
-                    </Text>
-                  </View>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="home-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>House Emphasis</Text></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{extendedPatterns.houseEmphasis.dominant} houses dominant</MetallicText></View>
                   <Text style={styles.patternDesc}>{extendedPatterns.houseEmphasis.description}</Text>
-                </LinearGradient>
+                </VelvetGlassSurface>
               )}
-
-              {/* Fallback (premium users only — free users see upsell card instead) */}
-              {isPremium &&
-                chartPatterns.stelliums.length === 0 &&
-                chartPatterns.conjunctionClusters.length === 0 &&
-                !chartPatterns.chartRuler &&
-                chartPatterns.retrogradeEmphasis.count === 0 &&
-                !chironInsight &&
-                !nodeInsight && (
-                  <View style={styles.emptyState}>
-                    <Ionicons name="sparkles-outline" size={32} color={theme.textMuted} />
-                    <Text style={styles.emptyText}>Your chart has a balanced distribution — no extreme concentrations detected.</Text>
-                  </View>
-                )}
             </Animated.View>
           )}
 
           {/* ── Themed Interpretation Sections (premium, Complete only) ── */}
           {viewMode === 'complete' && isPremium && themedSections.length > 0 && (
             <Animated.View entering={FadeInDown.delay(350).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Your Chart Story"
-                subtitle="Thematic interpretations woven from your placements"
-                sectionKey="chartStory"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
+              <SectionAccordion title="Your Chart Story" subtitle="Thematic interpretations woven from your placements" sectionKey="chartStory" openSections={openSections} setOpenSections={setOpenSections}>
                 {themedSections.map((section) => (
-                  <Pressable
-                    key={section.id}
-                    onPress={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${section.title} interpretation section`}
-                  >
-                    <LinearGradient
-                      colors={chartSurfaceGradients.goldPanelFaint}
-                      style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}
-                    >
+                  <Pressable key={section.id} onPress={() => setExpandedSection(expandedSection === section.id ? null : section.id)} accessibilityRole="button" accessibilityLabel={`${section.title} interpretation section`}>
+                    <VelvetGlassSurface style={styles.themedCard} intensity={45}>
+                    <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={StyleSheet.absoluteFill} />
                       <View style={styles.themedCardHeaderRow}>
                         <GradientSymbol symbol={section.icon} fontSize={20} w={24} h={24} style={{ marginRight: 4 }} />
                         <Text style={styles.themedCardTitle}>{section.title}</Text>
-                        <Ionicons
-                          name={expandedSection === section.id ? 'chevron-up' : 'chevron-down'}
-                          size={18}
-                          color={theme.textMuted}
-                        />
+                        <Ionicons name={expandedSection === section.id ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
                       </View>
                       <View style={styles.themedCardPlacements}>
-                        {section.placements.map((p, pi) => (
-                          <View key={pi} style={styles.themedPlacementChip}>
-                            <Text style={styles.themedPlacementText}>{p}</Text>
-                          </View>
-                        ))}
+                        {section.placements.map((p, pi) => <View key={pi} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{p}</Text></View>)}
                       </View>
                       <Text style={styles.themedCardSummary}>{section.summary}</Text>
                       {expandedSection === section.id && section.details.length > 0 && (
                         <View style={styles.themedCardDetails}>
-                          {section.details.map((detail, di) => (
-                            <Text key={di} style={styles.themedCardDetail}>• {detail}</Text>
-                          ))}
+                          {section.details.map((detail, di) => <Text key={di} style={styles.themedCardDetail}>• {detail}</Text>)}
                         </View>
                       )}
-                    </LinearGradient>
+                    </VelvetGlassSurface>
                   </Pressable>
                 ))}
               </SectionAccordion>
             </Animated.View>
           )}
 
-          {/* ══════════════════════════════════════════════════════
-              COMPLETE VIEW — Advanced sections shown when toggled
-              ══════════════════════════════════════════════════════ */}
-
           {/* ── Key Aspects Summary (Complete only) ── */}
           {viewMode === 'complete' && keyAspects.length > 0 && (
             <Animated.View entering={FadeInDown.delay(360).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Strongest Aspects"
-                subtitle="Your most important planetary connections"
-                sectionKey="keyAspects"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
+              <SectionAccordion title="Strongest Aspects" subtitle="Your most important planetary connections" sectionKey="keyAspects" openSections={openSections} setOpenSections={setOpenSections}>
                 {keyAspects.slice(0, 10).map((ka, idx) => (
-                  <LinearGradient
-                    key={`ka-${idx}`}
-                    colors={idx % 2 === 0 ? chartSurfaceGradients.rowPrimary : chartSurfaceGradients.rowSecondary}
-                    style={[styles.tableRow, { flexDirection: 'column', alignItems: 'center', gap: 6 }]}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <MetallicText style={{ fontSize: 14, fontWeight: '700' }} color="#CFAE73">
-                        {ka.planet1} {ka.type.toLowerCase()} {ka.planet2}
-                      </MetallicText>
-                      <Text style={{ fontSize: 12, color: ka.nature === 'Harmonious' ? '#9ACD32' : ka.nature === 'Challenging' ? '#991FA6' : '#FFDA03' }}>
-                        {ka.orb.toFixed(1)}° · {ka.nature}
-                      </Text>
-                      {ka.isApplying && <Text style={styles.applyingLabel}>applying</Text>}
+                  <VelvetGlassSurface key={`ka-${idx}`} style={styles.strongAspectCard} intensity={45}>
+                    <LinearGradient colors={idx % 2 === 0 ? chartSurfaceGradients.rowPrimary : chartSurfaceGradients.rowSecondary} style={StyleSheet.absoluteFill} />
+                    <View style={styles.strongAspectHeader}>
+                      <Text style={styles.strongAspectTitle}>{ka.planet1} {ka.type.toLowerCase()} {ka.planet2}</Text>
+                      <Text style={[styles.strongAspectMeta, { color: ka.nature === 'Harmonious' ? '#9ACD32' : ka.nature === 'Challenging' ? '#C387D9' : '#FFDA03' }]}>{ka.orb.toFixed(1)}° · {ka.nature}</Text>
                     </View>
-                    {isPremium && (
-                      <Text style={[styles.patternDesc, { fontSize: 12, marginTop: 2 }]}>{ka.interpretation}</Text>
-                    )}
-                  </LinearGradient>
+                    {isPremium && <Text style={styles.strongAspectDescription}>{ka.interpretation}</Text>}
+                  </VelvetGlassSurface>
                 ))}
               </SectionAccordion>
             </Animated.View>
@@ -2229,54 +1713,34 @@ export default function ChartScreen() {
           {/* ── Angle Interpretations ── */}
           {viewMode === 'complete' && angleInterpretations.length > 0 && (
             <Animated.View entering={FadeInDown.delay(370).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Angles & Axes"
-                subtitle="The four cardinal points of your chart"
-                sectionKey="anglesAxes"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
-                {angleInterpretations.map((ai, idx) => (
-                  <LinearGradient
-                    key={ai.name}
-                    colors={chartSurfaceGradients.goldPanelFaint}
-                    style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}
-                  >
+              <SectionAccordion title="Angles & Axes" subtitle="The four cardinal points of your chart" sectionKey="anglesAxes" openSections={openSections} setOpenSections={setOpenSections}>
+                {angleInterpretations.map((ai) => (
+                  <VelvetGlassSurface key={ai.name} style={styles.themedCard} intensity={45}>
+                  <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={StyleSheet.absoluteFill} />
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{ai.name}</Text>
                       <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#CFAE73">{ai.sign} · {ai.degree}°</MetallicText>
                     </View>
                     <Text style={styles.themedCardSummary}>{ai.interpretation}</Text>
-                  </LinearGradient>
+                  </VelvetGlassSurface>
                 ))}
               </SectionAccordion>
             </Animated.View>
           )}
 
-          {/* ── Sensitive Point Interpretations (Complete View) ── */}
+          {/* ── Sensitive Point Interpretations ── */}
           {viewMode === 'complete' && isPremium && pointInterpretations.length > 0 && (
             <Animated.View entering={FadeInDown.delay(375).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Chart Points"
-                subtitle="Nodes, Chiron, Lilith, Part of Fortune & Vertex"
-                sectionKey="chartPoints"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
-                {pointInterpretations.map((pi, idx) => (
-                  <LinearGradient
-                    key={pi.name}
-                    colors={chartSurfaceGradients.panel}
-                    style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}
-                  >
+              <SectionAccordion title="Chart Points" subtitle="Nodes, Chiron, Lilith, Part of Fortune & Vertex" sectionKey="chartPoints" openSections={openSections} setOpenSections={setOpenSections}>
+                {pointInterpretations.map((pi) => (
+                  <VelvetGlassSurface key={pi.name} style={styles.themedCard} intensity={45}>
+                  <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{pi.name}</Text>
-                      <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#CFAE73">
-                        {pi.sign}{pi.house ? ` · House ${pi.house}` : ''}
-                      </MetallicText>
+                      <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#CFAE73">{pi.sign}{pi.house ? ` · House ${pi.house}` : ''}</MetallicText>
                     </View>
                     <Text style={styles.themedCardSummary}>{pi.interpretation}</Text>
-                  </LinearGradient>
+                  </VelvetGlassSurface>
                 ))}
               </SectionAccordion>
             </Animated.View>
@@ -2285,27 +1749,13 @@ export default function ChartScreen() {
           {/* ── Chart Shape ── */}
           {viewMode === 'complete' && isPremium && chartShape && chartShape.shape !== 'Unknown' && (
             <Animated.View entering={FadeInDown.delay(380).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Chart Shape"
-                subtitle={chartShape.shape}
-                sectionKey="chartShape"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
-                <LinearGradient colors={chartSurfaceGradients.goldPanel} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="ellipse-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                    <Text style={styles.patternTitle}>Chart Shape: {chartShape.shape}</Text>
-                  </View>
-                  {chartShape.handlePlanet && (
-                    <View style={styles.patternHighlight}>
-                      <MetallicText style={styles.patternHighlightText} color="#CFAE73">
-                        Handle: {chartShape.handlePlanet}
-                      </MetallicText>
-                    </View>
-                  )}
+              <SectionAccordion title="Chart Shape" subtitle={chartShape.shape} sectionKey="chartShape" openSections={openSections} setOpenSections={setOpenSections}>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.goldPanel} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="ellipse-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Chart Shape: {chartShape.shape}</Text></View>
+                  {chartShape.handlePlanet && <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">Handle: {chartShape.handlePlanet}</MetallicText></View>}
                   <Text style={styles.patternDesc}>{chartShape.description}</Text>
-                </LinearGradient>
+                </VelvetGlassSurface>
               </SectionAccordion>
             </Animated.View>
           )}
@@ -2313,27 +1763,16 @@ export default function ChartScreen() {
           {/* ── Singletons ── */}
           {viewMode === 'complete' && isPremium && singletons.length > 0 && (
             <Animated.View entering={FadeInDown.delay(385).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Singleton Planets"
-                subtitle="Planets isolated in their hemisphere or element"
-                sectionKey="singletons"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
+              <SectionAccordion title="Singleton Planets" subtitle="Planets isolated in their hemisphere or element" sectionKey="singletons" openSections={openSections} setOpenSections={setOpenSections}>
                 {singletons.map((s, idx) => (
-                  <LinearGradient
-                    key={`singleton-${idx}`}
-                    colors={chartSurfaceGradients.panel}
-                    style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}
-                  >
+                  <VelvetGlassSurface key={`singleton-${idx}`} style={styles.themedCard} intensity={45}>
+                  <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{s.planet}</Text>
-                      <View style={styles.themedPlacementChip}>
-                        <Text style={styles.themedPlacementText}>{s.detail}</Text>
-                      </View>
+                      <View style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{s.detail}</Text></View>
                     </View>
                     <Text style={styles.themedCardSummary}>{s.description}</Text>
-                  </LinearGradient>
+                  </VelvetGlassSurface>
                 ))}
               </SectionAccordion>
             </Animated.View>
@@ -2342,317 +1781,243 @@ export default function ChartScreen() {
           {/* ── Interceptions ── */}
           {viewMode === 'complete' && isPremium && interceptions.length > 0 && (
             <Animated.View entering={FadeInDown.delay(388).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Interceptions"
-                subtitle="Signs contained within a house without a cusp"
-                sectionKey="interceptions"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
+              <SectionAccordion title="Interceptions" subtitle="Signs contained within a house without a cusp" sectionKey="interceptions" openSections={openSections} setOpenSections={setOpenSections}>
                 {interceptions.map((ic, idx) => (
-                  <LinearGradient
-                    key={`intercept-${idx}`}
-                    colors={chartSurfaceGradients.panel}
-                    style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}
-                  >
+                  <VelvetGlassSurface key={`intercept-${idx}`} style={styles.themedCard} intensity={45}>
+                  <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{ic.interceptedSigns[0]} / {ic.interceptedSigns[1]}</Text>
                       <Text style={{ fontSize: 12, color: theme.textMuted }}>Houses {ic.houses[0]} & {ic.houses[1]}</Text>
                     </View>
                     <Text style={styles.themedCardSummary}>{ic.description}</Text>
-                  </LinearGradient>
+                  </VelvetGlassSurface>
                 ))}
               </SectionAccordion>
             </Animated.View>
           )}
 
-          {/* ── Planet Dignity ── */}
+          {/* ── Planet Dignity (Complete only) ── */}
           {viewMode === 'complete' && isPremium && dignityAnalysis && (
             <Animated.View entering={FadeInDown.delay(390).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Planet Strength & Dignity"
-                subtitle="Which parts of your chart are strong, comfortable, or challenged"
-                sectionKey="planetDignity"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
-              <Text style={[styles.patternDesc, { marginBottom: 12, textAlign: 'center' }]}>{dignityAnalysis.summary}</Text>
-              {dignityAnalysis.strongestPlanets.length > 0 && (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginBottom: 10 }}>
-                  {dignityAnalysis.strongestPlanets.map(d => (
-                    <View key={d.planet} style={[styles.themedPlacementChip, { borderColor: 'rgba(154,205,50,0.3)' }]}>
-                      <Text style={[styles.themedPlacementText, { color: '#9ACD32' }]}>{d.planet}: {d.dignity}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-              {dignityAnalysis.challengedPlanets.length > 0 && (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginBottom: 10 }}>
-                  {dignityAnalysis.challengedPlanets.map(d => (
-                    <View key={d.planet} style={[styles.themedPlacementChip, { borderColor: 'rgba(153,31,166,0.3)' }]}>
-                      <Text style={[styles.themedPlacementText, { color: '#991FA6' }]}>{d.planet}: {d.dignity}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-              {dignityAnalysis.planetDignities.filter(d => d.dignity !== 'peregrine').map(d => (
-                <Pressable
-                  key={d.planet}
-                  onPress={() => setExpandedPlanet(expandedPlanet === d.planet ? null : d.planet)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${d.planet} dignity details`}
-                >
-                  <LinearGradient
-                    colors={chartSurfaceGradients.rowPrimary}
-                    style={[styles.tableRow, { flexDirection: 'column', alignItems: 'center', gap: 4 }]}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={styles.planetName}>{d.planet}</Text>
-                      <MetallicText style={{ fontSize: 12, fontWeight: '600' }} color={
-                        d.dignity === 'domicile' || d.dignity === 'exaltation' ? '#9ACD32' : '#991FA6'
-                      }>
-                        {d.dignity.charAt(0).toUpperCase() + d.dignity.slice(1)} in {d.sign}
-                      </MetallicText>
-                      <Ionicons name={expandedPlanet === d.planet ? 'chevron-up' : 'chevron-down'} size={14} color={theme.textMuted} />
-                    </View>
-                    {expandedPlanet === d.planet && (
-                      <Text style={[styles.patternDesc, { fontSize: 12, marginTop: 4 }]}>{d.description}</Text>
-                    )}
-                  </LinearGradient>
-                </Pressable>
-              ))}
-              </SectionAccordion>
-            </Animated.View>
-          )}
-
-          {/* ── Dispositor Chain & Rulership ── */}
-          {viewMode === 'complete' && isPremium && dispositorChain && (
-            <Animated.View entering={FadeInDown.delay(395).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Rulership & Dispositors"
-                subtitle={dispositorChain.finalDispositor ? `Final dispositor: ${dispositorChain.finalDispositor}` : 'Planetary rulership chain'}
-                sectionKey="dispositors"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
-                <LinearGradient colors={chartSurfaceGradients.goldPanelSoft} style={[styles.patternCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}>
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="git-network-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
-                    <Text style={styles.patternTitle}>Rulership & Dispositors</Text>
+              <SectionAccordion title="Planet Strength & Dignity" subtitle="Which parts of your chart are strong, comfortable, or challenged" sectionKey="planetDignity" openSections={openSections} setOpenSections={setOpenSections}>
+                <Text style={[styles.patternDesc, { marginBottom: 12, textAlign: 'center' }]}>{dignityAnalysis.summary}</Text>
+                {dignityAnalysis.strongestPlanets.length > 0 && (
+                  <View style={styles.dignityChipGroup}>
+                    {dignityAnalysis.strongestPlanets.map(d => <View key={d.planet} style={[styles.themedPlacementChip, { borderColor: 'rgba(154,205,50,0.3)' }]}><Text style={[styles.themedPlacementText, { color: '#9ACD32' }]}>{d.planet}: {d.dignity}</Text></View>)}
                   </View>
-                  {dispositorChain.finalDispositor && (
-                    <View style={styles.patternHighlight}>
-                      <MetallicText style={styles.patternHighlightText} color="#CFAE73">
-                        Final Dispositor: {dispositorChain.finalDispositor}
-                      </MetallicText>
-                    </View>
-                  )}
-                  {dispositorChain.mutualReceptions.length > 0 && (
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginBottom: 10 }}>
-                      {dispositorChain.mutualReceptions.map(([a, b], idx) => (
-                        <View key={idx} style={styles.themedPlacementChip}>
-                          <Text style={styles.themedPlacementText}>Mutual Reception: {a} ↔ {b}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                  <Text style={styles.patternDesc}>{dispositorChain.description}</Text>
-                  <View style={styles.tooltipBox}>
-                    <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                    <Text style={styles.tooltipText}>
-                      Each planet answers to the ruler of its sign. The dispositor chain shows this hierarchy — the final dispositor (if present) is the planet that ultimately directs the chart.
-                    </Text>
+                )}
+                {dignityAnalysis.challengedPlanets.length > 0 && (
+                  <View style={styles.dignityChipGroup}>
+                    {dignityAnalysis.challengedPlanets.map(d => <View key={d.planet} style={[styles.themedPlacementChip, { borderColor: 'rgba(153,31,166,0.3)' }]}><Text style={[styles.themedPlacementText, { color: '#991FA6' }]}>{d.planet}: {d.dignity}</Text></View>)}
                   </View>
-                </LinearGradient>
-              </SectionAccordion>
-            </Animated.View>
-          )}
-
-          {/* ── Editorial Tool: Planetary Deep Dives ── */}
-          {activeTab === 'planets' && viewMode === 'complete' && isPremium && (
-            <Animated.View entering={FadeIn.duration(1000)} style={styles.deepDiveContainer}>
-              <Text style={styles.editorialSectionLabel}>PLANETARY DEEP-DIVES</Text>
-              {planetRows.map((row) => (
-                <SectionAccordion
-                  key={`dd-${row.label}`}
-                  title={row.label}
-                  subtitle={`${row.p.sign.name.toUpperCase()} · HOUSE ${row.p.house || '—'}`}
-                  sectionKey={`dd-${row.label}`}
-                  openSections={openSections}
-                  setOpenSections={setOpenSections}
-                >
-                  <VelvetGlassSurface style={[styles.editorialCard, styles.velvetBorder]} intensity={20}>
-                    <LinearGradient colors={['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.01)']} style={StyleSheet.absoluteFill} />
-                    <View style={styles.ddHeaderRow}>
-                      <GradientSymbol symbol={(row.p as any).planet?.symbol || '•'} fontSize={24} w={30} h={30} />
-                      <View style={styles.ddHeaderLabels}>
-                        <Text style={styles.ddPlanetSignText}>{row.p.sign.name.toUpperCase()}</Text>
-                        <Text style={styles.ddPlanetElementText}>{row.p.sign.element.toUpperCase()} · {row.p.sign.modality.toUpperCase()}</Text>
+                )}
+                {dignityAnalysis.planetDignities.filter(d => d.dignity !== 'peregrine').map(d => (
+                  <Pressable key={d.planet} onPress={() => setExpandedPlanet(expandedPlanet === d.planet ? null : d.planet)} accessibilityRole="button" accessibilityLabel={`${d.planet} dignity details`}>
+                    <VelvetGlassSurface style={styles.dignityCard} intensity={45}>
+                      <LinearGradient colors={chartSurfaceGradients.rowPrimary} style={StyleSheet.absoluteFill} />
+                      <View style={styles.dignityCardHeader}>
+                        <Text style={styles.dignityPlanetName}>{d.planet}</Text>
+                        <Text style={[styles.dignityMeta, { color: d.dignity === 'domicile' || d.dignity === 'exaltation' ? '#9ACD32' : '#C387D9' }]}>
+                          {d.dignity.charAt(0).toUpperCase() + d.dignity.slice(1)} in {d.sign}
+                        </Text>
+                        <Ionicons name={expandedPlanet === d.planet ? 'chevron-up' : 'chevron-down'} size={14} color={theme.textMuted} />
                       </View>
-                    </View>
-                    <Text style={styles.editorialBodyText}>
-                      {generatePlanetDeepDive(row.p, activeChart!.aspects ?? []).synthesis}
-                    </Text>
-                    <View style={styles.ddFooterMeta}>
-                      <Text style={styles.ddMetaValue}>DEGREE: {Math.floor(row.p.degree)}°{String(row.p.minute).padStart(2, '0')}'</Text>
-                      <View style={styles.metaDot} />
-                      <Text style={styles.ddMetaValue}>HOUSE: {row.p.house ?? '—'}</Text>
-                    </View>
-                  </VelvetGlassSurface>
-                </SectionAccordion>
-              ))}
-            </Animated.View>
-          )}
-
-          {/* ── House-by-House Interpretation ── */}
-          {viewMode === 'complete' && isPremium && houseDeepDives.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(410).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="House-by-House Interpretation"
-                subtitle="12 areas of life, each with cusp sign, ruler, and occupants"
-                sectionKey="houseDeepDive"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
-                {houseDeepDives.map((hd) => (
-                  <Pressable
-                    key={hd.house}
-                    onPress={() => setExpandedHouse(expandedHouse === hd.house ? null : hd.house)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`House ${hd.house} interpretation`}
-                  >
-                    <LinearGradient
-                      colors={chartSurfaceGradients.rowPrimary}
-                      style={[styles.themedCard, { borderColor: "rgba(255,255,255,0.15)", borderWidth: 1 }]}
-                    >
-                      <View style={[styles.themedCardHeaderRow, { justifyContent: 'center' }]}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <MetallicText style={{ fontSize: 16, fontWeight: '700' }} color="#CFAE73">{hd.house}</MetallicText>
-                          <Text style={[styles.themedCardTitle, { flex: 0, textAlign: 'center' }]}>{hd.cuspSign}</Text>
-                        </View>
-                        <View style={{ flexDirection: 'row', gap: 4 }}>
-                          {hd.ruler && (
-                            <View style={styles.themedPlacementChip}>
-                              <Text style={styles.themedPlacementText}>♜ {hd.ruler}</Text>
-                            </View>
-                          )}
-                          {hd.occupants.length > 0 && (
-                            <View style={[styles.themedPlacementChip, { borderColor: 'rgba(207, 174, 115, 0.3)' }]}>
-                              <Text style={styles.themedPlacementText}>{hd.occupants.join(', ')}</Text>
-                            </View>
-                          )}
-                        </View>
-                        <Ionicons name={expandedHouse === hd.house ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
-                      </View>
-                      {expandedHouse === hd.house && (
-                        <Text style={[styles.themedCardSummary, { marginTop: 8, textAlign: 'center' }]}>{hd.synthesis}</Text>
-                      )}
-                    </LinearGradient>
+                      {expandedPlanet === d.planet && <Text style={styles.dignityDescription}>{d.description}</Text>}
+                    </VelvetGlassSurface>
                   </Pressable>
                 ))}
               </SectionAccordion>
             </Animated.View>
           )}
 
-          {/* ── Advanced Thematic Profiles (Premium) ── */}
-          {viewMode === 'complete' && isPremium && (
-            <Animated.View entering={FadeIn.duration(800)} style={styles.profileStack}>
-              <Text style={styles.editorialSectionLabel}>NARRATIVE SYNTHESIS</Text>
-
-              {relationshipProfile && (
-                <SectionAccordion title="The Relational Mirror" sectionKey="relational" openSections={openSections} setOpenSections={setOpenSections}>
-                  <VelvetGlassSurface style={[styles.editorialCard, styles.velvetBorder]} intensity={25}>
-                    <LinearGradient colors={['rgba(168, 139, 235, 0.12)', 'rgba(168, 139, 235, 0.04)']} style={StyleSheet.absoluteFill} />
-                    <View style={styles.profileHeader}>
-                      <MaterialCommunityIcons name="heart-pulse" size={24} color={PALETTE.nebula} />
-                      <Text style={styles.profileTitleText}>ATTACHMENT ARCHITECTURE</Text>
+          {/* ── Dispositor Chain ── */}
+          {viewMode === 'complete' && isPremium && dispositorChain && (
+            <Animated.View entering={FadeInDown.delay(395).duration(600)} style={{ width: '100%' }}>
+              <SectionAccordion title="Rulership & Dispositors" subtitle={dispositorChain.finalDispositor ? `Final dispositor: ${dispositorChain.finalDispositor}` : 'Planetary rulership chain'} sectionKey="dispositors" openSections={openSections} setOpenSections={setOpenSections}>
+                <VelvetGlassSurface style={styles.patternCard} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.goldPanelSoft} style={StyleSheet.absoluteFill} />
+                  <View style={styles.patternHeader}><Ionicons name="git-network-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Rulership & Dispositors</Text></View>
+                  {dispositorChain.finalDispositor && <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">Final Dispositor: {dispositorChain.finalDispositor}</MetallicText></View>}
+                  {dispositorChain.mutualReceptions.length > 0 && (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginBottom: 10 }}>
+                      {dispositorChain.mutualReceptions.map(([a, b], idx) => <View key={idx} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>Mutual Reception: {a} ↔ {b}</Text></View>)}
                     </View>
-                    <Text style={styles.editorialBodyText}>{relationshipProfile.synthesis}</Text>
-                    <View style={styles.tagCloud}>
-                      <View style={styles.editorialTag}><Text style={styles.tagText}>LOVE STYLE: {relationshipProfile.loveStyle.toUpperCase()}</Text></View>
-                      <View style={styles.editorialTag}><Text style={styles.tagText}>INTIMACY: {relationshipProfile.intimacyStyle.toUpperCase()}</Text></View>
-                    </View>
-                  </VelvetGlassSurface>
-                </SectionAccordion>
-              )}
-
-              {careerProfile && (
-                <SectionAccordion title="Vocation & Purpose" sectionKey="career" openSections={openSections} setOpenSections={setOpenSections}>
-                  <VelvetGlassSurface style={[styles.editorialCard, styles.velvetBorder]} intensity={25}>
-                    <LinearGradient colors={['rgba(207, 174, 115, 0.12)', 'rgba(207, 174, 115, 0.04)']} style={StyleSheet.absoluteFill} />
-                    <View style={styles.profileHeader}>
-                      <MaterialCommunityIcons name="briefcase-variant-outline" size={24} color={PALETTE.titanium} />
-                      <Text style={styles.profileTitleText}>VOCATIONAL ALCHEMY</Text>
-                    </View>
-                    <Text style={styles.editorialBodyText}>{careerProfile.synthesis}</Text>
-                    <View style={styles.tagCloud}>
-                      <View style={styles.editorialTag}><Text style={styles.tagText}>PUBLIC IMAGE: {careerProfile.publicImage.toUpperCase()}</Text></View>
-                      <View style={styles.editorialTag}><Text style={styles.tagText}>WORK STYLE: {careerProfile.workStyle.toUpperCase()}</Text></View>
-                    </View>
-                  </VelvetGlassSurface>
-                </SectionAccordion>
-              )}
-
-              {emotionalProfile && (
-                <SectionAccordion title="Inner World Substrate" sectionKey="emotional" openSections={openSections} setOpenSections={setOpenSections}>
-                  <VelvetGlassSurface style={[styles.editorialCard, styles.velvetBorder]} intensity={25}>
-                    <LinearGradient colors={['rgba(110, 191, 139, 0.12)', 'rgba(110, 191, 139, 0.04)']} style={StyleSheet.absoluteFill} />
-                    <View style={styles.profileHeader}>
-                      <MaterialCommunityIcons name="waves" size={24} color={PALETTE.sage} />
-                      <Text style={styles.profileTitleText}>PSYCHOLOGICAL SUBSTRATE</Text>
-                    </View>
-                    <Text style={styles.editorialBodyText}>{emotionalProfile.synthesis}</Text>
-                    <View style={styles.tagCloud}>
-                      <View style={styles.editorialTag}><Text style={styles.tagText}>CORE FEARS: {emotionalProfile.coreFears.toUpperCase()}</Text></View>
-                      <View style={styles.editorialTag}><Text style={styles.tagText}>HEALING: {emotionalProfile.healingThemes.toUpperCase()}</Text></View>
-                    </View>
-                  </VelvetGlassSurface>
-                </SectionAccordion>
-              )}
-
-              {shadowGrowth && (
-                <SectionAccordion title="Shadow & Evolution" sectionKey="shadow" openSections={openSections} setOpenSections={setOpenSections}>
-                  <VelvetGlassSurface style={[styles.editorialCard, styles.velvetBorder]} intensity={35}>
-                    <LinearGradient colors={['rgba(220, 80, 80, 0.15)', 'rgba(220, 80, 80, 0.05)']} style={StyleSheet.absoluteFill} />
-                    <View style={styles.profileHeader}>
-                      <MaterialCommunityIcons name="moon-waning-crescent" size={24} color={PALETTE.ember} />
-                      <Text style={styles.profileTitleText}>EVOLUTIONARY GROWTH EDGE</Text>
-                    </View>
-                    <Text style={styles.editorialBodyText}>{shadowGrowth.synthesis}</Text>
-
-                    <View style={styles.growthList}>
-                      {shadowGrowth.growthEdges.map((edge, i) => (
-                        <View key={i} style={styles.growthRow}>
-                          <Ionicons name="arrow-forward" size={14} color={PALETTE.titanium} />
-                          <Text style={styles.growthText}>{edge.toUpperCase()}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </VelvetGlassSurface>
-                </SectionAccordion>
-              )}
+                  )}
+                  <Text style={styles.patternDesc}>{dispositorChain.description}</Text>
+                  <View style={styles.tooltipBox}><Ionicons name="information-circle-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>Each planet answers to the ruler of its sign. The dispositor chain shows this hierarchy — the final dispositor (if present) is the planet that ultimately directs the chart.</Text></View>
+                </VelvetGlassSurface>
+              </SectionAccordion>
             </Animated.View>
           )}
 
-          {/* ── Deeper Sky Upsell (bottom, free users only) ── */}
+          {/* ── Planet Deep Dive ── */}
+          {viewMode === 'complete' && isPremium && planetDeepDives.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(400).duration(600)} style={{ width: '100%' }}>
+              <SectionAccordion title="Planet-by-Planet Deep Dive" subtitle="Each planet as a mini-profile in your chart" sectionKey="planetDeepDive" openSections={openSections} setOpenSections={setOpenSections}>
+                {planetDeepDives.map((dd) => (
+                  <Pressable key={dd.planet} onPress={() => setExpandedPlanet(expandedPlanet === `dd-${dd.planet}` ? null : `dd-${dd.planet}`)} accessibilityRole="button" accessibilityLabel={`${dd.planet} deep dive`}>
+                    <VelvetGlassSurface style={styles.themedCard} intensity={45}>
+                    <LinearGradient colors={chartSurfaceGradients.goldPanelBarely} style={StyleSheet.absoluteFill} />
+                      <View style={[styles.themedCardHeaderRow, styles.planetDiveHeaderRow]}>
+                        <Text style={[styles.themedCardTitle, styles.planetDiveTitle]} numberOfLines={1}>{dd.planet}</Text>
+                        <View style={styles.planetDiveChipRow}>
+                          <View style={styles.themedPlacementChip}><Text style={[styles.themedPlacementText, { fontSize: 8 }]} numberOfLines={1}>{dd.sign}</Text></View>
+                          {dd.house > 0 && <View style={styles.themedPlacementChip}><Text style={[styles.themedPlacementText, { fontSize: 8 }]} numberOfLines={1}>House {dd.house}</Text></View>}
+                          {dd.isRetrograde && <View style={[styles.themedPlacementChip, { borderColor: 'rgba(232, 214, 174, 0.3)' }]}><Text style={[styles.themedPlacementText, { color: theme.isDark ? '#FFFFFF' : theme.textPrimary, fontSize: 8 }]}>℞</Text></View>}
+                          {dd.dignity.dignity !== 'peregrine' && <View style={[styles.themedPlacementChip, { borderColor: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? 'rgba(154,205,50,0.3)' : 'rgba(153,31,166,0.3)' }]}><Text style={[styles.themedPlacementText, { color: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? '#9ACD32' : '#991FA6', fontSize: 8 }]} numberOfLines={1}>{dd.dignity.dignity}</Text></View>}
+                        </View>
+                        <Ionicons name={expandedPlanet === `dd-${dd.planet}` ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
+                      </View>
+                      <Text style={[styles.themedCardSummary, styles.planetDiveSummary]} numberOfLines={expandedPlanet === `dd-${dd.planet}` ? undefined : 2}>{dd.synthesis}</Text>
+                      {expandedPlanet === `dd-${dd.planet}` && dd.aspects.length > 0 && (
+                        <View style={styles.themedCardDetails}>
+                          {dd.aspects.map((asp, ai) => <Text key={ai} style={[styles.themedCardDetail, styles.planetDiveDetail]}>• {asp}</Text>)}
+                        </View>
+                      )}
+                    </VelvetGlassSurface>
+                  </Pressable>
+                ))}
+              </SectionAccordion>
+            </Animated.View>
+          )}
+
+          {/* ── House Deep Dive ── */}
+          {viewMode === 'complete' && isPremium && houseDeepDives.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(410).duration(600)} style={{ width: '100%' }}>
+              <SectionAccordion title="House-by-House Interpretation" subtitle="12 areas of life, each with cusp sign, ruler, and occupants" sectionKey="houseDeepDive" openSections={openSections} setOpenSections={setOpenSections}>
+                {houseDeepDives.map((hd) => (
+                  <Pressable key={hd.house} onPress={() => setExpandedHouse(expandedHouse === hd.house ? null : hd.house)} accessibilityRole="button" accessibilityLabel={`House ${hd.house} interpretation`}>
+                    <VelvetGlassSurface style={styles.themedCard} intensity={45}>
+                    <LinearGradient colors={chartSurfaceGradients.rowPrimary} style={StyleSheet.absoluteFill} />
+                      <View style={[styles.themedCardHeaderRow, styles.houseDiveHeaderRow]}>
+                        <View style={styles.houseDiveTitleRow}>
+                          <MetallicText style={{ fontSize: 16, fontWeight: '700' }} color="#CFAE73">{hd.house}</MetallicText>
+                          <Text style={[styles.themedCardTitle, { flex: 0, textAlign: 'center' }]}>{hd.cuspSign}</Text>
+                        </View>
+                        <View style={styles.houseDiveChipRow}>
+                          {hd.ruler && <View style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>♜ {hd.ruler}</Text></View>}
+                          {hd.occupants.length > 0 && <View style={[styles.themedPlacementChip, { borderColor: 'rgba(207, 174, 115, 0.3)' }]}><Text style={styles.themedPlacementText}>{hd.occupants.join(', ')}</Text></View>}
+                        </View>
+                        <Ionicons name={expandedHouse === hd.house ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
+                      </View>
+                      {expandedHouse === hd.house && <Text style={[styles.themedCardSummary, styles.houseDiveSummary]}>{hd.synthesis}</Text>}
+                    </VelvetGlassSurface>
+                  </Pressable>
+                ))}
+              </SectionAccordion>
+            </Animated.View>
+          )}
+
+          {/* ── Life Themes ── */}
+          {viewMode === 'complete' && isPremium && (relationshipProfile || careerProfile || emotionalProfile || shadowGrowth) && (
+            <Animated.View entering={FadeInDown.delay(420).duration(600)} style={{ width: '100%' }}>
+              <SectionAccordion title="Life Themes" subtitle="Relationship, career, emotional, and growth profiles" sectionKey="lifeThemes" openSections={openSections} setOpenSections={setOpenSections}>
+                {relationshipProfile && (
+                  <Pressable onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'relationship' ? null : 'relationship')} accessibilityRole="button" accessibilityLabel="Relationship profile">
+                    <VelvetGlassSurface style={styles.themedCard} intensity={45}>
+                    <LinearGradient colors={chartSurfaceGradients.goldPanelSoft} style={StyleSheet.absoluteFill} />
+                      <View style={styles.themedCardHeaderRow}>
+                        <GradientIcon size={20}><Ionicons name="heart-outline" size={20} color="#000" /></GradientIcon>
+                        <Text style={styles.themedCardTitle}>Relationship Profile</Text>
+                        <Ionicons name={expandedLifeTheme === 'relationship' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
+                      </View>
+                      <View style={styles.themedCardPlacements}>
+                        {relationshipProfile.keyPlanets.map((p, i) => <View key={i} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{p}</Text></View>)}
+                      </View>
+                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'relationship' ? undefined : 3}>{relationshipProfile.synthesis}</Text>
+                      {expandedLifeTheme === 'relationship' && (
+                        <View style={styles.themedCardDetails}>
+                          <Text style={styles.themedCardDetail}>• Love Style: {relationshipProfile.loveStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• Attraction: {relationshipProfile.attractionPattern}</Text>
+                          <Text style={styles.themedCardDetail}>• Intimacy: {relationshipProfile.intimacyStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• Partnership Lessons: {relationshipProfile.partnershipLessons}</Text>
+                        </View>
+                      )}
+                    </VelvetGlassSurface>
+                  </Pressable>
+                )}
+                {careerProfile && (
+                  <Pressable onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'career' ? null : 'career')} accessibilityRole="button" accessibilityLabel="Career and purpose profile">
+                    <VelvetGlassSurface style={styles.themedCard} intensity={45}>
+                    <LinearGradient colors={chartSurfaceGradients.goldPanelBarely} style={StyleSheet.absoluteFill} />
+                      <View style={styles.themedCardHeaderRow}>
+                        <GradientIcon size={20}><Ionicons name="briefcase-outline" size={20} color="#000" /></GradientIcon>
+                        <Text style={styles.themedCardTitle}>Career & Life Direction</Text>
+                        <Ionicons name={expandedLifeTheme === 'career' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
+                      </View>
+                      <View style={styles.themedCardPlacements}>
+                        {careerProfile.keyPlanets.map((p, i) => <View key={i} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{p}</Text></View>)}
+                      </View>
+                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'career' ? undefined : 3}>{careerProfile.synthesis}</Text>
+                      {expandedLifeTheme === 'career' && (
+                        <View style={styles.themedCardDetails}>
+                          <Text style={styles.themedCardDetail}>• Vocation: {careerProfile.vocationThemes}</Text>
+                          <Text style={styles.themedCardDetail}>• Work Style: {careerProfile.workStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• Public Image: {careerProfile.publicImage}</Text>
+                          <Text style={styles.themedCardDetail}>• Growth Path: {careerProfile.growthPath}</Text>
+                        </View>
+                      )}
+                    </VelvetGlassSurface>
+                  </Pressable>
+                )}
+                {emotionalProfile && (
+                  <Pressable onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'emotional' ? null : 'emotional')} accessibilityRole="button" accessibilityLabel="Emotional and psychological profile">
+                    <VelvetGlassSurface style={styles.themedCard} intensity={45}>
+                    <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={StyleSheet.absoluteFill} />
+                      <View style={styles.themedCardHeaderRow}>
+                        <GradientIcon size={20}><Ionicons name="water-outline" size={20} color="#000" /></GradientIcon>
+                        <Text style={styles.themedCardTitle}>Emotional & Inner World</Text>
+                        <Ionicons name={expandedLifeTheme === 'emotional' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
+                      </View>
+                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'emotional' ? undefined : 3}>{emotionalProfile.synthesis}</Text>
+                      {expandedLifeTheme === 'emotional' && (
+                        <View style={styles.themedCardDetails}>
+                          <Text style={styles.themedCardDetail}>• Emotional Style: {emotionalProfile.emotionalStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• Core Patterns: {emotionalProfile.coreFears}</Text>
+                          <Text style={styles.themedCardDetail}>• Under Stress: {emotionalProfile.defenseMechanisms}</Text>
+                          <Text style={styles.themedCardDetail}>• Attachment: {emotionalProfile.attachmentStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• Healing: {emotionalProfile.healingThemes}</Text>
+                        </View>
+                      )}
+                    </VelvetGlassSurface>
+                  </Pressable>
+                )}
+                {shadowGrowth && (
+                  <Pressable onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'shadow' ? null : 'shadow')} accessibilityRole="button" accessibilityLabel="Shadow and growth profile">
+                    <VelvetGlassSurface style={styles.themedCard} intensity={45}>
+                    <LinearGradient colors={chartSurfaceGradients.goldPanelBarely} style={StyleSheet.absoluteFill} />
+                      <View style={styles.themedCardHeaderRow}>
+                        <GradientIcon size={20}><Ionicons name="moon-outline" size={20} color="#000" /></GradientIcon>
+                        <Text style={styles.themedCardTitle}>Shadow & Growth Path</Text>
+                        <Ionicons name={expandedLifeTheme === 'shadow' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
+                      </View>
+                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'shadow' ? undefined : 3}>{shadowGrowth.synthesis}</Text>
+                      {expandedLifeTheme === 'shadow' && (
+                        <View style={styles.themedCardDetails}>
+                          <Text style={styles.themedCardDetail}>• Saturn Lessons: {shadowGrowth.saturnLessons}</Text>
+                          <Text style={styles.themedCardDetail}>• Chiron Wound: {shadowGrowth.chironWound}</Text>
+                          <Text style={styles.themedCardDetail}>• Pluto Transformation: {shadowGrowth.plutoTransformation}</Text>
+                          <Text style={styles.themedCardDetail}>• Node Axis: {shadowGrowth.nodeAxis}</Text>
+                          {shadowGrowth.growthEdges.map((edge, i) => <Text key={i} style={styles.themedCardDetail}>• {edge}</Text>)}
+                        </View>
+                      )}
+                    </VelvetGlassSurface>
+                  </Pressable>
+                )}
+              </SectionAccordion>
+            </Animated.View>
+          )}
+
+          {/* ── Premium Upsell (free users) ── */}
           {!isPremium && (
             <Animated.View entering={FadeInDown.delay(400).duration(600)} style={{ width: '100%' }}>
-              <Pressable
-                onPress={() => router.push('/(tabs)/premium' as Href)}
-                accessibilityRole="button"
-                accessibilityLabel="Unlock Deeper Sky premium features"
-              >
-                <LinearGradient
-                  colors={['rgba(232, 214, 174,0.12)', 'rgba(232, 214, 174,0.04)']}
-                  style={[styles.overlayUpsell, { borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' }]}
-                >
+              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock Deeper Sky premium features">
+                <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.overlayUpsell, { borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Ionicons name="sparkles-outline" size={16} color={theme.textPrimary} />
                     <View style={{ flex: 1 }}>
                       <MetallicText style={[styles.overlayUpsellText, { fontWeight: '600' }]} color="#CFAE73">Your chart has more to say</MetallicText>
-                      <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
-                        Nodes, Chiron, Lilith, Vertex, chart ruler, stelliums, retrogrades, and minor aspects
-                      </Text>
+                      <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>Nodes, Chiron, Lilith, Vertex, chart ruler, stelliums, retrogrades, and minor aspects</Text>
                     </View>
                     <Ionicons name="arrow-forward-outline" size={16} color={theme.textPrimary} />
                   </View>
@@ -2661,85 +2026,81 @@ export default function ChartScreen() {
             </Animated.View>
           )}
 
-          {/* ── The Celestial Glossary (Instructional Context) ── */}
-          <SectionAccordion
-            title="Celestial Glossary"
-            subtitle="Archetypal Definitions & System Logic"
-            sectionKey="glossary"
-            openSections={openSections}
-            setOpenSections={setOpenSections}
-          >
-             <View style={styles.glossaryContainer}>
-                {GLOSSARY_TERMS.map((item) => (
-                  <Pressable
-                    key={item.term}
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      setExpandedTerm(expandedTerm === item.term ? null : item.term);
-                    }}
-                    style={styles.glossaryRow}
-                  >
-                    <View style={styles.glossaryHeader}>
-                       <Text style={styles.glossaryTerm}>{item.term.toUpperCase()}</Text>
-                       <Ionicons name={expandedTerm === item.term ? 'remove' : 'add'} size={20} color={PALETTE.titanium} />
-                    </View>
-                    {expandedTerm === item.term && (
-                      <Animated.View entering={FadeIn.duration(400)}>
-                        <Text style={styles.glossaryDef}>{item.def}</Text>
-                      </Animated.View>
-                    )}
-                  </Pressable>
-                ))}
-             </View>
-          </SectionAccordion>
+          {/* ── Chart Glossary ── */}
+          <Animated.View entering={FadeInDown.duration(600)} style={styles.glossarySection}>
+            <Pressable
+              style={styles.glossarySectionTitleRow}
+              onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowGlossary((prev) => !prev); }}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle chart glossary"
+            >
+              <Text style={styles.glossarySectionTitle}>Chart Glossary</Text>
+              <Ionicons name={showGlossary ? 'chevron-up' : 'chevron-down'} size={20} color={theme.textMuted} />
+            </Pressable>
+            {showGlossary && (
+              <View style={styles.glossaryCard}>
+                <VelvetGlassSurface style={{ flex: 1 }} intensity={45}>
+                <LinearGradient colors={chartSurfaceGradients.settings} style={StyleSheet.absoluteFill} />
+                <View style={styles.glossaryGradient}>
+                  {GLOSSARY_TERMS.map((item, index) => (
+                    <Pressable
+                      key={item.term}
+                      onPress={() => { Haptics.selectionAsync().catch(() => {}); setExpandedTerm(expandedTerm === item.term ? null : item.term); }}
+                      style={[styles.glossaryRow, index < GLOSSARY_TERMS.length - 1 && styles.glossaryRowBorder]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${item.term}, glossary term`}
+                    >
+                      <View style={styles.glossaryHeader}>
+                        <Text style={styles.glossaryTerm}>{item.term}</Text>
+                        <Ionicons name={expandedTerm === item.term ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
+                      </View>
+                      {expandedTerm === item.term && <Text style={styles.glossaryDefinition}>{item.def}</Text>}
+                    </Pressable>
+                  ))}
+                </View>
+                </VelvetGlassSurface>
+              </View>
+            )}
+          </Animated.View>
 
-          {/* ── Calibration (System Settings) Launcher ── */}
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-              setShowAstrologyModal(true);
-            }}
-            style={styles.calibrationLauncher}
-          >
-            <VelvetGlassSurface style={[styles.calibrationGlass, styles.velvetBorder]} intensity={30}>
-              <Ionicons name="settings-outline" size={22} color={PALETTE.titanium} />
-              <MetallicText style={styles.calibrationText} variant="gold">CALIBRATE BLUEPRINT ENGINE</MetallicText>
-            </VelvetGlassSurface>
-          </Pressable>
-
-          <View style={{ height: 140 }} />
+          <View style={{ height: 120 }} />
         </ScrollView>
       </SafeAreaView>
 
-      {/* ── Chart Settings Modal ── */}
+      {/* ── Relationship Type Picker Modal ── */}
+      {showRelTypePicker && (
+        <View style={styles.relTypePickerOverlay}>
+          <View style={[styles.relTypePicker, { backgroundColor: 'transparent' }]}>
+            <Text style={styles.relTypeTitle}>What's their relationship to you?</Text>
+            {(Object.keys(RELATIONSHIP_LABELS) as RelationshipType[]).map((type) => (
+              <Pressable
+                key={type}
+                style={styles.relTypeOption}
+                onPress={() => handleAddPerson(type)}
+              >
+                <Text style={styles.relTypeOptionText}>{RELATIONSHIP_LABELS[type]}</Text>
+              </Pressable>
+            ))}
+            <Pressable style={styles.relTypeCancelBtn} onPress={() => setShowRelTypePicker(false)}>
+              <Text style={styles.relTypeCancelText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      {/* ── Modals ── */}
       <AstrologySettingsModal
         visible={showAstrologyModal}
-        onClose={() => setShowAstrologyModal(false)}
-        onSettingsChanged={(updated) => {
-          setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(updated.houseSystem));
-          setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(updated.orbPreset));
-          setZodiacSystemLabel(updated.zodiacSystem === 'sidereal' ? 'Sidereal' : 'Tropical');
-          setChartOrientation(updated.chartOrientation ?? 'standard-natal');
-          // Clear natal chart cache so changes take effect
-          AstrologyCalculator.clearNatalChartCache();
-          // Clear overlays so they regenerate with new settings
-          setActiveOverlays([]);
-          // Recalculate chart with new house system / orb settings
-          void loadChart();
-        }}
+        onClose={() => { setShowAstrologyModal(false); void loadChart(); }}
       />
-
-      {/* ── Add Person Modal ── */}
       <BirthDataModal visible={showAddModal} onClose={() => setShowAddModal(false)} onSave={handleSaveNewPerson} />
-
-      {/* ── Premium upsell (for Complete Chart tab) ── */}
       <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
     </View>
   );
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   center: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
     color: theme.textSecondary,
@@ -2765,18 +2126,57 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140, gap: 0 },
   glowOrb: {
     position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    opacity: 0.6,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    opacity: 0.5,
   },
 
   header: {
     alignItems: 'flex-start',
     marginBottom: 32,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  backLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 1.5,
+  },
+  settingsAction: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleStack: {
+    flex: 1,
+  },
+  wheelCaption: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.58)',
+    fontWeight: '500',
+    letterSpacing: 1.4,
+    lineHeight: 20,
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   headerUtilityRow: {
     flexDirection: 'row',
@@ -2856,12 +2256,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
 
   bigThreeCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
+    borderRadius: 32,
+    padding: 28,
     width: '100%',
     alignItems: 'center',
-    minHeight: 152,
+    minHeight: 160,
     justifyContent: 'center',
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.25)',
+    borderLeftColor: 'rgba(255,255,255,0.12)',
+    borderRightColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   bigThreeGrid: {
     width: '100%',
@@ -2923,11 +2328,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   mcDeg: { color: theme.textSecondary, fontSize: 10, marginTop: 2, textAlign: 'center' },
 
   sensitiveCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
+    borderRadius: 32,
+    padding: 28,
     marginBottom: theme.spacing.lg,
     width: '100%',
     alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.25)',
+    borderLeftColor: 'rgba(255,255,255,0.12)',
+    borderRightColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   sensitiveTitle: {
     color: theme.textMuted,
@@ -2946,28 +2357,33 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   sensitiveItem: { alignItems: 'center', minWidth: 90 },
-  sensitiveName: { color: theme.textPrimary, fontSize: 12, fontWeight: '600', textAlign: 'center' },
-  sensitiveSign: { color: theme.textSecondary, fontSize: 13, fontWeight: '500', marginTop: 2, textAlign: 'center' },
-  sensitiveDeg: { color: theme.textMuted, fontSize: 11, marginTop: 1, textAlign: 'center' },
+  sensitiveName: { color: '#FFFFFF', fontSize: 13, fontWeight: '700', textAlign: 'center', letterSpacing: -0.3 },
+  sensitiveSign: { color: 'rgba(255,255,255,0.65)', fontSize: 13, fontWeight: '500', marginTop: 2, textAlign: 'center', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  sensitiveDeg: { color: 'rgba(255,255,255,0.40)', fontSize: 11, marginTop: 2, textAlign: 'center' },
 
   insightBox: {
-    backgroundColor: 'transparent',
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 24,
+    padding: 20,
+    marginTop: theme.spacing.md,
     width: '100%',
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.18)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   insightLabel: {
-    color: theme.textMuted,
+    color: 'rgba(255,255,255,0.40)',
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 4,
+    letterSpacing: 2,
+    marginBottom: 6,
     textAlign: 'center',
   },
-  insightTitle: { color: theme.textPrimary, fontSize: 15, fontWeight: '600', fontFamily: 'serif', textAlign: 'center' },
-  insightText: { color: theme.textSecondary, fontSize: 13, lineHeight: 19, textAlign: 'center' },
+  insightTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', letterSpacing: -0.5, textAlign: 'center', marginBottom: 6 },
+  insightText: { color: 'rgba(255,255,255,0.55)', fontSize: 15, lineHeight: 22, textAlign: 'center', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
 
   pointsDivider: {
     marginTop: theme.spacing.lg,
@@ -3008,6 +2424,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderBottomColor: 'rgba(232, 214, 174,0.15)',
     width: '100%',
   },
+  blueprintTableHeader: {
+    marginBottom: 12,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 22,
+    borderBottomWidth: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
   th: {
     color: theme.textMuted,
     fontSize: 11,
@@ -3018,13 +2442,20 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
-    paddingHorizontal: 10,
-    paddingVertical: 14,
-    borderRadius: 24,
-    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderRadius: 28,
     width: '100%',
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
+  },
+  blueprintRowShell: {
+    marginBottom: 10,
+    borderRadius: 28,
+    overflow: 'hidden',
   },
 
   wheelFrame: {
@@ -3060,8 +2491,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: 'transparent',
   },
   wheelMetaContainer: {
-    marginTop: 14,
+    marginTop: 6,
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
   wheelMetaText: {
     color: theme.textPrimary,
@@ -3083,58 +2515,92 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
 
   td: { justifyContent: 'center', alignItems: 'center' },
+  blueprintLeadCell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  blueprintIconSlot: {
+    width: 28,
+    minWidth: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  blueprintSymbolSlot: {
+    width: 24,
+    minWidth: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  blueprintTextStack: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   planetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: theme.isDark ? '#FFFFFF' : theme.textPrimary, marginRight: 10, width: 28, textAlign: 'center' },
   signSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: theme.isDark ? '#FFFFFF' : theme.textPrimary, marginRight: 6, width: 24, textAlign: 'center' },
-  planetName: { color: theme.textPrimary, fontWeight: '600', fontSize: 14, textAlign: 'center' },
-  retroLabel: { color: theme.isDark ? '#FFFFFF' : theme.textPrimary, fontSize: 10, fontWeight: '700', textAlign: 'center' },
-  signName: { fontWeight: '600', fontSize: 10, textAlign: 'center' },
-  elementLabel: { color: theme.textMuted, fontSize: 10, textAlign: 'center' },
-  degreeText: { color: theme.textPrimary, fontWeight: '600', fontSize: 14, textAlign: 'center' },
-  minuteText: { color: theme.textSecondary, fontSize: 11, textAlign: 'center' },
-  houseNum: { color: theme.textPrimary, fontWeight: '700', fontSize: 16, textAlign: 'center' },
+  planetName: { color: '#FFFFFF', fontWeight: '700', fontSize: 15, letterSpacing: -0.3, textAlign: 'center' },
+  retroLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
+  signName: { fontWeight: '700', fontSize: 13, letterSpacing: -0.2, color: '#FFFFFF', textAlign: 'center' },
+  elementLabel: { color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 3, fontWeight: '500', letterSpacing: 0.3, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  degreeText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15, textAlign: 'center' },
+  minuteText: { color: 'rgba(255,255,255,0.5)', fontSize: 12, textAlign: 'center', marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  houseNum: { color: '#FFFFFF', fontWeight: '800', fontSize: 16, textAlign: 'center' },
 
   houseSystemLabel: {
-    color: theme.textMuted,
-    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 2.2,
+    textTransform: 'uppercase',
     textAlign: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 12,
     width: '100%',
   },
-  houseNumLarge: { color: theme.primary, fontWeight: '700', fontSize: 18, textAlign: 'center' },
-  houseTheme: { color: theme.textSecondary, fontSize: 12, lineHeight: 16, textAlign: 'center' },
-
-  aspectPlanetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: theme.isDark ? '#FFFFFF' : theme.textPrimary, marginRight: 6, width: 24, textAlign: 'center' },
-  aspectIconWrap: { width: 24, marginRight: 6, alignItems: 'center', justifyContent: 'center' },
-  aspectPlanetName: { color: theme.textPrimary, fontWeight: '600', fontSize: 13, textAlign: 'center' },
-  aspectSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: theme.isDark ? '#FFFFFF' : theme.textPrimary, fontWeight: '700', textAlign: 'center' },
-  aspectName: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
-  aspectNature: { fontSize: 9, textAlign: 'center' },
-  orbText: { fontWeight: '700', fontSize: 14, textAlign: 'center' },
-  applyingLabel: { color: theme.textMuted, fontSize: 9, textAlign: 'center' },
-
-  legend: {
-    marginTop: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: theme.isDark ? 'rgba(10, 18, 36,0.4)' : theme.cardSurface,
-    alignItems: 'center',
-    borderWidth: theme.isDark ? 0 : 1,
-    borderColor: theme.isDark ? 'transparent' : theme.cardBorder,
-  },
-  legendTitle: {
-    color: theme.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: theme.spacing.md,
+  houseNumLarge: { color: '#D4AF37', fontWeight: '800', fontSize: 18, textAlign: 'center' },
+  houseTheme: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
     textAlign: 'center',
   },
-  legendRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6, justifyContent: 'center' },
-  legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
-  legendText: { color: theme.textSecondary, fontSize: 13, textAlign: 'center' },
-  legendNote: { color: theme.textMuted, fontSize: 11, marginTop: theme.spacing.sm, textAlign: 'center' },
+
+  aspectPlanetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: theme.isDark ? '#FFFFFF' : theme.textPrimary, marginRight: 6, width: 24, textAlign: 'center' },
+  aspectIconWrap: { width: 24, minWidth: 24, alignItems: 'center', justifyContent: 'center' },
+  aspectPlanetName: { color: '#FFFFFF', fontWeight: '700', fontSize: 14, textAlign: 'center' },
+  aspectSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#FFFFFF', fontWeight: '700', textAlign: 'center' },
+  aspectName: { fontSize: 12, fontWeight: '700', textAlign: 'center', letterSpacing: 0.3 },
+  aspectNature: { fontSize: 10, textAlign: 'center', color: 'rgba(255,255,255,0.5)', letterSpacing: 0.9, textTransform: 'uppercase', marginTop: 2 },
+  orbText: { fontWeight: '800', fontSize: 15, textAlign: 'center' },
+  applyingLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10, textAlign: 'center', letterSpacing: 0.8, marginTop: 2, textTransform: 'uppercase' },
+
+  legend: {
+    marginTop: 16,
+    padding: 28,
+    borderRadius: 32,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.18)',
+    borderLeftColor: 'rgba(255,255,255,0.08)',
+    borderRightColor: 'rgba(255,255,255,0.03)',
+    borderBottomColor: 'rgba(255,255,255,0.01)',
+  },
+  legendTitle: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 2.5,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  legendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 10 },
+  legendText: { color: 'rgba(255,255,255,0.55)', fontSize: 15, lineHeight: 22, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', textAlign: 'center', fontWeight: '500' },
+  legendNote: { color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 10, lineHeight: 18, textAlign: 'center' },
 
   aspectUpsell: {
     flexDirection: 'row',
@@ -3149,22 +2615,59 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   emptyState: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { color: theme.textMuted, fontSize: 14, marginTop: 12, textAlign: 'center' },
 
-  patternCard: { borderRadius: theme.borderRadius.xl, padding: theme.spacing.lg, marginBottom: theme.spacing.md, width: '100%', alignItems: 'center' },
-  patternHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing.md },
-  patternIcon: { fontSize: 20, marginRight: 10 },
-  patternTitle: { color: theme.textPrimary, fontWeight: '700', fontSize: 17, textAlign: 'center' },
-  patternHighlight: {
-    backgroundColor: 'transparent',
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: theme.spacing.md,
-    alignSelf: 'center',
+  patternCard: {
+    borderRadius: 32,
+    padding: 28,
+    marginBottom: 16,
+    width: '100%',
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.25)',
+    borderLeftColor: 'rgba(255,255,255,0.12)',
+    borderRightColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
+    overflow: 'hidden',
   },
-  patternHighlightText: { color: theme.isDark ? '#CFAE73' : '#1A1815', fontWeight: '700', fontSize: 15, textAlign: 'center' },
-  patternDesc: { color: theme.textSecondary, fontSize: 12, lineHeight: 19, marginTop: theme.spacing.sm, textAlign: 'center' },
-  tooltipBox: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', backgroundColor: 'transparent', borderRadius: theme.borderRadius.md, padding: 10, marginTop: theme.spacing.md },
-  tooltipText: { color: theme.textMuted, fontSize: 11, lineHeight: 16, marginLeft: 6, flex: 1, textAlign: 'center' },
+  patternHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  patternIcon: { fontSize: 20, marginRight: 12 },
+  patternTitle: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 26,
+    letterSpacing: -1,
+    flex: 1,
+  },
+  patternHighlight: {
+    backgroundColor: 'rgba(44, 54, 69, 0.88)',
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginBottom: 12,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.16)',
+    borderLeftColor: 'rgba(255,255,255,0.08)',
+    borderRightColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
+  },
+  patternHighlightText: { color: '#D4AF37', fontWeight: '700', fontSize: 15, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  patternDesc: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 6,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontWeight: '500',
+  },
+  tooltipBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 16,
+    padding: 12,
+    marginTop: 14,
+    gap: 8,
+  },
+  tooltipText: { color: 'rgba(255,255,255,0.45)', fontSize: 12, lineHeight: 18, flex: 1 },
 
   // ── People Bar (Multi-Chart) ──
   peopleBar: {
@@ -3318,13 +2821,21 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   glossarySection: { alignSelf: 'stretch', marginHorizontal: theme.spacing.lg, marginBottom: theme.spacing.xl },
   glossarySectionTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: theme.spacing.md },
   glossarySectionTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif' },
-  glossaryCard: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" },
-  glossaryGradient: { paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm },
-  glossaryRow: { paddingVertical: theme.spacing.md },
+  glossaryCard: {
+    borderRadius: 32,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.25)',
+    borderLeftColor: 'rgba(255,255,255,0.12)',
+    borderRightColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
+  },
+  glossaryGradient: { paddingHorizontal: 28, paddingVertical: 8 },
+  glossaryRow: { paddingVertical: 16 },
   glossaryRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.cardBorder },
   glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', flex: 1 },
-  glossaryDefinition: { fontSize: 14, color: theme.textPrimary, lineHeight: 20, marginTop: theme.spacing.xs },
+  glossaryDefinition: { fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 22, marginTop: 8, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   glossaryContainer: { width: '100%' },
   glossaryDef: { fontSize: 13, color: theme.textSecondary, lineHeight: 20, marginTop: theme.spacing.xs, fontFamily: 'serif' },
 
@@ -3390,8 +2901,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
 
   sensitiveIconBox: {
-    marginRight: 10,
     width: 28,
+    minWidth: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -3433,8 +2944,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     textAlign: 'center',
   },
   houseRowContainer: {
-    marginBottom: 8,
-    borderRadius: 24,
+    marginBottom: 10,
+    borderRadius: 28,
     overflow: 'hidden',
   },
   angularHighlight: {
@@ -3468,12 +2979,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: 8,
   },
   occupantPill: {
-    backgroundColor: 'rgba(232,214,174,0.08)',
+    backgroundColor: 'rgba(44, 54, 69, 0.88)',
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: 'rgba(232,214,174,0.12)',
+    borderTopColor: 'rgba(255,255,255,0.16)',
+    borderLeftColor: 'rgba(255,255,255,0.08)',
+    borderRightColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   occupantPillText: {
     color: '#CFAE73',
@@ -3485,84 +2999,110 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // ── Aspect Interpretations ──
   aspectInterp: {
-    fontSize: 12,
-    color: theme.textMuted,
-    lineHeight: 17,
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.sm,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.55)',
+    lineHeight: 22,
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+    paddingTop: 4,
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontWeight: '500',
   },
 
   // ── Themed Interpretation Sections ──
-  accordionContainer: { width: '100%', marginBottom: theme.spacing.sm },
-  accordionSubtitle: { fontSize: 12, color: theme.textMuted, marginTop: 2, letterSpacing: 0.2 },
-  themedSectionHeaderActive: { backgroundColor: 'rgba(255,255,255,0.05)' },
-  themedSectionHeader: { flexDirection: 'row', padding: 25, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 28, alignItems: 'center' },
+  accordionContainer: { width: '100%', marginBottom: 16 },
+  accordionSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4, letterSpacing: 2.2, textTransform: 'uppercase' },
+  themedSectionHeaderActive: { backgroundColor: 'rgba(255,255,255,0.06)' },
+  themedSectionHeader: {
+    flexDirection: 'row',
+    padding: 28,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.25)',
+    borderLeftColor: 'rgba(255,255,255,0.12)',
+    borderRightColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
+  },
   themedSectionHeaderText: { fontSize: 20, fontWeight: '900', letterSpacing: 1.5, color: '#FFF' },
   velvetBorder: {
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderTopColor: 'rgba(255,255,255,0.25)',
+    borderLeftColor: 'rgba(255,255,255,0.12)',
+    borderRightColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   themedCard: {
-    marginHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
+    marginHorizontal: 0,
+    marginBottom: 0,
+    borderRadius: 32,
+    padding: 28,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(232,214,174,0.10)',
+    borderTopColor: 'rgba(255,255,255,0.18)',
+    borderLeftColor: 'rgba(255,255,255,0.08)',
+    borderRightColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   themedCardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: theme.spacing.sm,
+    marginBottom: 10,
   },
   themedCardIcon: {
     fontSize: 20,
   },
   themedCardTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -1,
     flex: 1,
   },
   themedCardPlacements: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
-    marginBottom: theme.spacing.sm,
+    marginBottom: 10,
   },
   themedPlacementChip: {
-    backgroundColor: 'rgba(232,214,174,0.08)',
+    backgroundColor: 'rgba(44, 54, 69, 0.88)',
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: 'rgba(232,214,174,0.12)',
+    borderTopColor: 'rgba(255,255,255,0.16)',
+    borderLeftColor: 'rgba(255,255,255,0.08)',
+    borderRightColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   themedPlacementText: {
     fontSize: 10,
     color: '#CFAE73',
-    fontFamily: 'serif',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   themedCardSummary: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    lineHeight: 19,
-    fontFamily: 'serif',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.55)',
+    lineHeight: 22,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontWeight: '500',
   },
   themedCardDetails: {
-    marginTop: theme.spacing.sm,
-    paddingTop: theme.spacing.sm,
+    marginTop: 14,
+    paddingTop: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: theme.cardBorder,
-    gap: 6,
+    borderTopColor: 'rgba(255,255,255,0.10)',
+    gap: 8,
   },
   themedCardDetail: {
-    fontSize: 12,
-    color: theme.textSecondary,
-    lineHeight: 19,
-    fontFamily: 'serif',
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.65)',
+    lineHeight: 21,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
 
   profileStack: {
@@ -3579,8 +3119,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   editorialCard: {
     width: '100%',
-    borderRadius: 28,
-    padding: theme.spacing.lg,
+    borderRadius: 32,
+    padding: 28,
     overflow: 'hidden',
   },
   ddHeaderRow: {
@@ -3688,6 +3228,140 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   deepDiveContainer: {
     width: '100%',
     marginTop: theme.spacing.md,
+  },
+  planetDiveHeaderRow: {
+    alignItems: 'center',
+    gap: 10,
+  },
+  planetDiveTitle: {
+    flex: 0,
+    flexShrink: 0,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  planetDiveChipRow: {
+    flexDirection: 'row',
+    gap: 6,
+    flex: 1,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    flexShrink: 1,
+    overflow: 'hidden',
+  },
+  planetDiveSummary: {
+    textAlign: 'center',
+  },
+  planetDiveDetail: {
+    textAlign: 'center',
+  },
+  houseDiveHeaderRow: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+  houseDiveTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  houseDiveChipRow: {
+    flexDirection: 'row',
+    gap: 4,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  houseDiveSummary: {
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  dignityChipGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  dignityCard: {
+    borderRadius: 32,
+    padding: 22,
+    marginBottom: 12,
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
+  },
+  dignityCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    width: '100%',
+  },
+  dignityPlanetName: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    textAlign: 'center',
+  },
+  dignityMeta: {
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  dignityDescription: {
+    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 22,
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontWeight: '500',
+  },
+  strongAspectCard: {
+    borderRadius: 32,
+    padding: 22,
+    marginBottom: 12,
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: 'rgba(255,255,255,0.02)',
+  },
+  strongAspectHeader: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  strongAspectTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    textAlign: 'center',
+  },
+  strongAspectMeta: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  strongAspectDescription: {
+    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 22,
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontWeight: '500',
   },
 
 });

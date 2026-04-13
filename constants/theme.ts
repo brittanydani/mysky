@@ -106,8 +106,12 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
 
     // Primary Colors
     primary: isDark ? METALLIC_GOLD.mid : (palette as typeof AURORA).gold,
+    primaryDark: METALLIC_GOLD.shadow,
     background: palette.bgTop,
+    backgroundSecondary: palette.bgMid,
     backgroundDeep: palette.bgDeep,
+    backgroundTertiary: isDark ? 'rgba(255, 255, 255, 0.05)' : '#FFFFFF',
+    surface: isDark ? palette.cardBg : 'rgba(255, 255, 255, 0.75)',
 
     // Text Colors
     textPrimary: palette.heading,
@@ -115,6 +119,12 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
     textMuted: palette.muted,
     textInk: isDark ? '#FFFFFF' : '#1A1815', // Pure white data in Dark mode
     textGold: isDark ? METALLIC_GOLD.mid : (palette as typeof AURORA).gold,
+    titanium: METALLIC_GOLD.mid,
+    goldLight: METALLIC_GOLD.highlight,
+    goldMain: METALLIC_GOLD.mid,
+    goldDark: METALLIC_GOLD.shadow,
+    slateMid: '#2C3645',
+    slateDeep: '#1A1E29',
 
     // Semantic Colors
     success: palette.success,
@@ -146,9 +156,19 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
 
     // Generic Smoked Glass
     cardSurface: isDark ? palette.cardBg : 'rgba(255, 255, 255, 0.75)',
+    cardSurfaceStrong: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.92)',
+    surfaceLight: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.92)',
+    cardGradientStart: isDark ? 'rgba(44, 54, 69, 0.85)' : 'rgba(255, 255, 255, 0.98)',
+    cardGradientEnd: isDark ? 'rgba(26, 30, 41, 0.40)' : 'rgba(244, 238, 229, 0.98)',
     cardBorder: palette.cardBorder,
     cardHighlight: isDark ? 'rgba(255, 255, 255, 0.20)' : 'rgba(255, 255, 255, 0.90)',
     pillSurface: isDark ? 'rgba(255, 255, 255, 0.08)' : '#FFFFFF',
+    pillSurfaceMuted: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.58)',
+    inputBackground: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.92)',
+    inputBorder: isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(0, 0, 0, 0.08)',
+    glass: {
+      highlight: isDark ? 'rgba(255, 255, 255, 0.20)' : 'rgba(255, 255, 255, 0.90)',
+    },
 
     // ── Velvet Glass Directional Light Catch ──────────────────────────────────
     // Spread into styles for the 1px light-machined look.
