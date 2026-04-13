@@ -114,17 +114,18 @@ export const mySkyStroke = {
   bold:     0.020,
 } as const;
 
-// ── Fill gradient — rich Lunar Gold for filled chips, badges, buttons ──────
-// Diagonal sweep (start top-left, end bottom-right) for maximum depth.
-// Purged the "bronze mud" in favor of pure champagne transition.
+// ── Fill gradient — champagne gold metallic reflective ─────────────────────
+// High-contrast diagonal sweep: deep shadow → warm gold → bright pearl peak → return.
 export const metallicFillColors = [
-  '#8C631F',  // machined gold edge
-  '#B5892D',  // mid gold body
-  '#D4AF37',  // brand core
-  '#F4EBD0',  // lunar light catch
-  '#B5892D',  // mid gold return
+  '#5A3E0E',  // deep shadow root
+  '#8C631F',  // machined edge
+  '#C9A84C',  // warm champagne body
+  '#FEFAF0',  // pearl specular peak
+  '#E8C97A',  // illuminated champagne
+  '#8C631F',  // machined edge return
+  '#3D2908',  // shadow close
 ] as const;
-export const metallicFillPositions = [0, 0.25, 0.5, 0.75, 1] as const;
+export const metallicFillPositions = [0, 0.12, 0.32, 0.50, 0.68, 0.85, 1.0] as const;
 
 // ── Background palette (Midnight Slate System) ─────────────────────────────
 export const mySkyBackground = {

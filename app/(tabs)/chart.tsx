@@ -22,6 +22,8 @@ import {
   Text, 
   ScrollView, 
   StyleSheet, 
+  type ViewStyle,
+  type TextStyle,
   Pressable, 
   Alert, 
   Platform, 
@@ -160,14 +162,14 @@ const PALETTE = {
   atmosphere: '#A2C2E1',    // Icy Blue (Cognitive/Nav)
   nebula: '#A88BEB',        // Amethyst (Psychological depth)
   ember: '#DC5050',         // Tension (Challenging aspects)
-  sage: '#6EBF8B',          // Somatic (Harmonious aspects)
+  sage: '#7F9488',          // Somatic (Harmonious aspects)
   roseGold: '#E8C2CA',      // Emotional / Healing
   silver: '#D1D5DB',        // Technical / Meta
 };
 
 const ELEMENT_COLORS: Record<string, string> = {
   Fire: '#FF7A5C', 
-  Earth: '#9ACD32', 
+  Earth: '#7F9488', 
   Air: '#49DFFF', 
   Water: '#7B68EE',
 };
@@ -337,7 +339,7 @@ function SectionAccordion({
   children: React.ReactNode;
 }) {
   const theme = useAppTheme();
-  const styles = useThemedStyles(createStyles);
+  const styles = useThemedStyles(createStyles) as any;
   const isOpen = openSections.has(sectionKey);
   
   const toggle = () => {
@@ -351,17 +353,17 @@ function SectionAccordion({
   };
 
   return (
-    <View style={styles.accordionContainer}>
+    <View style={styles.accordionContainer as ViewStyle}>
       <Pressable
         onPress={toggle}
-        style={[styles.themedSectionHeader, isOpen && styles.themedSectionHeaderActive]}
+        style={[styles.themedSectionHeader as ViewStyle, isOpen && (styles.themedSectionHeaderActive as ViewStyle)]}
         accessibilityRole="button"
         accessibilityLabel={`Toggle ${title}`}
       >
         <View style={{ flex: 1 }}>
-          <Text style={styles.themedSectionHeaderText}>{title.toUpperCase()}</Text>
+          <Text style={styles.themedSectionHeaderText as TextStyle}>{title.toUpperCase()}</Text>
           {subtitle && !isOpen ? (
-            <Text style={styles.accordionSubtitle}>{subtitle}</Text>
+            <Text style={styles.accordionSubtitle as TextStyle}>{subtitle}</Text>
           ) : null}
         </View>
         <Ionicons 
@@ -371,7 +373,7 @@ function SectionAccordion({
         />
       </Pressable>
       {isOpen && (
-        <Animated.View entering={FadeIn.duration(400)}>
+        <Animated.View entering={FadeIn.duration(400)} style={styles.accordionContent as ViewStyle}>
           {children}
         </Animated.View>
       )}
@@ -444,7 +446,7 @@ const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
 
 export default function ChartScreen() {
   const theme = useAppTheme();
-  const styles = useThemedStyles(createStyles);
+  const styles = useThemedStyles(createStyles) as any;
   const router = useRouter();
   const { isPremium } = usePremium();
 
@@ -455,6 +457,9 @@ export default function ChartScreen() {
     atmosphere: ['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.05)'],
     stratosphere: ['rgba(92, 124, 170, 0.18)', 'rgba(92, 124, 170, 0.05)'],
     titanium: ['rgba(207, 174, 115, 0.12)', 'rgba(207, 174, 115, 0.02)'],
+    plum: ['rgba(168, 139, 235, 0.18)', 'rgba(168, 139, 235, 0.05)'],
+    rose: ['rgba(232, 194, 202, 0.18)', 'rgba(232, 194, 202, 0.05)'],
+    ember: ['rgba(220, 80, 80, 0.18)', 'rgba(220, 80, 80, 0.05)'],
   };
 
   const chartSurfaceGradients = {
@@ -467,6 +472,14 @@ export default function ChartScreen() {
     goldPanelSoft: theme.cardSurfaceRelational as unknown as string[],
     goldPanelBarely: theme.cardSurfaceAnchor as unknown as string[],
     settings: theme.cardSurfaceAnchor as unknown as string[],
+    storySection: chartGradients.plum,
+    aspectsSection: chartGradients.ember,
+    dignitySection: chartGradients.titanium,
+    planetSection: theme.cardSurfaceSomatic as unknown as string[],
+    houseSection: chartGradients.rose,
+    lifeThemesSection: theme.cardSurfaceSomatic as unknown as string[],
+    pointsSection: chartGradients.titanium,
+    anglesSection: chartGradients.plum,
   };
 
   // ── Core Component State ──
@@ -907,14 +920,14 @@ export default function ChartScreen() {
   // ── Final Guardrails ──
   if (loading) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <View style={[styles.container as ViewStyle, styles.center as ViewStyle]}>
         <SkiaDynamicCosmos />
         <SkiaBreathingRing size={100} color="gold" rings={3} />
         <Animated.View
           entering={FadeIn.delay(400).duration(800)}
-          style={styles.loadingTextContainer}
+          style={styles.loadingTextContainer as ViewStyle}
         >
-          <Text style={styles.loadingText}>SYNCHRONIZING CELESTIAL BLUEPRINT...</Text>
+          <Text style={styles.loadingText as TextStyle}>SYNCHRONIZING CELESTIAL BLUEPRINT...</Text>
         </Animated.View>
       </View>
     );
@@ -922,7 +935,7 @@ export default function ChartScreen() {
 
   if (!userChart) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <View style={[styles.container as ViewStyle, styles.center as ViewStyle]}>
         <SkiaDynamicCosmos />
         <MaterialCommunityIcons
           name="moon-waxing-crescent"
@@ -930,12 +943,12 @@ export default function ChartScreen() {
           color={PALETTE.titanium}
           style={{ opacity: 0.3, marginBottom: 24 }}
         />
-        <Text style={styles.loadingText}>NO GENESIS ARCHIVE FOUND.</Text>
-        <Text style={[styles.wheelHint, { paddingHorizontal: 40, marginTop: 12 }]}> 
+        <Text style={styles.loadingText as TextStyle}>NO GENESIS ARCHIVE FOUND.</Text>
+        <Text style={[styles.wheelHint as TextStyle, { paddingHorizontal: 24, marginTop: 12 }]}> 
           Your celestial blueprint personalizes your reflection and growth prompts throughout the MySky ecosystem.
         </Text>
         <Pressable
-          style={styles.goHomeBtn}
+          style={styles.goHomeBtn as ViewStyle}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
             router.replace('/(tabs)/home' as Href);
@@ -943,8 +956,8 @@ export default function ChartScreen() {
           accessibilityRole="button"
           accessibilityLabel="Initialize Genesis"
         >
-          <VelvetGlassSurface style={styles.initBtnGlass} intensity={25}>
-            <MetallicText style={styles.goHomeText} color={PALETTE.titanium}>
+          <VelvetGlassSurface style={styles.initBtnGlass as ViewStyle} intensity={25}>
+            <MetallicText style={styles.goHomeText as TextStyle} color={PALETTE.titanium}>
               INITIALIZE BLUEPRINT
             </MetallicText>
           </VelvetGlassSurface>
@@ -966,18 +979,18 @@ export default function ChartScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container as ViewStyle}>
       <SkiaDynamicCosmos />
 
       {/* Atmospheric Nebula Depth */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -80, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 140, left: -100, backgroundColor: 'rgba(212, 175, 55, 0.08)' }]} />
+      <View style={StyleSheet.absoluteFill as ViewStyle} pointerEvents="none">
+        <View style={[styles.glowOrb as ViewStyle, { top: -80, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb as ViewStyle, { bottom: 140, left: -100, backgroundColor: 'rgba(212, 175, 55, 0.08)' }]} />
       </View>
 
-      <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <SafeAreaView edges={['top']} style={styles.safeArea as ViewStyle}>
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={styles.scrollContent as ViewStyle}
           showsVerticalScrollIndicator={false}
         >
 
@@ -1452,7 +1465,7 @@ export default function ChartScreen() {
                             </View>
                             <View style={[styles.td, { flex: 1, alignItems: 'center' }]}> 
                               {asp.orb < 2 ? (
-                                <MetallicText color="#9ACD32" style={styles.orbText}>{asp.orb.toFixed(1)}°</MetallicText>
+                                <MetallicText color="#7F9488" style={styles.orbText}>{asp.orb.toFixed(1)}°</MetallicText>
                               ) : (
                                 <Text style={[styles.orbText, { color: asp.orb < 5 ? theme.primary : theme.textSecondary }]}>{asp.orb.toFixed(1)}°</Text>
                               )}
@@ -1465,9 +1478,9 @@ export default function ChartScreen() {
                     );
                   })}
                   <VelvetGlassSurface style={styles.legend} intensity={45}>
-                    <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={StyleSheet.absoluteFill} />
+                    <LinearGradient colors={chartSurfaceGradients.storySection} style={StyleSheet.absoluteFill} />
                     <Text style={styles.legendTitle}>Aspect Legend</Text>
-                    <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: '#9ACD32' }]} /><Text style={styles.legendText}>Harmonious (trines, sextiles)</Text></View>
+                    <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: '#7F9488' }]} /><Text style={styles.legendText}>Harmonious (trines, sextiles)</Text></View>
                     <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: '#E07A7A' }]} /><Text style={styles.legendText}>Challenging (squares, oppositions)</Text></View>
                     <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: theme.isDark ? '#FFFFFF' : theme.textPrimary }]} /><Text style={styles.legendText}>Neutral (conjunctions)</Text></View>
                     <Text style={styles.legendNote}>Tighter orbs (lower numbers) = stronger influence</Text>
@@ -1698,10 +1711,10 @@ export default function ChartScreen() {
               <SectionAccordion title="Strongest Aspects" subtitle="Your most important planetary connections" sectionKey="keyAspects" openSections={openSections} setOpenSections={setOpenSections}>
                 {keyAspects.slice(0, 10).map((ka, idx) => (
                   <VelvetGlassSurface key={`ka-${idx}`} style={styles.strongAspectCard} intensity={45}>
-                    <LinearGradient colors={idx % 2 === 0 ? chartSurfaceGradients.rowPrimary : chartSurfaceGradients.rowSecondary} style={StyleSheet.absoluteFill} />
+                    <LinearGradient colors={chartSurfaceGradients.aspectsSection} style={StyleSheet.absoluteFill} />
                     <View style={styles.strongAspectHeader}>
                       <Text style={styles.strongAspectTitle}>{ka.planet1} {ka.type.toLowerCase()} {ka.planet2}</Text>
-                      <Text style={[styles.strongAspectMeta, { color: ka.nature === 'Harmonious' ? '#9ACD32' : ka.nature === 'Challenging' ? '#C387D9' : '#FFDA03' }]}>{ka.orb.toFixed(1)}° · {ka.nature}</Text>
+                      <Text style={[styles.strongAspectMeta, { color: ka.nature === 'Harmonious' ? '#7F9488' : ka.nature === 'Challenging' ? '#C387D9' : '#FFDA03' }]}>{ka.orb.toFixed(1)}° · {ka.nature}</Text>
                     </View>
                     {isPremium && <Text style={styles.strongAspectDescription}>{ka.interpretation}</Text>}
                   </VelvetGlassSurface>
@@ -1716,7 +1729,7 @@ export default function ChartScreen() {
               <SectionAccordion title="Angles & Axes" subtitle="The four cardinal points of your chart" sectionKey="anglesAxes" openSections={openSections} setOpenSections={setOpenSections}>
                 {angleInterpretations.map((ai) => (
                   <VelvetGlassSurface key={ai.name} style={styles.themedCard} intensity={45}>
-                  <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={StyleSheet.absoluteFill} />
+                  <LinearGradient colors={chartSurfaceGradients.anglesSection} style={StyleSheet.absoluteFill} />
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{ai.name}</Text>
                       <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#CFAE73">{ai.sign} · {ai.degree}°</MetallicText>
@@ -1734,7 +1747,7 @@ export default function ChartScreen() {
               <SectionAccordion title="Chart Points" subtitle="Nodes, Chiron, Lilith, Part of Fortune & Vertex" sectionKey="chartPoints" openSections={openSections} setOpenSections={setOpenSections}>
                 {pointInterpretations.map((pi) => (
                   <VelvetGlassSurface key={pi.name} style={styles.themedCard} intensity={45}>
-                  <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <LinearGradient colors={chartSurfaceGradients.pointsSection} style={StyleSheet.absoluteFill} />
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{pi.name}</Text>
                       <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#CFAE73">{pi.sign}{pi.house ? ` · House ${pi.house}` : ''}</MetallicText>
@@ -1803,7 +1816,7 @@ export default function ChartScreen() {
                 <Text style={[styles.patternDesc, { marginBottom: 12, textAlign: 'center' }]}>{dignityAnalysis.summary}</Text>
                 {dignityAnalysis.strongestPlanets.length > 0 && (
                   <View style={styles.dignityChipGroup}>
-                    {dignityAnalysis.strongestPlanets.map(d => <View key={d.planet} style={[styles.themedPlacementChip, { borderColor: 'rgba(154,205,50,0.3)' }]}><Text style={[styles.themedPlacementText, { color: '#9ACD32' }]}>{d.planet}: {d.dignity}</Text></View>)}
+                    {dignityAnalysis.strongestPlanets.map(d => <View key={d.planet} style={[styles.themedPlacementChip, { borderColor: 'rgba(127,148,136,0.35)' }]}><Text style={[styles.themedPlacementText, { color: '#7F9488' }]}>{d.planet}: {d.dignity}</Text></View>)}
                   </View>
                 )}
                 {dignityAnalysis.challengedPlanets.length > 0 && (
@@ -1814,10 +1827,10 @@ export default function ChartScreen() {
                 {dignityAnalysis.planetDignities.filter(d => d.dignity !== 'peregrine').map(d => (
                   <Pressable key={d.planet} onPress={() => setExpandedPlanet(expandedPlanet === d.planet ? null : d.planet)} accessibilityRole="button" accessibilityLabel={`${d.planet} dignity details`}>
                     <VelvetGlassSurface style={styles.dignityCard} intensity={45}>
-                      <LinearGradient colors={chartSurfaceGradients.rowPrimary} style={StyleSheet.absoluteFill} />
+                      <LinearGradient colors={chartSurfaceGradients.dignitySection} style={StyleSheet.absoluteFill} />
                       <View style={styles.dignityCardHeader}>
                         <Text style={styles.dignityPlanetName}>{d.planet}</Text>
-                        <Text style={[styles.dignityMeta, { color: d.dignity === 'domicile' || d.dignity === 'exaltation' ? '#9ACD32' : '#C387D9' }]}>
+                        <Text style={[styles.dignityMeta, { color: d.dignity === 'domicile' || d.dignity === 'exaltation' ? '#7F9488' : '#C387D9' }]}> 
                           {d.dignity.charAt(0).toUpperCase() + d.dignity.slice(1)} in {d.sign}
                         </Text>
                         <Ionicons name={expandedPlanet === d.planet ? 'chevron-up' : 'chevron-down'} size={14} color={theme.textMuted} />
@@ -1857,14 +1870,14 @@ export default function ChartScreen() {
                 {planetDeepDives.map((dd) => (
                   <Pressable key={dd.planet} onPress={() => setExpandedPlanet(expandedPlanet === `dd-${dd.planet}` ? null : `dd-${dd.planet}`)} accessibilityRole="button" accessibilityLabel={`${dd.planet} deep dive`}>
                     <VelvetGlassSurface style={styles.themedCard} intensity={45}>
-                    <LinearGradient colors={chartSurfaceGradients.goldPanelBarely} style={StyleSheet.absoluteFill} />
+                    <LinearGradient colors={chartSurfaceGradients.planetSection} style={StyleSheet.absoluteFill} />
                       <View style={[styles.themedCardHeaderRow, styles.planetDiveHeaderRow]}>
                         <Text style={[styles.themedCardTitle, styles.planetDiveTitle]} numberOfLines={1}>{dd.planet}</Text>
                         <View style={styles.planetDiveChipRow}>
                           <View style={styles.themedPlacementChip}><Text style={[styles.themedPlacementText, { fontSize: 8 }]} numberOfLines={1}>{dd.sign}</Text></View>
                           {dd.house > 0 && <View style={styles.themedPlacementChip}><Text style={[styles.themedPlacementText, { fontSize: 8 }]} numberOfLines={1}>House {dd.house}</Text></View>}
                           {dd.isRetrograde && <View style={[styles.themedPlacementChip, { borderColor: 'rgba(232, 214, 174, 0.3)' }]}><Text style={[styles.themedPlacementText, { color: theme.isDark ? '#FFFFFF' : theme.textPrimary, fontSize: 8 }]}>℞</Text></View>}
-                          {dd.dignity.dignity !== 'peregrine' && <View style={[styles.themedPlacementChip, { borderColor: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? 'rgba(154,205,50,0.3)' : 'rgba(153,31,166,0.3)' }]}><Text style={[styles.themedPlacementText, { color: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? '#9ACD32' : '#991FA6', fontSize: 8 }]} numberOfLines={1}>{dd.dignity.dignity}</Text></View>}
+                          {dd.dignity.dignity !== 'peregrine' && <View style={[styles.themedPlacementChip, { borderColor: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? 'rgba(127,148,136,0.35)' : 'rgba(153,31,166,0.3)' }]}><Text style={[styles.themedPlacementText, { color: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? '#7F9488' : '#991FA6', fontSize: 8 }]} numberOfLines={1}>{dd.dignity.dignity}</Text></View>}
                         </View>
                         <Ionicons name={expandedPlanet === `dd-${dd.planet}` ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
                       </View>
@@ -1888,17 +1901,19 @@ export default function ChartScreen() {
                 {houseDeepDives.map((hd) => (
                   <Pressable key={hd.house} onPress={() => setExpandedHouse(expandedHouse === hd.house ? null : hd.house)} accessibilityRole="button" accessibilityLabel={`House ${hd.house} interpretation`}>
                     <VelvetGlassSurface style={styles.themedCard} intensity={45}>
-                    <LinearGradient colors={chartSurfaceGradients.rowPrimary} style={StyleSheet.absoluteFill} />
+                    <LinearGradient colors={chartSurfaceGradients.houseSection} style={StyleSheet.absoluteFill} />
                       <View style={[styles.themedCardHeaderRow, styles.houseDiveHeaderRow]}>
-                        <View style={styles.houseDiveTitleRow}>
-                          <MetallicText style={{ fontSize: 16, fontWeight: '700' }} color="#CFAE73">{hd.house}</MetallicText>
-                          <Text style={[styles.themedCardTitle, { flex: 0, textAlign: 'center' }]}>{hd.cuspSign}</Text>
+                        <View style={styles.houseDiveContentStack}>
+                          <View style={styles.houseDiveTitleRow}>
+                            <MetallicText style={{ fontSize: 16, fontWeight: '700' }} color="#CFAE73">{hd.house}</MetallicText>
+                            <Text style={[styles.themedCardTitle, styles.houseDiveTitle]} numberOfLines={1}>{hd.cuspSign}</Text>
+                          </View>
+                          <View style={styles.houseDiveChipRow}>
+                            {hd.ruler && <View style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>♜ {hd.ruler}</Text></View>}
+                            {hd.occupants.length > 0 && <View style={[styles.themedPlacementChip, { borderColor: 'rgba(207, 174, 115, 0.3)' }]}><Text style={styles.themedPlacementText}>{hd.occupants.join(', ')}</Text></View>}
+                          </View>
                         </View>
-                        <View style={styles.houseDiveChipRow}>
-                          {hd.ruler && <View style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>♜ {hd.ruler}</Text></View>}
-                          {hd.occupants.length > 0 && <View style={[styles.themedPlacementChip, { borderColor: 'rgba(207, 174, 115, 0.3)' }]}><Text style={styles.themedPlacementText}>{hd.occupants.join(', ')}</Text></View>}
-                        </View>
-                        <Ionicons name={expandedHouse === hd.house ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
+                        <Ionicons style={styles.houseDiveChevron} name={expandedHouse === hd.house ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
                       </View>
                       {expandedHouse === hd.house && <Text style={[styles.themedCardSummary, styles.houseDiveSummary]}>{hd.synthesis}</Text>}
                     </VelvetGlassSurface>
@@ -1915,7 +1930,7 @@ export default function ChartScreen() {
                 {relationshipProfile && (
                   <Pressable onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'relationship' ? null : 'relationship')} accessibilityRole="button" accessibilityLabel="Relationship profile">
                     <VelvetGlassSurface style={styles.themedCard} intensity={45}>
-                    <LinearGradient colors={chartSurfaceGradients.goldPanelSoft} style={StyleSheet.absoluteFill} />
+                    <LinearGradient colors={chartSurfaceGradients.lifeThemesSection} style={StyleSheet.absoluteFill} />
                       <View style={styles.themedCardHeaderRow}>
                         <GradientIcon size={20}><Ionicons name="heart-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Relationship Profile</Text>
@@ -1939,7 +1954,7 @@ export default function ChartScreen() {
                 {careerProfile && (
                   <Pressable onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'career' ? null : 'career')} accessibilityRole="button" accessibilityLabel="Career and purpose profile">
                     <VelvetGlassSurface style={styles.themedCard} intensity={45}>
-                    <LinearGradient colors={chartSurfaceGradients.goldPanelBarely} style={StyleSheet.absoluteFill} />
+                    <LinearGradient colors={chartSurfaceGradients.lifeThemesSection} style={StyleSheet.absoluteFill} />
                       <View style={styles.themedCardHeaderRow}>
                         <GradientIcon size={20}><Ionicons name="briefcase-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Career & Life Direction</Text>
@@ -1963,7 +1978,7 @@ export default function ChartScreen() {
                 {emotionalProfile && (
                   <Pressable onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'emotional' ? null : 'emotional')} accessibilityRole="button" accessibilityLabel="Emotional and psychological profile">
                     <VelvetGlassSurface style={styles.themedCard} intensity={45}>
-                    <LinearGradient colors={chartSurfaceGradients.goldPanelFaint} style={StyleSheet.absoluteFill} />
+                    <LinearGradient colors={chartSurfaceGradients.lifeThemesSection} style={StyleSheet.absoluteFill} />
                       <View style={styles.themedCardHeaderRow}>
                         <GradientIcon size={20}><Ionicons name="water-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Emotional & Inner World</Text>
@@ -1985,7 +2000,7 @@ export default function ChartScreen() {
                 {shadowGrowth && (
                   <Pressable onPress={() => setExpandedLifeTheme(expandedLifeTheme === 'shadow' ? null : 'shadow')} accessibilityRole="button" accessibilityLabel="Shadow and growth profile">
                     <VelvetGlassSurface style={styles.themedCard} intensity={45}>
-                    <LinearGradient colors={chartSurfaceGradients.goldPanelBarely} style={StyleSheet.absoluteFill} />
+                    <LinearGradient colors={chartSurfaceGradients.lifeThemesSection} style={StyleSheet.absoluteFill} />
                       <View style={styles.themedCardHeaderRow}>
                         <GradientIcon size={20}><Ionicons name="moon-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Shadow & Growth Path</Text>
@@ -2137,7 +2152,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   header: {
     alignItems: 'flex-start',
-    marginBottom: 32,
+    marginBottom: 40,
   },
   headerRow: {
     flexDirection: 'row',
@@ -2244,7 +2259,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: 'rgba(255,179,0,0.1)',
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    marginBottom: 32,
     width: '100%',
   },
   warningText: {
@@ -2330,7 +2345,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   sensitiveCard: {
     borderRadius: 32,
     padding: 28,
-    marginBottom: theme.spacing.lg,
+    marginBottom: 20,
     width: '100%',
     alignItems: 'center',
     overflow: 'hidden',
@@ -2386,9 +2401,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   insightText: { color: 'rgba(255,255,255,0.55)', fontSize: 15, lineHeight: 22, textAlign: 'center', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
 
   pointsDivider: {
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
-    paddingBottom: theme.spacing.sm,
+    marginTop: 20,
+    marginBottom: 12,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(232, 214, 174,0.15)',
   },
@@ -2403,7 +2418,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   tabRow: {
     flexDirection: 'row',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 32,
     borderRadius: theme.borderRadius.lg,
     backgroundColor: theme.isDark ? 'rgba(10, 18, 36,0.5)' : PALETTE.slateMid,
     padding: 4,
@@ -2425,7 +2440,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: '100%',
   },
   blueprintTableHeader: {
-    marginBottom: 12,
+    marginBottom: 20,
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: 22,
     borderBottomWidth: 0,
@@ -2453,7 +2468,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   blueprintRowShell: {
-    marginBottom: 10,
+    marginBottom: 12,
     borderRadius: 28,
     overflow: 'hidden',
   },
@@ -2479,7 +2494,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   wheelSection: {
     alignItems: 'center',
     width: '100%',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 32,
   },
   wheelGlassContainer: {
     width: '100%',
@@ -2578,7 +2593,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   applyingLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10, textAlign: 'center', letterSpacing: 0.8, marginTop: 2, textTransform: 'uppercase' },
 
   legend: {
-    marginTop: 16,
+    marginTop: 20,
     padding: 28,
     borderRadius: 32,
     overflow: 'hidden',
@@ -2618,7 +2633,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   patternCard: {
     borderRadius: 32,
     padding: 28,
-    marginBottom: 16,
+    marginBottom: 20,
     width: '100%',
     borderWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.25)',
@@ -2791,7 +2806,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     padding: theme.spacing.md,
     gap: 8,
     marginTop: 24,
-    marginBottom: theme.spacing.xl,
+    marginBottom: 32,
   },
   overlayUpsellText: { flex: 1, color: '#C9AE78', fontSize: 13, lineHeight: 18, textAlign: 'center' },
   calibrationLauncher: {
@@ -2818,7 +2833,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
 
   // ── Chart Glossary ──
-  glossarySection: { alignSelf: 'stretch', marginHorizontal: theme.spacing.lg, marginBottom: theme.spacing.xl },
+  glossarySection: { alignSelf: 'stretch', marginHorizontal: 0, marginBottom: 32 },
   glossarySectionTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: theme.spacing.md },
   glossarySectionTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif' },
   glossaryCard: {
@@ -2842,8 +2857,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   // ── Transparency Bar ──
   transparencyBar: {
     alignSelf: 'stretch',
-    marginHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    marginHorizontal: 0,
+    marginBottom: 32,
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
@@ -2944,7 +2959,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     textAlign: 'center',
   },
   houseRowContainer: {
-    marginBottom: 10,
+    marginBottom: 12,
     borderRadius: 28,
     overflow: 'hidden',
   },
@@ -3011,19 +3026,20 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
 
   // ── Themed Interpretation Sections ──
-  accordionContainer: { width: '100%', marginBottom: 16 },
+  accordionContainer: { width: '100%', marginBottom: 20 },
+  accordionContent: { marginTop: 24 },
   accordionSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4, letterSpacing: 2.2, textTransform: 'uppercase' },
-  themedSectionHeaderActive: { backgroundColor: 'rgba(255,255,255,0.06)' },
+  themedSectionHeaderActive: { backgroundColor: 'rgba(44, 54, 69, 0.96)' },
   themedSectionHeader: {
     flexDirection: 'row',
     padding: 28,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(44, 54, 69, 0.88)',
     borderRadius: 32,
     alignItems: 'center',
     borderWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.25)',
-    borderLeftColor: 'rgba(255,255,255,0.12)',
-    borderRightColor: 'rgba(255,255,255,0.05)',
+    borderTopColor: 'rgba(255,255,255,0.18)',
+    borderLeftColor: 'rgba(255,255,255,0.08)',
+    borderRightColor: 'rgba(255,255,255,0.04)',
     borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   themedSectionHeaderText: { fontSize: 20, fontWeight: '900', letterSpacing: 1.5, color: '#FFF' },
@@ -3036,7 +3052,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   themedCard: {
     marginHorizontal: 0,
-    marginBottom: 0,
+    marginBottom: 16,
     borderRadius: 32,
     padding: 28,
     overflow: 'hidden',
@@ -3093,7 +3109,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   themedCardDetails: {
     marginTop: 14,
-    paddingTop: 14,
+    paddingTop: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255,255,255,0.10)',
     gap: 8,
@@ -3107,7 +3123,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   profileStack: {
     width: '100%',
-    marginTop: theme.spacing.sm,
+    marginTop: 12,
   },
   editorialSectionLabel: {
     color: '#CFAE73',
@@ -3255,8 +3271,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     textAlign: 'center',
   },
   houseDiveHeaderRow: {
+    position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 0,
+    paddingRight: 22,
+  },
+  houseDiveContentStack: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 10,
   },
   houseDiveTitleRow: {
@@ -3264,16 +3288,32 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    width: '100%',
+  },
+  houseDiveTitle: {
+    flex: 0,
+    flexShrink: 1,
+    fontSize: 24,
+    textAlign: 'center',
   },
   houseDiveChipRow: {
     flexDirection: 'row',
-    gap: 4,
     flexWrap: 'wrap',
     justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    width: '100%',
+  },
+  houseDiveChevron: {
+    position: 'absolute',
+    right: 0,
+    top: 4,
   },
   houseDiveSummary: {
     marginTop: 8,
     textAlign: 'center',
+    width: '100%',
+    alignSelf: 'center',
   },
   dignityChipGroup: {
     flexDirection: 'row',
@@ -3281,11 +3321,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     marginBottom: 10,
+    width: '100%',
   },
   dignityCard: {
     borderRadius: 32,
+    alignSelf: 'center',
+    width: '100%',
     padding: 22,
-    marginBottom: 12,
+    marginBottom: 16,
     alignItems: 'center',
     overflow: 'hidden',
     borderWidth: 1,
@@ -3325,7 +3368,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   strongAspectCard: {
     borderRadius: 32,
     padding: 22,
-    marginBottom: 12,
+    marginBottom: 16,
     alignItems: 'center',
     overflow: 'hidden',
     borderWidth: 1,
