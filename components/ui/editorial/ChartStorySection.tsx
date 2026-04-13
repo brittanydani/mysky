@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { SkiaGradientText } from './SkiaGradientText';
 import { Spacing } from './theme';
 import { CoreIdentitySummary } from '../../../services/astrology/natalSynthesis';
@@ -10,27 +10,22 @@ export const ChartStorySection = ({ coreIdentity }: { coreIdentity: CoreIdentity
   const { sunSign, risingSign, overviewParts, chartRuler, chartRulerSign } = coreIdentity;
 
   const renderParagraph = (text: string, index: number) => {
-    // 1. Drop Cap for the first letter of the very first paragraph
-    if (index === 0) {
-      const firstLetter = text.charAt(0);
-      const rest = text.slice(1);
-      
-      // Simple boldness injection for the Sun Sign
-      const splitSun = rest.split(`${sunSign} Sun`);
-      const restContent = splitSun.length > 1 ? (
-        <>
-          {splitSun[0]}
-          <Text style={styles.boldEmphasis}>{sunSign} Sun</Text>
-          {splitSun[1]}
-        </>
-      ) : rest;
-      
-      return (
-        <Text key={`p-${index}`} style={styles.body}>
-          <Text style={styles.dropCap}>{firstLetter}</Text>{restContent}
-        </Text>
-      );
-    }
+      if (index === 0) {
+        const splitSun = text.split(`${sunSign} Sun`);
+        const content = splitSun.length > 1 ? (
+          <>
+            {splitSun[0]}
+            <Text style={styles.boldEmphasis}>{sunSign} Sun</Text>
+            {splitSun[1]}
+          </>
+        ) : text;
+
+        return (
+          <Text key={`p-${index}`} style={styles.body}>
+            {content}
+          </Text>
+        );
+      }
     
     // Bold Rising Sign mention
     if (risingSign && text.includes(`${risingSign} Rising`)) {
@@ -98,23 +93,20 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   narrativeContainer: {
-    gap: 20,
-  },
-  dropCap: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.5,
+    gap: 24,
   },
   boldEmphasis: {
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
+    color: '#D4AF37',
+    textShadowColor: 'rgba(249, 223, 159, 0.22)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
   },
   body: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.65)',
-    lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontSize: 16,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.92)',
+    lineHeight: 28,
+    letterSpacing: -0.2,
   },
 });

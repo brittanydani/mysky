@@ -38,15 +38,15 @@ const ASPECT_NATURE: Record<string, 'Harmonious' | 'Challenging' | 'Neutral'> = 
 };
 
 const NATURE_COLOR: Record<string, string> = {
-  Harmonious: '#6EBF8B',  // Sage
-  Challenging: '#DC5050', // Ember
-  Neutral: '#CFAE73',     // Titanium
+  Harmonious: '#608A8D',  // Sage / teal
+  Challenging: '#A88BEB', // Nebula purple
+  Neutral: '#A49E97',     // Taupe
 };
 
-const NATURE_WASH: Record<string, 'cardSurfaceSomatic' | 'cardSurfaceTension' | 'cardSurfaceAnchor'> = {
-  Harmonious: 'cardSurfaceSomatic',
-  Challenging: 'cardSurfaceTension',
-  Neutral: 'cardSurfaceAnchor',
+const NATURE_WASH: Record<string, [string, string]> = {
+  Harmonious: ['rgba(96, 138, 141, 0.24)', 'rgba(96, 138, 141, 0.08)'],
+  Challenging: ['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.06)'],
+  Neutral: ['rgba(164, 158, 151, 0.28)', 'rgba(120, 116, 111, 0.12)'],
 };
 
 // ── TYPES ──
@@ -90,8 +90,7 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
           const symbol = ASPECT_SYMBOLS[typeName] ?? '◦';
           const nature = ASPECT_NATURE[typeName] ?? 'Neutral';
           const iconColor = NATURE_COLOR[nature];
-          const washKey = NATURE_WASH[nature];
-          const washColors = theme[washKey] as [string, string];
+          const washColors = NATURE_WASH[nature];
           const orbDeg = aspect.orb != null ? `${aspect.orb.toFixed(1)}°` : '';
           const typeLabel = typeName.charAt(0).toUpperCase() + typeName.slice(1);
 

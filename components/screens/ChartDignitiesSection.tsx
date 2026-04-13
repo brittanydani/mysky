@@ -41,7 +41,7 @@ interface DignityModule {
   dignity: DignityLevel;
   score: number;
   iconColor: string;
-  washKey: 'cardSurfaceTension' | 'cardSurfaceSomatic' | 'cardSurfaceAnchor';
+  surfaceColors: [string, string];
 }
 
 // ── SPECTRUM VISUAL (native View-based, no Skia Canvas) ──
@@ -105,13 +105,13 @@ const spectrumStyles = StyleSheet.create({
   },
   labelLeft: {
     fontSize: 8,
-    color: 'rgba(220,80,80,0.6)',
+    color: 'rgba(164,158,151,0.72)',
     fontWeight: '700',
     letterSpacing: 1.5,
   },
   labelRight: {
     fontSize: 8,
-    color: 'rgba(110,191,139,0.6)',
+    color: 'rgba(96,138,141,0.72)',
     fontWeight: '700',
     letterSpacing: 1.5,
   },
@@ -142,12 +142,12 @@ export const ChartDignitiesSection = ({ dignityAnalysis }: Props) => {
         sign: p.sign,
         dignity: DIGNITY_DISPLAY[p.dignity] ?? 'Neutral',
         score,
-        iconColor: isChallenged ? '#DC5050' : isStrong ? '#6EBF8B' : '#CFAE73',
-        washKey: isChallenged
-          ? 'cardSurfaceTension'
+        iconColor: isChallenged ? '#A88BEB' : isStrong ? '#608A8D' : '#CFAE73',
+        surfaceColors: isChallenged
+          ? ['rgba(168,139,235,0.20)', 'rgba(168,139,235,0.06)']
           : isStrong
-          ? 'cardSurfaceSomatic'
-          : 'cardSurfaceAnchor',
+            ? ['rgba(96,138,141,0.24)', 'rgba(96,138,141,0.08)']
+            : ['rgba(164,158,151,0.28)', 'rgba(120,116,111,0.12)'],
       };
     });
 
@@ -162,14 +162,13 @@ export const ChartDignitiesSection = ({ dignityAnalysis }: Props) => {
 
       <View style={styles.grid}>
         {modules.map((mod, i) => {
-          const washColors = theme[mod.washKey] as [string, string];
           return (
             <Animated.View
               key={mod.id}
               entering={FadeInDown.delay(200 + i * 80).duration(700)}
             >
               <VelvetGlassSurface style={[styles.card, styles.velvetBorder]} intensity={40}>
-                <LinearGradient colors={washColors} style={StyleSheet.absoluteFill} />
+                <LinearGradient colors={mod.surfaceColors} style={StyleSheet.absoluteFill} />
 
                 {/* Header row */}
                 <View style={styles.cardHeader}>

@@ -162,14 +162,15 @@ const PALETTE = {
   atmosphere: '#A2C2E1',    // Icy Blue (Cognitive/Nav)
   nebula: '#A88BEB',        // Amethyst (Psychological depth)
   ember: '#DC5050',         // Tension (Challenging aspects)
-  sage: '#7F9488',          // Somatic (Harmonious aspects)
+  sageOriginal: '#8D9A8F',  // Original soft sage
+  sage: '#608A8D',          // Somatic (Harmonious aspects)
   roseGold: '#E8C2CA',      // Emotional / Healing
   silver: '#D1D5DB',        // Technical / Meta
 };
 
 const ELEMENT_COLORS: Record<string, string> = {
   Fire: '#FF7A5C', 
-  Earth: '#7F9488', 
+  Earth: '#608A8D', 
   Air: '#49DFFF', 
   Water: '#7B68EE',
 };
@@ -457,9 +458,12 @@ export default function ChartScreen() {
     atmosphere: ['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.05)'],
     stratosphere: ['rgba(92, 124, 170, 0.18)', 'rgba(92, 124, 170, 0.05)'],
     titanium: ['rgba(207, 174, 115, 0.12)', 'rgba(207, 174, 115, 0.02)'],
-    plum: ['rgba(168, 139, 235, 0.18)', 'rgba(168, 139, 235, 0.05)'],
+    sand: ['rgba(176, 170, 163, 0.36)', 'rgba(148, 142, 136, 0.24)'],
+    sage: ['rgba(96, 138, 141, 0.34)', 'rgba(96, 138, 141, 0.20)'],
+    sageOriginal: ['rgba(141, 154, 143, 0.34)', 'rgba(141, 154, 143, 0.20)'],
+    plum: ['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)'],
     rose: ['rgba(232, 194, 202, 0.18)', 'rgba(232, 194, 202, 0.05)'],
-    ember: ['rgba(220, 80, 80, 0.18)', 'rgba(220, 80, 80, 0.05)'],
+    ember: ['rgba(220, 80, 80, 0.20)', 'rgba(220, 80, 80, 0.05)'],
   };
 
   const chartSurfaceGradients = {
@@ -473,12 +477,16 @@ export default function ChartScreen() {
     goldPanelBarely: theme.cardSurfaceAnchor as unknown as string[],
     settings: theme.cardSurfaceAnchor as unknown as string[],
     storySection: chartGradients.plum,
-    aspectsSection: chartGradients.ember,
-    dignitySection: chartGradients.titanium,
+    aspectsSectionHarmonious: chartGradients.sage,
+    aspectsSectionChallenging: chartGradients.plum,
+    aspectsSectionNeutral: chartGradients.sand,
+    aspectsSectionFallback: chartGradients.anchor,
+    dignitySection: chartGradients.sand,
     planetSection: theme.cardSurfaceSomatic as unknown as string[],
-    houseSection: chartGradients.rose,
-    lifeThemesSection: theme.cardSurfaceSomatic as unknown as string[],
-    pointsSection: chartGradients.titanium,
+    houseSection: chartGradients.sand,
+    lifeThemesSection: chartGradients.sageOriginal,
+    pointsSection: chartGradients.sand,
+    singletonSection: chartGradients.plum,
     anglesSection: chartGradients.plum,
   };
 
@@ -1465,7 +1473,7 @@ export default function ChartScreen() {
                             </View>
                             <View style={[styles.td, { flex: 1, alignItems: 'center' }]}> 
                               {asp.orb < 2 ? (
-                                <MetallicText color="#7F9488" style={styles.orbText}>{asp.orb.toFixed(1)}°</MetallicText>
+                                <MetallicText color="#608A8D" style={styles.orbText}>{asp.orb.toFixed(1)}°</MetallicText>
                               ) : (
                                 <Text style={[styles.orbText, { color: asp.orb < 5 ? theme.primary : theme.textSecondary }]}>{asp.orb.toFixed(1)}°</Text>
                               )}
@@ -1480,7 +1488,7 @@ export default function ChartScreen() {
                   <VelvetGlassSurface style={styles.legend} intensity={45}>
                     <LinearGradient colors={chartSurfaceGradients.storySection} style={StyleSheet.absoluteFill} />
                     <Text style={styles.legendTitle}>Aspect Legend</Text>
-                    <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: '#7F9488' }]} /><Text style={styles.legendText}>Harmonious (trines, sextiles)</Text></View>
+                    <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: '#608A8D' }]} /><Text style={styles.legendText}>Harmonious (trines, sextiles)</Text></View>
                     <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: '#E07A7A' }]} /><Text style={styles.legendText}>Challenging (squares, oppositions)</Text></View>
                     <View style={styles.legendRow}><View style={[styles.legendDot, { backgroundColor: theme.isDark ? '#FFFFFF' : theme.textPrimary }]} /><Text style={styles.legendText}>Neutral (conjunctions)</Text></View>
                     <Text style={styles.legendNote}>Tighter orbs (lower numbers) = stronger influence</Text>
@@ -1711,10 +1719,21 @@ export default function ChartScreen() {
               <SectionAccordion title="Strongest Aspects" subtitle="Your most important planetary connections" sectionKey="keyAspects" openSections={openSections} setOpenSections={setOpenSections}>
                 {keyAspects.slice(0, 10).map((ka, idx) => (
                   <VelvetGlassSurface key={`ka-${idx}`} style={styles.strongAspectCard} intensity={45}>
-                    <LinearGradient colors={chartSurfaceGradients.aspectsSection} style={StyleSheet.absoluteFill} />
+                    <LinearGradient
+                      colors={
+                        ka.nature === 'Harmonious'
+                          ? chartSurfaceGradients.aspectsSectionHarmonious
+                          : ka.nature === 'Challenging'
+                            ? chartSurfaceGradients.aspectsSectionChallenging
+                            : ka.nature === 'Neutral'
+                              ? chartSurfaceGradients.aspectsSectionNeutral
+                              : chartSurfaceGradients.aspectsSectionFallback
+                      }
+                      style={StyleSheet.absoluteFill}
+                    />
                     <View style={styles.strongAspectHeader}>
-                      <Text style={styles.strongAspectTitle}>{ka.planet1} {ka.type.toLowerCase()} {ka.planet2}</Text>
-                      <Text style={[styles.strongAspectMeta, { color: ka.nature === 'Harmonious' ? '#7F9488' : ka.nature === 'Challenging' ? '#C387D9' : '#FFDA03' }]}>{ka.orb.toFixed(1)}° · {ka.nature}</Text>
+                        <Text style={styles.strongAspectTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>{ka.planet1} {ka.type.toLowerCase()} {ka.planet2}</Text>
+                        <Text style={[styles.strongAspectMeta, { color: ka.nature === 'Harmonious' ? '#608A8D' : ka.nature === 'Challenging' ? '#A88BEB' : ka.nature === 'Neutral' ? '#A49E97' : '#CFAE73' }]}>{ka.orb.toFixed(1)}° · {ka.nature}</Text>
                     </View>
                     {isPremium && <Text style={styles.strongAspectDescription}>{ka.interpretation}</Text>}
                   </VelvetGlassSurface>
@@ -1779,7 +1798,7 @@ export default function ChartScreen() {
               <SectionAccordion title="Singleton Planets" subtitle="Planets isolated in their hemisphere or element" sectionKey="singletons" openSections={openSections} setOpenSections={setOpenSections}>
                 {singletons.map((s, idx) => (
                   <VelvetGlassSurface key={`singleton-${idx}`} style={styles.themedCard} intensity={45}>
-                  <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
+                  <LinearGradient colors={chartSurfaceGradients.singletonSection} style={StyleSheet.absoluteFill} />
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{s.planet}</Text>
                       <View style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{s.detail}</Text></View>
@@ -1813,10 +1832,10 @@ export default function ChartScreen() {
           {viewMode === 'complete' && isPremium && dignityAnalysis && (
             <Animated.View entering={FadeInDown.delay(390).duration(600)} style={{ width: '100%' }}>
               <SectionAccordion title="Planet Strength & Dignity" subtitle="Which parts of your chart are strong, comfortable, or challenged" sectionKey="planetDignity" openSections={openSections} setOpenSections={setOpenSections}>
-                <Text style={[styles.patternDesc, { marginBottom: 12, textAlign: 'center' }]}>{dignityAnalysis.summary}</Text>
+                <Text style={styles.dignitySummary}>{dignityAnalysis.summary}</Text>
                 {dignityAnalysis.strongestPlanets.length > 0 && (
                   <View style={styles.dignityChipGroup}>
-                    {dignityAnalysis.strongestPlanets.map(d => <View key={d.planet} style={[styles.themedPlacementChip, { borderColor: 'rgba(127,148,136,0.35)' }]}><Text style={[styles.themedPlacementText, { color: '#7F9488' }]}>{d.planet}: {d.dignity}</Text></View>)}
+                    {dignityAnalysis.strongestPlanets.map(d => <View key={d.planet} style={[styles.themedPlacementChip, { borderColor: 'rgba(96,138,141,0.35)' }]}><Text style={[styles.themedPlacementText, { color: '#608A8D' }]}>{d.planet}: {d.dignity}</Text></View>)}
                   </View>
                 )}
                 {dignityAnalysis.challengedPlanets.length > 0 && (
@@ -1830,7 +1849,7 @@ export default function ChartScreen() {
                       <LinearGradient colors={chartSurfaceGradients.dignitySection} style={StyleSheet.absoluteFill} />
                       <View style={styles.dignityCardHeader}>
                         <Text style={styles.dignityPlanetName}>{d.planet}</Text>
-                        <Text style={[styles.dignityMeta, { color: d.dignity === 'domicile' || d.dignity === 'exaltation' ? '#7F9488' : '#C387D9' }]}> 
+                        <Text style={[styles.dignityMeta, { color: d.dignity === 'domicile' || d.dignity === 'exaltation' ? '#608A8D' : '#A88BEB' }]}> 
                           {d.dignity.charAt(0).toUpperCase() + d.dignity.slice(1)} in {d.sign}
                         </Text>
                         <Ionicons name={expandedPlanet === d.planet ? 'chevron-up' : 'chevron-down'} size={14} color={theme.textMuted} />
@@ -1877,7 +1896,7 @@ export default function ChartScreen() {
                           <View style={styles.themedPlacementChip}><Text style={[styles.themedPlacementText, { fontSize: 8 }]} numberOfLines={1}>{dd.sign}</Text></View>
                           {dd.house > 0 && <View style={styles.themedPlacementChip}><Text style={[styles.themedPlacementText, { fontSize: 8 }]} numberOfLines={1}>House {dd.house}</Text></View>}
                           {dd.isRetrograde && <View style={[styles.themedPlacementChip, { borderColor: 'rgba(232, 214, 174, 0.3)' }]}><Text style={[styles.themedPlacementText, { color: theme.isDark ? '#FFFFFF' : theme.textPrimary, fontSize: 8 }]}>℞</Text></View>}
-                          {dd.dignity.dignity !== 'peregrine' && <View style={[styles.themedPlacementChip, { borderColor: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? 'rgba(127,148,136,0.35)' : 'rgba(153,31,166,0.3)' }]}><Text style={[styles.themedPlacementText, { color: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? '#7F9488' : '#991FA6', fontSize: 8 }]} numberOfLines={1}>{dd.dignity.dignity}</Text></View>}
+                          {dd.dignity.dignity !== 'peregrine' && <View style={[styles.themedPlacementChip, { borderColor: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? 'rgba(96,138,141,0.35)' : 'rgba(168,139,235,0.35)' }]}><Text style={[styles.themedPlacementText, { color: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? '#608A8D' : '#A88BEB', fontSize: 8 }]} numberOfLines={1}>{dd.dignity.dignity}</Text></View>}
                         </View>
                         <Ionicons name={expandedPlanet === `dd-${dd.planet}` ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
                       </View>
@@ -2421,14 +2440,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 32,
     borderRadius: theme.borderRadius.lg,
     backgroundColor: theme.isDark ? 'rgba(10, 18, 36,0.5)' : PALETTE.slateMid,
-    padding: 4,
+    padding: 3,
     width: '100%',
     borderWidth: theme.isDark ? 0 : 1,
     borderColor: theme.isDark ? 'transparent' : theme.cardBorder,
   },
-  tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: theme.borderRadius.md },
+  tabBtn: { flex: 1, paddingVertical: 10, paddingHorizontal: 2, alignItems: 'center', borderRadius: theme.borderRadius.md },
   tabBtnActive: { backgroundColor: theme.isDark ? 'rgba(162, 194, 225, 0.15)' : 'rgba(255, 255, 255, 0.92)' },
-  tabText: { color: theme.textMuted, fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  tabText: { color: theme.textMuted, fontSize: 11, fontWeight: '600', textAlign: 'center' },
   tabTextActive: { color: '#C9AE78' },
 
   tableHeader: {
@@ -2672,6 +2691,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: 6,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
     fontWeight: '500',
+  },
+  dignitySummary: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    lineHeight: 23,
+    marginBottom: 12,
+    textAlign: 'center',
+    fontWeight: '900',
+    letterSpacing: 0.6,
   },
   tooltipBox: {
     flexDirection: 'row',
@@ -3026,7 +3054,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
 
   // ── Themed Interpretation Sections ──
-  accordionContainer: { width: '100%', marginBottom: 20 },
+  accordionContainer: { width: '100%', marginTop: 16, marginBottom: 20 },
   accordionContent: { marginTop: 24 },
   accordionSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4, letterSpacing: 2.2, textTransform: 'uppercase' },
   themedSectionHeaderActive: { backgroundColor: 'rgba(44, 54, 69, 0.96)' },
@@ -3385,10 +3413,11 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   strongAspectTitle: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
     textAlign: 'center',
+    width: '100%',
   },
   strongAspectMeta: {
     fontSize: 12,
