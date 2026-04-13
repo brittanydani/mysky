@@ -8,10 +8,12 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SkiaGradient as LinearGradient } from '../ui/SkiaGradient';
+import { MetallicGlyph } from '../ui/MetallicGlyph';
 import { VelvetGlassSurface } from '../ui/VelvetGlassSurface';
 import { useThemedStyles, useAppTheme } from '../../context/ThemeContext';
 import { type AppTheme } from '../../constants/theme';
 import { Aspect } from '../../services/astrology/types';
+import { CHART_CARD_COLORS, CHART_CARD_WASHES } from './chartCardPalette';
 
 // ── CONSTANTS ──
 
@@ -38,15 +40,15 @@ const ASPECT_NATURE: Record<string, 'Harmonious' | 'Challenging' | 'Neutral'> = 
 };
 
 const NATURE_COLOR: Record<string, string> = {
-  Harmonious: '#608A8D',  // Sage / teal
-  Challenging: '#A88BEB', // Nebula purple
-  Neutral: '#A49E97',     // Taupe
+  Harmonious: CHART_CARD_COLORS.sage,
+  Challenging: CHART_CARD_COLORS.purple,
+  Neutral: CHART_CARD_COLORS.taupe,
 };
 
 const NATURE_WASH: Record<string, [string, string]> = {
-  Harmonious: ['rgba(96, 138, 141, 0.24)', 'rgba(96, 138, 141, 0.08)'],
-  Challenging: ['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.06)'],
-  Neutral: ['rgba(164, 158, 151, 0.28)', 'rgba(120, 116, 111, 0.12)'],
+  Harmonious: CHART_CARD_WASHES.sage,
+  Challenging: CHART_CARD_WASHES.purple,
+  Neutral: CHART_CARD_WASHES.taupe,
 };
 
 // ── TYPES ──
@@ -66,11 +68,25 @@ function safeStr(v: unknown): string {
 
 export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
   const styles = useThemedStyles(createStyles);
-  const theme = useAppTheme();
+  useAppTheme();
 
   const displayed = aspects
     .slice()
     .sort((a, b) => (a.orb ?? 99) - (b.orb ?? 99))
+    .filter((aspect, index, items) => {
+      const typeName = safeStr(aspect?.type?.name ?? (aspect as any)?.type).toLowerCase();
+      const planet1 = safeStr(aspect.planet1 ?? (aspect as any).body1);
+      const planet2 = safeStr(aspect.planet2 ?? (aspect as any).body2);
+      const identity = [planet1, planet2].sort().join('|') + `|${typeName}`;
+
+      return index === items.findIndex((candidate) => {
+        const candidateType = safeStr(candidate?.type?.name ?? (candidate as any)?.type).toLowerCase();
+        const candidatePlanet1 = safeStr(candidate.planet1 ?? (candidate as any).body1);
+        const candidatePlanet2 = safeStr(candidate.planet2 ?? (candidate as any).body2);
+        const candidateIdentity = [candidatePlanet1, candidatePlanet2].sort().join('|') + `|${candidateType}`;
+        return candidateIdentity === identity;
+      });
+    })
     .slice(0, limit);
 
   if (displayed.length === 0) return null;
@@ -89,7 +105,7 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
           const planet2 = safeStr(aspect.planet2 ?? (aspect as any).body2);
           const symbol = ASPECT_SYMBOLS[typeName] ?? '◦';
           const nature = ASPECT_NATURE[typeName] ?? 'Neutral';
-          const iconColor = NATURE_COLOR[nature];
+          const iconColor = CHART_CARD_COLORS.gold;
           const washColors = NATURE_WASH[nature];
           const orbDeg = aspect.orb != null ? `${aspect.orb.toFixed(1)}°` : '';
           const typeLabel = typeName.charAt(0).toUpperCase() + typeName.slice(1);
@@ -104,22 +120,22 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
 
                 {/* Header: Badge + Type */}
                 <View style={styles.cardHeader}>
-                  <View style={[styles.hardwareBadge, { borderColor: `${iconColor}30` }]}>
-                    <Text style={[styles.symbolText, { color: iconColor }]}>{symbol}</Text>
+                  <View style={styles.hardwareBadge}>
+                    <MetallicGlyph glyph={symbol} size={22} style={styles.symbolText} />
                   </View>
                   <View style={styles.cardTitles}>
                     <Text style={styles.typeLabel}>{typeLabel}</Text>
-                    <Text style={[styles.natureLabel, { color: iconColor }]}>
+                    <Text style={styles.natureLabel}>
                       {nature.toUpperCase()}{orbDeg ? `  ·  ${orbDeg} ORB` : ''}
                     </Text>
                   </View>
                 </View>
 
                 {/* Dialogue sentence */}
-                <Text style={styles.dialogueText}>
-                  <Text style={[styles.planetEmphasis, { color: iconColor }]}>{planet1}</Text>
+                <Text style={styles.dialogueText} numberOfLines={3}>
+                  <Text style={styles.planetEmphasis}>{planet1}</Text>
                   {' '}meets{' '}
-                  <Text style={[styles.planetEmphasis, { color: iconColor }]}>{planet2}</Text>
+                  <Text style={styles.planetEmphasis}>{planet2}</Text>
                   {' '}— a {nature.toLowerCase()} {typeLabel.toLowerCase()} weaving their energies together.
                 </Text>
               </VelvetGlassSurface>
@@ -183,6 +199,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
+    borderColor: 'rgba(207,174,115,0.24)',
   },
   symbolText: {
     fontSize: 22,
@@ -203,6 +220,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 2,
+    color: '#E8D6AE',
   },
   dialogueText: {
     fontSize: 14,
@@ -213,5 +231,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   planetEmphasis: {
     fontWeight: '700',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    color: '#F1E7CF',
   },
 });

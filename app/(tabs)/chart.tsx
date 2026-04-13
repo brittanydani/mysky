@@ -5,7 +5,7 @@
 // VERSION: 3.2.0 (High-End "Lunar Sky" & "Midnight Slate" Update)
 // AESTHETIC: Velvet Glass / Apple Editorial / Luxury Minimalism
 // TYPOGRAPHY: Negative tracking headers (-1.2 to -5.0), serif-synthesis bodies.
-// COLOR PALETTE: Obsidian #0A0A0F, Desert Titanium #CFAE73, Midnight Slate.
+// COLOR PALETTE: Obsidian #0A0A0F, Desert Titanium #E8D6AE, Midnight Slate.
 // ARCHITECTURE: High-density modular rendering with Skia-accelerated layers.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -154,8 +154,8 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
  * Strict semantic washes for navigation and active states.
  */
 const PALETTE = {
-  gold: '#D4AF37',          // 24k hardware icon fill
-  titanium: '#CFAE73',      // Desert Titanium accent
+  gold: '#E8D6AE',          // 24k hardware icon fill
+  titanium: '#E8D6AE',      // Desert Titanium accent
   obsidian: '#0A0A0F',      // Deep space base
   slateMid: '#2C3645',      // Midnight Slate (Primary Anchors)
   slateDeep: '#1A1E29',     // Deep Slate (Secondary Anchors)
@@ -207,15 +207,15 @@ const ASPECT_NATURE_COLORS: Record<string, string> = {
 const GRAD_PROPS = {
   colors: [...metallicFillColors] as string[],
   locations: [...metallicFillPositions] as number[],
-  start: { x: 0, y: 0 },
-  end: { x: 1, y: 1 },
+  start: { x: 0.1, y: 0 },
+  end: { x: 0.9, y: 1 },
 };
 
 const RED_GRAD_PROPS = {
   colors: [...METALLIC_RED] as string[],
-  locations: [0, 0.25, 0.5, 0.75, 1],
-  start: { x: 0, y: 0 },
-  end: { x: 1, y: 1 },
+  locations: [0, 0.18, 0.36, 0.50, 0.64, 0.82, 1],
+  start: { x: 0.1, y: 0 },
+  end: { x: 0.9, y: 1 },
 };
 
 const SAFE_ASPECT_SYMBOLS: Record<string, string> = {
@@ -1014,8 +1014,8 @@ export default function ChartScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Back to identity"
               >
-                <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
-                <Text style={styles.backLabel}>IDENTITY</Text>
+                <MetallicIcon name="chevron-back" size={20} color={PALETTE.gold} />
+                <MetallicText style={styles.backLabel} color={PALETTE.gold}>IDENTITY</MetallicText>
               </Pressable>
               <Pressable
                 style={styles.settingsAction}
@@ -1026,7 +1026,7 @@ export default function ChartScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Chart settings"
               >
-                <Ionicons name="options-outline" size={20} color={PALETTE.gold} />
+                <MetallicIcon name="options-outline" size={20} color={PALETTE.gold} />
               </Pressable>
             </View>
 
@@ -1045,7 +1045,7 @@ export default function ChartScreen() {
           {/* ── Birth time warning ── */}
           {displayChart?.warnings?.length ? (
             <View style={styles.warningBox}>
-              <Ionicons name="alert-circle-outline" size={18} color="#E8A87C" />
+              <MetallicIcon name="alert-circle-outline" size={18} color={PALETTE.gold} />
               <Text style={styles.warningText}>{displayChart.warnings[0]}</Text>
             </View>
           ) : null}
@@ -1080,7 +1080,7 @@ export default function ChartScreen() {
                   onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}); setShowRelTypePicker(true); }}
                   style={styles.addSynastryBtn}
                 >
-                  <Ionicons name="add" size={20} color={PALETTE.titanium} />
+                  <MetallicIcon name="add" size={20} color={PALETTE.gold} />
                 </Pressable>
               </ScrollView>
             )}
@@ -1145,7 +1145,7 @@ export default function ChartScreen() {
                 accessibilityState={{ selected: viewMode === 'essentials' }}
               >
                 {viewMode === 'essentials' ? (
-                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#CFAE73">Essentials</MetallicText>
+                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#E8D6AE">Essentials</MetallicText>
                 ) : (
                   <Text style={styles.tabText}>Essentials</Text>
                 )}
@@ -1160,7 +1160,7 @@ export default function ChartScreen() {
                 accessibilityState={{ selected: viewMode === 'complete' }}
               >
                 {viewMode === 'complete' ? (
-                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#CFAE73">Complete Chart</MetallicText>
+                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#E8D6AE">Complete Chart</MetallicText>
                 ) : (
                   <Text style={styles.tabText}>Complete Chart</Text>
                 )}
@@ -1227,7 +1227,7 @@ export default function ChartScreen() {
                 accessibilityState={{ selected: activeTab === tab }}
               >
                 {activeTab === tab ? (
-                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#CFAE73">
+                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#E8D6AE">
                     {tab === 'planets' ? `Planets (${viewMode === 'essentials' ? 7 : planetRows.length})` :
                      tab === 'houses' ? `Houses (${houseCusps.length})` :
                      tab === 'aspects' ? `Aspects (${sortedAspects.length})` :
@@ -1496,9 +1496,9 @@ export default function ChartScreen() {
                   {!isPremium && hiddenAspectCount > 0 && (
                     <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock more aspects">
                       <LinearGradient colors={chartSurfaceGradients.panel} style={styles.aspectUpsell}>
-                        <Ionicons name="sparkles-outline" size={16} color={theme.textPrimary} />
-                        <MetallicText style={styles.aspectUpsellText} color="#CFAE73">{hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more</MetallicText>
-                        <Ionicons name="chevron-forward-outline" size={16} color={theme.textPrimary} />
+                        <MetallicIcon name="sparkles-outline" size={16} color={PALETTE.gold} />
+                        <MetallicText style={styles.aspectUpsellText} color="#E8D6AE">{hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more</MetallicText>
+                        <MetallicIcon name="chevron-forward-outline" size={16} color={PALETTE.gold} />
                       </LinearGradient>
                     </Pressable>
                   )}
@@ -1513,18 +1513,18 @@ export default function ChartScreen() {
               {isPremium && chartPatterns.chartRuler && (
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.goldPanelStrong} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="ribbon-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Chart Ruler</Text></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="ribbon-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>Chart Ruler</Text></View>
                   <View style={styles.patternHighlight}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <GradientSymbol symbol={chartPatterns.chartRuler.planetSymbol} fontSize={15} w={18} h={17} />
-                      <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {chartPatterns.chartRuler.planet} in </MetallicText>
+                      <MetallicText style={styles.patternHighlightText} color="#E8D6AE"> {chartPatterns.chartRuler.planet} in </MetallicText>
                       <GradientSymbol symbol={chartPatterns.chartRuler.rulerSignSymbol} fontSize={15} w={18} h={17} />
                       <MetallicText style={styles.patternHighlightText} color="#C9AE78"> {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}</MetallicText>
                     </View>
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.chartRuler.description}</Text>
                   <View style={styles.tooltipBox}>
-                    <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
+                    <MetallicIcon name="information-circle-outline" size={14} color={PALETTE.gold} />
                     <Text style={styles.tooltipText}>Your chart ruler is the planet that rules your rising sign (<Text style={{ fontFamily: ZODIAC_FAMILY, color: theme.isDark ? '#FFFFFF' : theme.textPrimary }}>{chartPatterns.chartRuler.risingSymbol}</Text> {chartPatterns.chartRuler.risingSign}). Its placement colors your entire life path.</Text>
                   </View>
                 </VelvetGlassSurface>
@@ -1532,40 +1532,40 @@ export default function ChartScreen() {
               {isPremium && partOfFortune && (
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="sunny-outline" size={20} color={theme.textPrimary} style={{ marginRight: 10 }} /><Text style={styles.patternTitle}>Point of Flow</Text></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="sunny-outline" size={20} color={PALETTE.gold} style={{ marginRight: 10 }} /><Text style={styles.patternTitle}>Point of Flow</Text></View>
                   <View style={styles.patternHighlight}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <GradientSymbol symbol={partOfFortune.sign?.symbol ?? ''} fontSize={15} w={18} h={17} />
-                      <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°{partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}</MetallicText>
+                      <MetallicText style={styles.patternHighlightText} color="#E8D6AE"> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°{partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}</MetallicText>
                     </View>
                   </View>
                   <Text style={styles.patternDesc}>This point reflects where you tend to find ease, natural resilience, and a felt sense of alignment. Its sign and house shape how this feels in daily life.</Text>
-                  <View style={styles.tooltipBox}><Ionicons name="information-circle-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>Calculated from your Sun, Moon, and Ascendant. A reflective archetype — not a prediction.</Text></View>
+                  <View style={styles.tooltipBox}><MetallicIcon name="information-circle-outline" size={14} color={PALETTE.gold} /><Text style={styles.tooltipText}>Calculated from your Sun, Moon, and Ascendant. A reflective archetype — not a prediction.</Text></View>
                 </VelvetGlassSurface>
               )}
               {isPremium && dominantPlacement && chartPatterns && (
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="star-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Dominant Planet</Text></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="star-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>Dominant Planet</Text></View>
                   <View style={styles.patternHighlight}>
-                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
+                    <MetallicText style={styles.patternHighlightText} color="#E8D6AE">
                       {safeString((dominantPlacement as any).planet)} in {(dominantPlacement as any).sign?.name ?? safeString((dominantPlacement as any).sign)} · {Math.floor((dominantPlacement as any).degree ?? 0)}°{(dominantPlacement as any).house ? ` · House ${(dominantPlacement as any).house}` : ''}
                     </MetallicText>
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.dominantFactors.descriptions.planet}</Text>
-                  <View style={styles.tooltipBox}><Ionicons name="information-circle-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>Scored by aspect count, tight aspects (under 2°), and angular house placement.</Text></View>
+                  <View style={styles.tooltipBox}><MetallicIcon name="information-circle-outline" size={14} color={PALETTE.gold} /><Text style={styles.tooltipText}>Scored by aspect count, tight aspects (under 2°), and angular house placement.</Text></View>
                 </VelvetGlassSurface>
               )}
               {!isPremium && (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock pattern depth">
                   <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.patternCard, { borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }]}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="lock-closed-outline" size={16} color={theme.textPrimary} />
+                      <MetallicIcon name="lock-closed-outline" size={16} color={PALETTE.gold} />
                       <View style={{ flex: 1 }}>
-                        <MetallicText style={{ fontSize: 14, fontWeight: '600' }} color="#CFAE73">More patterns in your chart</MetallicText>
+                        <MetallicText style={{ fontSize: 14, fontWeight: '600' }} color="#E8D6AE">More patterns in your chart</MetallicText>
                         <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 3, lineHeight: 18 }}>Chart ruler, dominant planet, sensitive points, stelliums, retrogrades, and Point of Flow</Text>
                       </View>
-                      <Ionicons name="arrow-forward-outline" size={16} color={theme.textPrimary} />
+                      <MetallicIcon name="arrow-forward-outline" size={16} color={PALETTE.gold} />
                     </View>
                   </LinearGradient>
                 </Pressable>
@@ -1573,37 +1573,37 @@ export default function ChartScreen() {
               {isPremium && chartPatterns.stelliums.map((stellium, idx) => (
                 <VelvetGlassSurface key={`stellium-${idx}`} style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.goldPanel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="flash-outline" size={16} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>{stellium.cardTitle}</Text></View>
-                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{stellium.planets.join(', ')}</MetallicText></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="flash-outline" size={16} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>{stellium.cardTitle}</Text></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#E8D6AE">{stellium.planets.join(', ')}</MetallicText></View>
                   <Text style={styles.patternDesc}>{stellium.subtitle}</Text>
                   <Text style={[styles.patternDesc, { marginTop: 8 }]}>{stellium.description}</Text>
                   {stellium.narrative ? <Text style={[styles.patternDesc, { marginTop: 10, lineHeight: 22 }]}>{stellium.narrative}</Text> : null}
                   {stellium.planetMixNote && <Text style={[styles.patternDesc, { marginTop: 6, opacity: 0.8 }]}>{stellium.planetMixNote}</Text>}
                   {stellium.retroNote && <Text style={[styles.patternDesc, { marginTop: 6, opacity: 0.8 }]}>{stellium.retroNote}</Text>}
-                  {stellium.elementCloser && <View style={styles.tooltipBox}><Ionicons name="leaf-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>{stellium.elementCloser}</Text></View>}
+                  {stellium.elementCloser && <View style={styles.tooltipBox}><MetallicIcon name="leaf-outline" size={14} color={PALETTE.gold} /><Text style={styles.tooltipText}>{stellium.elementCloser}</Text></View>}
                 </VelvetGlassSurface>
               ))}
               {isPremium && chartPatterns.conjunctionClusters.map((cluster, idx) => (
                 <VelvetGlassSurface key={`cluster-${idx}`} style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="link-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Conjunction Cluster</Text></View>
-                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{cluster.planets.join(' · ')}</MetallicText></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="link-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>Conjunction Cluster</Text></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#E8D6AE">{cluster.planets.join(' · ')}</MetallicText></View>
                   <Text style={styles.patternDesc}>{cluster.description}</Text>
-                  <View style={styles.tooltipBox}><Ionicons name="information-circle-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>Tightest orb: {cluster.tightestOrb.toFixed(1)}° — these planets blend their energies closely.</Text></View>
+                  <View style={styles.tooltipBox}><MetallicIcon name="information-circle-outline" size={14} color={PALETTE.gold} /><Text style={styles.tooltipText}>Tightest orb: {cluster.tightestOrb.toFixed(1)}° — these planets blend their energies closely.</Text></View>
                 </VelvetGlassSurface>
               ))}
               {isPremium && chartPatterns.retrogradeEmphasis.count >= 3 && (
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="arrow-undo-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Retrograde Emphasis</Text></View>
-                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{chartPatterns.retrogradeEmphasis.count} planets retrograde: {chartPatterns.retrogradeEmphasis.planets.join(', ')}</MetallicText></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="arrow-undo-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>Retrograde Emphasis</Text></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#E8D6AE">{chartPatterns.retrogradeEmphasis.count} planets retrograde: {chartPatterns.retrogradeEmphasis.planets.join(', ')}</MetallicText></View>
                   <Text style={styles.patternDesc}>{chartPatterns.retrogradeEmphasis.description}</Text>
                 </VelvetGlassSurface>
               )}
               {chartPatterns.elementBalance && (
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="flame-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Element Balance</Text></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="flame-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>Element Balance</Text></View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }]}>
                     {Object.entries(chartPatterns.elementBalance.counts).map(([el, count]) => {
                       const isDominant = el === chartPatterns.elementBalance.dominant;
@@ -1616,18 +1616,18 @@ export default function ChartScreen() {
                     })}
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.elementBalance.description}</Text>
-                  {chartPatterns.elementBalance.missing && <View style={styles.tooltipBox}><Ionicons name="water-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>No planets in {chartPatterns.elementBalance.missing} — this element's themes may require more conscious effort.</Text></View>}
+                  {chartPatterns.elementBalance.missing && <View style={styles.tooltipBox}><MetallicIcon name="water-outline" size={14} color={PALETTE.gold} /><Text style={styles.tooltipText}>No planets in {chartPatterns.elementBalance.missing} — this element's themes may require more conscious effort.</Text></View>}
                 </VelvetGlassSurface>
               )}
               {chartPatterns.modalityBalance && (
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="options-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Modality Balance</Text></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="options-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>Modality Balance</Text></View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 16, justifyContent: 'center' }]}>
                     {Object.entries(chartPatterns.modalityBalance.counts).map(([mod, count]) => {
                       const isDominant = mod === chartPatterns.modalityBalance.dominant;
                       return isDominant ? (
-                        <MetallicText key={mod} style={[styles.patternHighlightText, { fontSize: 15 }]} color={theme.isDark ? '#CFAE73' : '#1A1815'}>{mod}: {count as number}</MetallicText>
+                        <MetallicText key={mod} style={[styles.patternHighlightText, { fontSize: 15 }]} color={theme.isDark ? '#E8D6AE' : '#1A1815'}>{mod}: {count as number}</MetallicText>
                       ) : (
                         <Text key={mod} style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}>{mod}: {count as number}</Text>
                       );
@@ -1639,19 +1639,19 @@ export default function ChartScreen() {
               {chartPatterns.polarityBalance && (
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="git-compare-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Polarity Balance</Text></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="git-compare-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>Polarity Balance</Text></View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 24, justifyContent: 'center' }]}>
                     {[{ label: 'Masculine', count: chartPatterns.polarityBalance.masculine }, { label: 'Feminine', count: chartPatterns.polarityBalance.feminine }].map(({ label, count }) => {
                       const isDominant = label === chartPatterns.polarityBalance.dominant;
                       return isDominant ? (
-                        <MetallicText key={label} style={[styles.patternHighlightText, { fontSize: 15 }]} color={theme.isDark ? '#CFAE73' : '#1A1815'}>{label}: {count}</MetallicText>
+                        <MetallicText key={label} style={[styles.patternHighlightText, { fontSize: 15 }]} color={theme.isDark ? '#E8D6AE' : '#1A1815'}>{label}: {count}</MetallicText>
                       ) : (
                         <Text key={label} style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}>{label}: {count}</Text>
                       );
                     })}
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.polarityBalance.description}</Text>
-                  <View style={styles.tooltipBox}><Ionicons name="information-circle-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>Masculine = Fire + Air signs. Feminine = Earth + Water signs. Based on your 10 core planets.</Text></View>
+                  <View style={styles.tooltipBox}><MetallicIcon name="information-circle-outline" size={14} color={PALETTE.gold} /><Text style={styles.tooltipText}>Masculine = Fire + Air signs. Feminine = Earth + Water signs. Based on your 10 core planets.</Text></View>
                 </VelvetGlassSurface>
               )}
               {isPremium && extendedPatterns?.aspectPatterns?.map((pattern, idx) => (
@@ -1661,23 +1661,23 @@ export default function ChartScreen() {
                     <Text style={styles.patternIcon}>{pattern.name === 'Grand Trine' ? '△' : pattern.name === 'T-Square' ? '⊤' : pattern.name === 'Grand Cross' ? '✚' : pattern.name === 'Yod' ? '☞' : pattern.name === 'Kite' ? '◇' : pattern.name === 'Mystic Rectangle' ? '▭' : '⬡'}</Text>
                     <Text style={styles.patternTitle}>{pattern.name}</Text>
                   </View>
-                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{pattern.planets.join(' · ')}</MetallicText></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#E8D6AE">{pattern.planets.join(' · ')}</MetallicText></View>
                   <Text style={styles.patternDesc}>{pattern.description}</Text>
                 </VelvetGlassSurface>
               ))}
               {isPremium && extendedPatterns?.hemisphereEmphasis && extendedPatterns.hemisphereEmphasis.dominant !== 'Balanced' && (
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="contrast-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Hemisphere Emphasis</Text></View>
-                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{extendedPatterns.hemisphereEmphasis.dominant} emphasis</MetallicText></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="contrast-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>Hemisphere Emphasis</Text></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#E8D6AE">{extendedPatterns.hemisphereEmphasis.dominant} emphasis</MetallicText></View>
                   <Text style={styles.patternDesc}>{extendedPatterns.hemisphereEmphasis.description}</Text>
                 </VelvetGlassSurface>
               )}
               {isPremium && extendedPatterns?.houseEmphasis && (
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.panel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="home-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>House Emphasis</Text></View>
-                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">{extendedPatterns.houseEmphasis.dominant} houses dominant</MetallicText></View>
+                  <View style={styles.patternHeader}><MetallicIcon name="home-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>House Emphasis</Text></View>
+                  <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#E8D6AE">{extendedPatterns.houseEmphasis.dominant} houses dominant</MetallicText></View>
                   <Text style={styles.patternDesc}>{extendedPatterns.houseEmphasis.description}</Text>
                 </VelvetGlassSurface>
               )}
@@ -1695,7 +1695,7 @@ export default function ChartScreen() {
                       <View style={styles.themedCardHeaderRow}>
                         <GradientSymbol symbol={section.icon} fontSize={20} w={24} h={24} style={{ marginRight: 4 }} />
                         <Text style={styles.themedCardTitle}>{section.title}</Text>
-                        <Ionicons name={expandedSection === section.id ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
+                        <MetallicIcon name={expandedSection === section.id ? 'chevron-up' : 'chevron-down'} size={18} color={PALETTE.gold} />
                       </View>
                       <View style={styles.themedCardPlacements}>
                         {section.placements.map((p, pi) => <View key={pi} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{p}</Text></View>)}
@@ -1733,7 +1733,7 @@ export default function ChartScreen() {
                     />
                     <View style={styles.strongAspectHeader}>
                         <Text style={styles.strongAspectTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>{ka.planet1} {ka.type.toLowerCase()} {ka.planet2}</Text>
-                        <Text style={[styles.strongAspectMeta, { color: ka.nature === 'Harmonious' ? '#608A8D' : ka.nature === 'Challenging' ? '#A88BEB' : ka.nature === 'Neutral' ? '#A49E97' : '#CFAE73' }]}>{ka.orb.toFixed(1)}° · {ka.nature}</Text>
+                        <Text style={[styles.strongAspectMeta, { color: ka.nature === 'Harmonious' ? '#608A8D' : ka.nature === 'Challenging' ? '#A88BEB' : ka.nature === 'Neutral' ? '#A49E97' : '#E8D6AE' }]}>{ka.orb.toFixed(1)}° · {ka.nature}</Text>
                     </View>
                     {isPremium && <Text style={styles.strongAspectDescription}>{ka.interpretation}</Text>}
                   </VelvetGlassSurface>
@@ -1751,7 +1751,7 @@ export default function ChartScreen() {
                   <LinearGradient colors={chartSurfaceGradients.anglesSection} style={StyleSheet.absoluteFill} />
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{ai.name}</Text>
-                      <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#CFAE73">{ai.sign} · {ai.degree}°</MetallicText>
+                      <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#E8D6AE">{ai.sign} · {ai.degree}°</MetallicText>
                     </View>
                     <Text style={styles.themedCardSummary}>{ai.interpretation}</Text>
                   </VelvetGlassSurface>
@@ -1769,7 +1769,7 @@ export default function ChartScreen() {
                   <LinearGradient colors={chartSurfaceGradients.pointsSection} style={StyleSheet.absoluteFill} />
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{pi.name}</Text>
-                      <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#CFAE73">{pi.sign}{pi.house ? ` · House ${pi.house}` : ''}</MetallicText>
+                      <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#E8D6AE">{pi.sign}{pi.house ? ` · House ${pi.house}` : ''}</MetallicText>
                     </View>
                     <Text style={styles.themedCardSummary}>{pi.interpretation}</Text>
                   </VelvetGlassSurface>
@@ -1784,8 +1784,8 @@ export default function ChartScreen() {
               <SectionAccordion title="Chart Shape" subtitle={chartShape.shape} sectionKey="chartShape" openSections={openSections} setOpenSections={setOpenSections}>
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.goldPanel} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="ellipse-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Chart Shape: {chartShape.shape}</Text></View>
-                  {chartShape.handlePlanet && <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">Handle: {chartShape.handlePlanet}</MetallicText></View>}
+                  <View style={styles.patternHeader}><MetallicIcon name="ellipse-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>Chart Shape: {chartShape.shape}</Text></View>
+                  {chartShape.handlePlanet && <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#E8D6AE">Handle: {chartShape.handlePlanet}</MetallicText></View>}
                   <Text style={styles.patternDesc}>{chartShape.description}</Text>
                 </VelvetGlassSurface>
               </SectionAccordion>
@@ -1852,7 +1852,7 @@ export default function ChartScreen() {
                         <Text style={[styles.dignityMeta, { color: d.dignity === 'domicile' || d.dignity === 'exaltation' ? '#608A8D' : '#A88BEB' }]}> 
                           {d.dignity.charAt(0).toUpperCase() + d.dignity.slice(1)} in {d.sign}
                         </Text>
-                        <Ionicons name={expandedPlanet === d.planet ? 'chevron-up' : 'chevron-down'} size={14} color={theme.textMuted} />
+                        <MetallicIcon name={expandedPlanet === d.planet ? 'chevron-up' : 'chevron-down'} size={14} color={PALETTE.gold} />
                       </View>
                       {expandedPlanet === d.planet && <Text style={styles.dignityDescription}>{d.description}</Text>}
                     </VelvetGlassSurface>
@@ -1868,15 +1868,15 @@ export default function ChartScreen() {
               <SectionAccordion title="Rulership & Dispositors" subtitle={dispositorChain.finalDispositor ? `Final dispositor: ${dispositorChain.finalDispositor}` : 'Planetary rulership chain'} sectionKey="dispositors" openSections={openSections} setOpenSections={setOpenSections}>
                 <VelvetGlassSurface style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.goldPanelSoft} style={StyleSheet.absoluteFill} />
-                  <View style={styles.patternHeader}><Ionicons name="git-network-outline" size={20} color="#C9AE78" style={styles.patternIcon} /><Text style={styles.patternTitle}>Rulership & Dispositors</Text></View>
-                  {dispositorChain.finalDispositor && <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#CFAE73">Final Dispositor: {dispositorChain.finalDispositor}</MetallicText></View>}
+                  <View style={styles.patternHeader}><MetallicIcon name="git-network-outline" size={20} color={PALETTE.gold} style={styles.patternIcon as ViewStyle} /><Text style={styles.patternTitle}>Rulership & Dispositors</Text></View>
+                  {dispositorChain.finalDispositor && <View style={styles.patternHighlight}><MetallicText style={styles.patternHighlightText} color="#E8D6AE">Final Dispositor: {dispositorChain.finalDispositor}</MetallicText></View>}
                   {dispositorChain.mutualReceptions.length > 0 && (
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginBottom: 10 }}>
                       {dispositorChain.mutualReceptions.map(([a, b], idx) => <View key={idx} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>Mutual Reception: {a} ↔ {b}</Text></View>)}
                     </View>
                   )}
                   <Text style={styles.patternDesc}>{dispositorChain.description}</Text>
-                  <View style={styles.tooltipBox}><Ionicons name="information-circle-outline" size={14} color={theme.textMuted} /><Text style={styles.tooltipText}>Each planet answers to the ruler of its sign. The dispositor chain shows this hierarchy — the final dispositor (if present) is the planet that ultimately directs the chart.</Text></View>
+                  <View style={styles.tooltipBox}><MetallicIcon name="information-circle-outline" size={14} color={PALETTE.gold} /><Text style={styles.tooltipText}>Each planet answers to the ruler of its sign. The dispositor chain shows this hierarchy — the final dispositor (if present) is the planet that ultimately directs the chart.</Text></View>
                 </VelvetGlassSurface>
               </SectionAccordion>
             </Animated.View>
@@ -1898,7 +1898,7 @@ export default function ChartScreen() {
                           {dd.isRetrograde && <View style={[styles.themedPlacementChip, { borderColor: 'rgba(232, 214, 174, 0.3)' }]}><Text style={[styles.themedPlacementText, { color: theme.isDark ? '#FFFFFF' : theme.textPrimary, fontSize: 8 }]}>℞</Text></View>}
                           {dd.dignity.dignity !== 'peregrine' && <View style={[styles.themedPlacementChip, { borderColor: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? 'rgba(96,138,141,0.35)' : 'rgba(168,139,235,0.35)' }]}><Text style={[styles.themedPlacementText, { color: dd.dignity.dignity === 'domicile' || dd.dignity.dignity === 'exaltation' ? '#608A8D' : '#A88BEB', fontSize: 8 }]} numberOfLines={1}>{dd.dignity.dignity}</Text></View>}
                         </View>
-                        <Ionicons name={expandedPlanet === `dd-${dd.planet}` ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
+                        <MetallicIcon name={expandedPlanet === `dd-${dd.planet}` ? 'chevron-up' : 'chevron-down'} size={16} color={PALETTE.gold} />
                       </View>
                       <Text style={[styles.themedCardSummary, styles.planetDiveSummary]} numberOfLines={expandedPlanet === `dd-${dd.planet}` ? undefined : 2}>{dd.synthesis}</Text>
                       {expandedPlanet === `dd-${dd.planet}` && dd.aspects.length > 0 && (
@@ -1924,7 +1924,7 @@ export default function ChartScreen() {
                       <View style={[styles.themedCardHeaderRow, styles.houseDiveHeaderRow]}>
                         <View style={styles.houseDiveContentStack}>
                           <View style={styles.houseDiveTitleRow}>
-                            <MetallicText style={{ fontSize: 16, fontWeight: '700' }} color="#CFAE73">{hd.house}</MetallicText>
+                            <MetallicText style={{ fontSize: 16, fontWeight: '700' }} color="#E8D6AE">{hd.house}</MetallicText>
                             <Text style={[styles.themedCardTitle, styles.houseDiveTitle]} numberOfLines={1}>{hd.cuspSign}</Text>
                           </View>
                           <View style={styles.houseDiveChipRow}>
@@ -1932,7 +1932,7 @@ export default function ChartScreen() {
                             {hd.occupants.length > 0 && <View style={[styles.themedPlacementChip, { borderColor: 'rgba(207, 174, 115, 0.3)' }]}><Text style={styles.themedPlacementText}>{hd.occupants.join(', ')}</Text></View>}
                           </View>
                         </View>
-                        <Ionicons style={styles.houseDiveChevron} name={expandedHouse === hd.house ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
+                        <MetallicIcon style={styles.houseDiveChevron as ViewStyle} name={expandedHouse === hd.house ? 'chevron-up' : 'chevron-down'} size={16} color={PALETTE.gold} />
                       </View>
                       {expandedHouse === hd.house && <Text style={[styles.themedCardSummary, styles.houseDiveSummary]}>{hd.synthesis}</Text>}
                     </VelvetGlassSurface>
@@ -1953,12 +1953,12 @@ export default function ChartScreen() {
                       <View style={styles.themedCardHeaderRow}>
                         <GradientIcon size={20}><Ionicons name="heart-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Relationship Profile</Text>
-                        <Ionicons name={expandedLifeTheme === 'relationship' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
+                        <MetallicIcon name={expandedLifeTheme === 'relationship' ? 'chevron-up' : 'chevron-down'} size={18} color={PALETTE.gold} />
                       </View>
                       <View style={styles.themedCardPlacements}>
                         {relationshipProfile.keyPlanets.map((p, i) => <View key={i} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{p}</Text></View>)}
                       </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'relationship' ? undefined : 3}>{relationshipProfile.synthesis}</Text>
+                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'relationship' ? undefined : 2}>{relationshipProfile.synthesis}</Text>
                       {expandedLifeTheme === 'relationship' && (
                         <View style={styles.themedCardDetails}>
                           <Text style={styles.themedCardDetail}>• Love Style: {relationshipProfile.loveStyle}</Text>
@@ -1977,12 +1977,12 @@ export default function ChartScreen() {
                       <View style={styles.themedCardHeaderRow}>
                         <GradientIcon size={20}><Ionicons name="briefcase-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Career & Life Direction</Text>
-                        <Ionicons name={expandedLifeTheme === 'career' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
+                        <MetallicIcon name={expandedLifeTheme === 'career' ? 'chevron-up' : 'chevron-down'} size={18} color={PALETTE.gold} />
                       </View>
                       <View style={styles.themedCardPlacements}>
                         {careerProfile.keyPlanets.map((p, i) => <View key={i} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{p}</Text></View>)}
                       </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'career' ? undefined : 3}>{careerProfile.synthesis}</Text>
+                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'career' ? undefined : 2}>{careerProfile.synthesis}</Text>
                       {expandedLifeTheme === 'career' && (
                         <View style={styles.themedCardDetails}>
                           <Text style={styles.themedCardDetail}>• Vocation: {careerProfile.vocationThemes}</Text>
@@ -2001,9 +2001,9 @@ export default function ChartScreen() {
                       <View style={styles.themedCardHeaderRow}>
                         <GradientIcon size={20}><Ionicons name="water-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Emotional & Inner World</Text>
-                        <Ionicons name={expandedLifeTheme === 'emotional' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
+                        <MetallicIcon name={expandedLifeTheme === 'emotional' ? 'chevron-up' : 'chevron-down'} size={18} color={PALETTE.gold} />
                       </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'emotional' ? undefined : 3}>{emotionalProfile.synthesis}</Text>
+                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'emotional' ? undefined : 2}>{emotionalProfile.synthesis}</Text>
                       {expandedLifeTheme === 'emotional' && (
                         <View style={styles.themedCardDetails}>
                           <Text style={styles.themedCardDetail}>• Emotional Style: {emotionalProfile.emotionalStyle}</Text>
@@ -2023,9 +2023,9 @@ export default function ChartScreen() {
                       <View style={styles.themedCardHeaderRow}>
                         <GradientIcon size={20}><Ionicons name="moon-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Shadow & Growth Path</Text>
-                        <Ionicons name={expandedLifeTheme === 'shadow' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
+                        <MetallicIcon name={expandedLifeTheme === 'shadow' ? 'chevron-up' : 'chevron-down'} size={18} color={PALETTE.gold} />
                       </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'shadow' ? undefined : 3}>{shadowGrowth.synthesis}</Text>
+                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'shadow' ? undefined : 2}>{shadowGrowth.synthesis}</Text>
                       {expandedLifeTheme === 'shadow' && (
                         <View style={styles.themedCardDetails}>
                           <Text style={styles.themedCardDetail}>• Saturn Lessons: {shadowGrowth.saturnLessons}</Text>
@@ -2048,12 +2048,12 @@ export default function ChartScreen() {
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock Deeper Sky premium features">
                 <LinearGradient colors={chartSurfaceGradients.panel} style={[styles.overlayUpsell, { borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="sparkles-outline" size={16} color={theme.textPrimary} />
+                    <MetallicIcon name="sparkles-outline" size={16} color={PALETTE.gold} />
                     <View style={{ flex: 1 }}>
-                      <MetallicText style={[styles.overlayUpsellText, { fontWeight: '600' }]} color="#CFAE73">Your chart has more to say</MetallicText>
+                      <MetallicText style={[styles.overlayUpsellText, { fontWeight: '600' }]} color="#E8D6AE">Your chart has more to say</MetallicText>
                       <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>Nodes, Chiron, Lilith, Vertex, chart ruler, stelliums, retrogrades, and minor aspects</Text>
                     </View>
-                    <Ionicons name="arrow-forward-outline" size={16} color={theme.textPrimary} />
+                    <MetallicIcon name="arrow-forward-outline" size={16} color={PALETTE.gold} />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -2069,7 +2069,7 @@ export default function ChartScreen() {
               accessibilityLabel="Toggle chart glossary"
             >
               <Text style={styles.glossarySectionTitle}>Chart Glossary</Text>
-              <Ionicons name={showGlossary ? 'chevron-up' : 'chevron-down'} size={20} color={theme.textMuted} />
+              <MetallicIcon name={showGlossary ? 'chevron-up' : 'chevron-down'} size={20} color={PALETTE.gold} />
             </Pressable>
             {showGlossary && (
               <View style={styles.glossaryCard}>
@@ -2086,7 +2086,7 @@ export default function ChartScreen() {
                     >
                       <View style={styles.glossaryHeader}>
                         <Text style={styles.glossaryTerm}>{item.term}</Text>
-                        <Ionicons name={expandedTerm === item.term ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
+                        <MetallicIcon name={expandedTerm === item.term ? 'chevron-up' : 'chevron-down'} size={16} color={PALETTE.gold} />
                       </View>
                       {expandedTerm === item.term && <Text style={styles.glossaryDefinition}>{item.def}</Text>}
                     </Pressable>
@@ -2150,7 +2150,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 28,
     backgroundColor: 'transparent',
   },
-  goHomeText: { color: '#CFAE73', fontWeight: '700' },
+  goHomeText: { color: '#E8D6AE', fontWeight: '700' },
   initBtnGlass: {
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -2187,7 +2187,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   backLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#E8D6AE',
     letterSpacing: 1.5,
   },
   settingsAction: {
@@ -2225,7 +2225,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     gap: 6,
   },
   backText: {
-    color: '#CFAE73',
+    color: '#E8D6AE',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.2,
@@ -2282,7 +2282,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: '100%',
   },
   warningText: {
-    color: theme.textSecondary,
+    color: 'rgba(255,255,255,0.84)',
     fontSize: 13,
     marginLeft: 8,
     flex: 1,
@@ -2513,7 +2513,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   wheelSection: {
     alignItems: 'center',
     width: '100%',
-    marginBottom: 32,
+    marginBottom: 48,
   },
   wheelGlassContainer: {
     width: '100%',
@@ -2525,7 +2525,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: 'transparent',
   },
   wheelMetaContainer: {
-    marginTop: 6,
+    marginTop: 10,
     alignItems: 'center',
     paddingHorizontal: 24,
   },
@@ -2593,7 +2593,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 12,
     width: '100%',
   },
-  houseNumLarge: { color: '#D4AF37', fontWeight: '800', fontSize: 18, textAlign: 'center' },
+  houseNumLarge: { color: '#E8D6AE', fontWeight: '800', fontSize: 18, textAlign: 'center' },
   houseTheme: {
     color: 'rgba(255,255,255,0.55)',
     fontSize: 14,
@@ -2644,7 +2644,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: theme.spacing.md,
     gap: 8,
   },
-  aspectUpsellText: { flex: 1, color: '#CFAE73', fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  aspectUpsellText: { flex: 1, color: '#E8D6AE', fontSize: 13, lineHeight: 18, textAlign: 'center' },
 
   emptyState: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { color: theme.textMuted, fontSize: 14, marginTop: 12, textAlign: 'center' },
@@ -2683,7 +2683,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRightColor: 'rgba(255,255,255,0.04)',
     borderBottomColor: 'rgba(255,255,255,0.02)',
   },
-  patternHighlightText: { color: '#D4AF37', fontWeight: '700', fontSize: 15, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  patternHighlightText: { color: '#E8D6AE', fontWeight: '700', fontSize: 15, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   patternDesc: {
     color: 'rgba(255,255,255,0.55)',
     fontSize: 15,
@@ -2736,7 +2736,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   personChipActive: {
     backgroundColor: 'transparent',
-    borderColor: '#CFAE73',
+    borderColor: '#E8D6AE',
     borderWidth: 1,
   },
   personChipText: {
@@ -2747,7 +2747,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 0.7,
     textAlign: 'center',
   },
-  personChipTextActive: { color: '#CFAE73' },
+  personChipTextActive: { color: '#E8D6AE' },
   personChipRelation: { color: theme.textMuted, fontSize: 10, opacity: 0.7 },
   personChipMeta: {
     color: theme.textMuted,
@@ -2779,7 +2779,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#FFDA03',
   },
-  addPersonText: { color: '#CFAE73', fontSize: 13, fontWeight: '600' },
+  addPersonText: { color: '#E8D6AE', fontSize: 13, fontWeight: '600' },
 
   // ── Overlay Legend (luxury pill tags) ──
   overlayLegend: {
@@ -2938,7 +2938,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   // ── House Planets ──
   housePlanets: {
     fontSize: 12,
-    color: '#CFAE73',
+    color: '#E8D6AE',
     fontFamily: 'serif',
     marginTop: 2,
   },
@@ -3033,7 +3033,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   occupantPillText: {
-    color: '#CFAE73',
+    color: '#E8D6AE',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.7,
@@ -3125,7 +3125,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   themedPlacementText: {
     fontSize: 10,
-    color: '#CFAE73',
+    color: '#E8D6AE',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   themedCardSummary: {
@@ -3154,7 +3154,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: 12,
   },
   editorialSectionLabel: {
-    color: '#CFAE73',
+    color: '#E8D6AE',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.8,

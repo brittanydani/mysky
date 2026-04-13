@@ -74,7 +74,7 @@ export const METALLIC_VIOLET = ['#EBE4F9', '#CDBCF4', '#A88BEB', '#CDBCF4', '#EB
 
 // ── Unified Gold Aliases (killing the mud) ──
 export const METALLIC_WARM_GOLD = METALLIC_GOLD;
-export const METALLIC_PALE_GOLD = METALLIC_GOLD;
+export const METALLIC_PALE_GOLD = ['#E8D6AE', '#E8D6AE', '#E8D6AE', '#E8D6AE', '#E8D6AE'] as const;
 export const METALLIC_HERO_GOLD = METALLIC_GOLD;
 export const METALLIC_FEATURE_GOLD = METALLIC_GOLD;
 
@@ -132,7 +132,7 @@ export function metallicForHex(hex: string): readonly string[] {
     '#E3CFA4': METALLIC_GOLD,
     '#D9BF8C': METALLIC_GOLD,
     '#D4B872': METALLIC_GOLD,
-    '#E8D6AE': METALLIC_GOLD,
+    '#E8D6AE': METALLIC_PALE_GOLD,
     '#C3CAD6': METALLIC_GOLD,
     '#F0C87E': METALLIC_GOLD,
     '#E2C27A': METALLIC_GOLD,

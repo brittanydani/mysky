@@ -11,10 +11,12 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaGradient as LinearGradient } from '../ui/SkiaGradient';
+import { MetallicGlyph } from '../ui/MetallicGlyph';
 import { VelvetGlassSurface } from '../ui/VelvetGlassSurface';
 import { useThemedStyles, useAppTheme } from '../../context/ThemeContext';
 import { type AppTheme } from '../../constants/theme';
 import { NatalChart } from '../../services/astrology/types';
+import { CHART_CARD_WASHES } from './chartCardPalette';
 
 // ── TYPES ──
 
@@ -22,8 +24,7 @@ interface BigThreeModule {
   id: string;
   label: string;
   glyph: string;
-  iconColor: string;
-  washKey: keyof AppTheme;
+  washColors: [string, string];
   signName: string;
   degree: number;
   minute: number;
@@ -48,8 +49,7 @@ export const ChartBigThreeSection = ({ chart, onMoonPress }: Props) => {
       id: 'sun',
       label: 'Sun',
       glyph: '☉',
-      iconColor: '#D4AF37',
-      washKey: 'cardSurfaceAnchor',
+      washColors: CHART_CARD_WASHES.taupe,
       signName: chart.sun.sign.name,
       degree: chart.sun.degree,
       minute: chart.sun.minute,
@@ -59,8 +59,7 @@ export const ChartBigThreeSection = ({ chart, onMoonPress }: Props) => {
       id: 'moon',
       label: 'Moon',
       glyph: '☽',
-      iconColor: '#A2C2E1',
-      washKey: 'cardSurfaceCognitive',
+      washColors: CHART_CARD_WASHES.sage,
       signName: chart.moon.sign.name,
       degree: chart.moon.degree,
       minute: chart.moon.minute,
@@ -71,8 +70,7 @@ export const ChartBigThreeSection = ({ chart, onMoonPress }: Props) => {
           id: 'rising',
           label: 'Rising',
           glyph: '↑',
-          iconColor: '#A88BEB',
-          washKey: 'cardSurfaceRelational' as keyof AppTheme,
+          washColors: CHART_CARD_WASHES.purple,
           signName: chart.ascendant.sign.name,
           degree: chart.ascendant.degree,
           minute: chart.ascendant.minute,
@@ -102,7 +100,6 @@ export const ChartBigThreeSection = ({ chart, onMoonPress }: Props) => {
 
       <View style={styles.grid}>
         {modules.map((mod, i) => {
-          const washColors = theme[mod.washKey] as [string, string];
           return (
             <Animated.View
               key={mod.id}
@@ -114,21 +111,21 @@ export const ChartBigThreeSection = ({ chart, onMoonPress }: Props) => {
                 onPress={() => handlePress(mod)}
               >
                 <VelvetGlassSurface style={[styles.card, styles.velvetBorder]} intensity={45}>
-                  <LinearGradient colors={washColors} style={StyleSheet.absoluteFill} />
+                  <LinearGradient colors={mod.washColors} style={StyleSheet.absoluteFill} />
 
                   {/* Glyph Badge */}
                   <View style={styles.cardHeader}>
-                    <View style={[styles.hardwareBadge, { borderColor: `${mod.iconColor}30` }]}>
-                      <Text style={[styles.glyphText, { color: mod.iconColor }]}>{mod.glyph}</Text>
+                    <View style={styles.hardwareBadge}>
+                      <MetallicGlyph glyph={mod.glyph} size={22} style={styles.glyphText} />
                     </View>
-                    <Text style={[styles.planetLabel, { color: mod.iconColor }]}>{mod.label.toUpperCase()}</Text>
+                    <Text style={styles.planetLabel}>{mod.label.toUpperCase()}</Text>
                   </View>
 
                   {/* Sign */}
                   <Text style={styles.signName}>{mod.signName}</Text>
 
                   {/* Degree — gold-tracked, bottom-left */}
-                  <Text style={[styles.degreeText, { color: mod.iconColor }]}>
+                  <Text style={styles.degreeText}>
                     {mod.degree}°{String(mod.minute).padStart(2, '0')}'
                     {mod.house ? `  ·  H${mod.house}` : ''}
                   </Text>
@@ -148,8 +145,8 @@ export const ChartBigThreeSection = ({ chart, onMoonPress }: Props) => {
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.mcRow}>
-              <View style={[styles.hardwareBadgeSm, { borderColor: 'rgba(207,174,115,0.25)' }]}>
-                <Text style={[styles.glyphTextSm, { color: '#CFAE73' }]}>MC</Text>
+              <View style={styles.hardwareBadgeSm}>
+                <MetallicGlyph glyph="MC" size={15} style={styles.glyphTextSm} />
               </View>
               <View style={styles.mcContent}>
                 <Text style={styles.mcLabel}>Midheaven</Text>
@@ -233,6 +230,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
+    borderColor: 'rgba(207,174,115,0.24)',
   },
   glyphText: {
     fontSize: 21,
@@ -243,6 +241,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 3,
+    color: '#E8D6AE',
   },
   signName: {
     fontSize: 24,
@@ -258,6 +257,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: 10,
     opacity: 0.82,
     textAlign: 'center',
+    color: '#E8D6AE',
   },
   // Midheaven row
   mcCard: {
@@ -281,6 +281,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
+    borderColor: 'rgba(207,174,115,0.24)',
   },
   glyphTextSm: {
     fontSize: 11,

@@ -114,18 +114,20 @@ export const mySkyStroke = {
   bold:     0.020,
 } as const;
 
-// ── Fill gradient — champagne gold metallic reflective ─────────────────────
-// High-contrast diagonal sweep: deep shadow → warm gold → bright pearl peak → return.
+// ── Fill gradient — 24k gold with reflective glass overlay ────────────────
+// Deep amber shadow → warm gold → narrow cool-white glass flare → gold specular → return.
+// The glass flare (#F0EFFF spike at 0.44–0.50) simulates a glass lens over metal.
 export const metallicFillColors = [
-  '#5A3E0E',  // deep shadow root
-  '#8C631F',  // machined edge
-  '#C9A84C',  // warm champagne body
-  '#FEFAF0',  // pearl specular peak
-  '#E8C97A',  // illuminated champagne
-  '#8C631F',  // machined edge return
-  '#3D2908',  // shadow close
+  '#2E1A04',  // deep amber shadow root
+  '#7A4D0C',  // machined bronze edge
+  '#C8921A',  // rich warm gold body
+  '#F0EFFF',  // glass flare — cool specular spike (glass-over-gold illusion)
+  '#FFE99A',  // warm gold specular return
+  '#DDB84A',  // illuminated gold
+  '#7A4D0C',  // machined bronze edge return
+  '#1E1003',  // deep shadow close
 ] as const;
-export const metallicFillPositions = [0, 0.12, 0.32, 0.50, 0.68, 0.85, 1.0] as const;
+export const metallicFillPositions = [0, 0.12, 0.30, 0.44, 0.52, 0.68, 0.85, 1.0] as const;
 
 // ── Background palette (Midnight Slate System) ─────────────────────────────
 export const mySkyBackground = {

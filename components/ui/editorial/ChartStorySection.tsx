@@ -79,10 +79,10 @@ export const ChartStorySection = ({ coreIdentity }: { coreIdentity: CoreIdentity
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 0,
-    marginBottom: 32,
+    marginBottom: 48,
   },
   headerContainer: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   subtitle: {
     fontSize: 12,
@@ -97,8 +97,8 @@ const styles = StyleSheet.create({
   },
   boldEmphasis: {
     fontWeight: '800',
-    color: '#D4AF37',
-    textShadowColor: 'rgba(249, 223, 159, 0.22)',
+    color: '#E8D6AE',
+    textShadowColor: 'rgba(232, 214, 174, 0.22)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 6,
   },

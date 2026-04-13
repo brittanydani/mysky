@@ -98,7 +98,7 @@ const CARDS: BlueprintCard[] = [
     title: 'Cosmic Blueprint',
     description: 'Planets, houses, and aspects mapping the celestial geometry of your arrival.',
     lucideIcon: Compass,
-    iconColor: '#D4AF37', // Gold
+    iconColor: '#E8D6AE', // Gold
     washKey: 'cardSurfaceAnchor', // Midnight Slate
     route: '/(tabs)/chart' as Href,
   },
@@ -177,7 +177,7 @@ export default function BlueprintScreen() {
                 onPress={() => nav('/inner-world' as Href)}
                 accessibilityRole="button"
               >
-                <Ionicons name="finger-print-outline" size={22} color={theme.titanium || '#CFAE73'} />
+                <Ionicons name="finger-print-outline" size={22} color={theme.titanium || '#E8D6AE'} />
               </Pressable>
             </View>
           </Animated.View>
@@ -382,6 +382,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderWidth: 1, 
     borderColor: 'rgba(212,175,55,0.25)' 
   },
-  badgeText: { fontSize: 9, fontWeight: '900', color: '#D4AF37', letterSpacing: 1.5 },
+  badgeText: { fontSize: 9, fontWeight: '900', color: '#E8D6AE', letterSpacing: 1.5 },
 });
 

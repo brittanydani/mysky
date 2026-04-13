@@ -27,6 +27,10 @@ interface Props {
   labelStyle?: any;
   /** Override container style */
   style?: any;
+  /** Override gradient colors */
+  gradientColors?: [string, string, ...string[]];
+  /** Render as a plain solid color with no gradient or highlight overlays */
+  solidColor?: string;
 }
 
 function SkiaMetallicPill({
@@ -38,6 +42,8 @@ function SkiaMetallicPill({
   icon,
   labelStyle,
   style,
+  gradientColors,
+  solidColor,
 }: Props) {
   const r = Math.min(borderRadius, height / 2);
 
@@ -49,22 +55,26 @@ function SkiaMetallicPill({
       accessibilityLabel={label}
       style={({ pressed }) => [
         styles.outer,
-        { height, borderRadius: r, opacity: disabled ? 0.5 : 1 },
-        pressed && styles.pressed,
+        { height, borderRadius: r, opacity: (disabled && !solidColor) ? 0.5 : 1 },        solidColor && { borderTopWidth: 0, borderBottomWidth: 0 },        pressed && styles.pressed,
         style,
       ]}
     >
-      <LinearGradient
-        colors={pillGradientColors}
-        locations={pillGradientPositions}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[StyleSheet.absoluteFillObject, { borderRadius: r }]}
-        pointerEvents="none"
-      />
+      {!solidColor && (
+        <LinearGradient
+          colors={gradientColors ?? pillGradientColors}
+          locations={gradientColors ? undefined : pillGradientPositions}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[StyleSheet.absoluteFillObject, { borderRadius: r }]}
+          pointerEvents="none"
+        />
+      )}
+      {solidColor && (
+        <View style={[StyleSheet.absoluteFillObject, { borderRadius: r, backgroundColor: solidColor }]} pointerEvents="none" />
+      )}
 
       {/* Inner highlight for polished metal effect */}
-      <View style={[styles.innerHighlight, { borderRadius: r }]} />
+      {!solidColor && <View style={[styles.innerHighlight, { borderRadius: r }]} />}
 
       {/* Label + icon sit above the canvas */}
       <View style={styles.content} pointerEvents="none">

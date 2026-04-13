@@ -62,7 +62,7 @@ export default function AstrologySettingsModal({
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const modalBackgroundGradient = theme.isDark
-    ? ['rgba(30, 35, 50, 0.98)', '#020817']
+    ? ['#0A0A0F', '#0A0A0F']
     : ['rgba(255, 252, 247, 0.98)', 'rgba(241, 233, 221, 0.98)'];
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -343,7 +343,9 @@ export default function AstrologySettingsModal({
             label={saving ? 'Applying…' : 'Apply Changes'}
             onPress={handleSave}
             disabled={!hasChanges || saving}
-            icon={saving ? <ActivityIndicator color="#1A1815" size="small" /> : undefined}
+            icon={saving ? <ActivityIndicator color="#000000" size="small" /> : undefined}
+            solidColor="#FFFFFF"
+            labelStyle={{ color: '#000000' }}
           />
         </View>
 
@@ -353,7 +355,7 @@ export default function AstrologySettingsModal({
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: theme.isDark ? '#0A0A0F' : theme.background },
   header: { alignItems: 'center', paddingTop: 12, paddingBottom: 16 },
   headerIndicator: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'transparent', marginBottom: 20 },
   headerRow: { flexDirection: 'row', width: '100%', paddingHorizontal: 24, justifyContent: 'space-between', alignItems: 'center' },

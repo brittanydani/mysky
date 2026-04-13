@@ -8,10 +8,12 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SkiaGradient as LinearGradient } from '../ui/SkiaGradient';
+import { MetallicGlyph } from '../ui/MetallicGlyph';
 import { VelvetGlassSurface } from '../ui/VelvetGlassSurface';
 import { useThemedStyles, useAppTheme } from '../../context/ThemeContext';
 import { type AppTheme } from '../../constants/theme';
 import { ChartDignityAnalysis } from '../../services/astrology/dignityService';
+import { CHART_CARD_COLORS, CHART_CARD_WASHES } from './chartCardPalette';
 
 // ── TYPES ──
 
@@ -125,11 +127,12 @@ interface Props {
 
 export const ChartDignitiesSection = ({ dignityAnalysis }: Props) => {
   const styles = useThemedStyles(createStyles);
-  const theme = useAppTheme();
+  useAppTheme();
 
   if (!dignityAnalysis) return null;
 
   const modules: DignityModule[] = [...dignityAnalysis.strongestPlanets, ...dignityAnalysis.challengedPlanets]
+    .filter((planet, index, items) => index === items.findIndex((candidate) => candidate.planet === planet.planet))
     .slice(0, 6)
     .map((p) => {
       const score = DIGNITY_SCORE[p.dignity] ?? 50;
@@ -142,12 +145,12 @@ export const ChartDignitiesSection = ({ dignityAnalysis }: Props) => {
         sign: p.sign,
         dignity: DIGNITY_DISPLAY[p.dignity] ?? 'Neutral',
         score,
-        iconColor: isChallenged ? '#A88BEB' : isStrong ? '#608A8D' : '#CFAE73',
+        iconColor: CHART_CARD_COLORS.gold,
         surfaceColors: isChallenged
-          ? ['rgba(168,139,235,0.20)', 'rgba(168,139,235,0.06)']
+          ? CHART_CARD_WASHES.purple
           : isStrong
-            ? ['rgba(96,138,141,0.24)', 'rgba(96,138,141,0.08)']
-            : ['rgba(164,158,151,0.28)', 'rgba(120,116,111,0.12)'],
+            ? CHART_CARD_WASHES.sage
+            : CHART_CARD_WASHES.taupe,
       };
     });
 
@@ -172,18 +175,18 @@ export const ChartDignitiesSection = ({ dignityAnalysis }: Props) => {
 
                 {/* Header row */}
                 <View style={styles.cardHeader}>
-                  <View style={[styles.hardwareBadge, { borderColor: `${mod.iconColor}30` }]}>
-                    <Text style={[styles.glyphText, { color: mod.iconColor }]}>{mod.glyph}</Text>
+                  <View style={styles.hardwareBadge}>
+                    <MetallicGlyph glyph={mod.glyph} size={28} style={styles.glyphText} />
                   </View>
                   <View style={styles.cardTitles}>
                     <Text style={styles.planetName}>{mod.planet}</Text>
-                    <Text style={[styles.dignityLabel, { color: mod.iconColor }]}>{mod.dignity.toUpperCase()}</Text>
+                    <Text style={styles.dignityLabel}>{mod.dignity.toUpperCase()}</Text>
                   </View>
                 </View>
 
                 {/* Sign description */}
-                <Text style={styles.signDesc}>
-                  in <Text style={[styles.signName, { color: mod.iconColor }]}>{mod.sign}</Text>
+                <Text style={styles.signDesc} numberOfLines={1}>
+                  in <Text style={styles.signName}>{mod.sign}</Text>
                 </Text>
 
                 {/* 1px Gold Spectrum Track */}
@@ -242,16 +245,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 12,
   },
   hardwareBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    width: 58,
+    height: 58,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
+    borderColor: 'rgba(207,174,115,0.24)',
   },
   glyphText: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '400',
     transform: [{ translateY: -1 }],
   },
@@ -269,6 +273,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 2,
+    color: '#E8D6AE',
   },
   signDesc: {
     fontSize: 13,
@@ -280,6 +285,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   signName: {
     fontWeight: '700',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    color: '#F1E7CF',
   },
   spectrumTrack: {},
   spectrumLabels: {},

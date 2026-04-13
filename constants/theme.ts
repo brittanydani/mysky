@@ -120,11 +120,6 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
     textInk: isDark ? '#FFFFFF' : '#1A1815', // Pure white data in Dark mode
     textGold: isDark ? METALLIC_GOLD.mid : (palette as typeof AURORA).gold,
     titanium: METALLIC_GOLD.mid,
-    goldLight: METALLIC_GOLD.highlight,
-    goldMain: METALLIC_GOLD.mid,
-    goldDark: METALLIC_GOLD.shadow,
-    slateMid: '#2C3645',
-    slateDeep: '#1A1E29',
 
     // Semantic Colors
     success: palette.success,
