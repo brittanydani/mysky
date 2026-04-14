@@ -215,10 +215,10 @@ export default function PastReflectionsScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
-      <LinearGradient
-        colors={['rgba(162, 194, 225, 0.12)', 'transparent']}
-        style={styles.topGlow}
-      />
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+      </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
@@ -413,8 +413,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRightColor: 'rgba(255,255,255,0.10)',
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
+  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
@@ -424,10 +425,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
   headerTitle: {
-    fontSize: 30,
+    fontSize: 32,
     color: theme.textPrimary,
-    fontWeight: '700',
-    letterSpacing: -0.8,
+    fontWeight: '800',
+    letterSpacing: -1,
     marginBottom: 6,
     maxWidth: '88%',
   },

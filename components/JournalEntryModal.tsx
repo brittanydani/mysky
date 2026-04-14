@@ -40,7 +40,6 @@ import * as Haptics from '../utils/haptics';
 import { type AppTheme } from '../constants/theme';
 import { logger } from '../utils/logger';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
-import { GoldSubtitle } from './ui/GoldSubtitle';
 import { JournalEntry } from '../services/storage/models';
 import { usePremium } from '../context/PremiumContext';
 import { localDb } from '../services/storage/localDb';

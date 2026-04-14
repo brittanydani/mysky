@@ -35,7 +35,7 @@ import { MetallicText } from './ui/MetallicText';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { VelvetGlassSurface } from './ui/VelvetGlassSurface';
 import { type AppTheme } from '../constants/theme';
-import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { useThemedStyles } from '../context/ThemeContext';
 import { logger } from '../utils/logger';
 import {
   clearPendingIfAllSealed,
@@ -87,7 +87,6 @@ export default function DailyReflectionSection({
   title = "Today's Questions",
   subtitle = 'Record each category to complete the day',
 }: DailyReflectionSectionProps) {
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
 
   const headerOpacity = useSharedValue(1);

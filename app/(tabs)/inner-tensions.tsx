@@ -688,7 +688,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   loader:           { marginTop: 80 },
   bottomSpacer:     { height: 40 },
 
-  screenTitle: { fontSize: 31, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
+  screenTitle: { fontSize: 32, fontWeight: '800', color: theme.textPrimary, letterSpacing: -1, marginBottom: 4, maxWidth: '88%' },
   screenSubtitle: { fontSize: 14, marginBottom: 32 },
 
   // Section label
@@ -702,7 +702,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // Glass card
   glassCard: {
-    borderRadius: 24, padding: 36, marginBottom: 4,
+    borderRadius: 24, padding: 24, marginBottom: 4,
     overflow: 'hidden',
   },
   cardTitle: {

@@ -12,7 +12,6 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
@@ -21,7 +20,7 @@ import { SUPPORT_EMAIL } from '../constants/config';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { MetallicText } from '../components/ui/MetallicText';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { useThemedStyles } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -33,34 +32,32 @@ const PALETTE = {
 };
 
 export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } = {}) {
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
-  const insets = useSafeAreaInsets();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <SafeAreaView edges={['bottom']} style={styles.safeArea}>
-        
-        {/* Cinematic Hardware Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 16 }, styles.velvetBorder]}>
-          <LinearGradient colors={['rgba(44, 54, 69, 0.4)', 'transparent']} style={StyleSheet.absoluteFill} />
-          <View style={styles.headerRow}>
-            <Pressable
-              style={styles.backButton}
-              onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : undefined)}
-            >
-              <MetallicIcon name="chevron-back-outline" size={22} variant="gold" />
-            </Pressable>
 
-            <View style={styles.titleArea}>
-              <Text style={styles.headerTitle}>Privacy</Text>
-              <GoldSubtitle style={styles.headerSubtitle}>Technical Transparency</GoldSubtitle>
-            </View>
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+      </View>
 
-            <View style={styles.headerSpacer} />
-          </View>
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable
+            style={styles.backButton}
+            onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : undefined)}
+          >
+            <MetallicIcon name="chevron-back-outline" size={22} variant="gold" />
+          </Pressable>
+        </View>
+        <View style={styles.titleArea}>
+          <Text style={styles.headerTitle}>Privacy</Text>
+          <GoldSubtitle style={styles.headerSubtitle}>Technical Transparency</GoldSubtitle>
         </View>
 
         <ScrollView
@@ -156,8 +153,9 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
+  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
   
   velvetBorder: {
     borderWidth: 1,
@@ -167,16 +165,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
 
-  header: {
-    paddingHorizontal: 24,
-    paddingBottom: 20,
-    overflow: 'hidden',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
   backButton: {
     width: 44,
     height: 44,
@@ -187,24 +177,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerSpacer: { width: 44 },
-  titleArea: { flex: 1, alignItems: 'center' },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 32,
     fontWeight: '800',
-    color: '#FFF',
-    letterSpacing: -0.5,
+    color: theme.textPrimary,
+    letterSpacing: -1,
   },
-  headerSubtitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginTop: 2,
-  },
+  headerSubtitle: { marginBottom: 4 },
 
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 32 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   
   heroIconWrap: {
     alignItems: 'center',

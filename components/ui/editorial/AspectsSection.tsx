@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, LayoutChangeEvent } from 'react-native';
 import { Canvas, Line, vec, LinearGradient, Circle } from '@shopify/react-native-skia';
 import { VelvetGlassCard } from './VelvetGlassCard';

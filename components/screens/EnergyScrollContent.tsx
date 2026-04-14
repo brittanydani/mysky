@@ -469,7 +469,6 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
    ════════════════════════════════════════════════ */
 
 function SectionHeader({ icon, title, delay }: { icon: keyof typeof Ionicons.glyphMap; title: string; delay?: number }) {
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const content = (
     <View style={styles.sectionTitleRow}>

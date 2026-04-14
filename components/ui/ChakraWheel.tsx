@@ -20,7 +20,7 @@ import {
 } from 'react-native-reanimated';
 import { type AppTheme } from '../../constants/theme';
 import { SkiaChakraNode, CHAKRA_COLORS } from './SkiaChakraNode';
-import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
+import { useThemedStyles } from '../../context/ThemeContext';
 
 export type ChakraState = 'Flowing' | 'Sensitive' | 'Grounding Needed' | 'Quiet';
 
@@ -80,7 +80,6 @@ function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
 export default function ChakraWheel({
   chakras, dominantChakra, size, showLabels = true,
 }: ChakraWheelProps) {
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const wheelSize = size || SCREEN_W * 0.58;
   const cx = wheelSize / 2;

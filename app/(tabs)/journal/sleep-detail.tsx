@@ -19,7 +19,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, Href } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 import { Sparkles, ChevronLeft, Moon } from 'lucide-react-native';
@@ -73,7 +73,6 @@ export default function SleepDetailScreen() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { isPremium } = usePremium();
   const { session, user } = useAuth();
@@ -217,8 +216,9 @@ export default function SleepDetailScreen() {
     >
       <SkiaDynamicCosmos />
 
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
       {/* HEADER */}
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+      <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <ChevronLeft color={theme.textPrimary} size={26} />
         </Pressable>
@@ -370,6 +370,7 @@ export default function SleepDetailScreen() {
         </LinearGradient>
         <View style={{ height: 40 }} />
       </ScrollView>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }
@@ -379,15 +380,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 24, paddingBottom: 8,
+    paddingHorizontal: 24, paddingTop: 8, paddingBottom: 8,
   },
   backBtn: {
-    width: 40, height: 40, borderRadius: 20,
+    width: 44, height: 44, borderRadius: 22,
     backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
+    borderWidth: 1, borderColor: theme.cardBorder,
     justifyContent: 'center', alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 34, color: theme.textPrimary, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4,
+    fontSize: 32, color: theme.textPrimary, fontWeight: '800', letterSpacing: -1, marginBottom: 4,
   },
   saveBtn: { paddingHorizontal: 12, paddingVertical: 8 },
   saveText: { color: theme.textPrimary, fontSize: 14, fontWeight: '600' },

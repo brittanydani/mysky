@@ -8,18 +8,14 @@
 // 4. Integrated "Velvet Glass" 1px directional light-catch borders globally.
 // 5. Unified celestial iconography with the Metallic Gold and Atmosphere Blue standard.
 
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-import MaskedView from '@react-native-masked-view/masked-view';
-import { metallicFillColors, metallicFillPositions } from '../constants/mySkyMetallic';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { getMoonPhaseInfo, getMoonSignForDate } from '../utils/moonPhase';
+import { getMoonPhaseInfo } from '../utils/moonPhase';
 import { getTransitInfo } from '../services/astrology/transits';
 import { signNameFromLongitude, degreeInSign, normalize360 } from '../services/astrology/sharedHelpers';
 import MoonPhaseView from '../components/ui/MoonPhaseView';
@@ -27,13 +23,10 @@ import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
-import { localDb } from '../services/storage/localDb';
-import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../services/premium/advancedJournal';
 import { usePremium } from '../context/PremiumContext';
-import { useFocusEffect } from '@react-navigation/core';
-import { dayOfYear, toLocalDateString } from '../utils/dateUtils';
+import { dayOfYear } from '../utils/dateUtils';
 import { type AppTheme } from '../constants/theme';
-import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { useThemedStyles } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -72,32 +65,12 @@ function formatHoursMinutes(hours: number): string {
   return h === 0 ? `${m}m` : m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
-const ZODIAC_FAMILY = Platform.select({ ios: 'Apple Symbols', default: 'sans-serif' });
-const GRAD_PROPS = {
-  colors: [...metallicFillColors],
-  locations: [...metallicFillPositions],
-  start: { x: 0, y: 0 }, end: { x: 1, y: 1 },
-};
-
-function GradientSymbol({ symbol, fontSize = 18, w = 28, h = 24 }: any) {
-  return (
-    <MaskedView style={{ width: w, height: h }} maskElement={
-      <Text style={{ fontFamily: ZODIAC_FAMILY, fontSize, color: '#000', lineHeight: h, width: w, textAlign: 'center', backgroundColor: 'transparent' }}>{symbol}</Text>
-    }>
-      <LinearGradient {...GRAD_PROPS} style={{ width: w, height: h }} />
-    </MaskedView>
-  );
-}
-
 export default function CosmicContext() {
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
   
   const [weekExpanded, setWeekExpanded] = useState(false);
-  const [activeDayIdx, setActiveDayIdx] = useState<number | null>(null);
-  const [transitInsights, setTransitInsights] = useState<PatternInsight[]>([]);
 
   const moonInfo = useMemo(() => getMoonPhaseInfo(), []);
   const transitInfo = useMemo(() => getTransitInfo(new Date(), 0, 0), []);

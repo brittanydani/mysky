@@ -20,7 +20,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
-import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
@@ -43,7 +43,6 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { logger } from '../utils/logger';
 import { EditorialLikertScale } from '../components/ui/EditorialLikertScale';
-import { keepLastWordsTogether } from '../utils/textLayout';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
@@ -95,11 +94,6 @@ const DIMENSIONS: Dimension[] = [
 ];
 
 type Scores = Record<'scope' | 'processing' | 'decisions', number>;
-
-interface StoredCognitiveProfile extends Partial<Scores> {
-  manualScores?: Partial<Scores>;
-  reflectionScores?: Partial<Scores>;
-}
 
 const CognitiveSynthesisMap = ({ scores }: { scores: Scores }) => {
   const styles = useThemedStyles(createStyles);

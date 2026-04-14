@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable, Platform, Keyboard, Animated } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { KeyboardStickyView } from '../components/keyboard/KeyboardControllerCompat';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
@@ -70,6 +71,12 @@ export default function SanctuaryWorkspace() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+      </View>
+
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
       {/* Header controls fade out when typing for focus */}
       <View style={styles.header}>
         <Pressable onPress={() => { Haptics.selectionAsync(); router.replace('/(tabs)/identity'); }} style={styles.iconButton} hitSlop={10}>
@@ -83,6 +90,7 @@ export default function SanctuaryWorkspace() {
         <Text style={styles.headerTitle}>Sanctuary</Text>
       </View>
 
+      </SafeAreaView>
       <View style={styles.editorContainer}>
         <TextInput
           style={styles.textInput}
@@ -126,14 +134,16 @@ export default function SanctuaryWorkspace() {
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
+  safeArea: { flex: 0 },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
+  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 8 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea: { paddingHorizontal: 24, paddingBottom: 16 },
   iconButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : theme.pillSurface, borderRadius: 22 },
   iconText: { color: theme.textPrimary, fontSize: 24, lineHeight: 28 },
   sealIconText: { color: theme.textGold, fontSize: 20, transform: [{ rotate: '45deg' }] },
-  headerTitle: { fontSize: 34, color: theme.textPrimary, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerTitle: { fontSize: 32, color: theme.textPrimary, fontWeight: '800', letterSpacing: -1, marginBottom: 4 },
 
   editorContainer: { flex: 1, paddingHorizontal: 24 },
   textInput: { flex: 1, fontSize: 18, color: theme.textPrimary, lineHeight: 28, paddingTop: 20 },

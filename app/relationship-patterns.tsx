@@ -16,14 +16,12 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  Alert,
-  Dimensions,
 } from 'react-native';
 import { KeyboardAwareScrollView } from '../components/keyboard/KeyboardControllerCompat';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
-import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
@@ -85,9 +83,6 @@ export default function RelationshipPatternsScreen() {
   const [note, setNote] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTags, setCustomTags] = useState<PatternTag[]>([]);
-  const [customTagInput, setCustomTagInput] = useState('');
-  const [activeCustomCategory, setActiveCustomCategory] = useState<PatternCategory | null>(null);
-  const [editingCustomTagId, setEditingCustomTagId] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<PatternCategory>('anxious');
 
   useFocusEffect(
@@ -155,7 +150,7 @@ export default function RelationshipPatternsScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <Pressable style={styles.backButton} onPress={() => router.replace('/(tabs)/identity')}>
-            <Text style={styles.backIcon}>‹</Text>
+            <MetallicIcon name="chevron-back-outline" size={22} variant="gold" />
           </Pressable>
         </View>
 
@@ -209,7 +204,7 @@ export default function RelationshipPatternsScreen() {
             <Text style={styles.tagSectionLabel}>SELECT ACTIVE PATTERNS</Text>
 
             {(['anxious', 'avoidant', 'control', 'secure'] as PatternCategory[]).map((cat) => {
-              const { wash, color } = getSemanticWashes(cat);
+              const { color } = getSemanticWashes(cat);
               const isExpanded = expandedCategory === cat;
               const tags = allTags.filter(t => t.category === cat);
               
@@ -289,10 +284,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   header: { paddingHorizontal: 24, paddingTop: 12 },
-  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
-  backIcon: { color: '#FFF', fontSize: 30, marginTop: -4 },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   titleArea: { paddingHorizontal: 24, marginVertical: 32 },
-  headerTitle: { fontSize: 32, fontWeight: '800', color: '#FFF', letterSpacing: -0.5 },
+  headerTitle: { fontSize: 32, fontWeight: '800', color: '#FFF', letterSpacing: -1 },
   headerSubtitle: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.6)' },
   
   summaryCard: { borderRadius: 24, padding: 24, marginBottom: 32, overflow: 'hidden' },

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import * as Haptics from '../../utils/haptics';
@@ -9,6 +10,8 @@ import * as SecureStore from 'expo-secure-store';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { NotificationEngine } from '../../utils/NotificationEngine';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { useThemePreference, useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 import { type AppTheme } from '../../constants/theme';
 
@@ -247,17 +250,24 @@ export default function NotificationSettings() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+      </View>
+
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
       <View style={styles.header}>
         <Pressable
           onPress={() => { Haptics.selectionAsync(); router.back(); }}
           style={styles.backButton}
         >
-          <Text style={styles.backArrow}>‹</Text>
+          <MetallicIcon name="chevron-back-outline" size={22} variant="gold" />
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.headerTitle}>Daily Rhythm</Text>
+        <GoldSubtitle style={styles.headerSubtitle}>Notification schedule</GoldSubtitle>
 
         {/* Master enable toggle */}
         <Text style={styles.sectionLabel}>LOCAL TRIGGERS</Text>
@@ -294,6 +304,7 @@ export default function NotificationSettings() {
 
         <View style={{ height: 60 }} />
       </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
@@ -302,23 +313,24 @@ export default function NotificationSettings() {
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
+  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
 
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: 8,
     paddingHorizontal: 24,
     paddingBottom: 8,
   },
-  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
-  backArrow: { color: theme.textPrimary, fontSize: 36, fontWeight: '300', lineHeight: 40 },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   headerTitle: {
-    fontSize: 34,
+    fontSize: 32,
     color: theme.textPrimary,
     fontWeight: '800',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
     marginBottom: 4,
   },
+  headerSubtitle: { marginBottom: 20 },
 
   content: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   sectionLabel: {

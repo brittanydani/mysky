@@ -1,11 +1,11 @@
 // File: app/terms.tsx
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 
 import { type AppTheme } from '../constants/theme';
 import { SUPPORT_EMAIL } from '../constants/config';
@@ -18,7 +18,6 @@ import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void } = {}) {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const PALETTE = {
     gold: theme.textGold,
@@ -32,34 +31,32 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <SafeAreaView edges={['bottom']} style={styles.safeArea}>
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-          <View style={styles.headerRow}>
-            <Pressable
-              style={styles.backButton}
-              onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : undefined)}
-              accessibilityRole="button"
-              accessibilityLabel="Back"
-            >
-              <Ionicons name="chevron-back-outline" size={22} color={theme.textPrimary} />
-            </Pressable>
-            
-            <View style={styles.titleArea}>
-              <Text style={styles.headerTitle}>Terms</Text>
-              <GoldSubtitle style={styles.headerSubtitle}>Last updated: April 7, 2026</GoldSubtitle>
-            </View>
 
-            <View style={styles.headerSpacer} />
-          </View>
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+      </View>
+
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable
+            style={styles.backButton}
+            onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : undefined)}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+          >
+            <MetallicIcon name="chevron-back-outline" size={22} variant="gold" />
+          </Pressable>
+        </View>
+        <View style={styles.titleArea}>
+          <Text style={styles.headerTitle}>Terms</Text>
+          <GoldSubtitle style={styles.headerSubtitle}>Terms of Use &amp; EULA</GoldSubtitle>
         </View>
 
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: insets.bottom + 40 },
-          ]}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
@@ -261,15 +258,9 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
-  header: {
-    paddingHorizontal: 24,
-    paddingBottom: 20,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
   backButton: {
     width: 44,
     height: 44,
@@ -280,29 +271,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerSpacer: {
-    width: 44,
-  },
-  titleArea: {
-    flex: 1,
-    alignItems: 'center',
-  },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 32,
+    fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.3,
+    letterSpacing: -1,
   },
-  headerSubtitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1.0,
-    textTransform: 'uppercase',
-    marginTop: 2,
-    color: theme.textSecondary,
-  },
+  headerSubtitle: { marginBottom: 4 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   heroIconWrap: {
     alignItems: 'center',
     marginBottom: 16,

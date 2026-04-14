@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
@@ -71,10 +72,10 @@ export default function BodyNervousScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
-      <LinearGradient
-        colors={['rgba(140, 190, 170, 0.08)', 'transparent']}
-        style={styles.topGlow}
-      />
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+      </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
@@ -82,7 +83,7 @@ export default function BodyNervousScreen() {
             style={styles.backButton}
             onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/identity'); }}
           >
-            <Text style={styles.backIcon}>‹</Text>
+            <MetallicIcon name="chevron-back-outline" size={22} variant="gold" />
           </Pressable>
         </View>
 
@@ -149,19 +150,17 @@ export default function BodyNervousScreen() {
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
+  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
   backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
-  backIcon:   { color: theme.textPrimary, fontSize: 34, lineHeight: 34, marginTop: -2 },
-
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
-    fontSize: 30,
+    fontSize: 32,
     color: theme.textPrimary,
-    fontWeight: '700',
-    letterSpacing: -0.8,
+    fontWeight: '800',
+    letterSpacing: -1,
     marginBottom: 6,
     maxWidth: '88%',
   },

@@ -7,7 +7,7 @@
 // 3. Integrated "Velvet Glass" 1px directional light-catch borders globally.
 // 4. Enhanced Typography: Pure White data hero numbers and crisp Metallic Gold headers.
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Dimensions, ActivityIndicator, Modal } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,33 +19,21 @@ import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
-import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
-import { computeTriggerPatternSummary, buildTriggerPatternNarrative } from '../../utils/triggerPatterns';
-import { logger } from '../../utils/logger';
-import { usePremium } from '../../context/PremiumContext';
 import { runPipeline } from '../../services/insights/pipeline';
-import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
-import { computeNarrativeInsights, NarrativeInsightBundle, NarrativeInsight, NarrativeCategory } from '../../utils/narrativeInsights';
+import { computeNarrativeInsights, NarrativeInsightBundle } from '../../utils/narrativeInsights';
 import { buildPersonalProfile } from '../../utils/personalProfile';
-import { computeDeepInsights, DeepInsightBundle, DeepInsight } from '../../utils/deepInsights';
+import { computeDeepInsights, DeepInsightBundle } from '../../utils/deepInsights';
 import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
-import { loadSelfKnowledgeContext, enrichSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
+import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import {
   computeSelfKnowledgeCrossRef,
   CrossRefInsight,
 } from '../../utils/selfKnowledgeCrossRef';
-import { enhancePatternInsights } from '../../services/insights/geminiInsightsService';
-import { useCircadianStore } from '../../store/circadianStore';
-import { useCorrelationStore } from '../../store/correlationStore';
-import { exportInsightsToPdf, InsightsPdfInput } from '../../services/premium/insightsPdfExport';
-import { DailyAggregate, ChartProfile } from '../../services/insights/types';
-import { TriggerEvent } from '../../utils/triggerEventTypes';
-import { keepLastWordsTogether } from '../../utils/textLayout';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
@@ -69,13 +57,12 @@ const PALETTE = {
 export default function PatternsScreen() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
-  const { isPremium } = usePremium();
   const [snapshot, setSnapshot] = useState({ avgMood: 0, avgStress: 0, checkInCount: 0 });
   const [trendCheckIns, setTrendCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
   const [crossRefs, setCrossRefs] = useState<CrossRefInsight[]>([]);
-  const [narrative, setNarrative] = useState<NarrativeInsightBundle | null>(null);
-  const [deepInsights, setDeepInsights] = useState<DeepInsightBundle | null>(null);
+  const [, setNarrative] = useState<NarrativeInsightBundle | null>(null);
+  const [, setDeepInsights] = useState<DeepInsightBundle | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
 
   useFocusEffect(
@@ -161,7 +148,13 @@ export default function PatternsScreen() {
           )}
 
           {/* ── View Pattern Library Button ── */}
-          <Pressable onPress={() => setShowLibraryModal(true)} style={styles.libraryButton}>
+          <Pressable
+            onPress={() => {
+              Haptics.selectionAsync().catch(() => {});
+              setShowLibraryModal(true);
+            }}
+            style={styles.libraryButton}
+          >
              <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
              <MetallicIcon name="library-outline" size={16} variant="gold" />
              <MetallicText style={styles.libraryButtonText} variant="gold">View Pattern Library</MetallicText>
@@ -169,8 +162,38 @@ export default function PatternsScreen() {
 
         </ScrollView>
       </SafeAreaView>
-      
-      {/* Pattern Library Modal placeholder... */}
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showLibraryModal}
+        onRequestClose={() => setShowLibraryModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <BlurView intensity={30} tint={theme.blurTint} style={StyleSheet.absoluteFill} />
+          <VelvetGlassSurface style={styles.modalCard} intensity={35}>
+            <LinearGradient colors={['rgba(44, 54, 69, 0.92)', 'rgba(26, 30, 41, 0.72)']} style={StyleSheet.absoluteFill} />
+            <View style={styles.modalHeader}>
+              <MetallicText style={styles.modalTitle} variant="gold">Pattern Library</MetallicText>
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setShowLibraryModal(false);
+                }}
+                hitSlop={8}
+              >
+                <MetallicIcon name="close-outline" size={18} variant="gold" />
+              </Pressable>
+            </View>
+            <Text style={styles.modalBody}>
+              This library will surface recurring nervous-system, mood, and reflection patterns as your check-in history grows.
+            </Text>
+            <Text style={styles.modalBodyMuted}>
+              Keep logging check-ins and journaling to unlock richer pattern summaries here.
+            </Text>
+          </VelvetGlassSurface>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -215,7 +238,7 @@ const GlassTakeaway = ({ label, body, icon }: { label: string; body: string; ico
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   header: { marginBottom: 32 },
@@ -249,6 +272,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   libraryButton: { height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   libraryButtonText: { fontSize: 15, fontWeight: '700' },
+
+  modalBackdrop: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
+  modalCard: { borderRadius: 24, padding: 24, overflow: 'hidden' },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  modalTitle: { fontSize: 20, fontWeight: '800' },
+  modalBody: { fontSize: 15, lineHeight: 24, color: '#FFFFFF', marginBottom: 12 },
+  modalBodyMuted: { fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.62)' },
 
   glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
 });

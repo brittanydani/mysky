@@ -18,12 +18,11 @@ import {
   Pressable,
   ScrollView,
   Alert,
-  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
-import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
@@ -43,13 +42,11 @@ import {
   ReflectionDraftAnswer,
 } from '../services/insights/dailyReflectionService';
 import {
-  VALUES_THEME_MAP,
   syncCoreValuesFromReflections,
 } from '../services/insights/reflectionProfileSync';
 
 const STORAGE_KEY = '@mysky:core_values';
 const MAX_TOP = 5;
-const DYNAMIC_MAP_WINDOW_DAYS = 21;
 const MAP_TOP_ANCHOR_WEIGHTS = [4.6, 4.1, 3.6, 3.1, 2.6];
 const MAP_SELECTED_WEIGHT = 0.35;
 
@@ -190,8 +187,6 @@ export default function CoreValuesScreen() {
   const [state, setState] = useState<State>({ selected: [], topFive: [] });
   const [saved, setSaved] = useState(false);
   const [valueReflectionAnswers, setValueReflectionAnswers] = useState<ValueReflectionAnswer[]>([]);
-  const [customValueInput, setCustomValueInput] = useState('');
-  const [showCustomValueInput, setShowCustomValueInput] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -273,7 +268,10 @@ export default function CoreValuesScreen() {
                 </Pressable>
               );
             })}
-            <Pressable style={[styles.chip, styles.addCustomChip]} onPress={() => setShowCustomValueInput(true)}>
+            <Pressable
+              style={[styles.chip, styles.addCustomChip]}
+              onPress={() => Alert.alert('Custom values', 'Custom values are not available on this screen yet.')}
+            >
               <Ionicons name="add-outline" size={14} color={PALETTE.gold} style={{ marginRight: 6 }} />
               <MetallicText style={styles.chipText} color={PALETTE.gold}>Custom value</MetallicText>
             </Pressable>

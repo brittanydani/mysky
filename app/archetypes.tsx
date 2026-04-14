@@ -29,11 +29,10 @@ import { syncArchetypeProfileFromReflections } from '../services/insights/reflec
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
-import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { logger } from '../utils/logger';
 import { type AppTheme } from '../constants/theme';
-import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { useThemedStyles } from '../context/ThemeContext';
 
 const STORAGE_KEY = '@mysky:archetype_profile';
 
@@ -176,7 +175,6 @@ interface SavedProfile {
 
 export default function ArchetypesScreen() {
   const router = useRouter();
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const [answers, setAnswers] = useState<Record<number, ArchetypeKey>>({});
   const [savedProfile, setSavedProfile] = useState<SavedProfile | null>(null);

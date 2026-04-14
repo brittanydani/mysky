@@ -8,7 +8,7 @@
 // 4. Integrated "Velvet Glass" 1px directional light-catch borders globally.
 // 5. Assigned Sage and Atmosphere Blue for silhouette depth and auxiliary navigation.
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
-import Body, { ExtendedBodyPart, Slug } from 'react-native-body-highlighter';
+import Body, { Slug } from 'react-native-body-highlighter';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
@@ -29,27 +29,15 @@ import * as Haptics from 'expo-haptics';
 import { logger } from '../utils/logger';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
-import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
-import { keepLastWordsTogether } from '../utils/textLayout';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
-import { EditorialPillGrid } from '../components/ui/EditorialPillGrid';
 import { type AppTheme } from '../constants/theme';
-import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { useThemedStyles } from '../context/ThemeContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const STORAGE_KEY = '@mysky:somatic_entries';
 const FIGURE_WIDTH = Math.min(SCREEN_W - 96, 200);
 const BODY_SCALE = FIGURE_WIDTH / 200;
-
-// ── Cinematic Palette ──
-const PALETTE = {
-  gold: '#D4AF37',       // Interaction highlights
-  atmosphere: '#A2C2E1', // Coarse silhouette glow
-  sage: '#6B9080',       // Background aura
-  slateMid: '#2C3645',   // Anchor Slate Top
-  slateDeep: '#1A1E29',  // Anchor Slate Bottom
-};
 
 const EMOTION_COLORS: Record<string, string> = {
   Anxiety: '#A2C2E1', Sadness: '#5C7CAA', Anger: '#DC5050', Joy: '#D4AF37',
@@ -67,18 +55,7 @@ const SENSATION_COLORS: Record<string, string> = {
   Nausea: '#8BAA7A',
 };
 
-const ZONES = [
-  { id: 'head', frontLabel: 'Head & Mind', backLabel: 'Back of Head' },
-  { id: 'throat', frontLabel: 'Throat & Jaw', backLabel: 'Neck' },
-  { id: 'chest', frontLabel: 'Chest & Heart', backLabel: 'Upper Back' },
-  { id: 'arms', frontLabel: 'Arms & Hands', backLabel: 'Arms & Hands' },
-  { id: 'gut', frontLabel: 'Gut & Belly', backLabel: '' },
-  { id: 'back', frontLabel: 'Hips & Pelvis', backLabel: 'Lower Back' },
-  { id: 'limbs', frontLabel: 'Legs & Feet', backLabel: 'Calves' },
-];
-
 export default function SomaticMapScreen() {
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
 
@@ -86,15 +63,13 @@ export default function SomaticMapScreen() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
   const [selectedSensation, setSelectedSensation] = useState<string | null>(null);
-  const [intensity, setIntensity] = useState(3);
+  const [intensity] = useState(3);
   const [side, setSide] = useState<'front' | 'back'>('front');
   const [gender, setGender] = useState<'female' | 'male'>('female');
 
   useFocusEffect(useCallback(() => {
     EncryptedAsyncStorage.getItem(STORAGE_KEY).then(raw => raw && setEntries(JSON.parse(raw))).catch(e => logger.warn(e));
   }, []));
-
-  const activeColor = selectedEmotion ? EMOTION_COLORS[selectedEmotion] : PALETTE.sage;
 
   const logEntry = async () => {
     if (!selectedRegion || !selectedEmotion) return;

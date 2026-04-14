@@ -2,7 +2,7 @@
   "expo": {
     "name": "MySky",
     "slug": "mysky",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "newArchEnabled": true,
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -11,7 +11,7 @@
     "updates": {
       "url": "https://u.expo.dev/c76e6f9f-d7eb-494b-90f5-e1b35d86152a"
     },
-    "runtimeVersion": "1.0.1",
+    "runtimeVersion": "1.0.2",
     "ios": {
       "bundleIdentifier": "com.brittany.mysky",
       "buildNumber": "37",

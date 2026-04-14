@@ -41,7 +41,7 @@ import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { type AppTheme } from '../../../constants/theme';
-import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
+import { useThemedStyles } from '../../../context/ThemeContext';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -187,7 +187,6 @@ function getDefaultProfiles(): AllProfiles {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function VisualCalibration() {
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const navigation = useNavigation();

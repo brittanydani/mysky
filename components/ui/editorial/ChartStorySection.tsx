@@ -1,13 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SkiaGradientText } from './SkiaGradientText';
-import { Spacing } from './theme';
 import { CoreIdentitySummary } from '../../../services/astrology/natalSynthesis';
 
 export const ChartStorySection = ({ coreIdentity }: { coreIdentity: CoreIdentitySummary | null }) => {
   if (!coreIdentity) return null;
 
-  const { sunSign, risingSign, overviewParts, chartRuler, chartRulerSign } = coreIdentity;
+  const { sunSign, risingSign, overviewParts, chartRuler } = coreIdentity;
 
   const renderParagraph = (text: string, index: number) => {
       if (index === 0) {

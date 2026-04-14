@@ -106,6 +106,18 @@
     "typescript": "~5.9.2"
   },
   "private": true,
+  "expo": {
+    "install": {
+      "exclude": [
+        "react-native-keyboard-controller"
+      ]
+    },
+    "doctor": {
+      "appConfigFieldsNotSyncedCheck": {
+        "enabled": false
+      }
+    }
+  },
   "overrides": {
     "@tootallnate/once": "^3.0.1",
     "serialize-javascript": "^7.0.0"

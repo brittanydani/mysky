@@ -17,11 +17,10 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { type AppTheme } from '../constants/theme';
-import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { useThemedStyles } from '../context/ThemeContext';
 
 export default function DailyReflectionScreen() {
   const router = useRouter();
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
 
   return (

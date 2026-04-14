@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { Platform, Text } from 'react-native';
 import {
   Canvas,
   LinearGradient,

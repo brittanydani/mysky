@@ -20,11 +20,10 @@ import { localDb } from '../../services/storage/localDb';
 import { logger } from '../../utils/logger';
 import { IdentityVault, CosmicIdentity } from '../../utils/IdentityVault';
 import { type AppTheme } from '../../constants/theme';
-import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
+import { useThemedStyles } from '../../context/ThemeContext';
 
 export default function OnboardingBirthScreen() {
   const router = useRouter();
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const [visible, setVisible] = useState(true);
   const [savedName, setSavedName] = useState<string | undefined>(undefined);
@@ -94,7 +93,7 @@ export default function OnboardingBirthScreen() {
       {/* Nebula depth — atmospheric glow orbs to match global space theme */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(212, 175, 55, 0.08)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -120,7 +119,7 @@ export default function OnboardingBirthScreen() {
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#0A0A0F' // Absolute Midnight Anchor
+    backgroundColor: theme.background
   },
   safeArea: { 
     flex: 1 

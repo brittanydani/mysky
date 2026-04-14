@@ -26,7 +26,7 @@ import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
-import { Canvas, Circle, Group, Path, Skia, BlurMask, RadialGradient, vec, Shadow } from '@shopify/react-native-skia';
+import { Canvas, Circle, Group, Path, Skia, BlurMask, Shadow } from '@shopify/react-native-skia';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
@@ -336,7 +336,6 @@ function getProfileSummary(scores: Scores): string {
 // ── Screen ──
 
 export default function IntelligenceProfileScreen() {
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const [scores, setScores] = useState<Scores>({});
