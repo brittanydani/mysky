@@ -29,7 +29,6 @@ import {
   Easing,
 } from 'react-native-reanimated';
 import { DailyCheckIn } from '../../services/patterns/types';
-import { useAppTheme } from '../../context/ThemeContext';
 import { MetallicText } from './MetallicText';
 
 // ── Lunar Sky / Midnight Slate Palette ──────────────────────────────────────
@@ -56,15 +55,12 @@ const DIMENSIONS = [
 const NUM_DIM = DIMENSIONS.length;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function levelToNum(l: any): number { return l === 'low' ? 2 : l === 'medium' ? 5 : 9; }
-function clamp01(v: number): number { return Math.max(0, Math.min(1, v)); }
 function withAlpha(hex: string, alpha: number): string {
   const normalized = hex.replace('#', '');
   return `rgba(${parseInt(normalized.slice(0, 2), 16)}, ${parseInt(normalized.slice(2, 4), 16)}, ${parseInt(normalized.slice(4, 6), 16)}, ${alpha})`;
 }
 
 export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }: { checkIns: DailyCheckIn[], size: number }) {
-  const theme = useAppTheme();
   const cx = size / 2, cy = size / 2;
   const orbitR = size * 0.34, innerR = size * 0.18, outerR = size * 0.40;
 
@@ -82,10 +78,10 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
   const orbitAngle = useSharedValue(0);
   useEffect(() => {
     orbitAngle.value = withRepeat(withTiming(Math.PI * 2, { duration: 16000, easing: Easing.linear }), -1, false);
-  }, []);
+  }, [orbitAngle]);
   const rotateTransform = useDerivedValue(() => [{ rotate: orbitAngle.value }]);
 
-  const { nodes, flowArcs, ringPaths } = useMemo(() => {
+  const { nodes, flowArcs } = useMemo(() => {
     const startAngle = -Math.PI / 2;
     const angleStep = (Math.PI * 2) / NUM_DIM;
 
@@ -107,7 +103,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
     const outerP = Skia.Path.Make(); outerP.addCircle(cx, cy, outerR);
     const innerP = Skia.Path.Make(); innerP.addCircle(cx, cy, innerR);
 
-    return { nodes: nodePositions, flowArcs: arcs, ringPaths: { outer: outerP, inner: innerP } };
+    return { nodes: nodePositions, flowArcs: arcs };
   }, [scores, cx, cy, orbitR, innerR, outerR]);
 
   return (
@@ -182,7 +178,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
 const styles = StyleSheet.create({
   root: { position: 'relative' },
   centerCopyWrap: { position: 'absolute', alignItems: 'center', gap: 6 },
-  centerThemes: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, textAlign: 'center' },
+  centerThemes: { fontSize: 9, fontWeight: '800', letterSpacing: 1.5, textAlign: 'center' },
   centerSummary: { fontSize: 13, color: 'rgba(255,255,255,0.6)', textAlign: 'center', fontWeight: '500' },
   dimLabel: { position: 'absolute', width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
   dimIcon: { fontSize: 16, fontWeight: '600' },

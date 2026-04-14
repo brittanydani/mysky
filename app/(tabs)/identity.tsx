@@ -14,7 +14,6 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  Dimensions,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -32,15 +31,12 @@ import { localDb } from '../../services/storage/localDb';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
-import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
 import { PremiumSegmentedControl } from '../../components/ui/PremiumSegmentedControl';
 import { EnergyScrollContent } from '../../components/screens/EnergyScrollContent';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface BlueprintCard {
   title: string;

@@ -36,7 +36,7 @@ import { usePremium } from '../../../context/PremiumContext';
 import { useAuth } from '../../../context/AuthContext';
 import { getDreamReinterpretPerDreamLimit } from '../../../constants/config';
 import { logger } from '../../../utils/logger';
-import { parseLocalDate, toLocalDateString } from '../../../utils/dateUtils';
+import { parseLocalDate } from '../../../utils/dateUtils';
 import { generateDreamInterpretation } from '../../../services/premium/dreamInterpretation';
 import {
   generateGeminiDreamInterpretation,

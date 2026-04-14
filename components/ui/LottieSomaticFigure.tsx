@@ -107,7 +107,7 @@ const LottieSomaticFigure = memo(function LottieSomaticFigure({
       -1,
       true,
     );
-  }, [selectedZone]);
+  }, [pulse, selectedZone]);
 
   const glowR = useDerivedValue(() => {
     if (!selectedZone || !zoneMap[selectedZone]) return 0;

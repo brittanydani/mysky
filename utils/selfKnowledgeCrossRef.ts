@@ -204,17 +204,21 @@ function buildSomaticInsight(
   // Most frequent region
   const regionCounts: Record<string, number> = {};
   const emotionCounts: Record<string, number> = {};
+  const sensationCounts: Record<string, number> = {};
   for (const e of entries) {
     regionCounts[e.region] = (regionCounts[e.region] ?? 0) + 1;
     emotionCounts[e.emotion] = (emotionCounts[e.emotion] ?? 0) + 1;
+    if (e.sensation) sensationCounts[e.sensation] = (sensationCounts[e.sensation] ?? 0) + 1;
   }
 
   const sortedRegions = Object.entries(regionCounts).sort((a, b) => b[1] - a[1]);
   const sortedEmotions = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1]);
+  const sortedSensations = Object.entries(sensationCounts).sort((a, b) => b[1] - a[1]);
   if (!sortedRegions.length || !sortedEmotions.length) return null;
   const [topRegionId, topRegionCount] = sortedRegions[0];
   const [topEmotion, topEmotionCount] = sortedEmotions[0];
   const regionLabel = REGION_LABELS[topRegionId] ?? topRegionId;
+  const topSensation = sortedSensations.length > 0 ? sortedSensations[0] : null;
 
   // Cross-ref: how many somatic entry days overlap with high-stress check-in days?
   let overlap = 0;
@@ -237,14 +241,17 @@ function buildSomaticInsight(
     ? ` On ${overlap} of those days, the same body signal appeared alongside high stress, which suggests your system is flagging the tension there before your thoughts fully catch up.`
     : '';
 
+  const sensationNote = topSensation ? ` The most common sensation is ${topSensation[0].toLowerCase()}.` : '';
+
   return {
     id: 'somatic-dominant',
     title: 'Body Awareness Pattern',
-    body: `Your physical and emotional logs are pointing to the same place. When ${topEmotion.toLowerCase()} surfaces, your body most often stores it in your ${regionLabel}.${overlapBody}`,
+    body: `Your physical and emotional logs are pointing to the same place. When ${topEmotion.toLowerCase()} surfaces, your body most often stores it in your ${regionLabel}.${sensationNote}${overlapBody}`,
     heroMetrics: [
       metric(heavyLabel.toUpperCase(), 'Somatic days', overlap >= 2 ? 'caution' : 'default'),
       metric(regionMetric.toUpperCase(), 'Primary signal'),
       metric(emotionalWeather.toUpperCase(), 'Top emotion'),
+      ...(topSensation ? [metric(titleCase(topSensation[0]).toUpperCase(), 'Top sensation')] : []),
     ],
     takeaway: takeaway(
       'Somatic cue',
@@ -670,10 +677,15 @@ const DREAM_TO_SOMATIC_EMOTION: Record<string, string[]> = {
   angry:      ['Anger', 'Frustration'],
   trapped:    ['Tension', 'Anxiety'],
   grieving:   ['Grief', 'Sadness'],
-  isolated:   ['Numbness', 'Sadness'],
+  isolated:   ['Numbness', 'Sadness', 'Loneliness'],
   exhausted:  ['Numbness', 'Restlessness'],
   restless:   ['Restlessness', 'Tension', 'Anxiety'],
   conflicted: ['Tension', 'Anxiety'],
+  vulnerable: ['Vulnerability', 'Fear', 'Shame'],
+  hopeful:    ['Hope', 'Excitement'],
+  lonely:     ['Loneliness', 'Sadness', 'Disconnection'],
+  overwhelmed:['Overwhelm', 'Anxiety', 'Tension'],
+  frustrated: ['Frustration', 'Anger'],
 };
 
 function buildDreamSomaticInsight(

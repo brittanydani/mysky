@@ -67,6 +67,7 @@ export interface SomaticEntry {
   date: string; // ISO string from new Date().toISOString()
   region: string;
   emotion: string;
+  sensation?: string;
   intensity: number; // 1–5
   note?: string;
 }

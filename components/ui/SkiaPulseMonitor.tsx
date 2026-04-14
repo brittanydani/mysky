@@ -18,8 +18,6 @@ import {
   BlurMask,
   Path,
   Skia,
-  RadialGradient,
-  vec,
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,
@@ -97,7 +95,7 @@ export default function SkiaPulseMonitor({
       cancelAnimation(breathe);
       cancelAnimation(discoveryPulse);
     };
-  }, []);
+  }, [breathe, discoveryPulse]);
 
   const hapticTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hapticMs    = useRef(400);

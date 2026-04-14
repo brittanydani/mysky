@@ -1,4 +1,5 @@
 export const CHART_CARD_COLORS = {
+  gold: '#D4AF37',
   midnight: '#2C3645',
   sage: '#608A8D',
   purple: '#85769F',

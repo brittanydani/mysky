@@ -100,7 +100,7 @@ export function buildTriggerPatternNarrative(summary: TriggerPatternSummary): st
   const ratioText =
     ratio >= 1
       ? `Restoring moments are keeping pace with harder moments (${glimmerCount} vs ${drainCount}).`
-      : `Hard moments are outweighing restoring moments ${drainCount} to ${glimmerCount}. Keep the next step small and concrete.`;
+      : `Hard moments are outpacing restoring moments ${drainCount} to ${glimmerCount}. Keep the next step small and concrete.`;
 
   const areaText = topDrainArea
     ? ` Your nervous system is most frequently activated in the context of ${topDrainArea.toLowerCase()}.`

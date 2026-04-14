@@ -310,20 +310,6 @@ export default function JournalScreen() {
     });
   }, [filteredEntries]);
 
-  useFocusEffect(
-    useCallback(() => {
-      void loadEntries(true);
-      void loadSleepEntries();
-      AsyncStorage.getItem('pref_mood_insights').then(v => {
-        setMoodInsightsEnabled(v === null || v === '1');
-      }).catch(() => {});
-    }, [])
-  );
-
-  useEffect(() => {
-    if (entries.length >= 3) generatePatternInsights();
-  }, [entries.length, isPremium]);
-
   const moodToLevel = useCallback((mood: string): MoodLevel => {
     const map: Record<string, MoodLevel> = {
       calm: 5, soft: 4, okay: 3, heavy: 2, stormy: 1,
@@ -356,7 +342,7 @@ export default function JournalScreen() {
     }
   }, [entries, isPremium, moodToLevel]);
 
-  const loadEntries = async (reset = false) => {
+  const loadEntries = useCallback(async (reset = false) => {
     try {
       if (reset) {
         setLoading(true);
@@ -391,9 +377,9 @@ export default function JournalScreen() {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [entries, hasMore, loadingMore]);
 
-  const loadSleepEntries = async () => {
+  const loadSleepEntries = useCallback(async () => {
     try {
       const charts = await localDb.getCharts();
       if (!charts.length) return;
@@ -402,7 +388,21 @@ export default function JournalScreen() {
     } catch (error) {
       logger.error('Failed to load sleep entries:', error);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadEntries(true);
+      void loadSleepEntries();
+      AsyncStorage.getItem('pref_mood_insights').then(v => {
+        setMoodInsightsEnabled(v === null || v === '1');
+      }).catch(() => {});
+    }, [loadEntries, loadSleepEntries])
+  );
+
+  useEffect(() => {
+    if (entries.length >= 3) generatePatternInsights();
+  }, [entries.length, generatePatternInsights]);
 
   const handleAddEntry = async () => {
     try {
@@ -427,7 +427,7 @@ export default function JournalScreen() {
       logger.error('Failed to delete journal entry:', error);
       Alert.alert('Error', 'Failed to delete entry');
     }
-  }, []);
+  }, [loadEntries]);
 
   const closeEntryActions = useCallback(() => {
     setActionEntry(null);
@@ -457,7 +457,7 @@ export default function JournalScreen() {
       logger.error('Failed to delete dream entry:', error);
       Alert.alert('Error', 'Failed to delete dream entry');
     }
-  }, []);
+  }, [loadSleepEntries]);
 
   const stableFormatDate = useCallback((dateString: string) => {
     const date = parseLocalDate(dateString);
@@ -529,11 +529,11 @@ export default function JournalScreen() {
     if (activeTab === 'reflections' && !loadingMore && hasMore) {
       void loadEntries(false);
     }
-  }, [activeTab, loadingMore, hasMore]);
+  }, [activeTab, hasMore, loadEntries, loadingMore]);
 
   // ── List header ────────────────────────────────────────────────────────────
 
-  const ListHeader = useMemo(() => (
+  const ListHeader = (
     <>
       <Animated.View entering={FadeInDown.duration(1000)} style={styles.header}>
         <View>
@@ -696,10 +696,10 @@ export default function JournalScreen() {
         </View>
       </View>
     </>
-  ), [isPremium, patternInsights, totalCount, sleepEntries, router, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, showSearch, toggleBrowseSearch, setActiveTab, moodInsightsEnabled]);
+  );
 
   // ── List footer ────────────────────────────────────────────────────────────
-  const ListFooter = useMemo(() => {
+  const ListFooter = (() => {
     if (activeTab === 'reflections' && loadingMore) {
       return (
         <View style={styles.loadingContainer}>
@@ -708,10 +708,10 @@ export default function JournalScreen() {
       );
     }
     return null;
-  }, [activeTab, loadingMore]);
+  })();
 
   // ── List empty ─────────────────────────────────────────────────────────────
-  const ListEmpty = useMemo(() => {
+  const ListEmpty = (() => {
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
@@ -773,7 +773,7 @@ export default function JournalScreen() {
         </LinearGradient>
       </View>
     );
-  }, [loading, activeTab, sleepEntries.length, filteredSleepEntries.length, totalCount, filteredEntries.length, searchQuery]);
+  })();
 
   const handleSaveEntry = async (data: Partial<JournalEntry>) => {
     try {

@@ -161,23 +161,6 @@ const PLANET_COLORS: Record<string, string> = {
   Uranus: '#6CBEC4', Neptune: '#7C8CD0', Pluto: '#A88BEB', 'North Node': '#A0A0B0', 'South Node': '#A0A0B0', Chiron: '#6EBF8B', Ascendant: '#D4AF37', Midheaven: '#D4AF37',
 };
 
-const OVERLAY_PLANET_COLORS: Record<string, string> = {
-  Sun: '#8C7CCF', Moon: '#7C70C0', Mercury: '#7080C4', Venus: '#9878C8', Mars: '#9870B8', Jupiter: '#8C7CCF', Saturn: '#6864A8',
-  Uranus: '#7090C8', Neptune: '#6878C0', Pluto: '#8068C0', 'North Node': '#808090', 'South Node': '#808090', Chiron: '#80C080', Ascendant: '#8C7CCF', Midheaven: '#8C7CCF',
-};
-
-function getUserSpherePalette(userIndex: number): string[] {
-  const palettes = [
-    // Champagne Gold Metallic — pearl peak → warm gold → deep shadow
-    ['#FEFAF0', '#F0DFA0', '#E8C97A', '#C9A84C', '#7A5010', '#3D2809'],
-    // Platinum Champagne — silver-warm specular for overlay
-    ['#FDFCF8', '#EDE8DC', '#D6C99A', '#B0976A', '#6B5330', '#2E2010'],
-    ['#F7E5EB', '#E6C0CD', '#D4A3B3', '#B07D8F', '#8C5A6B'],           // Rose Gold
-    ['#EBE4F9', '#CDBCF4', '#A88BEB', '#8365C8', '#5E42A6'],           // Nebula Purple
-  ];
-  return palettes[userIndex % 4] ?? palettes[0];
-}
-
 const CROSS_ASPECT_COLORS: Record<string, { tight: string; loose: string }> = {
   Harmonious: { tight: 'rgba(162,194,225,0.40)', loose: 'rgba(162,194,225,0.20)' },
   Challenging: { tight: 'rgba(212,163,179,0.40)', loose: 'rgba(212,163,179,0.20)' },
@@ -294,7 +277,6 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
     slateMid = theme.background,
     slateDeep = theme.background,
     goldLight = '#F9DF9F',
-    goldMain = '#D4AF37',
     goldDark = '#936B16',
     textInk = theme.isDark ? '#FFFFFF' : '#1A1815'
   } = theme as any;
@@ -348,7 +330,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
       aspectColor: (alpha: number) => `rgba(212, 175, 55, ${alpha})`,
       aspectGlow: (alpha: number) => `rgba(244, 235, 208, ${alpha})`,
     };
-  }, [theme]);
+  }, [slateDeep, slateMid, theme.background]);
 
   const [settingsOrientation, setSettingsOrientation] = useState<ChartOrientation>('standard-natal');
   useEffect(() => { AstrologySettingsService.getSettings().then((s) => setSettingsOrientation(s.chartOrientation)).catch(() => {}); }, []);
@@ -459,7 +441,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         });
       }
       return lines;
-    }, [visibleAspects, planetDisplayAngles, wheelPalette]);
+    }, [visibleAspects, planetDisplayAngles]);
     
   const crossLines = useMemo(() => {
     const lines: { x1: number; y1: number; x2: number; y2: number; thread: string; tight: boolean; }[] = [];

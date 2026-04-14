@@ -53,9 +53,18 @@ const PALETTE = {
 
 const EMOTION_COLORS: Record<string, string> = {
   Anxiety: '#A2C2E1', Sadness: '#5C7CAA', Anger: '#DC5050', Joy: '#D4AF37',
-  Fear: '#A88BEB', Peace: '#6B9080', Tension: '#CD7F5D', Numbness: '#2C3645',
-  Grief: '#5E3B8F', Excitement: '#F4E6BC', Shame: '#8B2121', Love: '#D4A0A0',
-  Grounded: '#2A4E38', Disconnection: '#1A1E29', Irritability: '#8B2121', Restlessness: '#CD7F5D',
+  Fear: '#A88BEB', Peace: '#6B9080', Grief: '#B48AD4', Excitement: '#F4E6BC',
+  Shame: '#D46B6B', Love: '#D4A0A0', Grounded: '#4E9A6E', Disconnection: '#7A7F8E',
+  Frustration: '#E07845', Loneliness: '#7B8EBF', Overwhelm: '#C47DB5', Hope: '#7EC8A0',
+  Vulnerability: '#C9A0D4',
+};
+
+const SENSATION_COLORS: Record<string, string> = {
+  Tension: '#CD7F5D', Numbness: '#8A92A1', Tingling: '#A88BEB', Warmth: '#D4AF37',
+  Heaviness: '#5C7CAA', Lightness: '#F4E6BC', Pressure: '#D46B6B', Restlessness: '#CD7F5D',
+  Pulsing: '#A2C2E1', Chill: '#6B9080', Aching: '#D4A0A0',
+  Fluttering: '#E0A4C8', Burning: '#E06040', Hollowness: '#7A7F8E', Shakiness: '#B8A0D4',
+  Nausea: '#8BAA7A',
 };
 
 const ZONES = [
@@ -76,6 +85,7 @@ export default function SomaticMapScreen() {
   const [entries, setEntries] = useState<any[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
+  const [selectedSensation, setSelectedSensation] = useState<string | null>(null);
   const [intensity, setIntensity] = useState(3);
   const [side, setSide] = useState<'front' | 'back'>('front');
   const [gender, setGender] = useState<'female' | 'male'>('female');
@@ -88,11 +98,11 @@ export default function SomaticMapScreen() {
 
   const logEntry = async () => {
     if (!selectedRegion || !selectedEmotion) return;
-    const entry = { id: Date.now().toString(), date: new Date().toISOString(), region: selectedRegion, side, gender, emotion: selectedEmotion, intensity };
+    const entry = { id: Date.now().toString(), date: new Date().toISOString(), region: selectedRegion, side, gender, emotion: selectedEmotion, sensation: selectedSensation, intensity };
     const updated = [entry, ...entries];
     setEntries(updated);
     await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    setSelectedRegion(null); setSelectedEmotion(null);
+    setSelectedRegion(null); setSelectedEmotion(null); setSelectedSensation(null);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
@@ -158,7 +168,7 @@ export default function SomaticMapScreen() {
               scale={BODY_SCALE}
               side={side}
               gender={gender}
-              colors={['transparent', activeColor, activeColor]}
+              colors={['transparent', '#FFFFFF', '#FFFFFF']}
               defaultFill="transparent"
               defaultStroke="none"
               defaultStrokeWidth={0}
@@ -172,15 +182,30 @@ export default function SomaticMapScreen() {
             />
           </VelvetGlassSurface>
 
-          {/* Emotion Pill Cloud (Recessed vs Raised) */}
-          <Text style={styles.sectionLabel}>EMOTION PRESENT</Text>
+          {/* Emotion Pill Cloud */}
+          <Text style={styles.sectionLabel}>EMOTION</Text>
           <View style={styles.pillCloud}>
-            {Object.keys(EMOTION_COLORS).slice(0, 12).map(em => (
+            {Object.keys(EMOTION_COLORS).map(em => (
               <Pressable key={em} onPress={() => setSelectedEmotion(selectedEmotion === em ? null : em)} style={[
                 styles.emotionPill,
-                selectedEmotion === em ? { backgroundColor: EMOTION_COLORS[em], borderColor: EMOTION_COLORS[em] } : styles.pillRecessed
+                { borderColor: `${EMOTION_COLORS[em]}40` },
+                selectedEmotion === em && { backgroundColor: EMOTION_COLORS[em], borderColor: EMOTION_COLORS[em] }
               ]}>
-                <Text style={[styles.emotionText, selectedEmotion === em && { color: '#0A0A0F', fontWeight: '800' }]}>{em}</Text>
+                <Text style={[styles.emotionText, { color: EMOTION_COLORS[em] }, selectedEmotion === em && { color: '#0A0A0F', fontWeight: '800' }]}>{em}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Sensation Pill Cloud */}
+          <Text style={[styles.sectionLabel, { marginTop: 28 }]}>SENSATION</Text>
+          <View style={styles.pillCloud}>
+            {Object.keys(SENSATION_COLORS).map(s => (
+              <Pressable key={s} onPress={() => setSelectedSensation(selectedSensation === s ? null : s)} style={[
+                styles.emotionPill,
+                { borderColor: `${SENSATION_COLORS[s]}40` },
+                selectedSensation === s && { backgroundColor: SENSATION_COLORS[s], borderColor: SENSATION_COLORS[s] }
+              ]}>
+                <Text style={[styles.emotionText, { color: SENSATION_COLORS[s] }, selectedSensation === s && { color: '#0A0A0F', fontWeight: '800' }]}>{s}</Text>
               </Pressable>
             ))}
           </View>
@@ -211,7 +236,7 @@ export default function SomaticMapScreen() {
                         {new Date(entry.date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                       </Text>
                     </View>
-                    <Text style={styles.historyRegion}>{entry.region} · {entry.side}</Text>
+                    <Text style={styles.historyRegion}>{entry.region} · {entry.side}{entry.sensation ? ` · ${entry.sensation}` : ''}</Text>
                   </VelvetGlassSurface>
                   </Pressable>
                 </Animated.View>

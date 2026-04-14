@@ -6,6 +6,8 @@ import {
   Text,
   StyleSheet,
   Dimensions,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { type AppTheme } from '../../constants/theme';
@@ -13,10 +15,6 @@ import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const GROUP_W = SCREEN_W - 32;
-
-// ── Props ───────────────────────────────────────────────────────────────────
-
-import { type StyleProp, type ViewStyle } from 'react-native';
 
 interface Props {
   /** Section title */

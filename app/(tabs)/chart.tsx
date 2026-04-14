@@ -25,7 +25,6 @@ import {
   Pressable, 
   Alert, 
   Platform, 
-  Dimensions, 
   Vibration,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,15 +35,6 @@ import { useRouter, Href } from 'expo-router';
 import Animated, { 
   FadeIn, 
   FadeInDown, 
-  useAnimatedStyle, 
-  withTiming, 
-  useSharedValue, 
-  withSpring, 
-  interpolate, 
-  Extrapolate,
-  Layout, 
-  SlideInRight, 
-  useAnimatedScrollHandler 
 } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
@@ -56,7 +46,6 @@ import { METALLIC_RED } from '../../constants/metallicPalettes';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaBreathingRing from '../../components/ui/SkiaBreathingRing';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
-import MoonPhaseView from '../../components/ui/MoonPhaseView';
 import { 
   ChironIcon, 
   NorthNodeIcon, 
@@ -86,26 +75,20 @@ import {
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
 import { HOUSE_MEANINGS } from '../../services/astrology/constants';
-import { detectChartPatterns, ChartPatterns } from '../../services/astrology/chartPatterns';
-import { getChironInsightFromChart, ChironInsight } from '../../services/journal/chiron';
-import { getNodeInsight, NodeInsight } from '../../services/journal/nodes';
+import { detectChartPatterns } from '../../services/astrology/chartPatterns';
+import { getChironInsightFromChart } from '../../services/journal/chiron';
+import { getNodeInsight } from '../../services/journal/nodes';
 import { RelationshipChart, generateId } from '../../services/storage/models';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
-import { detectExtendedPatterns, ExtendedPatterns } from '../../services/astrology/aspectPatterns';
-import { generateThemedSections, getAspectInterpretation, ThemedSection } from '../../services/astrology/natalInterpretations';
-import { parseLocalDate } from '../../utils/dateUtils';
+import { detectExtendedPatterns } from '../../services/astrology/aspectPatterns';
+import { generateThemedSections, getAspectInterpretation } from '../../services/astrology/natalInterpretations';
 import { 
   analyzeChartDignity, 
   analyzeDispositorChain, 
   detectChartShape, 
   detectSingletons, 
   detectInterceptions, 
-  ChartDignityAnalysis, 
-  DispositorChain, 
-  ChartShapeResult, 
-  Singleton, 
-  Interception 
 } from '../../services/astrology/dignityService';
 import { 
   generatePlanetDeepDive, 
@@ -113,11 +96,6 @@ import {
   generateAngleInterpretations, 
   selectKeyAspects, 
   generatePointInterpretations, 
-  PlanetDeepDive, 
-  HouseDeepDive, 
-  AngleInterpretation, 
-  KeyAspect, 
-  PointInterpretation 
 } from '../../services/astrology/natalDeepInterpretations';
 import { 
   generateCoreIdentitySummary, 
@@ -125,18 +103,9 @@ import {
   generateCareerProfile, 
   generateEmotionalProfile, 
   generateShadowGrowth, 
-  CoreIdentitySummary, 
-  RelationshipProfile, 
-  CareerProfile, 
-  EmotionalProfile, 
-  ShadowGrowthProfile 
 } from '../../services/astrology/natalSynthesis';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
-import { PlanetStrengthSection } from "../../components/ui/editorial/PlanetStrengthSection";
 import { ChartStorySection } from '../../components/ui/editorial/ChartStorySection';
-import { EditorialPlacementList, DataPlacement } from '../../components/ui/editorial/EditorialPlacementList';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ── Advanced System Configurations ──────────────────────────────────────────
 
@@ -330,7 +299,6 @@ function SectionAccordion({
   setOpenSections: React.Dispatch<React.SetStateAction<Set<string>>>;
   children: React.ReactNode;
 }) {
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles) as any;
   const isOpen = openSections.has(sectionKey);
   
@@ -510,7 +478,7 @@ export default function ChartScreen() {
 
   // ── System Configuration State ──
   const [houseSystemLabel, setHouseSystemLabel] = useState<string>('Whole Sign');
-  const [orbPresetLabel, setOrbPresetLabel] = useState<string>('Normal');
+  const [, setOrbPresetLabel] = useState<string>('Normal');
   const [zodiacSystemLabel, setZodiacSystemLabel] = useState<string>('Tropical');
   const [chartOrientation, setChartOrientation] = useState<any>('standard-natal');
 
@@ -518,7 +486,7 @@ export default function ChartScreen() {
    * loadChart: Primary Synchronization Engine
    * Orchestrates the fetching of user settings and database chart recovery.
    */
-  const loadChart = async () => {
+  const loadChart = useCallback(async () => {
     try {
       const astroSettings = await AstrologySettingsService.getSettings();
       setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(astroSettings.houseSystem));
@@ -572,13 +540,13 @@ export default function ChartScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isPremium]);
 
   // Re-synchronize ecosystem on screen focus
   useFocusEffect(
     useCallback(() => {
       void loadChart();
-    }, [isPremium])
+    }, [loadChart])
   );
 
   /**
@@ -856,8 +824,6 @@ export default function ChartScreen() {
   const pointInterpretations = useMemo(() => activeChart && isPremium ? generatePointInterpretations(activeChart) : [], [activeChart, isPremium]);
   const partOfFortune = useMemo(() => (activeChart as any)?.partOfFortune ?? null, [activeChart]);
   const dominantPlacement = useMemo(() => (chartPatterns as any)?.dominantFactors?.planetPlacement ?? null, [chartPatterns]);
-  const descendant = useMemo(() => (activeChart as any)?.descendant ?? null, [activeChart]);
-  const ic = useMemo(() => (activeChart as any)?.imumCoeli ?? (activeChart as any)?.ic ?? null, [activeChart]);
   const patternCount = useMemo(() => {
     const baseCount = (chartPatterns?.stelliums.length ?? 0)
       + (chartPatterns?.conjunctionClusters.length ?? 0)
@@ -879,30 +845,6 @@ export default function ChartScreen() {
   const [expandedHouse, setExpandedHouse] = useState<number | null>(null);
   const [expandedLifeTheme, setExpandedLifeTheme] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['bigThree', 'coreIdentity', 'chartStory']));
-
-  const birthDateStr = useMemo(() => {
-    const chart = activeChart ?? userChart;
-    const date = (chart as any)?.birthData?.date;
-    if (!date) return '';
-    try {
-      const d = parseLocalDate(date);
-      return d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
-    } catch { return ''; }
-  }, [activeChart, userChart]);
-
-  const birthTimeStr = useMemo(() => {
-    try {
-      const chart = activeChart ?? userChart;
-      const bd = (chart as any)?.birthData;
-      if (bd?.hasUnknownTime || !bd?.time) return '';
-      const [hStr, mStr] = bd.time.split(':');
-      const h = parseInt(hStr, 10);
-      const m = parseInt(mStr, 10);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const h12 = h % 12 === 0 ? 12 : h % 12;
-      return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
-    } catch { return ''; }
-  }, [activeChart, userChart]);
 
   const planetsByHouse = useMemo(() => {
     if (!activeChart) return new Map<number, string[]>();
@@ -966,16 +908,6 @@ export default function ChartScreen() {
   }
 
   const houseCusps = activeChart?.houseCusps ?? [];
-
-  const handleScroll = (event: any) => {
-    const yOffset = event.nativeEvent.contentOffset.y;
-    // Example thresholds for haptic feedback
-    if (yOffset > 300 && yOffset < 310) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    } else if (yOffset > 800 && yOffset < 810) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    }
-  };
 
   return (
     <View style={styles.container as ViewStyle}>

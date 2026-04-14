@@ -118,13 +118,6 @@ function generateInsight(
   return `Your stability is ${stabilityIndex}% today. Small adjustments to rest and movement could shift your coherence toward alignment.`;
 }
 
-// ── Insight accent color mapping ──
-const ACCENT_MAP: Record<string, string> = {
-  gold: PALETTE.gold,
-  emerald: PALETTE.emerald,
-  silverBlue: PALETTE.atmosphere,
-};
-
 // ── Home Screen ─────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
@@ -708,7 +701,6 @@ export default function HomeScreen() {
 // ── Mood Trend Graph ─────────────────────────────────────────────────────────
 
 function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string[] }) {
-  const theme = useAppTheme();
   // Canvas spans full card width (card has paddingHorizontal:24, scrollview has paddingHorizontal:24)
   // So card inner width = screen width - 48. We negate card padding so canvas goes edge-to-edge.
   const CANVAS_W = width - 48;
@@ -720,7 +712,6 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
   const plotW = CANVAS_W - PAD_X * 2;
   const baseY = PAD_T + plotH;
 
-  const hasData = useMemo(() => bars.map(b => b > 12), [bars]);
   const normalized = useMemo(() => bars.map(b => (b - 12) / 108), [bars]);
 
   const pts = useMemo(

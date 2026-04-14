@@ -168,14 +168,18 @@ function buildPatternInsightPayload(
   if (context.somaticEntries.length > 0) {
     const regionCounts: Record<string, number> = {};
     const emotionCounts: Record<string, number> = {};
+    const sensationCounts: Record<string, number> = {};
     for (const e of context.somaticEntries) {
       regionCounts[e.region] = (regionCounts[e.region] ?? 0) + 1;
       emotionCounts[e.emotion] = (emotionCounts[e.emotion] ?? 0) + 1;
+      if (e.sensation) sensationCounts[e.sensation] = (sensationCounts[e.sensation] ?? 0) + 1;
     }
     const topRegion = Object.entries(regionCounts).sort((a, b) => b[1] - a[1])[0];
     const topEmotion = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1])[0];
+    const topSensation = Object.entries(sensationCounts).sort((a, b) => b[1] - a[1])[0];
     if (topRegion && topEmotion) {
-      profile.somaticPattern = `${topEmotion[0]} most often held in ${topRegion[0]} (${context.somaticEntries.length} entries)`;
+      const sensationPart = topSensation ? `, top sensation: ${topSensation[0]}` : '';
+      profile.somaticPattern = `${topEmotion[0]} most often held in ${topRegion[0]}${sensationPart} (${context.somaticEntries.length} entries)`;
     }
   }
   if (context.relationshipPatterns.length > 0) {

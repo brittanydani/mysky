@@ -16,8 +16,16 @@ export function isAutoDemoSeedEnabled(): boolean {
 }
 
 const DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT = 1;
+const DREAM_REINTERPRET_ALLOWLIST_PER_DREAM_LIMIT = 5;
+const DREAM_REINTERPRET_ALLOWLIST = new Set([
+  'brithornick92@gmail.com',
+]);
 
-export function getDreamReinterpretPerDreamLimit(_email?: string | null): number {
+export function getDreamReinterpretPerDreamLimit(email?: string | null): number {
+  const normalizedEmail = email?.trim().toLowerCase();
+  if (normalizedEmail && DREAM_REINTERPRET_ALLOWLIST.has(normalizedEmail)) {
+    return DREAM_REINTERPRET_ALLOWLIST_PER_DREAM_LIMIT;
+  }
   return DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT;
 }
 

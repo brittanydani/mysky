@@ -11,12 +11,11 @@ import React, { useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter, Href } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { logger } from '../utils/logger';
 import { type AppTheme } from '../constants/theme';
-import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { useThemedStyles } from '../context/ThemeContext';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
@@ -33,7 +32,6 @@ const PALETTE = {
 
 export default function GlobalError({ error, retry }: { error: Error; retry?: () => void }) {
   const router = useRouter();
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
 
   useEffect(() => {
@@ -73,7 +71,11 @@ export default function GlobalError({ error, retry }: { error: Error; retry?: ()
             <Pressable
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
-                retry ? retry() : router.replace('/(tabs)/home' as Href);
+                if (retry) {
+                  retry();
+                } else {
+                  router.replace('/(tabs)/home' as Href);
+                }
               }}
               style={styles.actionBtn}
               accessibilityRole="button"

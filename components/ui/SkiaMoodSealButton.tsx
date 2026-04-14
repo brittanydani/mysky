@@ -112,7 +112,7 @@ export default function SkiaMoodSealButton({
     if (!complete) {
       progress.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) });
     }
-  }, [complete]);
+  }, [complete, progress]);
 
   useEffect(() => {
     breathe.value = withRepeat(
@@ -120,7 +120,7 @@ export default function SkiaMoodSealButton({
       -1,
       true,
     );
-  }, []);
+  }, [breathe]);
 
   const hapticTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hapticMs    = useRef(400);

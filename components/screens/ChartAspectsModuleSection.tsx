@@ -13,7 +13,7 @@ import { VelvetGlassSurface } from '../ui/VelvetGlassSurface';
 import { useThemedStyles, useAppTheme } from '../../context/ThemeContext';
 import { type AppTheme } from '../../constants/theme';
 import { Aspect } from '../../services/astrology/types';
-import { CHART_CARD_COLORS, CHART_CARD_WASHES } from './chartCardPalette';
+import { CHART_CARD_WASHES } from './chartCardPalette';
 
 // ── CONSTANTS ──
 
@@ -37,12 +37,6 @@ const ASPECT_NATURE: Record<string, 'Harmonious' | 'Challenging' | 'Neutral'> = 
   quincunx: 'Challenging',
   semisextile: 'Neutral',
   sesquiquadrate: 'Challenging',
-};
-
-const NATURE_COLOR: Record<string, string> = {
-  Harmonious: CHART_CARD_COLORS.sage,
-  Challenging: CHART_CARD_COLORS.purple,
-  Neutral: CHART_CARD_COLORS.taupe,
 };
 
 const NATURE_WASH: Record<string, [string, string]> = {
@@ -105,7 +99,6 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
           const planet2 = safeStr(aspect.planet2 ?? (aspect as any).body2);
           const symbol = ASPECT_SYMBOLS[typeName] ?? '◦';
           const nature = ASPECT_NATURE[typeName] ?? 'Neutral';
-          const iconColor = CHART_CARD_COLORS.gold;
           const washColors = NATURE_WASH[nature];
           const orbDeg = aspect.orb != null ? `${aspect.orb.toFixed(1)}°` : '';
           const typeLabel = typeName.charAt(0).toUpperCase() + typeName.slice(1);
