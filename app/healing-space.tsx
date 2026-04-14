@@ -35,6 +35,7 @@ import { usePremium } from '../context/PremiumContext';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { MetallicText } from '../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { logger } from '../utils/logger';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
@@ -89,7 +90,7 @@ export default function HealingSpaceScreen() {
       let isActive = true;
       const fetchContext = async () => {
         try {
-          await refreshCustomerInfo().catch(() => {});
+          await refreshCustomerInfo().catch((e) => logger.warn('[healing] Refresh premium failed:', e));
           const data = await loadSelfKnowledgeContext();
           if (isActive) {
             setContext(data);
@@ -99,7 +100,7 @@ export default function HealingSpaceScreen() {
           if (isActive) setLoading(false);
         }
       };
-      fetchContext().catch(() => {});
+      fetchContext().catch((e) => logger.warn('[healing] Context load failed:', e));
       return () => { isActive = false; };
     }, [refreshCustomerInfo])
   );

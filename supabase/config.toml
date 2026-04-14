@@ -1,14 +1,14 @@
 [functions.birth-profile-sync]
-verify_jwt = false
+verify_jwt = true
 
 [functions.gemini-proxy]
-verify_jwt = false
+verify_jwt = true
 
 [functions.password-recovery]
 verify_jwt = false
 
 [functions.pattern-insights]
-verify_jwt = false
+verify_jwt = true
 
 [functions.dream-insights]
-verify_jwt = false
+verify_jwt = true

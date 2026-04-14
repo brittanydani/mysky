@@ -35,6 +35,7 @@ import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { logger } from '../utils/logger';
 import {
   loadReflections,
   loadReflectionDrafts,
@@ -202,10 +203,10 @@ export default function CoreValuesScreen() {
             setState({ selected: parsed.selected || [], topFive: (parsed.topFive || []).slice(0, MAX_TOP), customValues: parsed.customValues || [] });
             setSaved(true);
           }
-        }).catch(() => {});
+        }).catch((e) => logger.warn('[CoreValues] Sync/load failed:', e));
       Promise.all([loadReflections(), loadReflectionDrafts()]).then(([refl, draft]) => {
         setValueReflectionAnswers(mergeValueReflectionAnswers(refl.answers, draft));
-      }).catch(() => {});
+      }).catch((e) => logger.warn('[CoreValues] Reflections load failed:', e));
     }, []),
   );
 

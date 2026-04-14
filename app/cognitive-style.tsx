@@ -41,6 +41,7 @@ import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { logger } from '../utils/logger';
 import { EditorialLikertScale } from '../components/ui/EditorialLikertScale';
 import { keepLastWordsTogether } from '../utils/textLayout';
 import { type AppTheme } from '../constants/theme';
@@ -183,7 +184,7 @@ export default function CognitiveStyleScreen() {
             setScores({ scope: parsed.scope, processing: parsed.processing, decisions: parsed.decisions });
             setSaved(true);
           }
-        }).catch(() => {});
+        }).catch((e) => logger.warn('[CognitiveStyle] Sync/load failed:', e));
     }, []),
   );
 

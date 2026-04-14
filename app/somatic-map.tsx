@@ -16,8 +16,9 @@ import {
   Pressable,
   ScrollView,
   Dimensions,
+  Alert,
 } from 'react-native';
-import LottieSomaticFigure from '../components/ui/LottieSomaticFigure';
+import Body, { ExtendedBodyPart, Slug } from 'react-native-body-highlighter';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
@@ -39,6 +40,7 @@ import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 const { width: SCREEN_W } = Dimensions.get('window');
 const STORAGE_KEY = '@mysky:somatic_entries';
 const FIGURE_WIDTH = Math.min(SCREEN_W - 96, 200);
+const BODY_SCALE = FIGURE_WIDTH / 200;
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -94,6 +96,20 @@ export default function SomaticMapScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
+  const deleteEntry = (id: string) => {
+    Alert.alert('Delete Sensation', 'Remove this entry from your log?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete', style: 'destructive', onPress: async () => {
+          const updated = entries.filter(e => e.id !== id);
+          setEntries(updated);
+          await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
@@ -133,17 +149,25 @@ export default function SomaticMapScreen() {
 
           {/* Main Map (Midnight Slate Anchor) */}
           <VelvetGlassSurface style={styles.bodyWrap} intensity={45}>
-            <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
-            <LottieSomaticFigure
-              width={FIGURE_WIDTH}
+                        <Body
+              key={`${side}-${gender}`}
+              data={[
+                { slug: 'hair' as Slug, intensity: 0, styles: { fill: 'rgba(255, 255, 255, 0.8)', stroke: 'rgba(255, 255, 255, 0.8)', strokeWidth: 2 } },
+                ...(selectedRegion ? [{ slug: selectedRegion as Slug, intensity: 2 }] : []),
+              ]}
+              scale={BODY_SCALE}
               side={side}
               gender={gender}
-              selectedZone={selectedRegion}
-              activeColor={activeColor}
-              zones={ZONES}
-              onZonePress={(zoneId) => {
-                setSelectedRegion(selectedRegion === zoneId ? null : zoneId);
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              colors={['transparent', activeColor, activeColor]}
+              defaultFill="transparent"
+              defaultStroke="none"
+              defaultStrokeWidth={0}
+              border="rgba(255, 255, 255, 0.8)"
+              onBodyPartPress={(p) => {
+                if (p.slug) {
+                  setSelectedRegion(selectedRegion === p.slug ? null : p.slug);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
               }}
             />
           </VelvetGlassSurface>
@@ -164,11 +188,35 @@ export default function SomaticMapScreen() {
           {/* Log Entry Action */}
           {(selectedRegion && selectedEmotion) && (
             <Animated.View entering={FadeIn} style={styles.logRow}>
-              <Pressable style={[styles.logBtn, styles.velvetBorder]} onPress={logEntry}>
-                <LinearGradient colors={['rgba(44, 54, 69, 0.95)', 'rgba(26, 30, 41, 0.60)']} style={StyleSheet.absoluteFill} />
-                <MetallicText style={styles.logBtnText} variant="gold">LOG SENSATION</MetallicText>
+              <Pressable style={[styles.logBtn, { backgroundColor: '#FFF' }]} onPress={logEntry}>
+                <Text style={[styles.logBtnText, { color: '#0A0A0F' }]}>LOG SENSATION</Text>
               </Pressable>
             </Animated.View>
+          )}
+
+          {/* Logged Sensations */}
+          {entries.length > 0 && (
+            <View style={styles.historySection}>
+              <Text style={styles.sectionLabel}>RECENT SENSATIONS</Text>
+              {entries.slice(0, 10).map((entry, idx) => (
+                <Animated.View key={entry.id} entering={FadeInDown.delay(idx * 60).duration(400)}>
+                  <Pressable onLongPress={() => deleteEntry(entry.id)}>
+                  <VelvetGlassSurface style={[styles.historyCard, styles.velvetBorder]} intensity={26}>
+                    <View style={styles.historyHeader}>
+                      <View style={[styles.emotionDot, { backgroundColor: EMOTION_COLORS[entry.emotion] || 'rgba(255,255,255,0.3)' }]} />
+                      <Text style={styles.historyEmotion}>{entry.emotion}</Text>
+                      <Text style={styles.historyDate}>
+                        {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {' · '}
+                        {new Date(entry.date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                      </Text>
+                    </View>
+                    <Text style={styles.historyRegion}>{entry.region} · {entry.side}</Text>
+                  </VelvetGlassSurface>
+                  </Pressable>
+                </Animated.View>
+              ))}
+            </View>
           )}
 
           <View style={{ height: 100 }} />
@@ -213,4 +261,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   logRow: { paddingHorizontal: 24, marginTop: 40 },
   logBtn: { height: 56, borderRadius: 28, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
   logBtnText: { fontSize: 15, fontWeight: '800', letterSpacing: 1 },
+
+  historySection: { marginTop: 40 },
+  historyCard: { borderRadius: 20, padding: 20, marginBottom: 14 },
+  historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  emotionDot: { width: 8, height: 8, borderRadius: 4 },
+  historyEmotion: { fontSize: 14, fontWeight: '700', color: '#FFF', flex: 1 },
+  historyDate: { fontSize: 11, color: 'rgba(255,255,255,0.4)' },
+  historyRegion: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 8 },
 });

@@ -19,6 +19,7 @@ import {
   useSharedValue,
   withRepeat,
   withTiming,
+  cancelAnimation,
   Easing,
   useDerivedValue,
   SharedValue,
@@ -74,6 +75,7 @@ const SkiaBreathingRing = memo(function SkiaBreathingRing({
       -1,
       true,
     );
+    return () => cancelAnimation(breath);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration]);
 

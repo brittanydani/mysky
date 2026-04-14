@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   headerContainer: {
-    marginBottom: 28,
+    marginBottom: 40,
   },
   subtitle: {
     fontSize: 12,
@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: 'rgba(255,255,255,0.6)',
     marginTop: 6,
+    textAlign: 'center',
   },
   narrativeContainer: {
     gap: 24,
@@ -104,9 +105,8 @@ const styles = StyleSheet.create({
   },
   body: {
     fontSize: 16,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.92)',
+    fontWeight: '400',
+    color: 'rgba(255,255,255,0.85)',
     lineHeight: 28,
-    letterSpacing: -0.2,
   },
 });

@@ -31,7 +31,7 @@ export function initSentry() {
       // Enable Logs
       enableLogs: true,
       // Session Replay
-      replaysSessionSampleRate: 0.1,
+      replaysSessionSampleRate: 0.01,
       replaysOnErrorSampleRate: 1,
       integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
       beforeSend(event) {

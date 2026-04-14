@@ -684,17 +684,17 @@ function AppShell() {
       try {
         const { flushQueue, pullFromSupabase, syncBirthProfileFromLocal } = await loadSyncService();
         if (isStale()) return;
-        await syncBirthProfileFromLocal().catch(() => {});
+        await syncBirthProfileFromLocal().catch((e: unknown) => logger.warn('[auth] Sync profile failed:', e));
         if (isStale()) return;
-        await flushQueue().catch(() => {});
+        await flushQueue().catch((e: unknown) => logger.warn('[sync] Queue flush failed:', e));
         if (isStale()) return;
-        await pullFromSupabase().catch(() => {});
+        await pullFromSupabase().catch((e: unknown) => logger.warn('[sync] Pull failed:', e));
       } catch (e) {
         logger.error('[auth] Failed to load sync service for session bootstrap:', e);
       }
 
       if (isStale()) return;
-      await bindLocalSettingsToUser(session.user.id, false).catch(() => {});
+      await bindLocalSettingsToUser(session.user.id, false).catch((e) => logger.warn('[auth] Bind settings failed:', e));
       if (isStale()) return;
 
       if (authEntryIntentRef.current === 'sign-in-home') {

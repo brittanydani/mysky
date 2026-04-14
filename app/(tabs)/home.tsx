@@ -224,8 +224,8 @@ export default function HomeScreen() {
             } catch (err) {
               logger.error('Daily loop data failed:', err);
             }
-          } catch {
-            // Silently fall back to defaults
+          } catch (err) {
+            logger.error('Failed to load check-ins, sleep, or self-knowledge:', err);
           }
         } else {
           setUserChart(null);

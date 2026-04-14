@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-body-highlighter/dist/index.js b/node_modules/react-native-body-highlighter/dist/index.js
+index c390729..9458e5c 100644
+--- a/node_modules/react-native-body-highlighter/dist/index.js
++++ b/node_modules/react-native-body-highlighter/dist/index.js
+@@ -67,7 +67,7 @@ const Body = ({ colors = ["#0984e3", "#74b9ff"], data, scale = 1, side = "front"
+             const userPart = userDataMap.get(assetPart.slug);
+             if (!userPart) {
+                 // No user data for this part, return as-is
+-                return assetPart;
++                return Object.assign(Object.assign({}, assetPart), { color: undefined });
+             }
+             // Merge asset part (has path) with user part (has styles, color, etc.)
+             const merged = Object.assign(Object.assign({}, assetPart), { 

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { toLocalDateString, getCheckInDateString } from '../utils/dateUtils';
+import { getCheckInDateString } from '../utils/dateUtils';
 
 export type CheckInSaveStatus = 'idle' | 'success' | 'error';
 

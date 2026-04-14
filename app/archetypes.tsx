@@ -31,6 +31,7 @@ import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { logger } from '../utils/logger';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
@@ -184,7 +185,7 @@ export default function ArchetypesScreen() {
   useFocusEffect(
     useCallback(() => {
       syncArchetypeProfileFromReflections({ includeDrafts: true })
-        .catch(() => {})
+        .catch((e) => logger.warn('[Archetypes] Sync failed:', e))
         .then(() => EncryptedAsyncStorage.getItem(STORAGE_KEY))
         .then((raw) => {
           if (raw) {

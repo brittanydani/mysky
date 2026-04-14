@@ -189,6 +189,7 @@ serve(async (req: Request) => {
 
       if (limitError) {
         console.error("Password recovery rate limit failed:", limitError.message);
+        return jsonResponse({ ok: true });
       }
 
       if (allowed === false) {

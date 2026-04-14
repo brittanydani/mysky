@@ -672,14 +672,24 @@ function getRetrogradeFlavor(planet: string): string {
 function analyzeElementBalance(chart: NatalChart): ElementBalance {
   const planets = getCorePlanets(chart);
   const counts: Record<string, number> = { Fire: 0, Earth: 0, Air: 0, Water: 0 };
+  const scores: Record<string, number> = { Fire: 0, Earth: 0, Air: 0, Water: 0 };
 
   for (const p of planets) {
-    if (p.sign?.element) counts[p.sign.element]++;
+    if (p.sign?.element) {
+      counts[p.sign.element]++;
+      const name = p.planet.name;
+      const weight = ['Sun', 'Moon'].includes(name) ? 3 : 
+                     ['Mercury', 'Venus', 'Mars'].includes(name) ? 2 : 1;
+      scores[p.sign.element] += weight;
+    }
   }
 
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  if (chart.ascendant?.sign?.element) scores[chart.ascendant.sign.element] += 3;
+  if (chart.midheaven?.sign?.element) scores[chart.midheaven.sign.element] += 2;
+
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   const dominant = sorted[0][0];
-  const missing = sorted.find(([_, c]) => c === 0)?.[0];
+  const missing = Object.keys(counts).find(el => counts[el] === 0);
 
   let description = getElementDescription(dominant, counts[dominant]);
   if (missing) {
@@ -716,12 +726,22 @@ function getMissingElementNote(element: string): string {
 function analyzeModalityBalance(chart: NatalChart): ModalityBalance {
   const planets = getCorePlanets(chart);
   const counts: Record<string, number> = { Cardinal: 0, Fixed: 0, Mutable: 0 };
+  const scores: Record<string, number> = { Cardinal: 0, Fixed: 0, Mutable: 0 };
 
   for (const p of planets) {
-    if (p.sign?.modality) counts[p.sign.modality]++;
+    if (p.sign?.modality) {
+      counts[p.sign.modality]++;
+      const name = p.planet.name;
+      const weight = ['Sun', 'Moon'].includes(name) ? 3 : 
+                     ['Mercury', 'Venus', 'Mars'].includes(name) ? 2 : 1;
+      scores[p.sign.modality] += weight;
+    }
   }
 
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  if (chart.ascendant?.sign?.modality) scores[chart.ascendant.sign.modality] += 3;
+  if (chart.midheaven?.sign?.modality) scores[chart.midheaven.sign.modality] += 2;
+
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   const dominant = sorted[0][0];
 
   const descriptions: Record<string, string> = {

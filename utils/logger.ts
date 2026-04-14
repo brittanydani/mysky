@@ -39,6 +39,7 @@ function redact(value: unknown): unknown {
         'userid','user_id','uuid','user_uuid',
         'sessionid','session_id','nonce',
         'transactionid','transaction_id',
+        'reflection','interpretation','dream','journal_text','entry_text',
       ];
 
       if (!Array.isArray(obj)) {

@@ -16,17 +16,9 @@ export function isAutoDemoSeedEnabled(): boolean {
 }
 
 const DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT = 1;
-const DREAM_REINTERPRET_EMAIL_LIMIT_OVERRIDES: Record<string, number> = {
-  'brithornick92@gmail.com': 5,
-};
 
-export function getDreamReinterpretPerDreamLimit(email?: string | null): number {
-  if (!email) {
-    return DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT;
-  }
-
-  return DREAM_REINTERPRET_EMAIL_LIMIT_OVERRIDES[email.trim().toLowerCase()]
-    ?? DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT;
+export function getDreamReinterpretPerDreamLimit(_email?: string | null): number {
+  return DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT;
 }
 
 export const config = {

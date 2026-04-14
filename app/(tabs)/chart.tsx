@@ -9,14 +9,12 @@
 // ARCHITECTURE: High-density modular rendering with Skia-accelerated layers.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { AspectsSection } from '../../components/ui/editorial/AspectsSection';
-import { PlanetaryDeepDivesSection } from '../../components/ui/editorial/PlanetaryDeepDives';
 import { ChartBigThreeSection } from '../../components/screens/ChartBigThreeSection';
 import { ChartDataLedgerSection } from '../../components/screens/ChartDataLedgerSection';
 import { ChartDignitiesSection } from '../../components/screens/ChartDignitiesSection';
 import { ChartAspectsModuleSection } from '../../components/screens/ChartAspectsModuleSection';
 
-import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -28,23 +26,16 @@ import {
   Alert, 
   Platform, 
   Dimensions, 
-  PixelRatio, 
-  Share, 
   Vibration,
-  SectionList,
-  FlatList,
-  StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
-import { Ionicons, FontAwesome6, MaterialCommunityIcons, Feather, Entypo } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { 
   FadeIn, 
   FadeInDown, 
-  FadeOut,
   useAnimatedStyle, 
   withTiming, 
   useSharedValue, 
@@ -1054,7 +1045,7 @@ export default function ChartScreen() {
           <Animated.View entering={FadeInDown.delay(200).duration(800)} style={styles.wheelSection}>
             {/* Synastry people bar (premium) */}
             {isPremium && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.peopleBar} style={{ marginBottom: 20 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.peopleBar} style={{ marginBottom: 36 }}>
                 <Pressable
                   onPress={() => { Haptics.selectionAsync().catch(() => {}); setActiveOverlays([]); }}
                   style={[styles.personChip, activeOverlays.length === 0 && styles.personChipActive]}
@@ -1900,7 +1891,9 @@ export default function ChartScreen() {
                         </View>
                         <MetallicIcon name={expandedPlanet === `dd-${dd.planet}` ? 'chevron-up' : 'chevron-down'} size={16} color={PALETTE.gold} />
                       </View>
-                      <Text style={[styles.themedCardSummary, styles.planetDiveSummary]} numberOfLines={expandedPlanet === `dd-${dd.planet}` ? undefined : 2}>{dd.synthesis}</Text>
+                      {expandedPlanet !== `dd-${dd.planet}` && (
+                        <Text style={[styles.themedCardSummary, styles.planetDiveSummary]} numberOfLines={2}>{dd.synthesis}</Text>
+                      )}
                       {expandedPlanet === `dd-${dd.planet}` && dd.aspects.length > 0 && (
                         <View style={styles.themedCardDetails}>
                           {dd.aspects.map((asp, ai) => <Text key={ai} style={[styles.themedCardDetail, styles.planetDiveDetail]}>• {asp}</Text>)}
@@ -1958,7 +1951,9 @@ export default function ChartScreen() {
                       <View style={styles.themedCardPlacements}>
                         {relationshipProfile.keyPlanets.map((p, i) => <View key={i} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{p}</Text></View>)}
                       </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'relationship' ? undefined : 2}>{relationshipProfile.synthesis}</Text>
+                      {!expandedLifeTheme || expandedLifeTheme !== 'relationship' ? (
+                        <Text style={styles.themedCardSummary} numberOfLines={2}>{relationshipProfile.synthesis}</Text>
+                      ) : null}
                       {expandedLifeTheme === 'relationship' && (
                         <View style={styles.themedCardDetails}>
                           <Text style={styles.themedCardDetail}>• Love Style: {relationshipProfile.loveStyle}</Text>
@@ -1982,7 +1977,9 @@ export default function ChartScreen() {
                       <View style={styles.themedCardPlacements}>
                         {careerProfile.keyPlanets.map((p, i) => <View key={i} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{p}</Text></View>)}
                       </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'career' ? undefined : 2}>{careerProfile.synthesis}</Text>
+                      {!expandedLifeTheme || expandedLifeTheme !== 'career' ? (
+                        <Text style={styles.themedCardSummary} numberOfLines={2}>{careerProfile.synthesis}</Text>
+                      ) : null}
                       {expandedLifeTheme === 'career' && (
                         <View style={styles.themedCardDetails}>
                           <Text style={styles.themedCardDetail}>• Vocation: {careerProfile.vocationThemes}</Text>
@@ -2003,7 +2000,9 @@ export default function ChartScreen() {
                         <Text style={styles.themedCardTitle}>Emotional & Inner World</Text>
                         <MetallicIcon name={expandedLifeTheme === 'emotional' ? 'chevron-up' : 'chevron-down'} size={18} color={PALETTE.gold} />
                       </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'emotional' ? undefined : 2}>{emotionalProfile.synthesis}</Text>
+                      {!expandedLifeTheme || expandedLifeTheme !== 'emotional' ? (
+                        <Text style={styles.themedCardSummary} numberOfLines={2}>{emotionalProfile.synthesis}</Text>
+                      ) : null}
                       {expandedLifeTheme === 'emotional' && (
                         <View style={styles.themedCardDetails}>
                           <Text style={styles.themedCardDetail}>• Emotional Style: {emotionalProfile.emotionalStyle}</Text>
@@ -2025,7 +2024,9 @@ export default function ChartScreen() {
                         <Text style={styles.themedCardTitle}>Shadow & Growth Path</Text>
                         <MetallicIcon name={expandedLifeTheme === 'shadow' ? 'chevron-up' : 'chevron-down'} size={18} color={PALETTE.gold} />
                       </View>
-                      <Text style={styles.themedCardSummary} numberOfLines={expandedLifeTheme === 'shadow' ? undefined : 2}>{shadowGrowth.synthesis}</Text>
+                      {!expandedLifeTheme || expandedLifeTheme !== 'shadow' ? (
+                        <Text style={styles.themedCardSummary} numberOfLines={2}>{shadowGrowth.synthesis}</Text>
+                      ) : null}
                       {expandedLifeTheme === 'shadow' && (
                         <View style={styles.themedCardDetails}>
                           <Text style={styles.themedCardDetail}>• Saturn Lessons: {shadowGrowth.saturnLessons}</Text>

@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useState, useCallback, useMemo } from 'react';
+import React, { forwardRef, useImperativeHandle, useState, useCallback, useMemo, useRef } from 'react';
 import { StyleSheet, Text, useWindowDimensions } from 'react-native';
 import {
   Canvas,
@@ -41,9 +41,11 @@ const SkiaFallingStarNotification = forwardRef<StarNotificationRef>((_, ref) => 
   );
 
   const hide = useCallback(() => setVisible(false), []);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useImperativeHandle(ref, () => ({
     show(text: string) {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
       setMessage(text);
       setVisible(true);
       translateY.value = -60;
@@ -61,7 +63,7 @@ const SkiaFallingStarNotification = forwardRef<StarNotificationRef>((_, ref) => 
       starProgress.value = withTiming(1, { duration: 900, easing: Easing.out(Easing.quad) });
 
       // Auto-hide after animation completes
-      setTimeout(() => runOnJS(hide)(), 3000);
+      hideTimer.current = setTimeout(() => runOnJS(hide)(), 3000);
     },
   }));
 

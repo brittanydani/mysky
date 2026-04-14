@@ -172,10 +172,10 @@ export default function InnerWorldScreen() {
           setStreak(currentStreak);
           setTotalDays(new Set(reflData.answers.map(a => a.date)).size);
 
-          getSomaticReflectionCorrelations().then(setSomaticCorrelations).catch(() => {});
+          getSomaticReflectionCorrelations().then(setSomaticCorrelations).catch((e) => logger.warn('[InnerWorld] Somatic correlations failed:', e));
         } catch (e) { logger.warn('[InnerWorld] Failed to load progress', e); }
       };
-      checkProgress().catch(() => {});
+      checkProgress().catch((e) => logger.warn('[InnerWorld] checkProgress failed:', e));
     }, [])
   );
 

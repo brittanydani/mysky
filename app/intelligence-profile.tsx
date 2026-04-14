@@ -33,6 +33,7 @@ import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { logger } from '../utils/logger';
 import { EditorialLikertScale } from '../components/ui/EditorialLikertScale';
 import { syncIntelligenceFromReflections } from '../services/insights/reflectionProfileSync';
 import { keepLastWordsTogether } from '../utils/textLayout';
@@ -344,7 +345,7 @@ export default function IntelligenceProfileScreen() {
   useFocusEffect(
     useCallback(() => {
       syncIntelligenceFromReflections({ includeDrafts: true })
-        .catch(() => {})
+        .catch((e) => logger.warn('[IntelligenceProfile] Sync failed:', e))
         .then(() => EncryptedAsyncStorage.getItem(STORAGE_KEY))
         .then((raw) => {
           if (raw) {
@@ -360,7 +361,7 @@ export default function IntelligenceProfileScreen() {
             } catch { /* ignore */ }
           }
         })
-        .catch(() => {});
+        .catch((e) => logger.warn('[IntelligenceProfile] Load failed:', e));
     }, []),
   );
 

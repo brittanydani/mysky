@@ -93,6 +93,10 @@ export default function SkiaPulseMonitor({
   useEffect(() => {
     breathe.value = withRepeat(withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sin) }), -1, true);
     discoveryPulse.value = withRepeat(withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sin) }), -1, false);
+    return () => {
+      cancelAnimation(breathe);
+      cancelAnimation(discoveryPulse);
+    };
   }, []);
 
   const hapticTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

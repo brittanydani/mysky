@@ -9,13 +9,9 @@ import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-na
 import * as Haptics from 'expo-haptics';
 import Constants from 'expo-constants';
 
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import { revenueCatService } from '../services/premium/revenuecat';
 import { logger } from '../utils/logger';
 import { useAuth } from './AuthContext';
-
-const DEMO_PREMIUM_KEY = '@mysky:demo_premium';
-const DEMO_REVIEWER_EMAIL = 'brittanyapps@outlook.com';
 
 type PurchaseResult = { success: boolean; error?: string; userCancelled?: boolean };
 type RestoreResult = { success: boolean; hasPremium?: boolean; error?: string };
@@ -140,17 +136,12 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const hasDemoPremiumOverride =
-          activeUserEmail === DEMO_REVIEWER_EMAIL &&
-          (await EncryptedAsyncStorage.getItem(DEMO_PREMIUM_KEY)) === 'true';
-
         await revenueCatService.initialize();
         await revenueCatService.logIn(activeUserId);
 
         if (isMounted.current) {
           customerInfoListener = (info: CustomerInfo) => {
             updatePremiumState(info);
-            if (hasDemoPremiumOverride) setIsPremium(true);
           };
           try {
             const { default: Purchases } = await import('react-native-purchases');
@@ -169,7 +160,6 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         if (isMounted.current) {
           setOfferings(activeOfferings);
           updatePremiumState(info);
-          if (hasDemoPremiumOverride) setIsPremium(true);
           setIsReady(true);
           logger.info('[PremiumContext] System Ready');
         }
