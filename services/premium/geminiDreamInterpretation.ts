@@ -18,6 +18,7 @@
 import { logger } from '../../utils/logger';
 import { supabase } from '../../lib/supabase';
 import type { SelectedFeeling } from './dreamTypes';
+import { enqueueGeminiRequest, isNetworkError } from '../offline/geminiQueue';
 import { FEELING_MAP } from './dreamTypes';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -346,6 +347,7 @@ export async function generateGeminiDreamInterpretation(
         continue;
       }
       if (isNetwork) {
+        enqueueGeminiRequest('dream-insights', payload as unknown as Record<string, unknown>).catch(() => {});
         throw new Error(FRIENDLY_NETWORK_UNAVAILABLE_MESSAGE);
       }
       throw error;

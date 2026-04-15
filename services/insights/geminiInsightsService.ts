@@ -25,6 +25,7 @@ import { logger } from '../../utils/logger';
 import type { CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
 import type { SelfKnowledgeContext } from './selfKnowledgeContext';
 import type { DailyCheckIn } from '../patterns/types';
+import { enqueueGeminiRequest } from '../offline/geminiQueue';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -384,6 +385,9 @@ export async function enhanceInsightCopy(
       if (isNetwork && attempt < MAX_RETRIES) {
         await wait(computeRetryDelayMs(attempt));
         continue;
+      }
+      if (isNetwork) {
+        enqueueGeminiRequest('pattern-insights', payload as unknown as Record<string, unknown>).catch(() => {});
       }
       logger.error('[GeminiPatterns] Request failed:', error?.message);
       return null;

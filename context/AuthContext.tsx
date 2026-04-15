@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 
 import { supabase } from '../lib/supabase';
 import { isAutoDemoSeedEnabled } from '../constants/config';
+import { processGeminiQueue } from '../services/offline/geminiQueueProcessor';
 import { logger } from '../utils/logger';
 import { revenueCatService } from '../services/premium/revenuecat';
 import { DemoSeedService } from '../services/storage/demoSeedService';
@@ -156,6 +157,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (nextSession?.user?.email) {
               syncDemoArtifacts(nextSession.user.email).catch((e) => logger.warn('[AuthContext] Demo sync failed:', e));
             }
+
+            // Retry any Gemini requests that failed while offline.
+            processGeminiQueue().catch((e) => logger.warn('[AuthContext] Gemini queue processing failed:', e));
           } catch (e) {
             logger.warn('[AuthContext] Failed to sync session on foreground:', e);
           }

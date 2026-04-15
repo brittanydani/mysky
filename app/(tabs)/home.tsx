@@ -63,6 +63,7 @@ import { MetallicText } from '../../components/ui/MetallicText';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
+import { scheduleTransitNotification } from '../../services/astrology/transitNotifications';
 
 const { width } = Dimensions.get('window');
 
@@ -260,6 +261,9 @@ export default function HomeScreen() {
               const loopData = await getDailyLoopData(chart.id, selfKnowledge);
               if (!isScreenActiveRef.current) return;
               setIfActive(setDailyLoop, loopData);
+
+              // Schedule personalized transit notification for tomorrow
+              scheduleTransitNotification(chart).catch(() => {});
 
               const hasCheckInToday = checkins.some((checkIn) => checkIn.date === getLogicalToday());
               const localInsightText = loopData.todayInsight.text || (
