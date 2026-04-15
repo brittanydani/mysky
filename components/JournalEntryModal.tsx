@@ -50,6 +50,7 @@ import { generateJournalPrompt, getFreePrompt, GeneratedPrompt, PromptSet } from
 import { getArchetypeProfile, getArchetypePrompt, ArchetypeProfile, ArchetypeJournalPrompt } from '../services/journal/archetypeIntegration';
 
 import { AdvancedJournalAnalyzer } from '../services/premium/advancedJournal';
+import { findMoodRecall, JournalRecallResult } from '../services/journal/journalRecall';
 import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
 import { VelvetGlassSurface } from './ui/VelvetGlassSurface';
@@ -349,6 +350,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
   const [archetypeProfile, setArchetypeProfile] = useState<ArchetypeProfile | null>(null);
   const [archetypePrompt, setArchetypePrompt] = useState<ArchetypeJournalPrompt | null>(null);
+  const [moodRecall, setMoodRecall] = useState<JournalRecallResult | null>(null);
   const showBodyCounter = content.length >= BODY_COUNTER_THRESHOLD;
 
   useEffect(() => {
@@ -419,6 +421,13 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       setArchetypePrompt(getArchetypePrompt(archetypeProfile, mood));
     }
   }, [mood, archetypeProfile]);
+
+  // "Last time you felt this way" recall
+  useEffect(() => {
+    if (!visible) return;
+    setMoodRecall(null);
+    findMoodRecall(mood, undefined, initialData?.id).then(setMoodRecall).catch(() => {});
+  }, [mood, visible, initialData?.id]);
 
   useEffect(() => {
     if (isPremium && userChart) {
@@ -827,6 +836,24 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     </View>
                   </LinearGradient>
                 </Animated.View>
+
+                {/* Mood Recall — "Last time you felt this way" */}
+                {moodRecall && (
+                  <Animated.View entering={FadeInDown.delay(370).duration(500)} style={styles.section}>
+                    <Pressable
+                      style={[styles.sectionCard, { borderColor: `${MOOD_OPTIONS.find(m => m.key === mood)?.color ?? PALETTE.gold}30`, borderWidth: 1, paddingVertical: 14, paddingHorizontal: 16 }]}
+                      onPress={() => {}}
+                      accessibilityLabel="Past journal entry with similar mood"
+                    >
+                      <Text style={{ color: PALETTE.gold, fontSize: 11, fontWeight: '600', letterSpacing: 1.2, marginBottom: 6 }}>
+                        LAST TIME YOU FELT {mood.toUpperCase()} · {moodRecall.daysAgo === 1 ? 'YESTERDAY' : `${moodRecall.daysAgo} DAYS AGO`}
+                      </Text>
+                      <Text style={{ color: theme.textSecondary, fontSize: 14, lineHeight: 20 }} numberOfLines={2}>
+                        {moodRecall.entry.content.slice(0, 140)}{moodRecall.entry.content.length > 140 ? '…' : ''}
+                      </Text>
+                    </Pressable>
+                  </Animated.View>
+                )}
 
                 {/* Main Reflection Area */}
                 <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>

@@ -395,6 +395,31 @@ export default function MoodCheckIn() {
   const influences = ['Sleep', 'Work', 'Relationships', 'Health', 'Movement', 'Nature', 'Alone time', 'Finances', 'Weather', 'Food', 'Creativity', 'Family', 'Social media', 'Rest', 'News', 'Music', 'Body', 'Spirit'];
   const premiumEmotions = ['Radiant', 'Grounded', 'Anxious', 'Scattered', 'Inspired', 'Heavy', 'Resilient', 'Numb', 'Hopeful', 'Content', 'Grateful', 'Melancholy', 'Tender', 'Alive', 'Depleted', 'Curious', 'Peaceful', 'Irritable', 'Lonely', 'Connected'];
 
+  // Adaptive contextual prompt based on yesterday's data
+  const contextualPrompt = useMemo(() => {
+    if (isLoading || recentCheckIns.length < 2) return null;
+    const today = getLogicalToday();
+    const yesterdayDate = new Date(today + 'T12:00:00');
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = toLocalDateString(yesterdayDate);
+    const yesterdayCheckIns = recentCheckIns.filter(c => c.date === yesterdayStr);
+    if (!yesterdayCheckIns.length) return null;
+    const lastMood = yesterdayCheckIns[yesterdayCheckIns.length - 1].moodScore;
+    const lastStress = yesterdayCheckIns[yesterdayCheckIns.length - 1].stressLevel;
+    const lastEnergy = yesterdayCheckIns[yesterdayCheckIns.length - 1].energyLevel;
+    if (lastMood <= 3) return 'Yesterday felt heavy — how are you carrying it today?';
+    if (lastStress === 'high') return 'You logged high stress yesterday — has anything shifted?';
+    if (lastEnergy === 'low') return 'Your energy was low yesterday — how does your body feel now?';
+    if (lastMood >= 8) return 'Yesterday felt bright — is that momentum still with you?';
+    // 3-day declining trend
+    const sorted = [...recentCheckIns].sort((a, b) => a.date.localeCompare(b.date));
+    const last3 = sorted.slice(-3);
+    if (last3.length === 3 && last3[0].moodScore > last3[1].moodScore && last3[1].moodScore > last3[2].moodScore) {
+      return 'Your mood has been dipping for a few days — what might need attention?';
+    }
+    return null;
+  }, [isLoading, recentCheckIns]);
+
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
@@ -867,6 +892,15 @@ export default function MoodCheckIn() {
             </View>
           )}
         </VelvetGlassSurface>
+
+        {/* Adaptive Contextual Prompt */}
+        {contextualPrompt && (
+          <View style={{ marginBottom: 16, paddingHorizontal: 4 }}>
+            <Text style={{ color: PALETTE.gold, fontSize: 14, fontStyle: 'italic', lineHeight: 20, textAlign: 'center' }}>
+              {contextualPrompt}
+            </Text>
+          </View>
+        )}
 
         {/* 1–10 Haptic Sliders */}
         <VelvetGlassSurface

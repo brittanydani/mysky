@@ -112,6 +112,7 @@ export default function BlueprintScreen() {
   const { isPremium } = usePremium();
   const [chartName, setChartName] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'blueprint' | 'energy'>('blueprint');
+  const [checkInCount, setCheckInCount] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -127,12 +128,30 @@ export default function BlueprintScreen() {
               setChartName(name && name !== place ? name : null);
             }
           }
+          // Load check-in count for progressive card reveal
+          const charts = await localDb.getCharts();
+          if (charts.length > 0) {
+            const count = await localDb.getCheckInCount(charts[0].id);
+            setCheckInCount(count);
+          }
         } catch (err) {
           logger.error('Blueprint: failed to load chart name', err);
         }
       })();
     }, []),
   );
+
+  // Progressive card display: always show Inner World, Body, and Cosmic Blueprint.
+  // Unlock Relational Mirror + Restorative Space after 5 check-ins.
+  // Unlock Internal Tensions after 10 check-ins.
+  const visibleCards = CARDS.filter((card, i) => {
+    if (i <= 1) return true;              // Inner World, Body & Somatics
+    if (i === 5) return true;             // Cosmic Blueprint — always visible (astrology users)
+    if (i <= 3) return checkInCount >= 5;  // Relational Mirror, Restorative Space
+    return checkInCount >= 10;             // Internal Tensions
+  });
+
+  const hasHiddenCards = visibleCards.length < CARDS.length;
 
   const nav = (route: Href, premium?: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -193,7 +212,7 @@ export default function BlueprintScreen() {
           {/* ── Content Body ── */}
           {activeTab === 'blueprint' ? (
             <View style={styles.grid}>
-              {CARDS.map((card, i) => (
+              {visibleCards.map((card, i) => (
                 <Animated.View 
                   key={card.route as string} 
                   entering={FadeInDown.delay(300 + i * 100).duration(800)}
@@ -236,6 +255,22 @@ export default function BlueprintScreen() {
                   </Pressable>
                 </Animated.View>
               ))}
+
+              {/* Progressive unlock hint */}
+              {hasHiddenCards && (
+                <Animated.View entering={FadeInDown.delay(300 + visibleCards.length * 100).duration(800)}>
+                  <View style={{ alignItems: 'center', paddingVertical: 20, gap: 6 }}>
+                    <Text style={{ color: theme.textMuted, fontSize: 12, letterSpacing: 1, fontWeight: '600' }}>
+                      {checkInCount < 5
+                        ? `${5 - checkInCount} MORE CHECK-IN${5 - checkInCount === 1 ? '' : 'S'} TO UNLOCK MORE`
+                        : `${10 - checkInCount} MORE CHECK-IN${10 - checkInCount === 1 ? '' : 'S'} TO UNLOCK ALL`}
+                    </Text>
+                    <Text style={{ color: theme.textMuted, fontSize: 13, textAlign: 'center', maxWidth: 260 }}>
+                      New modules appear as your self-knowledge deepens.
+                    </Text>
+                  </View>
+                </Animated.View>
+              )}
             </View>
           ) : (
             <Animated.View entering={FadeIn.duration(600)}>

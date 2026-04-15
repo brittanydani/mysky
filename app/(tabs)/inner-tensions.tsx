@@ -26,6 +26,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { ChevronDown, ChevronLeft, ChevronUp, Lock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { PremiumGate } from '../../components/ui/PremiumGate';
 import {
   Canvas,
   LinearGradient as SkiaLinearGradient,
@@ -647,17 +648,13 @@ export default function InnerTensionsScreen() {
                   <TriggerReflectionsSection data={data} />
                 </>
               ) : (
-                <Animated.View entering={FadeInDown.delay(120).duration(400)} style={styles.lockWrap}>
-                  <PremiumLockBanner onUnlock={goPremium} />
-                  {/* Blurred preview teaser */}
-                  <View style={styles.blurPreviewWrap} pointerEvents="none">
-                    <View style={styles.blurPreviewCard}>
-                      <Text style={styles.blurPreviewTitle}>State Balance</Text>
-                      <View style={styles.blurPreviewRadar} />
-                    </View>
-                    <View style={styles.blurPreviewOverlay} />
-                  </View>
-                </Animated.View>
+                <PremiumGate
+                  feature="Deep Tension Analysis"
+                  teaser="Branch maps, ambivalence patterns, dream echoes, and trigger reflections — synthesized from your data."
+                >
+                  <NSBranchMapSection data={data} />
+                  <AmbivalenceSection data={data} />
+                </PremiumGate>
               )}
 
               <View style={styles.bottomSpacer} />

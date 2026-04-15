@@ -36,6 +36,7 @@ import { SleepEntry, generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { usePremium } from '../../context/PremiumContext';
+import { PremiumGate } from '../../components/ui/PremiumGate';
 import { useAuth } from '../../context/AuthContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
@@ -1216,18 +1217,20 @@ export default function SleepScreen() {
                 </View>
               </View>
 
-              {recentCheckIns.length >= 2 && isPremium && (
-                <View style={{ marginTop: 16 }}>
-                  <SkiaRestorationInsight
-                    data={historicalSleep.slice(-7).map((sp) => {
-                      const ci = recentCheckIns.find(c => c.date === sp.date);
-                      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                      const d = new Date(sp.date + 'T12:00:00');
-                      return { label: dayNames[d.getDay()] || '', quality: sp.quality, moodScore: ci?.moodScore ?? 5 };
-                    })}
-                    title="Sleep Quality vs. Morning Mood"
-                  />
-                </View>
+              {recentCheckIns.length >= 2 && (
+                <PremiumGate feature="Sleep × Mood Analysis" teaser="See how your rest patterns shape your emotional baseline.">
+                  <View style={{ marginTop: 16 }}>
+                    <SkiaRestorationInsight
+                      data={historicalSleep.slice(-7).map((sp) => {
+                        const ci = recentCheckIns.find(c => c.date === sp.date);
+                        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                        const d = new Date(sp.date + 'T12:00:00');
+                        return { label: dayNames[d.getDay()] || '', quality: sp.quality, moodScore: ci?.moodScore ?? 5 };
+                      })}
+                      title="Sleep Quality vs. Morning Mood"
+                    />
+                  </View>
+                </PremiumGate>
               )}
             </Animated.View>
           )}

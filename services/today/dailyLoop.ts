@@ -33,7 +33,7 @@ export interface StreakStatus {
   checkedInToday: boolean;
   /** Whether the streak is at risk (no check-in today, but had one yesterday) */
   atRisk: boolean;
-  /** Total lifetime check-ins */
+  /** Total check-ins recorded */
   totalCheckIns: number;
   /** Milestone reached (7, 14, 30, 60, 90, 180, 365) or null */
   milestone: number | null;

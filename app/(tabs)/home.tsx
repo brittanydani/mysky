@@ -64,6 +64,7 @@ import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 import { scheduleTransitNotification } from '../../services/astrology/transitNotifications';
+import { scheduleInsightNotification } from '../../services/today/insightNotifications';
 
 const { width } = Dimensions.get('window');
 
@@ -264,6 +265,8 @@ export default function HomeScreen() {
 
               // Schedule personalized transit notification for tomorrow
               scheduleTransitNotification(chart).catch(() => {});
+              // Schedule data-driven insight notification
+              if (chart?.id) scheduleInsightNotification(chart.id).catch(() => {});
 
               const hasCheckInToday = checkins.some((checkIn) => checkIn.date === getLogicalToday());
               const localInsightText = loopData.todayInsight.text || (
