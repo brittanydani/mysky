@@ -132,7 +132,7 @@ export default function RelationshipsScreen() {
           latitude: saved.latitude,
           longitude: saved.longitude,
           timezone: saved.timezone,
-          houseSystem: saved.houseSystem,
+          houseSystem: astroSettings.houseSystem,
           zodiacSystem: astroSettings.zodiacSystem,
           orbPreset: astroSettings.orbPreset,
         };
@@ -156,7 +156,7 @@ export default function RelationshipsScreen() {
               latitude: rel.latitude,
               longitude: rel.longitude,
               timezone: rel.timezone,
-              houseSystem: saved.houseSystem,
+              houseSystem: astroSettings.houseSystem,
               zodiacSystem: astroSettings.zodiacSystem,
               orbPreset: astroSettings.orbPreset,
             };
@@ -235,7 +235,7 @@ export default function RelationshipsScreen() {
       if (userChart) {
         try {
           const saveAstroSettings = await AstrologySettingsService.getSettings();
-          const otherChart = AstrologyCalculator.generateNatalChart({ ...birthData, houseSystem: savedUserChart?.houseSystem, zodiacSystem: saveAstroSettings.zodiacSystem, orbPreset: saveAstroSettings.orbPreset });
+          const otherChart = AstrologyCalculator.generateNatalChart({ ...birthData, houseSystem: saveAstroSettings.houseSystem, zodiacSystem: saveAstroSettings.zodiacSystem, orbPreset: saveAstroSettings.orbPreset });
           otherChart.name = extra?.chartName || 'Someone Special';
           const report = SynastryEngine.calculateSynastry(userChart, otherChart);
           const topAspects = report.aspects.filter(a => a.strength === 'strong').slice(0, 3);
@@ -275,7 +275,7 @@ export default function RelationshipsScreen() {
       const birthData: BirthData = {
         date: rel.birthDate, time: rel.birthTime, hasUnknownTime: rel.hasUnknownTime,
         place: rel.birthPlace, latitude: rel.latitude, longitude: rel.longitude, timezone: rel.timezone,
-        houseSystem: savedUserChart?.houseSystem,
+        houseSystem: astroSettings.houseSystem,
         zodiacSystem: astroSettings.zodiacSystem,
         orbPreset: astroSettings.orbPreset,
       };
@@ -398,7 +398,6 @@ export default function RelationshipsScreen() {
   if (!userChart) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <SkiaDynamicCosmos />
         <Ionicons name="people-outline" size={56} color={theme.textMuted} style={{ marginBottom: 16 }} />
         <Text style={styles.emptyTitle}>Create Your Profile First</Text>
         <Text style={styles.emptySubtitle}>Set up your birth data on the Home screen to explore relationship dynamics</Text>
@@ -614,7 +613,7 @@ export default function RelationshipsScreen() {
                         <Ionicons name="sparkles-outline" size={18} color={theme.textGold} />
                         <Text style={styles.upsellTitle}>There's more between you</Text>
                       </View>
-                      <Text style={styles.upsellText}>Communication styles, emotional needs comparison, and healing paths for this relationship — with Deeper Sky.</Text>
+                      <Text style={styles.upsellText}>Communication styles, emotional needs comparison, and growth themes for this relationship — with Deeper Sky.</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
                         <MetallicText style={{ fontSize: 14, fontWeight: '600' }} variant="gold">See the full picture</MetallicText>
                         <MetallicIcon name="arrow-forward-outline" size={16} variant="gold" />

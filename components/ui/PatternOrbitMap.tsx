@@ -30,6 +30,7 @@ import {
 } from 'react-native-reanimated';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { MetallicText } from './MetallicText';
+import { derivePatternOrbitScores, getPatternOrbitSummary, getPatternOrbitThemes } from './patternOrbitHelpers';
 
 // ── Lunar Sky / Midnight Slate Palette ──────────────────────────────────────
 const PALETTE = {
@@ -62,17 +63,12 @@ function withAlpha(hex: string, alpha: number): string {
 
 export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }: { checkIns: DailyCheckIn[], size: number }) {
   const cx = size / 2, cy = size / 2;
-  const orbitR = size * 0.34, innerR = size * 0.18, outerR = size * 0.40;
+  const orbitR = size * 0.365, innerR = size * 0.195, outerR = size * 0.43;
 
-  // ── Scores Logic (Condensed for Full Code Request) ─────────────────────────
-  const scores = useMemo(() => {
-    if (!checkIns.length) return DIMENSIONS.map(() => 0.2);
-    // Simple mock logic for normalization in this pass:
-    return DIMENSIONS.map(() => 0.4 + Math.random() * 0.5);
-  }, [checkIns]);
+  // ── Scores Logic ───────────────────────────────────────────────────────────
+  const scores = useMemo(() => derivePatternOrbitScores(checkIns), [checkIns]);
 
-  const themes = useMemo(() => ['CLARITY', 'REST', 'DEPTH'], []);
-  const summary = "You are evolving steadily.";
+  const themes = useMemo(() => getPatternOrbitThemes(scores), [scores]);
 
   // ── Animations ─────────────────────────────────────────────────────────────
   const orbitAngle = useSharedValue(0);
@@ -160,9 +156,8 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
       </Canvas>
 
       {/* Editorial Content Layer */}
-      <View pointerEvents="none" style={[styles.centerCopyWrap, { width: size * 0.6, left: cx - (size * 0.3), top: cy - 20 }]}>
+      <View pointerEvents="none" style={[styles.centerCopyWrap, { width: size * 0.46, left: cx - (size * 0.23), top: cy - 10 }]}> 
         <MetallicText style={styles.centerThemes} variant="gold">{themes.join(' • ')}</MetallicText>
-        <Text style={styles.centerSummary}>{summary}</Text>
       </View>
 
       {/* Radial Icons */}
@@ -177,9 +172,8 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
 
 const styles = StyleSheet.create({
   root: { position: 'relative' },
-  centerCopyWrap: { position: 'absolute', alignItems: 'center', gap: 6 },
-  centerThemes: { fontSize: 9, fontWeight: '800', letterSpacing: 1.5, textAlign: 'center' },
-  centerSummary: { fontSize: 13, color: 'rgba(255,255,255,0.6)', textAlign: 'center', fontWeight: '500' },
+  centerCopyWrap: { position: 'absolute', alignItems: 'center' },
+  centerThemes: { fontSize: 9, fontWeight: '700', letterSpacing: 0.85, textAlign: 'center', opacity: 0.62, textTransform: 'uppercase' },
   dimLabel: { position: 'absolute', width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
   dimIcon: { fontSize: 16, fontWeight: '600' },
 });

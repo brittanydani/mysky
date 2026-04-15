@@ -24,7 +24,8 @@ export type GrowthEventName =
   | 'paywall_restore_succeeded'
   | 'home_quickstart_selected'
   | 'analytics_screen_viewed'
-  | 'analytics_snapshot_shared';
+  | 'analytics_snapshot_shared'
+  | 'pattern_library_opened';
 
 export interface GrowthEventRecord {
   name: GrowthEventName;

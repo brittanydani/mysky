@@ -140,5 +140,130 @@ describe('selfKnowledgeCrossRef', () => {
       expect(somaticInsight?.takeaway?.label).toBe('Somatic cue');
       expect(somaticInsight?.takeaway?.body).toMatch(/stomach|breathe/i);
     });
+
+    it('includes reflection practice insight when reflection days correlate with stronger mood', () => {
+      const context = {
+        coreValues: null,
+        archetypeProfile: null,
+        cognitiveStyle: null,
+        somaticEntries: [],
+        triggers: null,
+        relationshipPatterns: [],
+        dailyReflections: {
+          totalDays: 8,
+          totalAnswers: 19,
+          streak: 7,
+          byCategory: { grounding: 8, needs: 5, patterns: 6 },
+          reflectionDates: ['2026-04-01', '2026-04-02', '2026-04-03', '2026-04-04', '2026-04-05'],
+        },
+      };
+
+      const checkIns = [
+        { id: '1', date: '2026-04-01', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-01T12:00:00Z' },
+        { id: '2', date: '2026-04-02', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-02T12:00:00Z' },
+        { id: '3', date: '2026-04-03', moodScore: 7, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-03T12:00:00Z' },
+        { id: '4', date: '2026-04-04', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-04T12:00:00Z' },
+        { id: '5', date: '2026-04-05', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-05T12:00:00Z' },
+        { id: '6', date: '2026-04-06', moodScore: 5, energyLevel: 'medium', stressLevel: 'medium', tags: [], createdAt: '2026-04-06T12:00:00Z' },
+        { id: '7', date: '2026-04-07', moodScore: 5, energyLevel: 'medium', stressLevel: 'medium', tags: [], createdAt: '2026-04-07T12:00:00Z' },
+        { id: '8', date: '2026-04-08', moodScore: 5, energyLevel: 'medium', stressLevel: 'medium', tags: [], createdAt: '2026-04-08T12:00:00Z' },
+      ];
+
+      const result = computeSelfKnowledgeCrossRef(context as any, checkIns as any);
+      const reflectionInsight = result.find((insight) => insight.id === 'reflection-depth');
+
+      expect(reflectionInsight).toBeDefined();
+      expect(reflectionInsight?.isConfirmed).toBe(true);
+      expect(reflectionInsight?.body).toContain('Self-inquiry appears to have a measurable effect');
+    });
+
+    it('includes dream, archetype, and next-day sleep insights when dream history is rich enough', () => {
+      const context = {
+        coreValues: null,
+        archetypeProfile: {
+          dominant: 'seeker' as const,
+          scores: { hero: 1, caregiver: 1, seeker: 5, sage: 3, rebel: 1 },
+          completedAt: '2026-04-01T12:00:00Z',
+        },
+        cognitiveStyle: null,
+        somaticEntries: [
+          { id: 's1', date: '2026-04-01T12:00:00Z', region: 'gut', emotion: 'Anxiety', intensity: 4 },
+          { id: 's2', date: '2026-04-02T12:00:00Z', region: 'gut', emotion: 'Anxiety', intensity: 5 },
+          { id: 's3', date: '2026-04-03T12:00:00Z', region: 'chest', emotion: 'Tension', intensity: 4 },
+        ],
+        triggers: null,
+        relationshipPatterns: [],
+        dailyReflections: null,
+        dreamSummary: {
+          totalWithDreams: 5,
+          topFeelingIds: ['anxious', 'restless'],
+          topThemes: ['adventure', 'mystery'],
+          allDates: ['2026-03-31', '2026-04-01', '2026-04-02', '2026-04-03', '2026-04-04'],
+          avgQuality: 4.2,
+        },
+      };
+
+      const checkIns = [
+        { id: '1', date: '2026-04-01', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-01T12:00:00Z' },
+        { id: '2', date: '2026-04-02', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-02T12:00:00Z' },
+        { id: '3', date: '2026-04-03', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-03T12:00:00Z' },
+        { id: '4', date: '2026-04-04', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-04T12:00:00Z' },
+        { id: '5', date: '2026-04-05', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-05T12:00:00Z' },
+        { id: '6', date: '2026-04-06', moodScore: 5, energyLevel: 'medium', stressLevel: 'medium', tags: [], createdAt: '2026-04-06T12:00:00Z' },
+        { id: '7', date: '2026-04-07', moodScore: 5, energyLevel: 'medium', stressLevel: 'medium', tags: [], createdAt: '2026-04-07T12:00:00Z' },
+      ];
+
+      const result = computeSelfKnowledgeCrossRef(context as any, checkIns as any);
+
+      expect(result.find((insight) => insight.id === 'dream-somatic-link')).toBeDefined();
+      expect(result.find((insight) => insight.id === 'dream-archetype-pattern')).toBeDefined();
+      expect(result.find((insight) => insight.id === 'sleep-mood-link')).toBeDefined();
+    });
+
+    it('includes journal-body, cognitive, and intelligence insights when that profile data exists', () => {
+      const context = {
+        coreValues: null,
+        archetypeProfile: null,
+        cognitiveStyle: { scope: 4, processing: 3, decisions: 4 },
+        intelligenceProfile: {
+          linguistic: 3,
+          logical: 5,
+          musical: 1,
+          spatial: 2,
+          kinesthetic: 1,
+          interpersonal: 2,
+          intrapersonal: 4,
+          naturalistic: 1,
+          existential: 2,
+        },
+        somaticEntries: [
+          { id: 's1', date: '2026-04-01T12:00:00Z', region: 'chest', emotion: 'Tension', intensity: 4 },
+          { id: 's2', date: '2026-04-02T12:00:00Z', region: 'chest', emotion: 'Tension', intensity: 5 },
+          { id: 's3', date: '2026-04-04T12:00:00Z', region: 'gut', emotion: 'Anxiety', intensity: 4 },
+        ],
+        triggers: null,
+        relationshipPatterns: [],
+        dailyReflections: null,
+        journalSummary: {
+          heavyDays: ['2026-04-01', '2026-04-02'],
+        },
+      };
+
+      const checkIns = [
+        { id: '1', date: '2026-04-01', moodScore: 5, energyLevel: 'medium', stressLevel: 'high', tags: [], createdAt: '2026-04-01T12:00:00Z' },
+        { id: '2', date: '2026-04-02', moodScore: 5, energyLevel: 'medium', stressLevel: 'high', tags: [], createdAt: '2026-04-02T12:00:00Z' },
+        { id: '3', date: '2026-04-03', moodScore: 6, energyLevel: 'medium', stressLevel: 'medium', tags: [], createdAt: '2026-04-03T12:00:00Z' },
+        { id: '4', date: '2026-04-04', moodScore: 6, energyLevel: 'medium', stressLevel: 'medium', tags: [], createdAt: '2026-04-04T12:00:00Z' },
+        { id: '5', date: '2026-04-05', moodScore: 6, energyLevel: 'medium', stressLevel: 'medium', tags: [], createdAt: '2026-04-05T12:00:00Z' },
+        { id: '6', date: '2026-04-06', moodScore: 7, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-06T12:00:00Z' },
+        { id: '7', date: '2026-04-07', moodScore: 7, energyLevel: 'medium', stressLevel: 'low', tags: [], createdAt: '2026-04-07T12:00:00Z' },
+      ];
+
+      const result = computeSelfKnowledgeCrossRef(context as any, checkIns as any);
+
+      expect(result.find((insight) => insight.id === 'journal-body-pattern')?.isConfirmed).toBe(true);
+      expect(result.find((insight) => insight.id === 'cognitive-workflow')).toBeDefined();
+      expect(result.find((insight) => insight.id === 'intelligence-profile')).toBeDefined();
+    });
   });
 });

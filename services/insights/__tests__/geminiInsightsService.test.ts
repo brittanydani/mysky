@@ -32,7 +32,7 @@ jest.mock('../../../utils/logger', () => ({
   logger: mockLogger,
 }));
 
-import { enhancePatternInsights } from '../geminiInsightsService';
+import { enhanceInsightCopy, enhancePatternInsights } from '../geminiInsightsService';
 
 describe('geminiInsightsService', () => {
   let mockNow = 1_000_000;
@@ -105,6 +105,31 @@ describe('geminiInsightsService', () => {
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
+  it('retries 503 edge-function responses and falls back without logging an error', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: 'token' } },
+      error: null,
+    });
+    mockInvoke.mockResolvedValue({
+      data: null,
+      error: {
+        message: 'Edge Function returned a non-2xx status code',
+        context: { status: 503 },
+      },
+    });
+
+    const result = await enhancePatternInsights(insights as any, context as any, []);
+
+    expect(result).toBeNull();
+    expect(mockInvoke).toHaveBeenCalledTimes(3);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      '[GeminiPatterns] Edge function unavailable; using local pattern insights fallback.',
+      503,
+      'Edge Function returned a non-2xx status code',
+    );
+    expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+
   it('returns normalized insights from the dedicated pattern insights function', async () => {
     mockGetSession.mockResolvedValue({
       data: { session: { access_token: 'token' } },
@@ -125,5 +150,38 @@ describe('geminiInsightsService', () => {
       generatedAt: '2026-04-08T12:00:00.000Z',
     });
     expect(mockInvoke).toHaveBeenCalledWith('pattern-insights', expect.any(Object));
+  });
+
+  it('reuses the same fallback behavior for generic insight copy enhancement', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+
+    const result = await enhanceInsightCopy(insights as any, context as any, []);
+
+    expect(result).toBeNull();
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it('normalizes and caches generic insight copy enhancement responses', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: 'token' } },
+      error: null,
+    });
+    mockInvoke.mockResolvedValue({
+      data: {
+        insights: [{ id: 'pattern-1', body: 'This reflection feels more precise and personal.' }],
+        generatedAt: '2026-04-14T12:00:00.000Z',
+      },
+      error: null,
+    });
+
+    const firstResult = await enhanceInsightCopy(insights as any, context as any, []);
+    const secondResult = await enhanceInsightCopy(insights as any, context as any, []);
+
+    expect(firstResult).toEqual({
+      insights: [{ id: 'pattern-1', body: 'This reflection feels more precise and personal.' }],
+      generatedAt: '2026-04-14T12:00:00.000Z',
+    });
+    expect(secondResult).toEqual(firstResult);
+    expect(mockInvoke).toHaveBeenCalledTimes(1);
   });
 });

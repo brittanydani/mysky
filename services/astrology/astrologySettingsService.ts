@@ -184,6 +184,17 @@ const DEFAULT_SETTINGS: AstrologySettings = {
 
 class AstrologySettingsServiceClass {
   private cachedSettings: AstrologySettings | null = null;
+  private listeners = new Set<(settings: AstrologySettings) => void>();
+
+  private notifyListeners(settings: AstrologySettings): void {
+    this.listeners.forEach((listener) => {
+      try {
+        listener(settings);
+      } catch (error) {
+        logger.error('[AstrologySettings] Settings listener failed:', error);
+      }
+    });
+  }
 
   /**
    * Get current astrology settings
@@ -208,7 +219,8 @@ class AstrologySettingsServiceClass {
       return this.cachedSettings;
     } catch (error) {
       logger.error('[AstrologySettings] Failed to load settings:', error);
-      return { ...DEFAULT_SETTINGS };
+      this.cachedSettings = { ...DEFAULT_SETTINGS };
+      return this.cachedSettings;
     }
   }
 
@@ -226,6 +238,7 @@ class AstrologySettingsServiceClass {
 
       await getSecureStore().setItemAsync(SETTINGS_KEY, JSON.stringify(updated));
       this.cachedSettings = updated;
+      this.notifyListeners(updated);
       
       logger.info('[AstrologySettings] Settings saved:', {
         houseSystem: updated.houseSystem,
@@ -327,7 +340,9 @@ class AstrologySettingsServiceClass {
   async resetToDefaults(): Promise<AstrologySettings> {
     await getSecureStore().deleteItemAsync(SETTINGS_KEY);
     this.cachedSettings = null;
-    return this.getSettings();
+    const defaults = await this.getSettings();
+    this.notifyListeners(defaults);
+    return defaults;
   }
 
   /**
@@ -353,6 +368,13 @@ class AstrologySettingsServiceClass {
    */
   getCachedSettings(): AstrologySettings | null {
     return this.cachedSettings;
+  }
+
+  subscribe(listener: (settings: AstrologySettings) => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
   /**

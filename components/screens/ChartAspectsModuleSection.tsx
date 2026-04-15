@@ -13,6 +13,7 @@ import { VelvetGlassSurface } from '../ui/VelvetGlassSurface';
 import { useThemedStyles, useAppTheme } from '../../context/ThemeContext';
 import { type AppTheme } from '../../constants/theme';
 import { Aspect } from '../../services/astrology/types';
+import { getAspectInterpretation } from '../../services/astrology/natalInterpretations';
 import { CHART_CARD_WASHES } from './chartCardPalette';
 
 // ── CONSTANTS ──
@@ -56,6 +57,14 @@ function safeStr(v: unknown): string {
   if (typeof v === 'string') return v;
   if (v && typeof v === 'object' && 'name' in v) return (v as { name: string }).name;
   return '';
+}
+
+function toPersonalMeaning(text: string): string {
+  const normalized = text.trim().replace(//g, '');
+  const withPeriod = /[.!?]$/.test(normalized) ? normalized : `${normalized}.`;
+  const lower = withPeriod.charAt(0).toLowerCase() + withPeriod.slice(1);
+  if (/^you\b/i.test(withPeriod)) return withPeriod;
+  return `You may notice that ${lower}`;
 }
 
 // ── COMPONENT ──
@@ -102,6 +111,8 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
           const washColors = NATURE_WASH[nature];
           const orbDeg = aspect.orb != null ? `${aspect.orb.toFixed(1)}°` : '';
           const typeLabel = typeName.charAt(0).toUpperCase() + typeName.slice(1);
+          const interpretation = getAspectInterpretation(aspect);
+          const meaningText = toPersonalMeaning(interpretation);
 
           return (
             <Animated.View
@@ -125,11 +136,14 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
                 </View>
 
                 {/* Dialogue sentence */}
-                <Text style={styles.dialogueText} numberOfLines={3}>
+                <Text style={styles.dialogueText} numberOfLines={2}>
                   <Text style={styles.planetEmphasis}>{planet1}</Text>
-                  {' '}meets{' '}
+                  {' '}and{' '}
                   <Text style={styles.planetEmphasis}>{planet2}</Text>
-                  {' '}— a {nature.toLowerCase()} {typeLabel.toLowerCase()} weaving their energies together.
+                </Text>
+
+                <Text style={styles.meaningText}>
+                  {meaningText}
                 </Text>
               </VelvetGlassSurface>
             </Animated.View>
@@ -219,6 +233,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.55)',
     lineHeight: 22,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  meaningText: {
+    marginTop: 10,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.72)',
+    lineHeight: 20,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   planetEmphasis: {

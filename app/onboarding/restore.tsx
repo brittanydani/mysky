@@ -13,6 +13,7 @@ import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { BackupService } from '../../services/storage/backupService';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { IdentityVault } from '../../utils/IdentityVault';
 import { logger } from '../../utils/logger';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
@@ -67,6 +68,7 @@ export default function OnboardingRestoreScreen() {
         return;
       }
 
+      const astroSettings = await AstrologySettingsService.getSettings();
       const birthData = {
         date: charts[0].birthDate,
         time: charts[0].birthTime,
@@ -74,7 +76,9 @@ export default function OnboardingRestoreScreen() {
         place: charts[0].birthPlace,
         latitude: charts[0].latitude,
         longitude: charts[0].longitude,
-        houseSystem: charts[0].houseSystem,
+        houseSystem: astroSettings.houseSystem ?? charts[0].houseSystem,
+        zodiacSystem: astroSettings.zodiacSystem,
+        orbPreset: astroSettings.orbPreset,
         timezone: charts[0].timezone,
       };
 

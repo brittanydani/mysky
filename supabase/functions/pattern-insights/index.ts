@@ -24,7 +24,7 @@ const corsHeaders = {
 };
 
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const GEMINI_MODEL = "gemini-2.5-flash-lite";
+const GEMINI_MODELS = ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-1.5-flash-8b"] as const;
 const REQUEST_TIMEOUT_MS = 25_000;
 const RATE_LIMIT_MAX = 20;
 const RATE_LIMIT_WINDOW = "1 hour";
@@ -90,6 +90,18 @@ function jsonResponse(body: unknown, status = 200): Response {
     status,
     headers: { ...corsHeaders, "content-type": "application/json" },
   });
+}
+
+function getGeminiApiKeys(): string[] {
+  return [
+    Deno.env.get("GEMINI_API_KEY"),
+    Deno.env.get("GEMINI_API_KEY_SECONDARY"),
+    Deno.env.get("GEMINI_API_KEY_TERTIARY"),
+  ].filter((value, index, all): value is string => !!value && all.indexOf(value) === index);
+}
+
+function shouldTryFallbackStatus(status: number): boolean {
+  return status === 429 || status >= 500;
 }
 
 async function isRateLimited(
@@ -278,61 +290,85 @@ serve(async (req: Request) => {
 
     const payload = validatePayload(await req.json());
 
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
-    if (!apiKey) {
-      console.error("GEMINI_API_KEY secret is not set");
+    const apiKeys = getGeminiApiKeys();
+    if (!apiKeys.length) {
+      console.error("No Gemini API key secrets are set");
       return jsonResponse({ error: "Gemini is not configured" }, 503);
     }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-    let geminiResponse: Response;
-    try {
-      geminiResponse = await fetch(`${GEMINI_BASE_URL}/${GEMINI_MODEL}:generateContent`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
+    const requestBody = {
+      systemInstruction: {
+        parts: [{ text: SYSTEM_PROMPT }],
+      },
+      contents: [
+        {
+          parts: [{ text: buildUserPrompt(payload) }],
         },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: SYSTEM_PROMPT }],
-          },
-          contents: [
-            {
-              parts: [{ text: buildUserPrompt(payload) }],
+      ],
+      generationConfig: {
+        temperature: 0.75,
+        maxOutputTokens: 2048,
+        responseMimeType: "application/json",
+      },
+    };
+
+    let lastStatus = 502;
+    let lastResponseBody: unknown = null;
+
+    for (let keyIndex = 0; keyIndex < apiKeys.length; keyIndex += 1) {
+      const apiKey = apiKeys[keyIndex];
+
+      for (let modelIndex = 0; modelIndex < GEMINI_MODELS.length; modelIndex += 1) {
+        const model = GEMINI_MODELS[modelIndex];
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+        let geminiResponse: Response;
+        try {
+          geminiResponse = await fetch(`${GEMINI_BASE_URL}/${model}:generateContent`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": apiKey,
             },
-          ],
-          generationConfig: {
-            temperature: 0.75,
-            maxOutputTokens: 2048,
-            responseMimeType: "application/json",
-          },
-        }),
-        signal: controller.signal,
-      });
-    } finally {
-      clearTimeout(timeout);
+            body: JSON.stringify(requestBody),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeout);
+        }
+
+        const responseBody = await geminiResponse.json().catch(() => null);
+        if (geminiResponse.ok) {
+          const text = extractGeminiText(responseBody);
+          if (!text) {
+            console.error("[pattern-insights] No text returned from Gemini");
+            return jsonResponse({ error: "No content returned from Gemini" }, 502);
+          }
+
+          const parsed = parseGeminiJson(text);
+          return jsonResponse({
+            insights: parsed.insights,
+            generatedAt: new Date().toISOString(),
+          });
+        }
+
+        lastStatus = geminiResponse.status >= 400 && geminiResponse.status < 600 ? geminiResponse.status : 502;
+        lastResponseBody = responseBody;
+
+        const hasNextAttempt = modelIndex < GEMINI_MODELS.length - 1 || keyIndex < apiKeys.length - 1;
+        if (shouldTryFallbackStatus(geminiResponse.status) && hasNextAttempt) {
+          console.warn("[pattern-insights] Gemini request failed; trying fallback.", geminiResponse.status, { model, keyIndex });
+          continue;
+        }
+
+        console.error("[pattern-insights] Gemini API error:", geminiResponse.status, responseBody);
+        return jsonResponse({ error: `Gemini API error: ${geminiResponse.status}` }, lastStatus);
+      }
     }
 
-    const responseBody = await geminiResponse.json().catch(() => null);
-    if (!geminiResponse.ok) {
-      console.error("[pattern-insights] Gemini API error:", geminiResponse.status, responseBody);
-      return jsonResponse({ error: `Gemini API error: ${geminiResponse.status}` }, geminiResponse.status >= 400 && geminiResponse.status < 600 ? geminiResponse.status : 502);
-    }
-
-    const text = extractGeminiText(responseBody);
-    if (!text) {
-      console.error("[pattern-insights] No text returned from Gemini");
-      return jsonResponse({ error: "No content returned from Gemini" }, 502);
-    }
-
-    const parsed = parseGeminiJson(text);
-    return jsonResponse({
-      insights: parsed.insights,
-      generatedAt: new Date().toISOString(),
-    });
+    console.error("[pattern-insights] Gemini API error:", lastStatus, lastResponseBody);
+    return jsonResponse({ error: `Gemini API error: ${lastStatus}` }, lastStatus);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error";
     console.error("[pattern-insights] Unexpected error:", message);

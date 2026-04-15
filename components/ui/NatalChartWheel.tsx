@@ -171,7 +171,7 @@ const CROSS_ASPECT_COLORS: Record<string, { tight: string; loose: string }> = {
 
 function astroToAngle(longitude: number, ascLongitude: number): number {
   const offset = ascLongitude;
-  const adjusted = longitude - offset;
+  const adjusted = offset - longitude;
   return (adjusted * Math.PI) / 180;
 }
 
@@ -333,13 +333,28 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
   }, [slateDeep, slateMid, theme.background]);
 
   const [settingsOrientation, setSettingsOrientation] = useState<ChartOrientation>('standard-natal');
-  useEffect(() => { AstrologySettingsService.getSettings().then((s) => setSettingsOrientation(s.chartOrientation)).catch(() => {}); }, []);
+  useEffect(() => {
+    let mounted = true;
+
+    AstrologySettingsService.getSettings().then((s) => {
+      if (mounted) setSettingsOrientation(s.chartOrientation);
+    }).catch(() => {});
+
+    const unsubscribe = AstrologySettingsService.subscribe((settings) => {
+      if (mounted) setSettingsOrientation(settings.chartOrientation);
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   const orientation = orientationProp ?? settingsOrientation;
 
   const ascLongitude = useMemo(() => {
     if (orientation === 'midheaven-top') {
-      const mc = getLongitude(getChartPlanet(chart, 'Midheaven')); const mcLon = mc ?? rawAscLongitude; return normalize360(mcLon - 90);
+      const mc = getLongitude(getChartPlanet(chart, 'Midheaven')); const mcLon = mc ?? rawAscLongitude; return normalize360(mcLon + 90);
     }
     if (orientation === 'aries-rising') { return 180; }
     return normalize360(rawAscLongitude + 180);

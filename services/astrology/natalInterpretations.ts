@@ -43,25 +43,29 @@ function getGenericAspectInterpretation(p1: string, p2: string, type: string): s
     'North Node': 'soul growth direction',
     'South Node': 'past patterns',
     Ascendant: 'outward persona',
+    Descendant: 'relationship patterns and what you meet through other people',
     Midheaven: 'career and public role',
+    IC: 'private foundations, home, and what helps you feel rooted',
+    Vertex: 'fated encounters and catalytic turning points',
+    'Anti-Vertex': 'your familiar orientation and personal baseline',
   };
 
   const t1 = planetThemes[p1] || p1.toLowerCase();
   const t2 = planetThemes[p2] || p2.toLowerCase();
 
   const typeDescriptions: Record<string, string> = {
-    conjunction: `${t1} and ${t2} merge into a unified expression`,
-    opposition: `tension between ${t1} and ${t2} pushes toward integration`,
-    trine: `natural flow between ${t1} and ${t2}`,
-    square: `friction between ${t1} and ${t2} drives growth`,
-    sextile: `gentle opportunity between ${t1} and ${t2}`,
-    quincunx: `ongoing adjustment between ${t1} and ${t2}`,
-    semisextile: `subtle connection between ${t1} and ${t2}`,
-    semisquare: `mild friction between ${t1} and ${t2}`,
-    sesquiquadrate: `restless tension between ${t1} and ${t2}`,
+    conjunction: `you may experience ${t1} and ${t2} as deeply intertwined, in a way that feels central to how you move through life`,
+    opposition: `you may feel pulled between ${t1} and ${t2}, and part of your growth is learning how to hold both without abandoning either side`,
+    trine: `you may find that ${t1} and ${t2} support each other naturally, giving you an easier path to trust this part of yourself`,
+    square: `you may feel friction between ${t1} and ${t2}, but this can become one of the places where your resilience and self-understanding deepen`,
+    sextile: `you may notice a helpful opening between ${t1} and ${t2}, especially when you choose to work with that part of yourself intentionally`,
+    quincunx: `you may need ongoing adjustment between ${t1} and ${t2}, asking for patience as you learn what balance looks like for you`,
+    semisextile: `you may sense that ${t1} and ${t2} are quietly linked, even if the connection takes time to notice and name`,
+    semisquare: `you may feel a low-grade friction between ${t1} and ${t2} that nudges you toward subtle but important changes`,
+    sesquiquadrate: `you may notice a restless tension between ${t1} and ${t2} that keeps asking for a more honest way forward`,
   };
 
-  return typeDescriptions[type] || `${p1} and ${p2} interact through ${type}`;
+  return typeDescriptions[type] || `you may notice that ${p1} and ${p2} shape each other through ${type} energy in a way that becomes clearer as you pay attention to it`;
 }
 
 // ── Specific Aspect Interpretations ──
@@ -164,6 +168,12 @@ const ASPECT_INTERPRETATIONS: Record<string, string> = {
   'Jupiter-Saturn:trine': 'wisdom and discipline work together naturally — sustained growth',
   'Jupiter-Saturn:square': 'conflict between optimism and realism drives purposeful development',
   'Jupiter-Saturn:sextile': 'balanced approach to growth — expanding within practical boundaries',
+
+  // Axes and points
+  'North Node-South Node:opposition': 'you are living with a constant invitation to grow beyond old defaults while still honoring what your past patterns have taught you. This can feel like an inner tug-of-war at times, but it is also part of how your path becomes more conscious',
+  'Ascendant-Descendant:opposition': 'there can be an ongoing tension between who you are learning to be on your own and who you become in relationship. Over time, this axis can help you understand that connection does not have to cost you your own center',
+  'IC-Midheaven:opposition': 'part of your life lesson is learning how to care for your private foundation while also answering the call of your public life. When this axis is active, home, belonging, ambition, and visibility can all ask to be held at once',
+  'Anti-Vertex-Vertex:opposition': 'you may notice a tension between what feels familiar and self-directed and the encounters that seem to arrive with unusual timing or weight. This axis often asks you to stay open when life brings a turning point you did not plan for',
 
   // Outer planet interactions
   'Neptune-Uranus:conjunction': 'generational marker of idealism and innovation blending',

@@ -10,7 +10,7 @@
     "reset-project": "node ./scripts/reset-project.js",
     "ios": "expo run:ios",
     "ios:device": "expo run:ios --device",
-    "ios:sim": "expo run:ios --simulator",
+    "ios:sim": "expo run:ios",
     "web": "expo start --web",
     "update:preview": "eas update --platform ios --channel preview",
     "update:production": "eas update --platform ios --channel production",

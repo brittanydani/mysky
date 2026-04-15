@@ -17,6 +17,7 @@ import { config, LEGAL_URL } from '../constants/config';
 import { DEEPER_SKY_FEATURES, DEEPER_SKY_MARKETING } from '../services/premium/deeperSkyFeatures';
 import { metallicFillColors, metallicFillPositions } from '../constants/mySkyMetallic';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { trackGrowthEvent } from '../services/growth/localAnalytics';
 
 type PlanType = 'monthly' | 'yearly' | 'lifetime';
 type IoniconName = keyof typeof Ionicons.glyphMap;
@@ -28,7 +29,7 @@ interface PremiumScreenProps {
   analyticsVariant?: string;
 }
 
-export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
+export default function PremiumScreen({ onClose, analyticsSource, analyticsExperiment, analyticsVariant }: PremiumScreenProps = {}) {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
@@ -36,6 +37,14 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
   const { isPremium, offerings, loading, purchase, restore } = usePremium();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
   const [restoring, setRestoring] = useState(false);
+
+  React.useEffect(() => {
+    trackGrowthEvent('paywall_viewed', {
+      source: analyticsSource ?? 'unknown',
+      experiment: analyticsExperiment ?? 'none',
+      variant: analyticsVariant ?? 'none',
+    }).catch(() => {});
+  }, [analyticsExperiment, analyticsSource, analyticsVariant]);
 
   // Resolve display prices from live RevenueCat offerings
   const resolvedTiers = config.premium.tiers.map((tier) => {
@@ -77,6 +86,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
   const handleSelectPlan = useCallback((plan: PlanType) => {
     if (loading || restoring) return;
     setSelectedPlan(plan);
+    trackGrowthEvent('paywall_plan_selected', { plan }).catch(() => {});
     Haptics.selectionAsync().catch(() => {});
   }, [loading, restoring]);
 
@@ -103,10 +113,12 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
     }
 
     try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
+    trackGrowthEvent('paywall_purchase_started', { plan: selectedPlan }).catch(() => {});
 
     const result = await purchase(pkg);
 
     if (result.success) {
+      trackGrowthEvent('paywall_purchase_succeeded', { plan: selectedPlan }).catch(() => {});
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       Alert.alert('Welcome to Deeper Sky', 'Your premium features are now unlocked.');
     } else if (result.error) {
@@ -120,6 +132,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
     setRestoring(false);
 
     if (result.success && result.hasPremium) {
+      trackGrowthEvent('paywall_restore_succeeded').catch(() => {});
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       Alert.alert('Restored', 'Your purchases have been restored successfully.');
     } else if (result.success && !result.hasPremium) {
@@ -218,9 +231,9 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           {/* ── Value Copywriting ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <Text style={styles.premiumBadge}>✦ {DEEPER_SKY_MARKETING.headline}</Text>
-            <Text style={styles.title}>See what your patterns are teaching you</Text>
+            <Text style={styles.title}>See your patterns more clearly over time</Text>
             <GoldSubtitle style={styles.heroSubtitle}>
-              Deeper Sky turns your sleep, mood, dreams, and journal history into weekly shifts, recurring themes, and more personal guidance.
+              Deeper Sky turns your sleep, mood, dreams, and journal history into weekly shifts, recurring themes, and reflection prompts grounded in your own data.
             </GoldSubtitle>
           </Animated.View>
 
@@ -229,7 +242,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             {[
               { icon: 'calendar-outline', title: 'Track change over time', desc: 'Weekly shifts, recurring themes, and longitudinal pattern insight', color: '#D4AF37' },
               { icon: 'analytics-outline', title: 'Understand what helps or hurts', desc: 'See what restores you, drains you, and repeats in your reflections', color: '#D4AF37' },
-              { icon: 'sparkles-outline', title: 'Get more personal guidance', desc: 'Guidance shaped by your history, not just today\'s mood', color: '#D4AF37' },
+              { icon: 'sparkles-outline', title: 'Get more reflective guidance', desc: 'Reflection prompts shaped by your history, not just today\'s mood', color: '#D4AF37' },
               { icon: 'shield-checkmark-outline', title: 'Private by design', desc: 'Core reflections stay encrypted on-device and are not sold for ads', color: '#D4AF37' },
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
@@ -390,6 +403,10 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
               : selectedPlan === 'lifetime'
                 ? 'Lifetime works best if you already know you want to keep your full archive in one place long term.'
                 : 'Monthly is the lightest way to try Deeper Sky before committing to a longer pattern-building cycle.'}
+          </Text>
+
+          <Text style={styles.reflectionFrame}>
+            Deeper Sky is for reflection and self-observation, not diagnosis or crisis support.
           </Text>
 
           {/* Legal bar */}
@@ -800,6 +817,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   ctaHint: {
     marginTop: 12,
+    fontSize: 12,
+    lineHeight: 18,
+    color: theme.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: 6,
+  },
+  reflectionFrame: {
+    marginTop: 10,
     fontSize: 12,
     lineHeight: 18,
     color: theme.textSecondary,

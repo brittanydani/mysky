@@ -2,6 +2,7 @@
 
 import * as SQLite from 'expo-sqlite';
 import { SavedChart, JournalEntry, AppSettings, RelationshipChart, SleepEntry } from './models';
+import type { HouseSystem } from '../astrology/types';
 import { SavedInsight } from './insightHistory';
 import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
@@ -13,6 +14,41 @@ const CURRENT_DB_VERSION = 22;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
+
+  private isHydratedChartValid(chart: {
+    id: string;
+    birthDate: string;
+    birthPlace: string;
+    latitude: number;
+    longitude: number;
+  }): boolean {
+    if (!chart.birthDate || !chart.birthPlace.trim()) {
+      logger.error(`[LocalDB] Dropping invalid chart ${chart.id} due to unreadable birth data`);
+      return false;
+    }
+
+    if (!Number.isFinite(chart.latitude) || !Number.isFinite(chart.longitude)) {
+      logger.error(`[LocalDB] Dropping invalid chart ${chart.id} due to unreadable coordinates`);
+      return false;
+    }
+
+    return true;
+  }
+
+  private parseDecryptedCoordinate(value: string | undefined | null, field: string, rowId: string): number {
+    if (!value || isDecryptionFailure(value)) {
+      logger.error(`[LocalDB] ${field} for ${rowId} is unreadable`);
+      return Number.NaN;
+    }
+
+    const parsed = Number.parseFloat(value);
+    if (!Number.isFinite(parsed)) {
+      logger.error(`[LocalDB] ${field} for ${rowId} is invalid: ${value}`);
+      return Number.NaN;
+    }
+
+    return parsed;
+  }
 
   private getUnreadableEncryptedFields(fields: Record<string, string | undefined | null>): string[] {
     return Object.entries(fields)
@@ -1146,7 +1182,7 @@ class LocalDatabase {
     );
 
     // Decrypt sensitive fields after reading from SQLite
-    return Promise.all(
+    const charts = await Promise.all(
       (result as any[]).map(async (row: any) => {
         const latStr = row.latitude != null ? await FieldEncryptionService.decryptField(String(row.latitude)) : '0';
         const lngStr = row.longitude != null ? await FieldEncryptionService.decryptField(String(row.longitude)) : '0';
@@ -1156,8 +1192,8 @@ class LocalDatabase {
         const decBirthPlace = await FieldEncryptionService.decryptField(row.birth_place);
 
         // Guard against DECRYPTION_FAILED_PLACEHOLDER producing NaN coordinates
-        const safeLat = isDecryptionFailure(latStr) ? 0 : (parseFloat(latStr) || 0);
-        const safeLng = isDecryptionFailure(lngStr) ? 0 : (parseFloat(lngStr) || 0);
+        const safeLat = this.parseDecryptedCoordinate(latStr, 'saved_charts.latitude', row.id);
+        const safeLng = this.parseDecryptedCoordinate(lngStr, 'saved_charts.longitude', row.id);
 
         if (isDecryptionFailure(latStr) || isDecryptionFailure(lngStr) || isDecryptionFailure(decBirthPlace)) {
           logger.error(`[LocalDB] Chart ${row.id} has decryption failures — coordinates or birth place unreadable`);
@@ -1180,9 +1216,11 @@ class LocalDatabase {
         };
       })
     );
+
+    return charts.filter((chart) => this.isHydratedChartValid(chart));
   }
 
-  async updateAllChartsHouseSystem(houseSystem: string): Promise<void> {
+  async updateAllChartsHouseSystem(houseSystem: HouseSystem): Promise<void> {
     const db = await this.ensureReady();
     const now = new Date().toISOString();
 
@@ -1190,6 +1228,19 @@ class LocalDatabase {
       houseSystem,
       now,
     ]);
+
+    const session = await this.getSession().catch(() => null);
+    if (!session) return;
+
+    try {
+      const charts = await this.getCharts();
+      const { enqueueBirthProfile } = await import('../storage/syncService');
+      await Promise.all(
+        charts.map((chart) => enqueueBirthProfile({ ...chart, houseSystem, updatedAt: now })),
+      );
+    } catch (error) {
+      logger.error('[LocalDB] Failed to sync house system changes to cloud birth profile:', error);
+    }
   }
 
   async deleteChart(id: string): Promise<void> {
@@ -1952,7 +2003,8 @@ class LocalDatabase {
     query += ' ORDER BY created_at ASC';
 
     const result = await db.getAllAsync(query, params);
-    return Promise.all((result as any[]).map((row: any) => this.mapRelationshipRow(row)));
+    const charts = await Promise.all((result as any[]).map((row: any) => this.mapRelationshipRow(row)));
+    return charts.filter((chart): chart is RelationshipChart => chart !== null);
   }
 
   async getRelationshipChartById(id: string): Promise<RelationshipChart | null> {
@@ -1991,7 +2043,7 @@ class LocalDatabase {
     return result?.count ?? 0;
   }
 
-  private async mapRelationshipRow(row: any): Promise<RelationshipChart> {
+  private async mapRelationshipRow(row: any): Promise<RelationshipChart | null> {
     const decName = await FieldEncryptionService.decryptField(row.name);
     const decBirthDate = await FieldEncryptionService.decryptField(row.birth_date);
     const decBirthTime = row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time;
@@ -1999,14 +2051,14 @@ class LocalDatabase {
     const latStr = await FieldEncryptionService.decryptField(String(row.latitude));
     const lngStr = await FieldEncryptionService.decryptField(String(row.longitude));
 
-    const safeLat = isDecryptionFailure(latStr) ? 0 : (parseFloat(latStr) || 0);
-    const safeLng = isDecryptionFailure(lngStr) ? 0 : (parseFloat(lngStr) || 0);
+    const safeLat = this.parseDecryptedCoordinate(latStr, 'relationship_charts.latitude', row.id);
+    const safeLng = this.parseDecryptedCoordinate(lngStr, 'relationship_charts.longitude', row.id);
 
     if (isDecryptionFailure(latStr) || isDecryptionFailure(lngStr) || isDecryptionFailure(decName)) {
       logger.error(`[LocalDB] Relationship chart ${row.id} has decryption failures`);
     }
 
-    return {
+    const chart = {
       id: row.id,
       name: isDecryptionFailure(decName) ? '' : decName,
       relationship: row.relationship,
@@ -2023,6 +2075,8 @@ class LocalDatabase {
       isDeleted: row.is_deleted === 1,
       deletedAt: row.deleted_at,
     };
+
+    return this.isHydratedChartValid(chart) ? chart : null;
   }
 
   // ─────────────────────────────────────────────────────────────────────────────

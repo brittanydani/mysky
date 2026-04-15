@@ -16,6 +16,18 @@ describe('natalInterpretations', () => {
       const interp = getAspectInterpretation(aspect);
       expect(interp.length).toBeGreaterThan(0);
     });
+
+    it('returns specific interpretation for nodal opposition', () => {
+      const aspect = makeAspect('North Node', 'South Node', 'Opposition', 180, 0, 'Challenging');
+      const interp = getAspectInterpretation(aspect);
+      expect(interp).toContain('grow beyond old defaults');
+    });
+
+    it('uses more personal fallback wording for unknown pairings', () => {
+      const aspect = makeAspect('Ascendant', 'Descendant', 'Square', 90, 2, 'Challenging');
+      const interp = getAspectInterpretation(aspect);
+      expect(interp).toContain('you may feel');
+    });
   });
 
   describe('generateThemedSections()', () => {

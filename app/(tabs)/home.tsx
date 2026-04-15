@@ -54,6 +54,7 @@ import { getLogicalToday } from '../../services/patterns/checkInService';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { getDailyAffirmation, PersonalAffirmationContext } from '../../services/today/todayContentLibrary';
 import { loadSelfKnowledgeContext, SelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
+import { enhanceInsightCopy } from '../../services/insights/geminiInsightsService';
 import { logger } from '../../utils/logger';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { usePremium } from '../../context/PremiumContext';
@@ -61,6 +62,7 @@ import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
+import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 
 const { width } = Dimensions.get('window');
 
@@ -118,6 +120,29 @@ function generateInsight(
   return `Your stability is ${stabilityIndex}% today. Small adjustments to rest and movement could shift your coherence toward alignment.`;
 }
 
+function computeBalanceScore(mood: number, energy: number, sleep: number): number {
+  const moodPts = MOOD_POINTS[Math.round(mood)] ?? mood;
+  const energyPts = ENERGY_POINTS[Math.round(energy)] ?? energy;
+
+  const clampedSleep = Math.min(Math.max(sleep, 0), 10);
+  let sleepPts = 0;
+  for (let i = 1; i < SLEEP_POINTS.length; i++) {
+    const [h0, p0] = SLEEP_POINTS[i - 1];
+    const [h1, p1] = SLEEP_POINTS[i];
+    if (clampedSleep <= h1) {
+      const t = (clampedSleep - h0) / (h1 - h0);
+      sleepPts = p0 + t * (p1 - p0);
+      break;
+    }
+  }
+
+  const weighted = sleepPts * 0.40 + moodPts * 0.35 + energyPts * 0.25;
+  const lowestPts = Math.min(moodPts, energyPts, sleepPts);
+  const capped = lowestPts <= 1 ? Math.min(weighted, 4) : weighted;
+
+  return Math.round(capped * 10) / 10;
+}
+
 // ── Home Screen ─────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
@@ -126,6 +151,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
   const warpRef = useRef<WarpRef>(null);
+  const isScreenActiveRef = useRef(false);
 
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [showEditBirth, setShowEditBirth] = useState(false);
@@ -148,6 +174,7 @@ export default function HomeScreen() {
 
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
+  const [aiInsightText, setAiInsightText] = useState<string | null>(null);
 
   // Self-knowledge context — used to personalize affirmations
   const [selfKnowledge, setSelfKnowledge] = useState<SelfKnowledgeContext | null>(null);
@@ -157,10 +184,17 @@ export default function HomeScreen() {
   const loadUserChart = useCallback(
     async (opts?: { silent?: boolean }) => {
       const silent = opts?.silent ?? false;
-      if (!silent) setLoading(true);
+      if (!silent && isScreenActiveRef.current) setLoading(true);
+
+      const setIfActive = <T,>(setter: (value: T) => void, value: T) => {
+        if (isScreenActiveRef.current) {
+          setter(value);
+        }
+      };
 
       try {
         const charts = await localDb.getCharts();
+        if (!isScreenActiveRef.current) return;
 
         if (charts.length > 0) {
           const savedChart = charts[0];
@@ -188,7 +222,7 @@ export default function HomeScreen() {
           if (storedName) chart.name = storedName;
           chart.updatedAt = savedChart.updatedAt;
 
-          setUserChart(chart);
+          setIfActive(setUserChart, chart);
 
           // Hydrate data in parallel — checkins, sleep, and self-knowledge are independent
           try {
@@ -197,44 +231,87 @@ export default function HomeScreen() {
               localDb.getSleepEntries(chart.id, 7),
               loadSelfKnowledgeContext(),
             ]);
+            if (!isScreenActiveRef.current) return;
 
-            setWeeklyCheckIns(checkins);
-            setSelfKnowledge(selfKnowledge);
+            setIfActive(setWeeklyCheckIns, checkins);
+            setIfActive(setSelfKnowledge, selfKnowledge);
+            let nextMood = mood;
+            let nextEnergy = energy;
             if (checkins.length > 0) {
               const latest = checkins[0];
-              if (latest.moodScore != null) setMood(latest.moodScore);
+              if (latest.moodScore != null) {
+                nextMood = latest.moodScore;
+                setIfActive(setMood, latest.moodScore);
+              }
               const energyMap: Record<string, number> = { low: 3, medium: 5, high: 8 };
-              if (latest.energyLevel) setEnergy(energyMap[latest.energyLevel] ?? 5);
+              if (latest.energyLevel) {
+                nextEnergy = energyMap[latest.energyLevel] ?? 5;
+                setIfActive(setEnergy, nextEnergy);
+              }
             }
 
+            let nextSleep = latestSleep;
             if (sleepEntries.length > 0 && sleepEntries[0].durationHours != null) {
-              setLatestSleep(sleepEntries[0].durationHours);
+              nextSleep = sleepEntries[0].durationHours;
+              setIfActive(setLatestSleep, nextSleep);
             }
 
             try {
               const loopData = await getDailyLoopData(chart.id, selfKnowledge);
-              setDailyLoop(loopData);
+              if (!isScreenActiveRef.current) return;
+              setIfActive(setDailyLoop, loopData);
+
+              const hasCheckInToday = checkins.some((checkIn) => checkIn.date === getLogicalToday());
+              const localInsightText = loopData.todayInsight.text || (
+                hasCheckInToday
+                  ? generateInsight(Math.round(computeBalanceScore(nextMood, nextEnergy, nextSleep) * 10), nextMood, nextEnergy, nextSleep)
+                  : 'Log a check-in today to see your personalised daily reflection.'
+              );
+              try {
+                const enhancedInsight = await enhanceInsightCopy(
+                  [{
+                    id: `today-${chart.id}`,
+                    source: loopData.todayInsight.type,
+                    title: 'Today\'s reflection',
+                    body: localInsightText,
+                    isConfirmed: hasCheckInToday,
+                  }],
+                  selfKnowledge,
+                  checkins,
+                );
+                if (!isScreenActiveRef.current) return;
+                setIfActive(setAiInsightText, enhancedInsight?.insights[0]?.body ?? null);
+              } catch (err) {
+                logger.error('AI insight enhancement failed:', err);
+                setIfActive(setAiInsightText, 'We could not refresh your reflective insight right now. Your local summary is still available.');
+              }
             } catch (err) {
               logger.error('Daily loop data failed:', err);
+              setIfActive(setAiInsightText, 'We could not refresh your reflective insight right now. Try again in a moment.');
             }
           } catch (err) {
             logger.error('Failed to load check-ins, sleep, or self-knowledge:', err);
+            setIfActive(setAiInsightText, 'We could not refresh your reflective insight right now. Your check-ins are still saved locally.');
           }
         } else {
-          setUserChart(null);
+          setIfActive(setUserChart, null);
+          setIfActive(setAiInsightText, null);
         }
       } catch (error) {
         logger.error('Failed to load user chart:', error);
-        setUserChart(null);
+        setIfActive(setUserChart, null);
+        setIfActive(setAiInsightText, null);
       } finally {
-        if (!silent) setLoading(false);
+        if (!silent && isScreenActiveRef.current) setLoading(false);
       }
     },
-    [],
+    [energy, latestSleep, mood],
   );
 
   useFocusEffect(
     useCallback(() => {
+      isScreenActiveRef.current = true;
+      trackGrowthEvent('analytics_screen_viewed', { screen: 'home' }).catch(() => {});
       (async () => {
         try {
           await loadUserChart();
@@ -242,6 +319,10 @@ export default function HomeScreen() {
           logger.error('Home focus load failed:', e);
         }
       })();
+
+      return () => {
+        isScreenActiveRef.current = false;
+      };
     }, [loadUserChart]),
   );
 
@@ -344,36 +425,12 @@ export default function HomeScreen() {
   // ── Balance Score + Stability Map ──
 
   const balanceScore = useMemo(() => {
-    const moodPts = MOOD_POINTS[Math.round(mood)] ?? mood;
-    const energyPts = ENERGY_POINTS[Math.round(energy)] ?? energy;
-
-    // Linearly interpolate the sleep curve
-    const clampedSleep = Math.min(Math.max(latestSleep, 0), 10);
-    let sleepPts = 0;
-    for (let i = 1; i < SLEEP_POINTS.length; i++) {
-      const [h0, p0] = SLEEP_POINTS[i - 1];
-      const [h1, p1] = SLEEP_POINTS[i];
-      if (clampedSleep <= h1) {
-        const t = (clampedSleep - h0) / (h1 - h0);
-        sleepPts = p0 + t * (p1 - p0);
-        break;
-      }
-    }
-
-    // Weighted average: sleep 40%, mood 35%, energy 25%
-    // Sleep drives both mood and energy; energy is the coarsest signal.
-    const weighted = sleepPts * 0.40 + moodPts * 0.35 + energyPts * 0.25;
-
-    // Critical-low cap: if any single metric is ≤ 1 point, the total
-    // score can't exceed 4 — you're not "balanced" when one pillar fails.
-    const lowestPts = Math.min(moodPts, energyPts, sleepPts);
-    const capped = lowestPts <= 1 ? Math.min(weighted, 4) : weighted;
-
-    return Math.round(capped * 10) / 10;
+    return computeBalanceScore(mood, energy, latestSleep);
   }, [mood, energy, latestSleep]);
 
   // Prefer daily loop insight; fall back to legacy insight engine
   const insightText = useMemo(() => {
+    if (aiInsightText) return aiInsightText;
     if (dailyLoop?.todayInsight?.text) return dailyLoop.todayInsight.text;
     // Only generate a score-based insight if today's check-in data is present;
     // otherwise fall back to a neutral prompt to avoid showing fabricated numbers.
@@ -381,7 +438,7 @@ export default function HomeScreen() {
       return generateInsight(Math.round(balanceScore * 10), mood, energy, latestSleep);
     }
     return 'Log a check-in today to see your personalised daily reflection.';
-  }, [dailyLoop, balanceScore, mood, energy, latestSleep, hasDataToday]);
+  }, [aiInsightText, dailyLoop, balanceScore, mood, energy, latestSleep, hasDataToday]);
 
   /** Pixel heights (max ~120px) for each of the past 7 days, oldest → today */
   const stabilityBars = useMemo(() => {

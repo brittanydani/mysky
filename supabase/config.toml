@@ -2,13 +2,13 @@
 verify_jwt = true
 
 [functions.gemini-proxy]
-verify_jwt = true
+verify_jwt = false
 
 [functions.password-recovery]
 verify_jwt = false
 
 [functions.pattern-insights]
-verify_jwt = true
+verify_jwt = false
 
 [functions.dream-insights]
-verify_jwt = true
+verify_jwt = false

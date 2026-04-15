@@ -738,7 +738,7 @@ function detectAnticipations(profile: PatternProfile, stressPattern: StressPatte
   if (strainRising >= 2 && recentStrain > avg.strain) {
     anticipations.push({
       id: 'strain-building',
-      body: 'Your strain has been creeping up over the last few days. This pattern has preceded harder stretches before. This may be a good moment to protect some space.',
+      body: 'Your strain has been building over the last few days. That does not mean anything is wrong with you, but it may be a sign that your system is carrying more than usual. Protecting a little extra space right now could help you stay steadier.',
       urgency: recentStrain > avg.strain + 15 ? 'important' : 'notable',
       confidence: Math.min(strainRising * 25 + 20, 85),
     });
@@ -751,7 +751,7 @@ function detectAnticipations(profile: PatternProfile, stressPattern: StressPatte
     if (avgSleep < 2.5) {
       anticipations.push({
         id: 'sleep-risk',
-        body: 'Sleep quality has been low recently. Given how sleep-sensitive your system appears to be, this may start affecting your steadiness within a day or two.',
+        body: 'Sleep has been lower quality lately. Because your system seems fairly sleep-sensitive, this could start showing up in your steadiness soon. It may help to treat rest as support rather than something you have to earn.',
         urgency: avgSleep < 2 ? 'important' : 'gentle',
         confidence: 60,
       });
@@ -763,7 +763,7 @@ function detectAnticipations(profile: PatternProfile, stressPattern: StressPatte
   if (recentRest < avg.restoration - 10 && recentStrain > avg.strain) {
     anticipations.push({
       id: 'restoration-deficit',
-      body: 'Restoration has been lower than usual while strain is elevated. Without some form of replenishment, this combination tends to lead to a dip within a few days.',
+      body: 'You have had less restoration than usual while strain is still running high. That combination often leaves people feeling depleted after a few days. A small act of replenishment now may matter more than pushing through.',
       urgency: 'notable',
       confidence: 55,
     });
@@ -774,7 +774,7 @@ function detectAnticipations(profile: PatternProfile, stressPattern: StressPatte
   if (recentIntensity > avg.emotionalIntensity + 10 && recentStab < avg.stability) {
     anticipations.push({
       id: 'intensity-rising',
-      body: 'Emotional intensity has been higher than usual alongside lower stability. This sometimes precedes a period of feeling emotionally crowded or overwhelmed.',
+      body: 'Emotional intensity has been higher than usual while stability looks a little lower. If things have felt crowded inside, the data supports that. This may be a good time to soften expectations and give yourself a little more room.',
       urgency: 'gentle',
       confidence: 50,
     });

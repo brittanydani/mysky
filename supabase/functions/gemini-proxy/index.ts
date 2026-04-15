@@ -54,6 +54,15 @@ const ALLOWED_MODELS = new Set([
   "gemini-1.5-flash-8b",
 ]);
 
+const FALLBACK_MODELS: Record<string, string[]> = {
+  "gemini-2.5-flash": ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"],
+  "gemini-2.5-flash-lite": ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-1.5-flash-8b"],
+  "gemini-2.0-flash": ["gemini-2.0-flash", "gemini-1.5-flash"],
+  "gemini-2.0-flash-lite": ["gemini-2.0-flash-lite", "gemini-1.5-flash-8b"],
+  "gemini-1.5-flash": ["gemini-1.5-flash"],
+  "gemini-1.5-flash-8b": ["gemini-1.5-flash-8b"],
+};
+
 // ─── Rate limiting ─────────────────────────────────────────────────────────────
 
 const RATE_LIMIT_MAX = 20;        // max requests per window per user
@@ -85,6 +94,18 @@ interface ProxyPayload {
   systemPrompt: string;
   userPrompt: string;
   generationConfig?: Record<string, unknown>;
+}
+
+function getGeminiApiKeys(): string[] {
+  return [
+    Deno.env.get("GEMINI_API_KEY"),
+    Deno.env.get("GEMINI_API_KEY_SECONDARY"),
+    Deno.env.get("GEMINI_API_KEY_TERTIARY"),
+  ].filter((value, index, all): value is string => !!value && all.indexOf(value) === index);
+}
+
+function shouldTryFallbackStatus(status: number): boolean {
+  return status === 429 || status >= 500;
 }
 
 const MAX_PROMPT_CHARS = 32_000; // ~8k tokens — well above app needs, blocks abuse
@@ -212,9 +233,9 @@ serve(async (req: Request) => {
     }
 
     // ── API key (server-side secret only) ─────────────────────────────────────
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
-    if (!apiKey) {
-      console.error("GEMINI_API_KEY secret is not set");
+    const apiKeys = getGeminiApiKeys();
+    if (!apiKeys.length) {
+      console.error("No Gemini API key secrets are set");
       return new Response(
         JSON.stringify({ error: "Gemini is not configured" }),
         {
@@ -225,8 +246,6 @@ serve(async (req: Request) => {
     }
 
     // ── Forward to Gemini ─────────────────────────────────────────────────────
-    const url = `${GEMINI_BASE_URL}/${payload.model}:generateContent`;
-
     const geminiBody = {
       systemInstruction: {
         parts: [{ text: payload.systemPrompt }],
@@ -243,67 +262,104 @@ serve(async (req: Request) => {
       },
     };
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    const modelCandidates = FALLBACK_MODELS[payload.model] ?? [payload.model];
+    let lastStatus = 502;
+    let lastErrorText = "Unknown error";
 
-    let geminiResponse: Response;
-    try {
-      geminiResponse = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify(geminiBody),
-        signal: controller.signal,
-      });
-    } finally {
-      clearTimeout(timeout);
-    }
+    for (let keyIndex = 0; keyIndex < apiKeys.length; keyIndex += 1) {
+      const apiKey = apiKeys[keyIndex];
 
-    if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text().catch(() => "Unknown error");
-      console.error(`[gemini-proxy] Gemini error ${geminiResponse.status}:`, errorText);
+      for (let modelIndex = 0; modelIndex < modelCandidates.length; modelIndex += 1) {
+        const model = modelCandidates[modelIndex];
+        const url = `${GEMINI_BASE_URL}/${model}:generateContent`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-      // Pass rate-limit status through so the client can handle it
-      if (geminiResponse.status === 429) {
+        let geminiResponse: Response;
+        try {
+          geminiResponse = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": apiKey,
+            },
+            body: JSON.stringify(geminiBody),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeout);
+        }
+
+        if (geminiResponse.ok) {
+          const data = await geminiResponse.json();
+
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!text) {
+            console.error("[gemini-proxy] Empty candidate in response:", JSON.stringify(data));
+            return new Response(
+              JSON.stringify({ error: "No content returned from Gemini" }),
+              {
+                status: 502,
+                headers: { ...corsHeaders, "content-type": "application/json" },
+              },
+            );
+          }
+
+          return new Response(JSON.stringify({ text }), {
+            status: 200,
+            headers: { ...corsHeaders, "content-type": "application/json" },
+          });
+        }
+
+        lastStatus = geminiResponse.status;
+        lastErrorText = await geminiResponse.text().catch(() => "Unknown error");
+
+        const hasNextAttempt = modelIndex < modelCandidates.length - 1 || keyIndex < apiKeys.length - 1;
+        if (shouldTryFallbackStatus(geminiResponse.status) && hasNextAttempt) {
+          console.warn("[gemini-proxy] Gemini request failed; trying fallback.", geminiResponse.status, { model, keyIndex });
+          continue;
+        }
+
+        console.error(`[gemini-proxy] Gemini error ${geminiResponse.status}:`, lastErrorText);
+
+        if (geminiResponse.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "AI insights are at capacity right now. Please wait a minute and try again." }),
+            {
+              status: 429,
+              headers: { ...corsHeaders, "content-type": "application/json" },
+            },
+          );
+        }
+
         return new Response(
-          JSON.stringify({ error: "AI insights are at capacity right now. Please wait a minute and try again." }),
+          JSON.stringify({ error: `Gemini API error: ${geminiResponse.status}` }),
           {
-            status: 429,
+            status: 502,
             headers: { ...corsHeaders, "content-type": "application/json" },
           },
         );
       }
+    }
 
+    console.error(`[gemini-proxy] Gemini error ${lastStatus}:`, lastErrorText);
+    if (lastStatus === 429) {
       return new Response(
-        JSON.stringify({ error: `Gemini API error: ${geminiResponse.status}` }),
+        JSON.stringify({ error: "AI insights are at capacity right now. Please wait a minute and try again." }),
         {
-          status: 502,
+          status: 429,
           headers: { ...corsHeaders, "content-type": "application/json" },
         },
       );
     }
 
-    const data = await geminiResponse.json();
-
-    // Extract the generated text from Gemini's response envelope
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      console.error("[gemini-proxy] Empty candidate in response:", JSON.stringify(data));
-      return new Response(
-        JSON.stringify({ error: "No content returned from Gemini" }),
-        {
-          status: 502,
-          headers: { ...corsHeaders, "content-type": "application/json" },
-        },
-      );
-    }
-
-    return new Response(JSON.stringify({ text }), {
-      status: 200,
-      headers: { ...corsHeaders, "content-type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: `Gemini API error: ${lastStatus}` }),
+      {
+        status: 502,
+        headers: { ...corsHeaders, "content-type": "application/json" },
+      },
+    );
   } catch (err: unknown) {
     console.error("[gemini-proxy] Unhandled error:", err);
     return new Response(

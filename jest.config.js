@@ -3,7 +3,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   watchman: false,
-  roots: ['<rootDir>/services', '<rootDir>/utils', '<rootDir>/store', '<rootDir>/lib'],
+  roots: ['<rootDir>/services', '<rootDir>/utils', '<rootDir>/store', '<rootDir>/lib', '<rootDir>/app', '<rootDir>/components'],
   testMatch: ['**/__tests__/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   // Keep force-exit available for debugging flaky environments, but do not
@@ -27,6 +27,8 @@ module.exports = {
     'services/**/*.ts',
     'utils/**/*.ts',
     'lib/**/*.ts',
+    'app/**/*.ts',
+    'components/**/*.ts',
     '!**/__tests__/**',
   ],
   coverageThreshold: {

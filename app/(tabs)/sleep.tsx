@@ -623,8 +623,14 @@ export default function SleepScreen() {
     }
   }, [expandedEntryId, natalChart, entries, isPremium, canUseGemini]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- handler pending UI wiring
-  const handleDelete = (id: string) => {
+  const handleEditEntry = useCallback((entry: SleepEntry) => {
+    applyEntryToForm(entry);
+    setIsEditingUnlocked(true);
+    Haptics.selectionAsync().catch(() => {});
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, [applyEntryToForm]);
+
+  const handleDelete = useCallback((id: string) => {
     Alert.alert('Delete Entry', 'Remove this sleep entry?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -641,8 +647,24 @@ export default function SleepScreen() {
         },
       },
     ]);
-  };
+  }, [chartId, editingEntryId, applyEntryToForm]);
 
+  const presentEntryActions = useCallback((entry: SleepEntry) => {
+    Haptics.selectionAsync().catch(() => {});
+    Alert.alert(
+      'Nightly Log Options',
+      formatDate(entry.date),
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Edit Entry', onPress: () => handleEditEntry(entry) },
+        {
+          text: 'Delete Entry',
+          style: 'destructive',
+          onPress: () => handleDelete(entry.id),
+        },
+      ],
+    );
+  }, [handleDelete, handleEditEntry]);
   const stats = useMemo(() => {
     const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
     const recent = entries.filter(e => new Date(e.date + 'T12:00:00') >= weekAgo);
@@ -1222,6 +1244,80 @@ export default function SleepScreen() {
             </Animated.View>
           )}
 
+          {!loadError && entries.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(210).duration(600)} style={styles.section}>
+              <Text style={styles.editorialSectionLabel}>Recent Dreams</Text>
+              {entries.map((entry, index) => {
+                const hasDream = !!entry.dreamText?.trim();
+                const dreamPreview = hasDream ? entry.dreamText!.trim() : 'No dream notes saved for this night.';
+                const selectedInterpretation = interpretations[entry.id];
+                const selectedAiInterpretation = aiInterpretations[entry.id];
+                const isExpanded = expandedEntryId === entry.id;
+
+                if (index === 0) {
+                  return (
+                    <Pressable
+                      key={entry.id}
+                      onPress={() => handleDreamReflect(entry)}
+                      onLongPress={() => presentEntryActions(entry)}
+                      style={styles.featuredEntryCard}
+                    >
+                      <LinearGradient colors={['rgba(15, 18, 25, 0.65)', 'rgba(10, 12, 18, 0.85)']} style={styles.featuredEntryInner}>
+                        <View style={styles.featuredEntryTop}>
+                          <View style={styles.featuredEntryLead}>
+                            <Text style={styles.featuredEyebrow}>Most Recent</Text>
+                            <Text style={styles.featuredDate}>{formatDate(entry.date)}</Text>
+                          </View>
+                          <Pressable onPress={() => presentEntryActions(entry)} hitSlop={8}>
+                            <Ionicons name="ellipsis-horizontal" size={20} color={theme.textSecondary} />
+                          </Pressable>
+                        </View>
+                        <Text style={hasDream ? styles.featuredDream : styles.featuredNoDream} numberOfLines={isExpanded ? undefined : 4}>
+                          {dreamPreview}
+                        </Text>
+                        {entry.dreamFeelings ? (
+                          <View style={styles.featuredFeelingRow}>
+                            <Text style={styles.featuredFeelingText}>{entry.dreamFeelings}</Text>
+                          </View>
+                        ) : null}
+                        {isExpanded && selectedInterpretation?.paragraph ? (
+                          <View style={styles.featuredExpandedContent}>
+                            <Text style={styles.featuredExpandedText}>{selectedInterpretation.paragraph}</Text>
+                            {selectedAiInterpretation?.paragraph ? <Text style={styles.featuredExpandedText}>{selectedAiInterpretation.paragraph}</Text> : null}
+                          </View>
+                        ) : null}
+                      </LinearGradient>
+                    </Pressable>
+                  );
+                }
+
+                return (
+                  <Pressable
+                    key={entry.id}
+                    onPress={() => handleEditEntry(entry)}
+                    onLongPress={() => presentEntryActions(entry)}
+                  >
+                    <View style={styles.entryListRow}>
+                      <View style={styles.entryListLeft}>
+                        <Text style={styles.entryListDate}>{formatDate(entry.date)}</Text>
+                        <Text style={styles.entryListDream} numberOfLines={2}>{dreamPreview}</Text>
+                      </View>
+                      <View style={styles.entryListRight}>
+                        <Text style={styles.entryListMeta}>{entry.quality ? `${entry.quality}/5 quality` : 'No rating'}</Text>
+                        <Text style={styles.entryListMeta}>{entry.durationHours ? formatDuration(entry.durationHours) : 'No duration'}</Text>
+                      </View>
+                    </View>
+                    {entry.dreamFeelings ? (
+                      <View style={styles.entryListFeelingTag}>
+                        <Text style={styles.entryListFeelingText}>{entry.dreamFeelings}</Text>
+                      </View>
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </Animated.View>
+          )}
+
           {!loading && !loadError && entries.length === 0 && (
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.emptyState}>
               <Ionicons name="moon-outline" size={56} color={theme.textMuted} style={{ marginBottom: 12 }} />
@@ -1274,6 +1370,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   featuredNoDream: { fontSize: 14, color: theme.textSecondary, fontStyle: 'italic', marginBottom: 12 },
   featuredFeelingRow: { marginTop: 4, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.cardBorder },
   featuredFeelingText: { fontSize: 12, color: PALETTE.gold, fontWeight: '600', letterSpacing: 0.3 },
+  featuredExpandedContent: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: theme.cardBorder, gap: 10 },
+  featuredExpandedText: { fontSize: 14, color: theme.textSecondary, lineHeight: 23 },
 
   // Editorial list row for entries after the first
   entryListRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 4, gap: 12 },

@@ -40,19 +40,21 @@ export interface GeminiPatternResult {
   generatedAt: string;
 }
 
+export interface GeminiInsightInput {
+  id: string;
+  source: string;
+  title: string;
+  body: string;
+  isConfirmed: boolean;
+}
+
 interface CachedResult {
   cacheKey: string;
   result: GeminiPatternResult;
 }
 
 interface PatternInsightRequestPayload {
-  insights: Array<{
-    id: string;
-    source: string;
-    title: string;
-    body: string;
-    isConfirmed: boolean;
-  }>;
+  insights: GeminiInsightInput[];
   profile: {
     dominantArchetype?: string;
     coreValues?: string[];
@@ -142,7 +144,7 @@ function resolvePatternTag(tag: string): string {
 }
 
 function buildPatternInsightPayload(
-  insights: CrossRefInsight[],
+  insights: GeminiInsightInput[],
   context: SelfKnowledgeContext,
   checkIns: DailyCheckIn[],
 ): PatternInsightRequestPayload {
@@ -228,13 +230,7 @@ function buildPatternInsightPayload(
     }
 
     return {
-      insights: insights.map((insight) => ({
-        id: insight.id,
-        source: insight.source,
-        title: insight.title,
-        body: insight.body,
-        isConfirmed: insight.isConfirmed,
-      })),
+      insights,
       profile,
       behavioral: {
         checkInCount: checkIns.length,
@@ -249,13 +245,7 @@ function buildPatternInsightPayload(
   }
 
   return {
-    insights: insights.map((insight) => ({
-      id: insight.id,
-      source: insight.source,
-      title: insight.title,
-      body: insight.body,
-      isConfirmed: insight.isConfirmed,
-    })),
+    insights,
     profile,
     behavioral: {
       checkInCount: 0,
@@ -296,6 +286,24 @@ export async function enhancePatternInsights(
   context: SelfKnowledgeContext,
   checkIns: DailyCheckIn[],
 ): Promise<GeminiPatternResult | null> {
+  return enhanceInsightCopy(
+    insights.map((insight) => ({
+      id: insight.id,
+      source: insight.source,
+      title: insight.title,
+      body: insight.body,
+      isConfirmed: insight.isConfirmed,
+    })),
+    context,
+    checkIns,
+  );
+}
+
+export async function enhanceInsightCopy(
+  insights: GeminiInsightInput[],
+  context: SelfKnowledgeContext,
+  checkIns: DailyCheckIn[],
+): Promise<GeminiPatternResult | null> {
   if (!insights.length) return null;
 
   const payload = buildPatternInsightPayload(insights, context, checkIns);
@@ -330,19 +338,24 @@ export async function enhancePatternInsights(
       if (error) {
         const status = (error as any)?.context?.status ?? 0;
         const message = (error as any)?.message ?? String(error);
+        const retriable = status === 0 || status === 408 || status === 503 || status >= 500;
 
         if (status === 401 || status === 403) {
           logger.warn('[GeminiPatterns] Edge function unauthorized; using local pattern insights fallback.');
           return null;
         }
 
-        logger.error('[GeminiPatterns] Edge function error:', status, message);
-
-        const retriable = status === 0 || status === 408 || status === 503 || status >= 500;
         if (retriable && attempt < MAX_RETRIES) {
           await wait(computeRetryDelayMs(attempt));
           continue;
         }
+
+        if (retriable) {
+          logger.warn('[GeminiPatterns] Edge function unavailable; using local pattern insights fallback.', status, message);
+          return null;
+        }
+
+        logger.error('[GeminiPatterns] Edge function error:', status, message);
         return null;
       }
 

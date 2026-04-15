@@ -111,11 +111,11 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   },
   {
     id: 'daily-guidance',
-    name: 'Personalized Guidance',
+    name: 'Reflective Guidance',
     icon: 'sunny-outline',
-    description: 'Key insights, action steps, and evening reflections',
-    freeVersion: 'Daily guidance with love, energy, and growth themes',
-    premiumVersion: 'Enhanced guidance with key insights, action suggestions, emotional weather, and personalized affirmations',
+    description: 'Key insights, next-step prompts, and evening reflections',
+    freeVersion: 'Daily reflection prompts with love, energy, and growth themes',
+    premiumVersion: 'Enhanced reflection prompts with key insights, action suggestions, emotional weather, and personalized affirmations',
     isPremium: true,
     bullets: [
       'Key insights and action suggestions per category',
@@ -227,9 +227,9 @@ export class DeeperSkyGate {
 
 // Marketing copy for Deeper Sky — soft, trust-based, never manipulative
 export const DEEPER_SKY_MARKETING = {
-  tagline: 'See what your patterns are teaching you',
+  tagline: 'See your patterns more clearly over time',
   headline: 'Deeper Sky',
-  subheadline: 'Turn your history into weekly shifts, recurring themes, and more personal guidance',
+  subheadline: 'Turn your history into weekly shifts, recurring themes, and reflection prompts grounded in your own data',
   
   valueProps: [
     {
@@ -240,7 +240,7 @@ export const DEEPER_SKY_MARKETING = {
     {
       emoji: '🌙',
       title: 'Symbolic Dream Reflections',
-      brief: 'Personalized dream reflections drawn from your sleep, mood, and journal data — all on-device',
+      brief: 'Dream reflections drawn from your sleep, mood, and journal data, framed for reflection rather than diagnosis',
     },
     {
       emoji: '✍️',
@@ -269,8 +269,8 @@ export const DEEPER_SKY_MARKETING = {
     },
     {
       emoji: '🌙',
-      title: 'Personalized Guidance',
-      brief: 'Key insights, action steps, and evening reflections',
+      title: 'Reflective Guidance',
+      brief: 'Key insights, next-step prompts, and evening reflection check-ins',
     },
     {
       emoji: '✨',

@@ -107,8 +107,54 @@ jest.mock('expo-router', () => ({
 jest.mock('react-native-purchases', () => ({
   default: {
     addCustomerInfoUpdateListener: jest.fn(),
+    removeCustomerInfoUpdateListener: jest.fn(),
     setLogLevel: jest.fn(),
     configure: jest.fn(),
   },
   LOG_LEVEL: { VERBOSE: 0, WARN: 3 },
 }));
+
+jest.mock('@react-native-async-storage/async-storage', () => {
+  const store = new Map();
+  return {
+    __esModule: true,
+    default: {
+      getItem: jest.fn(async (key) => (store.has(key) ? store.get(key) : null)),
+      setItem: jest.fn(async (key, value) => {
+        store.set(key, value);
+      }),
+      removeItem: jest.fn(async (key) => {
+        store.delete(key);
+      }),
+      clear: jest.fn(async () => {
+        store.clear();
+      }),
+      getAllKeys: jest.fn(async () => [...store.keys()]),
+      multiGet: jest.fn(async (keys) => keys.map((key) => [key, store.has(key) ? store.get(key) : null])),
+      multiSet: jest.fn(async (entries) => {
+        for (const [key, value] of entries) {
+          store.set(key, value);
+        }
+      }),
+      multiRemove: jest.fn(async (keys) => {
+        for (const key of keys) {
+          store.delete(key);
+        }
+      }),
+    },
+  };
+});
+
+jest.mock('./context/ThemeContext', () => {
+  const actualTheme = jest.requireActual('./constants/theme');
+  return {
+    ThemeProvider: ({ children }) => children,
+    useAppTheme: () => actualTheme.darkTheme,
+    useThemedStyles: (createStyles) => createStyles(actualTheme.darkTheme),
+    useThemePreference: () => ({
+      preference: 'dark',
+      resolvedMode: 'dark',
+      setPreference: jest.fn().mockResolvedValue(undefined),
+    }),
+  };
+});

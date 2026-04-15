@@ -95,7 +95,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
                 <Text style={styles.boldText}>Free:</Text> Personal birth chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, AI dream interpretation using the standard Gemini model, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context.
               </Text>
               <Text style={styles.paragraph}>
-                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with AI interpretation using a richer Gemini model, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
+                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with AI interpretation using a richer Gemini model, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, reflective daily guidance with action prompts, sensitivity and growth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
               </Text>
             </View>
 

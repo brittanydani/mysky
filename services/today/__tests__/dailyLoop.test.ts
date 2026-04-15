@@ -13,11 +13,11 @@ jest.mock('../../../utils/logger', () => ({
 
 // selfKnowledgeCrossRef exports used in getTriggerCrossRefInsight
 jest.mock('../../../utils/selfKnowledgeCrossRef', () => ({
-  DRAIN_TAG_MAP:   {},
-  RESTORE_TAG_MAP: {},
+  DRAIN_TAG_MAP:   { conflict: 'conflict' },
+  RESTORE_TAG_MAP: { nature: 'nature' },
 }));
 
-import { getStreakStatus, getWeeklyReflection } from '../dailyLoop';
+import { getDailyLoopData, getStreakStatus, getWeeklyReflection } from '../dailyLoop';
 import { localDb } from '../../storage/localDb';
 import { toLocalDateString } from '../../../utils/dateUtils';
 
@@ -284,5 +284,82 @@ describe('getWeeklyReflection()', () => {
     expect(result.avgMood).toBe(0);
     expect(result.moodDirection).toBe('stable');
     expect(result.hasEnoughData).toBe(false);
+  });
+});
+
+describe('getDailyLoopData()', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (localDb.getJournalEntries as jest.Mock).mockResolvedValue([]);
+  });
+
+  it('prioritizes milestone insights over other available insight types', async () => {
+    const streakCheckIns = makeCheckIns([0, 1, 2, 3, 4, 5, 6], 7);
+    (localDb.getCheckIns as jest.Mock).mockResolvedValue(streakCheckIns);
+    (localDb.getCheckInCount as jest.Mock).mockResolvedValue(7);
+    (localDb.getSleepEntries as jest.Mock).mockResolvedValue(makeSleepEntries([0, 1, 2, 3, 4, 5, 6], 8));
+
+    const result = await getDailyLoopData('chart-1');
+
+    expect(result.todayInsight.type).toBe('milestone');
+    expect(result.todayInsight.text).toContain('One week');
+    expect(result.returnNudge).toBeNull();
+  });
+
+  it('uses trigger cross-reference insight before generic pattern insight when self-knowledge confirms it', async () => {
+    const checkIns = [
+      ...makeCheckIns([0], 8).map((entry) => ({ ...entry, tags: ['nature'] })),
+      ...makeCheckIns([2], 8).map((entry) => ({ ...entry, tags: ['nature'] })),
+      ...makeCheckIns([4], 8).map((entry) => ({ ...entry, tags: ['nature'] })),
+      ...makeCheckIns([6], 5).map((entry) => ({ ...entry, tags: ['screens'] })),
+      ...makeCheckIns([8], 5).map((entry) => ({ ...entry, tags: ['work'] })),
+    ];
+    (localDb.getCheckIns as jest.Mock).mockResolvedValue(checkIns);
+    (localDb.getCheckInCount as jest.Mock).mockResolvedValue(checkIns.length);
+    (localDb.getSleepEntries as jest.Mock).mockResolvedValue([]);
+
+    const result = await getDailyLoopData('chart-1', {
+      coreValues: null,
+      archetypeProfile: null,
+      cognitiveStyle: null,
+      somaticEntries: [],
+      triggers: { drains: ['conflict'], restores: ['nature'] },
+      relationshipPatterns: [],
+      dailyReflections: null,
+    } as any);
+
+    expect(result.todayInsight.type).toBe('pattern');
+    expect(result.todayInsight.text).toContain('data confirms it');
+    expect(result.todayInsight.text).toContain('nature');
+  });
+
+  it('builds a motivating return nudge when a streak is at risk', async () => {
+    const checkIns = makeCheckIns([1, 2, 3], 6);
+    (localDb.getCheckIns as jest.Mock).mockResolvedValue(checkIns);
+    (localDb.getCheckInCount as jest.Mock).mockResolvedValue(checkIns.length);
+    (localDb.getSleepEntries as jest.Mock).mockResolvedValue([]);
+
+    const result = await getDailyLoopData('chart-1');
+
+    expect(result.returnNudge).toEqual(expect.objectContaining({
+      ctaLabel: 'Quick Check-In',
+      urgency: 'motivating',
+      ctaRoute: '/(tabs)/internal-weather',
+    }));
+  });
+
+  it('falls back to encouragement and a restart nudge after a longer gap', async () => {
+    const checkIns = makeCheckIns([4, 5, 6], 6);
+    (localDb.getCheckIns as jest.Mock).mockResolvedValue(checkIns);
+    (localDb.getCheckInCount as jest.Mock).mockResolvedValue(checkIns.length);
+    (localDb.getSleepEntries as jest.Mock).mockResolvedValue([]);
+
+    const result = await getDailyLoopData('chart-1');
+
+    expect(result.todayInsight.type).toBe('encouragement');
+    expect(result.returnNudge).toEqual(expect.objectContaining({
+      ctaLabel: 'Start Again',
+      urgency: 'gentle',
+    }));
   });
 });

@@ -40,6 +40,7 @@ import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { DreamClusterMap } from '../../../components/ui/DreamClusterMap';
 import { PremiumSegmentedControl } from '../../../components/ui/PremiumSegmentedControl';
 import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
+import { buildDreamArchiveSummary } from './dreamArchiveSummary';
 
 const VALID_MOODS = ['calm', 'soft', 'okay', 'heavy', 'stormy'] as const;
 
@@ -283,6 +284,8 @@ export default function JournalScreen() {
       !e.isDeleted && (e.dreamText ?? '').toLowerCase().includes(q)
     );
   }, [sleepEntries, searchQuery]);
+
+  const dreamArchiveSummary = useMemo(() => buildDreamArchiveSummary(sleepEntries), [sleepEntries]);
 
   const toggleBrowseSearch = useCallback(() => {
     Haptics.selectionAsync().catch(() => {});
@@ -665,6 +668,23 @@ export default function JournalScreen() {
       {/* ── Dream Cluster Map (Midnight Slate Anchor) ── */}
       {activeTab === 'dreams' && isPremium && sleepEntries.some(e => e.dreamText) && (
         <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.insightsSection}>
+          {dreamArchiveSummary && (
+            <LinearGradient colors={theme.isDark ? ['rgba(168, 139, 235, 0.16)', 'rgba(44, 54, 69, 0.30)'] : ['rgba(168, 139, 235, 0.12)', 'rgba(240, 245, 252, 0.55)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
+              <View style={styles.insightHeader}>
+                <MetallicIcon name="pulse-outline" size={18} color={PALETTE.gold} />
+                <MetallicText color={PALETTE.gold} style={styles.insightTitle}>Dream Pattern Read</MetallicText>
+              </View>
+              <Text style={styles.insightDescription}>{dreamArchiveSummary.summary}</Text>
+              <View style={styles.dreamPatternChipRow}>
+                {dreamArchiveSummary.chips.map((chip) => (
+                  <View key={chip} style={styles.dreamPatternChip}>
+                    <Text style={styles.dreamPatternChipText}>{chip}</Text>
+                  </View>
+                ))}
+              </View>
+              <Text style={styles.insightActionable}>{dreamArchiveSummary.grounding}</Text>
+            </LinearGradient>
+          )}
           <SectionHeader title="Dream Symbols" icon="planet-outline" />
           <View style={[styles.clusterCard, theme.isDark && styles.velvetBorder]}>
             <LinearGradient colors={theme.isDark ? ['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)'] : ['rgba(245, 247, 250, 0.9)', 'rgba(245, 247, 250, 0.9)']} style={StyleSheet.absoluteFill} />
@@ -1138,9 +1158,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   confidenceLight: { backgroundColor: 'rgba(0, 0, 0, 0.04)', borderColor: 'rgba(0, 0, 0, 0.08)' },
   confidenceText: { fontSize: 10, textTransform: 'uppercase', fontWeight: '800', letterSpacing: 1.2 },
   confidenceTextLight: { color: LIGHT_MODE_INK },
-  insightDescription: { fontSize: 16, color: theme.textSecondary, lineHeight: 26, letterSpacing: 0.2, marginBottom: 12 },
+  insightDescription: { fontSize: 16, color: theme.isDark ? 'rgba(255,255,255,0.68)' : theme.textSecondary, lineHeight: 26, letterSpacing: 0.2, marginBottom: 12 },
   insightEvidence: { fontSize: 13, color: theme.isDark ? theme.textMuted : LIGHT_MODE_META, lineHeight: 21, marginBottom: 8 },
-  insightActionable: { fontSize: 15, fontWeight: '600', marginTop: 6, lineHeight: 22 },
+  insightActionable: { fontSize: 15, fontWeight: '600', marginTop: 6, lineHeight: 22, color: theme.isDark ? 'rgba(255,255,255,0.78)' : theme.textPrimary },
 
   filterSection: {
     marginBottom: 32,
@@ -1412,4 +1432,25 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
+  dreamPatternChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 14,
+  },
+  dreamPatternChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(168, 139, 235, 0.28)',
+    backgroundColor: theme.isDark ? 'rgba(168, 139, 235, 0.10)' : 'rgba(168, 139, 235, 0.08)',
+  },
+  dreamPatternChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    letterSpacing: 0.2,
+  },
 });
+

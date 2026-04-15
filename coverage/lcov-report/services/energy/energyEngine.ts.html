@@ -1,0 +1,2926 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for services/energy/energyEngine.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">services/energy</a> energyEngine.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">93.47% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>129/138</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">59.04% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>62/105</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">94.73% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>18/19</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">94.57% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>122/129</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line high'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a>
+<a name='L188'></a><a href='#L188'>188</a>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a>
+<a name='L196'></a><a href='#L196'>196</a>
+<a name='L197'></a><a href='#L197'>197</a>
+<a name='L198'></a><a href='#L198'>198</a>
+<a name='L199'></a><a href='#L199'>199</a>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a>
+<a name='L207'></a><a href='#L207'>207</a>
+<a name='L208'></a><a href='#L208'>208</a>
+<a name='L209'></a><a href='#L209'>209</a>
+<a name='L210'></a><a href='#L210'>210</a>
+<a name='L211'></a><a href='#L211'>211</a>
+<a name='L212'></a><a href='#L212'>212</a>
+<a name='L213'></a><a href='#L213'>213</a>
+<a name='L214'></a><a href='#L214'>214</a>
+<a name='L215'></a><a href='#L215'>215</a>
+<a name='L216'></a><a href='#L216'>216</a>
+<a name='L217'></a><a href='#L217'>217</a>
+<a name='L218'></a><a href='#L218'>218</a>
+<a name='L219'></a><a href='#L219'>219</a>
+<a name='L220'></a><a href='#L220'>220</a>
+<a name='L221'></a><a href='#L221'>221</a>
+<a name='L222'></a><a href='#L222'>222</a>
+<a name='L223'></a><a href='#L223'>223</a>
+<a name='L224'></a><a href='#L224'>224</a>
+<a name='L225'></a><a href='#L225'>225</a>
+<a name='L226'></a><a href='#L226'>226</a>
+<a name='L227'></a><a href='#L227'>227</a>
+<a name='L228'></a><a href='#L228'>228</a>
+<a name='L229'></a><a href='#L229'>229</a>
+<a name='L230'></a><a href='#L230'>230</a>
+<a name='L231'></a><a href='#L231'>231</a>
+<a name='L232'></a><a href='#L232'>232</a>
+<a name='L233'></a><a href='#L233'>233</a>
+<a name='L234'></a><a href='#L234'>234</a>
+<a name='L235'></a><a href='#L235'>235</a>
+<a name='L236'></a><a href='#L236'>236</a>
+<a name='L237'></a><a href='#L237'>237</a>
+<a name='L238'></a><a href='#L238'>238</a>
+<a name='L239'></a><a href='#L239'>239</a>
+<a name='L240'></a><a href='#L240'>240</a>
+<a name='L241'></a><a href='#L241'>241</a>
+<a name='L242'></a><a href='#L242'>242</a>
+<a name='L243'></a><a href='#L243'>243</a>
+<a name='L244'></a><a href='#L244'>244</a>
+<a name='L245'></a><a href='#L245'>245</a>
+<a name='L246'></a><a href='#L246'>246</a>
+<a name='L247'></a><a href='#L247'>247</a>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a>
+<a name='L251'></a><a href='#L251'>251</a>
+<a name='L252'></a><a href='#L252'>252</a>
+<a name='L253'></a><a href='#L253'>253</a>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a>
+<a name='L259'></a><a href='#L259'>259</a>
+<a name='L260'></a><a href='#L260'>260</a>
+<a name='L261'></a><a href='#L261'>261</a>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a>
+<a name='L277'></a><a href='#L277'>277</a>
+<a name='L278'></a><a href='#L278'>278</a>
+<a name='L279'></a><a href='#L279'>279</a>
+<a name='L280'></a><a href='#L280'>280</a>
+<a name='L281'></a><a href='#L281'>281</a>
+<a name='L282'></a><a href='#L282'>282</a>
+<a name='L283'></a><a href='#L283'>283</a>
+<a name='L284'></a><a href='#L284'>284</a>
+<a name='L285'></a><a href='#L285'>285</a>
+<a name='L286'></a><a href='#L286'>286</a>
+<a name='L287'></a><a href='#L287'>287</a>
+<a name='L288'></a><a href='#L288'>288</a>
+<a name='L289'></a><a href='#L289'>289</a>
+<a name='L290'></a><a href='#L290'>290</a>
+<a name='L291'></a><a href='#L291'>291</a>
+<a name='L292'></a><a href='#L292'>292</a>
+<a name='L293'></a><a href='#L293'>293</a>
+<a name='L294'></a><a href='#L294'>294</a>
+<a name='L295'></a><a href='#L295'>295</a>
+<a name='L296'></a><a href='#L296'>296</a>
+<a name='L297'></a><a href='#L297'>297</a>
+<a name='L298'></a><a href='#L298'>298</a>
+<a name='L299'></a><a href='#L299'>299</a>
+<a name='L300'></a><a href='#L300'>300</a>
+<a name='L301'></a><a href='#L301'>301</a>
+<a name='L302'></a><a href='#L302'>302</a>
+<a name='L303'></a><a href='#L303'>303</a>
+<a name='L304'></a><a href='#L304'>304</a>
+<a name='L305'></a><a href='#L305'>305</a>
+<a name='L306'></a><a href='#L306'>306</a>
+<a name='L307'></a><a href='#L307'>307</a>
+<a name='L308'></a><a href='#L308'>308</a>
+<a name='L309'></a><a href='#L309'>309</a>
+<a name='L310'></a><a href='#L310'>310</a>
+<a name='L311'></a><a href='#L311'>311</a>
+<a name='L312'></a><a href='#L312'>312</a>
+<a name='L313'></a><a href='#L313'>313</a>
+<a name='L314'></a><a href='#L314'>314</a>
+<a name='L315'></a><a href='#L315'>315</a>
+<a name='L316'></a><a href='#L316'>316</a>
+<a name='L317'></a><a href='#L317'>317</a>
+<a name='L318'></a><a href='#L318'>318</a>
+<a name='L319'></a><a href='#L319'>319</a>
+<a name='L320'></a><a href='#L320'>320</a>
+<a name='L321'></a><a href='#L321'>321</a>
+<a name='L322'></a><a href='#L322'>322</a>
+<a name='L323'></a><a href='#L323'>323</a>
+<a name='L324'></a><a href='#L324'>324</a>
+<a name='L325'></a><a href='#L325'>325</a>
+<a name='L326'></a><a href='#L326'>326</a>
+<a name='L327'></a><a href='#L327'>327</a>
+<a name='L328'></a><a href='#L328'>328</a>
+<a name='L329'></a><a href='#L329'>329</a>
+<a name='L330'></a><a href='#L330'>330</a>
+<a name='L331'></a><a href='#L331'>331</a>
+<a name='L332'></a><a href='#L332'>332</a>
+<a name='L333'></a><a href='#L333'>333</a>
+<a name='L334'></a><a href='#L334'>334</a>
+<a name='L335'></a><a href='#L335'>335</a>
+<a name='L336'></a><a href='#L336'>336</a>
+<a name='L337'></a><a href='#L337'>337</a>
+<a name='L338'></a><a href='#L338'>338</a>
+<a name='L339'></a><a href='#L339'>339</a>
+<a name='L340'></a><a href='#L340'>340</a>
+<a name='L341'></a><a href='#L341'>341</a>
+<a name='L342'></a><a href='#L342'>342</a>
+<a name='L343'></a><a href='#L343'>343</a>
+<a name='L344'></a><a href='#L344'>344</a>
+<a name='L345'></a><a href='#L345'>345</a>
+<a name='L346'></a><a href='#L346'>346</a>
+<a name='L347'></a><a href='#L347'>347</a>
+<a name='L348'></a><a href='#L348'>348</a>
+<a name='L349'></a><a href='#L349'>349</a>
+<a name='L350'></a><a href='#L350'>350</a>
+<a name='L351'></a><a href='#L351'>351</a>
+<a name='L352'></a><a href='#L352'>352</a>
+<a name='L353'></a><a href='#L353'>353</a>
+<a name='L354'></a><a href='#L354'>354</a>
+<a name='L355'></a><a href='#L355'>355</a>
+<a name='L356'></a><a href='#L356'>356</a>
+<a name='L357'></a><a href='#L357'>357</a>
+<a name='L358'></a><a href='#L358'>358</a>
+<a name='L359'></a><a href='#L359'>359</a>
+<a name='L360'></a><a href='#L360'>360</a>
+<a name='L361'></a><a href='#L361'>361</a>
+<a name='L362'></a><a href='#L362'>362</a>
+<a name='L363'></a><a href='#L363'>363</a>
+<a name='L364'></a><a href='#L364'>364</a>
+<a name='L365'></a><a href='#L365'>365</a>
+<a name='L366'></a><a href='#L366'>366</a>
+<a name='L367'></a><a href='#L367'>367</a>
+<a name='L368'></a><a href='#L368'>368</a>
+<a name='L369'></a><a href='#L369'>369</a>
+<a name='L370'></a><a href='#L370'>370</a>
+<a name='L371'></a><a href='#L371'>371</a>
+<a name='L372'></a><a href='#L372'>372</a>
+<a name='L373'></a><a href='#L373'>373</a>
+<a name='L374'></a><a href='#L374'>374</a>
+<a name='L375'></a><a href='#L375'>375</a>
+<a name='L376'></a><a href='#L376'>376</a>
+<a name='L377'></a><a href='#L377'>377</a>
+<a name='L378'></a><a href='#L378'>378</a>
+<a name='L379'></a><a href='#L379'>379</a>
+<a name='L380'></a><a href='#L380'>380</a>
+<a name='L381'></a><a href='#L381'>381</a>
+<a name='L382'></a><a href='#L382'>382</a>
+<a name='L383'></a><a href='#L383'>383</a>
+<a name='L384'></a><a href='#L384'>384</a>
+<a name='L385'></a><a href='#L385'>385</a>
+<a name='L386'></a><a href='#L386'>386</a>
+<a name='L387'></a><a href='#L387'>387</a>
+<a name='L388'></a><a href='#L388'>388</a>
+<a name='L389'></a><a href='#L389'>389</a>
+<a name='L390'></a><a href='#L390'>390</a>
+<a name='L391'></a><a href='#L391'>391</a>
+<a name='L392'></a><a href='#L392'>392</a>
+<a name='L393'></a><a href='#L393'>393</a>
+<a name='L394'></a><a href='#L394'>394</a>
+<a name='L395'></a><a href='#L395'>395</a>
+<a name='L396'></a><a href='#L396'>396</a>
+<a name='L397'></a><a href='#L397'>397</a>
+<a name='L398'></a><a href='#L398'>398</a>
+<a name='L399'></a><a href='#L399'>399</a>
+<a name='L400'></a><a href='#L400'>400</a>
+<a name='L401'></a><a href='#L401'>401</a>
+<a name='L402'></a><a href='#L402'>402</a>
+<a name='L403'></a><a href='#L403'>403</a>
+<a name='L404'></a><a href='#L404'>404</a>
+<a name='L405'></a><a href='#L405'>405</a>
+<a name='L406'></a><a href='#L406'>406</a>
+<a name='L407'></a><a href='#L407'>407</a>
+<a name='L408'></a><a href='#L408'>408</a>
+<a name='L409'></a><a href='#L409'>409</a>
+<a name='L410'></a><a href='#L410'>410</a>
+<a name='L411'></a><a href='#L411'>411</a>
+<a name='L412'></a><a href='#L412'>412</a>
+<a name='L413'></a><a href='#L413'>413</a>
+<a name='L414'></a><a href='#L414'>414</a>
+<a name='L415'></a><a href='#L415'>415</a>
+<a name='L416'></a><a href='#L416'>416</a>
+<a name='L417'></a><a href='#L417'>417</a>
+<a name='L418'></a><a href='#L418'>418</a>
+<a name='L419'></a><a href='#L419'>419</a>
+<a name='L420'></a><a href='#L420'>420</a>
+<a name='L421'></a><a href='#L421'>421</a>
+<a name='L422'></a><a href='#L422'>422</a>
+<a name='L423'></a><a href='#L423'>423</a>
+<a name='L424'></a><a href='#L424'>424</a>
+<a name='L425'></a><a href='#L425'>425</a>
+<a name='L426'></a><a href='#L426'>426</a>
+<a name='L427'></a><a href='#L427'>427</a>
+<a name='L428'></a><a href='#L428'>428</a>
+<a name='L429'></a><a href='#L429'>429</a>
+<a name='L430'></a><a href='#L430'>430</a>
+<a name='L431'></a><a href='#L431'>431</a>
+<a name='L432'></a><a href='#L432'>432</a>
+<a name='L433'></a><a href='#L433'>433</a>
+<a name='L434'></a><a href='#L434'>434</a>
+<a name='L435'></a><a href='#L435'>435</a>
+<a name='L436'></a><a href='#L436'>436</a>
+<a name='L437'></a><a href='#L437'>437</a>
+<a name='L438'></a><a href='#L438'>438</a>
+<a name='L439'></a><a href='#L439'>439</a>
+<a name='L440'></a><a href='#L440'>440</a>
+<a name='L441'></a><a href='#L441'>441</a>
+<a name='L442'></a><a href='#L442'>442</a>
+<a name='L443'></a><a href='#L443'>443</a>
+<a name='L444'></a><a href='#L444'>444</a>
+<a name='L445'></a><a href='#L445'>445</a>
+<a name='L446'></a><a href='#L446'>446</a>
+<a name='L447'></a><a href='#L447'>447</a>
+<a name='L448'></a><a href='#L448'>448</a>
+<a name='L449'></a><a href='#L449'>449</a>
+<a name='L450'></a><a href='#L450'>450</a>
+<a name='L451'></a><a href='#L451'>451</a>
+<a name='L452'></a><a href='#L452'>452</a>
+<a name='L453'></a><a href='#L453'>453</a>
+<a name='L454'></a><a href='#L454'>454</a>
+<a name='L455'></a><a href='#L455'>455</a>
+<a name='L456'></a><a href='#L456'>456</a>
+<a name='L457'></a><a href='#L457'>457</a>
+<a name='L458'></a><a href='#L458'>458</a>
+<a name='L459'></a><a href='#L459'>459</a>
+<a name='L460'></a><a href='#L460'>460</a>
+<a name='L461'></a><a href='#L461'>461</a>
+<a name='L462'></a><a href='#L462'>462</a>
+<a name='L463'></a><a href='#L463'>463</a>
+<a name='L464'></a><a href='#L464'>464</a>
+<a name='L465'></a><a href='#L465'>465</a>
+<a name='L466'></a><a href='#L466'>466</a>
+<a name='L467'></a><a href='#L467'>467</a>
+<a name='L468'></a><a href='#L468'>468</a>
+<a name='L469'></a><a href='#L469'>469</a>
+<a name='L470'></a><a href='#L470'>470</a>
+<a name='L471'></a><a href='#L471'>471</a>
+<a name='L472'></a><a href='#L472'>472</a>
+<a name='L473'></a><a href='#L473'>473</a>
+<a name='L474'></a><a href='#L474'>474</a>
+<a name='L475'></a><a href='#L475'>475</a>
+<a name='L476'></a><a href='#L476'>476</a>
+<a name='L477'></a><a href='#L477'>477</a>
+<a name='L478'></a><a href='#L478'>478</a>
+<a name='L479'></a><a href='#L479'>479</a>
+<a name='L480'></a><a href='#L480'>480</a>
+<a name='L481'></a><a href='#L481'>481</a>
+<a name='L482'></a><a href='#L482'>482</a>
+<a name='L483'></a><a href='#L483'>483</a>
+<a name='L484'></a><a href='#L484'>484</a>
+<a name='L485'></a><a href='#L485'>485</a>
+<a name='L486'></a><a href='#L486'>486</a>
+<a name='L487'></a><a href='#L487'>487</a>
+<a name='L488'></a><a href='#L488'>488</a>
+<a name='L489'></a><a href='#L489'>489</a>
+<a name='L490'></a><a href='#L490'>490</a>
+<a name='L491'></a><a href='#L491'>491</a>
+<a name='L492'></a><a href='#L492'>492</a>
+<a name='L493'></a><a href='#L493'>493</a>
+<a name='L494'></a><a href='#L494'>494</a>
+<a name='L495'></a><a href='#L495'>495</a>
+<a name='L496'></a><a href='#L496'>496</a>
+<a name='L497'></a><a href='#L497'>497</a>
+<a name='L498'></a><a href='#L498'>498</a>
+<a name='L499'></a><a href='#L499'>499</a>
+<a name='L500'></a><a href='#L500'>500</a>
+<a name='L501'></a><a href='#L501'>501</a>
+<a name='L502'></a><a href='#L502'>502</a>
+<a name='L503'></a><a href='#L503'>503</a>
+<a name='L504'></a><a href='#L504'>504</a>
+<a name='L505'></a><a href='#L505'>505</a>
+<a name='L506'></a><a href='#L506'>506</a>
+<a name='L507'></a><a href='#L507'>507</a>
+<a name='L508'></a><a href='#L508'>508</a>
+<a name='L509'></a><a href='#L509'>509</a>
+<a name='L510'></a><a href='#L510'>510</a>
+<a name='L511'></a><a href='#L511'>511</a>
+<a name='L512'></a><a href='#L512'>512</a>
+<a name='L513'></a><a href='#L513'>513</a>
+<a name='L514'></a><a href='#L514'>514</a>
+<a name='L515'></a><a href='#L515'>515</a>
+<a name='L516'></a><a href='#L516'>516</a>
+<a name='L517'></a><a href='#L517'>517</a>
+<a name='L518'></a><a href='#L518'>518</a>
+<a name='L519'></a><a href='#L519'>519</a>
+<a name='L520'></a><a href='#L520'>520</a>
+<a name='L521'></a><a href='#L521'>521</a>
+<a name='L522'></a><a href='#L522'>522</a>
+<a name='L523'></a><a href='#L523'>523</a>
+<a name='L524'></a><a href='#L524'>524</a>
+<a name='L525'></a><a href='#L525'>525</a>
+<a name='L526'></a><a href='#L526'>526</a>
+<a name='L527'></a><a href='#L527'>527</a>
+<a name='L528'></a><a href='#L528'>528</a>
+<a name='L529'></a><a href='#L529'>529</a>
+<a name='L530'></a><a href='#L530'>530</a>
+<a name='L531'></a><a href='#L531'>531</a>
+<a name='L532'></a><a href='#L532'>532</a>
+<a name='L533'></a><a href='#L533'>533</a>
+<a name='L534'></a><a href='#L534'>534</a>
+<a name='L535'></a><a href='#L535'>535</a>
+<a name='L536'></a><a href='#L536'>536</a>
+<a name='L537'></a><a href='#L537'>537</a>
+<a name='L538'></a><a href='#L538'>538</a>
+<a name='L539'></a><a href='#L539'>539</a>
+<a name='L540'></a><a href='#L540'>540</a>
+<a name='L541'></a><a href='#L541'>541</a>
+<a name='L542'></a><a href='#L542'>542</a>
+<a name='L543'></a><a href='#L543'>543</a>
+<a name='L544'></a><a href='#L544'>544</a>
+<a name='L545'></a><a href='#L545'>545</a>
+<a name='L546'></a><a href='#L546'>546</a>
+<a name='L547'></a><a href='#L547'>547</a>
+<a name='L548'></a><a href='#L548'>548</a>
+<a name='L549'></a><a href='#L549'>549</a>
+<a name='L550'></a><a href='#L550'>550</a>
+<a name='L551'></a><a href='#L551'>551</a>
+<a name='L552'></a><a href='#L552'>552</a>
+<a name='L553'></a><a href='#L553'>553</a>
+<a name='L554'></a><a href='#L554'>554</a>
+<a name='L555'></a><a href='#L555'>555</a>
+<a name='L556'></a><a href='#L556'>556</a>
+<a name='L557'></a><a href='#L557'>557</a>
+<a name='L558'></a><a href='#L558'>558</a>
+<a name='L559'></a><a href='#L559'>559</a>
+<a name='L560'></a><a href='#L560'>560</a>
+<a name='L561'></a><a href='#L561'>561</a>
+<a name='L562'></a><a href='#L562'>562</a>
+<a name='L563'></a><a href='#L563'>563</a>
+<a name='L564'></a><a href='#L564'>564</a>
+<a name='L565'></a><a href='#L565'>565</a>
+<a name='L566'></a><a href='#L566'>566</a>
+<a name='L567'></a><a href='#L567'>567</a>
+<a name='L568'></a><a href='#L568'>568</a>
+<a name='L569'></a><a href='#L569'>569</a>
+<a name='L570'></a><a href='#L570'>570</a>
+<a name='L571'></a><a href='#L571'>571</a>
+<a name='L572'></a><a href='#L572'>572</a>
+<a name='L573'></a><a href='#L573'>573</a>
+<a name='L574'></a><a href='#L574'>574</a>
+<a name='L575'></a><a href='#L575'>575</a>
+<a name='L576'></a><a href='#L576'>576</a>
+<a name='L577'></a><a href='#L577'>577</a>
+<a name='L578'></a><a href='#L578'>578</a>
+<a name='L579'></a><a href='#L579'>579</a>
+<a name='L580'></a><a href='#L580'>580</a>
+<a name='L581'></a><a href='#L581'>581</a>
+<a name='L582'></a><a href='#L582'>582</a>
+<a name='L583'></a><a href='#L583'>583</a>
+<a name='L584'></a><a href='#L584'>584</a>
+<a name='L585'></a><a href='#L585'>585</a>
+<a name='L586'></a><a href='#L586'>586</a>
+<a name='L587'></a><a href='#L587'>587</a>
+<a name='L588'></a><a href='#L588'>588</a>
+<a name='L589'></a><a href='#L589'>589</a>
+<a name='L590'></a><a href='#L590'>590</a>
+<a name='L591'></a><a href='#L591'>591</a>
+<a name='L592'></a><a href='#L592'>592</a>
+<a name='L593'></a><a href='#L593'>593</a>
+<a name='L594'></a><a href='#L594'>594</a>
+<a name='L595'></a><a href='#L595'>595</a>
+<a name='L596'></a><a href='#L596'>596</a>
+<a name='L597'></a><a href='#L597'>597</a>
+<a name='L598'></a><a href='#L598'>598</a>
+<a name='L599'></a><a href='#L599'>599</a>
+<a name='L600'></a><a href='#L600'>600</a>
+<a name='L601'></a><a href='#L601'>601</a>
+<a name='L602'></a><a href='#L602'>602</a>
+<a name='L603'></a><a href='#L603'>603</a>
+<a name='L604'></a><a href='#L604'>604</a>
+<a name='L605'></a><a href='#L605'>605</a>
+<a name='L606'></a><a href='#L606'>606</a>
+<a name='L607'></a><a href='#L607'>607</a>
+<a name='L608'></a><a href='#L608'>608</a>
+<a name='L609'></a><a href='#L609'>609</a>
+<a name='L610'></a><a href='#L610'>610</a>
+<a name='L611'></a><a href='#L611'>611</a>
+<a name='L612'></a><a href='#L612'>612</a>
+<a name='L613'></a><a href='#L613'>613</a>
+<a name='L614'></a><a href='#L614'>614</a>
+<a name='L615'></a><a href='#L615'>615</a>
+<a name='L616'></a><a href='#L616'>616</a>
+<a name='L617'></a><a href='#L617'>617</a>
+<a name='L618'></a><a href='#L618'>618</a>
+<a name='L619'></a><a href='#L619'>619</a>
+<a name='L620'></a><a href='#L620'>620</a>
+<a name='L621'></a><a href='#L621'>621</a>
+<a name='L622'></a><a href='#L622'>622</a>
+<a name='L623'></a><a href='#L623'>623</a>
+<a name='L624'></a><a href='#L624'>624</a>
+<a name='L625'></a><a href='#L625'>625</a>
+<a name='L626'></a><a href='#L626'>626</a>
+<a name='L627'></a><a href='#L627'>627</a>
+<a name='L628'></a><a href='#L628'>628</a>
+<a name='L629'></a><a href='#L629'>629</a>
+<a name='L630'></a><a href='#L630'>630</a>
+<a name='L631'></a><a href='#L631'>631</a>
+<a name='L632'></a><a href='#L632'>632</a>
+<a name='L633'></a><a href='#L633'>633</a>
+<a name='L634'></a><a href='#L634'>634</a>
+<a name='L635'></a><a href='#L635'>635</a>
+<a name='L636'></a><a href='#L636'>636</a>
+<a name='L637'></a><a href='#L637'>637</a>
+<a name='L638'></a><a href='#L638'>638</a>
+<a name='L639'></a><a href='#L639'>639</a>
+<a name='L640'></a><a href='#L640'>640</a>
+<a name='L641'></a><a href='#L641'>641</a>
+<a name='L642'></a><a href='#L642'>642</a>
+<a name='L643'></a><a href='#L643'>643</a>
+<a name='L644'></a><a href='#L644'>644</a>
+<a name='L645'></a><a href='#L645'>645</a>
+<a name='L646'></a><a href='#L646'>646</a>
+<a name='L647'></a><a href='#L647'>647</a>
+<a name='L648'></a><a href='#L648'>648</a>
+<a name='L649'></a><a href='#L649'>649</a>
+<a name='L650'></a><a href='#L650'>650</a>
+<a name='L651'></a><a href='#L651'>651</a>
+<a name='L652'></a><a href='#L652'>652</a>
+<a name='L653'></a><a href='#L653'>653</a>
+<a name='L654'></a><a href='#L654'>654</a>
+<a name='L655'></a><a href='#L655'>655</a>
+<a name='L656'></a><a href='#L656'>656</a>
+<a name='L657'></a><a href='#L657'>657</a>
+<a name='L658'></a><a href='#L658'>658</a>
+<a name='L659'></a><a href='#L659'>659</a>
+<a name='L660'></a><a href='#L660'>660</a>
+<a name='L661'></a><a href='#L661'>661</a>
+<a name='L662'></a><a href='#L662'>662</a>
+<a name='L663'></a><a href='#L663'>663</a>
+<a name='L664'></a><a href='#L664'>664</a>
+<a name='L665'></a><a href='#L665'>665</a>
+<a name='L666'></a><a href='#L666'>666</a>
+<a name='L667'></a><a href='#L667'>667</a>
+<a name='L668'></a><a href='#L668'>668</a>
+<a name='L669'></a><a href='#L669'>669</a>
+<a name='L670'></a><a href='#L670'>670</a>
+<a name='L671'></a><a href='#L671'>671</a>
+<a name='L672'></a><a href='#L672'>672</a>
+<a name='L673'></a><a href='#L673'>673</a>
+<a name='L674'></a><a href='#L674'>674</a>
+<a name='L675'></a><a href='#L675'>675</a>
+<a name='L676'></a><a href='#L676'>676</a>
+<a name='L677'></a><a href='#L677'>677</a>
+<a name='L678'></a><a href='#L678'>678</a>
+<a name='L679'></a><a href='#L679'>679</a>
+<a name='L680'></a><a href='#L680'>680</a>
+<a name='L681'></a><a href='#L681'>681</a>
+<a name='L682'></a><a href='#L682'>682</a>
+<a name='L683'></a><a href='#L683'>683</a>
+<a name='L684'></a><a href='#L684'>684</a>
+<a name='L685'></a><a href='#L685'>685</a>
+<a name='L686'></a><a href='#L686'>686</a>
+<a name='L687'></a><a href='#L687'>687</a>
+<a name='L688'></a><a href='#L688'>688</a>
+<a name='L689'></a><a href='#L689'>689</a>
+<a name='L690'></a><a href='#L690'>690</a>
+<a name='L691'></a><a href='#L691'>691</a>
+<a name='L692'></a><a href='#L692'>692</a>
+<a name='L693'></a><a href='#L693'>693</a>
+<a name='L694'></a><a href='#L694'>694</a>
+<a name='L695'></a><a href='#L695'>695</a>
+<a name='L696'></a><a href='#L696'>696</a>
+<a name='L697'></a><a href='#L697'>697</a>
+<a name='L698'></a><a href='#L698'>698</a>
+<a name='L699'></a><a href='#L699'>699</a>
+<a name='L700'></a><a href='#L700'>700</a>
+<a name='L701'></a><a href='#L701'>701</a>
+<a name='L702'></a><a href='#L702'>702</a>
+<a name='L703'></a><a href='#L703'>703</a>
+<a name='L704'></a><a href='#L704'>704</a>
+<a name='L705'></a><a href='#L705'>705</a>
+<a name='L706'></a><a href='#L706'>706</a>
+<a name='L707'></a><a href='#L707'>707</a>
+<a name='L708'></a><a href='#L708'>708</a>
+<a name='L709'></a><a href='#L709'>709</a>
+<a name='L710'></a><a href='#L710'>710</a>
+<a name='L711'></a><a href='#L711'>711</a>
+<a name='L712'></a><a href='#L712'>712</a>
+<a name='L713'></a><a href='#L713'>713</a>
+<a name='L714'></a><a href='#L714'>714</a>
+<a name='L715'></a><a href='#L715'>715</a>
+<a name='L716'></a><a href='#L716'>716</a>
+<a name='L717'></a><a href='#L717'>717</a>
+<a name='L718'></a><a href='#L718'>718</a>
+<a name='L719'></a><a href='#L719'>719</a>
+<a name='L720'></a><a href='#L720'>720</a>
+<a name='L721'></a><a href='#L721'>721</a>
+<a name='L722'></a><a href='#L722'>722</a>
+<a name='L723'></a><a href='#L723'>723</a>
+<a name='L724'></a><a href='#L724'>724</a>
+<a name='L725'></a><a href='#L725'>725</a>
+<a name='L726'></a><a href='#L726'>726</a>
+<a name='L727'></a><a href='#L727'>727</a>
+<a name='L728'></a><a href='#L728'>728</a>
+<a name='L729'></a><a href='#L729'>729</a>
+<a name='L730'></a><a href='#L730'>730</a>
+<a name='L731'></a><a href='#L731'>731</a>
+<a name='L732'></a><a href='#L732'>732</a>
+<a name='L733'></a><a href='#L733'>733</a>
+<a name='L734'></a><a href='#L734'>734</a>
+<a name='L735'></a><a href='#L735'>735</a>
+<a name='L736'></a><a href='#L736'>736</a>
+<a name='L737'></a><a href='#L737'>737</a>
+<a name='L738'></a><a href='#L738'>738</a>
+<a name='L739'></a><a href='#L739'>739</a>
+<a name='L740'></a><a href='#L740'>740</a>
+<a name='L741'></a><a href='#L741'>741</a>
+<a name='L742'></a><a href='#L742'>742</a>
+<a name='L743'></a><a href='#L743'>743</a>
+<a name='L744'></a><a href='#L744'>744</a>
+<a name='L745'></a><a href='#L745'>745</a>
+<a name='L746'></a><a href='#L746'>746</a>
+<a name='L747'></a><a href='#L747'>747</a>
+<a name='L748'></a><a href='#L748'>748</a>
+<a name='L749'></a><a href='#L749'>749</a>
+<a name='L750'></a><a href='#L750'>750</a>
+<a name='L751'></a><a href='#L751'>751</a>
+<a name='L752'></a><a href='#L752'>752</a>
+<a name='L753'></a><a href='#L753'>753</a>
+<a name='L754'></a><a href='#L754'>754</a>
+<a name='L755'></a><a href='#L755'>755</a>
+<a name='L756'></a><a href='#L756'>756</a>
+<a name='L757'></a><a href='#L757'>757</a>
+<a name='L758'></a><a href='#L758'>758</a>
+<a name='L759'></a><a href='#L759'>759</a>
+<a name='L760'></a><a href='#L760'>760</a>
+<a name='L761'></a><a href='#L761'>761</a>
+<a name='L762'></a><a href='#L762'>762</a>
+<a name='L763'></a><a href='#L763'>763</a>
+<a name='L764'></a><a href='#L764'>764</a>
+<a name='L765'></a><a href='#L765'>765</a>
+<a name='L766'></a><a href='#L766'>766</a>
+<a name='L767'></a><a href='#L767'>767</a>
+<a name='L768'></a><a href='#L768'>768</a>
+<a name='L769'></a><a href='#L769'>769</a>
+<a name='L770'></a><a href='#L770'>770</a>
+<a name='L771'></a><a href='#L771'>771</a>
+<a name='L772'></a><a href='#L772'>772</a>
+<a name='L773'></a><a href='#L773'>773</a>
+<a name='L774'></a><a href='#L774'>774</a>
+<a name='L775'></a><a href='#L775'>775</a>
+<a name='L776'></a><a href='#L776'>776</a>
+<a name='L777'></a><a href='#L777'>777</a>
+<a name='L778'></a><a href='#L778'>778</a>
+<a name='L779'></a><a href='#L779'>779</a>
+<a name='L780'></a><a href='#L780'>780</a>
+<a name='L781'></a><a href='#L781'>781</a>
+<a name='L782'></a><a href='#L782'>782</a>
+<a name='L783'></a><a href='#L783'>783</a>
+<a name='L784'></a><a href='#L784'>784</a>
+<a name='L785'></a><a href='#L785'>785</a>
+<a name='L786'></a><a href='#L786'>786</a>
+<a name='L787'></a><a href='#L787'>787</a>
+<a name='L788'></a><a href='#L788'>788</a>
+<a name='L789'></a><a href='#L789'>789</a>
+<a name='L790'></a><a href='#L790'>790</a>
+<a name='L791'></a><a href='#L791'>791</a>
+<a name='L792'></a><a href='#L792'>792</a>
+<a name='L793'></a><a href='#L793'>793</a>
+<a name='L794'></a><a href='#L794'>794</a>
+<a name='L795'></a><a href='#L795'>795</a>
+<a name='L796'></a><a href='#L796'>796</a>
+<a name='L797'></a><a href='#L797'>797</a>
+<a name='L798'></a><a href='#L798'>798</a>
+<a name='L799'></a><a href='#L799'>799</a>
+<a name='L800'></a><a href='#L800'>800</a>
+<a name='L801'></a><a href='#L801'>801</a>
+<a name='L802'></a><a href='#L802'>802</a>
+<a name='L803'></a><a href='#L803'>803</a>
+<a name='L804'></a><a href='#L804'>804</a>
+<a name='L805'></a><a href='#L805'>805</a>
+<a name='L806'></a><a href='#L806'>806</a>
+<a name='L807'></a><a href='#L807'>807</a>
+<a name='L808'></a><a href='#L808'>808</a>
+<a name='L809'></a><a href='#L809'>809</a>
+<a name='L810'></a><a href='#L810'>810</a>
+<a name='L811'></a><a href='#L811'>811</a>
+<a name='L812'></a><a href='#L812'>812</a>
+<a name='L813'></a><a href='#L813'>813</a>
+<a name='L814'></a><a href='#L814'>814</a>
+<a name='L815'></a><a href='#L815'>815</a>
+<a name='L816'></a><a href='#L816'>816</a>
+<a name='L817'></a><a href='#L817'>817</a>
+<a name='L818'></a><a href='#L818'>818</a>
+<a name='L819'></a><a href='#L819'>819</a>
+<a name='L820'></a><a href='#L820'>820</a>
+<a name='L821'></a><a href='#L821'>821</a>
+<a name='L822'></a><a href='#L822'>822</a>
+<a name='L823'></a><a href='#L823'>823</a>
+<a name='L824'></a><a href='#L824'>824</a>
+<a name='L825'></a><a href='#L825'>825</a>
+<a name='L826'></a><a href='#L826'>826</a>
+<a name='L827'></a><a href='#L827'>827</a>
+<a name='L828'></a><a href='#L828'>828</a>
+<a name='L829'></a><a href='#L829'>829</a>
+<a name='L830'></a><a href='#L830'>830</a>
+<a name='L831'></a><a href='#L831'>831</a>
+<a name='L832'></a><a href='#L832'>832</a>
+<a name='L833'></a><a href='#L833'>833</a>
+<a name='L834'></a><a href='#L834'>834</a>
+<a name='L835'></a><a href='#L835'>835</a>
+<a name='L836'></a><a href='#L836'>836</a>
+<a name='L837'></a><a href='#L837'>837</a>
+<a name='L838'></a><a href='#L838'>838</a>
+<a name='L839'></a><a href='#L839'>839</a>
+<a name='L840'></a><a href='#L840'>840</a>
+<a name='L841'></a><a href='#L841'>841</a>
+<a name='L842'></a><a href='#L842'>842</a>
+<a name='L843'></a><a href='#L843'>843</a>
+<a name='L844'></a><a href='#L844'>844</a>
+<a name='L845'></a><a href='#L845'>845</a>
+<a name='L846'></a><a href='#L846'>846</a>
+<a name='L847'></a><a href='#L847'>847</a>
+<a name='L848'></a><a href='#L848'>848</a>
+<a name='L849'></a><a href='#L849'>849</a>
+<a name='L850'></a><a href='#L850'>850</a>
+<a name='L851'></a><a href='#L851'>851</a>
+<a name='L852'></a><a href='#L852'>852</a>
+<a name='L853'></a><a href='#L853'>853</a>
+<a name='L854'></a><a href='#L854'>854</a>
+<a name='L855'></a><a href='#L855'>855</a>
+<a name='L856'></a><a href='#L856'>856</a>
+<a name='L857'></a><a href='#L857'>857</a>
+<a name='L858'></a><a href='#L858'>858</a>
+<a name='L859'></a><a href='#L859'>859</a>
+<a name='L860'></a><a href='#L860'>860</a>
+<a name='L861'></a><a href='#L861'>861</a>
+<a name='L862'></a><a href='#L862'>862</a>
+<a name='L863'></a><a href='#L863'>863</a>
+<a name='L864'></a><a href='#L864'>864</a>
+<a name='L865'></a><a href='#L865'>865</a>
+<a name='L866'></a><a href='#L866'>866</a>
+<a name='L867'></a><a href='#L867'>867</a>
+<a name='L868'></a><a href='#L868'>868</a>
+<a name='L869'></a><a href='#L869'>869</a>
+<a name='L870'></a><a href='#L870'>870</a>
+<a name='L871'></a><a href='#L871'>871</a>
+<a name='L872'></a><a href='#L872'>872</a>
+<a name='L873'></a><a href='#L873'>873</a>
+<a name='L874'></a><a href='#L874'>874</a>
+<a name='L875'></a><a href='#L875'>875</a>
+<a name='L876'></a><a href='#L876'>876</a>
+<a name='L877'></a><a href='#L877'>877</a>
+<a name='L878'></a><a href='#L878'>878</a>
+<a name='L879'></a><a href='#L879'>879</a>
+<a name='L880'></a><a href='#L880'>880</a>
+<a name='L881'></a><a href='#L881'>881</a>
+<a name='L882'></a><a href='#L882'>882</a>
+<a name='L883'></a><a href='#L883'>883</a>
+<a name='L884'></a><a href='#L884'>884</a>
+<a name='L885'></a><a href='#L885'>885</a>
+<a name='L886'></a><a href='#L886'>886</a>
+<a name='L887'></a><a href='#L887'>887</a>
+<a name='L888'></a><a href='#L888'>888</a>
+<a name='L889'></a><a href='#L889'>889</a>
+<a name='L890'></a><a href='#L890'>890</a>
+<a name='L891'></a><a href='#L891'>891</a>
+<a name='L892'></a><a href='#L892'>892</a>
+<a name='L893'></a><a href='#L893'>893</a>
+<a name='L894'></a><a href='#L894'>894</a>
+<a name='L895'></a><a href='#L895'>895</a>
+<a name='L896'></a><a href='#L896'>896</a>
+<a name='L897'></a><a href='#L897'>897</a>
+<a name='L898'></a><a href='#L898'>898</a>
+<a name='L899'></a><a href='#L899'>899</a>
+<a name='L900'></a><a href='#L900'>900</a>
+<a name='L901'></a><a href='#L901'>901</a>
+<a name='L902'></a><a href='#L902'>902</a>
+<a name='L903'></a><a href='#L903'>903</a>
+<a name='L904'></a><a href='#L904'>904</a>
+<a name='L905'></a><a href='#L905'>905</a>
+<a name='L906'></a><a href='#L906'>906</a>
+<a name='L907'></a><a href='#L907'>907</a>
+<a name='L908'></a><a href='#L908'>908</a>
+<a name='L909'></a><a href='#L909'>909</a>
+<a name='L910'></a><a href='#L910'>910</a>
+<a name='L911'></a><a href='#L911'>911</a>
+<a name='L912'></a><a href='#L912'>912</a>
+<a name='L913'></a><a href='#L913'>913</a>
+<a name='L914'></a><a href='#L914'>914</a>
+<a name='L915'></a><a href='#L915'>915</a>
+<a name='L916'></a><a href='#L916'>916</a>
+<a name='L917'></a><a href='#L917'>917</a>
+<a name='L918'></a><a href='#L918'>918</a>
+<a name='L919'></a><a href='#L919'>919</a>
+<a name='L920'></a><a href='#L920'>920</a>
+<a name='L921'></a><a href='#L921'>921</a>
+<a name='L922'></a><a href='#L922'>922</a>
+<a name='L923'></a><a href='#L923'>923</a>
+<a name='L924'></a><a href='#L924'>924</a>
+<a name='L925'></a><a href='#L925'>925</a>
+<a name='L926'></a><a href='#L926'>926</a>
+<a name='L927'></a><a href='#L927'>927</a>
+<a name='L928'></a><a href='#L928'>928</a>
+<a name='L929'></a><a href='#L929'>929</a>
+<a name='L930'></a><a href='#L930'>930</a>
+<a name='L931'></a><a href='#L931'>931</a>
+<a name='L932'></a><a href='#L932'>932</a>
+<a name='L933'></a><a href='#L933'>933</a>
+<a name='L934'></a><a href='#L934'>934</a>
+<a name='L935'></a><a href='#L935'>935</a>
+<a name='L936'></a><a href='#L936'>936</a>
+<a name='L937'></a><a href='#L937'>937</a>
+<a name='L938'></a><a href='#L938'>938</a>
+<a name='L939'></a><a href='#L939'>939</a>
+<a name='L940'></a><a href='#L940'>940</a>
+<a name='L941'></a><a href='#L941'>941</a>
+<a name='L942'></a><a href='#L942'>942</a>
+<a name='L943'></a><a href='#L943'>943</a>
+<a name='L944'></a><a href='#L944'>944</a>
+<a name='L945'></a><a href='#L945'>945</a>
+<a name='L946'></a><a href='#L946'>946</a>
+<a name='L947'></a><a href='#L947'>947</a>
+<a name='L948'></a><a href='#L948'>948</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">48x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">280x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// ─────────────────────────────────────────────────────────────
+// MySky — Energy Engine
+// Translates natal chart + transits + Moon into daily energy data
+// No horoscopes. Personal energy weather, grounded in placements.
+// ─────────────────────────────────────────────────────────────
+&nbsp;
+import { NatalChart } from '../astrology/types';
+import { getTransitingLongitudes } from '../astrology/transits';
+import { getMoonPhaseInfo } from '../../utils/moonPhase';
+import {
+  extractSignName as signName,
+  extractSignElement as signElement,
+  signNameFromLongitude as signFromLongitude,
+  computeHouseForLongitude as houseForLongitude,
+} from '../astrology/sharedHelpers';
+import { dayOfYear, toLocalDateString } from '../../utils/dateUtils';
+&nbsp;
+// ── Types ────────────────────────────────────────────────────
+&nbsp;
+export type EnergyIntensity = 'Low' | 'Moderate' | 'High';
+&nbsp;
+export type ChakraState = 'Flowing' | 'Sensitive' | 'Grounding Needed' | 'Quiet';
+&nbsp;
+export interface ChakraReading {
+  name: string;
+  emoji: string;
+  state: ChakraState;
+  trigger: string;           // astrological trigger
+  bodyCue: string;           // how it may show up physically
+  healingSuggestion: string; // grounding practice for this chakra today
+  groundingTip: string;      // additional micro-action (e.g., slow walking, deep breathing)
+  elementConnection: string; // how the current element interacts with this chakra
+  affirmation: string;       // a short affirmation aligned to the chakra state
+  color: string;             // for UI
+}
+&nbsp;
+export type EnergyDomainName = 'Mental' | 'Emotional' | 'Physical' | 'Relational' | 'Creative / Spiritual';
+&nbsp;
+export interface EnergyDomain {
+  name: EnergyDomainName;
+  icon: string;          // Ionicons name
+  state: string;         // 2–4 word state
+  why: string;           // astrological reason (specific, not generic)
+  feeling: string;       // how it may feel
+  suggestion: string;    // practical micro-action for this domain today
+}
+&nbsp;
+export interface EnergyGuidance {
+  leanInto: string;
+  leanIntoContext: string;        // why this matters today
+  moveGentlyAround: string;
+  moveGentlyContext: string;      // what makes this tricky right now
+  bestUseOfEnergy: string;
+  bestUseContext: string;         // how to actually do this
+  ritual: string;                 // a specific grounding micro-action
+}
+&nbsp;
+export interface MoonPhaseReading {
+  phase: string;
+  emoji: string;
+  personalMeaning: string;
+}
+&nbsp;
+export interface EnergySnapshot {
+  date: string;
+  tone: string;                    // 1–2 word energy tone
+  intensity: EnergyIntensity;
+  primaryDriver: string;           // "Moon in Pisces activating your 4th house"
+  quickMeaning: string;            // 1 sentence
+&nbsp;
+  chakras: ChakraReading[];        // all 7
+  dominantChakra: ChakraReading;   // the single most active
+&nbsp;
+  domains: EnergyDomain[];         // all 5
+  freeDomainIndices: [number, number]; // which 2 are free today (rotating)
+&nbsp;
+  guidance: EnergyGuidance;
+  freeGuidanceLine: string;        // single line for free users
+&nbsp;
+  moonPhase: MoonPhaseReading;
+}
+&nbsp;
+// ── Helpers ──────────────────────────────────────────────────
+&nbsp;
+// signName, signElement, SIGN_ELEMENTS, ZODIAC_SIGN_NAMES,
+// signFromLongitude, houseForLongitude, dayOfYear
+// → imported from sharedHelpers and dateUtils
+&nbsp;
+// ── Tone Mapping ─────────────────────────────────────────────
+&nbsp;
+const MOON_TONES: Record&lt;string, { tone: string; intensity: EnergyIntensity }&gt; = {
+  Aries:       { tone: 'Energy in Motion',      intensity: 'High' },
+  Taurus:      { tone: 'Grounded',               intensity: 'Low' },
+  Gemini:      { tone: 'Active',                 intensity: 'Moderate' },
+  Cancer:      { tone: 'Sensitive',               intensity: 'Moderate' },
+  Leo:         { tone: 'Expressive',              intensity: 'High' },
+  Virgo:       { tone: 'Focused',                 intensity: 'Moderate' },
+  Libra:       { tone: 'Flowing',                 intensity: 'Low' },
+  Scorpio:     { tone: 'Inward',                  intensity: 'High' },
+  Sagittarius: { tone: 'Seeking Movement',        intensity: 'High' },
+  Capricorn:   { tone: 'Quiet',                   intensity: 'Moderate' },
+  Aquarius:    { tone: 'Observing',               intensity: 'Moderate' },
+  Pisces:      { tone: 'Open &amp; Receiving',        intensity: 'Low' },
+};
+&nbsp;
+// ── Quick Meanings ───────────────────────────────────────────
+&nbsp;
+const QUICK_MEANINGS: Record&lt;string, string&gt; = {
+  Aries:       'You may feel more reactive or driven today. Pause before acting and check in with your body.',
+  Taurus:      'Your body may crave stillness and comfort today. Slower decisions tend to land better.',
+  Gemini:      'Your mind may feel busy today. Ideas come quickly, but focus might scatter — pick one thread.',
+  Cancer:      'You may feel more emotionally open today. Give yourself space for what arises.',
+  Leo:         'You may feel a pull toward self-expression today. Share what feels true to you.',
+  Virgo:       'You may notice a desire to organize or refine today. Channel it into one thing that matters.',
+  Libra:       'You may be more aware of relationship dynamics today. Balance giving with your own needs.',
+  Scorpio:     'Emotions may run deeper today. Being honest with yourself about what you feel creates relief.',
+  Sagittarius: 'You may feel restless or eager for change today. Movement helps, but patience serves you better.',
+  Capricorn:   'Structure may feel steadying today. Focus on one meaningful step rather than the whole list.',
+  Aquarius:    'You may feel more mentally detached today. Use that clarity for fresh perspective, not avoidance.',
+  Pisces:      'Your boundaries may feel softer today. Trust your intuition, but ground yourself to avoid overwhelm.',
+};
+&nbsp;
+// ── Chakra System ────────────────────────────────────────────
+&nbsp;
+const CHAKRA_DEFS = [
+  { name: 'Root',         emoji: '🔴', color: '#DC5050' }, // Ember Ruby
+  { name: 'Sacral',       emoji: '🟠', color: '#CD7F5D' }, // Rich Copper
+  { name: 'Solar Plexus', emoji: '🟡', color: '#D4AF37' }, // Metallic Gold
+  { name: 'Heart',        emoji: '🟢', color: '#6B9080' }, // Deep Sage
+  { name: 'Throat',       emoji: '🔵', color: '#5C7CAA' }, // Stratosphere Blue
+  { name: 'Third Eye',    emoji: '🟣', color: '#A88BEB' }, // Nebula Purple
+  { name: 'Crown',        emoji: '⚪', color: '#CBA6F7' }, // Ethereal Violet
+];
+&nbsp;
+// Map planet → primary chakra influence
+const PLANET_CHAKRA: Record&lt;string, number&gt; = {
+  Saturn: 0,   // Root
+  Moon: 1,     // Sacral
+  Mars: 2,     // Solar Plexus
+  Sun: 2,      // Solar Plexus
+  Venus: 3,    // Heart
+  Mercury: 4,  // Throat
+  Neptune: 5,  // Third Eye
+  Jupiter: 5,  // Third Eye
+  Uranus: 6,   // Crown
+  Pluto: 0,    // Root (deep survival)
+};
+&nbsp;
+// Element → chakra activation bias
+const ELEMENT_CHAKRA_BIAS: Record&lt;string, number[]&gt; = {
+  Fire:  [2, 3],       // Solar Plexus, Heart
+  Earth: [0, 1],       // Root, Sacral
+  Air:   [4, 5],       // Throat, Third Eye
+  Water: [1, 3, 5],    // Sacral, Heart, Third Eye
+};
+&nbsp;
+const CHAKRA_TRIGGERS: Record&lt;string, Record&lt;number, string&gt;&gt; = {
+  Aries:       { 0: 'Moon activating survival instincts', 2: 'Moon fueling willpower and drive', 3: 'Heart wants bold expression' },
+  Taurus:      { 0: 'Moon grounding through body', 1: 'Moon deepening comfort needs', 3: 'Heart craves sensory warmth' },
+  Gemini:      { 4: 'Moon activating voice and ideas', 5: 'Moon sharpening perception', 2: 'Mental energy overriding gut instinct' },
+  Cancer:      { 1: 'Moon amplifying emotional sensitivity', 3: 'Heart carrying old feelings', 0: 'Root seeking safety and home' },
+  Leo:         { 2: 'Moon boosting self-confidence', 3: 'Heart wants to be witnessed', 4: 'Voice wants creative expression' },
+  Virgo:       { 2: 'Moon refining self-discipline', 4: 'Throat filtering words carefully', 0: 'Root organizing for security' },
+  Libra:       { 3: 'Heart balancing between self and other', 4: 'Throat seeking diplomatic expression', 5: 'Third eye weighing perspectives' },
+  Scorpio:     { 1: 'Moon stirring deep emotional currents', 0: 'Root holding survival tension', 5: 'Third eye seeing beneath surfaces' },
+  Sagittarius: { 5: 'Moon expanding vision and belief', 2: 'Solar plexus restless for action', 6: 'Crown reaching for meaning' },
+  Capricorn:   { 0: 'Moon reinforcing structure and duty', 2: 'Solar plexus carrying responsibility', 4: 'Throat measured and cautious' },
+  Aquarius:    { 6: 'Moon detaching for perspective', 5: 'Third eye innovating', 4: 'Throat expressing unconventional truth' },
+  Pisces:      { 6: 'Moon dissolving boundaries', 5: 'Third eye receiving intuitive data', 1: 'Sacral absorbing ambient emotion' },
+};
+&nbsp;
+const CHAKRA_BODY_CUES: Record&lt;number, Record&lt;ChakraState, string&gt;&gt; = {
+  0: {
+    'Flowing':          'Legs feel steady, feet grounded, calm lower back.',
+    'Sensitive':        'Tension in lower back, restless legs, clenching.',
+    'Grounding Needed': 'Feeling unmoored, scattered, difficulty settling.',
+    'Quiet':            'Neutral stability — neither activated nor stressed.',
+  },
+  1: {
+    'Flowing':          'Hips feel open, creative impulse present, emotional ease.',
+    'Sensitive':        'Gut feelings are louder, possible nausea or emotional waves.',
+    'Grounding Needed': 'Emotional flooding, craving comfort food or touch.',
+    'Quiet':            'Emotions are steady but not particularly active.',
+  },
+  2: {
+    'Flowing':          'Confidence available, core feels energized, clear willpower.',
+    'Sensitive':        'Stomach tension, urge to control, heightened reactivity.',
+    'Grounding Needed': 'Self-doubt rising, energy scattered, difficulty deciding.',
+    'Quiet':            'Motivation is low but calm — rest may be the message.',
+  },
+  3: {
+    'Flowing':          'Chest feels open, compassion accessible, warmth in connection.',
+    'Sensitive':        'Heart ache, longing, sensitivity to rejection or distance.',
+    'Grounding Needed': 'Emotional walls going up, difficulty receiving care.',
+    'Quiet':            'Heart is steady — neither wide open nor closed off.',
+  },
+  4: {
+    'Flowing':          'Words come easily, truth feels accessible, clear communication.',
+    'Sensitive':        'Jaw tension, urge to explain yourself, throat tightness.',
+    'Grounding Needed': 'Difficulty expressing needs, swallowing words, avoidance.',
+    'Quiet':            'Communication is relaxed — listening more than speaking.',
+  },
+  5: {
+    'Flowing':          'Intuition is clear, insight arrives without effort.',
+    'Sensitive':        'Headache behind eyes, overthinking, analysis paralysis.',
+    'Grounding Needed': 'Mental fog, difficulty trusting perception, confusion.',
+    'Quiet':            'Inner vision is resting — not much arriving unbidden.',
+  },
+  6: {
+    'Flowing':          'Sense of connection to something larger, inner peace.',
+    'Sensitive':        'Feeling existentially tender, questions about purpose.',
+    'Grounding Needed': 'Dissociation, spacing out, difficulty being present.',
+    'Quiet':            'Spiritual connection is background — stable, not urgent.',
+  },
+};
+&nbsp;
+// ── Chakra Healing Suggestions ───────────────────────────────
+&nbsp;
+const CHAKRA_HEALING: Record&lt;number, Record&lt;ChakraState, string&gt;&gt; = {
+  0: {
+    'Flowing':          'Walk barefoot if you can, or press your feet firmly into the ground for 30 seconds.',
+    'Sensitive':        'Place both hands on your lower belly and breathe slowly into them for one minute.',
+    'Grounding Needed': 'Stand against a wall with your back fully pressed to it. Feel the support behind you.',
+    'Quiet':            'No action needed. Your root is stable — appreciate the steadiness.',
+  },
+  1: {
+    'Flowing':          'Move your hips — stretch, dance, or simply sway. Let creative energy circulate.',
+    'Sensitive':        'Place a warm hand below your navel. Acknowledge what you are feeling without naming it.',
+    'Grounding Needed': 'Drink warm water slowly. Let your body register comfort before your mind takes over.',
+    'Quiet':            'Gentle hip stretches or a warm bath can coax this center awake when you are ready.',
+  },
+  2: {
+    'Flowing':          'Take one decisive action you have been postponing — even a small one counts.',
+    'Sensitive':        'Unclench your jaw and soften your stomach muscles. Let go of the need to control.',
+    'Grounding Needed': 'Write down three things you have already accomplished today, no matter how small.',
+    'Quiet':            'Rest is its own strength. Do not force motivation — it will return.',
+  },
+  3: {
+    'Flowing':          'Tell someone you appreciate them. Let your heart give what it already has.',
+    'Sensitive':        'Place your hand on your chest and say: I do not have to earn tenderness.',
+    'Grounding Needed': 'Write a short letter to yourself as if you were writing to someone you love.',
+    'Quiet':            'Spend a few minutes in silence with your palm on your sternum. Just breathe.',
+  },
+  4: {
+    'Flowing':          'Speak your truth to someone today — even a small honest statement counts.',
+    'Sensitive':        'Hum for 30 seconds. The vibration loosens throat tension without forcing words.',
+    'Grounding Needed': 'Write what you need to say before you say it. Let ink carry the first draft.',
+    'Quiet':            'Listen more today. Your voice will come when it has something real to say.',
+  },
+  5: {
+    'Flowing':          'Trust the first answer that arrives — before your mind starts editing it.',
+    'Sensitive':        'Close your eyes for 60 seconds. Let images come and go without grasping.',
+    'Grounding Needed': 'Step away from screens for 10 minutes. Let your perception recalibrate in quiet.',
+    'Quiet':            'Read something that makes you think differently. Feed the third eye gently.',
+  },
+  6: {
+    'Flowing':          'Sit in stillness for two minutes. You do not need to meditate — just be.',
+    'Sensitive':        'Ask yourself: what question am I afraid to sit with? Then sit with it.',
+    'Grounding Needed': 'Touch something physical — a textured surface, cold water, warm fabric. Come back to your body.',
+    'Quiet':            'No spiritual homework today. Presence is enough.',
+  },
+};
+&nbsp;
+// ── Chakra Grounding Tips (additional micro-actions) ─────────
+&nbsp;
+const CHAKRA_GROUNDING_TIPS: Record&lt;number, Record&lt;ChakraState, string&gt;&gt; = {
+  0: {
+    'Flowing':          'Slow walking for 5 minutes, feeling each step.',
+    'Sensitive':        'Deep belly breathing — in for 4, hold for 4, out for 6.',
+    'Grounding Needed': 'Cold water on your wrists for 30 seconds to reset.',
+    'Quiet':            'A brief standing stretch to reconnect with your body.',
+  },
+  1: {
+    'Flowing':          'Gentle hip circles or stretching while breathing slowly.',
+    'Sensitive':        'Place both hands on your lower belly and breathe.',
+    'Grounding Needed': 'Slow walking while paying attention to each foot landing.',
+    'Quiet':            'A warm cup of tea, held slowly, sipped with attention.',
+  },
+  2: {
+    'Flowing':          'Deep belly breathing to sustain steady energy.',
+    'Sensitive':        'Cold water on your face or wrists to interrupt tension.',
+    'Grounding Needed': 'Slow walking outdoors for grounding and perspective.',
+    'Quiet':            'Gentle stretching to invite energy without forcing it.',
+  },
+  3: {
+    'Flowing':          'Place one hand on your heart and breathe slowly.',
+    'Sensitive':        'Slow walking in a calm environment to settle the chest.',
+    'Grounding Needed': 'Deep belly breathing with a long exhale.',
+    'Quiet':            'Cold water on wrists to gently awaken the body.',
+  },
+  4: {
+    'Flowing':          'A few minutes of humming or gentle vocalization.',
+    'Sensitive':        'Deep belly breathing focused on releasing jaw tension.',
+    'Grounding Needed': 'Slow walking while silently noting what you observe.',
+    'Quiet':            'A quiet stretch with attention to the neck and shoulders.',
+  },
+  5: {
+    'Flowing':          'Close your eyes and take 10 slow breaths.',
+    'Sensitive':        'Cold water on your wrists to reset mental overload.',
+    'Grounding Needed': 'Slow walking without a destination — let your eyes soften.',
+    'Quiet':            'Deep belly breathing to invite gentle awareness.',
+  },
+  6: {
+    'Flowing':          'Slow walking in silence to stay connected to your body.',
+    'Sensitive':        'Deep belly breathing with your eyes closed.',
+    'Grounding Needed': 'Cold water on your wrists and face to return to the present.',
+    'Quiet':            'A brief body scan — notice where you feel weight and warmth.',
+  },
+};
+&nbsp;
+// ── Chakra Affirmations ──────────────────────────────────────
+&nbsp;
+const CHAKRA_AFFIRMATIONS: Record&lt;number, Record&lt;ChakraState, string&gt;&gt; = {
+  0: {
+    'Flowing':          'I am safe here. I have what I need.',
+    'Sensitive':        'I can feel unsteady and still be held.',
+    'Grounding Needed': 'I am allowed to take up space and stand still.',
+    'Quiet':            'My foundation is quiet and strong.',
+  },
+  1: {
+    'Flowing':          'I let pleasure and creativity move through me.',
+    'Sensitive':        'My feelings are real, and they will pass.',
+    'Grounding Needed': 'I do not need to fix what I feel — only witness it.',
+    'Quiet':            'My emotional waters are still, and that is okay.',
+  },
+  2: {
+    'Flowing':          'I trust my ability to act and choose.',
+    'Sensitive':        'I release the need to control the outcome.',
+    'Grounding Needed': 'I am enough, even when I am not producing.',
+    'Quiet':            'Rest is not weakness. I will move again when I am ready.',
+  },
+  3: {
+    'Flowing':          'My heart is open and I receive freely.',
+    'Sensitive':        'I can feel deeply without losing myself.',
+    'Grounding Needed': 'I deserve the same compassion I give to others.',
+    'Quiet':            'Love is present even in the stillness.',
+  },
+  4: {
+    'Flowing':          'My voice matters. I speak with clarity.',
+    'Sensitive':        'I do not have to be perfect to be heard.',
+    'Grounding Needed': 'I give myself permission to say what is true.',
+    'Quiet':            'Silence is sometimes the most honest expression.',
+  },
+  5: {
+    'Flowing':          'I trust what I see beyond the surface.',
+    'Sensitive':        'I can observe without absorbing.',
+    'Grounding Needed': 'Clarity will return. I do not have to force insight.',
+    'Quiet':            'Not knowing is its own kind of wisdom.',
+  },
+  6: {
+    'Flowing':          'I am connected to something larger than my story.',
+    'Sensitive':        'My questions are sacred, even without answers.',
+    'Grounding Needed': 'I come back to my body. I come back to now.',
+    'Quiet':            'I am whole, even in ordinary moments.',
+  },
+};
+&nbsp;
+// ── Element-Chakra Connections ────────────────────────────────
+&nbsp;
+const ELEMENT_CHAKRA_CONNECTION: Record&lt;string, Record&lt;number, string&gt;&gt; = {
+  Fire: {
+    0: 'When intensity rises, grounding helps regulate the nervous system. Physical movement can restore balance.',
+    1: 'Heightened energy can accelerate emotional responses. Slowing down creates space between feeling and reacting.',
+    2: 'Confidence and motivation may feel more available today. Channel that drive with intention.',
+    3: 'Emotional warmth is present but may feel urgent. Let connection happen at its own pace.',
+    4: 'Your words may carry more weight today. Pause before speaking to match tone with intention.',
+    5: 'Clarity may come in flashes. Let insight arrive without forcing it into immediate action.',
+    6: 'A sense of purpose or meaning may feel stronger. Stay grounded while exploring bigger questions.',
+  },
+  Earth: {
+    0: 'You may feel more physically grounded and anchored today. Use that steadiness as a foundation.',
+    1: 'Emotional processing may be slower but deeper. Feelings arrive more fully formed.',
+    2: 'Determination is steady but may lean toward rigidity. Flexibility is a useful counterbalance.',
+    3: 'Loyalty and care feel strong. Allow vulnerability alongside that strength.',
+    4: 'Your communication may be more deliberate today. Say less, mean more.',
+    5: 'Practical instincts are reliable. Trust what you can observe and verify.',
+    6: 'Meaning may come through tangible work — craft, building, or hands-on activity.',
+  },
+  Air: {
+    0: 'Mental activity may feel unsettling in the body. Thoughts can create tension where none exists — breathe through it.',
+    1: 'You may notice a tendency to analyze feelings rather than feel them. Naming emotions helps more than explaining them.',
+    2: 'Focus may scatter across too many options. Choosing one thing and committing creates relief.',
+    3: 'Connection through conversation feels natural today. Understanding deepens through listening.',
+    4: 'Communication flows more easily. Use that clarity to express what matters.',
+    5: 'Mental sharpness is high, but overthinking can block intuition. Trust your first instinct.',
+    6: 'Fresh perspectives are available. Meaning may arrive through new ideas rather than familiar habits.',
+  },
+  Water: {
+    0: 'Safety may feel more emotional than logical today. Let yourself feel secure without needing to control the outcome.',
+    1: 'Emotions may be vivid and close to the surface. Acknowledge them without trying to fix them.',
+    2: 'Decision-making may feel harder today. Trust that slower, deeper choices often serve you better.',
+    3: 'Compassion flows naturally, but boundaries may soften. Caring for yourself is part of caring for others.',
+    4: 'Expressing what you feel may be harder than usual. Writing can help bridge the gap between feeling and words.',
+    5: 'Your intuition is strong today but may feel intense. Ground yourself before acting on gut feelings.',
+    6: 'Sensitivity to meaning and connection is heightened. Stay present in your body while exploring inner depths.',
+  },
+};
+&nbsp;
+// ── Domain Mapping ───────────────────────────────────────────
+&nbsp;
+const DOMAIN_STATES: Record&lt;string, Record&lt;EnergyDomainName, { state: string; feeling: string; why: string; suggestion: string }&gt;&gt; = {
+  Aries: {
+    'Mental':              { state: 'Fast &amp; Decisive',       feeling: 'Thoughts arrive as impulses — quick but not always thorough.', why: 'Aries Moon ignites the mental fire; Mars-ruled instinct overrides deliberation.', suggestion: 'Write your first impulse down, then wait 10 minutes before acting on it.' },
+    'Emotional':           { state: 'Reactive',              feeling: 'Feelings flash and pass; anger may surface before sadness.', why: 'Cardinal fire activates emotional responses at speed; feelings become action before they become awareness.', suggestion: 'Name the feeling out loud before responding to it. Even three seconds of pause shifts the outcome.' },
+    'Physical':            { state: 'Charged',               feeling: 'Body wants to move; stillness can feel frustrating.', why: 'Mars rules the muscles and adrenals; an Aries Moon charges the body with restless kinetic energy.', suggestion: 'Move for at least 10 minutes — a walk, stretch, or anything that lets the charge release safely.' },
+    'Relational':          { state: 'Direct',                feeling: 'Patience for small talk is low; honesty feels urgent.', why: 'Aries Moon values authenticity over diplomacy; the desire to cut through pretense intensifies.', suggestion: 'Lead with honesty but check your tone. Directness lands better when it comes with warmth.' },
+    'Creative / Spiritual': { state: 'Ignited',              feeling: 'Creative sparks need immediate action to survive.', why: 'Fire energy in the Moon creates short bursts of creative intensity — capture first, refine later.', suggestion: 'Start the thing. Do not plan it, do not outline it — just begin and let momentum carry it.' },
+  },
+  Taurus: {
+    'Mental':              { state: 'Steady',                feeling: 'Thinking is deliberate; rushing decisions feels wrong.', why: 'Taurus Moon is exalted — the mind slows into a grounded, reliable rhythm that resists pressure.', suggestion: 'Trust the slower pace. Sleep on any decision that feels forced.' },
+    'Emotional':           { state: 'Settled',               feeling: 'Emotions seek comfort and predictability.', why: 'Venus-ruled Moon craves emotional security; familiar routines become anchors.', suggestion: 'Wrap yourself in something comforting — a ritual, a texture, a familiar meal.' },
+    'Physical':            { state: 'Grounded',              feeling: 'Body wants rest, nourishment, and sensory pleasure.', why: 'Earth Moon deepens body awareness; the physical senses become primary channels of information.', suggestion: 'Eat something nourishing and eat it slowly. Let your body receive instead of perform.' },
+    'Relational':          { state: 'Warm but Cautious',     feeling: 'Trust builds slowly; loyalty runs deep when earned.', why: 'Fixed earth in the Moon creates strong attachment patterns — opening up requires safety first.', suggestion: 'Show up consistently for someone. Taurus love is demonstrated through presence, not grand gestures.' },
+    'Creative / Spiritual': { state: 'Sensory',              feeling: 'Beauty, texture, and craft feel more alive than abstraction.', why: 'Venus-ruled Moon channels creativity through the physical — touch, sound, and material beauty.', suggestion: 'Work with your hands. Cook, arrange, draw, build — let the senses guide the process.' },
+  },
+  Gemini: {
+    'Mental':              { state: 'Scattered &amp; Quick',     feeling: 'Multiple thoughts compete; focusing requires effort.', why: 'Mercury-ruled Moon activates the nervous system; the mind splits attention across many channels.', suggestion: 'Use a single notepad to capture every thought, then pick just one to follow through on.' },
+    'Emotional':           { state: 'Intellectualized',      feeling: 'You may think about feelings rather than feel them fully.', why: 'Air Moon processes emotion through language — understanding replaces experiencing.', suggestion: 'Say how you feel to someone without explaining why. Let the feeling stand on its own.' },
+    'Physical':            { state: 'Restless',              feeling: 'Fidgeting, multitasking, or needing stimulation.', why: 'Mutable air agitates the nervous system; the body mirrors the mind\'s scattered energy.', suggestion: 'Walk while you think. Movement helps Gemini Moon energy integrate instead of scatter.' },
+    'Relational':          { state: 'Talkative',             feeling: 'Connection through conversation; silence feels heavy.', why: 'Gemini Moon bonds through exchange — words ARE the connection, not a substitute for it.', suggestion: 'Have one real conversation instead of many surface ones. Depth satisfies more today.' },
+    'Creative / Spiritual': { state: 'Curious',              feeling: 'Ideas flow easily but follow-through needs anchoring.', why: 'Mercury lights up creative ideation but lacks the fixed energy for completion.', suggestion: 'Capture five ideas and commit to exploring only one. Breadth is the gift; depth is the work.' },
+  },
+  Cancer: {
+    'Mental':              { state: 'Reflective',            feeling: 'Mind drifts inward; memories surface unbidden.', why: 'Moon is domicile in Cancer — the mind turns toward the inner world, memory, and emotional processing.', suggestion: 'Journal for five minutes. Let the pen follow wherever your mind already wants to go.' },
+    'Emotional':           { state: 'Open &amp; Porous',         feeling: 'You may feel things more quickly today.', why: 'The Moon in its home sign amplifies emotional receptivity — everything registers more deeply.', suggestion: 'Check: is this feeling yours? Cancer Moon absorbs. Name what belongs to you and release the rest.' },
+    'Physical':            { state: 'Sensitive',             feeling: 'Body absorbs atmosphere; comfort is medicine.', why: 'Water Moon heightens somatic sensitivity — the body feels environments before the mind processes them.', suggestion: 'Create physical comfort. Soft lighting, warm drinks, clean space — your body is listening.' },
+    'Relational':          { state: 'Nurturing',             feeling: 'Need for closeness rises; rejection stings more.', why: 'Cancer Moon\'s cardinal water initiates emotional bonding — the desire to care and be cared for deepens.', suggestion: 'Reach out to someone you trust. You do not have to explain — just connect.' },
+    'Creative / Spiritual': { state: 'Intuitive',            feeling: 'Inner knowing speaks louder than logic.', why: 'Moon in domicile opens direct access to the subconscious — creativity arrives through feeling, not thinking.', suggestion: 'Follow an intuitive impulse without analyzing it first. Let art come from the body.' },
+  },
+  Leo: {
+    'Mental':              { state: 'Confident',             feeling: 'Thinking is bold; self-expression feels clearer.', why: 'Sun-ruled Moon lights up self-concept; the mind organizes around identity and creative output.', suggestion: 'Share an idea publicly — even a small one. Leo Moon clarity deserves an audience.' },
+    'Emotional':           { state: 'Warm &amp; Visible',        feeling: 'Emotions want to be seen and acknowledged.', why: 'Fixed fire in the Moon creates strong emotional needs around recognition and being witnessed.', suggestion: 'Tell someone how you feel without minimizing it. Leo Moon heals when feelings are honored.' },
+    'Physical':            { state: 'Vital',                 feeling: 'Energy is available; body wants to move and be present.', why: 'Solar energy feeds the Moon\'s physical body — vitality, warmth, and presence are amplified.', suggestion: 'Do something that makes you feel alive in your body. Dance, stretch, stand in sunlight.' },
+    'Relational':          { state: 'Generous',              feeling: 'Desire to give and be appreciated in return.', why: 'Leo Moon\'s generosity is real but comes with an honest need for reciprocity and recognition.', suggestion: 'Give freely, but also tell someone what you need. Generosity works both directions.' },
+    'Creative / Spiritual': { state: 'Inspired',             feeling: 'Creative confidence is high; self-expression flows.', why: 'The Sun illuminates the Moon\'s creative instinct — the inner child wants to play and make.', suggestion: 'Create something purely for joy, not for output. Let the process be the point.' },
+  },
+  Virgo: {
+    'Mental':              { state: 'Precise',               feeling: 'Mind seeks clarity and order; imprecision grates.', why: 'Mercury-ruled earth Moon organizes perception around usefulness; the mind wants to sort and correct.', suggestion: 'Channel precision into one task that actually matters. Let the rest be imperfect.' },
+    'Emotional':           { state: 'Contained',             feeling: 'Feelings process through analysis; expression is measured.', why: 'Mutable earth Moon holds emotions close and examines them — feeling is filtered through understanding.', suggestion: 'Write what you feel before you analyze it. Give emotion a head start over logic.' },
+    'Physical':            { state: 'Attentive',             feeling: 'Body awareness is sharp; small discomforts amplify.', why: 'Virgo Moon governs the body\'s nervous attention to detail — every sensation registers more clearly.', suggestion: 'Attend to the small thing that has been bothering you. Replace a pillow, stretch a tight muscle, tidy one shelf.' },
+    'Relational':          { state: 'Helpful',               feeling: 'Love expressed through service and practical support.', why: 'Virgo Moon shows care through action — doing something useful IS the emotional expression.', suggestion: 'Do one practical thing for someone without being asked. It is how you say I care.' },
+    'Creative / Spiritual': { state: 'Refined',              feeling: 'Craft over inspiration; editing feels more natural than drafting.', why: 'Mercury-earth Moon favors refinement — polishing what exists over generating what does not.', suggestion: 'Return to something unfinished and make it better. Editing is a creative act.' },
+  },
+  Libra: {
+    'Mental':              { state: 'Balanced',              feeling: 'Seeing all sides makes decisions slower but fairer.', why: 'Venus-ruled air Moon weighs perspectives automatically — the mind seeks equilibrium before action.', suggestion: 'Set a decision deadline. Libra Moon can weigh forever — give yourself permission to choose imperfectly.' },
+    'Emotional':           { state: 'Harmonizing',           feeling: 'Conflict avoidance rises; peace feels essential.', why: 'Cardinal air Moon initiates toward harmony — emotional discomfort with discord intensifies.', suggestion: 'Check if your peacemaking is genuine or if you are suppressing something that needs air.' },
+    'Physical':            { state: 'Graceful',              feeling: 'Body wants beauty, comfort, and aesthetic pleasure.', why: 'Venus rules the body\'s desire for grace — physical environments affect mood more than usual.', suggestion: 'Beautify one small space around you. Light a candle, rearrange flowers, clear a surface.' },
+    'Relational':          { state: 'Partnership-Focused',   feeling: 'Connection is central; being alone feels louder.', why: 'Libra Moon is the relationship Moon — self-understanding happens through mirrors, not isolation.', suggestion: 'Spend quality time with someone. If alone, write about a relationship that matters to you.' },
+    'Creative / Spiritual': { state: 'Aesthetic',            feeling: 'Beauty and symmetry feel spiritually nourishing.', why: 'Venus-air Moon channels the sacred through beauty — art, design, and visual harmony become spiritual practice.', suggestion: 'Curate something beautiful. A playlist, a meal presentation, an outfit — let aesthetics be devotion.' },
+  },
+  Scorpio: {
+    'Mental':              { state: 'Penetrating',           feeling: 'Mind goes deep; surface answers feel insufficient.', why: 'Scorpio Moon falls in detriment — the mind\'s intensity drives past comfort into hidden layers.', suggestion: 'Follow one thread all the way down. Do not settle for the first answer today.' },
+    'Emotional':           { state: 'Intense',               feeling: 'Emotions are powerful, private, and hard to ignore.', why: 'Fixed water Moon concentrates emotional energy — feelings arrive with weight and demand acknowledgment.', suggestion: 'Write what you are feeling in raw, unfiltered language. Then decide what to do with it.' },
+    'Physical':            { state: 'Tense',                 feeling: 'Body holds emotional charge; release is needed.', why: 'Scorpio Moon stores emotional energy in the body — tension accumulates where feelings go unspoken.', suggestion: 'Move your body to release held tension. Shaking, stretching, or deep breathing all help.' },
+    'Relational':          { state: 'Guarded',               feeling: 'Trust is selective; emotional honesty feels essential.', why: 'Fixed water Moon protects emotional depths — vulnerability is only offered where safety is proven.', suggestion: 'Choose one person and share something real. Trust is built in small acts of honesty, not grand reveals.' },
+    'Creative / Spiritual': { state: 'Transformative',       feeling: 'Art and insight emerge from what you let yourself feel.', why: 'Scorpio Moon transforms pain into meaning — creative power lives in what most people avoid.', suggestion: 'Create from the place that feels uncomfortable. The most honest art lives at the edge.' },
+  },
+  Sagittarius: {
+    'Mental':              { state: 'Expansive',             feeling: 'Thinking broadens; limitation feels stifling.', why: 'Jupiter-ruled fire Moon expands mental horizons — the mind wants big-picture meaning, not small details.', suggestion: 'Zoom out on a problem you have been stuck in. Ask: what is the larger pattern here?' },
+    'Emotional':           { state: 'Optimistic',            feeling: 'Emotions seek meaning; reframing comes naturally.', why: 'Mutable fire Moon processes emotion through philosophy — feelings become stories with purpose.', suggestion: 'Let optimism fuel you, but check if you are reframing too quickly. Some feelings need to be felt first.' },
+    'Physical':            { state: 'Restless',              feeling: 'Body wants movement, space, and fresh air.', why: 'Jupiter expands the body\'s need for freedom — physical confinement creates emotional claustrophobia.', suggestion: 'Get outside. Even five minutes of fresh air and open sky resets Sagittarius Moon energy.' },
+    'Relational':          { state: 'Freedom-Seeking',       feeling: 'Connection thrives through shared adventure, not obligation.', why: 'Sagittarius Moon bonds through exploration — relationships that feel like duty become suffocating.', suggestion: 'Invite someone into something new. A new restaurant, a walk in an unfamiliar place, a new topic.' },
+    'Creative / Spiritual': { state: 'Visionary',            feeling: 'Big ideas feel possible; details can wait.', why: 'Jupiter-fire Moon fuels vision and aspiration — the soul wants to reach for what has never been tried.', suggestion: 'Dream big on paper. Write the vision without editing for practicality — details come later.' },
+  },
+  Capricorn: {
+    'Mental':              { state: 'Disciplined',           feeling: 'Thinking is strategic; long-term view dominates.', why: 'Saturn-ruled Moon in detriment creates a mind that prioritizes structure and consequence over spontaneity.', suggestion: 'Make a plan for one thing that has been weighing on you. Structure is how you create ease.' },
+    'Emotional':           { state: 'Reserved',              feeling: 'Emotions stay private; vulnerability feels risky.', why: 'Capricorn Moon holds feelings behind a wall of composure — emotional expression feels like exposure.', suggestion: 'Write down what you are feeling, even if you never share it. Acknowledgment does not require audience.' },
+    'Physical':            { state: 'Enduring',              feeling: 'Body can push through but may be ignoring fatigue.', why: 'Saturn Moon creates physical endurance but suppresses signals of exhaustion — the body serves duty first.', suggestion: 'Rest before you think you need to. Capricorn Moon underestimates its own tiredness.' },
+    'Relational':          { state: 'Responsible',           feeling: 'Relationships feel like commitments; lightness is elusive.', why: 'Saturn-ruled Moon approaches relationships through obligation — love expressed as reliability and duty.', suggestion: 'Do something playful with someone you care about. Not everything has to be serious to be meaningful.' },
+    'Creative / Spiritual': { state: 'Purposeful',           feeling: 'Creativity serves a goal; art without function feels wasteful.', why: 'Saturn Moon needs creativity to justify itself — beauty must also be useful to feel worthwhile.', suggestion: 'Make something without a purpose. Let uselessness be the point, just this once.' },
+  },
+  Aquarius: {
+    'Mental':              { state: 'Innovative',            feeling: 'Thinking is unconventional; new solutions surface.', why: 'Uranus and Saturn co-rule this Moon — the mind oscillates between radical innovation and structured logic.', suggestion: 'Approach a familiar problem from a completely new angle. Ask: what would I try if nothing was at stake?' },
+    'Emotional':           { state: 'Detached',              feeling: 'Emotions are observed more than felt; objectivity rises.', why: 'Air Moon in fixed mode creates emotional distance — feelings are analyzed from above, not entered.', suggestion: 'Put your hand on your heart and ask: what am I actually feeling right now? Let the body answer, not the mind.' },
+    'Physical':            { state: 'Electric',              feeling: 'Nervous system is alert; overstimulation is possible.', why: 'Uranus activates the nervous system — the body runs on electrical sensitivity and can overload.', suggestion: 'Limit sensory input for 20 minutes. Quiet, dim light, no screens — let the nervous system recalibrate.' },
+    'Relational':          { state: 'Independent',           feeling: 'Need for space without losing connection.', why: 'Aquarius Moon values autonomy within belonging — closeness without freedom creates anxiety.', suggestion: 'Take space if you need it, but tell the person why. Disappearing creates the disconnection you are trying to avoid.' },
+    'Creative / Spiritual': { state: 'Experimental',         feeling: 'Rules feel breakable; originality is the path.', why: 'Uranus Moon channels creativity through disruption — the muse lives outside convention.', suggestion: 'Break a rule in your creative process. Use the wrong tool, the wrong format, the wrong approach.' },
+  },
+  Pisces: {
+    'Mental':              { state: 'Diffuse',               feeling: 'Thoughts drift; linear logic feels harder to sustain.', why: 'Neptune-ruled Moon dissolves mental boundaries — the mind receives more than it organizes.', suggestion: 'Do not fight the drift. Let your mind wander for 10 minutes, then write down what surfaced.' },
+    'Emotional':           { state: 'Deeply Receptive',      feeling: 'Absorbing others\' feelings without realizing it.', why: 'Mutable water Moon has the thinnest emotional boundaries in the zodiac — everything gets in.', suggestion: 'Ask yourself: is this feeling mine? If not, visualize handing it back. Empathy does not require absorption.' },
+    'Physical':            { state: 'Fatigued',              feeling: 'Body may feel heavy or unusually tired.', why: 'Neptune Moon dissolves physical vitality — the body prioritizes dream-state and recovery over action.', suggestion: 'Honor the tiredness instead of pushing through. A 20-minute rest now prevents a crash later.' },
+    'Relational':          { state: 'Compassionate',         feeling: 'Empathy is heightened; boundaries may thin.', why: 'Pisces Moon merges with others emotionally — the line between your feelings and theirs blurs.', suggestion: 'Be generous with compassion but honest about your limits. You cannot pour from an empty vessel.' },
+    'Creative / Spiritual': { state: 'Channeling',           feeling: 'Art, music, and spiritual insight arrive without effort.', why: 'Neptune Moon opens the channel between conscious and subconscious — creativity flows through you, not from you.', suggestion: 'Create without planning. Put on music, pick up a pen, open a blank page — let something arrive.' },
+  },
+};
+&nbsp;
+// ── Moon Phase ───────────────────────────────────────────────
+&nbsp;
+function getMoonPhase(date: Date = <span class="branch-0 cbranch-no" title="branch not covered" >new Date())</span>: { phase: string; emoji: string } {
+  const info = getMoonPhaseInfo(date);
+  return { phase: info.name, emoji: info.emoji };
+}
+&nbsp;
+const MOON_PHASE_MEANINGS: Record&lt;string, string&gt; = {
+  'New Moon':        'New Moons often affect your self-image more than goals. This is a time for internal resets, not public launches.',
+  'Waxing Crescent': 'Intention is building quietly. What you plant now emotionally will shape the weeks ahead.',
+  'First Quarter':   'Tension between comfort and action surfaces. Decisions made now carry momentum.',
+  'Waxing Gibbous':  'Refinement energy. Adjust rather than restart. Trust what you have already set in motion.',
+  'Full Moon':       'Emotions peak and things become visible. What has been building will surface — let it.',
+  'Waning Gibbous':  'Gratitude and perspective. What did this cycle teach you? Let insight settle before acting.',
+  'Last Quarter':    'Release what no longer fits. Letting go is not failure — it is creating space.',
+  'Waning Crescent': 'Rest and reflection. Your energy is preparing for the next cycle. Honor the pause.',
+};
+&nbsp;
+// ── Guidance Mapping ─────────────────────────────────────────
+&nbsp;
+const GUIDANCE: Record&lt;string, EnergyGuidance&gt; = {
+  Aries: {
+    leanInto: 'Decisive action, physical movement, and honest expression.',
+    leanIntoContext: 'Your energy is designed for direct engagement today. The impulse to move is not restlessness — it is your system clearing the path to clarity.',
+    moveGentlyAround: 'Impulsive reactions and confrontation as emotional regulation.',
+    moveGentlyContext: 'Speed is a strength, but today the gap between feeling and acting may be dangerously small. Pause is not weakness — it is aim.',
+    bestUseOfEnergy: 'One bold move you have been postponing.',
+    bestUseContext: 'Pick the thing that has been sitting in your chest. Send the message, make the call, start the project. Aries energy is wasted on hesitation.',
+    ritual: 'Stand up. Shake your hands out for 30 seconds. Take three deep breaths. Then act on one thing.',
+  },
+  Taurus: {
+    leanInto: 'Sensory comfort, slow decisions, and grounding routines.',
+    leanIntoContext: 'Your body is your compass today. What feels physically good is also what is emotionally correct. Trust the slower rhythm.',
+    moveGentlyAround: 'Stubbornness disguised as patience.',
+    moveGentlyContext: 'There is a difference between waiting for the right time and refusing to move. Notice if comfort has become avoidance.',
+    bestUseOfEnergy: 'Building something tangible and lasting.',
+    bestUseContext: 'Your hands want to work. Cook, organize, build, plant — anything that leaves a physical result at the end.',
+    ritual: 'Hold something warm in your hands for one minute — a mug, a stone, your own wrist. Feel the temperature. Be here.',
+  },
+  Gemini: {
+    leanInto: 'Conversation, learning, and mental flexibility.',
+    leanIntoContext: 'Your mind is your greatest tool today. Ideas are arriving faster than usual — the skill is catching the right ones and letting the rest pass.',
+    moveGentlyAround: 'Over-explaining and information overload.',
+    moveGentlyContext: 'More input is not more clarity. At some point today, you will know enough — the risk is continuing to research instead of deciding.',
+    bestUseOfEnergy: 'One meaningful exchange of ideas.',
+    bestUseContext: 'Find someone who thinks differently from you and have a real conversation. Not to convince — to understand.',
+    ritual: 'Write three sentences about what is on your mind. Not a journal entry — just three honest sentences. Then close the notebook.',
+  },
+  Cancer: {
+    leanInto: 'Emotional honesty, slower pacing, and nurturing yourself.',
+    leanIntoContext: 'Your emotional intelligence is heightened. What you feel today is accurate — the challenge is not dismissing it as too much.',
+    moveGentlyAround: 'Absorbing others\' emotions and over-protecting.',
+    moveGentlyContext: 'Care is your superpower, but today you may absorb pain that is not yours. Check before you carry it.',
+    bestUseOfEnergy: 'One act of genuine self-care.',
+    bestUseContext: 'Not self-care as performance — real care. The thing your body has been asking for that you keep postponing.',
+    ritual: 'Place one hand on your heart, one on your belly. Breathe slowly for five rounds. Say: I am allowed to need things too.',
+  },
+  Leo: {
+    leanInto: 'Creative expression, visibility, and generous warmth.',
+    leanIntoContext: 'Something in you wants to be seen today — not for ego, but because your authentic self-expression genuinely helps others feel permission to be themselves.',
+    moveGentlyAround: 'Seeking validation to feel worthy.',
+    moveGentlyContext: 'The desire to be appreciated is human and real. But today, notice if you are performing for approval instead of expressing for truth.',
+    bestUseOfEnergy: 'Sharing something you made or felt.',
+    bestUseContext: 'Creative output wants an audience today. Share a thought, post a creation, tell someone what they mean to you.',
+    ritual: 'Put your hand on your chest. Say: I do not need permission to shine. Then do one thing that feels like you.',
+  },
+  Virgo: {
+    leanInto: 'Refining one system, practical self-care, and clarity.',
+    leanIntoContext: 'Your eye for what needs fixing is exceptionally sharp. Use it wisely — channel precision into improvement, not criticism.',
+    moveGentlyAround: 'Perfectionism and self-criticism loops.',
+    moveGentlyContext: 'The voice telling you it is not good enough may feel like high standards, but it is actually anxiety wearing a productive mask.',
+    bestUseOfEnergy: 'Fixing the one thing that has been nagging you.',
+    bestUseContext: 'You know what it is. The drawer, the email, the habit, the conversation. Do it and feel the weight lift.',
+    ritual: 'Clean one surface completely. Wipe it, clear it, make it empty. Let the outer order settle the inner noise.',
+  },
+  Libra: {
+    leanInto: 'Beauty, partnership, and harmonizing environments.',
+    leanIntoContext: 'Relational energy is your native language today. Connecting, creating beauty, and bringing balance are not distractions — they are your work.',
+    moveGentlyAround: 'People-pleasing at the cost of truth.',
+    moveGentlyContext: 'Harmony is a gift, but not when it requires silencing what you actually think. Today, notice where peace costs you honesty.',
+    bestUseOfEnergy: 'One honest conversation.',
+    bestUseContext: 'Say the kind and true thing. Not the comfortable thing. Libra energy at its best is diplomatic honesty, not comfortable silence.',
+    ritual: 'Light a candle or put on music that feels beautiful. Let beauty regulate your nervous system for five minutes.',
+  },
+  Scorpio: {
+    leanInto: 'Emotional depth, honesty with yourself, and release.',
+    leanIntoContext: 'Your capacity for truth is at its peak. What you see today is accurate, even if it is uncomfortable. Do not look away.',
+    moveGentlyAround: 'Power struggles and testing people silently.',
+    moveGentlyContext: 'Intensity is a gift, but today it may manifest as control. Notice if you are testing someone instead of talking to them.',
+    bestUseOfEnergy: 'Naming one truth you have been avoiding.',
+    bestUseContext: 'Write it down or say it aloud. Not to anyone — just to yourself. Acknowledgment is the first act of transformation.',
+    ritual: 'Write down one thing you have been avoiding. Read it once. Then tear the paper up. The naming is the point.',
+  },
+  Sagittarius: {
+    leanInto: 'Perspective, exploration, and philosophical thinking.',
+    leanIntoContext: 'Your mind wants altitude today. Step back from the details and ask what the bigger picture is trying to show you.',
+    moveGentlyAround: 'Escapism disguised as freedom.',
+    moveGentlyContext: 'There is a difference between expanding your horizons and running from what is right in front of you. Check which one you are doing.',
+    bestUseOfEnergy: 'Broadening your view on one stuck situation.',
+    bestUseContext: 'The situation has not changed, but your perspective can. What would this look like from five years in the future?',
+    ritual: 'Go outside and look at the sky for two minutes. Let the vastness recalibrate your sense of scale.',
+  },
+  Capricorn: {
+    leanInto: 'Structure, responsibility, and doing the next right thing.',
+    leanIntoContext: 'Discipline is your friend today, not your taskmaster. The calm satisfaction of completing something meaningful is available to you.',
+    moveGentlyAround: 'Overwork and equating productivity with worth.',
+    moveGentlyContext: 'You are not your output. The drive to prove your value through work may be louder today — notice it, and choose when to stop.',
+    bestUseOfEnergy: 'One meaningful step toward a long-term goal.',
+    bestUseContext: 'Not five steps — one. The one that actually matters. Do it thoroughly and then let it be enough.',
+    ritual: 'Write tomorrow\'s to-do list tonight. Three items, no more. Let structure create permission to rest.',
+  },
+  Aquarius: {
+    leanInto: 'Innovation, objectivity, and community connection.',
+    leanIntoContext: 'Your ability to see systems and patterns is heightened. Use this clarity to reimagine, not just analyze.',
+    moveGentlyAround: 'Emotional detachment and intellectualizing feelings.',
+    moveGentlyContext: 'Objectivity is a lens, not a lifestyle. Today you may observe emotions from such a distance that you forget to actually feel them.',
+    bestUseOfEnergy: 'One unconventional approach to a familiar problem.',
+    bestUseContext: 'The solution you have been overlooking is probably the weird one. Try it.',
+    ritual: 'Put your phone in another room for 30 minutes. Let your mind think its own thoughts without input.',
+  },
+  Pisces: {
+    leanInto: 'Intuition, compassion, and creative flow.',
+    leanIntoContext: 'Your inner knowing is louder than usual. What arrives without effort today is more trustworthy than what you force through analysis.',
+    moveGentlyAround: 'Boundary dissolution and absorbing external pain.',
+    moveGentlyContext: 'Compassion without boundaries becomes self-sacrifice. You can hold space for others without disappearing into their experience.',
+    bestUseOfEnergy: 'Listening to what your body already knows.',
+    bestUseContext: 'Your body has been sending signals you have been overriding. Today, pause and actually listen.',
+    ritual: 'Lie down for five minutes with your eyes closed. Do not try to meditate. Just let whatever comes, come.',
+  },
+};
+&nbsp;
+const FREE_GUIDANCE_POOL: Record&lt;string, string[]&gt; = {
+  Aries:       ['Move your body before you make a decision.', 'Channel the impulse — act on one clear thing.', 'Pause for three breaths before reacting.'],
+  Taurus:      ['Slow down — your best choices arrive with patience.', 'Trust what your body is telling you right now.', 'Comfort is not laziness. Let yourself settle.'],
+  Gemini:      ['Name it out loud; clarity lives in conversation.', 'Pick one thread and follow it all the way.', 'Write three sentences about what is on your mind.'],
+  Cancer:      ['Protect your softness; choose who gets access.', 'Your feelings are data — listen before you dismiss them.', 'Create one small pocket of safety for yourself today.'],
+  Leo:         ['Let yourself be seen — dimming does not serve anyone.', 'Create something, even something small, just for you.', 'Tell someone what they mean to you.'],
+  Virgo:       ['Fix the one small thing; let the rest wait.', 'Good enough is still good. Release the rest.', 'Your attention to detail is a superpower — point it at one thing.'],
+  Libra:       ['Choose the honest thing over the comfortable thing.', 'Balance is not stillness — it is constant micro-adjustment.', 'Your own opinion counts. State it.'],
+  Scorpio:     ['Tell yourself the truth first.', 'Go deeper on one thought instead of wider on many.', 'Honesty with yourself is the first act of power.'],
+  Sagittarius: ['Expand your perspective before you react.', 'Step outside — even five minutes of sky resets your frame.', 'Ask: what is the larger pattern here?'],
+  Capricorn:   ['Do the next right thing — then let it be enough.', 'Rest is not wasted time. Schedule it.', 'One meaningful step beats ten urgent ones.'],
+  Aquarius:    ['Step back to see clearly; then reconnect.', 'Try the unconventional approach first.', 'Your difference is not a bug — it is the feature.'],
+  Pisces:      ['Less input, more inner listening.', 'Ground before you absorb. Your boundaries matter.', 'Trust what arrives without effort today.'],
+};
+&nbsp;
+function getFreeGuidanceLine(moonSign: string, date: Date): string {
+  const pool = FREE_GUIDANCE_POOL[moonSign] ?? <span class="branch-1 cbranch-no" title="branch not covered" >['Listen to your body today.'];</span>
+  const doy = dayOfYear(date);
+  return pool[doy % pool.length];
+}
+&nbsp;
+// ── Behavior Context (mood, journal, patterns) ──────────────
+&nbsp;
+export interface BehaviorContext {
+  recentMoodScore?: number;          // 1-10 from most recent check-in
+  recentEnergyLevel?: 'low' | 'medium' | 'high';
+  recentStressLevel?: 'low' | 'medium' | 'high';
+  recentTags?: string[];             // theme tags from check-in
+  journalEntryCount7d?: number;      // journal entries in last 7 days
+  averageMood7d?: number;            // average mood over last 7 days
+}
+&nbsp;
+// ── Main Engine ──────────────────────────────────────────────
+&nbsp;
+export class EnergyEngine {
+  /**
+   * Generate the complete daily energy snapshot from a natal chart.
+   * Optionally blends behavioral signals (mood, journal, check-in data)
+   * to create a pattern-aware experience rather than purely astrology-driven.
+   */
+  static generateSnapshot(chart: NatalChart, date: Date = <span class="branch-0 cbranch-no" title="branch not covered" >new Date(),</span> behavior?: BehaviorContext): EnergySnapshot {
+    const moonSign = this.getCurrentMoonSign(chart, date);
+    const moonElement = signElement(moonSign) || <span class="branch-1 cbranch-no" title="branch not covered" >'Water';</span>
+    const moonHouse = this.getMoonHouse(chart, date);
+&nbsp;
+    // 1. Energy Snapshot (hero)
+    const toneData = MOON_TONES[moonSign] ?? <span class="branch-1 cbranch-no" title="branch not covered" >{ tone: 'Shifting', intensity: 'Moderate' as EnergyIntensity };</span>
+&nbsp;
+    // Blend intensity with check-in data when available
+    let adjustedIntensity = toneData.intensity;
+    if (behavior) {
+      adjustedIntensity = this.blendIntensity(toneData.intensity, behavior);
+    }
+&nbsp;
+    // Build driver description — blend behavioral signals when present
+    let driver = `Moon in ${moonSign}${moonHouse ? ` activating your ${moonHouse}${this.ordinalSuffix(moonHouse)} house` : <span class="branch-1 cbranch-no" title="branch not covered" >''}</span>`;
+    if (behavior?.recentMoodScore !== undefined) {
+      const moodHint = behavior.recentMoodScore &lt;= 3 ? ' · Your recent check-in suggests lower energy'
+                     : <span class="branch-1 cbranch-no" title="branch not covered" >behavior.recentMoodScore &gt;= 8 ? ' · Your recent check-in reflects high energy'</span>
+                     : '';
+      driver += moodHint;
+    }
+&nbsp;
+    const baseQuickMeaning = QUICK_MEANINGS[moonSign] ?? <span class="branch-1 cbranch-no" title="branch not covered" >'Your energy is in flux — tune inward for clarity.';</span>
+    // Add house context when the transit Moon's natal house is known
+    const quickMeaning = moonHouse
+      ? `${baseQuickMeaning} This is activating your ${moonHouse}${this.ordinalSuffix(moonHouse)} house — ${this.houseThemeHint(moonHouse)}.`
+      : <span class="branch-1 cbranch-no" title="branch not covered" >baseQuickMeaning;</span>
+&nbsp;
+    // 2. Chakras
+    const chakras = this.buildChakras(chart, moonSign, moonElement);
+    const dominantChakra = this.pickDominant(chakras, moonSign);
+&nbsp;
+    // 3. Domains
+    const domains = this.buildDomains(moonSign);
+    const doy = dayOfYear(date);
+    const freeDomainIndices: [number, number] = [doy % 5, (doy + 2) % 5];
+&nbsp;
+    // 4. Guidance
+    const guidance = GUIDANCE[moonSign] ?? <span class="branch-1 cbranch-no" title="branch not covered" >GUIDANCE.Cancer;</span>
+    const freeGuidanceLine = getFreeGuidanceLine(moonSign, date);
+&nbsp;
+    // 5. Moon phase
+    const { phase, emoji } = getMoonPhase(date);
+    const personalMeaning = MOON_PHASE_MEANINGS[phase] ?? <span class="branch-1 cbranch-no" title="branch not covered" >'Observe how this phase moves through you.';</span>
+&nbsp;
+    return {
+      date: toLocalDateString(date),
+      tone: toneData.tone,
+      intensity: adjustedIntensity,
+      primaryDriver: driver,
+      quickMeaning,
+&nbsp;
+      chakras,
+      dominantChakra,
+&nbsp;
+      domains,
+      freeDomainIndices,
+&nbsp;
+      guidance,
+      freeGuidanceLine,
+&nbsp;
+      moonPhase: { phase, emoji, personalMeaning },
+    };
+  }
+&nbsp;
+  // ── Internals ────────────────────────────────────────────
+&nbsp;
+  /**
+   * Get the REAL transiting Moon sign for the given date using the ephemeris.
+   * Falls back to natal Moon sign only if the transit calculation fails.
+   */
+  private static getCurrentMoonSign(chart: NatalChart, date: Date): string {
+    try {
+      const lat = chart.birthData?.latitude ?? <span class="branch-1 cbranch-no" title="branch not covered" >0;</span>
+      const lon = chart.birthData?.longitude ?? <span class="branch-1 cbranch-no" title="branch not covered" >0;</span>
+      const transits = getTransitingLongitudes(date, lat, lon);
+      const moonLongitude = transits['Moon'];
+      if (typeof moonLongitude === 'number' &amp;&amp; Number.isFinite(moonLongitude)) {
+        return signFromLongitude(moonLongitude);
+      }
+    } catch {
+      // Transit calculation failed — fall back to natal Moon
+    }
+<span class="cstat-no" title="statement not covered" >    return signName(chart.moonSign) || signName(chart.moon?.sign) || 'Cancer';</span>
+  }
+&nbsp;
+  /**
+   * Get the transiting Moon's absolute longitude for house placement.
+   */
+  private static getTransitMoonLongitude(chart: NatalChart, date: Date): number | null {
+    try {
+      const lat = chart.birthData?.latitude ?? <span class="branch-1 cbranch-no" title="branch not covered" >0;</span>
+      const lon = chart.birthData?.longitude ?? <span class="branch-1 cbranch-no" title="branch not covered" >0;</span>
+      const transits = getTransitingLongitudes(date, lat, lon);
+      const moonLongitude = transits['Moon'];
+      if (typeof moonLongitude === 'number' &amp;&amp; Number.isFinite(moonLongitude)) {
+        return moonLongitude;
+      }
+    } catch {
+      // fall through
+    }
+<span class="cstat-no" title="statement not covered" >    return null;</span>
+  }
+&nbsp;
+  /**
+   * Determine which natal house the transiting Moon is activating.
+   * Uses natal house cusps to find which house the transit Moon falls in.
+   * Falls back to natal Moon house if transit data unavailable.
+   */
+  private static getMoonHouse(chart: NatalChart, date: Date): number | undefined {
+    // Try transit Moon in natal houses
+    const transitLon = this.getTransitMoonLongitude(chart, date);
+    if (transitLon !== null) {
+      // Use SimpleHouseCusp absolute degrees if available
+      <span class="missing-if-branch" title="if path not taken" >I</span>if (chart.houses &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >chart.houses.length === 12)</span> {
+        const cusps = <span class="cstat-no" title="statement not covered" >chart.houses.map(<span class="fstat-no" title="function not covered" >h </span>=&gt; <span class="cstat-no" title="statement not covered" >h.absoluteDegree)</span>;</span>
+        const house = <span class="cstat-no" title="statement not covered" >houseForLongitude(transitLon, cusps);</span>
+<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (house) <span class="cstat-no" title="statement not covered" >return house;</span></span>
+      }
+      // Fallback to legacy houseCusps
+      if (chart.houseCusps &amp;&amp; chart.houseCusps.length === 12) {
+        const cusps = chart.houseCusps.map((h: any) =&gt; h.longitude ?? <span class="branch-1 cbranch-no" title="branch not covered" >h.absoluteDegree </span>?? <span class="branch-2 cbranch-no" title="branch not covered" >0)</span>;
+        const house = houseForLongitude(transitLon, cusps);
+        if (house) return house;
+      }
+    }
+    // Final fallback: natal Moon's house
+<span class="cstat-no" title="statement not covered" >    return chart.moon?.house;</span>
+  }
+&nbsp;
+  private static ordinalSuffix(n: number): string {
+    const s = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+&nbsp;
+  private static houseThemeHint(house: number): string {
+    const hints: Record&lt;number, string&gt; = {
+      1: 'identity and how you present yourself',
+      2: 'security, comfort, and self-worth',
+      3: 'communication, learning, and daily exchanges',
+      4: 'home, emotional roots, and inner safety',
+      5: 'creativity, joy, and self-expression',
+      6: 'health, routines, and daily service',
+      7: 'relationships, partnership, and mirroring',
+      8: 'depth, trust, and emotional transformation',
+      9: 'meaning, growth, and broadening perspective',
+      10: 'career, public role, and long-term purpose',
+      11: 'community, friendship, and shared vision',
+      12: 'rest, solitude, and the inner world',
+    };
+    return hints[house] ?? <span class="branch-1 cbranch-no" title="branch not covered" >'a personal area of your chart';</span>
+  }
+&nbsp;
+  private static buildChakras(
+    chart: NatalChart,
+    moonSign: string,
+    moonElement: string,
+  ): ChakraReading[] {
+    const triggers = CHAKRA_TRIGGERS[moonSign] ?? <span class="branch-1 cbranch-no" title="branch not covered" >{};</span>
+    const elementBias = ELEMENT_CHAKRA_BIAS[moonElement] ?? <span class="branch-1 cbranch-no" title="branch not covered" >[];</span>
+&nbsp;
+    return CHAKRA_DEFS.map((def, idx) =&gt; {
+      // Determine state
+      let state: ChakraState = 'Quiet';
+      const trigger = triggers[idx];
+&nbsp;
+      if (trigger) {
+        state = 'Sensitive'; // direct activation from moon sign
+      } else if (elementBias.includes(idx)) {
+        state = 'Flowing';   // element alignment
+      }
+&nbsp;
+      // Check if natal planets activate this chakra
+      const natalActivators = this.getNatalChakraActivators(chart, idx);
+      if (natalActivators.length &gt; 0 &amp;&amp; trigger) {
+        state = 'Grounding Needed'; // double activation → overstimulation
+      }
+&nbsp;
+      const triggerText = trigger || this.getDefaultTrigger(idx, moonSign);
+      const bodyCue = CHAKRA_BODY_CUES[idx]?.[state] ?? <span class="branch-1 cbranch-no" title="branch not covered" >'Notice sensations in this area.';</span>
+      const healingSuggestion = CHAKRA_HEALING[idx]?.[state] ?? <span class="branch-1 cbranch-no" title="branch not covered" >'Bring gentle awareness to this area of your body.';</span>
+      const groundingTip = CHAKRA_GROUNDING_TIPS[idx]?.[state] ?? <span class="branch-1 cbranch-no" title="branch not covered" >'Deep belly breathing for one minute.';</span>
+      const affirmation = CHAKRA_AFFIRMATIONS[idx]?.[state] ?? <span class="branch-1 cbranch-no" title="branch not covered" >'I am present with what is.';</span>
+      const elementConnection = ELEMENT_CHAKRA_CONNECTION[moonElement]?.[idx] ?? <span class="branch-1 cbranch-no" title="branch not covered" >`${moonElement} energy is present in your ${def.name} center.`;</span>
+&nbsp;
+      return {
+        name: def.name,
+        emoji: def.emoji,
+        state,
+        trigger: triggerText,
+        bodyCue,
+        healingSuggestion,
+        groundingTip,
+        elementConnection,
+        affirmation,
+        color: def.color,
+      };
+    });
+  }
+&nbsp;
+  private static getNatalChakraActivators(chart: NatalChart, chakraIdx: number): string[] {
+    const result: string[] = [];
+    for (const [planet, cIdx] of Object.entries(PLANET_CHAKRA)) {
+      if (cIdx === chakraIdx) {
+        // Check if this planet exists in chart
+        const key = planet.toLowerCase() as keyof NatalChart;
+        if ((chart as any)[key]) result.push(planet);
+      }
+    }
+    return result;
+  }
+&nbsp;
+  private static getDefaultTrigger(chakraIdx: number, moonSign: string): string {
+    const names = ['Root', 'Sacral', 'Solar Plexus', 'Heart', 'Throat', 'Third Eye', 'Crown'];
+    return `${names[chakraIdx]} influenced by ambient ${moonSign} Moon energy`;
+  }
+&nbsp;
+  private static pickDominant(chakras: ChakraReading[], moonSign: string): ChakraReading {
+    // Priority: Grounding Needed &gt; Sensitive &gt; Flowing &gt; Quiet
+    const priority: ChakraState[] = ['Grounding Needed', 'Sensitive', 'Flowing', 'Quiet'];
+    for (const p of priority) {
+      const found = chakras.find(c =&gt; c.state === p);
+      if (found) return found;
+    }
+<span class="cstat-no" title="statement not covered" >    return chakras[0];</span>
+  }
+&nbsp;
+  private static buildDomains(moonSign: string): EnergyDomain[] {
+    const domainNames: EnergyDomainName[] = ['Mental', 'Emotional', 'Physical', 'Relational', 'Creative / Spiritual'];
+    const icons = ['bulb-outline', 'water-outline', 'body-outline', 'people-outline', 'color-palette-outline'];
+    const states = DOMAIN_STATES[moonSign] ?? <span class="branch-1 cbranch-no" title="branch not covered" >DOMAIN_STATES.Cancer;</span>
+&nbsp;
+    return domainNames.map((name, idx) =&gt; ({
+      name,
+      icon: icons[idx],
+      state: states[name].state,
+      why: states[name].why,
+      feeling: states[name].feeling,
+      suggestion: states[name].suggestion,
+    }));
+  }
+&nbsp;
+  /**
+   * Blend astrology-derived intensity with behavioral check-in data.
+   * This ensures the energy reading reflects the user's actual state,
+   * not just planetary positions — making it a pattern engine, not a horoscope.
+   */
+  private static blendIntensity(
+    astroIntensity: EnergyIntensity,
+    behavior: BehaviorContext,
+  ): EnergyIntensity {
+    // Convert to numeric scale: Low=1, Moderate=2, High=3
+    const intensityMap: Record&lt;EnergyIntensity, number&gt; = { Low: 1, Moderate: 2, High: 3 };
+    const reverseMap: Record&lt;number, EnergyIntensity&gt; = { 1: 'Low', 2: 'Moderate', 3: 'High' };
+&nbsp;
+    let score = intensityMap[astroIntensity];
+&nbsp;
+    // Factor in mood check-in (weight: 40% behavioral, 60% chart-based)
+    if (behavior.recentMoodScore !== undefined) {
+      // Mood 1-3 → suggests lower energy, 4-7 → moderate, 8-10 → high
+      const moodSignal = behavior.recentMoodScore &lt;= 3 ? 1
+                       : <span class="branch-1 cbranch-no" title="branch not covered" >behavior.recentMoodScore &lt;= 7 ? 2</span>
+                       : 3;
+      score = score * 0.6 + moodSignal * 0.4;
+    }
+&nbsp;
+    // Factor in self-reported energy level
+    if (behavior.recentEnergyLevel) {
+      const energySignal = behavior.recentEnergyLevel === 'low' ? 1
+                         : <span class="branch-1 cbranch-no" title="branch not covered" >behavior.recentEnergyLevel === 'medium' ? 2</span>
+                         : 3;
+      score = score * 0.7 + energySignal * 0.3;
+    }
+&nbsp;
+    // Factor in stress level (high stress → higher intensity)
+    if (behavior.recentStressLevel) {
+      const stressSignal = behavior.recentStressLevel === 'low' ? <span class="branch-0 cbranch-no" title="branch not covered" >1</span>
+                         : behavior.recentStressLevel === 'medium' ? <span class="branch-0 cbranch-no" title="branch not covered" >2</span>
+                         : 3;
+      // Stress raises intensity slightly
+      if (stressSignal === 3 &amp;&amp; score &lt; 3) score = Math.min(3, score + 1);
+    }
+&nbsp;
+    // Round once at the end to avoid compounding rounding errors
+    return reverseMap[Math.max(1, Math.min(3, Math.round(score)))] ?? <span class="branch-1 cbranch-no" title="branch not covered" >'Moderate';</span>
+  }
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-04-15T03:50:56.521Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
+</html>
+    

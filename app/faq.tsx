@@ -49,6 +49,8 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
           <Pressable
             style={styles.backButton}
             onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : undefined)}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
             <MetallicIcon name="chevron-back-outline" size={22} variant="gold" />
           </Pressable>
@@ -90,7 +92,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
               <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>
               <Text style={styles.answer}>
                 <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>Free:</MetallicText> Personal birth chart, Big Three, daily mood/energy/stress check-ins, basic journaling, and standard AI dream interpretation.{"\n\n"}
-                <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>Deeper Sky:</MetallicText> Richer AI models, extended reflection trends, unlimited charts, full chakra Energy system, encrypted backup, and personalized daily guidance.
+                <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>Deeper Sky:</MetallicText> Richer AI models, extended reflection trends, unlimited charts, full chakra Energy system, encrypted backup, and more reflective guidance grounded in your own history.
               </Text>
 
               <Text style={styles.question}>What data does MySky store and where?</Text>
@@ -100,7 +102,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>Are dream reflections powered by AI?</Text>
               <Text style={styles.answer}>
-                They combine on-device symbolic analysis with an AI narrative pass from Google Gemini. We extract pattern context locally and only send dream text and feelings for the final narrative pass.
+                They combine on-device symbolic analysis with an AI narrative pass from Google Gemini. We extract pattern context locally and only send dream text and feelings for the final narrative pass. These reflections are for personal meaning-making, not diagnosis.
               </Text>
 
               <Text style={styles.question}>Is my data ever sold or shared?</Text>

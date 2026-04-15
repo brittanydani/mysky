@@ -356,11 +356,11 @@ export function generateEmotionalProfile(chart: NatalChart): EmotionalProfile {
   // Healing themes (Chiron, 12th house)
   let healingThemes: string;
   if (house12Planets.length > 0) {
-    healingThemes = `With ${house12Planets.join(' and ')} in your 12th house, healing involves confronting what lies beneath conscious awareness. Solitude, dreams, and creative expression may be powerful healing tools.`;
+    healingThemes = `With ${house12Planets.join(' and ')} in your 12th house, growth often involves meeting what lies beneath conscious awareness with honesty. Solitude, dreams, and creative expression may be powerful reflective tools.`;
   } else if (waterCount >= 3) {
-    healingThemes = 'With strong water emphasis, your healing path runs through emotional honesty, creative expression, and learning to set gentle boundaries around your sensitivity.';
+    healingThemes = 'With strong water emphasis, growth often runs through emotional honesty, creative expression, and learning to set gentle boundaries around your sensitivity.';
   } else {
-    healingThemes = `Your healing journey is shaped by your Moon in ${moonSign} and the house it occupies — attending to your emotional needs in that life area is where growth happens.`;
+    healingThemes = `Your reflective growth is shaped by your Moon in ${moonSign} and the house it occupies — attending to your emotional needs in that life area is where growth happens.`;
   }
 
   // Attachment style (Moon + Venus + 4th house)

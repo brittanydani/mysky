@@ -346,6 +346,7 @@ function AppShell() {
         return false;
       }
 
+      const astroSettings = await AstrologySettingsService.getSettings();
       const now = new Date().toISOString();
       await localDb.saveChart({
         id: generateId(),
@@ -357,7 +358,7 @@ function AppShell() {
         latitude: sealedIdentity.locationLat,
         longitude: sealedIdentity.locationLng,
         timezone: sealedIdentity.timezone,
-        houseSystem: 'whole-sign',
+        houseSystem: astroSettings.houseSystem,
         createdAt: now,
         updatedAt: now,
         isDeleted: false,

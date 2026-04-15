@@ -121,7 +121,7 @@ describe('PremiumContext', () => {
     expect(view.getByTestId('premium').children[0]).toBe('false');
   });
 
-  it('applies demo premium override for the reviewer account only', async () => {
+  it('does not apply a reviewer-only premium override when debug premium is disabled', async () => {
     mockAuthState = {
       session: { user: { id: 'reviewer-1', email: 'brittanyapps@outlook.com' } },
       loading: false,
@@ -134,7 +134,7 @@ describe('PremiumContext', () => {
 
     await waitFor(() => {
       expect(view.getByTestId('ready').children[0]).toBe('true');
-      expect(view.getByTestId('premium').children[0]).toBe('true');
+      expect(view.getByTestId('premium').children[0]).toBe('false');
     });
   });
 });

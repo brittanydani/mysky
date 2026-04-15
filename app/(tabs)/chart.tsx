@@ -61,6 +61,7 @@ import PremiumModal from '../../components/PremiumModal';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
+import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 
 // ── Services & Storage ──
 import { localDb } from '../../services/storage/localDb';
@@ -105,6 +106,7 @@ import {
   generateShadowGrowth, 
 } from '../../services/astrology/natalSynthesis';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
+import { personalizeLifeThemeSummary } from './chartHelpers';
 import { ChartStorySection } from '../../components/ui/editorial/ChartStorySection';
 
 // ── Advanced System Configurations ──────────────────────────────────────────
@@ -545,6 +547,7 @@ export default function ChartScreen() {
   // Re-synchronize ecosystem on screen focus
   useFocusEffect(
     useCallback(() => {
+      trackGrowthEvent('analytics_screen_viewed', { screen: 'chart' }).catch(() => {});
       void loadChart();
     }, [loadChart])
   );
@@ -886,7 +889,7 @@ export default function ChartScreen() {
         />
         <Text style={styles.loadingText as TextStyle}>NO GENESIS ARCHIVE FOUND.</Text>
         <Text style={[styles.wheelHint as TextStyle, { paddingHorizontal: 24, marginTop: 12 }]}> 
-          Your celestial blueprint personalizes your reflection and growth prompts throughout the MySky ecosystem.
+          Set up your birth profile to unlock chart context, reflective prompts, and personalized trend views across MySky.
         </Text>
         <Pressable
           style={styles.goHomeBtn as ViewStyle}
@@ -899,7 +902,7 @@ export default function ChartScreen() {
         >
           <VelvetGlassSurface style={styles.initBtnGlass as ViewStyle} intensity={25}>
             <MetallicText style={styles.goHomeText as TextStyle} color={PALETTE.titanium}>
-              INITIALIZE BLUEPRINT
+              SET UP BIRTH PROFILE
             </MetallicText>
           </VelvetGlassSurface>
         </Pressable>
@@ -1172,10 +1175,10 @@ export default function ChartScreen() {
           {activeTab === 'planets' && (
             <Animated.View entering={FadeInDown.delay(300).duration(500)} style={{ width: '100%' }}>
               <View style={[styles.tableHeader, styles.blueprintTableHeader]}>
-                <Text style={[styles.th, { width: 140 }]}>Planet</Text>
-                <Text style={[styles.th, { flex: 2 }]}>Sign</Text>
-                <Text style={[styles.th, { flex: 1 }]}>Deg</Text>
-                <Text style={[styles.th, { flex: 1 }]}>House</Text>
+                <Text style={[styles.th, styles.planetsTh, { width: 140 }]} numberOfLines={1}>Planet</Text>
+                <Text style={[styles.th, styles.planetsTh, { flex: 2 }]} numberOfLines={1}>Sign</Text>
+                <Text style={[styles.th, styles.planetsTh, { flex: 1 }]} numberOfLines={1}>Deg</Text>
+                <Text style={[styles.th, styles.planetsTh, { flex: 1 }]} numberOfLines={1}>House</Text>
               </View>
               {(viewMode === 'essentials' ? planetRows.slice(0, 7) : planetRows).map((row, idx) => {
                 const elColor = ELEMENT_COLORS[row.p.sign.element] || theme.textSecondary;
@@ -1213,7 +1216,7 @@ export default function ChartScreen() {
                         </View>
                       </View>
                       <View style={[styles.td, { flex: 1 }]}>
-                        <Text style={styles.degreeText}>{row.p.degree}°</Text>
+                        <Text style={[styles.degreeText, styles.planetsDegreeText]}>{row.p.degree}°</Text>
                         <Text style={styles.minuteText}>{String(row.p.minute).padStart(2, '0')}'</Text>
                       </View>
                       <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
@@ -1291,10 +1294,10 @@ export default function ChartScreen() {
                     </Text>
                   )}
                   <View style={[styles.tableHeader, styles.blueprintTableHeader]}>
-                    <Text style={[styles.th, { flex: 1 }]}>House</Text>
-                    <Text style={[styles.th, { flex: 2 }]}>Sign</Text>
-                    <Text style={[styles.th, { flex: 1 }]}>Deg</Text>
-                    <Text style={[styles.th, { flex: 3 }]}>Theme</Text>
+                    <Text style={[styles.th, styles.housesTh, { flex: 1 }]} numberOfLines={1}>House</Text>
+                    <Text style={[styles.th, styles.housesTh, { flex: 2 }]} numberOfLines={1}>Sign</Text>
+                    <Text style={[styles.th, styles.housesTh, { flex: 1 }]} numberOfLines={1}>Deg</Text>
+                    <Text style={[styles.th, styles.housesTh, { flex: 3 }]} numberOfLines={1}>Theme</Text>
                   </View>
                   {houseCusps.map((cusp: HouseCuspType, idx: number) => {
                     const houseInfo = HOUSE_MEANINGS[cusp.house as keyof typeof HOUSE_MEANINGS];
@@ -1322,7 +1325,7 @@ export default function ChartScreen() {
                             </View>
                           </View>
                           <View style={[styles.td, { flex: 1 }]}> 
-                            <Text style={styles.degreeText}>{isWholeSign ? '0°' : `${deg}°${String(min).padStart(2, '0')}'`}</Text>
+                            <Text style={[styles.degreeText, styles.housesDegreeText]}>{isWholeSign ? '0°' : `${deg}°${String(min).padStart(2, '0')}'`}</Text>
                           </View>
                           <View style={[styles.td, { flex: 3 }]}> 
                             <Text style={styles.houseTheme}>{houseInfo?.theme || ''}</Text>
@@ -1673,7 +1676,7 @@ export default function ChartScreen() {
                   <VelvetGlassSurface key={ai.name} style={styles.themedCard} intensity={45}>
                   <LinearGradient colors={chartSurfaceGradients.anglesSection} style={StyleSheet.absoluteFill} />
                     <View style={styles.themedCardHeaderRow}>
-                      <Text style={styles.themedCardTitle}>{ai.name}</Text>
+                      <Text style={[styles.themedCardTitle, styles.angleCardTitle]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>{ai.name}</Text>
                       <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#E8D6AE">{ai.sign} · {ai.degree}°</MetallicText>
                     </View>
                     <Text style={styles.themedCardSummary}>{ai.interpretation}</Text>
@@ -1823,11 +1826,14 @@ export default function ChartScreen() {
                         </View>
                         <MetallicIcon name={expandedPlanet === `dd-${dd.planet}` ? 'chevron-up' : 'chevron-down'} size={16} color={PALETTE.gold} />
                       </View>
-                      {expandedPlanet !== `dd-${dd.planet}` && (
-                        <Text style={[styles.themedCardSummary, styles.planetDiveSummary]} numberOfLines={2}>{dd.synthesis}</Text>
-                      )}
+                      <Text
+                        style={[styles.themedCardSummary, styles.planetDiveSummary]}
+                        numberOfLines={expandedPlanet === `dd-${dd.planet}` ? undefined : 2}
+                      >
+                        {dd.synthesis}
+                      </Text>
                       {expandedPlanet === `dd-${dd.planet}` && dd.aspects.length > 0 && (
-                        <View style={styles.themedCardDetails}>
+                        <View style={[styles.themedCardDetails, styles.planetDiveDetails]}>
                           {dd.aspects.map((asp, ai) => <Text key={ai} style={[styles.themedCardDetail, styles.planetDiveDetail]}>• {asp}</Text>)}
                         </View>
                       )}
@@ -1884,14 +1890,15 @@ export default function ChartScreen() {
                         {relationshipProfile.keyPlanets.map((p, i) => <View key={i} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{p}</Text></View>)}
                       </View>
                       {!expandedLifeTheme || expandedLifeTheme !== 'relationship' ? (
-                        <Text style={styles.themedCardSummary} numberOfLines={2}>{relationshipProfile.synthesis}</Text>
+                        <Text style={styles.themedCardSummary} numberOfLines={2}>{personalizeLifeThemeSummary('relationship', relationshipProfile.synthesis)}</Text>
                       ) : null}
                       {expandedLifeTheme === 'relationship' && (
                         <View style={styles.themedCardDetails}>
-                          <Text style={styles.themedCardDetail}>• Love Style: {relationshipProfile.loveStyle}</Text>
-                          <Text style={styles.themedCardDetail}>• Attraction: {relationshipProfile.attractionPattern}</Text>
-                          <Text style={styles.themedCardDetail}>• Intimacy: {relationshipProfile.intimacyStyle}</Text>
-                          <Text style={styles.themedCardDetail}>• Partnership Lessons: {relationshipProfile.partnershipLessons}</Text>
+                          <Text style={styles.themedCardDetail}>{personalizeLifeThemeSummary('relationship', relationshipProfile.synthesis)}</Text>
+                          <Text style={styles.themedCardDetail}>• The way you love tends to feel like: {relationshipProfile.loveStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• You are often drawn toward: {relationshipProfile.attractionPattern}</Text>
+                          <Text style={styles.themedCardDetail}>• Closeness may feel safest when: {relationshipProfile.intimacyStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• The relationship lesson underneath this is: {relationshipProfile.partnershipLessons}</Text>
                         </View>
                       )}
                     </VelvetGlassSurface>
@@ -1910,14 +1917,15 @@ export default function ChartScreen() {
                         {careerProfile.keyPlanets.map((p, i) => <View key={i} style={styles.themedPlacementChip}><Text style={styles.themedPlacementText}>{p}</Text></View>)}
                       </View>
                       {!expandedLifeTheme || expandedLifeTheme !== 'career' ? (
-                        <Text style={styles.themedCardSummary} numberOfLines={2}>{careerProfile.synthesis}</Text>
+                        <Text style={styles.themedCardSummary} numberOfLines={2}>{personalizeLifeThemeSummary('career', careerProfile.synthesis)}</Text>
                       ) : null}
                       {expandedLifeTheme === 'career' && (
                         <View style={styles.themedCardDetails}>
-                          <Text style={styles.themedCardDetail}>• Vocation: {careerProfile.vocationThemes}</Text>
-                          <Text style={styles.themedCardDetail}>• Work Style: {careerProfile.workStyle}</Text>
-                          <Text style={styles.themedCardDetail}>• Public Image: {careerProfile.publicImage}</Text>
-                          <Text style={styles.themedCardDetail}>• Growth Path: {careerProfile.growthPath}</Text>
+                          <Text style={styles.themedCardDetail}>{personalizeLifeThemeSummary('career', careerProfile.synthesis)}</Text>
+                          <Text style={styles.themedCardDetail}>• The work that seems most aligned for you is: {careerProfile.vocationThemes}</Text>
+                          <Text style={styles.themedCardDetail}>• You tend to work best when: {careerProfile.workStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• People may read your public presence as: {careerProfile.publicImage}</Text>
+                          <Text style={styles.themedCardDetail}>• The next layer of growth here is: {careerProfile.growthPath}</Text>
                         </View>
                       )}
                     </VelvetGlassSurface>
@@ -1933,15 +1941,16 @@ export default function ChartScreen() {
                         <MetallicIcon name={expandedLifeTheme === 'emotional' ? 'chevron-up' : 'chevron-down'} size={18} color={PALETTE.gold} />
                       </View>
                       {!expandedLifeTheme || expandedLifeTheme !== 'emotional' ? (
-                        <Text style={styles.themedCardSummary} numberOfLines={2}>{emotionalProfile.synthesis}</Text>
+                        <Text style={styles.themedCardSummary} numberOfLines={2}>{personalizeLifeThemeSummary('emotional', emotionalProfile.synthesis)}</Text>
                       ) : null}
                       {expandedLifeTheme === 'emotional' && (
                         <View style={styles.themedCardDetails}>
-                          <Text style={styles.themedCardDetail}>• Emotional Style: {emotionalProfile.emotionalStyle}</Text>
-                          <Text style={styles.themedCardDetail}>• Core Patterns: {emotionalProfile.coreFears}</Text>
-                          <Text style={styles.themedCardDetail}>• Under Stress: {emotionalProfile.defenseMechanisms}</Text>
-                          <Text style={styles.themedCardDetail}>• Attachment: {emotionalProfile.attachmentStyle}</Text>
-                          <Text style={styles.themedCardDetail}>• Healing: {emotionalProfile.healingThemes}</Text>
+                          <Text style={styles.themedCardDetail}>{personalizeLifeThemeSummary('emotional', emotionalProfile.synthesis)}</Text>
+                          <Text style={styles.themedCardDetail}>• Your emotional style tends to be: {emotionalProfile.emotionalStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• The fear pattern underneath it may sound like: {emotionalProfile.coreFears}</Text>
+                          <Text style={styles.themedCardDetail}>• Under strain, you may protect yourself by: {emotionalProfile.defenseMechanisms}</Text>
+                          <Text style={styles.themedCardDetail}>• In attachment, this can feel like: {emotionalProfile.attachmentStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• The healing thread running through it is: {emotionalProfile.healingThemes}</Text>
                         </View>
                       )}
                     </VelvetGlassSurface>
@@ -1957,14 +1966,15 @@ export default function ChartScreen() {
                         <MetallicIcon name={expandedLifeTheme === 'shadow' ? 'chevron-up' : 'chevron-down'} size={18} color={PALETTE.gold} />
                       </View>
                       {!expandedLifeTheme || expandedLifeTheme !== 'shadow' ? (
-                        <Text style={styles.themedCardSummary} numberOfLines={2}>{shadowGrowth.synthesis}</Text>
+                        <Text style={styles.themedCardSummary} numberOfLines={2}>{personalizeLifeThemeSummary('shadow', shadowGrowth.synthesis)}</Text>
                       ) : null}
                       {expandedLifeTheme === 'shadow' && (
                         <View style={styles.themedCardDetails}>
-                          <Text style={styles.themedCardDetail}>• Saturn Lessons: {shadowGrowth.saturnLessons}</Text>
-                          <Text style={styles.themedCardDetail}>• Chiron Wound: {shadowGrowth.chironWound}</Text>
-                          <Text style={styles.themedCardDetail}>• Pluto Transformation: {shadowGrowth.plutoTransformation}</Text>
-                          <Text style={styles.themedCardDetail}>• Node Axis: {shadowGrowth.nodeAxis}</Text>
+                          <Text style={styles.themedCardDetail}>{personalizeLifeThemeSummary('shadow', shadowGrowth.synthesis)}</Text>
+                          <Text style={styles.themedCardDetail}>• The long lesson asking for maturity is: {shadowGrowth.saturnLessons}</Text>
+                          <Text style={styles.themedCardDetail}>• The tender place still asking for gentleness is: {shadowGrowth.chironWound}</Text>
+                          <Text style={styles.themedCardDetail}>• The transformation underway in you is: {shadowGrowth.plutoTransformation}</Text>
+                          <Text style={styles.themedCardDetail}>• The growth direction pulling you forward is: {shadowGrowth.nodeAxis}</Text>
                           {shadowGrowth.growthEdges.map((edge, i) => <Text key={i} style={styles.themedCardDetail}>• {edge}</Text>)}
                         </View>
                       )}
@@ -2407,6 +2417,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 1,
     textAlign: 'center',
   },
+  planetsTh: {
+    fontSize: 9,
+    letterSpacing: 0.8,
+  },
+  housesTh: {
+    fontSize: 9,
+    letterSpacing: 0.8,
+  },
   tableRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
@@ -2513,6 +2531,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   signName: { fontWeight: '700', fontSize: 13, letterSpacing: -0.2, color: '#FFFFFF', textAlign: 'center' },
   elementLabel: { color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 3, fontWeight: '500', letterSpacing: 0.3, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   degreeText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15, textAlign: 'center' },
+  planetsDegreeText: { fontSize: 12.5 },
+  housesDegreeText: { fontSize: 12.5 },
   minuteText: { color: 'rgba(255,255,255,0.5)', fontSize: 12, textAlign: 'center', marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   houseNum: { color: '#FFFFFF', fontWeight: '800', fontSize: 16, textAlign: 'center' },
 
@@ -3039,6 +3059,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: -1,
     flex: 1,
   },
+  angleCardTitle: {
+    fontSize: 22,
+    marginRight: 8,
+  },
   themedCardPlacements: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -3074,6 +3098,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255,255,255,0.10)',
     gap: 8,
+  },
+  planetDiveDetails: {
+    marginTop: 16,
   },
   themedCardDetail: {
     fontSize: 14,

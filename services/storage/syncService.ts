@@ -753,6 +753,26 @@ export async function syncBirthProfileFromLocal() {
   const localProfile = birthProfileToSupabase(charts[0]);
   const { profile: remoteProfile } = await invokeBirthProfileSync('getLatest');
   if (remoteProfile && remoteProfile.updatedAt > localProfile.updatedAt) {
+    if (remoteProfile.isDeleted) {
+      await localDb.deleteChart(remoteProfile.chartId).catch(() => {});
+      return;
+    }
+
+    await localDb.upsertChartFromSync({
+      id: remoteProfile.chartId,
+      name: remoteProfile.name ?? undefined,
+      birthDate: remoteProfile.birthDate,
+      birthTime: remoteProfile.birthTime ?? undefined,
+      hasUnknownTime: remoteProfile.hasUnknownTime,
+      birthPlace: remoteProfile.birthPlace,
+      latitude: remoteProfile.latitude,
+      longitude: remoteProfile.longitude,
+      timezone: remoteProfile.timezone ?? undefined,
+      houseSystem: remoteProfile.houseSystem as SavedChart['houseSystem'],
+      createdAt: remoteProfile.createdAt ?? remoteProfile.updatedAt,
+      updatedAt: remoteProfile.updatedAt,
+      isDeleted: false,
+    });
     return;
   }
 

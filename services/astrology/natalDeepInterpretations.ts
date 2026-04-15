@@ -87,21 +87,21 @@ export function generatePlanetDeepDive(
 
   // Build synthesis
   const parts: string[] = [];
-  parts.push(`${pName} governs ${meaning?.domain ?? 'a core life area'}. In ${sName}, it expresses this ${signFlavor}.`);
+  parts.push(`Your ${pName} in ${sName} gives this part of you a distinctly personal tone: it tends to move ${signFlavor}. This is where ${meaning?.domain ?? 'a core life area'} stops being abstract and starts sounding like your actual style.`);
 
   if (house && houseArea) {
-    parts.push(`Placed in the ${house}${getOrdinal(house)} house, this energy activates in the area of ${houseArea}.`);
+    parts.push(`Because it lives in your ${house}${getOrdinal(house)} house, you feel it most vividly around ${houseArea}. This is usually where the placement becomes visible in real life rather than staying internal.`);
   }
 
   if (dignity.dignity !== 'peregrine') {
     const dignityNote = dignity.dignity === 'domicile' || dignity.dignity === 'exaltation'
-      ? `${pName} is in ${dignity.dignity} here — its expression is naturally strong and fluent.`
-      : `${pName} is in ${dignity.dignity} here — it must adapt and work harder, which often builds depth.`;
+      ? `${pName} is in ${dignity.dignity} here, so this part of you tends to trust itself. When you lean into it, the expression usually feels natural rather than forced.`
+      : `${pName} is in ${dignity.dignity} here, which can make this energy feel more effortful or complicated at first. Over time, that friction often becomes the source of your depth.`;
     parts.push(dignityNote);
   }
 
   if (retro) {
-    parts.push(`Being retrograde, ${pName}'s energy turns inward — you may process its themes more reflectively or revisit them through life.`);
+    parts.push(`Because ${pName} is retrograde, you may experience these themes inwardly before you show them outwardly. This placement often asks for reflection first and expression second.`);
   }
 
   // Aspects involving this planet
@@ -116,8 +116,10 @@ export function generatePlanetDeepDive(
 
   if (relatedAspects.length > 0) {
     const count = relatedAspects.length;
-    parts.push(`${pName} forms ${count} aspect${count > 1 ? 's' : ''} in your chart, weaving its themes into multiple areas of your life.`);
+    parts.push(`${pName} forms ${count} aspect${count > 1 ? 's' : ''} in your chart, so this part of you is woven into multiple emotional and relational threads at once. It is not operating in isolation.`);
   }
+
+  parts.push(`The deeper invitation here is not to perform this placement perfectly, but to notice what it is trying to teach you about your own way of being.`);
 
   return {
     planet: pName,
@@ -218,13 +220,13 @@ export interface AngleInterpretation {
 
 const ANGLE_MEANINGS: Record<string, (sign: string) => string> = {
   Ascendant: (s) =>
-    `Your Ascendant in ${s} shapes how you instinctively present yourself. People often perceive you ${SIGN_EXPRESSION[s] ?? `through ${s} energy`}. This is your social mask, your approach to new situations, and the lens through which you filter first encounters.`,
+    `Your Ascendant in ${s} shapes the atmosphere people meet first. You often come across ${SIGN_EXPRESSION[s] ?? `through ${s} energy`}, but this is more than a surface impression, it is the stance your system takes when it first meets life.`,
   Descendant: (s) =>
-    `Your Descendant in ${s} reveals what you seek in close partnerships. You are drawn to others who embody ${s} qualities — ${SIGN_EXPRESSION[s] ?? `${s} energy`}. This axis shows how you balance self-expression with relationship needs.`,
+    `Your Descendant in ${s} reveals the qualities you look for when closeness becomes real. You are often drawn toward people who carry ${s} traits — ${SIGN_EXPRESSION[s] ?? `${s} energy`} — because they mirror something your own growth is asking you to meet in relationship.`,
   Midheaven: (s) =>
-    `Your Midheaven in ${s} points to your public image and career direction. You are drawn to achieve ${SIGN_EXPRESSION[s] ?? `through ${s} energy`}. This is the reputation you build and the legacy you aim to create.`,
+    `Your Midheaven in ${s} points to the kind of public life that feels meaningful to build. You tend to want your work, direction, or reputation to carry ${SIGN_EXPRESSION[s] ?? `through ${s} energy`}, not just for appearance, but because that is what feels true to your path.`,
   IC: (s) =>
-    `Your IC (Imum Coeli) in ${s} reveals your deepest emotional foundation. Your roots, sense of home, and private self carry ${s} themes — ${SIGN_EXPRESSION[s] ?? `${s} energy`}. This is where you retreat to recharge.`,
+    `Your IC in ${s} describes the emotional ground you return to underneath everything else. Home, memory, and your private self carry ${s} themes — ${SIGN_EXPRESSION[s] ?? `${s} energy`} — which often tells you what safety and belonging really need to feel like for you.`,
 };
 
 export function generateAngleInterpretations(chart: NatalChart): AngleInterpretation[] {

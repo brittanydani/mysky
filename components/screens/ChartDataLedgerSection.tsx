@@ -54,8 +54,8 @@ export const ChartDataLedgerSection = ({ title = 'Complete Placements', subtitle
 
         {/* Column Headers */}
         <View style={styles.columnHeaders}>
-          <Text style={[styles.colHeader, { flex: 3 }]}>PLANET</Text>
-          <Text style={[styles.colHeader, { flex: 4, textAlign: 'right' }]}>SIGN · DEGREE · HOUSE</Text>
+          <Text style={[styles.colHeader, { flex: 3 }]} numberOfLines={1}>PLANET</Text>
+          <Text style={[styles.colHeader, styles.rightHeader]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9}>SIGN · DEGREE · HOUSE</Text>
         </View>
 
         {/* Flat Ledger Rows */}
@@ -136,6 +136,11 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     color: 'rgba(255,255,255,0.35)',
     fontWeight: '800',
     letterSpacing: 2,
+  },
+  rightHeader: {
+    flex: 4.6,
+    textAlign: 'right',
+    fontSize: 8,
   },
   row: {
     flexDirection: 'row',

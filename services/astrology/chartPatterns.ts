@@ -336,7 +336,7 @@ function getHouseStelliumFlavor(house: number): { short: string; subtitle: strin
     8: {
       short: 'Life may initiate you into depth earlier than expected — repeated encounters with emotional intensity, vulnerability, and change.',
       subtitle: 'A life shaped by depth and transformation',
-      narrative: 'This stellium brings repeated encounters with emotional intensity, vulnerability, and change. Life may initiate you into depth earlier than expected.\n\nYou may sense undercurrents others avoid — feeling drawn toward truth, healing, or intimacy. Surface-level engagement can feel unsatisfying.\n\nEarlier in life, this emphasis can feel overwhelming or isolating. Over time, it becomes resilience — the ability to sit with discomfort without losing yourself.\n\nThe deeper invitation is realizing that transformation doesn\'t require constant crisis.',
+      narrative: 'This stellium brings repeated encounters with emotional intensity, vulnerability, and change. Life may initiate you into depth earlier than expected.\n\nYou may sense undercurrents others avoid — feeling drawn toward truth, repair, or intimacy. Surface-level engagement can feel unsatisfying.\n\nEarlier in life, this emphasis can feel overwhelming or isolating. Over time, it becomes resilience — the ability to sit with discomfort without losing yourself.\n\nThe deeper invitation is realizing that transformation doesn\'t require constant crisis.',
     },
     9: {
       short: 'Growth often comes through exploration — intellectual, spiritual, or literal. Life invites you to expand your worldview repeatedly.',

@@ -297,12 +297,12 @@ function buildWeeklySummary(data: {
       const moodHint = data.avgMood >= 7 ? 'Your first entry shows a positive start.'
         : data.avgMood >= 5 ? 'Your first entry logged a steady baseline.'
         : 'Your first entry captured a heavier moment — that honesty is valuable.';
-      return `You've checked in once this week. ${moodHint} A few more entries will unlock your full weekly summary.`;
+      return `You've checked in once this week. ${moodHint} Add a few more and this space will start reflecting back something more reliable than a single moment.`;
     }
     const moodHint = data.avgMood >= 7 ? 'So far your mood is trending positive.'
       : data.avgMood >= 5 ? 'Your mood has been steady so far.'
       : 'Your entries suggest a harder stretch — tracking through it builds real insight.';
-    return `You've checked in ${data.checkInCount} times this week. ${moodHint} A couple more entries will unlock your weekly summary.`;
+    return `You have ${data.checkInCount} check-ins so far this week. ${moodHint} A couple more entries will help this reflection separate a passing day from a meaningful pattern.`;
   }
 
   const moodLabel =
@@ -313,30 +313,30 @@ function buildWeeklySummary(data: {
   // Mood trajectory
   if (data.prevAvgMood != null) {
     if (data.moodDirection === 'up') {
-      parts.push(`Your mood has been trending upward this week — averaging ${data.avgMood.toFixed(1)}, up from ${data.prevAvgMood.toFixed(1)} last week.`);
+      parts.push(`Your mood has lifted this week, averaging ${data.avgMood.toFixed(1)} compared with ${data.prevAvgMood.toFixed(1)} last week. That suggests something in your recent rhythm may be giving you a little more room to breathe.`);
     } else if (data.moodDirection === 'down') {
-      parts.push(`Your mood averaged ${data.avgMood.toFixed(1)} this week, slightly lower than last week's ${data.prevAvgMood.toFixed(1)}.`);
+      parts.push(`Your mood has softened a bit this week, averaging ${data.avgMood.toFixed(1)} after ${data.prevAvgMood.toFixed(1)} last week. It may not feel dramatic, but the shift suggests something underneath is asking for attention or more care.`);
     } else {
-      parts.push(`Your mood has been steady at ${data.avgMood.toFixed(1)} this week.`);
+      parts.push(`Your mood has stayed relatively steady this week at ${data.avgMood.toFixed(1)}. Even without a dramatic swing, consistency like this can say a lot about what is quietly supporting you.`);
     }
   } else {
-    parts.push(`Your average mood this week is ${data.avgMood.toFixed(1)} — a ${moodLabel} baseline.`);
+    parts.push(`Your average mood this week is ${data.avgMood.toFixed(1)}, which points to a ${moodLabel} emotional baseline right now. Think of it as a starting signal rather than a verdict.`);
   }
 
   // Sleep
   if (data.avgSleep > 0) {
     if (data.avgSleep >= 7) {
-      parts.push(`You averaged ${data.avgSleep.toFixed(1)} hours of sleep — a solid recovery foundation.`);
+      parts.push(`You averaged ${data.avgSleep.toFixed(1)} hours of sleep, which gives your system a steadier recovery base. That kind of support often shows up emotionally before you fully notice it mentally.`);
     } else {
-      parts.push(`Your sleep averaged ${data.avgSleep.toFixed(1)} hours — a bit more rest could support your wellbeing.`);
+      parts.push(`Your sleep averaged ${data.avgSleep.toFixed(1)} hours. If things have felt thinner or harder to hold lately, the body may be part of that story.`);
     }
   }
 
   // Journaling
   if (data.journalCount >= 3) {
-    parts.push('You journaled regularly, which tends to support emotional clarity.');
+    parts.push('You journaled regularly this week, which usually helps subtle feelings become easier to understand before they spill over.');
   } else if (data.journalCount > 0) {
-    parts.push(`You reflected ${data.journalCount} time${data.journalCount === 1 ? '' : 's'} — even brief entries help build self-awareness.`);
+    parts.push(`You reflected ${data.journalCount} time${data.journalCount === 1 ? '' : 's'} this week. Even brief entries give this reflection more texture and make it easier to ground the pattern in something real.`);
   }
 
   return parts.join(' ');
@@ -486,7 +486,7 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
 
     if (delta > 0.5) {
       return {
-        text: `Your mood has been higher this week compared to last — something in your routine is working well.`,
+        text: `Your mood has been running higher this week than last. Something in your routine, rest, or emotional environment seems to be supporting you more gently right now.`,
         type: 'pattern',
         accentColor: 'emerald',
         icon: 'trending-up-outline',
@@ -495,7 +495,7 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
 
     if (delta < -0.5) {
       return {
-        text: `Your mood has dipped slightly this week. This is normal — awareness of the shift is the first step.`,
+        text: `Your mood has softened slightly this week. It may not feel dramatic, but there is a real shift underneath, and noticing it early gives you more choice in how you meet it.`,
         type: 'pattern',
         accentColor: 'copper',
         icon: 'leaf-outline',
