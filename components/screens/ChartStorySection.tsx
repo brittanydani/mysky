@@ -15,6 +15,7 @@ import { SkiaGradient as LinearGradient } from '../ui/SkiaGradient';
 import { VelvetGlassSurface } from '../ui/VelvetGlassSurface';
 import { useThemedStyles } from '../../context/ThemeContext';
 import { type AppTheme } from '../../constants/theme';
+import { ReflectionDisclaimer } from '../ui/ReflectionDisclaimer';
 
 // ── TYPES & DATA ──
 
@@ -136,6 +137,7 @@ export const ChartStorySection = () => {
         ))}
       </View>
 
+      <ReflectionDisclaimer body="Astrological interpretation is for self-reflection and personal exploration only." />
     </View>
   );
 };

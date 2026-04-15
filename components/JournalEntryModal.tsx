@@ -431,9 +431,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
   useEffect(() => {
     if (!isPremium && visible) {
-      try { setFreePrompt(getFreePrompt(date)); } catch {}
+      try { setFreePrompt(getFreePrompt(date, undefined, mood)); } catch {}
     }
-  }, [isPremium, visible, date]);
+  }, [isPremium, visible, date, mood]);
 
   const loadCustomTags = useCallback(async () => {
     try {

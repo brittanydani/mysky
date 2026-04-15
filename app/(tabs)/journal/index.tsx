@@ -94,6 +94,10 @@ const LIGHT_MODE_META = 'rgba(26, 24, 21, 0.5)';
 
 type DreamArchiveSummary = NonNullable<ReturnType<typeof buildDreamArchiveSummary>>;
 
+interface DisplayPatternInsight extends PatternInsight {
+  aiEnhanced: boolean;
+}
+
 function formatAiFreshness(generatedAt: string | null): string | null {
   if (!generatedAt) return null;
 
@@ -106,6 +110,15 @@ function formatAiFreshness(generatedAt: string | null): string | null {
   if (diffMs < 3_600_000) return `AI-enhanced ${Math.max(1, Math.round(diffMs / 60_000))}m ago`;
   if (diffMs < 86_400_000) return `AI-enhanced ${Math.max(1, Math.round(diffMs / 3_600_000))}h ago`;
   return `AI-enhanced ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+}
+
+function buildDreamArchiveKey(summary: DreamArchiveSummary | null): string | null {
+  if (!summary) return null;
+  return JSON.stringify({
+    summary: summary.summary,
+    chips: summary.chips,
+    grounding: summary.grounding,
+  });
 }
 
 // ─── Dream card ───────────────────────────────────────────────────────────────
@@ -263,6 +276,8 @@ export default function JournalScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
   const reflectionsListRef = useRef<FlatList<JournalEntry> | null>(null);
+  const patternAiRequestRef = useRef(0);
+  const dreamAiRequestRef = useRef(0);
 
   const [showPremiumRequired] = useState(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -276,9 +291,11 @@ export default function JournalScreen() {
   const [actionEntry, setActionEntry] = useState<JournalEntry | null>(null);
 
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
+  const [aiPatternEnhancedIds, setAiPatternEnhancedIds] = useState<string[]>([]);
   const [aiPatternGeneratedAt, setAiPatternGeneratedAt] = useState<string | null>(null);
   const [aiDreamArchiveSummary, setAiDreamArchiveSummary] = useState<DreamArchiveSummary | null>(null);
   const [aiDreamGeneratedAt, setAiDreamGeneratedAt] = useState<string | null>(null);
+  const [aiDreamArchiveKey, setAiDreamArchiveKey] = useState<string | null>(null);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'reflections' | 'dreams'>('reflections');
@@ -307,9 +324,24 @@ export default function JournalScreen() {
   }, [sleepEntries, searchQuery]);
 
   const dreamArchiveSummary = useMemo(() => buildDreamArchiveSummary(sleepEntries), [sleepEntries]);
-  const displayedDreamArchiveSummary = aiDreamArchiveSummary ?? dreamArchiveSummary;
+  const dreamArchiveKey = useMemo(() => buildDreamArchiveKey(dreamArchiveSummary), [dreamArchiveSummary]);
+  const displayedDreamArchiveSummary = aiDreamArchiveKey === dreamArchiveKey
+    ? (aiDreamArchiveSummary ?? dreamArchiveSummary)
+    : dreamArchiveSummary;
   const aiPatternFreshness = useMemo(() => formatAiFreshness(aiPatternGeneratedAt), [aiPatternGeneratedAt]);
-  const aiDreamFreshness = useMemo(() => formatAiFreshness(aiDreamGeneratedAt), [aiDreamGeneratedAt]);
+  const aiDreamFreshness = useMemo(
+    () => (aiDreamArchiveKey === dreamArchiveKey ? formatAiFreshness(aiDreamGeneratedAt) : null),
+    [aiDreamArchiveKey, aiDreamGeneratedAt, dreamArchiveKey],
+  );
+  const visiblePatternInsights = useMemo<DisplayPatternInsight[]>(() => {
+    const enhancedIds = new Set(aiPatternEnhancedIds);
+    return patternInsights
+      .filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline')
+      .map((insight, index) => ({
+        ...insight,
+        aiEnhanced: enhancedIds.has(String(index)),
+      }));
+  }, [aiPatternEnhancedIds, patternInsights]);
 
   const toggleBrowseSearch = useCallback(() => {
     Haptics.selectionAsync().catch(() => {});
@@ -360,6 +392,7 @@ export default function JournalScreen() {
 
   const generatePatternInsights = useCallback(async () => {
     try {
+      const requestId = ++patternAiRequestRef.current;
       const sample = entries.slice(0, 90);
       const entryMetas: JournalEntryMeta[] = sample.map((e) => {
         let transitSnapshot: TransitSnapshot | undefined;
@@ -378,6 +411,7 @@ export default function JournalScreen() {
 
       const insights = AdvancedJournalAnalyzer.analyzePatterns(entryMetas, isPremium);
       setPatternInsights(insights);
+  setAiPatternEnhancedIds([]);
       setAiPatternGeneratedAt(null);
 
       if (!isPremium || insights.length === 0) return;
@@ -406,9 +440,15 @@ export default function JournalScreen() {
         context,
         checkIns,
       );
-      if (!enhanced?.insights?.length) return;
+      if (requestId !== patternAiRequestRef.current || !enhanced?.insights?.length) return;
 
       const aiBodies = new Map(enhanced.insights.map((insight) => [insight.id, insight.body]));
+      const enhancedIndices = new Set(
+        enhanced.insights
+          .map((insight) => insight.id.match(/^(\d+):/i)?.[1] ?? null)
+          .filter((value): value is string => !!value),
+      );
+      setAiPatternEnhancedIds([...enhancedIndices]);
       setAiPatternGeneratedAt(enhanced.generatedAt ?? null);
       setPatternInsights(
         insights.map((insight, index) => ({
@@ -488,17 +528,16 @@ export default function JournalScreen() {
 
   useEffect(() => {
     let cancelled = false;
+    const requestId = ++dreamAiRequestRef.current;
 
     if (!isPremium || !dreamArchiveSummary) {
       setAiDreamArchiveSummary(null);
       setAiDreamGeneratedAt(null);
+      setAiDreamArchiveKey(null);
       return () => {
         cancelled = true;
       };
     }
-
-    setAiDreamArchiveSummary(null);
-    setAiDreamGeneratedAt(null);
 
     void (async () => {
       try {
@@ -525,10 +564,11 @@ export default function JournalScreen() {
           context,
           checkIns,
         );
-        if (cancelled || !enhanced?.insights?.length) return;
+        if (cancelled || requestId !== dreamAiRequestRef.current || !enhanced?.insights?.length) return;
 
         const aiBodies = new Map(enhanced.insights.map((insight) => [insight.id, insight.body]));
         setAiDreamGeneratedAt(enhanced.generatedAt ?? null);
+        setAiDreamArchiveKey(dreamArchiveKey);
         setAiDreamArchiveSummary({
           ...dreamArchiveSummary,
           summary: aiBodies.get('dream-summary') ?? dreamArchiveSummary.summary,
@@ -542,7 +582,7 @@ export default function JournalScreen() {
     return () => {
       cancelled = true;
     };
-  }, [dreamArchiveSummary, isPremium, loadAiInputs, sleepEntries]);
+  }, [dreamArchiveKey, dreamArchiveSummary, isPremium, loadAiInputs, sleepEntries]);
 
   const handleAddEntry = async () => {
     try {
@@ -742,12 +782,12 @@ export default function JournalScreen() {
       )}
 
       {/* ── Pattern Insights (Atmosphere Wash) ── */}
-      {activeTab === 'reflections' && isPremium && moodInsightsEnabled && patternInsights.filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline').length > 0 && (
+      {activeTab === 'reflections' && isPremium && moodInsightsEnabled && visiblePatternInsights.length > 0 && (
         <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.insightsSection}>
           <SectionHeader title="Pattern Insights" icon="analytics-outline" />
           <Text style={styles.insightsSubtitle}>What your journal reveals over time</Text>
 
-          {patternInsights.filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline').map((insight, idx) => (
+          {visiblePatternInsights.map((insight, idx) => (
             <LinearGradient key={`${insight.title}-${idx}`} colors={theme.isDark ? ['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)'] : ['rgba(240, 245, 252, 0.7)', 'rgba(240, 245, 252, 0.4)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
               <View style={styles.insightHeader}>
                 <MetallicIcon
@@ -767,7 +807,7 @@ export default function JournalScreen() {
                   <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && insight.confidence === 'suggested' && { color: PALETTE.gold }]}>{insight.confidence.toUpperCase()}</Text>
                 </View>
               </View>
-              {!!aiPatternFreshness && <Text style={styles.aiFreshnessText}>{aiPatternFreshness}</Text>}
+              {!!(insight.aiEnhanced && aiPatternFreshness) && <Text style={styles.aiFreshnessText}>{aiPatternFreshness}</Text>}
               <Text style={styles.insightDescription}>{insight.description}</Text>
               {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
               {!!insight.actionable && (

@@ -30,7 +30,7 @@ import {
 } from 'react-native-reanimated';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { MetallicText } from './MetallicText';
-import { derivePatternOrbitScores, getPatternOrbitSummary, getPatternOrbitThemes } from './patternOrbitHelpers';
+import { derivePatternOrbitScores, getPatternOrbitThemes } from './patternOrbitHelpers';
 
 // ── Lunar Sky / Midnight Slate Palette ──────────────────────────────────────
 const PALETTE = {

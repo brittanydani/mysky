@@ -38,6 +38,7 @@ import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { logger } from '../utils/logger';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { ReflectionDisclaimer } from '../components/ui/ReflectionDisclaimer';
 
 // ── Synthesis Logic ──
 const ARCHETYPE_HEALING: Record<ArchetypeKey, { title: string; shadow: string; affirmation: string }> = {
@@ -312,6 +313,8 @@ export default function HealingSpaceScreen() {
               </VelvetGlassSurface>
             </Animated.View>
           )}
+
+          <ReflectionDisclaimer body="Healing prompts are for self-reflection and personal exploration — not therapy, diagnosis, or crisis support." />
 
           <View style={{ height: 120 }} />
         </ScrollView>

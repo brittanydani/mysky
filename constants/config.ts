@@ -56,15 +56,6 @@ export const config = {
         description: 'Best plan for building patterns over time',
         popular: true,
       },
-      {
-        id: 'lifetime',
-        name: 'Lifetime',
-        price: '$129.99',
-        priceValue: 129.99,
-        period: 'one time',
-        description: 'One-time unlock for long-term archives',
-        popular: false,
-      },
     ],
   },
 };

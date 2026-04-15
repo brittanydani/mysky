@@ -135,19 +135,116 @@ export default function HealingScreen() {
   })();
 
   if (!isPremium) {
+    const previewArchetype = hasArchetype ? ARCHETYPE_HEALING[context!.archetypeProfile!.dominant] : null;
+
     return (
       <View style={styles.container}>
         <SkiaDynamicCosmos />
+
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: "rgba(110, 191, 139, 0.12)" }]} />
+          <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: "rgba(168, 139, 235, 0.08)" }]} />
+        </View>
+
         <SafeAreaView edges={['top']} style={styles.safeArea}>
-          <View style={styles.centered}>
-            <MetallicIcon name="medical-outline" size={56} color={theme.success} />
-            <Text style={styles.lockTitle}>The Healing Space</Text>
-            <Text style={styles.lockSub}>Deep shadow work and somatic release rituals synthesized from your Blueprint.</Text>
-            <Pressable style={styles.premiumBtn} onPress={() => router.push('/(tabs)/premium' as Href)}>
-              <Ionicons name="sparkles-outline" size={16} color={theme.background} />
-              <Text style={styles.premiumBtnText}>Unlock Deeper Sky</Text>
+          <View style={styles.headerRow}>
+            <Pressable
+              style={styles.backBtn}
+              onPress={() => { Haptics.selectionAsync(); router.replace('/(tabs)/identity' as Href); }}
+              accessibilityRole="button"
+            >
+              <MetallicIcon name="chevron-back-outline" size={24} color={theme.success} />
             </Pressable>
           </View>
+
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
+              <Text style={styles.headerTitle}>Healing</Text>
+              <GoldSubtitle style={styles.headerSubtitle}>A glimpse into your inner patterns</GoldSubtitle>
+            </Animated.View>
+
+            {/* FREE PREVIEW: Shadow Work Awareness */}
+            {previewArchetype ? (
+              <Animated.View entering={FadeInDown.delay(140).duration(600)}>
+                <VelvetGlassSurface style={[styles.card, theme.velvetBorder]} intensity={45}>
+                  <LinearGradient colors={theme.cardSurfaceAnchor as any as string[]} style={StyleSheet.absoluteFill} />
+                  <LinearGradient colors={["rgba(168, 139, 235, 0.15)", "transparent"]} style={StyleSheet.absoluteFill} />
+
+                  <View style={styles.cardHeader}>
+                    <MetallicIcon name="moon-outline" size={16} color={theme.amethyst} />
+                    <MetallicText style={styles.cardEyebrow} color={theme.amethyst}>SHADOW WORK</MetallicText>
+                  </View>
+
+                  <Text style={styles.cardTitle}>{previewArchetype.title}</Text>
+                  <Text style={styles.bodyText}>
+                    Your dominant archetype carries a shadow side — a pattern that quietly shapes your choices and reactions.
+                  </Text>
+
+                  <View style={[styles.affirmationBox, { borderLeftColor: theme.amethyst }]}>
+                    <Text style={styles.affirmationLabel}>ANCHOR AFFIRMATION</Text>
+                    <MetallicText style={styles.affirmationText} variant="gold">{'"' + previewArchetype.affirmation + '"'}</MetallicText>
+                  </View>
+                </VelvetGlassSurface>
+              </Animated.View>
+            ) : (
+              <Animated.View entering={FadeInDown.delay(140).duration(600)}>
+                <VelvetGlassSurface style={[styles.card, theme.velvetBorder]} intensity={45}>
+                  <LinearGradient colors={theme.cardSurfaceAnchor as any as string[]} style={StyleSheet.absoluteFill} />
+                  <LinearGradient colors={["rgba(168, 139, 235, 0.10)", "transparent"]} style={StyleSheet.absoluteFill} />
+
+                  <View style={styles.cardHeader}>
+                    <MetallicIcon name="moon-outline" size={16} color={theme.amethyst} />
+                    <MetallicText style={styles.cardEyebrow} color={theme.amethyst}>SHADOW WORK</MetallicText>
+                  </View>
+
+                  <Text style={styles.cardTitle}>What Are You Protecting?</Text>
+                  <Text style={styles.bodyText}>
+                    Shadow work begins with noticing what you defend, avoid, or overdo. Everyone carries patterns shaped by their earliest wounds. This space helps you see them clearly.
+                  </Text>
+                </VelvetGlassSurface>
+              </Animated.View>
+            )}
+
+            {/* FREE PREVIEW: Somatic Awareness */}
+            <Animated.View entering={FadeInDown.delay(220).duration(600)}>
+              <VelvetGlassSurface style={[styles.card, theme.velvetBorder]} intensity={45}>
+                <LinearGradient colors={theme.cardSurfaceAnchor as any as string[]} style={StyleSheet.absoluteFill} />
+                <LinearGradient colors={["rgba(110, 191, 139, 0.12)", "transparent"]} style={StyleSheet.absoluteFill} />
+
+                <View style={styles.cardHeader}>
+                  <MetallicIcon name="body-outline" size={16} color={theme.success} />
+                  <MetallicText style={styles.cardEyebrow} color={theme.success}>SOMATIC AWARENESS</MetallicText>
+                </View>
+
+                <Text style={styles.cardTitle}>Your Body Keeps Score</Text>
+                <Text style={styles.bodyText}>
+                  Stress, grief, and unprocessed emotion often live in the body long before the mind notices. Somatic release rituals are personalized physical resets based on where you carry tension.
+                </Text>
+              </VelvetGlassSurface>
+            </Animated.View>
+
+            {/* PREMIUM CTA */}
+            <Animated.View entering={FadeInDown.delay(300).duration(600)}>
+              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                <VelvetGlassSurface style={[styles.card, theme.velvetBorder, { alignItems: 'center' }]} intensity={45}>
+                  <LinearGradient colors={theme.cardSurfaceAnchor as any as string[]} style={StyleSheet.absoluteFill} />
+                  <LinearGradient colors={["rgba(212, 175, 55, 0.10)", "transparent"]} style={StyleSheet.absoluteFill} />
+
+                  <MetallicIcon name="sparkles-outline" size={32} variant="gold" />
+                  <Text style={[styles.cardTitle, { textAlign: 'center', marginTop: 16 }]}>Unlock Full Healing Space</Text>
+                  <Text style={[styles.bodyText, { textAlign: 'center', marginBottom: 24 }]}>
+                    Personalized shadow work prompts, somatic release rituals, relational pattern resets, and integration affirmations — all synthesized from your unique Blueprint.
+                  </Text>
+                  <View style={styles.premiumBtn}>
+                    <Ionicons name="sparkles-outline" size={16} color={theme.background} />
+                    <Text style={styles.premiumBtnText}>Unlock Deeper Sky</Text>
+                  </View>
+                </VelvetGlassSurface>
+              </Pressable>
+            </Animated.View>
+
+            <View style={{ height: 120 }} />
+          </ScrollView>
         </SafeAreaView>
       </View>
     );

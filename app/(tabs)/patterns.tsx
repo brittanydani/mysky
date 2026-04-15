@@ -40,6 +40,9 @@ import {
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
+import { usePremium } from '../../context/PremiumContext';
+import { useRouter, Href } from 'expo-router';
+import { logger } from '../../utils/logger';
 
 const SCREEN_W = Dimensions.get('window').width;
 const ORBIT_SIZE = SCREEN_W - 48;
@@ -61,6 +64,8 @@ const PALETTE = {
 export default function PatternsScreen() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
+  const { isPremium } = usePremium();
+  const router = useRouter();
   const [snapshot, setSnapshot] = useState({ avgMood: 0, avgStress: 0, checkInCount: 0 });
   const [trendCheckIns, setTrendCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +75,7 @@ export default function PatternsScreen() {
   const [, setDeepInsights] = useState<DeepInsightBundle | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -138,6 +144,9 @@ export default function PatternsScreen() {
           setNarrative(computeNarrativeInsights(pipelineResult.dailyAggregates));
           setDeepInsights(computeDeepInsights(buildPersonalProfile(pipelineResult.dailyAggregates)));
 
+        } catch (e) {
+          logger.error('[Patterns] Pipeline error:', e);
+          if (active) setLoadError(true);
         } finally {
           if (active) setLoading(false);
         }
@@ -205,11 +214,50 @@ export default function PatternsScreen() {
               </View>
 
               <SectionHeader label="SURFACING TODAY" icon="radio-outline" />
-              {!loading && patternRows.length === 0 ? (
+              {!isPremium && !loading && snapshot.checkInCount >= 7 && (
+                <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                  <VelvetGlassSurface style={styles.insightCard} intensity={25}>
+                    <LinearGradient colors={['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)']} style={StyleSheet.absoluteFill} />
+                    <View style={styles.cardHeader}>
+                      <MetallicText style={styles.cardLabel} variant="gold">PATTERNS DETECTED</MetallicText>
+                      <View style={styles.lockedBadge}><MetallicIcon name="lock-closed-outline" size={10} variant="gold" /><Text style={styles.lockedText}>PREMIUM</Text></View>
+                    </View>
+                    <Text style={styles.patternTitle}>We found recurring themes in your data</Text>
+                    <Text style={styles.insightBody}>
+                      With {snapshot.checkInCount} check-ins logged, your mood and stress patterns are starting to reveal what restores you and what drains you. Unlock Deeper Sky to see the full picture.
+                    </Text>
+                  </VelvetGlassSurface>
+                </Pressable>
+              )}
+              {!isPremium && !loading && snapshot.checkInCount >= 3 && snapshot.checkInCount < 7 && (
+                <VelvetGlassSurface style={styles.insightCard} intensity={25}>
+                  <LinearGradient colors={['rgba(107, 144, 128, 0.15)', 'rgba(107, 144, 128, 0.05)']} style={StyleSheet.absoluteFill} />
+                  <View style={styles.cardHeader}>
+                    <MetallicText style={styles.cardLabel} variant="gold">BUILDING YOUR ARCHIVE</MetallicText>
+                  </View>
+                  <Text style={styles.patternTitle}>{7 - snapshot.checkInCount} more check-ins until your first pattern insight</Text>
+                  <Text style={styles.insightBody}>
+                    Keep logging — once we have a week of data, Deeper Sky can surface what your mood, stress, and energy levels are trying to tell you.
+                  </Text>
+                </VelvetGlassSurface>
+              )}
+              {!loading && loadError ? (
                 <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
                   <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
-                  <Text style={styles.emptyTitle}>No clear pattern yet</Text>
-                  <Text style={styles.emptyBody}>Start logging to begin seeing patterns emerge. A few more check-ins will make this view more useful.</Text>
+                  <Text style={styles.emptyTitle}>Couldn't load patterns right now</Text>
+                  <Text style={styles.emptyBody}>Something went wrong while analyzing your data. Try again in a moment.</Text>
+                </VelvetGlassSurface>
+              ) : !loading && patternRows.length === 0 ? (
+                <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
+                  <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
+                  <Text style={styles.emptyTitle}>Your patterns are forming</Text>
+                  <Text style={styles.emptyBody}>This space comes alive after a few days of data. Here's what feeds it:</Text>
+                  <View style={{ marginTop: 16, gap: 10 }}>
+                    <Text style={styles.emptyBody}>{'\u2022'} Check in with your mood, energy, and stress daily</Text>
+                    <Text style={styles.emptyBody}>{'\u2022'} Log sleep duration and dream notes</Text>
+                    <Text style={styles.emptyBody}>{'\u2022'} Write a journal entry when something feels important</Text>
+                  </View>
+                  <Text style={[styles.emptyBody, { marginTop: 16, fontStyle: 'italic' }]}>3–5 days of check-ins typically surfaces your first insight.</Text>
                 </VelvetGlassSurface>
               ) : null}
             </>
@@ -353,6 +401,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   cardLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   confirmedBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(107,144,128,0.15)', borderWidth: 1, borderColor: 'rgba(107,144,128,0.3)' },
   confirmedText: { fontSize: 8, fontWeight: '800', color: '#6B9080' },
+  lockedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(212,175,55,0.12)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.25)' },
+  lockedText: { fontSize: 8, fontWeight: '800', color: '#D4AF37' },
   patternTitle: { fontSize: 18, fontWeight: '700', color: '#FFFFFF', marginBottom: 12 },
   insightBody: { fontSize: 15, color: 'rgba(255,255,255,0.7)', lineHeight: 24 },
 

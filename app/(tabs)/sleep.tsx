@@ -300,15 +300,12 @@ export default function SleepScreen() {
   const [editingDate, setEditingDate] = useState<string | null>(null);
   const [natalChart, setNatalChart] = useState<NatalChart | null>(null);
   const [recentCheckIns, setRecentCheckIns] = useState<DailyCheckIn[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- state read pending UI wiring
   const [interpretations, setInterpretations] = useState<Record<string, DreamInterpretation>>({});
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
   // Gemini AI interpretation state
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- state read pending UI wiring
   const [aiInterpretations, setAiInterpretations] = useState<Record<string, GeminiDreamResult>>({});
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- state read pending UI wiring
-  const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [, setAiLoading] = useState<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- state read pending UI wiring
   const [aiError, setAiError] = useState<string | null>(null);
 
@@ -576,7 +573,6 @@ export default function SleepScreen() {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- handler pending UI wiring
   const handleDreamReflect = useCallback((entry: SleepEntry) => {
     if (!entry.dreamText || isDecryptionFailure(entry.dreamText)) return;
     if (expandedEntryId === entry.id) { setExpandedEntryId(null); return; }
@@ -647,7 +643,7 @@ export default function SleepScreen() {
         },
       },
     ]);
-  }, [chartId, editingEntryId, applyEntryToForm]);
+  }, [chartId, editingEntryId, applyEntryToForm, today]);
 
   const presentEntryActions = useCallback((entry: SleepEntry) => {
     Haptics.selectionAsync().catch(() => {});
@@ -1284,6 +1280,19 @@ export default function SleepScreen() {
                           <View style={styles.featuredExpandedContent}>
                             <Text style={styles.featuredExpandedText}>{selectedInterpretation.paragraph}</Text>
                             {selectedAiInterpretation?.paragraph ? <Text style={styles.featuredExpandedText}>{selectedAiInterpretation.paragraph}</Text> : null}
+                            {!isPremium && selectedInterpretation.extractedSymbols && selectedInterpretation.extractedSymbols.length > 0 && (
+                              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} style={styles.dreamSymbolTeaser}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                  <MetallicIcon name="sparkles-outline" size={14} variant="gold" />
+                                  <MetallicText style={{ fontSize: 13, fontWeight: '700' }} variant="gold">
+                                    {selectedInterpretation.extractedSymbols.length} recurring symbol{selectedInterpretation.extractedSymbols.length !== 1 ? 's' : ''} detected
+                                  </MetallicText>
+                                </View>
+                                <Text style={{ fontSize: 13, color: theme.textMuted, marginTop: 6, lineHeight: 20 }}>
+                                  Deeper Sky maps your dream symbols over time to reveal what your subconscious is processing.
+                                </Text>
+                              </Pressable>
+                            )}
                           </View>
                         ) : null}
                       </LinearGradient>
@@ -1322,7 +1331,7 @@ export default function SleepScreen() {
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.emptyState}>
               <Ionicons name="moon-outline" size={56} color={theme.textMuted} style={{ marginBottom: 12 }} />
               <Text style={styles.emptyTitle}>Your sleep story starts here</Text>
-              <Text style={styles.emptySubtitle}>Log your first night above. Even just a quality rating helps you spot patterns over time.</Text>
+              <Text style={styles.emptySubtitle}>Log your first night above — duration, quality, or a dream. After 3 nights, your sleep and mood patterns start connecting.</Text>
             </Animated.View>
           )}
 
@@ -1372,6 +1381,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   featuredFeelingText: { fontSize: 12, color: PALETTE.gold, fontWeight: '600', letterSpacing: 0.3 },
   featuredExpandedContent: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: theme.cardBorder, gap: 10 },
   featuredExpandedText: { fontSize: 14, color: theme.textSecondary, lineHeight: 23 },
+  dreamSymbolTeaser: { marginTop: 12, padding: 14, borderRadius: 14, backgroundColor: 'rgba(212,175,55,0.08)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.18)' },
 
   // Editorial list row for entries after the first
   entryListRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 4, gap: 12 },

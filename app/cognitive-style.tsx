@@ -45,6 +45,7 @@ import { logger } from '../utils/logger';
 import { EditorialLikertScale } from '../components/ui/EditorialLikertScale';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { ReflectionDisclaimer } from '../components/ui/ReflectionDisclaimer';
 
 const STORAGE_KEY = '@mysky:cognitive_style';
 const RADAR_SIZE = 180;
@@ -213,6 +214,11 @@ export default function CognitiveStyleScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {!anySet && (
+            <View style={styles.emptyHint}>
+              <Text style={styles.emptyHintText}>Adjust the sliders below to map how you process information. Your cognitive blueprint will appear here.</Text>
+            </View>
+          )}
           {anySet && (
             <VelvetGlassSurface style={styles.synthesisCard} intensity={35} backgroundColor={theme.cardSurfaceCognitive as any}>
               <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
@@ -249,6 +255,8 @@ export default function CognitiveStyleScreen() {
               </Animated.View>
             ))}
           </View>
+          <ReflectionDisclaimer body="This is a self-assessment tool for personal exploration — not a professional cognitive evaluation." />
+
           <View style={{ height: 120 }} />
         </ScrollView>
 
@@ -281,6 +289,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: theme.textPrimary, fontSize: 24 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
+  emptyHint: { marginBottom: 24, padding: 20, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  emptyHintText: { fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 21, textAlign: 'center' },
   headerTitle: { fontSize: 32, color: theme.textPrimary, fontWeight: '800', letterSpacing: -1 },
   headerSubtitle: { fontSize: 13, marginTop: 4 },
   synthesisCard: { borderRadius: 28, padding: 24, marginBottom: 32, alignItems: 'center', overflow: 'hidden' },

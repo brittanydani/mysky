@@ -19,7 +19,7 @@ import { metallicFillColors, metallicFillPositions } from '../constants/mySkyMet
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 import { trackGrowthEvent } from '../services/growth/localAnalytics';
 
-type PlanType = 'monthly' | 'yearly' | 'lifetime';
+type PlanType = 'monthly' | 'yearly';
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
 interface PremiumScreenProps {
@@ -53,107 +53,8 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
     const identifierMap: Record<string, string[]> = {
       monthly: ['monthly', '$rc_monthly', 'mysky_monthly'],
       yearly: ['annual', 'yearly', '$rc_annual', 'mysky_annual', 'mysky_yearly'],
-      lifetime: ['lifetime', '$rc_lifetime', 'mysky_lifetime'],
     };
 
-    const ids = identifierMap[tier.id] ?? [];
-    const pkg = offerings.availablePackages.find((p) =>
-      ids.some((id) => p.identifier.toLowerCase().includes(id.toLowerCase()))
-    );
-
-    if (!pkg) return tier;
-
-    return {
-      ...tier,
-      price: pkg.product.priceString,
-      period: tier.period,
-    };
-  });
-  const selectedTier = resolvedTiers.find((tier) => tier.id === selectedPlan);
-  const subscriptionTiers = resolvedTiers.filter((tier) => tier.id !== 'lifetime');
-  const lifetimeTier = resolvedTiers.find((tier) => tier.id === 'lifetime');
-
-  const safeGoBack = useCallback(() => {
-    if (onClose) {
-      onClose();
-    } else if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/settings' as Href);
-    }
-  }, [router, onClose]);
-
-  const handleSelectPlan = useCallback((plan: PlanType) => {
-    if (loading || restoring) return;
-    setSelectedPlan(plan);
-    trackGrowthEvent('paywall_plan_selected', { plan }).catch(() => {});
-    Haptics.selectionAsync().catch(() => {});
-  }, [loading, restoring]);
-
-  const handlePurchase = useCallback(async () => {
-    if (!offerings) {
-      Alert.alert('Not Available', 'Subscription packages are not available right now. Please try again later.');
-      return;
-    }
-
-    const identifierMap: Record<PlanType, string[]> = {
-      monthly: ['monthly', '$rc_monthly', 'mysky_monthly'],
-      yearly: ['annual', 'yearly', '$rc_annual', 'mysky_annual', 'mysky_yearly'],
-      lifetime: ['lifetime', '$rc_lifetime', 'mysky_lifetime'],
-    };
-
-    const identifiers = identifierMap[selectedPlan];
-    const pkg = offerings.availablePackages.find(p =>
-      identifiers.some(id => p.identifier.toLowerCase().includes(id.toLowerCase()))
-    );
-
-    if (!pkg) {
-      Alert.alert('Not Available', 'This plan is not available right now. Please try another option.');
-      return;
-    }
-
-    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
-    trackGrowthEvent('paywall_purchase_started', { plan: selectedPlan }).catch(() => {});
-
-    const result = await purchase(pkg);
-
-    if (result.success) {
-      trackGrowthEvent('paywall_purchase_succeeded', { plan: selectedPlan }).catch(() => {});
-      try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
-      Alert.alert('Welcome to Deeper Sky', 'Your premium features are now unlocked.');
-    } else if (result.error) {
-      Alert.alert('Purchase Failed', result.error);
-    }
-  }, [offerings, selectedPlan, purchase]);
-
-  const handleRestore = useCallback(async () => {
-    setRestoring(true);
-    const result = await restore();
-    setRestoring(false);
-
-    if (result.success && result.hasPremium) {
-      trackGrowthEvent('paywall_restore_succeeded').catch(() => {});
-      try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
-      Alert.alert('Restored', 'Your purchases have been restored successfully.');
-    } else if (result.success && !result.hasPremium) {
-      Alert.alert('No Purchases Found', 'No active purchases were found for this account.');
-    } else {
-      Alert.alert('Restore Failed', result.error || 'Could not restore purchases. Please try again.');
-    }
-  }, [restore]);
-
-  const openSubscriptions = useCallback(async () => {
-    try {
-      const url = 'https://apps.apple.com/account/subscriptions';
-      if (url) await Linking.openURL(url);
-    } catch {
-      // Fall through silently if linking fails
-    }
-  }, []);
-
-  const navigateToLegal = useCallback((path: '/terms' | '/privacy') => {
-    if (onClose) onClose();
-    setTimeout(() => router.push(path as Href), 350);
   }, [onClose, router]);
 
   const openLegalWebsite = useCallback(() => {
@@ -325,30 +226,6 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
             })}
           </Animated.View>
 
-          {lifetimeTier ? (
-            <Animated.View entering={FadeInDown.delay(560).duration(600)}>
-              <Text style={styles.lifetimeSectionLabel}>Optional one-time unlock</Text>
-              <Pressable
-                onPress={() => handleSelectPlan('lifetime')}
-                disabled={loading || restoring}
-                style={[
-                  styles.lifetimeOfferCard,
-                  selectedPlan === 'lifetime' && styles.lifetimeOfferCardSelected,
-                ]}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: selectedPlan === 'lifetime' }}
-              >
-                <View style={styles.lifetimeOfferCopy}>
-                  <Text style={styles.lifetimeOfferTitle}>Lifetime</Text>
-                  <Text style={styles.lifetimeOfferDesc}>Best for people who already know they want one long-term private archive.</Text>
-                </View>
-                <View style={styles.lifetimeOfferPriceWrap}>
-                  <Text style={styles.lifetimeOfferPrice}>{lifetimeTier.price}</Text>
-                  <Text style={styles.lifetimeOfferMeta}>single purchase</Text>
-                </View>
-              </Pressable>
-            </Animated.View>
-          ) : null}
         </ScrollView>
 
         {/* ── Sticky Bottom CTA ── */}
@@ -400,9 +277,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
           <Text style={styles.ctaHint}>
             {selectedPlan === 'yearly'
               ? 'Yearly is the best fit if you want weekly pattern shifts, recurring themes, and a full year of progress.'
-              : selectedPlan === 'lifetime'
-                ? 'Lifetime works best if you already know you want to keep your full archive in one place long term.'
-                : 'Monthly is the lightest way to try Deeper Sky before committing to a longer pattern-building cycle.'}
+              : 'Monthly is the lightest way to try Deeper Sky before committing to a longer pattern-building cycle.'}
           </Text>
 
           <Text style={styles.reflectionFrame}>
@@ -429,9 +304,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
           </View>
 
           <Text style={styles.legalMicro}>
-            {selectedPlan === 'lifetime'
-              ? 'This is a one-time purchase. Payment will be charged to your Apple ID account at confirmation of purchase. No recurring charges.'
-              : 'Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. Manage or cancel subscriptions in Settings → Apple ID → Subscriptions.'}
+            Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. Manage or cancel subscriptions in Settings → Apple ID → Subscriptions.
           </Text>
         </View>
       </SafeAreaView>

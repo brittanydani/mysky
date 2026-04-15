@@ -27,14 +27,14 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>mysky</string>
-          <string>com.brittany.mysky</string>
+          <string>$(APP_URL_SCHEME)</string>
+          <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
         </array>
       </dict>
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>exp+mysky</string>
+          <string>$(APP_EXPO_URL_SCHEME)</string>
         </array>
       </dict>
     </array>

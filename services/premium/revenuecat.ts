@@ -269,12 +269,11 @@ class RevenueCatService {
   }
 
   // Helper method to get package by type for easier selection
-  getPackageByType(offering: PurchasesOffering, type: 'monthly' | 'annual' | 'lifetime'): PurchasesPackage | null {
+  getPackageByType(offering: PurchasesOffering, type: 'monthly' | 'annual'): PurchasesPackage | null {
     // RevenueCat package types - adjust these based on your actual package identifiers
     const typeMap = {
       monthly: ['monthly', '$rc_monthly', 'mysky_monthly'],
       annual: ['annual', 'yearly', '$rc_annual', 'mysky_annual', 'mysky_yearly'],
-      lifetime: ['lifetime', '$rc_lifetime', 'mysky_lifetime'],
     };
 
     const identifiers = typeMap[type];

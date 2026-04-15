@@ -87,6 +87,22 @@ export interface DailyLoopData {
   weeklyReflection: WeeklyReflection;
   todayInsight: DailyInsight;
   returnNudge: ReturnNudge | null;
+  weeklySynthesis: WeeklySynthesis | null;
+}
+
+export interface WeeklySynthesis {
+  /** One-paragraph narrative connecting mood, sleep, journal, and dream data */
+  narrative: string;
+  /** Individual data points that fed the narrative */
+  signals: SynthesisSignal[];
+  /** Whether enough cross-domain data exists for a meaningful synthesis */
+  hasEnoughData: boolean;
+}
+
+export interface SynthesisSignal {
+  domain: 'mood' | 'sleep' | 'journal' | 'dream';
+  label: string;
+  detail: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -795,11 +811,143 @@ export async function getDailyLoopData(
   const weeklyReflection = await getWeeklyReflection(chartId);
   const todayInsight = await getTodayInsight(chartId, streak, selfKnowledge);
   const returnNudge = buildReturnNudge(streak);
+  const weeklySynthesis = await getWeeklySynthesis(chartId);
 
   return {
     streak,
     weeklyReflection,
     todayInsight,
     returnNudge,
+    weeklySynthesis,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Weekly Cross-Screen Synthesis
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function getWeeklySynthesis(chartId: string): Promise<WeeklySynthesis | null> {
+  try {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoKey = toLocalDateString(sevenDaysAgo);
+
+    const [checkIns, sleepEntries, journals] = await Promise.all([
+      localDb.getCheckIns(chartId, 14),
+      localDb.getSleepEntries(chartId, 14),
+      localDb.getJournalEntries(),
+    ]);
+
+    const weekCheckIns = checkIns.filter(c => c.date >= sevenDaysAgoKey);
+    const weekSleep = sleepEntries.filter(s => s.date >= sevenDaysAgoKey);
+    const weekJournals = journals.filter(j => j.date >= sevenDaysAgoKey);
+    const weekDreams = weekSleep.filter(s => s.dreamText?.trim());
+
+    const domains = [
+      weekCheckIns.length > 0,
+      weekSleep.length > 0,
+      weekJournals.length > 0,
+      weekDreams.length > 0,
+    ].filter(Boolean).length;
+
+    if (domains < 2) return null;
+
+    const signals: SynthesisSignal[] = [];
+    const narrativeParts: string[] = [];
+
+    // Mood signal
+    if (weekCheckIns.length > 0) {
+      const moods = weekCheckIns.map(c => c.moodScore).filter(Boolean) as number[];
+      const avgMood = moods.length > 0 ? mean(moods) : 0;
+      const highDays = weekCheckIns.filter(c => c.moodScore >= 7);
+      const lowDays = weekCheckIns.filter(c => c.moodScore <= 4);
+
+      signals.push({
+        domain: 'mood',
+        label: `${weekCheckIns.length} check-ins`,
+        detail: `Avg mood ${avgMood.toFixed(1)}/10`,
+      });
+
+      if (lowDays.length > 0 && highDays.length > 0) {
+        narrativeParts.push(`Your mood ranged widely this week — ${highDays.length} brighter day${highDays.length !== 1 ? 's' : ''} and ${lowDays.length} heavier one${lowDays.length !== 1 ? 's' : ''}.`);
+      } else if (avgMood >= 7) {
+        narrativeParts.push('Your mood stayed elevated most of the week.');
+      } else if (avgMood <= 4) {
+        narrativeParts.push('This was a heavier week emotionally.');
+      } else {
+        narrativeParts.push('Your mood held steady in the middle range this week.');
+      }
+    }
+
+    // Sleep-mood connection
+    if (weekSleep.length > 0) {
+      const sleepHours = weekSleep.map(s => s.durationHours).filter(Boolean) as number[];
+      const avgSleep = sleepHours.length > 0 ? mean(sleepHours) : 0;
+
+      signals.push({
+        domain: 'sleep',
+        label: `${weekSleep.length} nights logged`,
+        detail: avgSleep > 0 ? `Avg ${avgSleep.toFixed(1)}h` : 'Quality tracked',
+      });
+
+      if (weekCheckIns.length >= 3 && sleepHours.length >= 3) {
+        // Simple correlation: compare mood on good-sleep vs bad-sleep days
+        const sleepDateMap = new Map(weekSleep.map(s => [s.date, s.durationHours ?? 0]));
+        const goodSleepMoods: number[] = [];
+        const poorSleepMoods: number[] = [];
+        for (const c of weekCheckIns) {
+          const hours = sleepDateMap.get(c.date);
+          if (hours != null && c.moodScore) {
+            if (hours >= 7) goodSleepMoods.push(c.moodScore);
+            else if (hours < 6) poorSleepMoods.push(c.moodScore);
+          }
+        }
+        if (goodSleepMoods.length > 0 && poorSleepMoods.length > 0) {
+          const goodAvg = mean(goodSleepMoods);
+          const poorAvg = mean(poorSleepMoods);
+          if (goodAvg - poorAvg >= 1.5) {
+            narrativeParts.push('Your mood was noticeably higher on nights you slept 7+ hours.');
+          } else if (poorAvg - goodAvg >= 1) {
+            narrativeParts.push('Interestingly, shorter sleep nights didn\'t bring your mood down as much this week.');
+          }
+        }
+      } else if (avgSleep > 0) {
+        if (avgSleep < 6) {
+          narrativeParts.push(`Sleep averaged ${avgSleep.toFixed(1)} hours — your body may be carrying a deficit.`);
+        } else if (avgSleep >= 8) {
+          narrativeParts.push(`Sleep was generous this week at ${avgSleep.toFixed(1)} hours on average.`);
+        }
+      }
+    }
+
+    // Journal signal
+    if (weekJournals.length > 0) {
+      signals.push({
+        domain: 'journal',
+        label: `${weekJournals.length} journal entr${weekJournals.length !== 1 ? 'ies' : 'y'}`,
+        detail: 'Written reflections',
+      });
+      narrativeParts.push(`You wrote ${weekJournals.length} journal entr${weekJournals.length !== 1 ? 'ies' : 'y'} — that level of reflection compounds.`);
+    }
+
+    // Dream signal
+    if (weekDreams.length > 0) {
+      signals.push({
+        domain: 'dream',
+        label: `${weekDreams.length} dream${weekDreams.length !== 1 ? 's' : ''} logged`,
+        detail: 'Subconscious processing',
+      });
+      narrativeParts.push(`${weekDreams.length} dream${weekDreams.length !== 1 ? 's were' : ' was'} recorded, keeping your subconscious patterns visible.`);
+    }
+
+    return {
+      narrative: narrativeParts.join(' '),
+      signals,
+      hasEnoughData: domains >= 2,
+    };
+  } catch (e) {
+    logger.error('[DailyLoop] getWeeklySynthesis failed:', e);
+    return null;
+  }
 }

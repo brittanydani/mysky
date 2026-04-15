@@ -696,8 +696,108 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
+          {/* ── Engagement Nudge ── */}
+          {dailyLoop && dailyLoop.streak.current >= 3 && dailyLoop.weeklyReflection.journalCount === 0 && (
+            <Animated.View entering={FadeInDown.delay(900).duration(600)}>
+              <Pressable onPress={() => router.push('/(tabs)/sleep' as Href)}>
+                <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={['rgba(168, 139, 235, 0.15)', 'rgba(26, 30, 41, 0.40)']}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.insightPadding}>
+                    <View style={styles.insightHeader}>
+                      <MetallicIcon name="bulb-outline" size={16} variant="gold" />
+                      <MetallicText style={styles.insightEyebrow} variant="gold">NEXT STEP</MetallicText>
+                    </View>
+                    <Text style={styles.weeklySummaryText}>
+                      You have {dailyLoop.streak.current} days of mood data building. Try logging a sleep entry or journal to see how they connect in your weekly story.
+                    </Text>
+                  </View>
+                </VelvetGlassSurface>
+              </Pressable>
+            </Animated.View>
+          )}
+
+          {/* ── Birth Time Nudge ── */}
+          {userChart?.birthData?.hasUnknownTime && dailyLoop && dailyLoop.streak.totalCheckIns >= 3 && (
+            <Animated.View entering={FadeInDown.delay(920).duration(600)}>
+              <Pressable onPress={() => setShowEditBirth(true)}>
+                <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={['rgba(162, 194, 225, 0.15)', 'rgba(26, 30, 41, 0.40)']}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.insightPadding}>
+                    <View style={styles.insightHeader}>
+                      <MetallicIcon name="time-outline" size={16} variant="gold" />
+                      <MetallicText style={styles.insightEyebrow} variant="gold">UNLOCK MORE DEPTH</MetallicText>
+                    </View>
+                    <Text style={styles.weeklySummaryText}>
+                      Adding your birth time unlocks your Rising sign, house placements, and more accurate daily transits — the full picture of your Blueprint.
+                    </Text>
+                  </View>
+                </VelvetGlassSurface>
+              </Pressable>
+            </Animated.View>
+          )}
+
           {/* ── Premium Teaser ── */}
-          {!isPremium && (
+          {dailyLoop?.weeklySynthesis?.hasEnoughData && (
+            <Animated.View entering={FadeInDown.delay(950).duration(600)}>
+              <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
+                <LinearGradient
+                  pointerEvents="none"
+                  colors={['rgba(107, 144, 128, 0.20)', 'rgba(26, 30, 41, 0.40)']}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.insightPadding}>
+                  <View style={styles.insightHeader}>
+                    <MetallicIcon name="git-network-outline" size={16} variant="gold" />
+                    <MetallicText style={styles.insightEyebrow} variant="gold">THIS WEEK'S STORY</MetallicText>
+                  </View>
+                  <Text style={styles.weeklySummaryText}>{dailyLoop.weeklySynthesis.narrative}</Text>
+                  <View style={styles.weeklyMetrics}>
+                    {dailyLoop.weeklySynthesis.signals.map((sig) => (
+                      <MetricChip key={sig.domain} value={sig.label} label={sig.domain.charAt(0).toUpperCase() + sig.domain.slice(1)} />
+                    ))}
+                  </View>
+                </View>
+              </VelvetGlassSurface>
+            </Animated.View>
+          )}
+          {!isPremium && dailyLoop?.weeklyReflection?.hasEnoughData && (
+            <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
+              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                <VelvetGlassSurface style={styles.premiumCard} intensity={20}>
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.insightPadding}>
+                    <View style={styles.premiumHeader}>
+                      <MetallicIcon name="sparkles-outline" size={18} variant="gold" />
+                      <MetallicText style={styles.premiumLabel} variant="gold">Pattern Unlocked</MetallicText>
+                    </View>
+                    <Text style={styles.premiumTitle}>
+                      You have {dailyLoop.weeklyReflection.checkInCount} check-ins this week — your first pattern trends are ready
+                    </Text>
+                    <Text style={styles.premiumSub}>
+                      Deeper Sky can now show you what restores your energy, what drains it, and how your mood shifts across your week.
+                    </Text>
+                    <View style={styles.premiumCta}>
+                      <MetallicText style={styles.premiumCtaText} variant="gold">See Your Patterns</MetallicText>
+                      <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
+                    </View>
+                  </View>
+                </VelvetGlassSurface>
+              </Pressable>
+            </Animated.View>
+          )}
+          {!isPremium && !dailyLoop?.weeklyReflection?.hasEnoughData && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                 <VelvetGlassSurface style={styles.premiumCard} intensity={20}>

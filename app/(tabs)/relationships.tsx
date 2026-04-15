@@ -190,12 +190,12 @@ export default function RelationshipsScreen() {
   const handleAddRelationship = (type: RelationshipType) => {
     if (!canAddMore()) {
       Alert.alert(
-        'Upgrade to Deeper Sky',
-        'Your free chart includes one relationship. Upgrade to explore unlimited connections.',
+        'You want to understand them better',
+        'That curiosity matters. Deeper Sky lets you explore unlimited relationship charts — partners, family, friends — so you can see the patterns that shape how you connect.',
 
         [
           { text: 'Not now', style: 'cancel' },
-          { text: 'Learn more', onPress: () => router.push('/(tabs)/premium' as Href) },
+          { text: 'Unlock Deeper Sky', onPress: () => router.push('/(tabs)/premium' as Href) },
         ]
       );
       return;
@@ -634,8 +634,8 @@ export default function RelationshipsScreen() {
                 {!isPremium && synastryReport.aspects.length > 6 && (
                   <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                     <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.upsellGradient}>
-                      <Text style={styles.upsellTitle}>+{synastryReport.aspects.length - 6} more planetary connections</Text>
-                      <Text style={styles.upsellText}>Deeper aspects reveal hidden dynamics — the subtle threads that make this relationship unique.</Text>
+                      <Text style={styles.upsellTitle}>+{synastryReport.aspects.length - 6} hidden connections between you</Text>
+                      <Text style={styles.upsellText}>The aspects you can't see yet often explain the tensions, attractions, and unspoken dynamics that shape this relationship most.</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
                         <MetallicText style={{ fontSize: 14, fontWeight: '600' }} variant="gold">Unlock all aspects</MetallicText>
                         <MetallicIcon name="arrow-forward-outline" size={16} variant="gold" />

@@ -1,16 +1,16 @@
 import React from 'react';
-const TestRenderer = require('react-test-renderer') as {
-  create: (node: React.ReactElement) => { root: any };
-  act: (callback: () => void) => void;
-};
-const { act } = TestRenderer;
+import TestRenderer, { act } from 'react-test-renderer';
 
 function loadKeyboardCompat(options?: { native?: boolean }) {
   jest.resetModules();
 
   jest.doMock('react-native', () => {
     const React = jest.requireActual('react');
-    const makeComponent = (name: string) => ({ children, ...props }: any) => React.createElement(name, props, children);
+    const makeComponent = (name: string) => {
+      const MockComponent = ({ children, ...props }: any) => React.createElement(name, props, children);
+      MockComponent.displayName = `${name}Mock`;
+      return MockComponent;
+    };
     return {
       KeyboardAvoidingView: makeComponent('KeyboardAvoidingView'),
       ScrollView: makeComponent('ScrollView'),
@@ -26,23 +26,32 @@ function loadKeyboardCompat(options?: { native?: boolean }) {
   if (options?.native) {
     jest.doMock('react-native-keyboard-controller', () => {
       const React = jest.requireActual('react');
+      const KeyboardProvider = ({ children, preload }: any) => (
+        React.createElement('native-provider', { testID: 'native-provider', accessibilityLabel: String(preload) }, children)
+      );
+      KeyboardProvider.displayName = 'KeyboardProviderMock';
+
+      const KeyboardAwareScrollView = ({ children, bottomOffset, extraKeyboardSpace }: any) => (
+        React.createElement('native-scroll', { testID: 'native-scroll', accessibilityLabel: `${bottomOffset}:${extraKeyboardSpace}` }, children)
+      );
+      KeyboardAwareScrollView.displayName = 'KeyboardAwareScrollViewMock';
+
+      const KeyboardStickyView = ({ children }: any) => (
+        React.createElement('native-sticky', { testID: 'native-sticky' }, children)
+      );
+      KeyboardStickyView.displayName = 'KeyboardStickyViewMock';
+
       return {
-        KeyboardProvider: ({ children, preload }: any) => (
-          React.createElement('native-provider', { testID: 'native-provider', accessibilityLabel: String(preload) }, children)
-        ),
-        KeyboardAwareScrollView: ({ children, bottomOffset, extraKeyboardSpace }: any) => (
-          React.createElement('native-scroll', { testID: 'native-scroll', accessibilityLabel: `${bottomOffset}:${extraKeyboardSpace}` }, children)
-        ),
-        KeyboardStickyView: ({ children }: any) => (
-          React.createElement('native-sticky', { testID: 'native-sticky' }, children)
-        ),
+        KeyboardProvider,
+        KeyboardAwareScrollView,
+        KeyboardStickyView,
       };
     });
   }
 
   let mod: typeof import('../KeyboardControllerCompat');
   jest.isolateModules(() => {
-    mod = require('../KeyboardControllerCompat');
+    mod = jest.requireActual('../KeyboardControllerCompat') as typeof import('../KeyboardControllerCompat');
   });
 
   return mod!;

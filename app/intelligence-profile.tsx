@@ -39,6 +39,7 @@ import { syncIntelligenceFromReflections } from '../services/insights/reflection
 import { keepLastWordsTogether } from '../utils/textLayout';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { ReflectionDisclaimer } from '../components/ui/ReflectionDisclaimer';
 
 const STORAGE_KEY = '@mysky:intelligence_profile';
 
@@ -511,6 +512,8 @@ export default function IntelligenceProfileScreen() {
               );
             })}
           </View>
+
+          <ReflectionDisclaimer body="Based on your responses — for self-discovery, not validated professional assessment." />
 
           <View style={{ height: 120 }} />
         </ScrollView>

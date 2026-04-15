@@ -12,6 +12,7 @@ import { MetallicGlyph } from '../ui/MetallicGlyph';
 import { VelvetGlassSurface } from '../ui/VelvetGlassSurface';
 import { useThemedStyles, useAppTheme } from '../../context/ThemeContext';
 import { type AppTheme } from '../../constants/theme';
+import { ReflectionDisclaimer } from '../ui/ReflectionDisclaimer';
 import { Aspect } from '../../services/astrology/types';
 import { getAspectInterpretation } from '../../services/astrology/natalInterpretations';
 import { CHART_CARD_WASHES } from './chartCardPalette';
@@ -166,6 +167,7 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
           );
         })}
       </View>
+      <ReflectionDisclaimer body="Aspect interpretations are for self-reflection — think of them as inner dynamics to explore, not predictions." />
     </View>
   );
 };

@@ -25,10 +25,6 @@ const mockPremiumContext = {
         identifier: '$rc_annual',
         product: { priceString: '$29.99', price: 29.99, identifier: 'mysky_annual' },
       },
-      {
-        identifier: 'mysky_lifetime',
-        product: { priceString: '$79.99', price: 79.99, identifier: 'mysky_lifetime' },
-      },
     ],
   },
   loading: false,
@@ -59,7 +55,6 @@ jest.mock('../../constants/config', () => ({
       tiers: [
         { id: 'monthly', name: 'Monthly', price: '$4.99', period: 'per month', popular: false },
         { id: 'yearly', name: 'Yearly', price: '$29.99', period: 'per year', popular: true },
-        { id: 'lifetime', name: 'Lifetime', price: '$79.99', period: 'one time', popular: false },
       ],
     },
   },

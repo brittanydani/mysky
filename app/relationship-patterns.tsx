@@ -35,6 +35,7 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { ReflectionDisclaimer } from '../components/ui/ReflectionDisclaimer';
 
 const STORAGE_KEY = '@mysky:relationship_patterns';
 const CUSTOM_TAGS_KEY = '@mysky:relationship_pattern_custom_tags';
@@ -254,6 +255,14 @@ export default function RelationshipPatternsScreen() {
             </View>
           )}
 
+          {entries.length === 0 && (
+            <View style={styles.emptyHint}>
+              <Text style={styles.emptyHintText}>Start logging relationship reflections to see your patterns emerge over time.</Text>
+            </View>
+          )}
+
+          <ReflectionDisclaimer body="These patterns are for noticing and reflection — not clinical diagnosis or attachment assessment." />
+
           <View style={{ height: 100 }} />
         </KeyboardAwareScrollView>
       </SafeAreaView>
@@ -283,6 +292,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
+  emptyHint: { marginTop: 16, marginBottom: 16, padding: 20, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  emptyHintText: { fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 21, textAlign: 'center' },
   header: { paddingHorizontal: 24, paddingTop: 12 },
   backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   titleArea: { paddingHorizontal: 24, marginVertical: 32 },

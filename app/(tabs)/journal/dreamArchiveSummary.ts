@@ -10,7 +10,7 @@ export function buildDreamArchiveSummary(entries: SleepEntry[]) {
   for (const entry of dreamEntries) {
     if (entry.dreamFeelings) {
       try {
-        const parsed = JSON.parse(entry.dreamFeelings) as Array<{ id?: string; label?: string }>;
+        const parsed = JSON.parse(entry.dreamFeelings) as { id?: string; label?: string }[];
         for (const feeling of parsed) {
           const label = (feeling.label ?? feeling.id ?? '').trim();
           if (!label) continue;

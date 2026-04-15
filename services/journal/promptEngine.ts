@@ -425,7 +425,7 @@ export function generateJournalPrompt(
  * Pass `userSeed` (e.g. a profile hash or startedAt timestamp) to
  * differentiate prompt selection across users on the same day.
  */
-export function getFreePrompt(date: Date = new Date(), userSeed?: string): GeneratedPrompt {
+export function getFreePrompt(date: Date = new Date(), userSeed?: string, recentMood?: number): GeneratedPrompt {
   const dayOfYear = getDayOfYear(date);
 
   // Per-user offset so different free-tier users don't all see the same prompt
@@ -444,7 +444,19 @@ export function getFreePrompt(date: Date = new Date(), userSeed?: string): Gener
     p => p.tags.moonPhases?.includes(moonPhase)
   );
   const fallbacks = PROMPT_LIBRARY.filter(p => p.id.startsWith('fb-'));
-  const pool = moonPrompts.length > 0 ? moonPrompts : fallbacks;
+  let pool = moonPrompts.length > 0 ? moonPrompts : fallbacks;
+
+  // Mood-aware filtering: prefer gentler prompts on low-mood days, activating ones on high-mood days
+  if (recentMood != null && pool.length > 3) {
+    if (recentMood <= 4) {
+      const gentle = pool.filter(p => p.tags.intensity === 'gentle' || p.tags.intensity === 'reflective');
+      if (gentle.length >= 2) pool = gentle;
+    } else if (recentMood >= 8) {
+      const activating = pool.filter(p => p.tags.intensity === 'activating' || p.tags.intensity === 'expansive');
+      if (activating.length >= 2) pool = activating;
+    }
+  }
+
   const entry = pool[(dayOfYear + userOffset) % pool.length];
 
   return {

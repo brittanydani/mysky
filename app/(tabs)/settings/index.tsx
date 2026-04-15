@@ -96,7 +96,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Can I cancel my subscription?',
     answer:
-      'Yes. Monthly and yearly subscriptions are managed through your device’s App Store account. Go to Settings > Apple ID > Subscriptions. You keep access through the end of your billing period. Lifetime purchases do not renew and do not have a cancellation setting (refunds follow the App Store policy).',
+      'Yes. Monthly and yearly subscriptions are managed through your device’s App Store account. Go to Settings > Apple ID > Subscriptions. You keep access through the end of your billing period.',
   },
   {
     question: 'How do I change my birth data?',
@@ -288,7 +288,7 @@ export default function SettingsScreen() {
     } catch {}
     Alert.alert(
       'Deeper Sky Feature',
-      'Encrypted backup & restore keeps your data safe. Available with Deeper Sky (subscription or lifetime).',
+      'Encrypted backup & restore keeps your data safe. Available with a Deeper Sky subscription.',
       [
         { text: 'Not now', style: 'cancel' },
         { text: 'Learn more', onPress: () => router.push('/(tabs)/premium' as Href) },
@@ -1115,7 +1115,7 @@ export default function SettingsScreen() {
                         <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
-                        Full personal story, deeper reflection insights, unlimited relationships, pattern analysis, encrypted backup, and reflective guidance — $4.99/mo • $29.99/yr • $129.99 lifetime.
+                        Full personal story, deeper reflection insights, unlimited relationships, pattern analysis, encrypted backup, and reflective guidance — $4.99/mo or $29.99/yr.
                       </Text>
                     </View>
                     <Ionicons name="arrow-forward-outline" size={16} color={styles.chevronTint.color} />

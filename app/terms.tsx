@@ -101,7 +101,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Subscriptions & Payments</Text>
             <Text style={styles.paragraph}>
-              Premium access ("Deeper Sky") is available via auto-renewing subscriptions (monthly or yearly) or a one-time lifetime purchase. Payment is charged through your platform account at confirmation of purchase. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage or cancel subscriptions in your device's App Store or Google Play subscription settings. Purchases can be restored at any time.
+              Premium access ("Deeper Sky") is available via auto-renewing subscriptions (monthly or yearly). Payment is charged through your platform account at confirmation of purchase. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage or cancel subscriptions in your device's App Store or Google Play subscription settings. Purchases can be restored at any time.
             </Text>
 
             <Text style={styles.sectionTitle}>Accounts</Text>
