@@ -111,19 +111,13 @@ export const ChartBigThreeSection = ({ chart, onMoonPress }: Props) => {
               >
                 <VelvetGlassSurface style={[styles.card, styles.velvetBorder]} intensity={45}>
                   <LinearGradient colors={mod.washColors} style={StyleSheet.absoluteFill} />
-
-                  {/* Glyph Badge */}
                   <View style={styles.cardHeader}>
                     <View style={styles.hardwareBadge}>
                       <MetallicGlyph glyph={mod.glyph} size={22} style={styles.glyphText} />
                     </View>
                     <Text style={styles.planetLabel}>{mod.label.toUpperCase()}</Text>
                   </View>
-
-                  {/* Sign */}
                   <Text style={styles.signName}>{mod.signName}</Text>
-
-                  {/* Degree — gold-tracked, bottom-left */}
                   <Text style={styles.degreeText}>
                     {mod.degree}°{String(mod.minute).padStart(2, '0')}'
                     {mod.house ? `  ·  H${mod.house}` : ''}

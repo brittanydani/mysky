@@ -172,8 +172,6 @@ export const ChartDignitiesSection = ({ dignityAnalysis }: Props) => {
             >
               <VelvetGlassSurface style={[styles.card, styles.velvetBorder]} intensity={40}>
                 <LinearGradient colors={mod.surfaceColors} style={StyleSheet.absoluteFill} />
-
-                {/* Header row */}
                 <View style={styles.cardHeader}>
                   <View style={styles.hardwareBadge}>
                     <MetallicGlyph glyph={mod.glyph} size={28} style={styles.glyphText} />
@@ -183,13 +181,9 @@ export const ChartDignitiesSection = ({ dignityAnalysis }: Props) => {
                     <Text style={styles.dignityLabel}>{mod.dignity.toUpperCase()}</Text>
                   </View>
                 </View>
-
-                {/* Sign description */}
                 <Text style={styles.signDesc} numberOfLines={1}>
                   in <Text style={styles.signName}>{mod.sign}</Text>
                 </Text>
-
-                {/* 1px Gold Spectrum Track */}
                 <DignitySpectrum score={mod.score} dotColor={mod.iconColor} />
               </VelvetGlassSurface>
             </Animated.View>

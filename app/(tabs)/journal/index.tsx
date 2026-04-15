@@ -41,6 +41,8 @@ import { DreamClusterMap } from '../../../components/ui/DreamClusterMap';
 import { PremiumSegmentedControl } from '../../../components/ui/PremiumSegmentedControl';
 import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
 import { buildDreamArchiveSummary } from './dreamArchiveSummary';
+import { loadSelfKnowledgeContext } from '../../../services/insights/selfKnowledgeContext';
+import { enhanceInsightCopy } from '../../../services/insights/geminiInsightsService';
 
 const VALID_MOODS = ['calm', 'soft', 'okay', 'heavy', 'stormy'] as const;
 
@@ -89,6 +91,22 @@ const PALETTE = {
 
 const LIGHT_MODE_INK = '#1A1815';
 const LIGHT_MODE_META = 'rgba(26, 24, 21, 0.5)';
+
+type DreamArchiveSummary = NonNullable<ReturnType<typeof buildDreamArchiveSummary>>;
+
+function formatAiFreshness(generatedAt: string | null): string | null {
+  if (!generatedAt) return null;
+
+  const date = new Date(generatedAt);
+  if (Number.isNaN(date.getTime())) return 'AI-enhanced';
+
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  if (diffMs < 60_000) return 'AI-enhanced just now';
+  if (diffMs < 3_600_000) return `AI-enhanced ${Math.max(1, Math.round(diffMs / 60_000))}m ago`;
+  if (diffMs < 86_400_000) return `AI-enhanced ${Math.max(1, Math.round(diffMs / 3_600_000))}h ago`;
+  return `AI-enhanced ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+}
 
 // ─── Dream card ───────────────────────────────────────────────────────────────
 
@@ -258,6 +276,9 @@ export default function JournalScreen() {
   const [actionEntry, setActionEntry] = useState<JournalEntry | null>(null);
 
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
+  const [aiPatternGeneratedAt, setAiPatternGeneratedAt] = useState<string | null>(null);
+  const [aiDreamArchiveSummary, setAiDreamArchiveSummary] = useState<DreamArchiveSummary | null>(null);
+  const [aiDreamGeneratedAt, setAiDreamGeneratedAt] = useState<string | null>(null);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'reflections' | 'dreams'>('reflections');
@@ -286,6 +307,9 @@ export default function JournalScreen() {
   }, [sleepEntries, searchQuery]);
 
   const dreamArchiveSummary = useMemo(() => buildDreamArchiveSummary(sleepEntries), [sleepEntries]);
+  const displayedDreamArchiveSummary = aiDreamArchiveSummary ?? dreamArchiveSummary;
+  const aiPatternFreshness = useMemo(() => formatAiFreshness(aiPatternGeneratedAt), [aiPatternGeneratedAt]);
+  const aiDreamFreshness = useMemo(() => formatAiFreshness(aiDreamGeneratedAt), [aiDreamGeneratedAt]);
 
   const toggleBrowseSearch = useCallback(() => {
     Haptics.selectionAsync().catch(() => {});
@@ -320,7 +344,21 @@ export default function JournalScreen() {
     return map[mood] ?? 3;
   }, []);
 
-  const generatePatternInsights = useCallback(() => {
+  const loadAiInputs = useCallback(async () => {
+    const [context, charts] = await Promise.all([
+      loadSelfKnowledgeContext(),
+      localDb.getCharts(),
+    ]);
+
+    if (!charts.length) {
+      return { context, checkIns: [] as Awaited<ReturnType<typeof localDb.getCheckIns>> };
+    }
+
+    const checkIns = await localDb.getCheckIns(charts[0].id, 90);
+    return { context, checkIns };
+  }, []);
+
+  const generatePatternInsights = useCallback(async () => {
     try {
       const sample = entries.slice(0, 90);
       const entryMetas: JournalEntryMeta[] = sample.map((e) => {
@@ -340,10 +378,49 @@ export default function JournalScreen() {
 
       const insights = AdvancedJournalAnalyzer.analyzePatterns(entryMetas, isPremium);
       setPatternInsights(insights);
+      setAiPatternGeneratedAt(null);
+
+      if (!isPremium || insights.length === 0) return;
+
+      const { context, checkIns } = await loadAiInputs();
+      const descriptionInputs = insights.map((insight, index) => ({
+        id: `${index}:description`,
+        source: 'journal-pattern-description',
+        title: insight.title,
+        body: insight.description,
+        isConfirmed: insight.confidence === 'strong',
+      }));
+      const actionableInputs = insights
+        .map((insight, index) => ({ insight, index }))
+        .filter(({ insight }) => typeof insight.actionable === 'string' && insight.actionable.trim().length > 0)
+        .map(({ insight, index }) => ({
+          id: `${index}:actionable`,
+          source: 'journal-pattern-actionable',
+          title: `${insight.title} grounding`,
+          body: insight.actionable ?? '',
+          isConfirmed: insight.confidence === 'strong',
+        }));
+
+      const enhanced = await enhanceInsightCopy(
+        [...descriptionInputs, ...actionableInputs],
+        context,
+        checkIns,
+      );
+      if (!enhanced?.insights?.length) return;
+
+      const aiBodies = new Map(enhanced.insights.map((insight) => [insight.id, insight.body]));
+      setAiPatternGeneratedAt(enhanced.generatedAt ?? null);
+      setPatternInsights(
+        insights.map((insight, index) => ({
+          ...insight,
+          description: aiBodies.get(`${index}:description`) ?? insight.description,
+          actionable: aiBodies.get(`${index}:actionable`) ?? insight.actionable,
+        })),
+      );
     } catch (e) {
       logger.error('[Journal] Pattern analysis failed:', e);
     }
-  }, [entries, isPremium, moodToLevel]);
+  }, [entries, isPremium, loadAiInputs, moodToLevel]);
 
   const loadEntries = useCallback(async (reset = false) => {
     try {
@@ -404,8 +481,68 @@ export default function JournalScreen() {
   );
 
   useEffect(() => {
-    if (entries.length >= 3) generatePatternInsights();
+    if (entries.length >= 3) {
+      void generatePatternInsights();
+    }
   }, [entries.length, generatePatternInsights]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!isPremium || !dreamArchiveSummary) {
+      setAiDreamArchiveSummary(null);
+      setAiDreamGeneratedAt(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setAiDreamArchiveSummary(null);
+    setAiDreamGeneratedAt(null);
+
+    void (async () => {
+      try {
+        const { context, checkIns } = await loadAiInputs();
+        if (cancelled) return;
+
+        const enhanced = await enhanceInsightCopy(
+          [
+            {
+              id: 'dream-summary',
+              source: 'dream-archive-summary',
+              title: 'Dream Pattern Read',
+              body: `${dreamArchiveSummary.summary}\nSignals: ${dreamArchiveSummary.chips.join(', ')}\nDream entries analyzed: ${sleepEntries.filter((entry) => !!entry.dreamText?.trim()).length}`,
+              isConfirmed: dreamArchiveSummary.chips[0] !== 'Needs more repeated signals',
+            },
+            {
+              id: 'dream-grounding',
+              source: 'dream-archive-grounding',
+              title: 'Dream Pattern Grounding',
+              body: dreamArchiveSummary.grounding,
+              isConfirmed: true,
+            },
+          ],
+          context,
+          checkIns,
+        );
+        if (cancelled || !enhanced?.insights?.length) return;
+
+        const aiBodies = new Map(enhanced.insights.map((insight) => [insight.id, insight.body]));
+        setAiDreamGeneratedAt(enhanced.generatedAt ?? null);
+        setAiDreamArchiveSummary({
+          ...dreamArchiveSummary,
+          summary: aiBodies.get('dream-summary') ?? dreamArchiveSummary.summary,
+          grounding: aiBodies.get('dream-grounding') ?? dreamArchiveSummary.grounding,
+        });
+      } catch (error) {
+        logger.warn('[Journal] Dream archive AI enhancement failed; using local summary fallback.', error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dreamArchiveSummary, isPremium, loadAiInputs, sleepEntries]);
 
   const handleAddEntry = async () => {
     try {
@@ -630,6 +767,7 @@ export default function JournalScreen() {
                   <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && insight.confidence === 'suggested' && { color: PALETTE.gold }]}>{insight.confidence.toUpperCase()}</Text>
                 </View>
               </View>
+              {!!aiPatternFreshness && <Text style={styles.aiFreshnessText}>{aiPatternFreshness}</Text>}
               <Text style={styles.insightDescription}>{insight.description}</Text>
               {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
               {!!insight.actionable && (
@@ -668,21 +806,22 @@ export default function JournalScreen() {
       {/* ── Dream Cluster Map (Midnight Slate Anchor) ── */}
       {activeTab === 'dreams' && isPremium && sleepEntries.some(e => e.dreamText) && (
         <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.insightsSection}>
-          {dreamArchiveSummary && (
+          {displayedDreamArchiveSummary && (
             <LinearGradient colors={theme.isDark ? ['rgba(168, 139, 235, 0.16)', 'rgba(44, 54, 69, 0.30)'] : ['rgba(168, 139, 235, 0.12)', 'rgba(240, 245, 252, 0.55)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
               <View style={styles.insightHeader}>
                 <MetallicIcon name="pulse-outline" size={18} color={PALETTE.gold} />
                 <MetallicText color={PALETTE.gold} style={styles.insightTitle}>Dream Pattern Read</MetallicText>
               </View>
-              <Text style={styles.insightDescription}>{dreamArchiveSummary.summary}</Text>
+              {!!aiDreamFreshness && <Text style={styles.aiFreshnessText}>{aiDreamFreshness}</Text>}
+              <Text style={styles.insightDescription}>{displayedDreamArchiveSummary.summary}</Text>
               <View style={styles.dreamPatternChipRow}>
-                {dreamArchiveSummary.chips.map((chip) => (
+                {displayedDreamArchiveSummary.chips.map((chip) => (
                   <View key={chip} style={styles.dreamPatternChip}>
                     <Text style={styles.dreamPatternChipText}>{chip}</Text>
                   </View>
                 ))}
               </View>
-              <Text style={styles.insightActionable}>{dreamArchiveSummary.grounding}</Text>
+              <Text style={styles.insightActionable}>{displayedDreamArchiveSummary.grounding}</Text>
             </LinearGradient>
           )}
           <SectionHeader title="Dream Symbols" icon="planet-outline" />
@@ -1158,6 +1297,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   confidenceLight: { backgroundColor: 'rgba(0, 0, 0, 0.04)', borderColor: 'rgba(0, 0, 0, 0.08)' },
   confidenceText: { fontSize: 10, textTransform: 'uppercase', fontWeight: '800', letterSpacing: 1.2 },
   confidenceTextLight: { color: LIGHT_MODE_INK },
+  aiFreshnessText: { fontSize: 11, color: theme.isDark ? 'rgba(255,255,255,0.48)' : LIGHT_MODE_META, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 12 },
   insightDescription: { fontSize: 16, color: theme.isDark ? 'rgba(255,255,255,0.68)' : theme.textSecondary, lineHeight: 26, letterSpacing: 0.2, marginBottom: 12 },
   insightEvidence: { fontSize: 13, color: theme.isDark ? theme.textMuted : LIGHT_MODE_META, lineHeight: 21, marginBottom: 8 },
   insightActionable: { fontSize: 15, fontWeight: '600', marginTop: 6, lineHeight: 22, color: theme.isDark ? 'rgba(255,255,255,0.78)' : theme.textPrimary },

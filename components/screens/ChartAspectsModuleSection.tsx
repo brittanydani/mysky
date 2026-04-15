@@ -59,12 +59,33 @@ function safeStr(v: unknown): string {
   return '';
 }
 
-function toPersonalMeaning(text: string): string {
-  const normalized = text.trim().replace(//g, '');
-  const withPeriod = /[.!?]$/.test(normalized) ? normalized : `${normalized}.`;
-  const lower = withPeriod.charAt(0).toLowerCase() + withPeriod.slice(1);
-  if (/^you\b/i.test(withPeriod)) return withPeriod;
-  return `You may notice that ${lower}`;
+function formatAspectMeaning(text: string): string {
+  const trimmed = text.trim();
+  const normalized = /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+
+  if (/^you may feel /i.test(normalized)) {
+    return `A feeling of ${normalized.replace(/^you may feel /i, '')}`;
+  }
+  if (/^you may find that /i.test(normalized)) {
+    return normalized.replace(/^you may find that /i, '').replace(/^./, (char) => char.toUpperCase());
+  }
+  if (/^you may notice a /i.test(normalized)) {
+    return `A ${normalized.replace(/^you may notice a /i, '')}`;
+  }
+  if (/^you may notice that /i.test(normalized)) {
+    return normalized.replace(/^you may notice that /i, '').replace(/^./, (char) => char.toUpperCase());
+  }
+  if (/^you may need /i.test(normalized)) {
+    return `This asks for ${normalized.replace(/^you may need /i, '')}`;
+  }
+  if (/^you may sense that /i.test(normalized)) {
+    return normalized.replace(/^you may sense that /i, '').replace(/^./, (char) => char.toUpperCase());
+  }
+  if (/^you may experience /i.test(normalized)) {
+    return normalized.replace(/^you may experience /i, '').replace(/^./, (char) => char.toUpperCase());
+  }
+
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
 // ── COMPONENT ──
@@ -98,7 +119,10 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Strongest Aspects</Text>
-        <Text style={styles.sectionSubtitle}>ENERGY FLOWS & PLANETARY DIALOGUES</Text>
+        <Text style={styles.sectionSubtitle}>THE INNER PATTERNS THAT SHAPE HOW DIFFERENT PARTS OF YOU WORK TOGETHER</Text>
+        <Text style={styles.sectionIntro}>
+          If you are new to astrology, think of each aspect as a relationship between two parts of your personality. These cards are less about prediction and more about understanding your own inner dynamics.
+        </Text>
       </View>
 
       <View style={styles.grid}>
@@ -111,8 +135,7 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
           const washColors = NATURE_WASH[nature];
           const orbDeg = aspect.orb != null ? `${aspect.orb.toFixed(1)}°` : '';
           const typeLabel = typeName.charAt(0).toUpperCase() + typeName.slice(1);
-          const interpretation = getAspectInterpretation(aspect);
-          const meaningText = toPersonalMeaning(interpretation);
+          const interpretation = formatAspectMeaning(getAspectInterpretation(aspect));
 
           return (
             <Animated.View
@@ -121,8 +144,6 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
             >
               <VelvetGlassSurface style={[styles.card, styles.velvetBorder]} intensity={40}>
                 <LinearGradient colors={washColors} style={StyleSheet.absoluteFill} />
-
-                {/* Header: Badge + Type */}
                 <View style={styles.cardHeader}>
                   <View style={styles.hardwareBadge}>
                     <MetallicGlyph glyph={symbol} size={22} style={styles.symbolText} />
@@ -134,17 +155,12 @@ export const ChartAspectsModuleSection = ({ aspects, limit = 6 }: Props) => {
                     </Text>
                   </View>
                 </View>
-
-                {/* Dialogue sentence */}
                 <Text style={styles.dialogueText} numberOfLines={2}>
                   <Text style={styles.planetEmphasis}>{planet1}</Text>
                   {' '}and{' '}
                   <Text style={styles.planetEmphasis}>{planet2}</Text>
                 </Text>
-
-                <Text style={styles.meaningText}>
-                  {meaningText}
-                </Text>
+                <Text style={styles.meaningText}>{interpretation}</Text>
               </VelvetGlassSurface>
             </Animated.View>
           );
@@ -176,6 +192,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 2,
     marginTop: 4,
+  },
+  sectionIntro: {
+    marginTop: 10,
+    fontSize: 13,
+    lineHeight: 20,
+    color: 'rgba(255,255,255,0.6)',
   },
   grid: {
     gap: 14,
