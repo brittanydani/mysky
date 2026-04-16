@@ -165,7 +165,7 @@ const SectionHeader = ({ icon, label }: { icon: any; label: string }) => {
 };
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
@@ -175,7 +175,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginTop: 4,
   },
-  title: { fontSize: 31, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
+  title: { fontSize: 31, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
   subtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
   section: { marginBottom: 0 },
   sectionHeaderWrap: { marginBottom: 20, marginTop: 8 },
@@ -191,6 +191,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', marginRight: 16,
   },
   cardText: { flex: 1 },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: '#FFFFFF', marginBottom: 6 },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary, marginBottom: 6 },
   cardDescription: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 20 },
 });

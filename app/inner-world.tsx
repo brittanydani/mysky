@@ -352,7 +352,7 @@ export default function InnerWorldScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
   
@@ -369,7 +369,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: { fontSize: 31, color: '#FFFFFF', fontWeight: '700', letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
+  headerTitle: { fontSize: 31, color: theme.textPrimary, fontWeight: '700', letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
   headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.6)' },
 
   syncBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 16, marginBottom: 24, overflow: 'hidden' },
@@ -391,7 +391,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   cardIcon: { fontSize: 32 },
   badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1 },
   badgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  cardTitle: { fontSize: 20, color: '#FFFFFF', fontWeight: '700', marginBottom: 6 },
+  cardTitle: { fontSize: 20, color: theme.textPrimary, fontWeight: '700', marginBottom: 6 },
   cardSubtitle: { fontSize: 15, color: 'rgba(255,255,255,0.6)', lineHeight: 22 },
 
   dailyHeader: { marginBottom: 24 },
@@ -410,7 +410,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   somaticLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   somaticDesc: { fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 17 },
   somaticRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
-  somaticCat: { fontSize: 13, color: '#FFFFFF', fontWeight: '700' },
+  somaticCat: { fontSize: 13, color: theme.textPrimary, fontWeight: '700' },
   somaticValueGroup: { alignItems: 'flex-end', gap: 2 },
   somaticEmotion: { fontSize: 13, fontWeight: '600' },
   somaticCount: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '500' },

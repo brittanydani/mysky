@@ -20,14 +20,6 @@ import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
-// ── Cinematic Palette ──
-const PALETTE = {
-  gold: '#D4AF37',
-  textMain: '#FFFFFF',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
-};
-
 export default function OnboardingRestoreScreen() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
@@ -128,11 +120,11 @@ export default function OnboardingRestoreScreen() {
 
           <View style={styles.content}>
             <LinearGradient 
-              colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} 
+              colors={[theme.cardGradientStart, theme.cardGradientEnd] as unknown as readonly [string, string, ...string[]]} 
               style={styles.glassCard}
             >
               <View style={styles.cardHeader}>
-                <MetallicIcon name="cloud-download-outline" size={32} color={PALETTE.gold} style={{ marginBottom: 12 }} />
+                <MetallicIcon name="cloud-download-outline" size={32} color={theme.textGold} style={{ marginBottom: 12 }} />
                 <Text style={styles.cardTitle}>Recover Your Data</Text>
                 <Text style={styles.cardSubtitle}>
                   Select your encrypted .msky backup file and enter the passphrase used to secure it.
@@ -147,9 +139,9 @@ export default function OnboardingRestoreScreen() {
                 <MetallicIcon 
                   name={backupUri ? "checkmark-circle" : "folder-open-outline"} 
                   size={20} 
-                  color={backupUri ? '#6EBF8B' : PALETTE.gold} 
+                  color={backupUri ? '#6EBF8B' : theme.textGold} 
                 />
-                <MetallicText style={backupUri ? [styles.pickText, { fontWeight: '700' as const }] : styles.pickText} color={backupUri ? '#6EBF8B' : PALETTE.gold}>
+                <MetallicText style={backupUri ? [styles.pickText, { fontWeight: '700' as const }] : styles.pickText} color={backupUri ? '#6EBF8B' : theme.textGold}>
                   {backupUri ? 'Backup file selected' : 'Choose backup file'}
                 </MetallicText>
               </Pressable>
@@ -170,7 +162,7 @@ export default function OnboardingRestoreScreen() {
                 label={busy ? 'Restoring...' : 'Restore Data'}
                 onPress={restore}
                 disabled={!backupUri || busy}
-                icon={!busy ? <Ionicons name="arrow-forward-outline" size={18} color="#1A1815" /> : undefined}
+                icon={!busy ? <Ionicons name="arrow-forward-outline" size={18} color={theme.textInk} /> : undefined}
               />
 
               <Text style={styles.note}>
@@ -247,7 +239,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderColor: 'rgba(110, 191, 139, 0.4)',
     backgroundColor: 'rgba(110, 191, 139, 0.1)',
   },
-  pickText: { color: PALETTE.gold, fontWeight: '600', fontSize: 15 },
+  pickText: { color: theme.textGold, fontWeight: '600', fontSize: 15 },
   
   input: {
     width: '100%',
@@ -281,7 +273,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderColor: 'rgba(232, 214, 174, 0.4)',
     borderRadius: 16,
   },
-  ctaText: { fontSize: 16, fontWeight: '700', color: '#1A1815' },
+  ctaText: { fontSize: 16, fontWeight: '700', color: theme.textInk },
   
   note: { 
     marginTop: 20, 

@@ -126,7 +126,7 @@ export default function OnboardingConsentScreen() {
               accessibilityState={{ checked }}
             >
               <View style={[styles.checkbox, checked && styles.checkboxOn]}>
-                {checked && <Ionicons name="checkmark-outline" size={16} color="#1A1815" />}
+                {checked && <Ionicons name="checkmark-outline" size={16} color={theme.textInk} />}
               </View>
               <Text style={styles.checkText}>
                 I agree to the Terms of Use and Privacy Policy.
@@ -137,7 +137,7 @@ export default function OnboardingConsentScreen() {
               label={saving ? 'Saving...' : 'Accept & Continue'}
               onPress={accept}
               disabled={!checked || saving}
-              icon={!saving ? <Ionicons name="arrow-forward-outline" size={18} color="#1A1815" /> : undefined}
+              icon={!saving ? <Ionicons name="arrow-forward-outline" size={18} color={theme.textInk} /> : undefined}
             />
 
             <Text style={styles.note}>

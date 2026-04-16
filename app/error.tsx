@@ -98,7 +98,7 @@ export default function GlobalError({ error, retry }: { error: Error; retry?: ()
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0F', // Absolute Midnight
+    backgroundColor: theme.background, // Absolute Midnight
   },
   safeArea: {
     flex: 1,
@@ -142,7 +142,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 24,
     fontWeight: '800',
     letterSpacing: -0.5,

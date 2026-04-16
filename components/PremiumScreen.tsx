@@ -141,10 +141,10 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
           {/* ── Value Propositions ── */}
           <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.valueSection}>
             {[
-              { icon: 'calendar-outline', title: 'Track change over time', desc: 'Weekly shifts, recurring themes, and longitudinal pattern insight', color: '#D4AF37' },
-              { icon: 'analytics-outline', title: 'Understand what helps or hurts', desc: 'See what restores you, drains you, and repeats in your reflections', color: '#D4AF37' },
-              { icon: 'sparkles-outline', title: 'Get more reflective guidance', desc: 'Reflection prompts shaped by your history, not just today\'s mood', color: '#D4AF37' },
-              { icon: 'shield-checkmark-outline', title: 'Private by design', desc: 'Core reflections stay encrypted on-device and are not sold for ads', color: '#D4AF37' },
+              { icon: 'calendar-outline', title: 'Track change over time', desc: 'Weekly shifts, recurring themes, and longitudinal pattern insight', color: theme.textGold },
+              { icon: 'analytics-outline', title: 'Understand what helps or hurts', desc: 'See what restores you, drains you, and repeats in your reflections', color: theme.textGold },
+              { icon: 'sparkles-outline', title: 'Get more reflective guidance', desc: 'Reflection prompts shaped by your history, not just today\'s mood', color: theme.textGold },
+              { icon: 'shield-checkmark-outline', title: 'Private by design', desc: 'Core reflections stay encrypted on-device and are not sold for ads', color: theme.textGold },
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
                 <View style={[styles.valueIconContainer, { borderColor: `${item.color}30` }]}>
@@ -393,7 +393,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     height: 150,
     borderRadius: 75,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
   },
   heroRingInner: {
     position: 'absolute',
@@ -401,8 +401,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     height: 116,
     borderRadius: 58,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.18)',
-    shadowColor: '#D4AF37',
+    borderColor: theme.isDark ? 'rgba(212, 175, 55, 0.18)' : 'rgba(181, 138, 58, 0.2)',
+    shadowColor: theme.textGold,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.35,
     shadowRadius: 18,
@@ -412,7 +412,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(212, 175, 55, 0.06)',
+    backgroundColor: theme.isDark ? 'rgba(212, 175, 55, 0.06)' : 'rgba(181, 138, 58, 0.06)',
   },
 
   // ── Header ──
@@ -446,7 +446,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     height: 48,
     borderRadius: 24,
     borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -470,13 +471,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     padding: 28,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(197,181,161,0.18)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: theme.isDark ? 'rgba(197,181,161,0.18)' : 'rgba(110,95,78,0.18)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
   },
   trustLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: 'rgba(255,255,255,0.45)',
+    color: theme.isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)',
     letterSpacing: 1.2,
     marginBottom: 8,
   },
@@ -508,8 +509,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
     alignItems: 'center',
   },
   pricingCardSelected: {
@@ -533,13 +534,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   bestValueText: {
     fontSize: 7,
     fontWeight: '800',
-    color: '#020817',
+    color: '#020817', // intentional dark contrast on light badge
     letterSpacing: 1,
   },
   pricingPeriod: {
     fontSize: 13,
     fontWeight: '500',
-    color: 'rgba(255,255,255,0.6)',
+    color: theme.muted,
     marginBottom: 8,
   },
   pricingPrice: {
@@ -550,27 +551,27 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     textAlign: 'center',
   },
   pricingPriceSelected: {
-    color: '#FFF',
+    color: theme.background, // reversed for selected fill
   },
   pricingMeta: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.35)',
+    color: theme.isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)',
     textAlign: 'center',
   },
   pricingMetaSelected: {
-    color: '#D4B872',
+    color: theme.textGold,
   },
   // ── Sticky Bottom ──
   stickyBottom: {
     paddingTop: 16,
     paddingHorizontal: 24,
-    backgroundColor: 'rgba(2, 8, 23, 0.95)',
+    backgroundColor: theme.isDark ? 'rgba(2, 8, 23, 0.95)' : 'rgba(255, 252, 247, 0.95)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
+    borderTopColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
   },
   legalAgreement: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.55)',
+    color: theme.isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.55)',
     textAlign: 'center',
     marginBottom: 14,
     lineHeight: 18,

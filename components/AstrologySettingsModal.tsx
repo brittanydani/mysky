@@ -358,9 +358,9 @@ export default function AstrologySettingsModal({
             label={saving ? 'Applying…' : 'Apply Changes'}
             onPress={handleSave}
             disabled={!hasChanges || saving}
-            icon={saving ? <ActivityIndicator color="#000000" size="small" /> : undefined}
-            solidColor="#FFFFFF"
-            labelStyle={{ color: '#000000' }}
+            icon={saving ? <ActivityIndicator color={theme.background} size="small" /> : undefined}
+            solidColor={theme.textInk}
+            labelStyle={{ color: theme.background }}
           />
         </View>
 

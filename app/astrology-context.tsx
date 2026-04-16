@@ -26,7 +26,7 @@ import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { usePremium } from '../context/PremiumContext';
 import { dayOfYear } from '../utils/dateUtils';
 import { type AppTheme } from '../constants/theme';
-import { useThemedStyles } from '../context/ThemeContext';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -67,6 +67,7 @@ function formatHoursMinutes(hours: number): string {
 
 export default function CosmicContext() {
   const styles = useThemedStyles(createStyles);
+  const theme = useAppTheme();
   const router = useRouter();
   const { isPremium } = usePremium();
   
@@ -131,7 +132,7 @@ export default function CosmicContext() {
               {weeklyPhases.map(({ dayName, dayNum, isToday, phase }, i) => (
                 <View key={i} style={styles.weekDayCol}>
                   <Text style={[styles.weekDayName, isToday && { color: PALETTE.gold }]}>{dayName.toUpperCase()}</Text>
-                  <Text style={[styles.weekDayNum, isToday && { fontWeight: '800', color: '#FFF' }]}>{dayNum}</Text>
+                  <Text style={[styles.weekDayNum, isToday && { fontWeight: '800', color: theme.textPrimary }]}>{dayNum}</Text>
                   <View style={{ marginTop: 4, opacity: isToday ? 1 : 0.6 }}>
                     <Text style={{ fontSize: 16 }}>{phase.emoji}</Text>
                   </View>
@@ -200,28 +201,24 @@ export default function CosmicContext() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 10 },
   
   velvetBorder: {
-    borderWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.20)',
-    borderLeftColor: 'rgba(255,255,255,0.10)',
-    borderRightColor: 'rgba(255,255,255,0.10)',
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    ...theme.velvetBorder,
   },
 
   header: { paddingHorizontal: 24, paddingVertical: 8 },
   closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  closeIcon: { color: '#FFF', fontSize: 24 },
+  closeIcon: { color: theme.textPrimary, fontSize: 24 },
 
   titleArea: { paddingHorizontal: 24, marginBottom: 32 },
-  headerTitle: { fontSize: 32, color: '#FFF', fontWeight: '800', letterSpacing: -1 },
+  headerTitle: { fontSize: 32, color: theme.textPrimary, fontWeight: '800', letterSpacing: -1 },
   headerSubtitle: { fontSize: 13, marginTop: 4 },
 
   heroSection: { alignItems: 'center', marginBottom: 40 },
-  moonTitle: { fontSize: 24, fontWeight: '700', color: '#FFF', marginTop: 24, marginBottom: 4 },
+  moonTitle: { fontSize: 24, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 4 },
   moonDegree: { fontSize: 14, fontWeight: '600', letterSpacing: 1 },
   
   vocBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(212,175,55,0.08)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, marginTop: 20 },
@@ -244,7 +241,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   cardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   premiumIcon: { fontSize: 14, lineHeight: 14 },
-  affirmationText: { fontSize: 19, color: '#FFF', lineHeight: 28, fontWeight: '600' },
+  affirmationText: { fontSize: 19, color: theme.textPrimary, lineHeight: 28, fontWeight: '600' },
 
   insightCard: { padding: 24, borderRadius: 24, marginBottom: 24, overflow: 'hidden' },
   insightText: { fontSize: 15, color: 'rgba(255,255,255,0.8)', lineHeight: 22, marginTop: 12 },
@@ -252,7 +249,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   reflectionCard: { padding: 32, borderRadius: 32, marginBottom: 40, overflow: 'hidden' },
   promptHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   promptEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },
-  promptText: { fontSize: 22, fontWeight: '800', color: '#FFF', lineHeight: 32, marginBottom: 24 },
+  promptText: { fontSize: 22, fontWeight: '800', color: theme.textPrimary, lineHeight: 32, marginBottom: 24 },
   actionRow: { flexDirection: 'row', gap: 12 },
   actionPill: { flex: 1, height: 52, borderRadius: 18, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)' },
   actionLabel: { fontSize: 14, fontWeight: '800' },

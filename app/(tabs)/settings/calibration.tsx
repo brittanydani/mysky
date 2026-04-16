@@ -752,13 +752,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: 20,
     paddingVertical: 14,
     borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.textInk,
   },
   saveButtonDisabled: {
     backgroundColor: 'transparent',
   },
   saveButtonText: {
-    color: '#0A0A0C',
+    color: theme.background,
     fontSize: 16,
     fontWeight: '700',
   },

@@ -566,7 +566,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRightColor: 'rgba(255,255,255,0.10)',
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 

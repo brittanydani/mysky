@@ -66,7 +66,7 @@ export default function DailyReflectionScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
   
@@ -81,9 +81,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 44, 
     height: 44, 
     borderRadius: 22, 
-    backgroundColor: 'rgba(255,255,255,0.05)', 
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', 
     borderWidth: 1, 
-    borderColor: 'rgba(255,255,255,0.1)', 
+    borderColor: theme.cardBorder, 
     justifyContent: 'center', 
     alignItems: 'center' 
   },
@@ -95,13 +95,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#FFF',
+    color: theme.textPrimary,
     letterSpacing: -1,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
+    color: theme.textMuted,
     marginTop: 4,
   },
 

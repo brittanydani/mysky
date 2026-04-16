@@ -784,7 +784,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
                   <SectionHeader title="Timeline" icon="calendar-outline" />
                   <Pressable onPress={() => setShowDatePicker(true)}>
-                    <LinearGradient colors={['rgba(212,175,55,0.08)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
+                    <LinearGradient colors={theme.cardSurfaceAnchor as unknown as readonly [string, string, ...string[]]} style={styles.sectionCard}>
                       <View style={styles.cardRow}>
                         <MetallicIcon name="calendar-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.cardRowText}>{formatDate(date)}</Text>
@@ -797,7 +797,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 {/* Title Input */}
                 <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
                   <SectionHeader title="Title (Optional)" icon="text-outline" />
-                  <LinearGradient colors={['rgba(212,175,55,0.06)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
+                  <LinearGradient colors={theme.cardSurfaceAnchor as unknown as readonly [string, string, ...string[]]} style={styles.sectionCard}>
                     <TextInput
                       style={styles.cardTextInput}
                       value={title}
@@ -812,7 +812,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 {/* Mood Selector */}
                 <Animated.View entering={FadeInDown.delay(350)} style={styles.section}>
                   <SectionHeader title="Mood" icon="heart-outline" />
-                  <LinearGradient colors={['rgba(212,175,55,0.06)', 'rgba(10,10,12,0.9)']} style={[styles.sectionCard, { paddingVertical: 16, paddingHorizontal: 14 }]}>
+                  <LinearGradient colors={theme.cardSurfaceAnchor as unknown as readonly [string, string, ...string[]]} style={[styles.sectionCard, { paddingVertical: 16, paddingHorizontal: 14 }]}>
                     <View style={styles.moodRow}>
                       {MOOD_OPTIONS.map((m) => {
                         const isSelected = mood === m.key;
@@ -912,7 +912,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     </Animated.View>
                   ))}
 
-                  <LinearGradient colors={['rgba(212,175,55,0.06)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
+                  <LinearGradient colors={theme.cardSurfaceAnchor as unknown as readonly [string, string, ...string[]]} style={styles.sectionCard}>
                     <TextInput
                       style={styles.contentInput}
                       value={content}
@@ -943,7 +943,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       <Text style={styles.addTagsBtnText}>Add Tags</Text>
                     </Pressable>
                   </View>
-                  <LinearGradient colors={['rgba(107,191,163,0.06)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
+                  <LinearGradient colors={theme.cardSurfaceAnchor as unknown as readonly [string, string, ...string[]]} style={styles.sectionCard}>
                   {tags.length > 0 ? (
                     <View style={styles.tagsWrap}>
                       {tags.map((tagId) => {
@@ -1383,7 +1383,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // ── Tag Picker Modal ──
   tagPickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.60)', justifyContent: 'flex-end' },
-  tagPickerSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '92%', minHeight: '70%', flexShrink: 1, marginBottom: 64, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: -10 }, shadowOpacity: 0.22, shadowRadius: 28, elevation: 18 },
+  tagPickerSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '92%', minHeight: '70%', flexShrink: 1, marginBottom: 64, overflow: 'hidden', shadowColor: theme.shadows.soft.shadowColor, shadowOffset: { width: 0, height: -10 }, shadowOpacity: 0.22, shadowRadius: 28, elevation: 18 },
   tagPickerHandle: { width: 44, height: 4, borderRadius: 999, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.10)', alignSelf: 'center', marginTop: 12, marginBottom: 8 },
   tagPickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' },
   tagPickerTitle: { fontSize: 16, color: theme.textPrimary, fontWeight: '600' },

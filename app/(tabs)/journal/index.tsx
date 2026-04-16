@@ -1462,7 +1462,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     fontSize: 24,
     lineHeight: 30,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     letterSpacing: -0.4,
   },
   entryActionSubtitle: {
@@ -1509,7 +1509,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   entryActionLabel: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.textPrimary,
   },
   entryActionLabelDanger: {
     color: '#FFD4D4',

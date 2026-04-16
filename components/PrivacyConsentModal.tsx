@@ -18,11 +18,6 @@ const PALETTE = {
   gold: '#D4AF37',
   silverBlue: '#A2C2E1',
   emerald: '#6EBF8B',
-  textMain: '#FFFFFF',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
-  titaniumGlow: 'rgba(197, 181, 161, 0.12)',
-  starlight: 'rgba(79, 79, 127, 0.10)',
 };
 
 function LivingBackground({ backgroundColor }: { backgroundColor: string }) {

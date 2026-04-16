@@ -32,7 +32,7 @@ import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { type AppTheme } from '../constants/theme';
-import { useThemedStyles } from '../context/ThemeContext';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const STORAGE_KEY = '@mysky:somatic_entries';
@@ -57,7 +57,7 @@ const SENSATION_COLORS: Record<string, string> = {
 
 export default function SomaticMapScreen() {
   const styles = useThemedStyles(createStyles);
-  const router = useRouter();
+  const theme = useAppTheme();
 
   const [entries, setEntries] = useState<any[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -119,14 +119,14 @@ export default function SomaticMapScreen() {
             <View style={styles.hardwareToggle}>
               {['front', 'back'].map((s: any) => (
                 <Pressable key={s} onPress={() => setSide(s)} style={[styles.toggleBtn, side === s && styles.toggleBtnActive]} accessibilityRole="radio" accessibilityState={{ selected: side === s }} accessibilityLabel={s === 'front' ? 'Front view' : 'Back view'}>
-                  <Text style={[styles.toggleBtnText, side === s && { color: '#0A0A0F' }]}>{s.toUpperCase()}</Text>
+                  <Text style={[styles.toggleBtnText, side === s && { color: theme.background }]}>{s.toUpperCase()}</Text>
                 </Pressable>
               ))}
             </View>
             <View style={styles.hardwareToggle}>
               {['female', 'male'].map((g: any) => (
                 <Pressable key={g} onPress={() => setGender(g)} style={[styles.toggleBtn, gender === g && styles.toggleBtnActive]} accessibilityRole="radio" accessibilityState={{ selected: gender === g }} accessibilityLabel={g === 'female' ? 'Female body' : 'Male body'}>
-                  <Text style={[styles.toggleBtnText, gender === g && { color: '#0A0A0F' }]}>{g.toUpperCase()}</Text>
+                  <Text style={[styles.toggleBtnText, gender === g && { color: theme.background }]}>{g.toUpperCase()}</Text>
                 </Pressable>
               ))}
             </View>
@@ -188,8 +188,8 @@ export default function SomaticMapScreen() {
           {/* Log Entry Action */}
           {(selectedRegion && selectedEmotion) && (
             <Animated.View entering={FadeIn} style={styles.logRow}>
-              <Pressable style={[styles.logBtn, { backgroundColor: '#FFF' }]} onPress={logEntry} accessibilityRole="button" accessibilityLabel="Log sensation">
-                <Text style={[styles.logBtnText, { color: '#0A0A0F' }]}>LOG SENSATION</Text>
+              <Pressable style={[styles.logBtn, { backgroundColor: theme.textInk }]} onPress={logEntry} accessibilityRole="button" accessibilityLabel="Log sensation">
+                <Text style={[styles.logBtnText, { color: theme.background }]}>LOG SENSATION</Text>
               </Pressable>
             </Animated.View>
           )}
@@ -227,27 +227,23 @@ export default function SomaticMapScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
   velvetBorder: {
-    borderWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.20)',
-    borderLeftColor: 'rgba(255,255,255,0.10)',
-    borderRightColor: 'rgba(255,255,255,0.10)',
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    ...theme.velvetBorder,
   },
   header: { paddingHorizontal: 24, paddingVertical: 8 },
   backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   titleArea: { paddingHorizontal: 24, marginBottom: 32 },
-  headerTitle: { fontSize: 32, fontWeight: '800', color: '#FFF', letterSpacing: -1 },
+  headerTitle: { fontSize: 32, fontWeight: '800', color: theme.textPrimary, letterSpacing: -1 },
   headerSubtitle: { fontSize: 13, marginTop: 4 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 10, paddingBottom: 140 },
   
   toggleRow: { flexDirection: 'row', gap: 12, justifyContent: 'center', marginBottom: 24 },
   hardwareToggle: { flexDirection: 'row', padding: 4, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   toggleBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 },
-  toggleBtnActive: { backgroundColor: '#FFF' },
+  toggleBtnActive: { backgroundColor: theme.textInk },
   toggleBtnText: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: 1 },
 
   bodyWrap: { borderRadius: 32, paddingVertical: 40, marginBottom: 32, alignItems: 'center', overflow: 'hidden' },
@@ -266,7 +262,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   historyCard: { borderRadius: 20, padding: 20, marginBottom: 14 },
   historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   emotionDot: { width: 8, height: 8, borderRadius: 4 },
-  historyEmotion: { fontSize: 14, fontWeight: '700', color: '#FFF', flex: 1 },
+  historyEmotion: { fontSize: 14, fontWeight: '700', color: theme.textPrimary, flex: 1 },
   historyDate: { fontSize: 11, color: 'rgba(255,255,255,0.4)' },
   historyRegion: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 8 },
 });

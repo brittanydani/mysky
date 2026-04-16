@@ -218,14 +218,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#FFF',
+    color: theme.textPrimary,
     marginBottom: 12,
     letterSpacing: -0.3,
   },
   subSectionTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#D4AF37',
+    color: theme.textGold,
     marginBottom: 8,
   },
   paragraph: {
@@ -248,7 +248,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     overflow: 'hidden',
   },
   securityHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  securityTitle: { fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, color: '#FFF' },
+  securityTitle: { fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, color: theme.textPrimary },
   
   contactCard: {
     flexDirection: 'row',
@@ -258,7 +258,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
   },
-  contactInfo: { fontSize: 16, color: '#FFF', fontWeight: '700' },
+  contactInfo: { fontSize: 16, color: theme.textPrimary, fontWeight: '700' },
   
   footer: {
     alignItems: 'center',

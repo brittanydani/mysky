@@ -243,7 +243,7 @@ export default function RelationshipPatternsScreen() {
                         return (
                           <Pressable key={tag.id} onPress={() => setSelectedTags(prev => isSelected ? prev.filter(i => i !== tag.id) : [...prev, tag.id])}
                             style={[styles.patternTag, isSelected ? { backgroundColor: 'rgba(162, 194, 225, 0.15)', borderColor: 'rgba(162, 194, 225, 0.4)' } : styles.patternTagUnselected]}>
-                            <Text style={[styles.patternTagText, isSelected && { color: '#FFF' }]}>{tag.label}</Text>
+                            <Text style={[styles.patternTagText, isSelected && { color: theme.textPrimary }]}>{tag.label}</Text>
                           </Pressable>
                         );
                       })}
@@ -299,16 +299,17 @@ function LegendItem({ label, color }: { label: string; color: string }) {
 }
 
 function SectionHeader({ title, icon }: { title: string; icon: string }) {
+  const theme = useAppTheme();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16, marginTop: 8 }}>
       <MetallicIcon name={icon as any} size={16} variant="gold" />
-      <Text style={{ color: '#FFF', fontSize: 14, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>{title}</Text>
+      <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>{title}</Text>
     </View>
   );
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   emptyHint: { marginTop: 16, marginBottom: 16, padding: 20, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
@@ -316,7 +317,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   header: { paddingHorizontal: 24, paddingTop: 12 },
   backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   titleArea: { paddingHorizontal: 24, marginVertical: 32 },
-  headerTitle: { fontSize: 32, fontWeight: '800', color: '#FFF', letterSpacing: -1 },
+  headerTitle: { fontSize: 32, fontWeight: '800', color: theme.textPrimary, letterSpacing: -1 },
   headerSubtitle: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.6)' },
   
   summaryCard: { borderRadius: 24, padding: 24, marginBottom: 32, overflow: 'hidden' },
@@ -328,7 +329,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   legendRow: { flexDirection: 'row', justifyContent: 'space-between' },
 
   formCard: { borderRadius: 24, padding: 24, marginBottom: 32, overflow: 'hidden' },
-  noteInput: { minHeight: 100, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.3)', padding: 20, color: '#FFF', fontSize: 16, marginBottom: 24 },
+  noteInput: { minHeight: 100, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.3)', padding: 20, color: theme.textPrimary, fontSize: 16, marginBottom: 24 },
   tagSectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '800', letterSpacing: 1.5, marginBottom: 16 },
   
   tagCategoryGroup: { marginBottom: 12, borderRadius: 16, padding: 16, backgroundColor: 'rgba(255,255,255,0.03)' },
@@ -347,6 +348,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   historySection: { gap: 12 },
   entryCard: { padding: 20, borderRadius: 20, marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.05)' },
   entryDate: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginBottom: 8 },
-  entryNote: { fontSize: 14, color: '#FFF', lineHeight: 20 },
+  entryNote: { fontSize: 14, color: theme.textPrimary, lineHeight: 20 },
   glowOrb: { position: 'absolute', width: 300, height: 300, borderRadius: 150, opacity: 0.5 },
 });

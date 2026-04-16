@@ -301,7 +301,7 @@ const PremiumBadge = () => {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   glowOrb: { position: 'absolute', width: 400, height: 400, borderRadius: 200, opacity: 0.5 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },

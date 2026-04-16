@@ -287,7 +287,7 @@ export default function CognitiveStyleScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
   velvetBorder: {
@@ -317,7 +317,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   dimensionsContainer: { gap: 16 },
   dimensionBlock: { borderRadius: 24 },
   dimInner: { padding: 24, borderRadius: 24, overflow: 'hidden' },
-  dimQuestion: { fontSize: 16, fontWeight: '600', color: '#FFF', lineHeight: 24, marginBottom: 24 },
+  dimQuestion: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, lineHeight: 24, marginBottom: 24 },
   scaleRow: { marginBottom: 16 },
   scaleBtn: { borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.35)', borderColor: 'rgba(255,255,255,0.05)' },
   scaleBtnActive: { backgroundColor: PALETTE.atmosphere, borderColor: PALETTE.atmosphere },

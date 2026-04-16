@@ -342,7 +342,7 @@ export default function ArchetypesScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 360 },
   velvetBorder: {
@@ -363,7 +363,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   promptBlock: { marginBottom: 32 },
   promptNum: { fontSize: 11, color: PALETTE.atmosphere, fontWeight: '800', letterSpacing: 1.5, marginBottom: 8 },
-  promptQuestion: { fontSize: 18, color: '#FFF', fontWeight: '700', marginBottom: 16, lineHeight: 24 },
+  promptQuestion: { fontSize: 18, color: theme.textPrimary, fontWeight: '700', marginBottom: 16, lineHeight: 24 },
   optionsList: { gap: 10 },
   option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderRadius: 24, borderWidth: 1 },
   optionRecessed: { backgroundColor: 'rgba(0,0,0,0.3)', borderColor: 'rgba(255,255,255,0.05)' },
@@ -376,7 +376,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   resultCard: { borderRadius: 28, padding: 32, marginBottom: 24, alignItems: 'center', overflow: 'hidden' },
   resultIcon: { fontSize: 52, marginBottom: 16 },
-  resultName: { fontSize: 28, fontWeight: '800', color: '#FFF', marginBottom: 8 },
+  resultName: { fontSize: 28, fontWeight: '800', color: theme.textPrimary, marginBottom: 8 },
   resultTagline: { fontSize: 15, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 22 },
   divider: { width: '100%', height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 24 },
   dividerThin: { width: '100%', height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 16 },

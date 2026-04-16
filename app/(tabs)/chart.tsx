@@ -2026,7 +2026,7 @@ export default function ChartScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   center: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
     color: theme.textSecondary,
@@ -2283,7 +2283,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   sensitiveItem: { alignItems: 'center', minWidth: 90 },
-  sensitiveName: { color: '#FFFFFF', fontSize: 13, fontWeight: '700', textAlign: 'center', letterSpacing: -0.3 },
+  sensitiveName: { color: theme.textPrimary, fontSize: 13, fontWeight: '700', textAlign: 'center', letterSpacing: -0.3 },
   sensitiveSign: { color: 'rgba(255,255,255,0.65)', fontSize: 13, fontWeight: '500', marginTop: 2, textAlign: 'center', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   sensitiveDeg: { color: 'rgba(255,255,255,0.40)', fontSize: 11, marginTop: 2, textAlign: 'center' },
 

@@ -459,7 +459,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: theme.backgroundTertiary,
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.inputBorder,
   },
   input: {
     backgroundColor: theme.backgroundTertiary,
@@ -469,7 +469,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     fontSize: 16,
     color: theme.textPrimary,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.inputBorder,
   },
   passwordInput: {
     flex: 1,
