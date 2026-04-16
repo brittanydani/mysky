@@ -51,6 +51,8 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
           <Pressable
             style={styles.backButton}
             onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : undefined)}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
             <MetallicIcon name="chevron-back-outline" size={22} variant="gold" />
           </Pressable>

@@ -150,7 +150,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Privacy & Data</Text>
-            <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={15}>
+            <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={15} accessibilityRole="button" accessibilityLabel="Close">
               <Ionicons name="close-outline" size={24} color={theme.textPrimary} />
             </Pressable>
           </View>
@@ -213,7 +213,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                   </View>
                 </LinearGradient>
                 {consentRecord?.granted && (
-                  <Pressable style={styles.actionCard} onPress={handleWithdrawConsent} disabled={isLoading}>
+                  <Pressable style={styles.actionCard} onPress={handleWithdrawConsent} disabled={isLoading} accessibilityRole="button" accessibilityLabel="Withdraw consent">
                     <LinearGradient colors={['rgba(205, 127, 93, 0.08)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                       <MetallicIcon name="close-circle-outline" size={22} color={PALETTE.copper} />
                       <Text style={styles.actionTitle}>Withdraw Consent</Text>
@@ -228,7 +228,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                 <Text style={styles.sectionLabel}>Your Archive</Text>
                 {hasData ? (
                   <View style={styles.actionGrid}>
-                    <Pressable style={styles.actionCard} onPress={handleExportData} disabled={isLoading}>
+                    <Pressable style={styles.actionCard} onPress={handleExportData} disabled={isLoading} accessibilityRole="button" accessibilityLabel="Export archive">
                       <LinearGradient colors={['rgba(212, 175, 55, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                         <MetallicIcon name="download-outline" size={22} color={PALETTE.silverBlue} />
                         <Text style={styles.actionTitle}>Export Archive</Text>
@@ -236,7 +236,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                       </LinearGradient>
                     </Pressable>
 
-                    <Pressable style={styles.actionCard} onPress={handleDeleteAllData} disabled={isLoading}>
+                    <Pressable style={styles.actionCard} onPress={handleDeleteAllData} disabled={isLoading} accessibilityRole="button" accessibilityLabel="Hard reset - delete all data">
                       <LinearGradient colors={['rgba(205, 127, 93, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                         <MetallicIcon name="trash-outline" size={22} color={PALETTE.copper} />
                         <Text style={styles.actionTitle}>Hard Reset</Text>

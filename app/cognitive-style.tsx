@@ -205,7 +205,7 @@ export default function CognitiveStyleScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable style={styles.closeButton} onPress={() => router.back()} hitSlop={10}><Text style={styles.closeIcon}>×</Text></Pressable>
+          <Pressable style={styles.closeButton} onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="Go back"><Text style={styles.closeIcon}>×</Text></Pressable>
         </View>
 
         <View style={styles.titleArea}>
@@ -257,12 +257,25 @@ export default function CognitiveStyleScreen() {
           </View>
           <ReflectionDisclaimer body="This is a self-assessment tool for personal exploration — not a professional cognitive evaluation." />
 
+          {anySet && (
+            <Pressable
+              onPress={() => router.push('/(tabs)/premium' as any)}
+              style={{ marginTop: 28, marginBottom: 8, padding: 20, borderRadius: 20, backgroundColor: 'rgba(212,175,55,0.07)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.18)', alignItems: 'center', gap: 6 }}
+            >
+              <Text style={{ color: 'rgba(212,175,55,0.9)', fontSize: 11, fontWeight: '700', letterSpacing: 1.5 }}>DEEPER SKY</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
+                Curious how your cognitive style connects to your mood and energy patterns? Unlock the full picture.
+              </Text>
+              <Text style={{ color: 'rgba(212,175,55,0.8)', fontSize: 12, fontWeight: '600', marginTop: 4 }}>Explore Premium →</Text>
+            </Pressable>
+          )}
+
           <View style={{ height: 120 }} />
         </ScrollView>
 
         {anySet && (
           <View style={styles.sealBar}>
-            <Pressable style={[styles.saveBtn, theme.isDark && styles.velvetBorder]} onPress={handleSave}>
+            <Pressable style={[styles.saveBtn, theme.isDark && styles.velvetBorder]} onPress={handleSave} accessibilityRole="button" accessibilityLabel={saved ? 'Blueprint sealed' : 'Seal my blueprint and continue'}>
               <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
               <MetallicText style={styles.saveBtnText} variant="gold">{saved ? '✓ Blueprint Sealed' : 'Seal My Blueprint & Continue'}</MetallicText>
             </Pressable>

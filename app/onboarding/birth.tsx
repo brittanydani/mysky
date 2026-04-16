@@ -22,6 +22,45 @@ import { IdentityVault, CosmicIdentity } from '../../utils/IdentityVault';
 import { type AppTheme } from '../../constants/theme';
 import { useThemedStyles } from '../../context/ThemeContext';
 
+/**
+ * Ask for notification permissions with a rationale-first approach.
+ * The iOS native prompt fires only once ever, so showing context before it
+ * dramatically improves opt-in rate. Android 13+ also requires a permission.
+ */
+async function requestNotificationPermissions(): Promise<void> {
+  try {
+    const Notifications = await import('expo-notifications');
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    if (existing === 'granted') return;
+    // Don't re-ask if already denied — system won't show the prompt anyway.
+    if (existing === 'denied') return;
+
+    await new Promise<void>((resolve) => {
+      Alert.alert(
+        'Stay in tune with your sky',
+        'MySky can send you a morning note when a transit aligns with your chart — and alert you when your mood or sleep patterns are shifting.',
+        [
+          { text: 'Not now', style: 'cancel', onPress: () => resolve() },
+          {
+            text: 'Allow notifications',
+            onPress: async () => {
+              try {
+                await Notifications.requestPermissionsAsync();
+              } catch {
+                // Non-blocking — app works without notifications
+              }
+              resolve();
+            },
+          },
+        ],
+        { cancelable: true },
+      );
+    });
+  } catch {
+    // Non-blocking
+  }
+}
+
 export default function OnboardingBirthScreen() {
   const router = useRouter();
   const styles = useThemedStyles(createStyles);
@@ -79,6 +118,12 @@ export default function OnboardingBirthScreen() {
         .catch((err) => logger.error('[OnboardingBirth] analytics failed:', err));
 
       DeviceEventEmitter.emit('ONBOARDING_COMPLETE');
+
+      // Request notification permissions before navigating home.
+      // Show a rationale alert first — the iOS system prompt only fires once,
+      // so giving context dramatically improves opt-in rate.
+      await requestNotificationPermissions();
+
       router.replace('/(tabs)/home' as Href);
     } catch (e) {
       logger.error('[OnboardingBirth] failed:', e);

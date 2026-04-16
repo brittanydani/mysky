@@ -312,6 +312,8 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
             },
           ]}
           onPress={() => setActiveIdx((current) => (current === index ? null : index))}
+          accessibilityRole="button"
+          accessibilityLabel={`Sleep data point ${index + 1}`}
         />
       ))}
 

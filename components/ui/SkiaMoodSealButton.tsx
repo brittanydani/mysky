@@ -207,7 +207,14 @@ export default function SkiaMoodSealButton({
   return (
     <View style={[styles.wrapper, { opacity: dimOpacity }]}>
       <GestureDetector key={gestureKey} gesture={longPress}>
-        <View style={styles.container} collapsable={false}>
+        <View
+          style={styles.container}
+          collapsable={false}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={complete ? 'Entry sealed' : isEditing ? 'Hold to update check-in' : 'Hold to seal check-in'}
+          accessibilityState={{ disabled: disabled && !complete }}
+        >
           <View style={{ width: SIZE, height: SIZE, pointerEvents: 'none' }}>
             <Canvas style={{ position: 'absolute', top: -CANVAS_PAD, left: -CANVAS_PAD, width: CANVAS_SIZE, height: CANVAS_SIZE }}>
               <Group>

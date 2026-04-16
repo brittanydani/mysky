@@ -284,6 +284,9 @@ export default function DailyReflectionSection({
                           key={opt.value}
                           disabled={isSealed}
                           onPress={() => setAnswer(category, q.id, opt.value)}
+                          accessibilityRole="radio"
+                          accessibilityState={{ selected: val === opt.value, disabled: isSealed }}
+                          accessibilityLabel={opt.label}
                           style={[
                             styles.scalePill,
                             isSelected 
@@ -328,6 +331,9 @@ export default function DailyReflectionSection({
                 ]}
                 onPress={() => isSealed ? setCategorySealed(p => ({ ...p, [category]: false })) : handleSealCategory(category)}
                 disabled={!allAnswered && !isSealed}
+                accessibilityRole="button"
+                accessibilityLabel={isSealed ? 'Reopen to edit' : `Record ${CATEGORY_LABELS[category]}`}
+                accessibilityState={{ disabled: !allAnswered && !isSealed }}
               >
                 <MetallicIcon name={isSealed ? "lock-open-outline" : "shield-checkmark-outline"} size={16} color={isSealed || allAnswered ? accent : 'rgba(255,255,255,0.3)'} />
                 <Text style={[styles.sealButtonText, { color: isSealed || allAnswered ? accent : 'rgba(255,255,255,0.3)' }]}>

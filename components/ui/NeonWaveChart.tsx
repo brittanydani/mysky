@@ -184,7 +184,7 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
 
       {/* Tap targets */}
       {pillars.map((day, i) => (
-        <Pressable key={i} style={{ position: 'absolute', left: day.px - 4, top: PAD_T, width: PILLAR_W + 8, height: plotH }} onPress={() => { Haptics.selectionAsync(); setActiveIdx(activeIdx === i ? null : i); }} />
+        <Pressable key={i} style={{ position: 'absolute', left: day.px - 4, top: PAD_T, width: PILLAR_W + 8, height: plotH }} onPress={() => { Haptics.selectionAsync(); setActiveIdx(activeIdx === i ? null : i); }} accessibilityRole="button" accessibilityLabel={`${day.label} mood data`} />
       ))}
 
       {/* Day labels */}

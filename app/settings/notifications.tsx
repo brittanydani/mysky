@@ -199,6 +199,9 @@ export default function NotificationSettings() {
             style={[styles.timeBadge, (unknown || !isRhythmEnabled) && styles.timeBadgeDim]}
             onPress={() => !unknown && isRhythmEnabled && openPicker(slot)}
             disabled={unknown || !isRhythmEnabled}
+            accessibilityRole="button"
+            accessibilityLabel={`Set ${isMorning ? 'wake' : 'evening'} notification time`}
+            accessibilityState={{ disabled: unknown || !isRhythmEnabled }}
           >
             {(unknown || !isRhythmEnabled) ? (
               <Text style={[styles.timeText, styles.dimText]}>
@@ -224,7 +227,7 @@ export default function NotificationSettings() {
               themeVariant={resolvedMode}
               style={styles.picker}
             />
-            <Pressable style={styles.doneButton} onPress={confirmIOSTime}>
+            <Pressable style={styles.doneButton} onPress={confirmIOSTime} accessibilityRole="button" accessibilityLabel="Confirm time">
               <MetallicText color="#D9BF8C" style={styles.doneText}>Done</MetallicText>
             </Pressable>
           </View>
@@ -233,7 +236,7 @@ export default function NotificationSettings() {
         <View style={styles.divider} />
 
         {/* Unknown time option */}
-        <Pressable style={styles.unknownRow} onPress={() => toggleUnknown(slot)}>
+        <Pressable style={styles.unknownRow} onPress={() => toggleUnknown(slot)} accessibilityRole="checkbox" accessibilityState={{ checked: unknown }} accessibilityLabel="I don't know my time">
           <View style={[styles.checkbox, unknown && styles.checkboxActive]}>
             {unknown && <MetallicText color="#D9BF8C" style={styles.checkmark}>✓</MetallicText>}
           </View>

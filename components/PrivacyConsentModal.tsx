@@ -135,6 +135,8 @@ export default function PrivacyConsentModal({
                   <Pressable
                     style={({ pressed }) => [styles.acceptBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
                     onPress={handleAccept}
+                    accessibilityRole="button"
+                    accessibilityLabel="Accept and continue"
                   >
                     <LinearGradient
                       colors={['#FFF4D6', '#D4AF37', '#6B532E']}
@@ -150,6 +152,8 @@ export default function PrivacyConsentModal({
                     style={styles.declineBtn}
                     onPress={handleDecline}
                     disabled={showDeclineHint}
+                    accessibilityRole="button"
+                    accessibilityLabel="Decline, not now"
                   >
                       <Text style={styles.declineBtnText}>Not now</Text>
                     </Pressable>

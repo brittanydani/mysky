@@ -118,7 +118,7 @@ export default function PatternsScreen() {
           const skContext = await loadSelfKnowledgeContext();
           if (!active) return;
           const refs = computeSelfKnowledgeCrossRef(skContext, checkIns);
-          const enhancedRefs = await enhancePatternInsights(refs, skContext, checkIns);
+          const enhancedRefs = await enhancePatternInsights(refs, skContext, checkIns, isPremium);
           if (!active) return;
           const aiBodies = new Map(enhancedRefs?.insights.map((insight) => [insight.id, insight.body]) ?? []);
           setCrossRefs(
@@ -214,10 +214,20 @@ export default function PatternsScreen() {
               </View>
 
               <SectionHeader label="SURFACING TODAY" icon="radio-outline" />
-              {!isPremium && !loading && snapshot.checkInCount >= 7 && (
+              {!isPremium && !loading && snapshot.checkInCount >= 5 && (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                   <VelvetGlassSurface style={styles.insightCard} intensity={25}>
                     <LinearGradient colors={['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)']} style={StyleSheet.absoluteFill} />
+                    {/* Blurred glimpse layer — shows the shape of real content */}
+                    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                      <View style={styles.blurredInsightPreview}>
+                        <View style={styles.blurredInsightLine} />
+                        <View style={[styles.blurredInsightLine, { width: '75%', opacity: 0.5 }]} />
+                        <View style={[styles.blurredInsightLine, { width: '88%', opacity: 0.4 }]} />
+                        <View style={[styles.blurredInsightLine, { width: '60%', opacity: 0.3 }]} />
+                      </View>
+                      <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFill} />
+                    </View>
                     <View style={styles.cardHeader}>
                       <MetallicText style={styles.cardLabel} variant="gold">PATTERNS DETECTED</MetallicText>
                       <View style={styles.lockedBadge}><MetallicIcon name="lock-closed-outline" size={10} variant="gold" /><Text style={styles.lockedText}>PREMIUM</Text></View>
@@ -229,15 +239,15 @@ export default function PatternsScreen() {
                   </VelvetGlassSurface>
                 </Pressable>
               )}
-              {!isPremium && !loading && snapshot.checkInCount >= 3 && snapshot.checkInCount < 7 && (
+              {!isPremium && !loading && snapshot.checkInCount >= 3 && snapshot.checkInCount < 5 && (
                 <VelvetGlassSurface style={styles.insightCard} intensity={25}>
                   <LinearGradient colors={['rgba(107, 144, 128, 0.15)', 'rgba(107, 144, 128, 0.05)']} style={StyleSheet.absoluteFill} />
                   <View style={styles.cardHeader}>
                     <MetallicText style={styles.cardLabel} variant="gold">BUILDING YOUR ARCHIVE</MetallicText>
                   </View>
-                  <Text style={styles.patternTitle}>{7 - snapshot.checkInCount} more check-ins until your first pattern insight</Text>
+                  <Text style={styles.patternTitle}>{5 - snapshot.checkInCount} more check-ins until your first pattern insight</Text>
                   <Text style={styles.insightBody}>
-                    Keep logging — once we have a week of data, Deeper Sky can surface what your mood, stress, and energy levels are trying to tell you.
+                    Keep logging — once you have 5 check-ins, Deeper Sky can start surfacing what your mood, stress, and energy levels are really telling you.
                   </Text>
                 </VelvetGlassSurface>
               )}
@@ -405,6 +415,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   lockedText: { fontSize: 8, fontWeight: '800', color: '#D4AF37' },
   patternTitle: { fontSize: 18, fontWeight: '700', color: '#FFFFFF', marginBottom: 12 },
   insightBody: { fontSize: 15, color: 'rgba(255,255,255,0.7)', lineHeight: 24 },
+
+  blurredInsightPreview: { padding: 32, gap: 10 },
+  blurredInsightLine: { height: 14, borderRadius: 7, width: '95%', backgroundColor: 'rgba(255,255,255,0.25)' },
 
   supportCallout: { marginTop: 24, padding: 16, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   supportCalloutHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },

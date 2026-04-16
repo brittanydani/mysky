@@ -527,33 +527,87 @@ export default function HomeScreen() {
           </Animated.View>
 
           {/* ── Streak Row ── */}
-          {dailyLoop && dailyLoop.streak.current > 0 && (
+          {dailyLoop && (dailyLoop.streak.current > 0 || dailyLoop.streak.atRisk || dailyLoop.streak.totalCheckIns === 0) && (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.streakRow}>
-              <View style={styles.streakPill}>
-                <MetallicIcon name="flame-outline" size={16} variant="gold" />
-                <MetallicText style={styles.streakCount} variant="gold">{dailyLoop.streak.current}</MetallicText>
-                <Text style={styles.streakLabel}>day streak</Text>
-              </View>
-              {dailyLoop.streak.milestone && (
-                <View style={[styles.streakPill, { backgroundColor: `${PALETTE.gold}18` }]}>
-                  <MetallicIcon name="trophy-outline" size={14} variant="gold" />
-                  {theme.isDark ? (
-                    <MetallicText style={styles.streakLabel} variant="gold">Milestone!</MetallicText>
-                  ) : (
-                    <Text style={[styles.streakLabel, styles.streakLabelLight]}>Milestone!</Text>
-                  )}
+              {dailyLoop.streak.totalCheckIns === 0 ? (
+                /* First-time user: encourage first check-in */
+                <View style={[styles.streakPill, { backgroundColor: 'rgba(162,194,225,0.12)' }]}>
+                  <MetallicIcon name="flame-outline" size={16} variant="gold" />
+                  <Text style={styles.streakLabel}>Start your streak — log today's check-in</Text>
                 </View>
-              )}
-              {dailyLoop.streak.checkedInToday && (
-                <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}>
-                  <MetallicIcon name="checkmark-circle-outline" size={14} variant="green" />
-                  {theme.isDark ? (
-                    <MetallicText style={styles.streakLabel} variant="green">Today</MetallicText>
-                  ) : (
-                    <Text style={[styles.streakLabel, styles.streakLabelLight]}>Today</Text>
+              ) : dailyLoop.streak.atRisk ? (
+                /* At risk: show the streak they'll lose */
+                <>
+                  <View style={[styles.streakPill, { backgroundColor: 'rgba(217,140,140,0.15)' }]}>
+                    <MetallicIcon name="flame-outline" size={16} variant="gold" />
+                    <MetallicText style={styles.streakCount} variant="gold">{dailyLoop.streak.current}</MetallicText>
+                    <Text style={[styles.streakLabel, { color: '#D98C8C' }]}>day streak at risk</Text>
+                  </View>
+                  <View style={[styles.streakPill, { backgroundColor: 'rgba(217,140,140,0.10)' }]}>
+                    <MetallicIcon name="warning-outline" size={14} variant="gold" />
+                    <Text style={[styles.streakLabel, { color: '#D98C8C' }]}>Check in to keep it</Text>
+                  </View>
+                </>
+              ) : (
+                /* Normal streak display */
+                <>
+                  <View style={styles.streakPill}>
+                    <MetallicIcon name="flame-outline" size={16} variant="gold" />
+                    <MetallicText style={styles.streakCount} variant="gold">{dailyLoop.streak.current}</MetallicText>
+                    <Text style={styles.streakLabel}>day streak</Text>
+                  </View>
+                  {dailyLoop.streak.milestone && (
+                    <View style={[styles.streakPill, { backgroundColor: `${PALETTE.gold}18` }]}>
+                      <MetallicIcon name="trophy-outline" size={14} variant="gold" />
+                      {theme.isDark ? (
+                        <MetallicText style={styles.streakLabel} variant="gold">Milestone!</MetallicText>
+                      ) : (
+                        <Text style={[styles.streakLabel, styles.streakLabelLight]}>Milestone!</Text>
+                      )}
+                    </View>
                   )}
-                </View>
+                  {dailyLoop.streak.checkedInToday && (
+                    <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}>
+                      <MetallicIcon name="checkmark-circle-outline" size={14} variant="green" />
+                      {theme.isDark ? (
+                        <MetallicText style={styles.streakLabel} variant="green">Today</MetallicText>
+                      ) : (
+                        <Text style={[styles.streakLabel, styles.streakLabelLight]}>Today</Text>
+                      )}
+                    </View>
+                  )}
+                </>
               )}
+            </Animated.View>
+          )}
+
+          {/* ── First Check-In Prompt (new users only) ── */}
+          {dailyLoop && dailyLoop.streak.totalCheckIns === 0 && (
+            <Animated.View entering={FadeInDown.delay(300).duration(700)}>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                  router.push('/checkin' as Href);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Log your first check-in"
+              >
+                <VelvetGlassSurface style={styles.firstCheckInCard} intensity={20}>
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={['rgba(168, 139, 235, 0.25)', 'rgba(107, 144, 128, 0.10)']}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.firstCheckInContent}>
+                    <MetallicIcon name="add-circle-outline" size={28} variant="gold" />
+                    <View style={{ flex: 1 }}>
+                      <MetallicText style={styles.firstCheckInTitle} variant="gold">Log your first check-in</MetallicText>
+                      <Text style={styles.firstCheckInBody}>Track your mood, energy, and sleep — your first step toward understanding your patterns.</Text>
+                    </View>
+                    <MetallicIcon name="chevron-forward-outline" size={18} variant="gold" />
+                  </View>
+                </VelvetGlassSurface>
+              </Pressable>
             </Animated.View>
           )}
 
@@ -1286,6 +1340,11 @@ const createStyles = (theme: AppTheme) => {
   streakLabelLight: {
     color: theme.textSecondary,
   },
+
+  firstCheckInCard: { borderRadius: 20, marginBottom: 20, overflow: 'hidden' },
+  firstCheckInContent: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 20 },
+  firstCheckInTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
+  firstCheckInBody: { fontSize: 13, color: theme.textSecondary, lineHeight: 18 },
 
   // Weekly reflection
   weeklyCard: { marginBottom: 32 },

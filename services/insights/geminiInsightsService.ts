@@ -56,6 +56,7 @@ interface CachedResult {
 
 interface PatternInsightRequestPayload {
   insights: GeminiInsightInput[];
+  modelTier?: 'free' | 'premium';
   profile: {
     dominantArchetype?: string;
     coreValues?: string[];
@@ -148,6 +149,7 @@ function buildPatternInsightPayload(
   insights: GeminiInsightInput[],
   context: SelfKnowledgeContext,
   checkIns: DailyCheckIn[],
+  modelTier: 'free' | 'premium' = 'free',
 ): PatternInsightRequestPayload {
   const profile: PatternInsightRequestPayload['profile'] = {};
 
@@ -232,6 +234,7 @@ function buildPatternInsightPayload(
 
     return {
       insights,
+      modelTier,
       profile,
       behavioral: {
         checkInCount: checkIns.length,
@@ -247,6 +250,7 @@ function buildPatternInsightPayload(
 
   return {
     insights,
+    modelTier,
     profile,
     behavioral: {
       checkInCount: 0,
@@ -286,6 +290,7 @@ export async function enhancePatternInsights(
   insights: CrossRefInsight[],
   context: SelfKnowledgeContext,
   checkIns: DailyCheckIn[],
+  isPremium = false,
 ): Promise<GeminiPatternResult | null> {
   return enhanceInsightCopy(
     insights.map((insight) => ({
@@ -297,6 +302,7 @@ export async function enhancePatternInsights(
     })),
     context,
     checkIns,
+    isPremium,
   );
 }
 
@@ -304,10 +310,12 @@ export async function enhanceInsightCopy(
   insights: GeminiInsightInput[],
   context: SelfKnowledgeContext,
   checkIns: DailyCheckIn[],
+  isPremium = false,
 ): Promise<GeminiPatternResult | null> {
   if (!insights.length) return null;
 
-  const payload = buildPatternInsightPayload(insights, context, checkIns);
+  const modelTier = isPremium ? 'premium' : 'free';
+  const payload = buildPatternInsightPayload(insights, context, checkIns, modelTier);
 
   // ── Check cache ──
   const cacheKey = buildCacheKey(payload);

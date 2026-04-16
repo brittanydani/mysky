@@ -103,11 +103,11 @@ export default function PremiumRequiredScreen({
         <Text style={styles.priceHint}>Deeper Sky subscription required • Private & Secure</Text>
 
         <View style={styles.legalLinks}>
-          <Pressable onPress={() => router.push('/terms' as Href)} hitSlop={12}>
+          <Pressable onPress={() => router.push('/terms' as Href)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Terms of Use">
             <MetallicText style={styles.legalLink} color={PALETTE.silverBlue}>Terms</MetallicText>
           </Pressable>
           <Text style={styles.legalSeparator}>•</Text>
-          <Pressable onPress={() => router.push('/privacy' as Href)} hitSlop={12}>
+          <Pressable onPress={() => router.push('/privacy' as Href)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Privacy Policy">
             <MetallicText style={styles.legalLink} color={PALETTE.silverBlue}>Privacy</MetallicText>
           </Pressable>
         </View>

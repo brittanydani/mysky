@@ -132,7 +132,7 @@ export default function AwakenStateSheet({
     >
       {/* Dim backdrop */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" />
       </Animated.View>
 
       {/* Sheet panel */}
@@ -170,6 +170,9 @@ export default function AwakenStateSheet({
                     <Pressable
                       key={opt.id}
                       onPress={() => handleSelect(opt.id)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: opt.id === selected }}
+                      accessibilityLabel={opt.label}
                       style={({ pressed }) => [
                         styles.item,
                         isSelected && styles.itemSelected,

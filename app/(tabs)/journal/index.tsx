@@ -278,6 +278,9 @@ export default function JournalScreen() {
   const reflectionsListRef = useRef<FlatList<JournalEntry> | null>(null);
   const patternAiRequestRef = useRef(0);
   const dreamAiRequestRef = useRef(0);
+  const entriesRef = useRef<JournalEntry[]>([]);
+  const hasMoreRef = useRef(true);
+  const loadingMoreRef = useRef(false);
 
   const [showPremiumRequired] = useState(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -466,38 +469,49 @@ export default function JournalScreen() {
     try {
       if (reset) {
         setLoading(true);
+        hasMoreRef.current = true;
         setHasMore(true);
         const [page, count] = await Promise.all([
           localDb.getJournalEntriesPaginated(PAGE_SIZE),
           localDb.getJournalEntryCount(),
         ]);
+        entriesRef.current = page;
         setEntries(page);
         setTotalCount(count);
-        setHasMore(page.length >= PAGE_SIZE);
+        const more = page.length >= PAGE_SIZE;
+        hasMoreRef.current = more;
+        setHasMore(more);
       } else {
-        if (loadingMore || !hasMore) return;
+        if (loadingMoreRef.current || !hasMoreRef.current) return;
+        loadingMoreRef.current = true;
         setLoadingMore(true);
-        const last = entries[entries.length - 1];
+        const last = entriesRef.current[entriesRef.current.length - 1];
         const page = await localDb.getJournalEntriesPaginated(
           PAGE_SIZE,
           last?.date,
           last?.createdAt,
         );
-        if (page.length < PAGE_SIZE) setHasMore(false);
+        if (page.length < PAGE_SIZE) {
+          hasMoreRef.current = false;
+          setHasMore(false);
+        }
         setEntries(prev => {
           const existingIds = new Set(prev.map(e => e.id));
           const newEntries = page.filter(e => !existingIds.has(e.id));
-          return [...prev, ...newEntries];
+          const updated = [...prev, ...newEntries];
+          entriesRef.current = updated;
+          return updated;
         });
       }
     } catch (error) {
       logger.error('Failed to load journal entries:', error);
       Alert.alert('Error', 'Failed to load journal entries');
     } finally {
+      loadingMoreRef.current = false;
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [entries, hasMore, loadingMore]);
+  }, []);
 
   const loadSleepEntries = useCallback(async () => {
     try {

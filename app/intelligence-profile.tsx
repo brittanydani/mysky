@@ -412,7 +412,7 @@ export default function IntelligenceProfileScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable style={styles.closeButton} onPress={handleClose} hitSlop={10}>
+          <Pressable style={styles.closeButton} onPress={handleClose} hitSlop={10} accessibilityRole="button" accessibilityLabel="Go back">
             <Text style={styles.closeIcon}>×</Text>
           </Pressable>
         </View>
@@ -515,6 +515,19 @@ export default function IntelligenceProfileScreen() {
 
           <ReflectionDisclaimer body="Based on your responses — for self-discovery, not validated professional assessment." />
 
+          {anySet && (
+            <Pressable
+              onPress={() => router.push('/(tabs)/premium' as any)}
+              style={{ marginTop: 28, marginBottom: 8, padding: 20, borderRadius: 20, backgroundColor: 'rgba(212,175,55,0.07)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.18)', alignItems: 'center', gap: 6 }}
+            >
+              <Text style={{ color: 'rgba(212,175,55,0.9)', fontSize: 11, fontWeight: '700', letterSpacing: 1.5 }}>DEEPER SKY</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
+                See how your intelligence strengths show up in your daily patterns — unlock deeper analysis with Premium.
+              </Text>
+              <Text style={{ color: 'rgba(212,175,55,0.8)', fontSize: 12, fontWeight: '600', marginTop: 4 }}>Explore Premium →</Text>
+            </Pressable>
+          )}
+
           <View style={{ height: 120 }} />
         </ScrollView>
 
@@ -524,6 +537,8 @@ export default function IntelligenceProfileScreen() {
             <Pressable
               style={[styles.saveBtn, styles.velvetBorder]}
               onPress={handleSave}
+              accessibilityRole="button"
+              accessibilityLabel={saved ? 'Profile sealed' : 'Seal profile and continue'}
               onLongPress={() => {
                 if (saved) {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});

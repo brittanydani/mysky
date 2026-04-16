@@ -102,7 +102,7 @@ export default function SomaticMapScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => router.back()} hitSlop={10}>
+          <Pressable style={styles.backButton} onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="Go back">
             <MetallicIcon name="chevron-back-outline" size={22} color="#FFF" />
           </Pressable>
         </View>
@@ -118,14 +118,14 @@ export default function SomaticMapScreen() {
           <View style={styles.toggleRow}>
             <View style={styles.hardwareToggle}>
               {['front', 'back'].map((s: any) => (
-                <Pressable key={s} onPress={() => setSide(s)} style={[styles.toggleBtn, side === s && styles.toggleBtnActive]}>
+                <Pressable key={s} onPress={() => setSide(s)} style={[styles.toggleBtn, side === s && styles.toggleBtnActive]} accessibilityRole="radio" accessibilityState={{ selected: side === s }} accessibilityLabel={s === 'front' ? 'Front view' : 'Back view'}>
                   <Text style={[styles.toggleBtnText, side === s && { color: '#0A0A0F' }]}>{s.toUpperCase()}</Text>
                 </Pressable>
               ))}
             </View>
             <View style={styles.hardwareToggle}>
               {['female', 'male'].map((g: any) => (
-                <Pressable key={g} onPress={() => setGender(g)} style={[styles.toggleBtn, gender === g && styles.toggleBtnActive]}>
+                <Pressable key={g} onPress={() => setGender(g)} style={[styles.toggleBtn, gender === g && styles.toggleBtnActive]} accessibilityRole="radio" accessibilityState={{ selected: gender === g }} accessibilityLabel={g === 'female' ? 'Female body' : 'Male body'}>
                   <Text style={[styles.toggleBtnText, gender === g && { color: '#0A0A0F' }]}>{g.toUpperCase()}</Text>
                 </Pressable>
               ))}
@@ -188,7 +188,7 @@ export default function SomaticMapScreen() {
           {/* Log Entry Action */}
           {(selectedRegion && selectedEmotion) && (
             <Animated.View entering={FadeIn} style={styles.logRow}>
-              <Pressable style={[styles.logBtn, { backgroundColor: '#FFF' }]} onPress={logEntry}>
+              <Pressable style={[styles.logBtn, { backgroundColor: '#FFF' }]} onPress={logEntry} accessibilityRole="button" accessibilityLabel="Log sensation">
                 <Text style={[styles.logBtnText, { color: '#0A0A0F' }]}>LOG SENSATION</Text>
               </Pressable>
             </Animated.View>

@@ -197,6 +197,7 @@ function BottomNav({
           style={({ pressed }) => [st.backButton, pressed && { opacity: 0.7 }]}
           onPress={onBack}
           accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Ionicons name="chevron-back-outline" size={24} color={PREMIUM.textMain} />
         </Pressable>
@@ -799,6 +800,9 @@ export default function OnboardingModal({
                             onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
                             onPress={authRecoveryCodeSent ? handleCompleteAuthRecovery : handleSendAuthRecoveryCode}
                             disabled={authLoading}
+                            accessibilityRole="button"
+                            accessibilityLabel={authRecoveryCodeSent ? 'Reset password' : 'Email me a code'}
+                            accessibilityState={{ disabled: authLoading }}
                           >
                             <LinearGradient colors={LIQUID_GOLD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.liquidGoldFill} />
                             {authLoading ? (
@@ -875,6 +879,9 @@ export default function OnboardingModal({
                             onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
                             onPress={handleAuthSubmit}
                             disabled={authLoading}
+                            accessibilityRole="button"
+                            accessibilityLabel={authMode === 'sign-in' ? 'Sign in' : 'Create account'}
+                            accessibilityState={{ disabled: authLoading }}
                           >
                             <LinearGradient colors={LIQUID_GOLD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.liquidGoldFill} />
                             {authLoading ? (

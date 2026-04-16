@@ -82,6 +82,8 @@ export default function BodyNervousScreen() {
           <Pressable
             style={styles.backButton}
             onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/identity'); }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
             <MetallicIcon name="chevron-back-outline" size={22} variant="gold" />
           </Pressable>

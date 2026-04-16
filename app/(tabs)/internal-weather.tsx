@@ -813,6 +813,8 @@ export default function MoodCheckIn() {
         <Pressable
           onPress={() => { Haptics.selectionAsync(); router.back(); }}
           style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Ionicons name="chevron-back-outline" size={22} color={theme.textPrimary} />
         </Pressable>
@@ -838,6 +840,9 @@ export default function MoodCheckIn() {
           disabled={!canGoBack()}
           hitSlop={12}
           style={styles.dateArrow}
+          accessibilityRole="button"
+          accessibilityLabel="Previous day"
+          accessibilityState={{ disabled: !canGoBack() }}
         >
           <Ionicons name="chevron-back-outline" size={18} color={canGoBack() ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)'} />
         </Pressable>
@@ -847,6 +852,9 @@ export default function MoodCheckIn() {
           disabled={!canGoForward()}
           hitSlop={12}
           style={styles.dateArrow}
+          accessibilityRole="button"
+          accessibilityLabel="Next day"
+          accessibilityState={{ disabled: !canGoForward() }}
         >
           <Ionicons name="chevron-forward-outline" size={18} color={canGoForward() ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)'} />
         </Pressable>
@@ -1027,6 +1035,9 @@ export default function MoodCheckIn() {
             <Pressable
               style={styles.emotionDropdownHeader}
               onPress={() => { Haptics.selectionAsync(); setEmotionSectionOpen(o => !o); }}
+              accessibilityRole="button"
+              accessibilityLabel="Emotional quality section"
+              accessibilityState={{ expanded: emotionSectionOpen }}
             >
               <View style={styles.premiumHeaderRow}>
                 <Text style={styles.sectionLabel}>EMOTIONAL QUALITY</Text>

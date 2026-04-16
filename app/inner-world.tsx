@@ -9,6 +9,7 @@
 
 import React, { useCallback, useState, useRef } from 'react';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { usePremium } from '../context/PremiumContext';
 import type { AppTheme } from '../constants/theme';
 import { logger } from '../utils/logger';
 import {
@@ -126,6 +127,7 @@ export default function InnerWorldScreen() {
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
+  const { isPremium } = usePremium();
 
   const [completion, setCompletion] = useState<Record<ToolId, boolean>>({
     values: false, archetypes: false, cognitive: false, intelligence: false,
@@ -199,7 +201,7 @@ export default function InnerWorldScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable style={styles.closeButton} onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/identity'); }}>
+          <Pressable style={styles.closeButton} onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/identity'); }} accessibilityRole="button" accessibilityLabel="Close">
             <Ionicons name="close-outline" size={22} color="#FFFFFF" />
           </Pressable>
         </View>
@@ -261,7 +263,7 @@ export default function InnerWorldScreen() {
               const isDone = completion[tool.id];
               return (
                 <Animated.View key={tool.id} entering={FadeInDown.delay(620 + i * 80).duration(600)} layout={Layout.springify()}>
-                  <Pressable style={({ pressed }) => [pressed && styles.cardPressed]} onPress={() => nav(tool.route)}>
+                  <Pressable style={({ pressed }) => [pressed && styles.cardPressed]} onPress={() => nav(tool.route)} accessibilityRole="button" accessibilityLabel={tool.title}>
                     <VelvetGlassSurface style={styles.card} intensity={25}>
                       <LinearGradient colors={tool.wash} style={StyleSheet.absoluteFill} />
                       <View style={styles.cardHeader}>
@@ -284,6 +286,24 @@ export default function InnerWorldScreen() {
             })}
           </View>
 
+          {/* Premium synthesis gate — shown when at least one tool is done */}
+          {!isPremium && Object.values(completion).some(Boolean) && (
+            <Pressable
+              onPress={() => router.push('/(tabs)/premium' as any)}
+              style={{ marginTop: 28, padding: 20, borderRadius: 20, backgroundColor: 'rgba(212,175,55,0.07)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.22)', alignItems: 'center', gap: 6 }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <MetallicIcon name="lock-closed-outline" size={12} variant="gold" />
+                <Text style={{ color: 'rgba(212,175,55,0.9)', fontSize: 11, fontWeight: '700', letterSpacing: 1.5 }}>DEEPER SKY</Text>
+              </View>
+              <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: '700', textAlign: 'center', marginTop: 2 }}>Unlock Your Healing Space</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
+                Premium synthesises your archetype, somatic patterns, and relational tendencies into personalised shadow work, rituals, and integration prompts.
+              </Text>
+              <Text style={{ color: 'rgba(212,175,55,0.8)', fontSize: 12, fontWeight: '600', marginTop: 4 }}>Unlock the Full Portrait →</Text>
+            </Pressable>
+          )}
+
           {/* Journey Progress */}
           {totalDays > 0 && (
             <Animated.View entering={FadeIn.delay(900).duration(500)} style={styles.progressSection}>
@@ -293,7 +313,7 @@ export default function InnerWorldScreen() {
               </View>
               <Text style={styles.progressLabel}>{totalDays} of 365 days — {Math.round((totalDays / 365) * 100)}% of a full cycle</Text>
 
-              <Pressable style={[styles.pastLink, theme.isDark && styles.velvetBorder]} onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/past-reflections'); }}>
+              <Pressable style={[styles.pastLink, theme.isDark && styles.velvetBorder]} onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/past-reflections'); }} accessibilityRole="button" accessibilityLabel="View past reflections">
                 <LinearGradient colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']} style={StyleSheet.absoluteFill} />
                 <MetallicIcon name="time-outline" size={16} variant="gold" />
                 <MetallicText style={styles.pastLinkText} variant="gold">View Past Reflections</MetallicText>

@@ -107,7 +107,7 @@ export default function BackupPassphraseModal({
             
             {/* Header */}
             <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.header}>
-              <Pressable style={styles.iconButton} onPress={onCancel}>
+              <Pressable style={styles.iconButton} onPress={onCancel} accessibilityRole="button" accessibilityLabel="Cancel">
                 <Ionicons name="close-outline" size={24} color={theme.textPrimary} />
               </Pressable>
               <Text style={styles.title}>

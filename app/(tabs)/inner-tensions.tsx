@@ -294,7 +294,7 @@ function PremiumLockBanner({ onUnlock }: { onUnlock: () => void }) {
   const styles = useThemedStyles(createStyles);
 
   return (
-    <Pressable style={styles.lockBanner} onPress={onUnlock}>
+    <Pressable style={styles.lockBanner} onPress={onUnlock} accessibilityRole="button" accessibilityLabel="Upgrade to Deeper Sky premium">
       <LinearGradient
         colors={['rgba(162, 194, 225, 0.12)', 'rgba(168,155,200,0.08)']}
         start={{ x: 0, y: 0 }}

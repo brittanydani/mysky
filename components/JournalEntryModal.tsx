@@ -685,7 +685,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
             {/* Header — collapses to minimal bar in writing mode */}
             {writingMode ? (
               <View style={styles.writingHeader}>
-                <Pressable style={styles.iconBtn} onPress={dismissWritingKeyboard} hitSlop={15}>
+                <Pressable style={styles.iconBtn} onPress={dismissWritingKeyboard} hitSlop={15} accessibilityRole="button" accessibilityLabel="Collapse writing view">
                   <Ionicons name="chevron-down-outline" size={22} color={theme.textPrimary} />
                 </Pressable>
                 <Text style={styles.writingDateLabel} numberOfLines={1}>
@@ -698,7 +698,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       <MetallicText style={styles.saveIndicatorText} color="#6EBF8B">Secured</MetallicText>
                     </Animated.View>
                   )}
-                  <Pressable style={styles.writingSaveBtn} onPress={handleSave} hitSlop={12}>
+                  <Pressable style={styles.writingSaveBtn} onPress={handleSave} hitSlop={12} accessibilityRole="button" accessibilityLabel={initialData ? 'Save entry' : 'Secure entry'}>
                     <Text style={styles.writingSaveBtnText}>{initialData ? 'Save' : 'Secure'}</Text>
                   </Pressable>
                 </View>
@@ -709,7 +709,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   <View>
                     <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
                   </View>
-                  <Pressable style={styles.iconBtn} onPress={handleRequestClose} hitSlop={15}>
+                  <Pressable style={styles.iconBtn} onPress={handleRequestClose} hitSlop={15} accessibilityRole="button" accessibilityLabel="Close">
                     <Ionicons name="close-outline" size={18} color={theme.textMuted} />
                   </Pressable>
                 </View>
@@ -978,7 +978,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
                 {/* Footer / Save */}
                 <Animated.View entering={FadeInUp.delay(500)} style={styles.footer}>
-                  <Pressable style={styles.saveBtn} onPress={handleSave}>
+                  <Pressable style={styles.saveBtn} onPress={handleSave} accessibilityRole="button" accessibilityLabel={initialData ? 'Secure changes' : 'Secure entry'}>
                     <LinearGradient
                       colors={['#F4E6B8', '#D4B872', '#8C5A12']}
                       start={{ x: 0, y: 0 }}

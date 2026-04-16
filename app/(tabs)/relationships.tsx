@@ -416,19 +416,19 @@ export default function RelationshipsScreen() {
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           
           <View style={styles.detailHeader}>
-            <Pressable onPress={handleBack} style={styles.backButton}>
+            <Pressable onPress={handleBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
               <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
             </Pressable>
             <View style={styles.detailHeaderCenter}>
               <Text style={styles.detailTitle}>Relationship Chart</Text>
               <Text style={styles.detailSubtitle}>{userName} + {selectedRelationship.name}</Text>
             </View>
-            <Pressable onPress={handleExportPdf} disabled={isExporting} style={styles.exportButton}>
+            <Pressable onPress={handleExportPdf} disabled={isExporting} style={styles.exportButton} accessibilityRole="button" accessibilityLabel="Export PDF">
               {isExporting
                 ? <ActivityIndicator size="small" color={theme.textGold} />
                 : <MetallicIcon name="share-outline" size={22} variant="gold" />}
             </Pressable>
-            <Pressable onPress={handleDeleteRelationship} style={styles.deleteButton}>
+            <Pressable onPress={handleDeleteRelationship} style={styles.deleteButton} accessibilityRole="button" accessibilityLabel="Delete relationship">
               <MetallicIcon name="trash-outline" size={22} color="#CD7F5D" />
             </Pressable>
           </View>

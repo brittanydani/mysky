@@ -68,7 +68,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}>
-            <Pressable onPress={safeGoBack} style={styles.backButton}>
+            <Pressable onPress={safeGoBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
               <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
             </Pressable>
             <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
@@ -125,7 +125,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
           showsVerticalScrollIndicator={false}
         >
           {/* Back button */}
-          <Pressable onPress={safeGoBack} style={styles.backButton}>
+          <Pressable onPress={safeGoBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
           </Pressable>
 
@@ -250,6 +250,9 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
             <Pressable
               onPress={handlePurchase}
               disabled={loading || restoring}
+              accessibilityRole="button"
+              accessibilityLabel={`Continue with ${selectedTier?.name ?? 'your plan'}`}
+              accessibilityState={{ disabled: loading || restoring }}
               style={({ pressed }) => [
                 styles.ctaButton,
                 pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] },
@@ -286,7 +289,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
 
           {/* Legal bar */}
           <View style={styles.legalBar}>
-            <Pressable onPress={handleRestore} disabled={restoring || loading} hitSlop={12}>
+            <Pressable onPress={handleRestore} disabled={restoring || loading} hitSlop={12} accessibilityRole="button" accessibilityLabel="Restore purchases" accessibilityState={{ disabled: restoring || loading }}>
               {restoring ? (
                 <ActivityIndicator size="small" color={theme.textMuted} />
               ) : (
@@ -294,11 +297,11 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
               )}
             </Pressable>
             <Text style={styles.legalBarDot}>·</Text>
-            <Pressable onPress={() => navigateToLegal('/terms')} disabled={loading} hitSlop={12}>
+            <Pressable onPress={() => navigateToLegal('/terms')} disabled={loading} hitSlop={12} accessibilityRole="button" accessibilityLabel="Terms of Use">
               <Text style={styles.legalBarLink}>Terms of Use</Text>
             </Pressable>
             <Text style={styles.legalBarDot}>·</Text>
-            <Pressable onPress={() => navigateToLegal('/privacy')} disabled={loading} hitSlop={12}>
+            <Pressable onPress={() => navigateToLegal('/privacy')} disabled={loading} hitSlop={12} accessibilityRole="button" accessibilityLabel="Privacy Policy">
               <Text style={styles.legalBarLink}>Privacy Policy</Text>
             </Pressable>
           </View>

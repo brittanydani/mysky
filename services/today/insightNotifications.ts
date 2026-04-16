@@ -18,6 +18,7 @@ import { toLocalDateString } from '../../utils/dateUtils';
 import { logger } from '../../utils/logger';
 
 const LAST_INSIGHT_NOTIF_KEY = '@mysky:last_insight_notif_date';
+const FIRST_PATTERN_NOTIF_KEY = '@mysky:first_pattern_notif_sent';
 
 interface InsightNotification {
   title: string;
@@ -114,6 +115,25 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
       localDb.getCheckIns(chartId, 14),
       localDb.getSleepEntries(chartId, 14),
     ]);
+
+    // One-time "first pattern found" notification after 7+ unique check-in days
+    const uniqueDays = new Set(checkIns.map((c) => c.date)).size;
+    const alreadySentFirstPattern = await AsyncStorage.getItem(FIRST_PATTERN_NOTIF_KEY);
+    if (!alreadySentFirstPattern && uniqueDays >= 7) {
+      await AsyncStorage.setItem(FIRST_PATTERN_NOTIF_KEY, 'true');
+      const Notifications = await import('expo-notifications');
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Your first pattern is forming ✧',
+          body: 'You\'ve logged 7 days of check-ins. We\'ve started to see patterns in your mood and energy — tap to uncover what your data is telling you.',
+          data: { route: '/(tabs)/patterns', type: 'first_pattern' },
+          color: '#A88BEB',
+        },
+        trigger: { seconds: 30, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
+      });
+      await AsyncStorage.setItem(LAST_INSIGHT_NOTIF_KEY, today);
+      return;
+    }
 
     // Try each trigger in priority order
     const insight =

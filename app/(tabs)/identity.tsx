@@ -147,8 +147,8 @@ export default function BlueprintScreen() {
   const visibleCards = CARDS.filter((card, i) => {
     if (i <= 1) return true;              // Inner World, Body & Somatics
     if (i === 5) return true;             // Cosmic Blueprint — always visible (astrology users)
-    if (i <= 3) return checkInCount >= 5;  // Relational Mirror, Restorative Space
-    return checkInCount >= 10;             // Internal Tensions
+    if (i <= 3) return checkInCount >= 3;  // Relational Mirror, Restorative Space
+    return checkInCount >= 7;             // Internal Tensions
   });
 
   const hasHiddenCards = visibleCards.length < CARDS.length;
@@ -191,6 +191,7 @@ export default function BlueprintScreen() {
                 style={styles.globalAction}
                 onPress={() => nav('/inner-world' as Href)}
                 accessibilityRole="button"
+                accessibilityLabel="Open Inner World"
               >
                 <Ionicons name="finger-print-outline" size={22} color={theme.titanium || '#E8D6AE'} />
               </Pressable>
@@ -220,9 +221,11 @@ export default function BlueprintScreen() {
                   <Pressable 
                     style={({ pressed }) => [pressed && styles.cardPressed]} 
                     onPress={() => nav(card.route, card.premium)}
+                    accessibilityRole="button"
+                    accessibilityLabel={card.title}
                   >
                     <VelvetGlassSurface 
-                      style={[styles.card, styles.velvetBorder]} 
+                      style={[styles.card, styles.velvetBorder, card.premium && styles.premiumCard]} 
                       intensity={45}
                     >
                       <LinearGradient 
@@ -260,13 +263,13 @@ export default function BlueprintScreen() {
               {hasHiddenCards && (
                 <Animated.View entering={FadeInDown.delay(300 + visibleCards.length * 100).duration(800)}>
                   <View style={{ alignItems: 'center', paddingVertical: 20, gap: 6 }}>
-                    <Text style={{ color: theme.textMuted, fontSize: 12, letterSpacing: 1, fontWeight: '600' }}>
-                      {checkInCount < 5
-                        ? `${5 - checkInCount} MORE CHECK-IN${5 - checkInCount === 1 ? '' : 'S'} TO UNLOCK MORE`
-                        : `${10 - checkInCount} MORE CHECK-IN${10 - checkInCount === 1 ? '' : 'S'} TO UNLOCK ALL`}
+                    <Text style={{ color: theme.textMuted, fontSize: 12, letterSpacing: 1, fontWeight: '600', textAlign: 'center' }}>
+                      {checkInCount < 3
+                        ? `${3 - checkInCount} MORE CHECK-IN${3 - checkInCount === 1 ? '' : 'S'} TO REVEAL YOUR NEXT INSIGHT`
+                        : `${7 - checkInCount} MORE CHECK-IN${7 - checkInCount === 1 ? '' : 'S'} TO UNLOCK EVERYTHING`}
                     </Text>
                     <Text style={{ color: theme.textMuted, fontSize: 13, textAlign: 'center', maxWidth: 260 }}>
-                      New modules appear as your self-knowledge deepens.
+                      Your identity portrait deepens with every check-in — unlock the full picture with Premium.
                     </Text>
                   </View>
                 </Animated.View>
@@ -353,6 +356,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderLeftColor: 'rgba(255,255,255,0.12)',
     borderRightColor: 'rgba(255,255,255,0.05)',
     borderBottomColor: 'rgba(255,255,255,0.02)',
+  },
+  premiumCard: {
+    borderTopColor: 'rgba(212,175,55,0.45)',
+    borderLeftColor: 'rgba(212,175,55,0.25)',
+    borderRightColor: 'rgba(212,175,55,0.12)',
+    borderBottomColor: 'rgba(212,175,55,0.08)',
   },
   cardPressed: { transform: [{ scale: 0.97 }], opacity: 0.9 },
 

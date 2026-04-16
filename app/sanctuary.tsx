@@ -79,10 +79,10 @@ export default function SanctuaryWorkspace() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
       {/* Header controls fade out when typing for focus */}
       <View style={styles.header}>
-        <Pressable onPress={() => { Haptics.selectionAsync(); router.replace('/(tabs)/identity'); }} style={styles.iconButton} hitSlop={10}>
+        <Pressable onPress={() => { Haptics.selectionAsync(); router.replace('/(tabs)/identity'); }} style={styles.iconButton} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close">
           <Text style={styles.iconText}>×</Text>
         </Pressable>
-        <Pressable onPress={handleSeal} style={[styles.iconButton, { marginRight: 8 }]} hitSlop={10}>
+        <Pressable onPress={handleSeal} style={[styles.iconButton, { marginRight: 8 }]} hitSlop={10} accessibilityRole="button" accessibilityLabel="Seal entry">
           <MetallicText style={styles.sealIconText} color="#D9BF8C">⚲</MetallicText>
         </Pressable>
       </View>

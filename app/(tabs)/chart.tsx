@@ -10,9 +10,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { ChartBigThreeSection } from '../../components/screens/ChartBigThreeSection';
-import { ChartDataLedgerSection } from '../../components/screens/ChartDataLedgerSection';
 import { ChartDignitiesSection } from '../../components/screens/ChartDignitiesSection';
-import { ChartAspectsModuleSection } from '../../components/screens/ChartAspectsModuleSection';
 
 import React, { useCallback, useMemo, useState } from 'react';
 import { 
@@ -77,8 +75,7 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
 import { HOUSE_MEANINGS } from '../../services/astrology/constants';
 import { detectChartPatterns } from '../../services/astrology/chartPatterns';
-import { getChironInsightFromChart } from '../../services/journal/chiron';
-import { getNodeInsight } from '../../services/journal/nodes';
+
 import { RelationshipChart, generateId } from '../../services/storage/models';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
@@ -472,7 +469,7 @@ export default function ChartScreen() {
   // ── Core Component State ──
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabKey>('houses');
+  const [activeTab, setActiveTab] = useState<TabKey>('planets');
   const [viewMode, setViewMode] = useState<'essentials' | 'complete'>('essentials');
   const [savedUserChartId, setSavedUserChartId] = useState<string | null>(null);
 
@@ -796,8 +793,7 @@ export default function ChartScreen() {
 
   // ── Deep Interpretation Hooks ──
 
-  const chironInsight = useMemo(() => activeChart && isPremium ? getChironInsightFromChart(activeChart) : null, [activeChart, isPremium]);
-  const nodeInsight = useMemo(() => activeChart && isPremium ? getNodeInsight(activeChart) : null, [activeChart, isPremium]);
+
 
   const sortedAspects = useMemo(() => {
     const FREE_TYPES = new Set(['conjunction', 'sextile', 'square', 'trine', 'opposition']);
@@ -1057,24 +1053,6 @@ export default function ChartScreen() {
           {/* ── 5. Dignity & Friction ── */}
           {isPremium && <ChartDignitiesSection dignityAnalysis={dignityAnalysis} />}
 
-          {/* ── 6. Complete Placements Ledger ── */}
-          <ChartDataLedgerSection
-            title="Complete Placements"
-            subtitle={`${zodiacSystemLabel.toUpperCase()} · ${houseSystemLabel.toUpperCase()}`}
-            rows={planetRows.map(row => ({
-              id: row.label,
-              glyph: (row.p as any)?.planet?.symbol || '•',
-              planetName: row.label,
-              signName: row.p.sign.name,
-              degree: `${row.p.degree}°${String(row.p.minute).padStart(2, '0')}'`,
-              house: row.p.house,
-              isRetrograde: !!(row.p as any).isRetrograde,
-            }))}
-          />
-
-          {/* ── 7. Strongest Aspects ── */}
-          <ChartAspectsModuleSection aspects={sortedAspects} limit={isPremium ? 8 : 5} />
-
           {/* ── View Mode Toggle ── */}
           <Animated.View entering={FadeInDown.delay(215).duration(600)} style={{ width: '100%' }}>
             <View style={[styles.tabRow, { marginBottom: theme.spacing.md }]}>
@@ -1112,53 +1090,6 @@ export default function ChartScreen() {
             </View>
           </Animated.View>
 
-          {/* ── Sensitive Points (premium, complete only) ── */}
-          {viewMode === 'complete' && isPremium && sensitivePoints.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(250).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion
-                title="Sensitive Points"
-                subtitle={`Chiron, Nodes, Lilith & ${sensitivePoints.length} more`}
-                sectionKey="sensitivePoints"
-                openSections={openSections}
-                setOpenSections={setOpenSections}
-              >
-                <VelvetGlassSurface style={styles.sensitiveCard} intensity={45}>
-                  <LinearGradient colors={theme.cardSurfaceAnchor as unknown as string[]} style={StyleSheet.absoluteFill} />
-                  <View style={styles.sensitiveGrid}>
-                    {sensitivePoints.map((pt) => (
-                      <View key={pt.label} style={styles.sensitiveItem}>
-                        <View style={{ marginBottom: 4 }}>
-                          {pt.icon ? <GradientIcon size={20}>{pt.icon as React.ReactElement}</GradientIcon> : null}
-                        </View>
-                        <Text style={styles.sensitiveName}>{pt.label}</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
-                          <GradientSymbol symbol={pt.signSymbol} fontSize={13} w={16} h={15} />
-                          <Text style={[styles.sensitiveSign, { marginTop: 0 }]}> {pt.sign}</Text>
-                        </View>
-                        <Text style={styles.sensitiveDeg}>
-                          {pt.degree}°{String(pt.minute).padStart(2, '0')}'{pt.house ? ` · H${pt.house}` : ''}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                  {chironInsight && (
-                    <View style={styles.insightBox}>
-                      <Text style={styles.insightLabel}>Chiron Theme</Text>
-                      <Text style={styles.insightTitle}>{chironInsight.title}</Text>
-                      <Text style={styles.insightText}>{chironInsight.theme}</Text>
-                    </View>
-                  )}
-                  {nodeInsight && (
-                    <View style={styles.insightBox}>
-                      <Text style={styles.insightLabel}>Node Axis</Text>
-                      <Text style={styles.insightText}>{nodeInsight.fusionLine}</Text>
-                    </View>
-                  )}
-                </VelvetGlassSurface>
-              </SectionAccordion>
-            </Animated.View>
-          )}
-
           {/* ── Tab Switcher ── */}
           <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.tabRow}>
             {(viewMode === 'complete' ? ['planets', 'houses', 'aspects', 'patterns'] as TabKey[] : ['planets'] as TabKey[]).map((tab) => (
@@ -1172,14 +1103,14 @@ export default function ChartScreen() {
               >
                 {activeTab === tab ? (
                   <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#E8D6AE">
-                    {tab === 'planets' ? `Planets (${viewMode === 'essentials' ? 7 : planetRows.length})` :
+                    {tab === 'planets' ? `Planets (${viewMode === 'essentials' ? Math.min(7, planetRows.length) : planetRows.length})` :
                      tab === 'houses' ? `Houses (${houseCusps.length})` :
                      tab === 'aspects' ? `Aspects (${sortedAspects.length})` :
                      `Patterns (${patternCount})`}
                   </MetallicText>
                 ) : (
                   <Text style={styles.tabText}>
-                    {tab === 'planets' ? `Planets (${viewMode === 'essentials' ? 7 : planetRows.length})` :
+                    {tab === 'planets' ? `Planets (${viewMode === 'essentials' ? Math.min(7, planetRows.length) : planetRows.length})` :
                      tab === 'houses' ? `Houses (${houseCusps.length})` :
                      tab === 'aspects' ? `Aspects (${sortedAspects.length})` :
                      `Patterns (${patternCount})`}
@@ -1198,7 +1129,7 @@ export default function ChartScreen() {
                 <Text style={[styles.th, styles.planetsTh, { flex: 1 }]} numberOfLines={1}>Deg</Text>
                 <Text style={[styles.th, styles.planetsTh, { flex: 1 }]} numberOfLines={1}>House</Text>
               </View>
-              {(viewMode === 'essentials' ? planetRows.slice(0, 7) : planetRows).map((row, idx) => {
+              {(viewMode === 'essentials' ? planetRows.slice(0, Math.min(7, planetRows.length)) : planetRows).map((row, idx) => {
                 const elColor = ELEMENT_COLORS[row.p.sign.element] || theme.textSecondary;
                 const retro = getRetrogradeFlag(row.p as any);
                 const planetSymbol = (row.p as any)?.planet?.symbol ?? '•';

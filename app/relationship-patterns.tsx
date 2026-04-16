@@ -35,6 +35,7 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { usePremium } from '../context/PremiumContext';
 import { ReflectionDisclaimer } from '../components/ui/ReflectionDisclaimer';
 
 const STORAGE_KEY = '@mysky:relationship_patterns';
@@ -79,6 +80,7 @@ export default function RelationshipPatternsScreen() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
+  const { isPremium } = usePremium();
   
   const [entries, setEntries] = useState<PatternEntry[]>([]);
   const [note, setNote] = useState('');
@@ -187,6 +189,23 @@ export default function RelationshipPatternsScreen() {
                   <LegendItem label="Secure" color="#6B9080" />
                 </View>
               </VelvetGlassSurface>
+
+              {/* Premium insight interpretation gate */}
+              {!isPremium && entries.length >= 3 && (
+                <Pressable
+                  onPress={() => router.push('/(tabs)/premium' as any)}
+                  style={{ marginTop: 12, marginBottom: 4, padding: 20, borderRadius: 20, backgroundColor: 'rgba(212,175,55,0.07)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.22)', alignItems: 'center', gap: 6 }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <MetallicIcon name="lock-closed-outline" size={12} variant="gold" />
+                    <Text style={{ color: 'rgba(212,175,55,0.9)', fontSize: 11, fontWeight: '700', letterSpacing: 1.5 }}>DEEPER SKY</Text>
+                  </View>
+                  <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
+                    Unlock a personalised read of what your relational gravity pattern actually means for how you connect.
+                  </Text>
+                  <Text style={{ color: 'rgba(212,175,55,0.8)', fontSize: 12, fontWeight: '600', marginTop: 4 }}>Reveal Your Interpretation →</Text>
+                </Pressable>
+              )}
             </Animated.View>
           )}
 

@@ -167,6 +167,8 @@ const LottieSomaticFigure = memo(function LottieSomaticFigure({
           <Pressable
             key={zoneId}
             onPress={() => onZonePress?.(zoneId)}
+            accessibilityRole="button"
+            accessibilityLabel={`Body zone ${zoneId}`}
             style={{
               position: 'absolute',
               left: cx - rx, top: cy - ry,

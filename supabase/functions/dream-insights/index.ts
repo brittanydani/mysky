@@ -201,8 +201,13 @@ function buildUserPrompt(payload: DreamInsightRequestPayload): string {
 }
 
 function extractGeminiText(responseBody: unknown): string | null {
-  const candidates = (responseBody as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> })?.candidates;
-  const text = candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("").trim();
+  const candidates = (responseBody as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> }; finishReason?: string }> })?.candidates;
+  const candidate = candidates?.[0];
+  if (candidate?.finishReason === "MAX_TOKENS") {
+    console.error("[dream-insights] Gemini response truncated at MAX_TOKENS");
+    return null;
+  }
+  const text = candidate?.content?.parts?.map((part) => part.text ?? "").join("").trim();
   return text || null;
 }
 
@@ -217,6 +222,9 @@ function parseGeminiJson(text: string): { paragraph: string; question: string } 
   const parsed = JSON.parse(jsonText) as { paragraph?: unknown; question?: unknown };
   if (typeof parsed.paragraph !== "string" || typeof parsed.question !== "string") {
     throw new Error("Invalid dream insight response structure");
+  }
+  if (parsed.paragraph.trim().length === 0 || parsed.question.trim().length === 0) {
+    throw new Error("Empty dream insight fields in response");
   }
 
   return {
@@ -278,7 +286,7 @@ serve(async (req: Request) => {
       ],
       generationConfig: {
         temperature: 0.35,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
         responseMimeType: "application/json",
       },
     };

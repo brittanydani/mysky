@@ -24,7 +24,10 @@ const corsHeaders = {
 };
 
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const GEMINI_MODELS = ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-1.5-flash-8b"] as const;
+const GEMINI_MODELS = {
+  free: ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-1.5-flash-8b"],
+  premium: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"],
+} as const;
 const REQUEST_TIMEOUT_MS = 25_000;
 const RATE_LIMIT_MAX = 20;
 const RATE_LIMIT_WINDOW = "1 hour";
@@ -85,6 +88,7 @@ interface PatternInsightRequestPayload {
     body: string;
     isConfirmed: boolean;
   }>;
+  modelTier?: "free" | "premium";
   profile?: {
     dominantArchetype?: string;
     coreValues?: string[];
@@ -180,8 +184,9 @@ function validatePayload(body: unknown): PatternInsightRequestPayload {
   const behavioral = payload.behavioral && typeof payload.behavioral === "object"
     ? payload.behavioral as PatternInsightRequestPayload["behavioral"]
     : {};
+  const modelTier = payload.modelTier === "premium" ? "premium" : "free";
 
-  return { insights, profile, behavioral };
+  return { insights, profile, behavioral, modelTier };
 }
 
 function buildUserPrompt(payload: PatternInsightRequestPayload): string {
@@ -248,8 +253,13 @@ function buildUserPrompt(payload: PatternInsightRequestPayload): string {
 }
 
 function extractGeminiText(responseBody: unknown): string | null {
-  const candidates = (responseBody as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> })?.candidates;
-  const text = candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("").trim();
+  const candidates = (responseBody as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> }; finishReason?: string }> })?.candidates;
+  const candidate = candidates?.[0];
+  if (candidate?.finishReason === "MAX_TOKENS") {
+    console.error("[pattern-insights] Gemini response truncated at MAX_TOKENS");
+    return null;
+  }
+  const text = candidate?.content?.parts?.map((part) => part.text ?? "").join("").trim();
   return text || null;
 }
 
@@ -304,7 +314,7 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
     if (await isRateLimited(supabaseAdmin, user.id)) {
-      return jsonResponse({ error: "Rate limit exceeded. Try again later." }, 429);
+      return jsonResponse({ error: "AI insights are at capacity right now. Please wait a minute and try again." }, 429);
     }
 
     const payload = validatePayload(await req.json());
@@ -326,19 +336,20 @@ serve(async (req: Request) => {
       ],
       generationConfig: {
         temperature: 0.75,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
         responseMimeType: "application/json",
       },
     };
 
+    const modelCandidates = GEMINI_MODELS[payload.modelTier ?? "free"];
     let lastStatus = 502;
     let lastResponseBody: unknown = null;
 
     for (let keyIndex = 0; keyIndex < apiKeys.length; keyIndex += 1) {
       const apiKey = apiKeys[keyIndex];
 
-      for (let modelIndex = 0; modelIndex < GEMINI_MODELS.length; modelIndex += 1) {
-        const model = GEMINI_MODELS[modelIndex];
+      for (let modelIndex = 0; modelIndex < modelCandidates.length; modelIndex += 1) {
+        const model = modelCandidates[modelIndex];
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -375,7 +386,7 @@ serve(async (req: Request) => {
         lastStatus = geminiResponse.status >= 400 && geminiResponse.status < 600 ? geminiResponse.status : 502;
         lastResponseBody = responseBody;
 
-        const hasNextAttempt = modelIndex < GEMINI_MODELS.length - 1 || keyIndex < apiKeys.length - 1;
+        const hasNextAttempt = modelIndex < modelCandidates.length - 1 || keyIndex < apiKeys.length - 1;
         if (shouldTryFallbackStatus(geminiResponse.status) && hasNextAttempt) {
           console.warn("[pattern-insights] Gemini request failed; trying fallback.", geminiResponse.status, { model, keyIndex });
           continue;

@@ -161,7 +161,7 @@ export default function AstrologySettingsModal({
           <View style={styles.headerIndicator} />
           <View style={styles.headerRow}>
             <Text style={styles.title}>Calculation Settings</Text>
-            <Pressable onPress={onClose} style={styles.closeBtn}>
+            <Pressable onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close settings">
               <Ionicons name="close-outline" size={22} color={theme.textMuted} />
             </Pressable>
           </View>
@@ -183,6 +183,9 @@ export default function AstrologySettingsModal({
                     key={option.value}
                     style={[styles.houseCard, selectedZodiacSystem === option.value && styles.cardSelected]}
                     onPress={() => handleSelect('zodiac', option.value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: selectedZodiacSystem === option.value }}
+                    accessibilityLabel={option.label}
                   >
                     <View style={styles.cardHeader}>
                       {selectedZodiacSystem === option.value ? (
@@ -212,6 +215,9 @@ export default function AstrologySettingsModal({
                       key={option.value}
                       style={[styles.houseCard, selectedAyanamsa === option.value && styles.cardSelected]}
                       onPress={() => handleSelect('ayanamsa', option.value)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: selectedAyanamsa === option.value }}
+                      accessibilityLabel={option.label}
                     >
                       <View style={styles.cardHeader}>
                         {selectedAyanamsa === option.value ? (
@@ -241,6 +247,9 @@ export default function AstrologySettingsModal({
                     key={option.value}
                     style={[styles.houseCard, selectedHouseSystem === option.value && styles.cardSelected]}
                     onPress={() => handleSelect('house', option.value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: selectedHouseSystem === option.value }}
+                    accessibilityLabel={option.label}
                   >
                     <View style={styles.cardHeader}>
                       {selectedHouseSystem === option.value ? (
@@ -269,6 +278,9 @@ export default function AstrologySettingsModal({
                     key={option.value}
                     style={[styles.orbCard, selectedOrbPreset === option.value && styles.cardSelected]}
                     onPress={() => handleSelect('orb', option.value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: selectedOrbPreset === option.value }}
+                    accessibilityLabel={option.label}
                   >
                     {selectedOrbPreset === option.value ? (
                       <MetallicIcon 
@@ -317,6 +329,9 @@ export default function AstrologySettingsModal({
                     key={option.value}
                     style={[styles.houseCard, selectedOrientation === option.value && styles.cardSelected]}
                     onPress={() => handleSelect('orientation', option.value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: selectedOrientation === option.value }}
+                    accessibilityLabel={option.label}
                   >
                     <View style={styles.cardHeader}>
                       {selectedOrientation === option.value ? (

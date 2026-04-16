@@ -233,7 +233,7 @@ export default function ArchetypesScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable style={styles.closeButton} onPress={() => router.back()} hitSlop={10}><Text style={styles.closeIcon}>×</Text></Pressable>
+          <Pressable style={styles.closeButton} onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="Go back"><Text style={styles.closeIcon}>×</Text></Pressable>
         </View>
 
         <View style={styles.titleArea}>
@@ -277,7 +277,7 @@ export default function ArchetypesScreen() {
                   })}
               </VelvetGlassSurface>
 
-              <Pressable style={styles.retakeBtn} onPress={retake}>
+              <Pressable style={styles.retakeBtn} onPress={retake} accessibilityRole="button" accessibilityLabel="Retake reflection">
                 <Text style={styles.retakeBtnText}>Retake Reflection</Text>
               </Pressable>
             </Animated.View>
@@ -313,7 +313,7 @@ export default function ArchetypesScreen() {
 
               {Object.keys(answers).length === PROMPTS.length && (
                 <Animated.View entering={FadeIn} style={styles.submitRow}>
-                  <Pressable style={[styles.submitBtn, styles.velvetBorder]} onPress={computeAndSave}>
+                  <Pressable style={[styles.submitBtn, styles.velvetBorder]} onPress={computeAndSave} accessibilityRole="button" accessibilityLabel="Reveal my archetype">
                     <LinearGradient colors={['rgba(44, 54, 69, 0.95)', 'rgba(26, 30, 41, 0.60)']} style={StyleSheet.absoluteFill} />
                     <MetallicText style={styles.submitBtnText} variant="gold">Reveal My Archetype</MetallicText>
                   </Pressable>
@@ -321,6 +321,19 @@ export default function ArchetypesScreen() {
               )}
             </>
           )}
+          {showResult && dominant && savedProfile && (
+            <Pressable
+              onPress={() => router.push('/(tabs)/premium' as any)}
+              style={{ marginTop: 28, marginBottom: 8, padding: 20, borderRadius: 20, backgroundColor: 'rgba(212,175,55,0.07)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.18)', alignItems: 'center', gap: 6 }}
+            >
+              <Text style={{ color: 'rgba(212,175,55,0.9)', fontSize: 11, fontWeight: '700', letterSpacing: 1.5 }}>DEEPER SKY</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
+                Your archetype is just the beginning — discover how it shapes your emotional patterns and relationships.
+              </Text>
+              <Text style={{ color: 'rgba(212,175,55,0.8)', fontSize: 12, fontWeight: '600', marginTop: 4 }}>Explore Premium →</Text>
+            </Pressable>
+          )}
+
           <View style={{ height: 120 }} />
         </ScrollView>
       </SafeAreaView>

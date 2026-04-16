@@ -489,12 +489,18 @@ export default function TriggerLogScreen() {
             <Pressable
               style={[styles.viewToggleBtn, viewMode === 'log' && styles.viewToggleBtnActive]}
               onPress={() => { Haptics.selectionAsync().catch(() => {}); setViewMode('log'); }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: viewMode === 'log' }}
+              accessibilityLabel="Log view"
             >
               <Text style={[styles.viewToggleText, viewMode === 'log' && styles.viewToggleTextActive]}>Log</Text>
             </Pressable>
             <Pressable
               style={[styles.viewToggleBtn, viewMode === 'history' && styles.viewToggleBtnActive]}
               onPress={() => { Haptics.selectionAsync().catch(() => {}); setViewMode('history'); }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: viewMode === 'history' }}
+              accessibilityLabel="History view"
             >
               <Text style={[styles.viewToggleText, viewMode === 'history' && styles.viewToggleTextActive]}>
                 History{history.length > 0 ? ` (${history.length})` : ''}
@@ -551,12 +557,18 @@ export default function TriggerLogScreen() {
             <Pressable
               style={[styles.toggleBtn, mode === 'drain' && styles.toggleBtnActiveDrain]}
               onPress={() => toggleMode('drain')}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: mode === 'drain' }}
+              accessibilityLabel="Log as trigger (drain)"
             >
               <Text style={[styles.toggleText, mode === 'drain' && styles.toggleTextActiveDrain]}>Trigger (Drain)</Text>
             </Pressable>
             <Pressable
               style={[styles.toggleBtn, mode === 'nourish' && styles.toggleBtnActiveNourish]}
               onPress={() => toggleMode('nourish')}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: mode === 'nourish' }}
+              accessibilityLabel="Log as glimmer (nourish)"
             >
               <Text style={[styles.toggleText, mode === 'nourish' && styles.toggleTextActiveNourish]}>Glimmer (Nourish)</Text>
             </Pressable>
@@ -723,6 +735,9 @@ export default function TriggerLogScreen() {
                           isSelected && styles.stateCardSelected,
                         ]}
                         onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState(state); }}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: isSelected }}
+                        accessibilityLabel={card.label}
                       >
                         {isSelected ? (
                           <MetallicText style={styles.stateTitle} color={card.color}>{card.label}</MetallicText>
@@ -747,6 +762,9 @@ export default function TriggerLogScreen() {
                           isSelected && styles.stateCardSelected,
                         ]}
                         onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState(state); }}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: isSelected }}
+                        accessibilityLabel={card.label}
                       >
                         {isSelected ? (
                           <MetallicText style={styles.stateTitle} color={card.color}>{card.label}</MetallicText>
@@ -903,6 +921,9 @@ export default function TriggerLogScreen() {
               ]}
               onPress={handleSeal}
               disabled={!eventText.trim() || !selectedState || saving || saved}
+              accessibilityRole="button"
+              accessibilityLabel={saved ? 'Entry logged' : 'Log this entry'}
+              accessibilityState={{ disabled: !eventText.trim() || !selectedState || saving || saved }}
             >
               <Text style={[
                 styles.sealBtnText,
