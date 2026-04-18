@@ -57,7 +57,7 @@ function buildTransitMessage(
 
   return {
     title: `Transit ${top.transitPlanet} ✧`,
-    body: `The Moon ${verb} ${natalLabel} today. Notice how this lands in your body and mood.`,
+    body: `${top.transitPlanet} ${verb} ${natalLabel} today. Notice how this lands in your body and mood.`,
   };
 }
 
@@ -85,7 +85,7 @@ export async function scheduleTransitNotification(
 
     const message = buildTransitMessage(
       aspects.map((a) => ({
-        transitPlanet: 'Moon',
+        transitPlanet: a.pointA,
         natalPlanet: a.pointB,
         aspectType: a.type,
       })),

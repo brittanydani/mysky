@@ -27,6 +27,7 @@ import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { CheckInService, getLogicalToday } from '../../services/patterns/checkInService';
+import { cancelStreakAtRiskNotification } from '../../services/today/insightNotifications';
 import type { DailyCheckIn, EnergyLevel, StressLevel, ThemeTag, CheckInInput } from '../../services/patterns/types';
 import type { NatalChart } from '../../services/astrology/types';
 import { usePremium } from '../../context/PremiumContext';
@@ -758,6 +759,8 @@ export default function MoodCheckIn() {
         }),
       };
       await CheckInService.saveCheckIn(input, natalChart, chartId);
+      // Cancel any pending streak-at-risk notification now that user has checked in
+      cancelStreakAtRiskNotification().catch(() => {});
 
       // Refresh completed slots + recent data so the UI reflects the save
       const slots = await CheckInService.getCompletedTimeSlotsForDate(chartId, selectedDate);

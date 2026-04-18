@@ -220,6 +220,9 @@ async function scheduleStreakAndReengagementNotifications(
 
     // ── Re-engagement: 2–3 days absent ───────────────────────────────────────
     if (daysSinceLast === 2 || daysSinceLast === 3) {
+      const tomorrow10am = new Date(now);
+      tomorrow10am.setDate(tomorrow10am.getDate() + 1);
+      tomorrow10am.setHours(10, 0, 0, 0);
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title: 'Your inner world is waiting ✧',
@@ -227,7 +230,7 @@ async function scheduleStreakAndReengagementNotifications(
           data: { route: '/checkin', type: 'reengagement_short' },
           color: '#A88BEB',
         },
-        trigger: { seconds: 5, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: tomorrow10am },
       });
       await AsyncStorage.setItem(REENGAGEMENT_NOTIF_ID_KEY, id);
       logger.info('[InsightNotif] Short re-engagement notification scheduled');
@@ -236,6 +239,9 @@ async function scheduleStreakAndReengagementNotifications(
 
     // ── Lapse re-engagement: 7+ days absent ──────────────────────────────────
     if (daysSinceLast >= 7) {
+      const tomorrow10am = new Date(now);
+      tomorrow10am.setDate(tomorrow10am.getDate() + 1);
+      tomorrow10am.setHours(10, 0, 0, 0);
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title: 'We miss you ✦',
@@ -243,7 +249,7 @@ async function scheduleStreakAndReengagementNotifications(
           data: { route: '/(tabs)/internal-weather', type: 'reengagement_long' },
           color: '#D4AF37',
         },
-        trigger: { seconds: 5, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: tomorrow10am },
       });
       await AsyncStorage.setItem(REENGAGEMENT_NOTIF_ID_KEY, id);
       logger.info('[InsightNotif] Long re-engagement notification scheduled');

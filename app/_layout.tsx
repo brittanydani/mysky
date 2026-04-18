@@ -607,10 +607,21 @@ function AppShell() {
     };
   }, []);
 
-  // Deep-link routing from local notification taps
+  // Configure notification display behaviour and deep-link routing from taps.
+  // setNotificationHandler must be called before any notification is displayed
+  // so that foreground notifications are shown (not silently dropped on iOS).
   useEffect(() => {
     let sub: { remove: () => void } | undefined;
     loadNotifications().then((Notifications) => {
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
       sub = Notifications.addNotificationResponseReceivedListener((response: import('expo-notifications').NotificationResponse) => {
         const route = response.notification.request.content.data?.route as string | undefined;
         if (route && ALLOWED_NOTIFICATION_ROUTES.has(route)) {
