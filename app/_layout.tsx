@@ -17,6 +17,7 @@ import React, { Component, type ReactNode, useEffect, useRef, useState } from 'r
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
+import Constants from 'expo-constants';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from '../components/keyboard/KeyboardControllerCompat';
@@ -255,6 +256,9 @@ function loadSentry() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   return Promise.resolve().then(() => require('../utils/sentry'));
 }
+
+const isLightweightDevMode =
+  __DEV__ && Constants.expoConfig?.extra?.lightweightDevMode === true;
 
 function AppShell() {
   const theme = useAppTheme();
@@ -733,6 +737,10 @@ function AppShell() {
     setCompletingOnboarding(true);
     setOnboardingComplete(true);
 
+    if (isLightweightDevMode) {
+      return;
+    }
+
     try {
       const { trackGrowthEvent } = await loadGrowthAnalytics();
       await trackGrowthEvent('onboarding_completed');
@@ -762,6 +770,11 @@ function AppShell() {
     if (!checkingConsent && dbReady && !authLoading && (!session || sessionDataReady) && !didHideSplash.current) {
       didHideSplash.current = true;
       SplashScreen.hideAsync().catch(() => {});
+
+      if (isLightweightDevMode) {
+        return;
+      }
+
       loadSentry().then(({ initSentry }) => {
         try { initSentry(); } catch { /* native module unavailable */ }
       }).catch(() => {});
@@ -794,9 +807,13 @@ function AppShell() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider preload={false}>
         <View style={{ flex: 1, position: 'relative' }}>
-          <React.Suspense fallback={<View style={{ flex: 1, backgroundColor: theme.background }} />}>
-            <CosmicBackground />
-          </React.Suspense>
+          {isLightweightDevMode ? (
+            <View style={{ flex: 1, backgroundColor: theme.background }} />
+          ) : (
+            <React.Suspense fallback={<View style={{ flex: 1, backgroundColor: theme.background }} />}>
+              <CosmicBackground />
+            </React.Suspense>
+          )}
           <SafeAreaProvider>
             <StatusBar style={theme.statusBarStyle} />
             <Stack

@@ -690,9 +690,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // Section label
   sectionLabel: {
-    fontSize: 12, fontWeight: '700',
+    fontSize: 10, fontWeight: '800',
     color: theme.textSecondary,
-    letterSpacing: 1.4,
+    letterSpacing: 2,
     textTransform: 'uppercase',
     marginTop: 8, marginBottom: 20,
   },
@@ -707,7 +707,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 6, letterSpacing: 0.3,
   },
   cardSubtitle: {
-    fontSize: 13, color: theme.textMuted, lineHeight: 19,
+    fontSize: 13, color: theme.textMuted, lineHeight: 22,
     marginBottom: 16,
   },
 
@@ -754,15 +754,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   stateName:            { fontSize: 13, fontWeight: '600', marginBottom: 2 },
   stateDesc:            { fontSize: 12, color: theme.textMuted, letterSpacing: 0.2, lineHeight: 17 },
   conflictInterpretation: {
-    fontSize: 13, color: theme.textMuted, lineHeight: 19,
+    fontSize: 13, color: theme.textMuted, lineHeight: 22,
     borderTopWidth: 1, borderTopColor: theme.cardBorder,
-    paddingTop: 14, marginTop: 4,
+    paddingTop: 16, marginTop: 16,
   },
 
   // Premium lock banner
   lockWrap: { marginTop: 8 },
   lockBanner: {
-    borderRadius: 24, padding: 28, marginBottom: 16,
+    borderRadius: 24, padding: 24, marginBottom: 16,
     borderWidth: 1, borderColor: 'rgba(212, 175, 55,0.2)',
     overflow: 'hidden',
   },
@@ -777,7 +777,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   // Blurred teaser
   blurPreviewWrap:    { position: 'relative', overflow: 'hidden', borderRadius: 16 },
-  blurPreviewCard: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', borderWidth: 1, borderColor: theme.cardBorder, borderRadius: 24, padding: 28, opacity: 0.4 },
+  blurPreviewCard: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', borderWidth: 1, borderColor: theme.cardBorder, borderRadius: 24, padding: 24, opacity: 0.4 },
   blurPreviewTitle:   { fontSize: 17, fontWeight: '500', color: theme.textPrimary, marginBottom: 12 },
   blurPreviewRadar:   { height: 150, backgroundColor: 'rgba(168,155,200,0.08)', borderRadius: 16 },
   blurPreviewOverlay: {

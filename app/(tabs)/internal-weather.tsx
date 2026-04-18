@@ -1447,12 +1447,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: theme.textPrimary, letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 0, marginBottom: 12 },
+  sectionLabel: { fontSize: 10, fontWeight: '800', color: theme.textSecondary, letterSpacing: 2, textTransform: 'uppercase', marginTop: 0, marginBottom: 12 },
   tagsHint: { fontSize: 12, color: theme.textSecondary, marginTop: 0, marginBottom: 18, lineHeight: 18 },
 
   trendCard: { borderRadius: 24, padding: 24, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
-  trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  trendLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 20 },
+  trendLabel: { color: theme.textSecondary, fontSize: 10, fontWeight: '800', letterSpacing: 2 },
   trendStatus: { fontSize: 12, fontWeight: '700' },
   trendPlaceholder: { height: 190, justifyContent: 'center', alignItems: 'center' },
   trendSkeletonBars: {

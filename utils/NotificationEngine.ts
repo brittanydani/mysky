@@ -3,6 +3,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CHECK_IN_ID_KEY = 'notif_checkin_reminder_id';
+const REFLECTION_ID_KEY = 'notif_reflection_reminder_id';
 
 export class NotificationEngine {
   /**
@@ -140,6 +141,51 @@ export class NotificationEngine {
         const Notifications = await import('expo-notifications');
         await Notifications.cancelScheduledNotificationAsync(id);
         await AsyncStorage.removeItem(CHECK_IN_ID_KEY);
+      }
+    } catch {
+      // Notifications native module unavailable — skip
+    }
+  }
+
+  /**
+   * Schedules the daily inner-world reflection reminder with a tracked
+   * identifier so it can be cancelled independently.
+   */
+  static async scheduleReflectionReminder(hour: number = 19, minute: number = 0): Promise<void> {
+    try {
+      await NotificationEngine.cancelReflectionReminder();
+
+      const Notifications = await import('expo-notifications');
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Inner World ✦',
+          body: 'Your daily reflection questions are ready. A few minutes of honest self-inquiry goes a long way.',
+          data: { route: '/(tabs)/identity', type: 'reflection_reminder' },
+          color: '#A88BEB',
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour,
+          minute,
+        },
+      });
+
+      await AsyncStorage.setItem(REFLECTION_ID_KEY, id);
+    } catch {
+      // Notifications native module unavailable — skip
+    }
+  }
+
+  /**
+   * Cancels the daily reflection reminder by its stored identifier.
+   */
+  static async cancelReflectionReminder(): Promise<void> {
+    try {
+      const id = await AsyncStorage.getItem(REFLECTION_ID_KEY);
+      if (id) {
+        const Notifications = await import('expo-notifications');
+        await Notifications.cancelScheduledNotificationAsync(id);
+        await AsyncStorage.removeItem(REFLECTION_ID_KEY);
       }
     } catch {
       // Notifications native module unavailable — skip

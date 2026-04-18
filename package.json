@@ -4,9 +4,12 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "start:lowmem": "EXPO_NO_TELEMETRY=1 NODE_OPTIONS=--max-old-space-size=3072 expo start --clear",
     "dev": "expo start --dev-client",
+    "dev:light": "EXPO_NO_TELEMETRY=1 NODE_OPTIONS=--max-old-space-size=3072 APP_VARIANT=development EXPO_PUBLIC_LIGHTWEIGHT_DEV=1 expo start --dev-client --clear",
     "dev:tunnel": "expo start --dev-client --tunnel",
     "dev:lan": "expo start --dev-client --lan",
+    "dev:light:lan": "EXPO_NO_TELEMETRY=1 NODE_OPTIONS=--max-old-space-size=3072 APP_VARIANT=development EXPO_PUBLIC_LIGHTWEIGHT_DEV=1 expo start --dev-client --lan --clear",
     "reset-project": "node ./scripts/reset-project.js",
     "ios": "expo run:ios",
     "ios:device": "expo run:ios --device",

@@ -629,16 +629,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   legalBarLink: {
     fontSize: 13,
     fontWeight: '500',
-    color: 'rgba(255,255,255,0.55)',
+    color: theme.isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.55)',
     textDecorationLine: 'underline',
   },
   legalBarDot: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.2)',
+    color: theme.isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
   },
   legalMicro: {
     fontSize: 11,
-    color: 'rgba(255,255,255,0.35)',
+    color: theme.isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)',
     textAlign: 'center',
     marginTop: 10,
     lineHeight: 16,

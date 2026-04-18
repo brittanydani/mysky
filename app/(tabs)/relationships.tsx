@@ -914,7 +914,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   detailScroll: { flex: 1 },
   detailScrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
-  personSelectorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  personSelectorRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   personPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: 'transparent' },
   personPillPartner: { flex: 1 },
   personPillActive: { borderColor: 'rgba(230, 213, 184, 0.4)', backgroundColor: 'rgba(230, 213, 184, 0.1)' },
@@ -923,7 +923,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   personPillAdd: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(230, 213, 184, 0.34)', backgroundColor: 'rgba(230, 213, 184, 0.08)' },
   personPillAddText: { fontSize: 14, fontWeight: '600', color: theme.textGold },
 
-  filterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginVertical: 16 },
+  filterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginVertical: 16 },
   filterPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: 'transparent' },
   filterDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'transparent' },
   filterPillText: { fontSize: 12, color: theme.textMuted, fontWeight: '600' },
@@ -942,20 +942,20 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   tabText: { fontSize: 15, color: theme.textMuted, fontWeight: '600' },
   tabTextActive: { color: theme.textGold },
   
-  insightCardGradient: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.cardHighlight, marginBottom: 16 },
+  insightCardGradient: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.cardHighlight, marginBottom: 16 },
   insightCardTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary },
   insightCardText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   sectionHeader: { fontSize: 19, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 16 },
   
-  reminderCard: { marginTop: 24, padding: 28, backgroundColor: 'transparent', borderRadius: 24, borderLeftWidth: 3, borderLeftColor: theme.textGold },
+  reminderCard: { marginTop: 24, padding: 24, backgroundColor: 'transparent', borderRadius: 24, borderLeftWidth: 3, borderLeftColor: theme.textGold },
   reminderText: { fontSize: 16, color: theme.textPrimary, lineHeight: 24 },
   
-  upsellGradient: { padding: 28, alignItems: 'center', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', marginTop: 24 },
+  upsellGradient: { padding: 24, alignItems: 'center', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', marginTop: 24 },
   upsellTitle: { fontSize: 16, fontWeight: '600', color: theme.textGold },
   upsellText: { fontSize: 14, color: theme.textSecondary, textAlign: 'center', marginTop: 10, lineHeight: 20 },
 
-  dynamicCard: { borderRadius: 24, padding: 28, marginBottom: 12, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.cardHighlight },
-  dynamicLabel: { fontSize: 12, fontWeight: '700', color: theme.textGold, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 },
+  dynamicCard: { borderRadius: 24, padding: 24, marginBottom: 12, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.cardHighlight },
+  dynamicLabel: { fontSize: 10, fontWeight: '800', color: theme.textGold, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 2 },
   dynamicText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   bulletItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10 },
   bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.textGold, marginTop: 8, marginRight: 12 },

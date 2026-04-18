@@ -2,6 +2,7 @@ const { expo: baseConfig } = require('./app.json');
 
 const APP_VARIANT = process.env.APP_VARIANT;
 const isDevVariant = APP_VARIANT === 'development';
+const isLightweightDevMode = process.env.EXPO_PUBLIC_LIGHTWEIGHT_DEV === '1';
 
 module.exports = () => ({
   ...baseConfig,
@@ -21,5 +22,6 @@ module.exports = () => ({
   extra: {
     ...baseConfig.extra,
     appVariant: isDevVariant ? 'development' : 'production',
+    lightweightDevMode: isLightweightDevMode,
   },
 });

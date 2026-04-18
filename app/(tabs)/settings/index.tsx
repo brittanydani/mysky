@@ -137,11 +137,6 @@ export default function SettingsScreen() {
   // ── Accent colors for settings sections ──
   const accentGold = '#D4AF37';
   const accentCopper = '#CD7F5D';
-  const appearanceOptions: { value: 'light' | 'dark' | 'system'; label: string }[] = [
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
-    { value: 'system', label: 'System' },
-  ];
 
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -876,44 +871,6 @@ export default function SettingsScreen() {
                 label="Subconscious Capture"
                 description="Enable dream logging and archetypal reflection"
               />
-              <ObsidianDivider />
-              <View style={styles.appearanceBlock}>
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <View style={styles.settingHeader}>
-                      <MetallicIcon name="sunny-outline" size={20} color={accentGold} />
-                      <Text style={styles.settingTitle}>Appearance</Text>
-                    </View>
-                    <Text style={styles.settingDescription}>
-                      Choose light mode, dark mode, or follow your device setting.
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.appearanceOptionRow}>
-                  {appearanceOptions.map((option) => {
-                    const selected = appearanceMode === option.value;
-                    return (
-                      <Pressable
-                        key={option.value}
-                        style={[styles.appearanceChip, selected && styles.appearanceChipActive]}
-                        onPress={() => {
-                          void setAppearanceMode(option.value);
-                        }}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Use ${option.label.toLowerCase()} appearance`}
-                        accessibilityState={{ selected }}
-                      >
-                        <Text style={[styles.appearanceChipText, selected && styles.appearanceChipTextActive]}>
-                          {option.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-                <Text style={styles.appearanceCaption}>
-                  Active now: {resolvedMode === 'light' ? 'Light mode' : 'Dark mode'}
-                </Text>
-              </View>
             </ObsidianSettingsGroup>
             </VelvetGlassCard>
           </Animated.View>

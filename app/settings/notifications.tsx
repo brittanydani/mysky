@@ -17,13 +17,16 @@ import { type AppTheme } from '../../constants/theme';
 
 // ── Persistence keys ──────────────────────────────────────────────────────────
 const KEYS = {
-  enabled:        'notif_enabled',
-  morningHour:    'notif_morning_hour',
-  morningMinute:  'notif_morning_minute',
-  eveningHour:    'notif_evening_hour',
-  eveningMinute:  'notif_evening_minute',
-  morningUnknown: 'notif_morning_unknown',
-  eveningUnknown: 'notif_evening_unknown',
+  enabled:              'notif_enabled',
+  morningHour:          'notif_morning_hour',
+  morningMinute:        'notif_morning_minute',
+  eveningHour:          'notif_evening_hour',
+  eveningMinute:        'notif_evening_minute',
+  morningUnknown:       'notif_morning_unknown',
+  eveningUnknown:       'notif_evening_unknown',
+  reflectionEnabled:    'notif_reflection_enabled',
+  reflectionHour:       'notif_reflection_hour',
+  reflectionMinute:     'notif_reflection_minute',
 };
 
 function makeTime(hour: number, minute: number): Date {
@@ -48,6 +51,11 @@ export default function NotificationSettings() {
   const [eveningTime, setEveningTime] = useState(makeTime(20, 0));
   const [morningUnknown, setMorningUnknown] = useState(false);
   const [eveningUnknown, setEveningUnknown] = useState(false);
+
+  const [isReflectionEnabled, setIsReflectionEnabled] = useState(false);
+  const [reflectionTime, setReflectionTime] = useState(makeTime(19, 0));
+  const [reflectionPickerOpen, setReflectionPickerOpen] = useState(false);
+  const [reflectionPendingTime, setReflectionPendingTime] = useState<Date | null>(null);
 
   // iOS: which picker is currently expanded; also tracked as pending before confirmation
   const [activePicker, setActivePicker] = useState<'morning' | 'evening' | null>(null);
@@ -97,6 +105,15 @@ export default function NotificationSettings() {
     await NotificationEngine.clearAllSchedules();
     if (!mu) await NotificationEngine.scheduleMorningRhythm(mt.getHours(), mt.getMinutes());
     if (!eu) await NotificationEngine.scheduleEveningRhythm(et.getHours(), et.getMinutes());
+    // Re-apply reflection reminder if it was enabled
+    const reflEnabled = await SecureStore.getItemAsync(KEYS.reflectionEnabled);
+    if (reflEnabled === 'true') {
+      const rh = await SecureStore.getItemAsync(KEYS.reflectionHour);
+      const rm = await SecureStore.getItemAsync(KEYS.reflectionMinute);
+      const h = rh !== null ? Number(rh) : 19;
+      const m = rm !== null ? Number(rm) : 0;
+      await NotificationEngine.scheduleReflectionReminder(h, m);
+    }
     await Promise.all([
       savePrefs(mt, et, mu, eu),
       SecureStore.setItemAsync(KEYS.enabled, 'true'),
@@ -159,6 +176,47 @@ export default function NotificationSettings() {
     Haptics.selectionAsync();
     setPendingTime(slot === 'morning' ? morningTime : eveningTime);
     setActivePicker(prev => (prev === slot ? null : slot));
+  };
+
+  // ── Unknown-time toggle ────────────────────────────────────────────────────
+  const toggleUnknown = async (slot: 'morning' | 'evening') => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setActivePicker(null);
+    setPendingTime(null);
+
+  // ── Reflection reminder toggle ─────────────────────────────────────────────
+  const toggleReflectionReminder = async (value: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setIsReflectionEnabled(value);
+    if (value) {
+      const hasPermission = await NotificationEngine.requestPermissions();
+      if (!hasPermission) {
+        setIsReflectionEnabled(false);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        return;
+      }
+      await NotificationEngine.scheduleReflectionReminder(reflectionTime.getHours(), reflectionTime.getMinutes());
+      await Promise.all([
+        SecureStore.setItemAsync(KEYS.reflectionEnabled, 'true'),
+        SecureStore.setItemAsync(KEYS.reflectionHour, String(reflectionTime.getHours())),
+        SecureStore.setItemAsync(KEYS.reflectionMinute, String(reflectionTime.getMinutes())),
+      ]);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      await NotificationEngine.cancelReflectionReminder();
+      await SecureStore.setItemAsync(KEYS.reflectionEnabled, 'false');
+    }
+  };
+
+  const applyReflectionTime = async (time: Date) => {
+    setReflectionTime(time);
+    await Promise.all([
+      SecureStore.setItemAsync(KEYS.reflectionHour, String(time.getHours())),
+      SecureStore.setItemAsync(KEYS.reflectionMinute, String(time.getMinutes())),
+    ]);
+    if (isReflectionEnabled) {
+      await NotificationEngine.scheduleReflectionReminder(time.getHours(), time.getMinutes());
+    }
   };
 
   // ── Unknown-time toggle ────────────────────────────────────────────────────
@@ -299,6 +357,75 @@ export default function NotificationSettings() {
         {/* Evening slot */}
         <Text style={[styles.sectionLabel, { marginTop: 28 }]}>EVENING · INTERNAL WEATHER</Text>
         {renderSlot('evening')}
+
+        {/* Reflection reminder */}
+        <Text style={[styles.sectionLabel, { marginTop: 28 }]}>INNER WORLD · DAILY REFLECTION</Text>
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <View style={styles.textContainer}>
+              <Text style={styles.title}>Reflection Reminder</Text>
+              <Text style={styles.subtitle}>
+                Daily prompt to complete your inner-world reflection questions.
+              </Text>
+            </View>
+            <Switch
+              value={isReflectionEnabled}
+              onValueChange={toggleReflectionReminder}
+              trackColor={{ false: theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(168,139,235,0.22)', true: '#A88BEB' }}
+              thumbColor={isReflectionEnabled ? '#050507' : (theme.isDark ? '#FFF' : '#FFF9F2')}
+              ios_backgroundColor={theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(168,139,235,0.22)'}
+            />
+          </View>
+          {isReflectionEnabled && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.row}>
+                <Text style={styles.subtitle}>Reminder time</Text>
+                <Pressable
+                  style={styles.timeBadge}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setReflectionPendingTime(reflectionTime);
+                    setReflectionPickerOpen(v => !v);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Set reflection reminder time"
+                >
+                  <MetallicText color="#A88BEB" style={styles.timeText}>
+                    {formatTime(reflectionTime)}
+                  </MetallicText>
+                </Pressable>
+              </View>
+              {reflectionPickerOpen && (
+                <View>
+                  <DateTimePicker
+                    value={reflectionPendingTime ?? reflectionTime}
+                    mode="time"
+                    display="spinner"
+                    onChange={(_e, d) => { if (d) setReflectionPendingTime(d); }}
+                    textColor={theme.textPrimary}
+                    themeVariant={resolvedMode}
+                    style={styles.picker}
+                  />
+                  <Pressable
+                    style={styles.doneButton}
+                    onPress={async () => {
+                      const t = reflectionPendingTime ?? reflectionTime;
+                      setReflectionPickerOpen(false);
+                      setReflectionPendingTime(null);
+                      Haptics.selectionAsync();
+                      await applyReflectionTime(t);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Confirm reflection reminder time"
+                  >
+                    <MetallicText color="#A88BEB" style={styles.doneText}>Done</MetallicText>
+                  </Pressable>
+                </View>
+              )}
+            </>
+          )}
+        </View>
 
         <Text style={styles.privacyNote}>
           All prompts are scheduled directly on your device's hardware. We do not use

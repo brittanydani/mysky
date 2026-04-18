@@ -18,11 +18,8 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function resolveThemeMode(preference: ThemePreference, systemScheme: ReturnType<typeof useColorScheme>): ResolvedThemeMode {
-  if (preference === 'system') {
-    return systemScheme === 'light' ? 'light' : 'dark';
-  }
-
-  return preference;
+  // Always enforce dark mode as requested by user
+  return 'dark';
 }
 
 export function ThemeProvider({ children }: PropsWithChildren) {

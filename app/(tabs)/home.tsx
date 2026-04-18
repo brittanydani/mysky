@@ -30,7 +30,7 @@ import {
   vec,
 } from '@shopify/react-native-skia';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring, withSequence, withDelay, ZoomIn } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/core';
@@ -177,6 +177,7 @@ export default function HomeScreen() {
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
   const [aiInsightText, setAiInsightText] = useState<string | null>(null);
+  const prevMilestoneRef = useRef<number | null>(null);
 
   // Self-knowledge context — used to personalize affirmations
   const [selfKnowledge, setSelfKnowledge] = useState<SelfKnowledgeContext | null>(null);
@@ -262,6 +263,12 @@ export default function HomeScreen() {
               const loopData = await getDailyLoopData(chart.id, selfKnowledge);
               if (!isScreenActiveRef.current) return;
               setIfActive(setDailyLoop, loopData);
+
+              // Fire haptic celebration on fresh milestone
+              if (loopData.streak.milestone && loopData.streak.milestone !== prevMilestoneRef.current) {
+                prevMilestoneRef.current = loopData.streak.milestone;
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+              }
 
               // Schedule personalized transit notification for tomorrow
               scheduleTransitNotification(chart).catch(() => {});
@@ -557,14 +564,21 @@ export default function HomeScreen() {
                     <Text style={styles.streakLabel}>day streak</Text>
                   </View>
                   {dailyLoop.streak.milestone && (
-                    <View style={[styles.streakPill, { backgroundColor: `${PALETTE.gold}18` }]}>
+                    <Animated.View
+                      entering={ZoomIn.springify().damping(10).stiffness(120)}
+                      style={[styles.streakPill, { backgroundColor: `${PALETTE.gold}22` }]}
+                    >
                       <MetallicIcon name="trophy-outline" size={14} variant="gold" />
                       {theme.isDark ? (
-                        <MetallicText style={styles.streakLabel} variant="gold">Milestone!</MetallicText>
+                        <MetallicText style={styles.streakLabel} variant="gold">
+                          {dailyLoop.streak.milestone}-day milestone! ✦
+                        </MetallicText>
                       ) : (
-                        <Text style={[styles.streakLabel, styles.streakLabelLight]}>Milestone!</Text>
+                        <Text style={[styles.streakLabel, styles.streakLabelLight]}>
+                          {dailyLoop.streak.milestone}-day milestone! ✦
+                        </Text>
                       )}
-                    </View>
+                    </Animated.View>
                   )}
                   {dailyLoop.streak.checkedInToday && (
                     <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}>
@@ -822,7 +836,7 @@ export default function HomeScreen() {
                   <Text style={styles.weeklySummaryText}>{dailyLoop.weeklySynthesis.narrative}</Text>
                   <View style={styles.weeklyMetrics}>
                     {dailyLoop.weeklySynthesis.signals.map((sig) => (
-                      <MetricChip key={sig.domain} value={sig.label} label={sig.domain.charAt(0).toUpperCase() + sig.domain.slice(1)} />
+                      <MetricChip key={sig.domain} value={sig.label.split(' ')[0]} label={sig.domain.charAt(0).toUpperCase() + sig.domain.slice(1)} />
                     ))}
                   </View>
                 </View>

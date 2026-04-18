@@ -7,7 +7,7 @@
 // 3. Integrated "Velvet Glass" 1px directional light-catch borders globally.
 // 4. Enhanced Typography: Pure White data hero numbers and crisp Metallic Gold headers.
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useRef } from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Modal } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -74,6 +74,7 @@ export default function PatternsScreen() {
   const [, setNarrative] = useState<NarrativeInsightBundle | null>(null);
   const [, setDeepInsights] = useState<DeepInsightBundle | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [showDeepDiveModal, setShowDeepDiveModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
 
@@ -156,9 +157,16 @@ export default function PatternsScreen() {
   );
 
   const libraryState = useMemo(() => buildPatternLibraryState(dailyAggregates), [dailyAggregates]);
+
+  // Rotate through all cross-ref insights daily — users see a fresh insight each day
+  const todayIndex = useMemo(() => {
+    const epoch = Math.floor(Date.now() / 86_400_000); // day number since Unix epoch
+    return crossRefs.length > 0 ? epoch % crossRefs.length : 0;
+  }, [crossRefs.length]);
+
   const leadInsight = useMemo(
-    () => (crossRefs.length > 0 ? refineCrossRefCopy(crossRefs[0]) : null),
-    [crossRefs],
+    () => (crossRefs.length > 0 ? refineCrossRefCopy(crossRefs[todayIndex]) : null),
+    [crossRefs, todayIndex],
   );
   const patternRows = useMemo(() => (leadInsight ? [leadInsight] : []), [leadInsight]);
 
@@ -175,16 +183,73 @@ export default function PatternsScreen() {
           data={patternRows}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <VelvetGlassSurface style={styles.insightCard} intensity={25}>
-              <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
-              <View style={styles.cardHeader}>
-                <MetallicText style={styles.cardLabel} variant="gold">PERSONAL PATTERN</MetallicText>
-                <View style={styles.confirmedBadge}><Text style={styles.confirmedText}>DATA CONFIRMED</Text></View>
-              </View>
-              <Text style={styles.patternTitle}>{item.title}</Text>
-              <Text style={styles.insightBody}>{item.body}</Text>
-              <GlassTakeaway label="Gentle read" body="Treat the pattern as information, not a diagnosis." icon="compass-outline" />
-            </VelvetGlassSurface>
+            <>
+              <VelvetGlassSurface style={styles.insightCard} intensity={25}>
+                <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
+                <View style={styles.cardHeader}>
+                  <MetallicText style={styles.cardLabel} variant="gold">TODAY'S INSIGHT</MetallicText>
+                  <View style={styles.confirmedBadge}>
+                    <Text style={styles.confirmedText}>{item.isConfirmed ? 'DATA CONFIRMED' : 'PROFILE INSIGHT'}</Text>
+                  </View>
+                </View>
+                <Text style={styles.patternTitle}>{item.title}</Text>
+                <Text style={styles.insightBody}>{item.body}</Text>
+                {item.heroMetrics && item.heroMetrics.length > 0 && (
+                  <View style={styles.heroMetricsRow}>
+                    {item.heroMetrics.map((m) => (
+                      <View key={m.label} style={styles.heroMetricChip}>
+                        <Text style={styles.heroMetricValue}>{m.value}</Text>
+                        <Text style={styles.heroMetricLabel}>{m.label}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                {item.takeaway && (
+                  <GlassTakeaway label={item.takeaway.label} body={item.takeaway.body} icon="compass-outline" />
+                )}
+                {crossRefs.length > 1 && (
+                  <Text style={styles.rotationHint}>
+                    Insight {todayIndex + 1} of {crossRefs.length} · refreshes daily
+                  </Text>
+                )}
+              </VelvetGlassSurface>
+
+              {/* Premium: Full Analysis CTA */}
+              {isPremium ? (
+                <Pressable
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setShowDeepDiveModal(true);
+                  }}
+                  style={styles.deepDiveButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="See full pattern analysis"
+                >
+                  <LinearGradient colors={['rgba(168,139,235,0.25)', 'rgba(168,139,235,0.08)']} style={StyleSheet.absoluteFill} />
+                  <MetallicIcon name="analytics-outline" size={16} variant="gold" />
+                  <View style={{ flex: 1 }}>
+                    <MetallicText style={styles.deepDiveButtonTitle} variant="gold">Full Pattern Analysis</MetallicText>
+                    <Text style={styles.deepDiveButtonSub}>All {crossRefs.length} insights from your data</Text>
+                  </View>
+                  <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={() => router.push('/(tabs)/premium' as Href)}
+                  style={styles.deepDiveButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Unlock full pattern analysis"
+                >
+                  <LinearGradient colors={['rgba(44,54,69,0.85)', 'rgba(26,30,41,0.40)']} style={StyleSheet.absoluteFill} />
+                  <MetallicIcon name="lock-closed-outline" size={16} variant="gold" />
+                  <View style={{ flex: 1 }}>
+                    <MetallicText style={styles.deepDiveButtonTitle} variant="gold">Unlock Full Analysis</MetallicText>
+                    <Text style={styles.deepDiveButtonSub}>See all {crossRefs.length > 0 ? crossRefs.length : ''} in-depth patterns — premium</Text>
+                  </View>
+                  <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
+                </Pressable>
+              )}
+            </>
           )}
           ListHeaderComponent={(
             <>
@@ -440,6 +505,28 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   libraryItemBody: { fontSize: 13, lineHeight: 20, color: 'rgba(255,255,255,0.66)' },
 
   glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
+
+  rotationHint: { marginTop: 16, fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'center', letterSpacing: 0.5 },
+
+  deepDiveButton: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderRadius: 24, padding: 20, marginBottom: 24, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  deepDiveButtonTitle: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  deepDiveButtonSub: { fontSize: 12, color: 'rgba(255,255,255,0.45)' },
+
+  heroMetricsRow: {
+    flexDirection: 'row', gap: 8, marginTop: 20, paddingTop: 16,
+    borderTopWidth: 1, borderTopColor: theme.cardBorder,
+  },
+  heroMetricChip: { flex: 1, alignItems: 'center', gap: 4 },
+  heroMetricValue: { fontSize: 18, fontWeight: '700', color: theme.textPrimary },
+  heroMetricLabel: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 },
+
+  deepDiveModalCard: { maxHeight: '90%', paddingBottom: 24 },
+  deepDiveInsightCard: { borderRadius: 20, padding: 24, overflow: 'hidden' },
+  deepDiveInsightTitle: { fontSize: 16, fontWeight: '700', color: theme.textPrimary, marginBottom: 10 },
 });
 
 
