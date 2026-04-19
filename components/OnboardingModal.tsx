@@ -58,27 +58,23 @@ import {
 } from '../services/auth/passwordRecovery';
 import { useAppTheme, useThemePreference } from '../context/ThemeContext';
 
-// ── Liquid Mirror Gold Palette ──
+// ── Palette — aligned with app theme tokens ──
 const PREMIUM = {
-  bgOled: '#020817',
-  titanium: '#C5B5A1',
-  // Nebula orb fills — Champagne Gold + Amethyst Purple for volumetric depth
-  titaniumGlow: 'rgba(197, 181, 161, 0.12)',   // Champagne — refined Titanium warmth
-  starlight:    'rgba(79,  79,  127, 0.10)',    // Amethyst Purple — deep volumetric void
-  // Laser-Etched White Gold border
-  glassBorder: 'rgba(255, 253, 235, 0.2)',
-  glassFill: 'rgba(15, 15, 15, 0.4)',
-  textMain: '#F5F5F7',
-  textMuted: '#86868B',
+  bgOled: '#0A0A0F',                          // theme.background dark
+  titanium: '#D4AF37',                        // METALLIC_GOLD.mid — accent icons
+  titaniumGlow: 'rgba(212, 175, 55, 0.08)',   // Subtle gold ambient
+  starlight:    'rgba(79,  79,  127, 0.08)',  // Depth void
+  glassBorder: 'rgba(255, 255, 255, 0.10)',   // theme.cardBorder dark
+  glassFill: 'rgba(255, 255, 255, 0.06)',     // theme.inputBackground dark
+  textMain: '#FFFFFF',                        // theme.textPrimary dark
+  textMuted: 'rgba(255, 255, 255, 0.40)',     // theme.textMuted dark
 };
 
-// 6-stop horizontal Liquid Mirror Gold gradient
+// 3-stop foil gradient — matches METALLIC_GOLD.foilGradient
 const LIQUID_GOLD: string[] = [
-  '#FFFFFF',   // 0 — Specular white glint
-  '#F7E7C2',   // 1 — Champagne gold
-  '#EED9A7',   // 2 — Base gold
-  '#D4AF37',   // 3 — Amber mid-tone
-  '#9B7A46',   // 4 — Deep bronze shadow
+  '#F9DF9F',   // 0 — Highlight
+  '#D4AF37',   // 1 — Mid gold
+  '#936B16',   // 2 — Shadow
 ];
 
 // ── Nominatim location search ──
@@ -201,7 +197,7 @@ function BottomNav({
         >
           <Ionicons name="chevron-back-outline" size={24} color={PREMIUM.textMain} />
         </Pressable>
-      ) : <View style={{ width: 50 }} />}
+      ) : <View style={{ width: 56 }} />}
 
       <View style={{ flex: 1 }} />
 
@@ -690,8 +686,6 @@ export default function OnboardingModal({
           <SkiaDynamicCosmos fill="transparent" />
         </View>
 
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.background }]} pointerEvents="none" />
-
         <SafeAreaView edges={['top', 'bottom']} style={st.safeArea}>
           <KeyboardAvoidingView 
             style={{ flex: 1 }} 
@@ -710,7 +704,7 @@ export default function OnboardingModal({
                 <View style={st.centeredFlex}>
                   <Animated.View entering={FadeInDown.delay(100).duration(900)} style={st.singleQuestionContainer}>
                     <Text style={st.etherealQuestion}>{authRecoveryOpen ? 'Reset your password' : authMode === 'sign-in' ? 'Welcome back' : 'Create your account'}</Text>
-                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
+                    <Text style={st.etherealSubtext}>
                       {authRecoveryOpen
                         ? authRecoveryCodeSent
                           ? 'Enter the recovery code from your email and choose a new password.'
@@ -718,7 +712,7 @@ export default function OnboardingModal({
                         : authMode === 'sign-in'
                           ? 'Sign in to go straight to your home page.'
                           : 'Create your account first, then we will set up your profile.'}
-                    </MetallicText>
+                    </Text>
                   </Animated.View>
 
                   <Animated.View entering={FadeInUp.delay(250).duration(600)} style={st.ctaContainerFixed}>
@@ -815,12 +809,12 @@ export default function OnboardingModal({
 
                         {authRecoveryCodeSent && (
                           <Pressable style={st.authSecondaryLink} onPress={handleSendAuthRecoveryCode} accessibilityLabel="Resend code">
-                            <MetallicText style={st.authSecondaryLinkText} color={PREMIUM.textMuted}>Resend code</MetallicText>
+                            <Text style={st.authSecondaryLinkText}>Resend code</Text>
                           </Pressable>
                         )}
 
                         <Pressable style={st.authSecondaryLink} onPress={closeAuthRecovery} accessibilityRole="button" accessibilityLabel="Back to sign in">
-                          <MetallicText style={st.authSecondaryLinkText} color={PREMIUM.textMuted}>Back to sign in</MetallicText>
+                          <Text style={st.authSecondaryLinkText}>Back to sign in</Text>
                         </Pressable>
                       </>
                     ) : (
@@ -868,7 +862,7 @@ export default function OnboardingModal({
 
                         {authMode === 'sign-in' && (
                           <Pressable style={st.authSecondaryLink} onPress={openAuthRecovery} accessibilityRole="button" accessibilityLabel="Forgot password">
-                            <MetallicText style={st.authSecondaryLinkText} color={PREMIUM.textMuted}>Forgot password?</MetallicText>
+                            <Text style={st.authSecondaryLinkText}>Forgot password?</Text>
                           </Pressable>
                         )}
 
@@ -898,13 +892,13 @@ export default function OnboardingModal({
                           accessibilityRole="button"
                           accessibilityLabel={authMode === 'sign-in' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
                         >
-                          <MetallicText style={st.authSecondaryLinkText} color={PREMIUM.textMuted}>
+                          <Text style={st.authSecondaryLinkText}>
                             {authMode === 'sign-in' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
-                          </MetallicText>
+                          </Text>
                         </Pressable>
                         <Pressable style={st.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button">
-                          <MetallicIcon name="cloud-download-outline" size={16} color={PREMIUM.textMuted} />
-                          <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Restore from Backup</MetallicText>
+                          <Ionicons name="cloud-download-outline" size={16} color={PREMIUM.textMuted} />
+                          <Text style={st.restoreText}>Restore from Backup</Text>
                         </Pressable>
                       </>
                     )}
@@ -932,7 +926,7 @@ export default function OnboardingModal({
 
                   <Animated.View entering={FadeInUp.delay(300).duration(600)} style={st.termsContent}>
                     <View style={st.termsGlassSection}>
-                      <MetallicText style={st.termsSectionLabel} color={PREMIUM.textMuted}>What You Add</MetallicText>
+                      <Text style={st.termsSectionLabel}>What You Add</Text>
                       <View style={st.termsDataRow}>
                         <MetallicIcon name="sparkles-outline" size={16} color={PREMIUM.titanium} />
                         <Text style={st.termsDataText}>Birth data & personalization settings</Text>
@@ -968,8 +962,8 @@ export default function OnboardingModal({
                           onPress={() => setLegalView(item.id)}
                           accessibilityRole="link"
                         >
-                          <MetallicText style={st.legalPillText} color={PREMIUM.textMuted}>{item.label}</MetallicText>
-                          <MetallicIcon name="chevron-forward-outline" size={12} color={PREMIUM.textMuted} />
+                          <Text style={st.legalPillText}>{item.label}</Text>
+                          <Ionicons name="chevron-forward-outline" size={12} color={PREMIUM.textMuted} />
                         </Pressable>
                       ))}
                     </View>
@@ -990,7 +984,7 @@ export default function OnboardingModal({
                       </LinearGradient>
                     </Pressable>
                     <Pressable style={st.restoreButton} onPress={() => goToStep('auth')}>
-                      <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Go Back</MetallicText>
+                      <Text style={st.restoreText}>Go Back</Text>
                     </Pressable>
                   </Animated.View>
                 </ScrollView>
@@ -1042,9 +1036,9 @@ export default function OnboardingModal({
                 <Pressable style={[st.centeredFlex, st.birthDetailsStep]} onPress={Keyboard.dismiss} accessible={false}>
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                     <Text style={st.etherealQuestion}>When did your journey begin?</Text>
-                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
+                    <Text style={st.etherealSubtext}>
                       Used to accurately map your internal weather and profile.
-                    </MetallicText>
+                    </Text>
 
                     <BlurView intensity={30} tint={theme.blurTint} style={st.glassCard}>
                       <DateTimePicker
@@ -1073,9 +1067,9 @@ export default function OnboardingModal({
                 <View style={[st.centeredFlex, st.birthDetailsStep]}>
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                     <Text style={st.etherealQuestion}>What time did you arrive?</Text>
-                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
+                    <Text style={st.etherealSubtext}>
                       Precision helps us personalize your data patterns.
-                    </MetallicText>
+                    </Text>
 
                     <View style={st.customTimeRow}>
                       {/* Hour */}
@@ -1183,9 +1177,9 @@ export default function OnboardingModal({
                 >
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                     <Text style={st.etherealQuestion}>Where did your journey begin?</Text>
-                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
+                    <Text style={st.etherealSubtext}>
                       City of birth roots your profile baseline.
-                    </MetallicText>
+                    </Text>
 
                     <BlurView intensity={30} tint={theme.blurTint} style={st.locationSearchRow}>
                       <MetallicIcon name="search-outline" size={20} color={PREMIUM.titanium} />
@@ -1224,7 +1218,7 @@ export default function OnboardingModal({
                               >
                                 <View>
                                   <Text style={st.suggestionCity}>{city}</Text>
-                                  <MetallicText style={st.suggestionCountry} color={PREMIUM.textMuted}>{country}</MetallicText>
+                                  <Text style={[st.suggestionCountry, { color: PREMIUM.textMuted }]}>{country}</Text>
                                 </View>
                               </Pressable>
                             </React.Fragment>
@@ -1274,9 +1268,9 @@ export default function OnboardingModal({
                       <MetallicIcon name="lock-closed-outline" size={32} color={PREMIUM.titanium} />
                     </View>
                     <Text style={st.etherealQuestion}>Enter Encryption Key</Text>
-                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
+                    <Text style={st.etherealSubtext}>
                       Provide the passphrase used to secure your backup.
-                    </MetallicText>
+                    </Text>
                     
                     <BlurView intensity={30} tint={theme.blurTint} style={st.passphraseInputWrapper}>
                       <TextInput
@@ -1311,7 +1305,7 @@ export default function OnboardingModal({
                     </Animated.View>
 
                     <Pressable style={[st.restoreButton, { alignSelf: 'center' }]} onPress={() => setStep('auth')}>
-                      <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Cancel</MetallicText>
+                      <Text style={st.restoreText}>Cancel</Text>
                     </Pressable>
                   </Animated.View>
                 </Pressable>
@@ -1492,7 +1486,7 @@ const st = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 2.5,
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     color: PREMIUM.textMuted,
     marginBottom: 10,
   },
@@ -1568,7 +1562,7 @@ const st = StyleSheet.create({
   },
   restoreText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     color: PREMIUM.textMuted,
     marginLeft: 8,
   },
@@ -1593,6 +1587,7 @@ const st = StyleSheet.create({
     marginBottom: 40,
     lineHeight: 22,
     textAlign: 'center',
+    fontWeight: '400',
   },
 
   // ── Centered Name Input ──
@@ -1631,7 +1626,7 @@ const st = StyleSheet.create({
   glassCard: {
     width: '100%',
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: PREMIUM.glassFill,
     padding: 12,
@@ -1642,7 +1637,7 @@ const st = StyleSheet.create({
     width: '100%',
     minHeight: 216,
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: 'rgba(40, 40, 55, 0.65)',
     padding: 12,
@@ -1654,7 +1649,7 @@ const st = StyleSheet.create({
     minWidth: 320,
     height: 216,
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: PREMIUM.glassFill,
     padding: 12,
@@ -1685,7 +1680,7 @@ const st = StyleSheet.create({
     width: '100%',
     paddingVertical: 20,
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: PREMIUM.glassFill,
   },
@@ -1703,7 +1698,7 @@ const st = StyleSheet.create({
     width: '100%',
     paddingVertical: 12,
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: PREMIUM.glassFill,
   },
@@ -1733,7 +1728,7 @@ const st = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
@@ -1750,7 +1745,7 @@ const st = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: PREMIUM.glassFill,
     paddingHorizontal: 20,
@@ -1768,7 +1763,7 @@ const st = StyleSheet.create({
     marginTop: 12,
     width: '100%',
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: PREMIUM.glassFill,
     overflow: 'hidden',
@@ -1815,11 +1810,11 @@ const st = StyleSheet.create({
     paddingTop: 24,
   },
   backButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: PREMIUM.glassFill,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: PREMIUM.glassBorder,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1947,7 +1942,7 @@ const st = StyleSheet.create({
   passphraseInputWrapper: {
     width: '100%',
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: PREMIUM.glassFill,
     overflow: 'hidden',
@@ -1960,7 +1955,7 @@ const st = StyleSheet.create({
     fontSize: 17,
     fontWeight: '500',
     color: PREMIUM.textMain,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   passwordInputRow: {
     position: 'relative',
@@ -1970,7 +1965,7 @@ const st = StyleSheet.create({
   },
   passwordInput: {
     width: '100%',
-    paddingLeft: 56,
+    paddingLeft: 20,
     paddingRight: 56,
   },
   passwordEyeButton: {
@@ -1983,11 +1978,12 @@ const st = StyleSheet.create({
     justifyContent: 'center',
   },
   authSecondaryLink: {
-    alignSelf: 'flex-end',
+    alignSelf: 'center',
     marginBottom: 16,
   },
   authSecondaryLinkText: {
     fontSize: 14,
     fontWeight: '600',
+    color: PREMIUM.textMuted,
   },
 });

@@ -7,7 +7,7 @@ const isLightweightDevMode = process.env.EXPO_PUBLIC_LIGHTWEIGHT_DEV === '1';
 module.exports = () => ({
   ...baseConfig,
   name: isDevVariant ? 'MySky Dev' : baseConfig.name,
-  icon: isDevVariant ? './assets/images/birth_logo.png' : baseConfig.icon,
+  icon: baseConfig.icon,
   scheme: isDevVariant ? 'mysky-dev' : baseConfig.scheme,
   ios: {
     ...baseConfig.ios,

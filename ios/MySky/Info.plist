@@ -27,19 +27,19 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>$(APP_URL_SCHEME)</string>
-          <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+          <string>mysky</string>
+          <string>com.brittany.mysky</string>
         </array>
       </dict>
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>$(APP_EXPO_URL_SCHEME)</string>
+          <string>exp+mysky</string>
         </array>
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>37</string>
+    <string>1</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>LSMinimumSystemVersion</key>
@@ -70,7 +70,7 @@
       <string>arm64</string>
     </array>
     <key>UIRequiresFullScreen</key>
-    <true/>
+    <false/>
     <key>UIStatusBarStyle</key>
     <string>UIStatusBarStyleDefault</string>
     <key>UISupportedInterfaceOrientations</key>
