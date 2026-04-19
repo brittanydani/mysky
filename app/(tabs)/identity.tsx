@@ -7,7 +7,7 @@
 // 3. Midnight Slate: Heavy anchor washes for the Blueprint grid.
 // 4. Metallic Hardware: Badges with sheer metallic saturation for tool icons.
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -113,6 +113,7 @@ export default function BlueprintScreen() {
   const [chartName, setChartName] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'blueprint' | 'energy'>('blueprint');
   const [checkInCount, setCheckInCount] = useState(0);
+  const prevCheckInCount = useRef<number | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -132,6 +133,15 @@ export default function BlueprintScreen() {
           const charts = await localDb.getCharts();
           if (charts.length > 0) {
             const count = await localDb.getCheckInCount(charts[0].id);
+            // Milestone celebration: fire success haptic when crossing unlock thresholds
+            const prev = prevCheckInCount.current;
+            if (prev !== null && prev !== count) {
+              const crossedThreshold = [3, 7].some((t) => prev < t && count >= t);
+              if (crossedThreshold) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+              }
+            }
+            prevCheckInCount.current = count;
             setCheckInCount(count);
           }
         } catch (err) {
@@ -144,14 +154,20 @@ export default function BlueprintScreen() {
   // Progressive card display: always show Inner World, Body, and Cosmic Blueprint.
   // Unlock Relational Mirror + Restorative Space after 3 check-ins.
   // Unlock Internal Tensions after 7 check-ins.
-  const visibleCards = CARDS.filter((card, i) => {
-    if (i <= 1) return true;              // Inner World, Body & Somatics
-    if (i === 5) return true;             // Cosmic Blueprint — always visible (astrology users)
-    if (i <= 3) return checkInCount >= 3;  // Relational Mirror, Restorative Space
-    return checkInCount >= 7;             // Internal Tensions
-  });
+  // Locked cards are shown dimmed so users know they exist.
+  const isCardLocked = (i: number): boolean => {
+    if (i <= 1) return false;    // Inner World, Body & Somatics — always open
+    if (i === 5) return false;   // Cosmic Blueprint — always open
+    if (i <= 3) return checkInCount < 3; // Relational Mirror, Restorative Space
+    return checkInCount < 7;     // Internal Tensions
+  };
 
-  const hasHiddenCards = visibleCards.length < CARDS.length;
+  const unlockLabelFor = (i: number): string => {
+    const needed = i <= 3 ? 3 - checkInCount : 7 - checkInCount;
+    return `${needed} MORE CHECK-IN${needed === 1 ? '' : 'S'} TO UNLOCK`;
+  };
+
+  const hasLockedCards = CARDS.some((_, i) => isCardLocked(i));
 
   const nav = (route: Href, premium?: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -212,61 +228,77 @@ export default function BlueprintScreen() {
           {/* ── Content Body ── */}
           {activeTab === 'blueprint' ? (
             <View style={styles.grid}>
-              {visibleCards.map((card, i) => (
-                <Animated.View 
-                  key={card.route as string} 
-                  entering={FadeInDown.delay(300 + i * 100).duration(800)}
-                >
-                  <Pressable 
-                    style={({ pressed }) => [pressed && styles.cardPressed]} 
-                    onPress={() => nav(card.route, card.premium)}
+              {CARDS.map((card, i) => {
+                const locked = isCardLocked(i);
+                return (
+                  <Animated.View 
+                    key={card.route as string} 
+                    entering={FadeInDown.delay(300 + i * 100).duration(800)}
+                    style={locked ? styles.cardLockedWrapper : undefined}
                   >
-                    <VelvetGlassSurface 
-                      style={[styles.card, styles.velvetBorder, card.premium && styles.premiumCard]} 
-                      intensity={45}
+                    <Pressable 
+                      style={({ pressed }) => [!locked && pressed && styles.cardPressed]} 
+                      onPress={() => locked
+                        ? Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
+                        : nav(card.route, card.premium)
+                      }
                     >
-                      <LinearGradient 
-                        colors={theme[card.washKey] as [string, string]} 
-                        style={StyleSheet.absoluteFill} 
-                      />
-                      
-                      <View style={styles.cardHeader}>
-                        <View style={[styles.hardwareBadge, { borderColor: `${card.iconColor}30` }]}>
-                          <MetallicLucideIcon 
-                            icon={card.lucideIcon} 
-                            size={22} 
-                            strokeWidth={1.5} 
-                            color={card.iconColor} 
-                          />
+                      <VelvetGlassSurface 
+                        style={[styles.card, styles.velvetBorder, card.premium && !locked && styles.premiumCard]} 
+                        intensity={locked ? 20 : 45}
+                      >
+                        <LinearGradient 
+                          colors={theme[card.washKey] as [string, string]} 
+                          style={StyleSheet.absoluteFill} 
+                        />
+
+                        <View style={styles.cardHeader}>
+                          <View style={[styles.hardwareBadge, { borderColor: `${card.iconColor}30` }]}>
+                            <MetallicLucideIcon 
+                              icon={card.lucideIcon} 
+                              size={22} 
+                              strokeWidth={1.5} 
+                              color={locked ? 'rgba(255,255,255,0.3)' : card.iconColor} 
+                            />
+                          </View>
+                          {locked
+                            ? (
+                              <View style={styles.lockBadge}>
+                                <Ionicons name="lock-closed" size={10} color="rgba(255,255,255,0.45)" />
+                                <Text style={styles.lockBadgeText}>LOCKED</Text>
+                              </View>
+                            )
+                            : card.premium && <PremiumBadge />
+                          }
                         </View>
-                        {card.premium && <PremiumBadge />}
-                      </View>
 
-                      <View style={styles.cardTextContent}>
-                        <Text style={styles.cardTitle}>{card.title}</Text>
-                        <Text style={styles.cardDescription}>{card.description}</Text>
-                      </View>
+                        <View style={styles.cardTextContent}>
+                          <Text style={[styles.cardTitle, locked && styles.cardTitleLocked]}>{card.title}</Text>
+                          <Text style={[styles.cardDescription, locked && styles.cardDescriptionLocked]}>{card.description}</Text>
+                        </View>
 
-                      <View style={styles.cardActionRow}>
-                        <Text style={[styles.actionText, { color: card.iconColor }]}>EXPLORE MODULE</Text>
-                        <Ionicons name="chevron-forward" size={14} color={card.iconColor} />
-                      </View>
-                    </VelvetGlassSurface>
-                  </Pressable>
-                </Animated.View>
-              ))}
+                        <View style={styles.cardActionRow}>
+                          {locked ? (
+                            <Text style={styles.unlockLabel}>{unlockLabelFor(i)}</Text>
+                          ) : (
+                            <>
+                              <Text style={[styles.actionText, { color: card.iconColor }]}>EXPLORE MODULE</Text>
+                              <Ionicons name="chevron-forward" size={14} color={card.iconColor} />
+                            </>
+                          )}
+                        </View>
+                      </VelvetGlassSurface>
+                    </Pressable>
+                  </Animated.View>
+                );
+              })}
 
-              {/* Progressive unlock hint */}
-              {hasHiddenCards && (
-                <Animated.View entering={FadeInDown.delay(300 + visibleCards.length * 100).duration(800)}>
-                  <View style={{ alignItems: 'center', paddingVertical: 20, gap: 6 }}>
+              {/* Progressive unlock hint — shown only when all cards are visible */}
+              {!hasLockedCards && (
+                <Animated.View entering={FadeInDown.delay(300 + CARDS.length * 100).duration(800)}>
+                  <View style={{ alignItems: 'center', paddingVertical: 12 }}>
                     <Text style={{ color: theme.textMuted, fontSize: 12, letterSpacing: 1, fontWeight: '600', textAlign: 'center' }}>
-                      {checkInCount < 3
-                        ? `${3 - checkInCount} MORE CHECK-IN${3 - checkInCount === 1 ? '' : 'S'} TO REVEAL YOUR NEXT INSIGHT`
-                        : `${7 - checkInCount} MORE CHECK-IN${7 - checkInCount === 1 ? '' : 'S'} TO UNLOCK EVERYTHING`}
-                    </Text>
-                    <Text style={{ color: theme.textMuted, fontSize: 13, textAlign: 'center', maxWidth: 260 }}>
-                      Your identity portrait deepens with every check-in — unlock the full picture with Premium.
+                      ALL MODULES UNLOCKED
                     </Text>
                   </View>
                 </Animated.View>
@@ -406,6 +438,24 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     fontWeight: '900', 
     letterSpacing: 1.5 
   },
+
+  // Locked card states
+  cardLockedWrapper: { opacity: 0.45 },
+  cardTitleLocked: { color: 'rgba(255,255,255,0.5)' },
+  cardDescriptionLocked: { color: 'rgba(255,255,255,0.3)' },
+  lockBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  lockBadgeText: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.45)', letterSpacing: 1.5 },
+  unlockLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.35)', letterSpacing: 1.2 },
 
   // Premium Badge
   badgeContainer: { 
