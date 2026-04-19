@@ -170,7 +170,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                     <View key={i} style={[styles.statusRow, i === 2 && { borderBottomWidth: 0 }]}>
                       <View style={styles.rowLead}>
                         <Ionicons name={item.icon as any} size={16} color={item.color} />
-                        <Text style={styles.statusLabel}>{item.label}</Text>
+                        <Text style={styles.statusLabel} numberOfLines={1}>{item.label}</Text>
                       </View>
                       <Text style={styles.statusVal}>{item.val}</Text>
                     </View>
@@ -185,7 +185,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                   <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: theme.cardBorder }]}>
                     <View style={styles.rowLead}>
                       <MetallicIcon name="checkmark-circle-outline" size={16} color={consentRecord?.granted ? PALETTE.gold : PALETTE.copper} />
-                      <Text style={styles.statusLabel}>Status</Text>
+                      <Text style={styles.statusLabel} numberOfLines={1}>Status</Text>
                     </View>
                     <Text style={styles.statusVal}> 
                       {consentRecord?.granted ? (consentRecord.expired ? 'Expired' : 'Active') : 'Not granted'}
@@ -195,7 +195,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                     <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: theme.cardBorder }]}>
                       <View style={styles.rowLead}>
                         <MetallicIcon name="time-outline" size={16} color={PALETTE.silverBlue} />
-                        <Text style={styles.statusLabel}>Consented</Text>
+                        <Text style={styles.statusLabel} numberOfLines={1}>Consented</Text>
                       </View>
                       <Text style={styles.statusVal}> 
                         {new Date(consentRecord.timestamp).toLocaleDateString()}
@@ -205,7 +205,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                   <View style={[styles.statusRow, { borderBottomWidth: 0 }]}>
                     <View style={styles.rowLead}>
                       <MetallicIcon name="document-outline" size={16} color={PALETTE.silverBlue} />
-                      <Text style={styles.statusLabel}>Policy Version</Text>
+                      <Text style={styles.statusLabel} numberOfLines={1}>Policy Version</Text>
                     </View>
                     <Text style={styles.statusVal}> 
                       {consentRecord?.policyVersion ?? '—'}

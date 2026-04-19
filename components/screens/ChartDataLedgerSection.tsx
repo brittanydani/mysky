@@ -69,7 +69,7 @@ export const ChartDataLedgerSection = ({ title = 'Complete Placements', subtitle
               {row.glyph ? (
                 <Text style={styles.glyphText}>{row.glyph}</Text>
               ) : null}
-              <Text style={styles.planetName}>{row.planetName}</Text>
+              <Text style={styles.planetName} numberOfLines={1}>{row.planetName}</Text>
               {row.isRetrograde && (
                 <Text style={styles.retroBadge}>℞</Text>
               )}

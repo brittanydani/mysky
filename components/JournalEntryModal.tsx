@@ -1283,7 +1283,7 @@ function SectionHeader({ title, icon }: { title: string; icon: string }) {
   return (
     <View style={styles.sectionHeader}>
       <MetallicIcon name={icon as any} size={18} color="#D4AF37" />
-      <Text style={styles.sectionHeaderTitle}>{title}</Text>
+      <Text style={styles.sectionHeaderTitle} numberOfLines={1}>{title}</Text>
     </View>
   );
 }

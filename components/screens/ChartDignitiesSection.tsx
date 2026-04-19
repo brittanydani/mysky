@@ -177,7 +177,7 @@ export const ChartDignitiesSection = ({ dignityAnalysis }: Props) => {
                     <MetallicGlyph glyph={mod.glyph} size={28} style={styles.glyphText} />
                   </View>
                   <View style={styles.cardTitles}>
-                    <Text style={styles.planetName}>{mod.planet}</Text>
+                    <Text style={styles.planetName} numberOfLines={1}>{mod.planet}</Text>
                     <Text style={styles.dignityLabel}>{mod.dignity.toUpperCase()}</Text>
                   </View>
                 </View>

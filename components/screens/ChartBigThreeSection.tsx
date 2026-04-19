@@ -115,7 +115,7 @@ export const ChartBigThreeSection = ({ chart, onMoonPress }: Props) => {
                     <View style={styles.hardwareBadge}>
                       <MetallicGlyph glyph={mod.glyph} size={22} style={styles.glyphText} />
                     </View>
-                    <Text style={styles.planetLabel}>{mod.label.toUpperCase()}</Text>
+                    <Text style={styles.planetLabel} numberOfLines={1}>{mod.label.toUpperCase()}</Text>
                   </View>
                   <Text style={styles.signName}>{mod.signName}</Text>
                   <Text style={styles.degreeText}>

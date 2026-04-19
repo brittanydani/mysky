@@ -259,7 +259,7 @@ export default function DailyReflectionSection({
             <View style={styles.categoryHeader}>
               <View style={styles.categoryHeaderLeft}>
                 <MetallicText style={styles.categoryIcon} color={accent}>{CATEGORY_ICONS[category]}</MetallicText>
-                <MetallicText style={styles.categoryTitle} color={accent}>{CATEGORY_LABELS[category]}</MetallicText>
+                <MetallicText style={styles.categoryTitle} color={accent} numberOfLines={1}>{CATEGORY_LABELS[category]}</MetallicText>
               </View>
               {isSealed && (
                 <View style={[styles.categorySealedBadge, { borderColor: `${PALETTE.sage}40`, backgroundColor: `${PALETTE.sage}15` }]}>

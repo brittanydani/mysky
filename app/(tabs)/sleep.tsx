@@ -832,7 +832,7 @@ export default function SleepScreen() {
                     >
                       <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(10, 12, 18, 0.8)']} style={styles.premiumLockCard}>
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.premiumLockTitle, { color: theme.textPrimary }]}>AI Dream Interpretation</Text>
+                          <Text style={[styles.premiumLockTitle, { color: theme.textPrimary }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>AI Dream Interpretation</Text>
                           <Text style={styles.premiumLockSub}>
                             {isPremium
                               ? 'Saving this dream uses the richer Deeper Sky Gemini model.'

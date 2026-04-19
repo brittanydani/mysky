@@ -849,7 +849,7 @@ export default function JournalScreen() {
                 With {totalCount} entries, Deeper Sky can reveal which energy patterns lift your mood, when you tend to journal most, and what emotional themes keep appearing.
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                <Text style={[styles.insightActionable, { marginTop: 0, color: PALETTE.gold }]}>Reveal your patterns</Text>
+                <Text style={[styles.insightActionable, { marginTop: 0, color: PALETTE.gold }]} numberOfLines={1}>Reveal your patterns</Text>
                 <MetallicIcon name="arrow-forward-outline" size={14} color={PALETTE.gold} />
               </View>
             </LinearGradient>
