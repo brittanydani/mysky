@@ -30,7 +30,7 @@ import {
   vec,
 } from '@shopify/react-native-skia';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring, withSequence, withDelay, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring, ZoomIn } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/core';

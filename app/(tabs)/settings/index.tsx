@@ -40,7 +40,7 @@ import GlassToggle from '../../../components/ui/GlassToggle';
 import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/ObsidianSettingsGroup';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 import { VelvetGlassCard } from '../../../components/ui/VelvetGlassCard';
-import { useAppTheme, useThemedStyles, useThemePreference } from '../../../context/ThemeContext';
+import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
 
 const FAQ: { question: string; answer: string }[] = [
   {
@@ -126,7 +126,6 @@ export default function SettingsScreen() {
   const settingsFaqGradient = theme.isDark
     ? ['rgba(14, 24, 48, 0.6)', 'rgba(10, 18, 36, 0.4)']
     : [theme.cardSurfaceStrong, 'rgba(236, 240, 245, 0.98)'];
-  const { preference: appearanceMode, resolvedMode, setPreference: setAppearanceMode } = useThemePreference();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();

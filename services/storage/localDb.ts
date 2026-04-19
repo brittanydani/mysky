@@ -58,7 +58,7 @@ class LocalDatabase {
 
   private logUnreadableEncryptedRow(table: string, rowId: string, fields: string[]): void {
     if (fields.length === 0) return;
-    logger.error(`[LocalDB] ${table} ${rowId} has decryption failures in: ${fields.join(', ')}`);
+    logger.debug(`[LocalDB] ${table} ${rowId} has decryption failures in: ${fields.join(', ')}`);
   }
 
   private async writeChart(chart: SavedChart): Promise<void> {

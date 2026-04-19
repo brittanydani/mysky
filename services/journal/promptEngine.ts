@@ -449,11 +449,11 @@ export function getFreePrompt(date: Date = new Date(), userSeed?: string, recent
   // Mood-aware filtering: prefer gentler prompts on low-mood days, activating ones on high-mood days
   if (recentMood != null && pool.length > 3) {
     if (recentMood <= 4) {
-      const gentle = pool.filter(p => p.tags.intensity === 'gentle' || p.tags.intensity === 'reflective');
+      const gentle = pool.filter(p => p.tags.intensity === 'gentle');
       if (gentle.length >= 2) pool = gentle;
     } else if (recentMood >= 8) {
-      const activating = pool.filter(p => p.tags.intensity === 'activating' || p.tags.intensity === 'expansive');
-      if (activating.length >= 2) pool = activating;
+      const deeper = pool.filter(p => p.tags.intensity === 'deep');
+      if (deeper.length >= 2) pool = deeper;
     }
   }
 

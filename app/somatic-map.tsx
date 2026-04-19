@@ -58,6 +58,7 @@ const SENSATION_COLORS: Record<string, string> = {
 export default function SomaticMapScreen() {
   const styles = useThemedStyles(createStyles);
   const theme = useAppTheme();
+  const router = useRouter();
 
   const [entries, setEntries] = useState<any[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);

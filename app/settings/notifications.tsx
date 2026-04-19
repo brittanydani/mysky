@@ -178,12 +178,6 @@ export default function NotificationSettings() {
     setActivePicker(prev => (prev === slot ? null : slot));
   };
 
-  // ── Unknown-time toggle ────────────────────────────────────────────────────
-  const toggleUnknown = async (slot: 'morning' | 'evening') => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setActivePicker(null);
-    setPendingTime(null);
-
   // ── Reflection reminder toggle ─────────────────────────────────────────────
   const toggleReflectionReminder = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

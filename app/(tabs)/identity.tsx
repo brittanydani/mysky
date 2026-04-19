@@ -142,8 +142,8 @@ export default function BlueprintScreen() {
   );
 
   // Progressive card display: always show Inner World, Body, and Cosmic Blueprint.
-  // Unlock Relational Mirror + Restorative Space after 5 check-ins.
-  // Unlock Internal Tensions after 10 check-ins.
+  // Unlock Relational Mirror + Restorative Space after 3 check-ins.
+  // Unlock Internal Tensions after 7 check-ins.
   const visibleCards = CARDS.filter((card, i) => {
     if (i <= 1) return true;              // Inner World, Body & Somatics
     if (i === 5) return true;             // Cosmic Blueprint — always visible (astrology users)
@@ -191,7 +191,6 @@ export default function BlueprintScreen() {
                 style={styles.globalAction}
                 onPress={() => nav('/inner-world' as Href)}
                 accessibilityRole="button"
-                accessibilityLabel="Open Inner World"
               >
                 <Ionicons name="finger-print-outline" size={22} color={theme.titanium || '#E8D6AE'} />
               </Pressable>
@@ -221,8 +220,6 @@ export default function BlueprintScreen() {
                   <Pressable 
                     style={({ pressed }) => [pressed && styles.cardPressed]} 
                     onPress={() => nav(card.route, card.premium)}
-                    accessibilityRole="button"
-                    accessibilityLabel={card.title}
                   >
                     <VelvetGlassSurface 
                       style={[styles.card, styles.velvetBorder, card.premium && styles.premiumCard]} 

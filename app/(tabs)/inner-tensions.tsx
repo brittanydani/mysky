@@ -24,7 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { ChevronDown, ChevronLeft, ChevronUp, Lock } from 'lucide-react-native';
+import { ChevronDown, ChevronLeft, ChevronUp } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { PremiumGate } from '../../components/ui/PremiumGate';
 import {
@@ -287,31 +287,6 @@ function NSConflictCard({ data }: { data: InnerTensionsData }) {
         </>
       )}
     </GlassCard>
-  );
-}
-
-function PremiumLockBanner({ onUnlock }: { onUnlock: () => void }) {
-  const styles = useThemedStyles(createStyles);
-
-  return (
-    <Pressable style={styles.lockBanner} onPress={onUnlock} accessibilityRole="button" accessibilityLabel="Upgrade to Deeper Sky premium">
-      <LinearGradient
-        colors={['rgba(162, 194, 225, 0.12)', 'rgba(168,155,200,0.08)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <View style={styles.lockBannerRow}>
-        <Lock size={16} color={PALETTE.gold} strokeWidth={1.5} />
-        <MetallicText style={styles.lockBannerTitle} color={PALETTE.gold}>Unlock Your Full Tension Map</MetallicText>
-      </View>
-      <Text style={styles.lockBannerSub}>
-        State balance radar · Ambivalence patterns · Dream archetypes · Trigger reflections
-      </Text>
-      <View style={styles.lockBannerButton}>
-        <MetallicText style={styles.lockBannerButtonText} color={PALETTE.gold}>Upgrade to Premium</MetallicText>
-      </View>
-    </Pressable>
   );
 }
 
@@ -583,11 +558,6 @@ export default function InnerTensionsScreen() {
   const goBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     router.replace('/(tabs)/identity' as Href);
-  };
-
-  const goPremium = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    router.push('/(tabs)/premium');
   };
 
   return (

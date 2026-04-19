@@ -120,7 +120,7 @@ export default function OnboardingRestoreScreen() {
 
           <View style={styles.content}>
             <LinearGradient 
-              colors={[theme.cardGradientStart, theme.cardGradientEnd] as unknown as readonly [string, string, ...string[]]} 
+              colors={[theme.cardGradientStart, theme.cardGradientEnd]} 
               style={styles.glassCard}
             >
               <View style={styles.cardHeader}>

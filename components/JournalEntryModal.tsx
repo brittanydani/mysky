@@ -95,6 +95,23 @@ const MOOD_OPTIONS: { key: MoodKey; label: string; color: string }[] = [
   { key: 'stormy', label: 'Stormy', color: '#E07A7A' },
 ];
 
+function moodKeyToScore(mood: MoodKey): number {
+  switch (mood) {
+    case 'calm':
+      return 9;
+    case 'soft':
+      return 7;
+    case 'okay':
+      return 5;
+    case 'heavy':
+      return 3;
+    case 'stormy':
+      return 1;
+    default:
+      return 5;
+  }
+}
+
 function formatTitleCaseSegment(segment: string): string {
   const SMALL_WORDS = new Set(['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'if', 'in', 'nor', 'of', 'on', 'or', 'per', 'the', 'to', 'vs', 'via']);
   return segment
@@ -440,7 +457,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
   useEffect(() => {
     if (!isPremium && visible) {
-      try { setFreePrompt(getFreePrompt(date, undefined, mood)); } catch {}
+      try { setFreePrompt(getFreePrompt(date, undefined, moodKeyToScore(mood))); } catch {}
     }
   }, [isPremium, visible, date, mood]);
 

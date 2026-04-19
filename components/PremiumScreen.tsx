@@ -47,19 +47,108 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
   }, [analyticsExperiment, analyticsSource, analyticsVariant]);
 
   // Resolve display prices from live RevenueCat offerings
-  const resolvedTiers = config.premium.tiers.map((tier) => {
-    if (!offerings) return tier;
+  const findPackageForPlan = useCallback((plan: PlanType) => {
+    if (!offerings) return null;
 
-    const identifierMap: Record<string, string[]> = {
-      monthly: ['monthly', '$rc_monthly', 'mysky_monthly'],
-      yearly: ['annual', 'yearly', '$rc_annual', 'mysky_annual', 'mysky_yearly'],
-    };
+    const identifiers = plan === 'monthly'
+      ? ['monthly', '$rc_monthly', 'mysky_monthly']
+      : ['annual', 'yearly', '$rc_annual', 'mysky_annual', 'mysky_yearly'];
 
+    return offerings.availablePackages.find((pkg) => {
+      const packageId = pkg.identifier.toLowerCase();
+      const productId = pkg.product.identifier.toLowerCase();
+      return identifiers.some((id) => packageId.includes(id) || productId.includes(id));
+    }) ?? null;
+  }, [offerings]);
+
+  const resolvedTiers = React.useMemo(() => (
+    config.premium.tiers.map((tier) => {
+      const matchingPackage = findPackageForPlan(tier.id as PlanType);
+      if (!matchingPackage) return tier;
+      return {
+        ...tier,
+        price: matchingPackage.product.priceString,
+        priceValue: matchingPackage.product.price,
+      };
+    })
+  ), [findPackageForPlan]);
+
+  const subscriptionTiers = resolvedTiers;
+  const selectedTier = subscriptionTiers.find((tier) => tier.id === selectedPlan) ?? subscriptionTiers[0];
+
+  const safeGoBack = useCallback(() => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(tabs)/settings' as Href);
   }, [onClose, router]);
+
+  const navigateToLegal = useCallback((route: '/terms' | '/privacy') => {
+    router.push(route as Href);
+  }, [router]);
+
+  const openSubscriptions = useCallback(() => {
+    Linking.openURL('https://apps.apple.com/account/subscriptions').catch(() => {
+      Alert.alert('Manage Subscription', 'Open Settings > Apple ID > Subscriptions to manage your plan.');
+    });
+  }, []);
 
   const openLegalWebsite = useCallback(() => {
     Linking.openURL(LEGAL_URL).catch(() => {});
   }, []);
+
+  const handleSelectPlan = useCallback((plan: PlanType) => {
+    Haptics.selectionAsync().catch(() => {});
+    setSelectedPlan(plan);
+    trackGrowthEvent('paywall_plan_selected', {
+      source: analyticsSource ?? 'unknown',
+      plan,
+    }).catch(() => {});
+  }, [analyticsSource]);
+
+  const handlePurchase = useCallback(async () => {
+    const packageToPurchase = findPackageForPlan(selectedPlan);
+
+    if (!packageToPurchase) {
+      Alert.alert('Not Available', 'Subscription plans are temporarily unavailable. Please try again shortly.');
+      return;
+    }
+
+    const result = await purchase(packageToPurchase);
+    if (result.success) {
+      Alert.alert('Welcome to Deeper Sky', 'Your subscription is active and premium insights are now unlocked.');
+      safeGoBack();
+      return;
+    }
+
+    if (result.userCancelled) return;
+
+    Alert.alert('Purchase Failed', result.error ?? 'Your purchase could not be completed.');
+  }, [findPackageForPlan, purchase, safeGoBack, selectedPlan]);
+
+  const handleRestore = useCallback(async () => {
+    setRestoring(true);
+    try {
+      const result = await restore();
+      if (result.success && result.hasPremium) {
+        Alert.alert('Restored', 'Your Deeper Sky purchase has been restored.');
+        safeGoBack();
+        return;
+      }
+      if (result.success && !result.hasPremium) {
+        Alert.alert('No Purchases Found', 'We could not find an active Deeper Sky subscription for this Apple ID.');
+        return;
+      }
+      Alert.alert('Restore Failed', result.error ?? 'We could not restore your purchases right now.');
+    } finally {
+      setRestoring(false);
+    }
+  }, [restore, safeGoBack]);
 
   // ── Active Premium State ──
   if (isPremium) {
@@ -540,7 +629,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   pricingPeriod: {
     fontSize: 13,
     fontWeight: '500',
-    color: theme.muted,
+    color: theme.textMuted,
     marginBottom: 8,
   },
   pricingPrice: {

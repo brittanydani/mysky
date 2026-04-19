@@ -7,7 +7,7 @@
 // 3. Integrated "Velvet Glass" 1px directional light-catch borders globally.
 // 4. Enhanced Typography: Pure White data hero numbers and crisp Metallic Gold headers.
 
-import React, { useCallback, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Modal } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -74,7 +74,7 @@ export default function PatternsScreen() {
   const [, setNarrative] = useState<NarrativeInsightBundle | null>(null);
   const [, setDeepInsights] = useState<DeepInsightBundle | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
-  const [showDeepDiveModal, setShowDeepDiveModal] = useState(false);
+  const [, setShowDeepDiveModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
 
@@ -153,7 +153,7 @@ export default function PatternsScreen() {
         }
       })();
       return () => { active = false; };
-    }, [])
+    }, [isPremium])
   );
 
   const libraryState = useMemo(() => buildPatternLibraryState(dailyAggregates), [dailyAggregates]);
