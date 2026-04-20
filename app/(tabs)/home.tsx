@@ -10,7 +10,7 @@
 //   3. SkiaStabilityDashboard — 7-day Bézier coherence graph
 //   4. Actionable Insights — text engine with stability recommendations
 
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -158,6 +158,7 @@ export default function HomeScreen() {
 
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [showEditBirth, setShowEditBirth] = useState(false);
+
   const [loading, setLoading] = useState(true);
 
   // Check-in data — used by insight engine
@@ -179,9 +180,6 @@ export default function HomeScreen() {
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
   const [aiInsightText, setAiInsightText] = useState<string | null>(null);
   const prevMilestoneRef = useRef<number | null>(null);
-
-  // Widget tip — shown once after first check-in, dismissible
-  const [widgetTipDismissed, setWidgetTipDismissed] = useState(true); // default hidden until loaded
 
   // Self-knowledge context — used to personalize affirmations
   const [selfKnowledge, setSelfKnowledge] = useState<SelfKnowledgeContext | null>(null);
@@ -228,10 +226,6 @@ export default function HomeScreen() {
           const storedName = await EncryptedAsyncStorage.getItem('msky_user_name');
           if (storedName) chart.name = storedName;
           chart.updatedAt = savedChart.updatedAt;
-
-          // Widget tip: show to users who have checked in at least once but haven't dismissed it
-          const widgetDismissed = await EncryptedAsyncStorage.getItem('msky_widget_tip_dismissed');
-          setIfActive(setWidgetTipDismissed, widgetDismissed === 'true');
 
           setIfActive(setUserChart, chart);
 
@@ -324,6 +318,7 @@ export default function HomeScreen() {
         } else {
           setIfActive(setUserChart, null);
           setIfActive(setAiInsightText, null);
+
         }
       } catch (error) {
         logger.error('Failed to load user chart:', error);
@@ -488,6 +483,12 @@ export default function HomeScreen() {
 
   // ── Loading / Onboarding Gates ──
 
+  useEffect(() => {
+    if (userChart === null && !loading) {
+      router.replace('/onboarding/birth' as Href);
+    }
+  }, [userChart, loading, router]);
+
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
@@ -499,20 +500,9 @@ export default function HomeScreen() {
 
   if (!userChart) {
     return (
-      <View style={[styles.container, styles.loadingContainer]}>
+      <View style={styles.container}>
         <SkiaDynamicCosmos />
-        <Text style={styles.loadingText}>Set up your birth profile to get started</Text>
-        <Pressable
-          onPress={() => setShowEditBirth(true)}
-          style={{ marginTop: 20, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 28, borderWidth: 1, borderColor: 'rgba(212, 175, 55,0.4)', backgroundColor: 'rgba(162, 194, 225, 0.08)' }}
-        >
-          <Text style={{ color: '#D4AF37', fontWeight: '600', fontSize: 16 }}>Add Birth Data</Text>
-        </Pressable>
-        <BirthDataModal
-          visible={showEditBirth}
-          onClose={() => setShowEditBirth(false)}
-          onSave={handleEditBirthData}
-        />
+        <Text style={styles.loadingText}>Setting up your sky...</Text>
       </View>
     );
   }
@@ -647,37 +637,6 @@ export default function HomeScreen() {
                   </View>
                 </VelvetGlassSurface>
               </Pressable>
-            </Animated.View>
-          )}
-
-          {/* ── Widget Tip Card (shown once after first check-in, dismissible) ── */}
-          {dailyLoop && dailyLoop.streak.totalCheckIns >= 1 && !widgetTipDismissed && (
-            <Animated.View entering={FadeInDown.delay(320).duration(700)}>
-              <VelvetGlassSurface style={styles.firstCheckInCard} intensity={20}>
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={['rgba(162, 194, 225, 0.18)', 'rgba(44, 54, 69, 0.40)']}
-                  style={StyleSheet.absoluteFill}
-                />
-                <View style={styles.firstCheckInContent}>
-                  <MetallicIcon name="phone-portrait-outline" size={26} variant="gold" />
-                  <View style={{ flex: 1 }}>
-                    <MetallicText style={styles.firstCheckInTitle} variant="gold">Add the Home Screen widget</MetallicText>
-                    <Text style={styles.firstCheckInBody}>Log your mood in one tap — directly from your Home Screen, without opening the app.</Text>
-                  </View>
-                  <Pressable
-                    onPress={async () => {
-                      await EncryptedAsyncStorage.setItem('msky_widget_tip_dismissed', 'true');
-                      setWidgetTipDismissed(true);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Dismiss widget tip"
-                    style={{ padding: 4 }}
-                  >
-                    <MetallicIcon name="close-outline" size={18} variant="gold" />
-                  </Pressable>
-                </View>
-              </VelvetGlassSurface>
             </Animated.View>
           )}
 
@@ -1109,7 +1068,7 @@ function ScorePill({ label, val, color }: { label: string; val: string; color: s
   return (
     <View style={styles.pill}>
       <View style={[styles.pillDot, { backgroundColor: color }]} />
-      <Text style={styles.pillLabel}>{label}</Text>
+      <Text style={styles.pillLabel} numberOfLines={1}>{label}</Text>
       <Text style={styles.pillVal}>{val}</Text>
     </View>
   );
@@ -1543,7 +1502,6 @@ const createStyles = (theme: AppTheme) => {
     color: theme.isDark ? theme.textSecondary : 'rgba(26, 24, 21, 0.5)',
     textTransform: 'uppercase',
     fontWeight: '700',
-    flex: 1,
   },
   pillVal: {
     fontSize: 12,

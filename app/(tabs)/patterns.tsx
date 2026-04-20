@@ -8,7 +8,7 @@
 // 4. Enhanced Typography: Pure White data hero numbers and crisp Metallic Gold headers.
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Modal, ScrollView } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -74,7 +74,7 @@ export default function PatternsScreen() {
   const [, setNarrative] = useState<NarrativeInsightBundle | null>(null);
   const [, setDeepInsights] = useState<DeepInsightBundle | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
-  const [, setShowDeepDiveModal] = useState(false);
+  const [showDeepDiveModal, setShowDeepDiveModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
 
@@ -156,7 +156,7 @@ export default function PatternsScreen() {
     }, [isPremium])
   );
 
-  const libraryState = useMemo(() => buildPatternLibraryState(dailyAggregates), [dailyAggregates]);
+  const libraryState = useMemo(() => buildPatternLibraryState(dailyAggregates, crossRefs), [crossRefs, dailyAggregates]);
 
   // Rotate through all cross-ref insights daily — users see a fresh insight each day
   const todayIndex = useMemo(() => {
@@ -226,12 +226,10 @@ export default function PatternsScreen() {
                   accessibilityLabel="See full pattern analysis"
                 >
                   <LinearGradient colors={['rgba(168,139,235,0.25)', 'rgba(168,139,235,0.08)']} style={StyleSheet.absoluteFill} />
-                  <MetallicIcon name="analytics-outline" size={16} variant="gold" />
-                  <View style={{ flex: 1 }}>
-                    <MetallicText style={styles.deepDiveButtonTitle} variant="gold">Full Pattern Analysis</MetallicText>
-                    <Text style={styles.deepDiveButtonSub}>All {crossRefs.length} insights from your data</Text>
+                  <View style={{ alignItems: 'center', flex: 1 }}>
+                    <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">Full Pattern Analysis</MetallicText>
+                    <Text style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>All {crossRefs.length} insights from your data</Text>
                   </View>
-                  <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
                 </Pressable>
               ) : (
                 <Pressable
@@ -363,6 +361,62 @@ export default function PatternsScreen() {
       </SafeAreaView>
 
       <Modal
+        animationType="slide"
+        transparent
+        visible={showDeepDiveModal}
+        onRequestClose={() => setShowDeepDiveModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <BlurView intensity={30} tint={theme.blurTint} style={StyleSheet.absoluteFill} />
+          <VelvetGlassSurface style={[styles.deepDiveModalCard, styles.modalCard]} intensity={35}>
+            <LinearGradient colors={['rgba(44, 54, 69, 0.92)', 'rgba(26, 30, 41, 0.72)']} style={StyleSheet.absoluteFill} />
+            <View style={styles.modalHeader}>
+              <MetallicText style={styles.modalTitle} variant="gold">Full Pattern Analysis</MetallicText>
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setShowDeepDiveModal(false);
+                }}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="Close full pattern analysis"
+              >
+                <MetallicIcon name="close-outline" size={18} variant="gold" />
+              </Pressable>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: '85%' }}>
+              <View style={{ gap: 16, paddingBottom: 8 }}>
+                {crossRefs.map((insight, idx) => (
+                  <View key={insight.id} style={styles.deepDiveInsightCard}>
+                    <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.03)']} style={StyleSheet.absoluteFill} />
+                    <Text style={styles.deepDiveInsightTitle}>{insight.title}</Text>
+                    <Text style={[styles.insightBody, { fontSize: 14 }]}>{insight.body}</Text>
+                    {insight.heroMetrics && insight.heroMetrics.length > 0 && (
+                      <View style={[styles.heroMetricsRow, { marginTop: 12 }]}>
+                        {insight.heroMetrics.map((m) => (
+                          <View key={m.label} style={styles.heroMetricChip}>
+                            <Text style={styles.heroMetricValue}>{m.value}</Text>
+                            <Text style={styles.heroMetricLabel}>{m.label}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {insight.takeaway && (
+                      <View style={[styles.supportCallout, { marginTop: 12 }]}>
+                        <Text style={styles.supportCalloutLabel}>{insight.takeaway.label}</Text>
+                        <Text style={styles.supportCalloutBody}>{insight.takeaway.body}</Text>
+                      </View>
+                    )}
+                    <Text style={[styles.rotationHint, { textAlign: 'left', marginTop: 8 }]}>Insight {idx + 1} of {crossRefs.length}</Text>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </VelvetGlassSurface>
+        </View>
+      </Modal>
+
+      <Modal
         animationType="fade"
         transparent
         visible={showLibraryModal}
@@ -391,12 +445,17 @@ export default function PatternsScreen() {
             </Text>
             <Text style={styles.modalStatus}>{libraryState.statusLine}</Text>
             <Text style={styles.modalBodyMuted}>{libraryState.helperText}</Text>
-            {libraryState.items.length > 0 ? (
+            {libraryState.sections.length > 0 ? (
               <View style={styles.libraryList}>
-                {libraryState.items.map((item) => (
-                  <View key={item.title} style={styles.libraryItem}>
-                    <Text style={styles.libraryItemTitle}>{item.title}</Text>
-                    <Text style={styles.libraryItemBody}>{item.body}</Text>
+                {libraryState.sections.map((section) => (
+                  <View key={section.title} style={styles.librarySection}>
+                    <Text style={styles.librarySectionTitle}>{section.title}</Text>
+                    {section.items.map((item) => (
+                      <View key={`${section.title}-${item.title}`} style={styles.libraryItem}>
+                        <Text style={styles.libraryItemTitle}>{item.title}</Text>
+                        <Text style={styles.libraryItemBody}>{item.body}</Text>
+                      </View>
+                    ))}
                   </View>
                 ))}
               </View>
@@ -500,6 +559,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   modalStatus: { fontSize: 12, fontWeight: '700', color: 'rgba(212,175,55,0.9)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8 },
   modalBodyMuted: { fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.62)' },
   libraryList: { marginTop: 18, gap: 12 },
+  librarySection: { gap: 10 },
+  librarySectionTitle: { fontSize: 12, fontWeight: '700', color: 'rgba(212,175,55,0.9)', textTransform: 'uppercase', letterSpacing: 1.1 },
   libraryItem: { padding: 14, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   libraryItemTitle: { fontSize: 13, fontWeight: '700', color: theme.textPrimary, marginBottom: 6 },
   libraryItemBody: { fontSize: 13, lineHeight: 20, color: 'rgba(255,255,255,0.66)' },
@@ -509,7 +570,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   rotationHint: { marginTop: 16, fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'center', letterSpacing: 0.5 },
 
   deepDiveButton: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12,
     borderRadius: 24, padding: 20, marginBottom: 24, overflow: 'hidden',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
@@ -521,7 +582,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderTopWidth: 1, borderTopColor: theme.cardBorder,
   },
   heroMetricChip: { flex: 1, alignItems: 'center', gap: 4 },
-  heroMetricValue: { fontSize: 18, fontWeight: '700', color: theme.textPrimary },
+  heroMetricValue: { fontSize: 15, fontWeight: '700', color: theme.textPrimary, textAlign: 'center' },
   heroMetricLabel: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 },
 
   deepDiveModalCard: { maxHeight: '90%', paddingBottom: 24 },

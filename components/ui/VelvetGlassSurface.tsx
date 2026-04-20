@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAppTheme } from '../../context/ThemeContext';
 
 interface VelvetGlassSurfaceProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   style?: StyleProp<RNViewStyle>;
   intensity?: number;
   tint?: 'light' | 'dark' | 'default' | 'prominent' | 'systemUltraThinMaterial';

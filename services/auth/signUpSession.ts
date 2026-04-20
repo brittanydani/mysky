@@ -34,31 +34,52 @@ export async function signUpAndEnsureSession({
     };
   }
 
-  try {
-    const signInResult = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password,
-    });
+  // Supabase sometimes needs a brief moment after sign-up before the account
+  // is ready to accept a sign-in. Retry up to 3 times with increasing delays.
+  const delays = [300, 800, 1500];
+  for (let attempt = 0; attempt < delays.length; attempt++) {
+    await new Promise(r => setTimeout(r, delays[attempt]));
+    try {
+      const signInResult = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
 
-    if (signInResult?.error) {
-      return {
-        session: null,
-        user: data.user ?? null,
-        requiresEmailConfirmation: true,
-      };
+      if (!signInResult?.error) {
+        const session = signInResult?.data?.session ?? null;
+        if (session?.access_token) {
+          return {
+            session,
+            user: signInResult?.data?.user ?? session?.user ?? data.user ?? null,
+            requiresEmailConfirmation: false,
+          };
+        }
+        // No session + no error means email confirmation is genuinely required
+        return {
+          session: null,
+          user: data.user ?? null,
+          requiresEmailConfirmation: true,
+        };
+      }
+
+      // If it's an email-not-confirmed error, stop retrying — confirmation is required
+      const errMsg = signInResult.error?.message?.toLowerCase() ?? '';
+      if (errMsg.includes('email') && errMsg.includes('confirm')) {
+        return {
+          session: null,
+          user: data.user ?? null,
+          requiresEmailConfirmation: true,
+        };
+      }
+      // Otherwise it may be a transient error — continue retrying
+    } catch {
+      // Transient network error — retry
     }
-
-    const session = signInResult?.data?.session ?? null;
-    return {
-      session,
-      user: signInResult?.data?.user ?? session?.user ?? data.user ?? null,
-      requiresEmailConfirmation: !session?.access_token,
-    };
-  } catch {
-    return {
-      session: null,
-      user: data.user ?? null,
-      requiresEmailConfirmation: true,
-    };
   }
+
+  return {
+    session: null,
+    user: data.user ?? null,
+    requiresEmailConfirmation: true,
+  };
 }

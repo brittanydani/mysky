@@ -40,7 +40,6 @@ import { IdentityVault } from '../utils/IdentityVault';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import { ThemeProvider, useAppTheme, useThemedStyles } from '../context/ThemeContext';
-import NetworkStatusBanner from '../components/ui/NetworkStatusBanner';
 
 // Keep splash visible until the app finishes initializing
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -896,7 +895,6 @@ function AppShell() {
               }
             />
             </React.Suspense>
-            <NetworkStatusBanner />
           </SafeAreaProvider>
         </View>
       </KeyboardProvider>

@@ -3,8 +3,7 @@
 // Log and review nervous system events (Drains & Glimmers), mapped to
 // Polyvagal Theory states. All data stored locally. Nothing transmitted.
 
-import * as React from 'react';
-const { useState, useEffect } = React;
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -191,21 +190,12 @@ const createHistStyles = (theme: AppTheme) => StyleSheet.create({
 // Main Screen
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SectionHeader({ title, icon }: { title: string; icon: string }) {
-  const theme = useAppTheme();
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16, marginTop: 16 }}>
-      <MetallicIcon name={icon as any} size={16} variant="gold" />
-      <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>{title}</Text>
-    </View>
-  );
-}
-
 export default function TriggerLogScreen() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
-    const [mode, setMode] = useState<LogMode>('drain');
+  const [viewMode, setViewMode] = useState<ViewMode>('log');
+  const [mode, setMode] = useState<LogMode>('drain');
   const [eventText, setEventText] = useState('');
   const [selectedState, setSelectedState] = useState<NSState | null>(null);
   const [selectedSensations, setSelectedSensations] = useState<string[]>([]);
@@ -495,7 +485,28 @@ export default function TriggerLogScreen() {
           </Pressable>
 
           {/* ── View mode toggle: Log / History ── */}
-          
+          <View style={styles.viewToggle}>
+            <Pressable
+              style={[styles.viewToggleBtn, viewMode === 'log' && styles.viewToggleBtnActive]}
+              onPress={() => { Haptics.selectionAsync().catch(() => {}); setViewMode('log'); }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: viewMode === 'log' }}
+              accessibilityLabel="Log view"
+            >
+              <Text style={[styles.viewToggleText, viewMode === 'log' && styles.viewToggleTextActive]}>Log</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.viewToggleBtn, viewMode === 'history' && styles.viewToggleBtnActive]}
+              onPress={() => { Haptics.selectionAsync().catch(() => {}); setViewMode('history'); }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: viewMode === 'history' }}
+              accessibilityLabel="History view"
+            >
+              <Text style={[styles.viewToggleText, viewMode === 'history' && styles.viewToggleTextActive]}>
+                History{history.length > 0 ? ` (${history.length})` : ''}
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.titleArea}>
@@ -503,7 +514,34 @@ export default function TriggerLogScreen() {
           <GoldSubtitle style={styles.headerSubtitle}>Triggers, drains, and glimmers</GoldSubtitle>
         </View>
 
-        
+        {/* ════════════════════════ HISTORY VIEW ════════════════════════ */}
+        {viewMode === 'history' ? (
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {!historyLoaded ? (
+              <Text style={styles.emptyText}>Loading…</Text>
+            ) : history.length === 0 ? (
+              <Animated.View entering={FadeInDown.duration(400)} style={styles.emptyState}>
+                <Text style={styles.emptyEmoji}>🌿</Text>
+                <Text style={styles.emptyTitle}>No entries yet</Text>
+                <Text style={styles.emptyText}>Switch to Log to record your first event.</Text>
+              </Animated.View>
+            ) : (
+              <>
+                {history.map((entry, i) => (
+                  <Animated.View key={entry.id} entering={FadeInDown.delay(i * 40).duration(400)}>
+                    <HistoryEntry entry={entry} />
+                  </Animated.View>
+                ))}
+              </>
+            )}
+            <View style={{ height: 48 }} />
+          </ScrollView>
+        ) : (
+
+        /* ════════════════════════ LOG VIEW ════════════════════════ */
         <KeyboardAwareScrollView
           style={{ flex: 1 }}
           contentContainerStyle={styles.scrollContent}
@@ -514,8 +552,6 @@ export default function TriggerLogScreen() {
           disableScrollOnKeyboardHide
         >
 
-          <SectionHeader title="Log An Event" icon="pencil-outline" />
-          <VelvetGlassSurface style={styles.formCard} intensity={30} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.54)' : 'rgba(255, 255, 255, 0.82)'}>
           {/* ── Mode Toggle ── */}
           <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.toggleContainer}>
             <Pressable
@@ -540,9 +576,9 @@ export default function TriggerLogScreen() {
 
           {/* ── Event Input ── */}
           <Animated.View entering={FadeInDown.delay(160).duration(500)} style={styles.inputSection}>
-            <Text style={styles.tagSectionLabel}>WHAT HAPPENED?</Text>
+            <Text style={styles.sectionLabel}>WHAT HAPPENED?</Text>
             <VelvetGlassSurface
-              style={styles.noteInput as any}
+              style={[styles.inputGlass, { borderColor: theme.isDark ? `${activeColor}40` : 'rgba(0, 0, 0, 0.06)' }]}
               intensity={30}
               backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.7)' : 'rgba(0, 0, 0, 0.03)'}
               borderColor={theme.isDark ? `${activeColor}30` : 'rgba(0, 0, 0, 0.06)'}
@@ -550,7 +586,7 @@ export default function TriggerLogScreen() {
               topEdgeColor="rgba(255,255,255,0.24)"
             >
               <TextInput
-                style={[styles.noteInput, {marginTop: 0}] as any}
+                style={styles.textInput}
                 placeholder={
                   mode === 'drain'
                     ? 'What shifted your energy downward?'
@@ -567,7 +603,7 @@ export default function TriggerLogScreen() {
 
           {/* ── Intensity ── */}
           <Animated.View entering={FadeInDown.delay(180).duration(500)} style={styles.section}>
-            <Text style={styles.tagSectionLabel}>
+            <Text style={styles.sectionLabel}>
               {mode === 'drain' ? 'INTENSITY' : 'DEPTH OF SHIFT'}
             </Text>
             <View style={styles.intensityRow}>
@@ -590,7 +626,7 @@ export default function TriggerLogScreen() {
 
           {/* ── Context Area ── */}
           <Animated.View entering={FadeInDown.delay(190).duration(500)} style={styles.section}>
-            <Text style={styles.tagSectionLabel}>LIFE AREA</Text>
+            <Text style={styles.sectionLabel}>LIFE AREA</Text>
             <Text style={styles.helperText}>Tap to select. Hold a custom area to edit or delete it.</Text>
             <EditorialPillGrid
               style={styles.tagCloud}
@@ -684,7 +720,7 @@ export default function TriggerLogScreen() {
 
           {/* ── Current State ── */}
           <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.section}>
-            <Text style={styles.tagSectionLabel}>CURRENT STATE</Text>
+            <Text style={styles.sectionLabel}>CURRENT STATE</Text>
             <View style={styles.stateGrid}>
               {mode === 'drain' ? (
                 <>
@@ -747,7 +783,7 @@ export default function TriggerLogScreen() {
           {/* ── Before State (Glimmers only) ── */}
           {mode === 'nourish' && (
             <Animated.View entering={FadeInDown.delay(210).duration(500)} style={styles.section}>
-              <Text style={styles.tagSectionLabel}>WHERE DID YOU START?</Text>
+              <Text style={styles.sectionLabel}>WHERE DID YOU START?</Text>
               <View style={styles.stateGrid}>
                 {(['sympathetic', 'dorsal', 'ventral', 'still'] as NSState[]).map(state => {
                   const card = NS_STATE_CARDS[state];
@@ -779,7 +815,7 @@ export default function TriggerLogScreen() {
 
           {/* ── Somatic Tags ── */}
           <Animated.View entering={FadeInDown.delay(240).duration(500)} style={styles.section}>
-            <Text style={styles.tagSectionLabel}>SOMATIC CUES</Text>
+            <Text style={styles.sectionLabel}>SOMATIC CUES</Text>
             <Text style={styles.helperText}>Tap to select. Hold a custom cue to edit or delete it.</Text>
             <EditorialPillGrid
               style={styles.tagCloud}
@@ -845,11 +881,11 @@ export default function TriggerLogScreen() {
 
           {/* ── What Helped / Resolution ── */}
           <Animated.View entering={FadeInDown.delay(260).duration(500)} style={styles.inputSection}>
-            <Text style={styles.tagSectionLabel}>
+            <Text style={styles.sectionLabel}>
               {mode === 'drain' ? 'WHAT HELPED? (optional)' : 'WHAT CREATED THIS? (optional)'}
             </Text>
             <VelvetGlassSurface
-              style={styles.noteInput as any}
+              style={styles.inputGlass}
               intensity={30}
               backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.7)' : 'rgba(255, 255, 255, 0.85)'}
               borderColor={`${activeColor}24`}
@@ -899,27 +935,8 @@ export default function TriggerLogScreen() {
           </Animated.View>
 
           <View style={{ height: 48 }} />
-            {/* ── Close VelvetGlassSurface ── */}
-          </VelvetGlassSurface>
-
-          {/* ════════════════════════ HISTORY MIGRATED ════════════════════════ */}
-          {history.length > 0 && (
-            <View style={styles.historySection}>
-              <SectionHeader title="Previous Reflections" icon="journal-outline" />
-              {history.slice(0, 10).map((entry, i) => (
-                  <View key={entry.id}><HistoryEntry entry={entry} /></View>
-              ))}
-            </View>
-          )}
-
-          {history.length === 0 && (
-            <View style={styles.emptyHint}>
-              <Text style={styles.emptyHintText}>Start logging nervous system events to see your patterns emerge over time.</Text>
-            </View>
-          )}
-          <View style={{ height: 100 }} />
-
-</KeyboardAwareScrollView>
+        </KeyboardAwareScrollView>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -927,16 +944,6 @@ export default function TriggerLogScreen() {
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
-
-  formCard: { borderRadius: 28, padding: 24, marginBottom: 32 },
-  noteInput: { minHeight: 120, borderRadius: 24, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', padding: 20, paddingTop: 20, color: theme.textPrimary, fontSize: 16, marginBottom: 24, textAlignVertical: 'top' },
-  tagSectionLabel: { fontSize: 10, color: theme.textMuted, fontWeight: '800', letterSpacing: 1.5, marginBottom: 16, textTransform: 'uppercase' },
-  submitBtn: { height: 56, borderRadius: 28, marginTop: 24, overflow: 'hidden', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  submitBtnText: { fontSize: 14, fontWeight: '800', letterSpacing: 1, color: '#0A0A0C' },
-  emptyHint: { marginTop: 16, marginBottom: 16, padding: 20, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  emptyHintText: { fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 21, textAlign: 'center' },
-  historySection: { gap: 12 },
-
   safeArea: { flex: 1 },
 
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },

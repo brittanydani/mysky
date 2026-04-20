@@ -34,6 +34,8 @@ describe('patternsHelpers', () => {
 
     expect(state.statusLine).toBe('Needs more entries');
     expect(state.items).toEqual([]);
+    expect(state.sections).toEqual([]);
+    expect(state.helperText).toContain('relationship reflections');
   });
 
   it('builds recurring pattern items from tags, keywords, dreams, and stress', () => {
@@ -43,11 +45,44 @@ describe('patternsHelpers', () => {
       makeAggregate({ dayKey: '2026-04-12', tagsUnion: ['creative'], keywordsUnion: ['repair'], hasDream: true, stressAvg: 6.2, checkInCount: 1 }),
     ]);
 
-    expect(state.statusLine).toBe('Last updated today');
+    expect(state.statusLine).toBe('Building deeper analysis');
     expect(state.items).toHaveLength(3);
+    expect(state.sections).toHaveLength(1);
+    expect(state.sections[0].title).toBe('Check-In Trends');
     expect(state.items[0].body).toContain('Overwhelm');
     expect(state.items[1].body).toContain('Boundaries');
     expect(state.items[2].body).toContain('3 recent days include dream material');
+  });
+
+  it('includes real computed cross-reference insights in the library', () => {
+    const state = buildPatternLibraryState([], [
+      {
+        id: 'relationship-pattern',
+        source: 'relationship',
+        title: 'Your Relational Mirror',
+        body: 'When relational themes appear in your check-ins, your emotional baseline tends to drop.',
+        isConfirmed: true,
+      } as any,
+    ]);
+
+    expect(state.statusLine).toBe('Last updated today');
+    expect(state.helperText).toContain('built from your current pattern analysis');
+    expect(state.sections[0].title).toBe('Relationship Patterns');
+    expect(state.items[0]).toEqual({
+      title: 'Your Relational Mirror',
+      body: 'When relational themes appear in your check-ins, your emotional baseline tends to drop.',
+    });
+  });
+
+  it('explains when only trend analysis is available', () => {
+    const state = buildPatternLibraryState([
+      makeAggregate({ tagsUnion: ['eq_overwhelm'], checkInCount: 3 }),
+      makeAggregate({ dayKey: '2026-04-11', tagsUnion: ['eq_overwhelm'], checkInCount: 2 }),
+    ]);
+
+    expect(state.statusLine).toBe('Building deeper analysis');
+    expect(state.helperText).toContain('Add relationship patterns, trigger logs, somatic entries, or daily reflections');
+    expect(state.sections[0].title).toBe('Check-In Trends');
   });
 
   it('formats readable labels for pattern copy', () => {

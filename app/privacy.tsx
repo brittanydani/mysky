@@ -132,6 +132,132 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             </View>
           </View>
 
+          {/* ── Third-Party Processors ── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>THIRD-PARTY SERVICE PROCESSORS</Text>
+            <View style={[styles.glassSection, styles.velvetBorder]}>
+              <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
+              <Text style={styles.sectionTitle}>Who We Work With</Text>
+              <Text style={styles.paragraph}>MySky limits third-party data exposure to the minimum necessary to operate. Below is every service that may receive any portion of your data, what it receives, and why.</Text>
+
+              <View style={styles.dataBlock}>
+                <Text style={styles.subSectionTitle}>Supabase</Text>
+                <Text style={styles.paragraph}>Handles account authentication and session management. Only your email address, hashed password, and anonymous user ID are stored on Supabase servers. No personal reflection data, journal content, somatic logs, or chart data is ever sent to Supabase.</Text>
+              </View>
+
+              <View style={styles.dataBlock}>
+                <Text style={styles.subSectionTitle}>Google Gemini</Text>
+                <Text style={styles.paragraph}>Used for AI dream interpretation and AI Reflection Insights (Deeper Sky). When you request an AI pass, only your dream text, selected feelings, and minimal symbolic context are transmitted. No birth data, location, somatic logs, or account identity is included. Transmissions occur only on your explicit action. Google's data processing terms apply.</Text>
+              </View>
+
+              <View style={styles.dataBlock}>
+                <Text style={styles.subSectionTitle}>RevenueCat</Text>
+                <Text style={styles.paragraph}>Manages subscription state and purchase validation for Deeper Sky. RevenueCat receives a pseudonymous subscriber ID, platform receipt data, and subscription status. No personal content, journal entries, or reflection data is shared.</Text>
+              </View>
+
+              <View style={styles.dataBlock}>
+                <Text style={styles.subSectionTitle}>Sentry</Text>
+                <Text style={styles.paragraph}>Collects crash reports and error diagnostics. Reports include device type, OS version, app version, and a sanitized stack trace. We configure Sentry to strip personally identifiable content before transmission. Crash reports never include journal text, birth data, or location.</Text>
+              </View>
+
+              <View style={styles.dataBlock}>
+                <Text style={styles.subSectionTitle}>OpenStreetMap Nominatim</Text>
+                <Text style={styles.paragraph}>Used for birth location geocoding (converting a city name to coordinates for chart calculations). Only the text you type in the location search field is transmitted. Coordinates are stored locally on your device and are never sent back to Nominatim.</Text>
+              </View>
+
+              <View style={[styles.dataBlock, { borderLeftColor: 'rgba(110,191,139,0.25)', marginBottom: 0 }]}>
+                <Text style={[styles.subSectionTitle, { color: PALETTE.emerald }]}>What We Do NOT Use</Text>
+                <Text style={styles.paragraph}>We do not use Google Analytics, Meta Pixel, AppsFlyer, Adjust, Amplitude, Mixpanel, Firebase Analytics, or any advertising SDK. No advertising identifiers (IDFA, GAID) are collected or transmitted at any time.</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* ── Data Retention & Deletion ── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>DATA RETENTION & DELETION</Text>
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>On-Device Data</Text>
+              <Text style={styles.paragraph}>All personal data — journal entries, check-ins, dreams, birth charts, somatic logs, relationship charts — lives in a SQLite database on your device. This data persists until you uninstall the app or perform a Hard Reset.</Text>
+            </View>
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Hard Reset</Text>
+              <Text style={styles.paragraph}>Settings → Privacy & Data → Hard Reset performs a cryptographic key wipe followed by a full database purge. After a Hard Reset, your data is irrecoverable even by us. We strongly recommend creating an encrypted .msky backup before resetting.</Text>
+            </View>
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Account Deletion</Text>
+              <Text style={styles.paragraph}>You can request deletion of your Supabase auth account by emailing us. Account deletion removes your email and credentials from Supabase. It does not automatically delete on-device data — use Hard Reset first if you want a complete wipe.</Text>
+            </View>
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Crash & Diagnostic Logs</Text>
+              <Text style={styles.paragraph}>Sentry crash reports are retained for up to 90 days and then automatically purged. These logs contain no personally identifiable information.</Text>
+            </View>
+          </View>
+
+          {/* ── Your Rights ── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>YOUR RIGHTS</Text>
+            <View style={[styles.glassSection, styles.velvetBorder]}>
+              <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
+              <Text style={styles.sectionTitle}>Access, Control & Portability</Text>
+              <Text style={styles.paragraph}>Because MySky is local-first, you already have direct access to all your data at all times through the app. In addition, you have the following rights:</Text>
+
+              <View style={styles.dataBlock}>
+                <Text style={styles.subSectionTitle}>Right to Access</Text>
+                <Text style={styles.paragraph}>You can view all your stored data directly within the app at any time — no request needed.</Text>
+              </View>
+              <View style={styles.dataBlock}>
+                <Text style={styles.subSectionTitle}>Right to Export</Text>
+                <Text style={styles.paragraph}>Deeper Sky subscribers can export an encrypted .msky backup via the app. Free users can export a PDF birth chart. Additional plain-text export options are in development.</Text>
+              </View>
+              <View style={styles.dataBlock}>
+                <Text style={styles.subSectionTitle}>Right to Delete</Text>
+                <Text style={styles.paragraph}>Perform a Hard Reset in Privacy Settings to permanently delete all on-device data. Email us to delete your Supabase auth account and remove your credentials from our systems.</Text>
+              </View>
+              <View style={styles.dataBlock}>
+                <Text style={styles.subSectionTitle}>Right to Correct</Text>
+                <Text style={styles.paragraph}>You can update your birth data, journal entries, or any stored information directly within the app at any time. No approval or request is required.</Text>
+              </View>
+              <View style={[styles.dataBlock, { marginBottom: 0 }]}>
+                <Text style={styles.subSectionTitle}>Right to Opt Out of AI Features</Text>
+                <Text style={styles.paragraph}>AI features (dream interpretation, AI Reflection Insights) are always opt-in and only trigger on your explicit action. You can use MySky fully without ever activating an AI pass. AI features can be disabled entirely in Settings.</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* ── Children's Privacy ── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>CHILDREN'S PRIVACY</Text>
+            <View style={styles.dataBlock}>
+              <Text style={styles.paragraph}>MySky is intended for users aged <MetallicText color={PALETTE.atmosphere} style={styles.boldText}>17 and older</MetallicText>. We do not knowingly collect personal information from anyone under 17. If you believe a minor has created an account, please contact us immediately and we will delete the account. Parents or guardians who become aware of a minor using MySky should contact us at the address below.</Text>
+            </View>
+          </View>
+
+          {/* ── California Privacy Rights ── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>CALIFORNIA PRIVACY RIGHTS (CCPA)</Text>
+            <View style={styles.dataBlock}>
+              <Text style={styles.paragraph}>California residents have additional rights under the California Consumer Privacy Act. You have the right to know what personal information is collected, the right to delete personal information, and the right to opt out of the sale of personal information.</Text>
+              <Text style={styles.paragraph}><MetallicText color={PALETTE.emerald} style={styles.boldText}>We do not sell personal information</MetallicText> — to anyone, ever. We do not share personal information for cross-context behavioral advertising. California residents can exercise their rights by contacting us below. We will not discriminate against you for exercising any CCPA rights.</Text>
+            </View>
+          </View>
+
+          {/* ── International Users ── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>INTERNATIONAL USERS</Text>
+            <View style={styles.dataBlock}>
+              <Text style={styles.paragraph}>MySky is operated from the United States. By using the app, users outside the US acknowledge that authentication credentials are processed via Supabase infrastructure, which operates in the US. All personal reflection data remains on your device regardless of your location.</Text>
+              <Text style={styles.paragraph}>If you are located in the European Economic Area (EEA) or United Kingdom, you have rights under GDPR — including the right to access, rectify, erase, restrict processing, and data portability. Our legal basis for processing your email and auth credentials is contractual necessity. Contact us to exercise any GDPR rights.</Text>
+            </View>
+          </View>
+
+          {/* ── Policy Updates ── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>POLICY UPDATES</Text>
+            <View style={styles.dataBlock}>
+              <Text style={styles.paragraph}>When we make material changes to this Privacy Policy, we will update the "Last updated" date and, where required by law, re-request your consent within the app. For significant changes we will display a clear notice on first launch after the update. Continued use of MySky after changes constitutes acceptance of the revised policy. We encourage you to review this page periodically.</Text>
+            </View>
+          </View>
+
           {/* ── Contact Card ── */}
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>CONTACT US</Text>

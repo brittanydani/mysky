@@ -125,6 +125,101 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
                 Yes. After initial sign-in, all core features work fully offline. Internet is only required for authentication, geocoding, and optional AI features.
               </Text>
 
+              <Text style={styles.question}>How do I cancel my Deeper Sky subscription?</Text>
+              <Text style={styles.answer}>
+                {'On iOS: open the Settings app → tap your Apple ID → Subscriptions → MySky → Cancel.\n\nOn Android: open the Play Store → Profile → Payments & subscriptions → Subscriptions → MySky → Cancel.\n\nCancellation takes effect at the end of the current billing period. You keep access to premium features until that date.'}
+              </Text>
+
+              <Text style={styles.question}>Can I restore my subscription on a new device?</Text>
+              <Text style={styles.answer}>
+                Yes. Sign in with the same account used to purchase Deeper Sky, then tap "Restore Purchases" in the Premium screen. Your subscription will be recognized automatically. Make sure you are signed into the same Apple ID or Google account used at purchase.
+              </Text>
+
+              <Text style={styles.question}>What happens to my data if I delete the app?</Text>
+              <Text style={styles.answer}>
+                Deleting the app may leave the local database behind depending on system settings. For a guaranteed full wipe, go to Settings → Privacy & Data → Hard Reset before uninstalling. This cryptographically destroys your encryption key and purges the database — data becomes irrecoverable.
+              </Text>
+
+              <Text style={styles.question}>How do I delete my account?</Text>
+              <Text style={styles.answer}>
+                {`Perform a Hard Reset first (Settings → Privacy & Data → Hard Reset) to erase all on-device data. Then email us at ${SUPPORT_EMAIL} to request deletion of your Supabase authentication account. We'll confirm deletion within 5 business days.`}
+              </Text>
+
+              <Text style={styles.question}>Can I use MySky on multiple devices?</Text>
+              <Text style={styles.answer}>
+                MySky is local-first — your data lives on each device separately by design, which is how we protect your privacy. There is no automatic cloud sync. To move data to a new device, create an encrypted .msky backup on your old device (Deeper Sky feature) and restore it on the new one.
+              </Text>
+
+              <Text style={styles.question}>What AI models does MySky use?</Text>
+              <Text style={styles.answer}>
+                Dream interpretation and AI Reflection Insights use Google Gemini. Free accounts use the standard Gemini model. Deeper Sky subscribers access a richer model with more nuanced and contextual responses. AI features are always optional — they only activate on your explicit tap.
+              </Text>
+
+              <Text style={styles.question}>What gets sent to AI when I use dream interpretation?</Text>
+              <Text style={styles.answer}>
+                Only your dream text and the feelings you tagged. No birth data, location, identity, account email, somatic logs, or other personal context is included. Pattern context (symbols, archetypes) is extracted on-device first; only the minimal narrative payload is transmitted.
+              </Text>
+
+              <Text style={styles.question}>How does astrology work in MySky?</Text>
+              <Text style={styles.answer}>
+                MySky uses the Swiss Ephemeris library — the same planetary calculation engine used by professional astrological software — running entirely on-device. Planetary positions, house cusps, and aspects are computed locally from your birth date, time, and location. No data is sent to a server for chart calculations.
+              </Text>
+
+              <Text style={styles.question}>What is the difference between house systems?</Text>
+              <Text style={styles.answer}>
+                MySky defaults to Whole Sign houses, which assigns one full zodiac sign per house starting from your Ascendant sign. This is one of the oldest and most widely used systems. Other systems (Placidus, Koch, Equal House) divide the sky differently based on time and geography. The house system affects house cusp positions but not planetary sign placements.
+              </Text>
+
+              <Text style={styles.question}>What if I don't know my birth time?</Text>
+              <Text style={styles.answer}>
+                Check "I don't know" when entering birth details. MySky will use solar noon as a placeholder. Your Sun, Moon, and most planetary signs will still be accurate. Your Ascendant, Midheaven, and house placements will be approximate. The Moon sign may also be uncertain if you were born near a Moon sign change.
+              </Text>
+
+              <Text style={styles.question}>What is somatic body mapping?</Text>
+              <Text style={styles.answer}>
+                Somatic body mapping lets you log where you feel emotions, stress, or tension in your body by tapping a body diagram. Over time, patterns emerge — for example, consistently feeling anxiety in your chest or tension in your shoulders. This is a self-awareness tool, not a medical or therapeutic diagnosis.
+              </Text>
+
+              <Text style={styles.question}>What is the nervous system trigger log?</Text>
+              <Text style={styles.answer}>
+                The trigger log lets you record situations, thoughts, or sensations that activate your nervous system — fight, flight, freeze, or fawn responses. Logging these over time helps you recognize personal patterns. All entries are encrypted and stored locally only.
+              </Text>
+
+              <Text style={styles.question}>How do I update my birth data or relationship charts?</Text>
+              <Text style={styles.answer}>
+                To update your own birth data, go to Settings → Birth Data. For relationship charts, open the chart from the Relationships screen and tap Edit. Your chart will regenerate immediately after saving.
+              </Text>
+
+              <Text style={styles.question}>How do I export or share my birth chart?</Text>
+              <Text style={styles.answer}>
+                Deeper Sky subscribers can export a PDF of their birth chart via the chart screen using the export button. Use your device's share sheet to send it to Files, email, AirDrop, or any app. Free users can take screenshots of their chart.
+              </Text>
+
+              <Text style={styles.question}>What is the encrypted .msky backup file?</Text>
+              <Text style={styles.answer}>
+                A .msky file is a full encrypted snapshot of your MySky database protected by a passphrase you choose. It is created and decrypted entirely on-device — we never have access to it. Store it in iCloud Drive, a Files folder, or anywhere you keep important documents. If you forget the passphrase, the backup cannot be recovered by anyone.
+              </Text>
+
+              <Text style={styles.question}>What platforms does MySky support?</Text>
+              <Text style={styles.answer}>
+                MySky is available on iOS (iPhone and iPad) and Android. The minimum supported iOS version is iOS 16. Some features — such as encrypted backup — rely on platform-specific secure hardware and may behave slightly differently between iOS and Android.
+              </Text>
+
+              <Text style={styles.question}>Why does MySky require an account if everything is stored locally?</Text>
+              <Text style={styles.answer}>
+                A free account serves three purposes: it enables subscription restoration across devices, it gates optional network features (AI interpretation, geocoding), and it provides a way to recover Deeper Sky access on a new device. Your account stores only your email and subscription status — no personal reflection data.
+              </Text>
+
+              <Text style={styles.question}>I'm having trouble signing in. What should I do?</Text>
+              <Text style={styles.answer}>
+                {`Tap "Forgot Password" on the sign-in screen to receive a reset link. Make sure you're using the email address you registered with. If the issue persists, email us at ${SUPPORT_EMAIL} with your device model and iOS/Android version.`}
+              </Text>
+
+              <Text style={styles.question}>How do I report a bug or send feedback?</Text>
+              <Text style={styles.answer}>
+                {`Email us at ${SUPPORT_EMAIL}. Include a description of the issue, your device model, OS version, and app version (found in Settings → About). Screenshots or screen recordings are always helpful.`}
+              </Text>
+
               <View style={styles.supportBox}>
                 <Text style={styles.supportLabel}>QUESTIONS OR PRIVACY INQUIRIES?</Text>
                 <MetallicText color={PALETTE.gold} style={styles.supportEmail}>{SUPPORT_EMAIL}</MetallicText>

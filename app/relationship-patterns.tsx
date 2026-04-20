@@ -8,7 +8,8 @@
 // 4. Mapped attachment styles to Lunar Sky semantic washes (Nebula, Stratosphere, Ember, Sage).
 // 5. Integrated "Velvet Glass" 1px directional light-catch borders.
 
-import React, { useCallback, useState, useMemo } from 'react';
+import * as React from 'react';
+const { useCallback, useState, useMemo } = React;
 import {
   View,
   Text,
@@ -33,6 +34,7 @@ import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { EditorialPillGrid, EditorialPillItem } from '../components/ui/EditorialPillGrid';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 import { usePremium } from '../context/PremiumContext';
@@ -86,7 +88,7 @@ export default function RelationshipPatternsScreen() {
   const [note, setNote] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTags, setCustomTags] = useState<PatternTag[]>([]);
-  const [expandedCategory, setExpandedCategory] = useState<PatternCategory>('anxious');
+  const [expandedCategory, setExpandedCategory] = useState<PatternCategory | null>('anxious');
 
   useFocusEffect(
     useCallback(() => {
@@ -174,7 +176,7 @@ export default function RelationshipPatternsScreen() {
           {gravityStats.total > 0 && (
             <Animated.View entering={FadeIn.duration(600)}>
               <SectionHeader title="Relational Gravity" icon="planet-outline" />
-              <VelvetGlassSurface style={styles.summaryCard} intensity={30}>
+              <VelvetGlassSurface style={styles.summaryCard as any} intensity={30}>
                 <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.summaryHeader}>
                   <MetallicIcon name="planet-outline" size={16} variant="gold" />
@@ -215,15 +217,14 @@ export default function RelationshipPatternsScreen() {
             </Animated.View>
           )}
 
-          {/* Log Form (Atmosphere Blue) */}
+          {/* Log Form */}
           <SectionHeader title="Log a Pattern" icon="pencil-outline" />
-          <VelvetGlassSurface style={styles.formCard} intensity={30}>
-            <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
+              <VelvetGlassSurface style={styles.formCard as any} intensity={30} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.54)' : 'rgba(255, 255, 255, 0.82)'}>
             
             <TextInput
               style={styles.noteInput}
               placeholder="What played out today? Describe the dynamic..."
-              placeholderTextColor="rgba(255,255,255,0.4)"
+              placeholderTextColor={theme.isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
               multiline value={note} onChangeText={setNote}
             />
 
@@ -234,26 +235,31 @@ export default function RelationshipPatternsScreen() {
               const isExpanded = expandedCategory === cat;
               const tags = allTags.filter(t => t.category === cat);
               
+              const pillItems: EditorialPillItem[] = tags.map(tag => ({
+                key: tag.id,
+                label: tag.label,
+                selected: selectedTags.includes(tag.id),
+                onPress: () => setSelectedTags(prev => 
+                  prev.includes(tag.id) ? prev.filter(i => i !== tag.id) : [...prev, tag.id]
+                ),
+                accentColor: color,
+                selectedBackgroundColor: `${color}15`,
+                selectedTextColor: theme.textPrimary,
+              }));
+
               return (
                 <View key={cat} style={[styles.tagCategoryGroup, theme.velvetBorder]}>
-                  <Pressable style={styles.tagCategoryHeader} onPress={() => setExpandedCategory(cat)}>
+                  <Pressable style={styles.tagCategoryHeader} onPress={() => setExpandedCategory(isExpanded ? null : cat)}>
                     <Text style={[styles.tagCategoryDot, { color }]}>◆</Text>
                     <Text style={styles.tagCategoryLabel}>{cat.toUpperCase()}</Text>
                     <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={14} color={color} style={{ marginLeft: 'auto' }} />
                   </Pressable>
 
                   {isExpanded && (
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagRailContent}>
-                      {tags.map(tag => {
-                        const isSelected = selectedTags.includes(tag.id);
-                        return (
-                          <Pressable key={tag.id} onPress={() => setSelectedTags(prev => isSelected ? prev.filter(i => i !== tag.id) : [...prev, tag.id])}
-                            style={[styles.patternTag, isSelected ? { backgroundColor: 'rgba(162, 194, 225, 0.15)', borderColor: 'rgba(162, 194, 225, 0.4)' } : styles.patternTagUnselected]}>
-                            <Text style={[styles.patternTagText, isSelected && { color: theme.textPrimary }]}>{tag.label}</Text>
-                          </Pressable>
-                        );
-                      })}
-                    </ScrollView>
+                    <EditorialPillGrid
+                      items={pillItems}
+                      style={styles.tagRailContent}
+                    />
                   )}
                 </View>
               );
@@ -272,10 +278,12 @@ export default function RelationshipPatternsScreen() {
             <View style={styles.historySection}>
               <SectionHeader title="Previous Reflections" icon="journal-outline" />
               {entries.slice(0, 10).map(e => (
-                <VelvetGlassSurface key={e.id} style={styles.entryCard} intensity={20}>
-                   <Text style={styles.entryDate}>{new Date(e.date).toLocaleDateString()}</Text>
-                   <Text style={styles.entryNote}>{e.note}</Text>
-                </VelvetGlassSurface>
+                <View key={e.id}>
+                  <VelvetGlassSurface style={styles.entryCard as any} intensity={20}>
+                     <Text style={styles.entryDate}>{new Date(e.date).toLocaleDateString()}</Text>
+                     <Text style={styles.entryNote}>{e.note}</Text>
+                  </VelvetGlassSurface>
+                </View>
               ))}
             </View>
           )}
@@ -334,19 +342,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   gravitySegment: { height: '100%' },
   legendRow: { flexDirection: 'row', justifyContent: 'space-between' },
 
-  formCard: { borderRadius: 24, padding: 24, marginBottom: 32, overflow: 'hidden' },
-  noteInput: { minHeight: 100, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.3)', padding: 20, color: theme.textPrimary, fontSize: 16, marginBottom: 24 },
-  tagSectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '800', letterSpacing: 1.5, marginBottom: 16 },
+  formCard: { borderRadius: 28, padding: 24, marginBottom: 32 },
+  noteInput: { minHeight: 120, borderRadius: 24, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', padding: 20, paddingTop: 20, color: theme.textPrimary, fontSize: 16, marginBottom: 24 },
+  tagSectionLabel: { fontSize: 10, color: theme.textMuted, fontWeight: '800', letterSpacing: 1.5, marginBottom: 16 },
   
-  tagCategoryGroup: { marginBottom: 12, borderRadius: 16, padding: 16, backgroundColor: 'rgba(255,255,255,0.03)' },
+  tagCategoryGroup: { marginBottom: 12, borderRadius: 20, padding: 16, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' },
   tagCategoryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tagCategoryDot: { fontSize: 8 },
-  tagCategoryLabel: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: 1 },
-  tagRailContent: { gap: 8, paddingTop: 16 },
-  
-  patternTag: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, borderWidth: 1 },
-  patternTagUnselected: { backgroundColor: 'rgba(0,0,0,0.25)', borderColor: 'rgba(255,255,255,0.05)' },
-  patternTagText: { fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: '600' },
+  tagCategoryLabel: { fontSize: 11, fontWeight: '700', color: theme.textSecondary, letterSpacing: 1 },
+  tagRailContent: { paddingTop: 16 },
   
   submitBtn: { height: 56, borderRadius: 28, marginTop: 24, overflow: 'hidden', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   submitBtnText: { fontSize: 14, fontWeight: '800', letterSpacing: 1 },
