@@ -1,5 +1,7 @@
 import { NativeModules, Platform } from 'react-native';
 
+const APP_GROUP = 'group.com.brittany.mysky';
+
 // Orb colour channels are 0.0–1.0 linear-light values matching SwiftUI's Color(red:green:blue:).
 // Map your chakra colours from the app theme to these values before calling update.
 export interface WidgetData {
@@ -11,6 +13,13 @@ export interface WidgetData {
   orbColorR: number;   // 0.0–1.0
   orbColorG: number;   // 0.0–1.0
   orbColorB: number;   // 0.0–1.0
+  // Daily reflection prompt (optional — pushed when available)
+  reflectionPrompt?: string;
+  reflectionCategory?: string;
+  // Streak data (optional — pushed after check-in or on foreground)
+  streakCount?: number;
+  checkedInToday?: boolean;
+  lastCheckInDate?: string; // YYYY-MM-DD
 }
 
 /** A pending check-in queued by QuickCheckInIntent inside the widget extension. */

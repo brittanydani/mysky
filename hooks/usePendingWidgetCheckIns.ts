@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { consumePendingCheckIns } from '../services/widgets/widgetDataService';
+import { syncWidgetStreak } from '../services/widgets/widgetSyncService';
 import { CheckInService } from '../services/patterns/checkInService';
 import { AstrologyCalculator } from '../services/astrology/calculator';
 import { localDb } from '../services/storage/localDb';
@@ -23,6 +24,7 @@ export function usePendingWidgetCheckIns(): void {
     // Attempt a flush immediately at mount in case the widget button was tapped
     // while the app was fully terminated (cold-launch path).
     flushPendingCheckIns();
+    syncWidgetStreak();
 
     const subscription = AppState.addEventListener('change', (nextState) => {
       const wasBackground =
@@ -30,6 +32,7 @@ export function usePendingWidgetCheckIns(): void {
         appStateRef.current === 'inactive';
       if (wasBackground && nextState === 'active') {
         flushPendingCheckIns();
+        syncWidgetStreak();
       }
       appStateRef.current = nextState;
     });
@@ -83,6 +86,7 @@ async function flushPendingCheckIns(): Promise<void> {
       }
 
       logger.info(`[Widget] Flushed ${records.length} pending widget check-in(s).`);
+      syncWidgetStreak();
     });
   } catch (e) {
     logger.error('[Widget] Failed to prepare widget flush:', e);
