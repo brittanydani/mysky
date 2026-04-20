@@ -24,6 +24,7 @@ import {
   Alert, 
   Platform, 
   Vibration,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -1049,6 +1050,56 @@ export default function ChartScreen() {
             chart={activeChart!}
             onMoonPress={() => router.push('/astrology-context' as Href)}
           />
+
+          {/* ── Share Big Three ── */}
+          {!overlayChart && (
+            <Animated.View entering={FadeInDown.delay(300).duration(600)} style={{ paddingHorizontal: 20, paddingBottom: 8 }}>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                  const sun = activeChart?.sun?.sign?.name ?? '';
+                  const moon = activeChart?.moon?.sign?.name ?? '';
+                  const rising = activeChart?.ascendant?.sign?.name;
+                  const risingLine = rising ? `↑  ${rising} Rising` : '';
+                  const elementLine = (() => {
+                    const el = activeChart?.sunSign?.element;
+                    return el ? `Element: ${el}` : '';
+                  })();
+                  const lines = [
+                    '✦  My Cosmic Blueprint',
+                    '─────────────────',
+                    `☉  ${sun} Sun`,
+                    `☽  ${moon} Moon`,
+                    risingLine,
+                    elementLine,
+                    '─────────────────',
+                    'Tracked on MySky — self-knowledge, astrology & daily patterns.',
+                    'Download: https://apps.apple.com/app/mysky/id6758646585',
+                  ].filter(Boolean).join('\n');
+                  Share.share({ message: lines }).catch(() => {});
+                }}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  paddingVertical: 12,
+                  paddingHorizontal: 20,
+                  borderRadius: 28,
+                  borderWidth: 1,
+                  borderColor: 'rgba(212,175,55,0.30)',
+                  backgroundColor: pressed ? 'rgba(212,175,55,0.10)' : 'rgba(212,175,55,0.05)',
+                })}
+                accessibilityRole="button"
+                accessibilityLabel="Share your Big Three"
+              >
+                <Ionicons name="share-outline" size={16} color={PALETTE.gold} />
+                <Text style={{ color: PALETTE.gold, fontSize: 13, fontWeight: '600', letterSpacing: 1 }}>
+                  SHARE YOUR BIG THREE
+                </Text>
+              </Pressable>
+            </Animated.View>
+          )}
 
           {/* ── 5. Dignity & Friction ── */}
           {isPremium && <ChartDignitiesSection dignityAnalysis={dignityAnalysis} />}

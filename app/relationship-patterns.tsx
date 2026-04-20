@@ -119,7 +119,13 @@ export default function RelationshipPatternsScreen() {
     };
     const updated = [newEntry, ...entries];
     setEntries(updated);
-    await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    try {
+      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch (e) {
+      logger.error('[RelationshipPatterns] Failed to save entry', e);
+      setEntries(entries);
+      return;
+    }
     setNote('');
     setSelectedTags([]);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});

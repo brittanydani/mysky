@@ -9,7 +9,7 @@
  *
  * Required secrets:
  *   supabase secrets set RESEND_API_KEY=re_...
- *   supabase secrets set RECOVERY_EMAIL_FROM="MySky <auth@your-domain.com>"
+ *   supabase secrets set RECOVERY_EMAIL_FROM="MySky <auth@mysky.app>"
  *   supabase secrets set PASSWORD_RECOVERY_CODE_PEPPER=...
  */
 

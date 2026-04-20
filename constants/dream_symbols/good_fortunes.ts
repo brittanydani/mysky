@@ -6198,7 +6198,7 @@ export const good_fortunes_symbols: SingleWordSymbol[] = [
   { symbol: 'edulcoration', category: 'good_fortunes' },
   { symbol: 'clean', category: 'good_fortunes' },
   { symbol: 'paid', category: 'good_fortunes' },
-  { symbol: 'foo', category: 'good_fortunes' },
+  { symbol: 'fortune', category: 'good_fortunes' },
   { symbol: 'siegfried', category: 'good_fortunes' },
   { symbol: 'wheatflake', category: 'good_fortunes' },
   { symbol: 'winda', category: 'good_fortunes' },

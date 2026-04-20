@@ -653,7 +653,7 @@ export const emotions_symbols: SingleWordSymbol[] = [
   { symbol: "sinking", category: "emotions" },
   { symbol: "disenchant", category: "emotions" },
   { symbol: "queasiness", category: "emotions" },
-  { symbol: "foo", category: "emotions" },
+  { symbol: "forlorn", category: "emotions" },
   { symbol: "enjoys", category: "emotions" },
   { symbol: "exercise", category: "emotions" },
   { symbol: "preemption", category: "emotions" },

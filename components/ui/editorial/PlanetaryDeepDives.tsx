@@ -4,12 +4,12 @@ import { VelvetGlassCard } from './VelvetGlassCard';
 import { SkiaGradientText } from './SkiaGradientText';
 import { Colors, Typography, Spacing, Layout } from './theme';
 
-// --- TYPES & MOCK DATA ---
+// --- TYPES ---
 
-type ElementType = 'Fire' | 'Earth' | 'Air' | 'Water';
-type ModalityType = 'Cardinal' | 'Fixed' | 'Mutable';
+export type ElementType = 'Fire' | 'Earth' | 'Air' | 'Water';
+export type ModalityType = 'Cardinal' | 'Fixed' | 'Mutable';
 
-interface PlanetData {
+export interface PlanetData {
   id: string;
   planetName: string;
   glyph: string;
@@ -22,35 +22,6 @@ interface PlanetData {
   signExpression: string;
   housePlacement: string;
 }
-
-const MOCK_PLANETS: PlanetData[] = [
-  {
-    id: '1',
-    planetName: 'Sun',
-    glyph: '☉',
-    sign: 'Pisces',
-    element: 'Water',
-    modality: 'Mutable',
-    degree: "10°58'",
-    house: 10,
-    coreMeaning: 'Governs your core identity, ego, vitality, and ultimate life purpose.',
-    signExpression: 'Expresses with empathic sensitivity, imagination, and a permeable openness to the invisible currents of life.',
-    housePlacement: 'Activates in the area of career, public role, reputation, and long-term legacy.',
-  },
-  {
-    id: '2',
-    planetName: 'Moon',
-    glyph: '☽',
-    sign: 'Libra',
-    element: 'Air',
-    modality: 'Cardinal',
-    degree: "14°40'",
-    house: 5,
-    coreMeaning: 'Governs your emotions, baseline instincts, inner needs, and unconscious behavioral patterns.',
-    signExpression: 'Expresses through a need for diplomacy, aesthetic awareness, and a deep relational focus.',
-    housePlacement: 'Activates in the area of creativity, romance, spontaneous joy, and self-expression.',
-  }
-];
 
 // --- MICRO-COMPONENTS ---
 
@@ -128,7 +99,7 @@ const PlanetCard = ({ data }: { data: PlanetData }) => {
   );
 };
 
-export const PlanetaryDeepDivesSection = () => {
+export const PlanetaryDeepDivesSection = ({ planets }: { planets: PlanetData[] }) => {
   return (
     <View style={styles.sectionContainer}>
       
@@ -142,7 +113,7 @@ export const PlanetaryDeepDivesSection = () => {
       </View>
 
       <FlatList
-        data={MOCK_PLANETS}
+        data={planets}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <PlanetCard data={item} />}
         showsVerticalScrollIndicator={false}

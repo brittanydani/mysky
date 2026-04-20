@@ -109,9 +109,11 @@ export default function OnboardingBirthScreen() {
         locationLng: birthData.longitude,
         timezone: birthData.timezone,
       };
-      IdentityVault.sealIdentity(identity).catch((err) =>
-        logger.error('[OnboardingBirth] IdentityVault seal failed:', err)
-      );
+      void IdentityVault.sealIdentity(identity).then((sealed) => {
+        if (!sealed) {
+          logger.error('[OnboardingBirth] IdentityVault seal failed');
+        }
+      });
 
       import('../../services/growth/localAnalytics')
         .then(({ trackGrowthEvent }) => trackGrowthEvent('onboarding_completed'))
@@ -124,7 +126,7 @@ export default function OnboardingBirthScreen() {
       // so giving context dramatically improves opt-in rate.
       await requestNotificationPermissions();
 
-      router.replace('/(tabs)/home' as Href);
+      router.replace('/onboarding/chart-reveal' as Href);
     } catch (e) {
       logger.error('[OnboardingBirth] failed:', e);
       Alert.alert('Something went wrong', 'We could not save your birth details. Please try again.');

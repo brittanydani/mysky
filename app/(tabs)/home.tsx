@@ -65,6 +65,7 @@ import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 import { scheduleTransitNotification } from '../../services/astrology/transitNotifications';
 import { scheduleInsightNotification } from '../../services/today/insightNotifications';
+import * as StoreReview from 'expo-store-review';
 
 const { width } = Dimensions.get('window');
 
@@ -179,6 +180,9 @@ export default function HomeScreen() {
   const [aiInsightText, setAiInsightText] = useState<string | null>(null);
   const prevMilestoneRef = useRef<number | null>(null);
 
+  // Widget tip — shown once after first check-in, dismissible
+  const [widgetTipDismissed, setWidgetTipDismissed] = useState(true); // default hidden until loaded
+
   // Self-knowledge context — used to personalize affirmations
   const [selfKnowledge, setSelfKnowledge] = useState<SelfKnowledgeContext | null>(null);
 
@@ -225,6 +229,10 @@ export default function HomeScreen() {
           if (storedName) chart.name = storedName;
           chart.updatedAt = savedChart.updatedAt;
 
+          // Widget tip: show to users who have checked in at least once but haven't dismissed it
+          const widgetDismissed = await EncryptedAsyncStorage.getItem('msky_widget_tip_dismissed');
+          setIfActive(setWidgetTipDismissed, widgetDismissed === 'true');
+
           setIfActive(setUserChart, chart);
 
           // Hydrate data in parallel — checkins, sleep, and self-knowledge are independent
@@ -268,6 +276,12 @@ export default function HomeScreen() {
               if (loopData.streak.milestone && loopData.streak.milestone !== prevMilestoneRef.current) {
                 prevMilestoneRef.current = loopData.streak.milestone;
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+                // Request App Store review at meaningful milestone moments (7 and 30 days)
+                if (loopData.streak.milestone === 7 || loopData.streak.milestone === 30) {
+                  StoreReview.isAvailableAsync().then((available) => {
+                    if (available) StoreReview.requestReview();
+                  }).catch(() => {});
+                }
               }
 
               // Schedule personalized transit notification for tomorrow
@@ -595,6 +609,17 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
+          {/* ── Total Check-Ins Counter (shows after first few check-ins) ── */}
+          {dailyLoop && dailyLoop.streak.totalCheckIns >= 5 && (
+            <Animated.View entering={FadeInDown.delay(240).duration(600)}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 4 }}>
+                <Text style={{ color: 'rgba(212,175,55,0.45)', fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}>
+                  {dailyLoop.streak.totalCheckIns} DAYS LOGGED TOTAL
+                </Text>
+              </View>
+            </Animated.View>
+          )}
+
           {/* ── First Check-In Prompt (new users only) ── */}
           {dailyLoop && dailyLoop.streak.totalCheckIns === 0 && (
             <Animated.View entering={FadeInDown.delay(300).duration(700)}>
@@ -622,6 +647,37 @@ export default function HomeScreen() {
                   </View>
                 </VelvetGlassSurface>
               </Pressable>
+            </Animated.View>
+          )}
+
+          {/* ── Widget Tip Card (shown once after first check-in, dismissible) ── */}
+          {dailyLoop && dailyLoop.streak.totalCheckIns >= 1 && !widgetTipDismissed && (
+            <Animated.View entering={FadeInDown.delay(320).duration(700)}>
+              <VelvetGlassSurface style={styles.firstCheckInCard} intensity={20}>
+                <LinearGradient
+                  pointerEvents="none"
+                  colors={['rgba(162, 194, 225, 0.18)', 'rgba(44, 54, 69, 0.40)']}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.firstCheckInContent}>
+                  <MetallicIcon name="phone-portrait-outline" size={26} variant="gold" />
+                  <View style={{ flex: 1 }}>
+                    <MetallicText style={styles.firstCheckInTitle} variant="gold">Add the Home Screen widget</MetallicText>
+                    <Text style={styles.firstCheckInBody}>Log your mood in one tap — directly from your Home Screen, without opening the app.</Text>
+                  </View>
+                  <Pressable
+                    onPress={async () => {
+                      await EncryptedAsyncStorage.setItem('msky_widget_tip_dismissed', 'true');
+                      setWidgetTipDismissed(true);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Dismiss widget tip"
+                    style={{ padding: 4 }}
+                  >
+                    <MetallicIcon name="close-outline" size={18} variant="gold" />
+                  </Pressable>
+                </View>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 

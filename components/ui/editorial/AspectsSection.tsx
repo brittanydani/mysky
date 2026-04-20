@@ -4,11 +4,11 @@ import { Canvas, Line, vec, LinearGradient, Circle } from '@shopify/react-native
 import { VelvetGlassCard } from './VelvetGlassCard';
 import { Colors, Typography, Spacing, Layout } from './theme';
 
-// --- TYPES & MOCK DATA ---
+// --- TYPES ---
 
-type AspectType = 'Harmonious' | 'Challenging' | 'Neutral';
+export type AspectType = 'Harmonious' | 'Challenging' | 'Neutral';
 
-interface AspectData {
+export interface AspectData {
   id: string;
   planet1: string;
   planet2: string;
@@ -143,7 +143,7 @@ const AspectCard = ({ data }: { data: AspectData }) => {
   );
 };
 
-export const AspectsSection = () => {
+export const AspectsSection = ({ aspects }: { aspects: AspectData[] }) => {
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
@@ -154,7 +154,7 @@ export const AspectsSection = () => {
       </View>
 
       <FlatList
-        data={MOCK_ASPECTS}
+        data={aspects}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <AspectCard data={item} />}
         showsVerticalScrollIndicator={false}

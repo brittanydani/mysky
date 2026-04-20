@@ -54,10 +54,8 @@ async function isRateLimited(
   });
 
   if (error) {
-    // If the rate-limit table/function doesn't exist yet, allow the request
-    // but log the error so you know to run the migration
     console.error("Rate limit check failed:", error.code);
-    return false;
+    return true;
   }
 
   // RPC returns true if the request is ALLOWED, false if blocked

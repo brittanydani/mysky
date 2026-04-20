@@ -18,6 +18,7 @@ export default function OnboardingLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="consent" />
         <Stack.Screen name="birth" />
+        <Stack.Screen name="chart-reveal" />
         <Stack.Screen name="restore" />
       </Stack>
     </>

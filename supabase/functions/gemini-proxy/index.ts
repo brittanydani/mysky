@@ -79,9 +79,8 @@ async function isRateLimited(
   });
 
   if (error) {
-    // If the rate-limit table/function doesn't exist yet, allow but log
     console.error("Gemini rate limit check failed:", error.code);
-    return false;
+    return true;
   }
 
   return data === false;

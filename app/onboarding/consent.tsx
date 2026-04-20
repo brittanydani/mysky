@@ -15,7 +15,7 @@ import { PrivacyComplianceManager } from '../../services/privacy/privacyComplian
 import { logger } from '../../utils/logger';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
-const TERMS_VERSION = '2026-03-03';
+const TERMS_VERSION = '2026-03-30';
 
 export default function OnboardingConsentScreen() {
   const theme = useAppTheme();

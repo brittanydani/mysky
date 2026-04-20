@@ -139,7 +139,7 @@ async function isRateLimited(
 
   if (error) {
     console.error("Pattern insights rate limit check failed:", error.code);
-    return false;
+    return true;
   }
 
   return data === false;

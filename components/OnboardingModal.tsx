@@ -537,7 +537,11 @@ export default function OnboardingModal({
         locationLat: birthData.latitude,
         locationLng: birthData.longitude,
         timezone: chart.birthData.timezone,
-      }).catch((err) => logger.error('[OnboardingModal] IdentityVault seal failed:', err));
+      }).then((sealed) => {
+        if (!sealed) {
+          logger.error('[OnboardingModal] IdentityVault seal failed');
+        }
+      });
 
         timeoutRef.current = setTimeout(async () => {
           await completeChart(chart);
@@ -652,7 +656,11 @@ export default function OnboardingModal({
           locationLat: charts[0].latitude,
           locationLng: charts[0].longitude,
           timezone: charts[0].timezone,
-        }).catch((err) => logger.error('[OnboardingModal] IdentityVault seal failed:', err));
+        }).then((sealed) => {
+          if (!sealed) {
+            logger.error('[OnboardingModal] IdentityVault seal failed');
+          }
+        });
 
           timeoutRef.current = setTimeout(async () => {
             await completeChart(chart);

@@ -8,6 +8,9 @@ export const LEGAL_URL = 'https://amber-divan-e75.notion.site/Privacy-Policy-for
 // Support contact — single source of truth for all in-app references
 export const SUPPORT_EMAIL = 'brittanyapps@outlook.com';
 
+// App Store product page — update with the live ID once submitted
+export const APP_STORE_URL = 'https://apps.apple.com/app/mysky/id6758646585';
+
 // Reviewer/demo content should only be seeded when explicitly enabled.
 // Defaulting this off keeps normal app startup deterministic and avoids
 // mutating local encrypted state during auth restoration.
@@ -17,13 +20,20 @@ export function isAutoDemoSeedEnabled(): boolean {
 
 const DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT = 1;
 const DREAM_REINTERPRET_ALLOWLIST_PER_DREAM_LIMIT = 5;
-const DREAM_REINTERPRET_ALLOWLIST = new Set([
-  'brithornick92@gmail.com',
-]);
+
+function getDreamReinterpretAllowlist(): Set<string> {
+  const raw = process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST ?? '';
+  return new Set(
+    raw
+      .split(',')
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
 
 export function getDreamReinterpretPerDreamLimit(email?: string | null): number {
   const normalizedEmail = email?.trim().toLowerCase();
-  if (normalizedEmail && DREAM_REINTERPRET_ALLOWLIST.has(normalizedEmail)) {
+  if (normalizedEmail && getDreamReinterpretAllowlist().has(normalizedEmail)) {
     return DREAM_REINTERPRET_ALLOWLIST_PER_DREAM_LIMIT;
   }
   return DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT;

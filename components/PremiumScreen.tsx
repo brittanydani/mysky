@@ -121,6 +121,10 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
 
     const result = await purchase(packageToPurchase);
     if (result.success) {
+      trackGrowthEvent('paywall_purchase_succeeded', {
+        source: analyticsSource ?? 'unknown',
+        plan: selectedPlan,
+      }).catch(() => {});
       Alert.alert('Welcome to Deeper Sky', 'Your subscription is active and premium insights are now unlocked.');
       safeGoBack();
       return;

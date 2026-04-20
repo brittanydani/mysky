@@ -485,7 +485,7 @@ export const containers_symbols: SingleWordSymbol[] = [
   { symbol: 'burse', category: 'containers' },
   { symbol: 'batcher', category: 'containers' },
   { symbol: 'dong', category: 'containers' },
-  { symbol: 'placeholder', category: 'containers' },
+  { symbol: 'holder', category: 'containers' },
   { symbol: 'egis', category: 'containers' },
   { symbol: 'ear', category: 'containers' },
   { symbol: 'cartons', category: 'containers' },

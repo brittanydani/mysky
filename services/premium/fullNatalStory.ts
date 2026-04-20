@@ -251,7 +251,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     isPremium: true,
     freeContent: {
       brief: 'Venus reveals your love style.',
-      teaser: 'Unlock Deeper Sky to understand your unique way of giving and receiving love...',
+      teaser: 'This chapter explores how you give love, how you need to receive it, and the patterns that keep repeating in your closest relationships. You may recognise yourself in places you never expected.',
     },
   },
   {
@@ -262,7 +262,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     isPremium: true,
     freeContent: {
       brief: 'Mars shows how you assert yourself.',
-      teaser: 'Unlock Deeper Sky to explore your relationship with anger, drive, and desire...',
+      teaser: 'This chapter maps where your drive comes from, what happens when you suppress it, and why certain kinds of conflict feel more charged for you than others. It includes prompts to help you work with your edge rather than against it.',
     },
   },
   {
@@ -273,7 +273,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     isPremium: true,
     freeContent: {
       brief: 'Your chart reveals your defense mechanisms.',
-      teaser: 'Unlock Deeper Sky for trauma-informed insights on your protective patterns...',
+      teaser: 'This chapter names the specific ways your nervous system learned to stay safe — the walls, the distance, the performing — and gently explores where those patterns came from. Written with a trauma-informed lens.',
     },
   },
   {
@@ -284,7 +284,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     isPremium: true,
     freeContent: {
       brief: 'Your chart holds clues to childhood wounds.',
-      teaser: 'Unlock Deeper Sky to meet your inner child and understand what they needed...',
+      teaser: 'This chapter explores the emotional needs your younger self carried — what they were given, what they were missing, and the ways those early experiences still shape your present. Includes reflection prompts for integration.',
     },
   },
   {
@@ -296,7 +296,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     // placementKey: 'Jupiter', // (add if such a field is used elsewhere)
     freeContent: {
       brief: 'Jupiter shows your growth opportunities.',
-      teaser: 'Unlock Deeper Sky to explore the full story of your growth and expansion...',
+      teaser: 'This chapter traces the specific conditions under which you expand — the environments, mindsets, and relationships that unlock your potential. It also names the fears that tend to hold you back from your own growth.',
     },
   },
   {
@@ -307,7 +307,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     isPremium: true,
     freeContent: {
       brief: 'Your North Node points toward growth.',
-      teaser: 'Unlock Deeper Sky to explore your soul\'s direction...',
+      teaser: 'This chapter describes the direction your chart is pulling you toward — the unfamiliar qualities you are here to develop, and the deeply familiar patterns that may be holding you in place. One of the most personally resonant chapters.',
     },
   },
   {
@@ -318,7 +318,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     isPremium: true,
     freeContent: {
       brief: 'Pluto reveals transformation points.',
-      teaser: 'Unlock Deeper Sky for deep shadow work insights...',
+      teaser: 'This chapter explores what your chart says about your relationship to power, loss, and change — the places you resist transformation most, and what becomes possible when you stop. Deep shadow work with practical integration prompts.',
     },
   },
 ];

@@ -86,10 +86,14 @@ export default function OnboardingRestoreScreen() {
         locationLat: charts[0].latitude,
         locationLng: charts[0].longitude,
         timezone: charts[0].timezone,
-      }).catch((err) => logger.error('[Restore] IdentityVault seal failed:', err));
+      }).then((sealed) => {
+        if (!sealed) {
+          logger.error('[Restore] IdentityVault seal failed');
+        }
+      });
 
       DeviceEventEmitter.emit('ONBOARDING_COMPLETE');
-      router.replace('/(tabs)/home' as Href);
+      router.replace('/onboarding/chart-reveal' as Href);
     } catch (e) {
       logger.error('[Restore] restore failed:', e);
       Alert.alert('Restore Failed', 'Could not restore from backup. Please check your passphrase and try again.');

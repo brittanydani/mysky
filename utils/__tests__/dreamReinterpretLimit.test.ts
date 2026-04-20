@@ -10,6 +10,20 @@ jest.mock('expo-constants', () => ({
 import { getDreamReinterpretPerDreamLimit } from '../../constants/config';
 
 describe('getDreamReinterpretPerDreamLimit', () => {
+  const originalAllowlist = process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST;
+
+  beforeEach(() => {
+    delete process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST;
+  });
+
+  afterAll(() => {
+    if (typeof originalAllowlist === 'string') {
+      process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST = originalAllowlist;
+      return;
+    }
+    delete process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST;
+  });
+
   it('returns the default limit when email is missing', () => {
     expect(getDreamReinterpretPerDreamLimit()).toBe(1);
     expect(getDreamReinterpretPerDreamLimit(null)).toBe(1);
@@ -20,10 +34,12 @@ describe('getDreamReinterpretPerDreamLimit', () => {
   });
 
   it('returns the override limit for allowlisted emails', () => {
+    process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST = 'brithornick92@gmail.com';
     expect(getDreamReinterpretPerDreamLimit('brithornick92@gmail.com')).toBe(5);
   });
 
   it('normalizes allowlisted emails before lookup', () => {
+    process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST = 'brithornick92@gmail.com';
     expect(getDreamReinterpretPerDreamLimit('  Brithornick92@gmail.com  ')).toBe(5);
   });
 });
