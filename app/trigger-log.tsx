@@ -194,9 +194,9 @@ const createHistStyles = (theme: AppTheme) => StyleSheet.create({
 function SectionHeader({ title, icon }: { title: string; icon: string }) {
   const theme = useAppTheme();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16, marginTop: 16 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16, marginTop: 8 }}>
       <MetallicIcon name={icon as any} size={16} variant="gold" />
-      <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>{title}</Text>
+      <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>{title}</Text>
     </View>
   );
 }
@@ -453,10 +453,10 @@ export default function TriggerLogScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
-      <LinearGradient
-        colors={['rgba(140, 190, 170, 0.08)', 'transparent']}
-        style={styles.topGlow}
-      />
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(140, 190, 170, 0.10)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(205, 127, 93, 0.06)' }]} />
+      </View>
 
       {/* ── Post-save Confirmation Overlay ── */}
       {saved && (
@@ -939,10 +939,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   safeArea: { flex: 1 },
 
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+  glowOrb: { position: 'absolute', width: 300, height: 300, borderRadius: 150, opacity: 0.5 },
 
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 10 },
-  titleArea: { paddingHorizontal: 24, paddingBottom: 14 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, paddingHorizontal: 24 },
+  titleArea: { paddingHorizontal: 24, marginVertical: 32 },
   backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
 
   viewToggle: { flexDirection: 'row', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.035)' : theme.pillSurface, borderRadius: 14, padding: 4, borderWidth: 1, borderColor: theme.cardBorder },
@@ -951,17 +951,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   viewToggleText: { fontSize: 13, color: theme.textMuted, fontWeight: '600' },
   viewToggleTextActive: { color: theme.textPrimary },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 32,
     color: theme.textPrimary,
-    fontWeight: '700',
-    letterSpacing: -0.8,
-    lineHeight: 29,
-    marginBottom: 6,
-    maxWidth: '88%',
+    fontWeight: '800',
+    letterSpacing: -1,
   },
-  headerSubtitle: { fontSize: 12, color: theme.textSecondary, lineHeight: 17 },
+  headerSubtitle: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.6)' },
 
   toggleContainer: {
     flexDirection: 'row',
