@@ -1045,15 +1045,9 @@ export default function ChartScreen() {
           {/* ── 3. Your Chart Story ── */}
           <ChartStorySection coreIdentity={coreIdentity} />
 
-          {/* ── 4. Big Three Modules ── */}
-          <ChartBigThreeSection
-            chart={activeChart!}
-            onMoonPress={() => router.push('/astrology-context' as Href)}
-          />
-
           {/* ── Share Big Three ── */}
           {!overlayChart && (
-            <Animated.View entering={FadeInDown.delay(300).duration(600)} style={{ paddingHorizontal: 20, paddingBottom: 8 }}>
+            <Animated.View entering={FadeInDown.delay(300).duration(600)} style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -1087,19 +1081,25 @@ export default function ChartScreen() {
                   paddingHorizontal: 20,
                   borderRadius: 28,
                   borderWidth: 1,
-                  borderColor: 'rgba(212,175,55,0.30)',
-                  backgroundColor: pressed ? 'rgba(212,175,55,0.10)' : 'rgba(212,175,55,0.05)',
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                  backgroundColor: pressed ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
                 })}
                 accessibilityRole="button"
                 accessibilityLabel="Share your Big Three"
               >
-                <Ionicons name="share-outline" size={16} color={PALETTE.gold} />
-                <Text style={{ color: PALETTE.gold, fontSize: 13, fontWeight: '600', letterSpacing: 1 }}>
+                <Ionicons name="share-outline" size={16} color="#FFFFFF" />
+                <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '600', letterSpacing: 1 }}>
                   SHARE YOUR BIG THREE
                 </Text>
               </Pressable>
             </Animated.View>
           )}
+
+          {/* ── 4. Big Three Modules ── */}
+          <ChartBigThreeSection
+            chart={activeChart!}
+            onMoonPress={() => router.push('/astrology-context' as Href)}
+          />
 
           {/* ── 5. Dignity & Friction ── */}
           {isPremium && <ChartDignitiesSection dignityAnalysis={dignityAnalysis} />}

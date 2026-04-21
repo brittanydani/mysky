@@ -101,6 +101,11 @@ export default function SkiaPulseMonitor({
   const hapticMs    = useRef(400);
   const hapticMounted = useRef(true);
 
+  const stopHaptics = useCallback(() => {
+    if (hapticTimer.current) { clearTimeout(hapticTimer.current); hapticTimer.current = null; }
+    hapticMs.current = 400;
+  }, []);
+
   useEffect(() => {
     hapticMounted.current = true;
     return () => {
@@ -108,11 +113,6 @@ export default function SkiaPulseMonitor({
       stopHaptics();
     };
   }, [stopHaptics]);
-
-  const stopHaptics = useCallback(() => {
-    if (hapticTimer.current) { clearTimeout(hapticTimer.current); hapticTimer.current = null; }
-    hapticMs.current = 400;
-  }, []);
 
   const startHaptics = useCallback(() => {
     stopHaptics();

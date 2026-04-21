@@ -234,7 +234,7 @@ interface OnboardingModalProps {
   visible: boolean;
   onComplete: (chart?: NatalChart) => void;
   onPrivacyConsent?: () => void;
-  onSignInComplete?: () => Promise<void> | void;
+  onSignInComplete?: () => Promise<boolean> | boolean;
 }
 
 export default function OnboardingModal({
@@ -294,7 +294,8 @@ export default function OnboardingModal({
 
   useEffect(() => {
     const hasSession = !!session;
-    if (!previousSessionRef.current && hasSession && step === 'auth') {
+    // If they already have a session on mount or acquire one, skip auth step
+    if (hasSession && step === 'auth') {
       goToStep('privacy');
     }
     previousSessionRef.current = hasSession;
@@ -408,7 +409,11 @@ export default function OnboardingModal({
       setAuthEmail(trimmedEmail);
       setAuthPassword(authRecoveryPassword);
       closeAuthRecovery();
-      await onSignInComplete?.();
+      
+      const isComplete = await onSignInComplete?.();
+      if (!isComplete) {
+        goToStep('privacy');
+      }
     } catch (error: unknown) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Could not reset password right now.');
     } finally {
@@ -453,7 +458,11 @@ export default function OnboardingModal({
           password: authPassword,
         });
         if (error) throw error;
-        await onSignInComplete?.();
+        
+        const isComplete = await onSignInComplete?.();
+        if (!isComplete) {
+          goToStep('privacy');
+        }
       }
     } catch {
       Alert.alert('Error', authMode === 'sign-up' ? genericSignUpError : genericSignInError);
@@ -1389,11 +1398,12 @@ const st = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 24,
     paddingTop: 20,
-    gap: 6,
+    justifyContent: 'center',
+    gap: 8,
   },
   progressCapsule: {
-    flex: 1,
-    height: 3,
+    width: 32,
+    height: 4,
     borderRadius: 2,
   },
   progressCapsuleActive: {
@@ -1404,7 +1414,7 @@ const st = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
   },
   progressCapsuleInactive: {
-    backgroundColor: PREMIUM.glassBorder,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
   },
 
   // ── Content Layout ──

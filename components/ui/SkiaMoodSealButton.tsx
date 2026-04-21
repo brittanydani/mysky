@@ -126,14 +126,6 @@ export default function SkiaMoodSealButton({
   const hapticMs    = useRef(400);
   const hapticMounted = useRef(true);
 
-  useEffect(() => {
-    hapticMounted.current = true;
-    return () => {
-      hapticMounted.current = false;
-      stopHaptics();
-    };
-  }, [stopHaptics]);
-
   const stopHaptics = useCallback(() => {
     if (hapticTimer.current) {
       clearTimeout(hapticTimer.current);
@@ -141,6 +133,14 @@ export default function SkiaMoodSealButton({
     }
     hapticMs.current = 400;
   }, []);
+
+  useEffect(() => {
+    hapticMounted.current = true;
+    return () => {
+      hapticMounted.current = false;
+      stopHaptics();
+    };
+  }, [stopHaptics]);
 
   const startHaptics = useCallback(() => {
     stopHaptics();

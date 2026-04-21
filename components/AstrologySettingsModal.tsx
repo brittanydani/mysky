@@ -72,6 +72,9 @@ export default function AstrologySettingsModal({
   const [selectedHouseSystem, setSelectedHouseSystem] = useState<HouseSystem>('placidus');
   const [selectedOrbPreset, setSelectedOrbPreset] = useState<OrbPreset>('normal');
   const [selectedOrientation, setSelectedOrientation] = useState<ChartOrientation>('standard-natal');
+  const [showAsteroid, setShowAsteroid] = useState<boolean>(true);
+  const [showMinorAspects, setShowMinorAspects] = useState<boolean>(false);
+  const [lilitMethod, setLilitMethod] = useState<'mean' | 'true'>('mean');
 
   useEffect(() => {
     if (visible) {
@@ -89,6 +92,9 @@ export default function AstrologySettingsModal({
       setSelectedHouseSystem(current.houseSystem);
       setSelectedOrbPreset(current.orbPreset);
       setSelectedOrientation(current.chartOrientation ?? 'standard-natal');
+      setShowAsteroid(current.showAsteroid ?? true);
+      setShowMinorAspects(current.showMinorAspects ?? false);
+      setLilitMethod(current.lilitMethod ?? 'mean');
     } catch (error) {
       logger.error('[AstrologySettingsModal] Failed to load settings:', error);
     } finally {
@@ -107,6 +113,9 @@ export default function AstrologySettingsModal({
         houseSystem: selectedHouseSystem,
         orbPreset: selectedOrbPreset,
         chartOrientation: selectedOrientation,
+        showAsteroid,
+        showMinorAspects,
+        lilitMethod,
       });
 
       try {
@@ -149,7 +158,10 @@ export default function AstrologySettingsModal({
       settings.ayanamsa !== selectedAyanamsa ||
       settings.houseSystem !== selectedHouseSystem ||
       settings.orbPreset !== selectedOrbPreset ||
-      (settings.chartOrientation ?? 'standard-natal') !== selectedOrientation);
+      (settings.chartOrientation ?? 'standard-natal') !== selectedOrientation ||
+      (settings.showAsteroid ?? true) !== showAsteroid ||
+      (settings.showMinorAspects ?? false) !== showMinorAspects ||
+      (settings.lilitMethod ?? 'mean') !== lilitMethod);
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -341,6 +353,97 @@ export default function AstrologySettingsModal({
                       )}
                       <View style={[styles.radio, selectedOrientation === option.value && styles.radioActive]}>
                         {selectedOrientation === option.value && <View style={styles.radioInner} />}
+                      </View>
+                    </View>
+                    <Text style={styles.optionSub}>{option.description}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {/* Advanced Preferences */}
+            <View style={styles.section}>
+              <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Advanced Details</MetallicText>
+              <Text style={styles.sectionSub}>Additional celestial bodies and aspects.</Text>
+              
+              <View style={styles.optionsList}>
+                <Pressable
+                  style={[styles.houseCard, showAsteroid && styles.cardSelected]}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setShowAsteroid(!showAsteroid);
+                  }}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: showAsteroid }}
+                  accessibilityLabel="Show Asteroids"
+                >
+                  <View style={styles.cardHeader}>
+                    {showAsteroid ? (
+                      <MetallicText style={styles.optionTitle} color={PALETTE.gold}>Asteroids</MetallicText>
+                    ) : (
+                      <Text style={styles.optionTitle}>Asteroids</Text>
+                    )}
+                    <View style={[styles.radio, showAsteroid && styles.radioActive, { borderRadius: 4 }]}>
+                      {showAsteroid && <View style={[styles.radioInner, { borderRadius: 2 }]} />}
+                    </View>
+                  </View>
+                  <Text style={styles.optionSub}>Include Ceres, Pallas, Juno, and Vesta calculation in charts.</Text>
+                </Pressable>
+
+                <Pressable
+                  style={[styles.houseCard, showMinorAspects && styles.cardSelected]}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setShowMinorAspects(!showMinorAspects);
+                  }}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: showMinorAspects }}
+                  accessibilityLabel="Show Minor Aspects"
+                >
+                  <View style={styles.cardHeader}>
+                    {showMinorAspects ? (
+                      <MetallicText style={styles.optionTitle} color={PALETTE.gold}>Minor Aspects</MetallicText>
+                    ) : (
+                      <Text style={styles.optionTitle}>Minor Aspects</Text>
+                    )}
+                    <View style={[styles.radio, showMinorAspects && styles.radioActive, { borderRadius: 4 }]}>
+                      {showMinorAspects && <View style={[styles.radioInner, { borderRadius: 2 }]} />}
+                    </View>
+                  </View>
+                  <Text style={styles.optionSub}>Calculate Quincunx, Semi-Sextile, and other minor geometric angles.</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Lilith Calculation Mode */}
+            <View style={styles.section}>
+              <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Black Moon Lilith Method</MetallicText>
+              <Text style={styles.sectionSub}>Choose between the mean or true osculating lunar apogee.</Text>
+
+              <View style={styles.optionsList}>
+                {[
+                  { value: 'mean', label: 'Mean Apogee (Smoothed)', description: 'The most commonly used calculation, showing Lilith\'s average mathematical orbit.' },
+                  { value: 'true', label: 'True/Osculating (Precise)', description: 'Calculates Lilith\'s exact position accounting for wobbles and gravitational pull.' }
+                ].map((option) => (
+                  <Pressable
+                    key={option.value}
+                    style={[styles.houseCard, lilitMethod === option.value && styles.cardSelected]}
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setLilitMethod(option.value as 'mean' | 'true');
+                    }}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: lilitMethod === option.value }}
+                    accessibilityLabel={option.label}
+                  >
+                    <View style={styles.cardHeader}>
+                      {lilitMethod === option.value ? (
+                        <MetallicText style={styles.optionTitle} color={PALETTE.gold}>{option.label}</MetallicText>
+                      ) : (
+                        <Text style={styles.optionTitle}>{option.label}</Text>
+                      )}
+                      <View style={[styles.radio, lilitMethod === option.value && styles.radioActive]}>
+                        {lilitMethod === option.value && <View style={styles.radioInner} />}
                       </View>
                     </View>
                     <Text style={styles.optionSub}>{option.description}</Text>
