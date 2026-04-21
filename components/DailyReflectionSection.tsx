@@ -12,6 +12,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Keyboard,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -95,8 +96,11 @@ export default function DailyReflectionSection({
   }));
 
   useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardWillShow', () => { headerOpacity.value = 0; });
-    const hideSub = Keyboard.addListener('keyboardWillHide', () => { headerOpacity.value = 1; });
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    
+    const showSub = Keyboard.addListener(showEvent, () => { headerOpacity.value = 0; });
+    const hideSub = Keyboard.addListener(hideEvent, () => { headerOpacity.value = 1; });
     return () => { showSub.remove(); hideSub.remove(); };
   }, [headerOpacity]);
 

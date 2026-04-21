@@ -132,7 +132,7 @@ export default function ChartRevealScreen() {
                 entering={ZoomIn.delay(500 + i * 200).springify().damping(14).stiffness(120)}
                 style={styles.cardWrapper}
               >
-                <VelvetGlassSurface style={styles.card} intensity={30}>
+                <VelvetGlassSurface style={[styles.card, styles.velvetBorder]} intensity={30}>
                   <LinearGradient
                     pointerEvents="none"
                     colors={['rgba(212,175,55,0.12)', 'rgba(44,54,69,0.60)']}
@@ -187,6 +187,13 @@ const createStyles = (theme: AppTheme) =>
       paddingHorizontal: 24,
       justifyContent: 'center',
     },
+  velvetBorder: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
     glowOrb: {
       position: 'absolute',
       width: 320,

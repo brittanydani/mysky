@@ -338,6 +338,7 @@ export default function VisualCalibration() {
         'You have unsaved color preferences. Discard and leave?',
         [
           { text: 'Stay', style: 'cancel' },
+          { text: 'Stay', style: 'cancel' },
           { text: 'Discard', style: 'destructive', onPress: () => navigation.dispatch(e.data.action) },
         ],
       );

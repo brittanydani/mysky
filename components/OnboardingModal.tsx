@@ -67,7 +67,7 @@ const PREMIUM = {
   starlight:    'rgba(79,  79,  127, 0.08)',  // Depth void
   glassBorder: 'rgba(255, 255, 255, 0.10)',   // theme.cardBorder dark
   glassFill: 'rgba(255, 255, 255, 0.06)',     // theme.inputBackground dark
-  textMain: '#FFFFFF',                        // theme.textPrimary dark
+  textMain: '#FFFFFF',                        // PREMIUM.textMain dark
   textMuted: 'rgba(255, 255, 255, 0.40)',     // theme.textMuted dark
 };
 
@@ -705,6 +705,8 @@ export default function OnboardingModal({
         {/* Stars sit ON TOP of the nebula blur, but UNDER the UI */}
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <SkiaDynamicCosmos fill="transparent" />
+          <View style={[st.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+          <View style={[st.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
         </View>
 
         <SafeAreaView edges={['top', 'bottom']} style={st.safeArea}>
@@ -739,7 +741,7 @@ export default function OnboardingModal({
                   <Animated.View entering={FadeInUp.delay(250).duration(600)} style={st.ctaContainerFixed}>
                     {authRecoveryOpen ? (
                       <>
-                        <View style={st.passphraseInputWrapper}>
+                        <View style={[st.passphraseInputWrapper, st.velvetBorder]}>
                           <TextInput
                             style={st.passphraseInput}
                             placeholder="Email"
@@ -755,7 +757,7 @@ export default function OnboardingModal({
 
                         {authRecoveryCodeSent && (
                           <>
-                            <View style={st.passphraseInputWrapper}>
+                            <View style={[st.passphraseInputWrapper, st.velvetBorder]}>
                               <TextInput
                                 style={st.passphraseInput}
                                 placeholder="6-digit code"
@@ -767,7 +769,7 @@ export default function OnboardingModal({
                                 maxLength={6}
                               />
                             </View>
-                            <View style={st.passphraseInputWrapper}>
+                            <View style={[st.passphraseInputWrapper, st.velvetBorder]}>
                               <View style={st.passwordInputRow}>
                                 <TextInput
                                   style={[st.passphraseInput, st.passwordInput]}
@@ -792,7 +794,7 @@ export default function OnboardingModal({
                                 </Pressable>
                               </View>
                             </View>
-                            <View style={st.passphraseInputWrapper}>
+                            <View style={[st.passphraseInputWrapper, st.velvetBorder]}>
                               <TextInput
                                 style={st.passphraseInput}
                                 placeholder="Confirm new password"
@@ -840,7 +842,7 @@ export default function OnboardingModal({
                       </>
                     ) : (
                       <>
-                        <View style={st.passphraseInputWrapper}>
+                        <View style={[st.passphraseInputWrapper, st.velvetBorder]}>
                           <TextInput
                             style={st.passphraseInput}
                             placeholder="Email"
@@ -853,7 +855,7 @@ export default function OnboardingModal({
                             accessibilityLabel="Email address"
                           />
                         </View>
-                        <View style={st.passphraseInputWrapper}>
+                        <View style={[st.passphraseInputWrapper, st.velvetBorder]}>
                           <View style={st.passwordInputRow}>
                             <TextInput
                               style={[st.passphraseInput, st.passwordInput]}
@@ -946,7 +948,7 @@ export default function OnboardingModal({
                   </Animated.View>
 
                   <Animated.View entering={FadeInUp.delay(300).duration(600)} style={st.termsContent}>
-                    <View style={st.termsGlassSection}>
+                    <View style={[st.termsGlassSection, st.velvetBorder]}>
                       <Text style={st.termsSectionLabel}>What You Add</Text>
                       <View style={st.termsDataRow}>
                         <MetallicIcon name="sparkles-outline" size={16} color={PREMIUM.titanium} />
@@ -958,7 +960,7 @@ export default function OnboardingModal({
                       </View>
                     </View>
 
-                    <View style={[st.termsGlassSection, { borderColor: 'rgba(110, 191, 139, 0.2)' }]}>
+                    <View style={[st.termsGlassSection, st.velvetBorder]}>
                       <MetallicText style={st.termsSectionLabel} variant="green">Your Agreement</MetallicText>
                       <View style={st.termsDataRow}>
                         <MetallicIcon name="document-text-outline" size={16} color="#6EBF8B" />
@@ -1202,7 +1204,7 @@ export default function OnboardingModal({
                       City of birth roots your profile baseline.
                     </Text>
 
-                    <BlurView intensity={30} tint={theme.blurTint} style={st.locationSearchRow}>
+                    <BlurView intensity={30} tint={theme.blurTint} style={[st.locationSearchRow, st.velvetBorder]}>
                       <MetallicIcon name="search-outline" size={20} color={PREMIUM.titanium} />
                       <TextInput
                         style={st.locationInput}
@@ -1225,7 +1227,7 @@ export default function OnboardingModal({
                     </BlurView>
 
                     {locationSuggestions.length > 0 && !locationSelected && (
-                      <BlurView intensity={40} tint={theme.blurTint} style={st.suggestionsContainer}>
+                      <BlurView intensity={40} tint={theme.blurTint} style={[st.suggestionsContainer, st.velvetBorder]}>
                         {locationSuggestions.map((suggestion, idx) => {
                           const parts = suggestion.display_name.split(', ');
                           const city = parts.slice(0, 2).join(', ');
@@ -1293,7 +1295,7 @@ export default function OnboardingModal({
                       Provide the passphrase used to secure your backup.
                     </Text>
                     
-                    <BlurView intensity={30} tint={theme.blurTint} style={st.passphraseInputWrapper}>
+                    <BlurView intensity={30} tint={theme.blurTint} style={[st.passphraseInputWrapper, st.velvetBorder]}>
                       <TextInput
                         style={st.passphraseInput}
                         value={passphrase}
@@ -1353,6 +1355,14 @@ const st = StyleSheet.create({
   },
   container: { flex: 1, backgroundColor: PREMIUM.bgOled },
   safeArea: { flex: 1 },
+  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
+  velvetBorder: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
 
   // ── Living Nebula Orbs ──
   orbTitanium: {
@@ -1593,15 +1603,7 @@ const st = StyleSheet.create({
     alignItems: 'center', // Centered for the input flow
     width: '100%',
   },
-  etherealQuestion: {
-    fontSize: 34,
-    fontWeight: '800',
-    color: PREMIUM.textMain,
-    marginBottom: 12,
-    textAlign: 'center',
-    lineHeight: 40,
-    letterSpacing: -0.7,
-  },
+  etherealQuestion: { fontSize: 32, fontWeight: '800', color: PREMIUM.textMain, letterSpacing: -1, marginBottom: 8 },
   etherealSubtext: {
     fontSize: 15,
     color: PREMIUM.textMuted,
@@ -1648,7 +1650,7 @@ const st = StyleSheet.create({
     width: '100%',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
     backgroundColor: PREMIUM.glassFill,
     padding: 12,
     alignItems: 'center',
@@ -1659,7 +1661,7 @@ const st = StyleSheet.create({
     minHeight: 216,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
     backgroundColor: 'rgba(40, 40, 55, 0.65)',
     padding: 12,
     alignItems: 'center',
@@ -1671,7 +1673,7 @@ const st = StyleSheet.create({
     height: 216,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
     backgroundColor: PREMIUM.glassFill,
     padding: 12,
     alignItems: 'center',
@@ -1702,7 +1704,7 @@ const st = StyleSheet.create({
     paddingVertical: 20,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
     backgroundColor: PREMIUM.glassFill,
   },
   timeDisplayText: {
@@ -1720,7 +1722,7 @@ const st = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
     backgroundColor: PREMIUM.glassFill,
   },
   customTimeColumn: {
@@ -1750,7 +1752,7 @@ const st = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
   customTimeAmPmText: {
@@ -1767,7 +1769,7 @@ const st = StyleSheet.create({
     width: '100%',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
     backgroundColor: PREMIUM.glassFill,
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -1785,7 +1787,7 @@ const st = StyleSheet.create({
     width: '100%',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
     backgroundColor: PREMIUM.glassFill,
     overflow: 'hidden',
   },
@@ -1836,7 +1838,7 @@ const st = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: PREMIUM.glassFill,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1857,7 +1859,7 @@ const st = StyleSheet.create({
   nextButtonDisabled: {
     opacity: 0.35,
     backgroundColor: PREMIUM.glassFill,
-    borderColor: PREMIUM.glassBorder,
+    
     borderWidth: 1,
     shadowOpacity: 0,
   },
@@ -1909,7 +1911,7 @@ const st = StyleSheet.create({
     height: 160,
     borderRadius: 80,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
   },
   processingSparkle: {
     zIndex: 1,
@@ -1964,7 +1966,7 @@ const st = StyleSheet.create({
     width: '100%',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PREMIUM.glassBorder,
+    
     backgroundColor: PREMIUM.glassFill,
     overflow: 'hidden',
     marginBottom: 32,

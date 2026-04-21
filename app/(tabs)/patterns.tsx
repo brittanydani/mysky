@@ -164,11 +164,11 @@ export default function PatternsScreen() {
 
   // Rotate through all cross-ref insights daily — users see a fresh insight each day
   const todayIndex = useMemo(() => {
-    const todayStr = toLocalDateString(new Date());
-    let hash = 0;
-    for (let i = 0; i < todayStr.length; i++) hash = (hash << 5) - hash + todayStr.charCodeAt(i);
-    const daySeed = Math.abs(hash | 0);
-    return crossRefs.length > 0 ? daySeed % crossRefs.length : 0;
+    // Calculate the number of days since the Unix epoch in the local timezone.
+    // This provides a guaranteed sequential increment each local day, whereas 
+    // hashing the date string caused unpredictable jumps during date rollovers.
+    const localEpochDay = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60_000) / 86_400_000);
+    return crossRefs.length > 0 ? localEpochDay % crossRefs.length : 0;
   }, [crossRefs.length]);
 
   const leadInsight = useMemo(

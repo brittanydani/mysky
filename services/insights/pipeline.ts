@@ -179,7 +179,10 @@ function aggregateByDay(
 
     // Skip days that only have journal entries without check-ins nor sleep logs
     // so we don't skew the overall timeline with empty/void somatic snapshots
-    if (dayCheckIns.length === 0 && daySleeps.length === 0) continue;
+    if (dayCheckIns.length === 0 /* sleep-only days are allowed */) {
+        // Keep sleep-only days if they have entries
+        if (daySleeps.length === 0 && dayJournals.length > 0) continue;
+    }
 
     const moods = dayCheckIns.map(c => c.mood);
     const energies = dayCheckIns.map(c => c.energy);

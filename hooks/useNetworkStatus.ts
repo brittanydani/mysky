@@ -12,11 +12,11 @@ async function probe(): Promise<boolean> {
   const id = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   try {
     const res = await fetch(PROBE_URL, { method: 'HEAD', signal: controller.signal, cache: 'no-cache' });
+    clearTimeout(id);
     return res.status < 500;
   } catch {
-    return false;
-  } finally {
     clearTimeout(id);
+    return false;
   }
 }
 

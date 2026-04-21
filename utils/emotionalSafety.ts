@@ -118,7 +118,7 @@ const GLIMMER_PROMPTS = [
 
 /** Get today's glimmer prompt (rotates daily based on date). */
 export function getDailyGlimmerPrompt(): string {
-  const todayStr = toLocalDateString(new Date());
+  const todayStr = toLocalDateString();
   // simple string hash so the prompt is stable for the local day
   let hash = 0;
   for (let i = 0; i < todayStr.length; i++) {

@@ -26,6 +26,7 @@ const isValidDate = (dateString: string): boolean => {
   const month = parseInt(monthStr, 10) - 1;
   const day = parseInt(dayStr, 10);
   const date = new Date(year, month, day);
+  date.setFullYear(year);
   return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day;
 };
 

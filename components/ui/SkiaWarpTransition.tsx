@@ -91,14 +91,13 @@ const SkiaWarpTransition = forwardRef<WarpRef>(function SkiaWarpTransition(
 ) {
   // 0 = idle, 1 = peak burst
   const progress = useSharedValue(0);
-  const warpTimeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  const warpTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
-      for (const timeoutId of warpTimeoutsRef.current) {
-        clearTimeout(timeoutId);
+      if (warpTimeoutRef.current) {
+        clearTimeout(warpTimeoutRef.current);
       }
-      warpTimeoutsRef.current.clear();
     };
   }, []);
 
@@ -109,13 +108,16 @@ const SkiaWarpTransition = forwardRef<WarpRef>(function SkiaWarpTransition(
         withTiming(0, { duration: 350, easing: Easing.in(Easing.cubic) }),
       );
 
-      // Each fire call keeps its own completion callback so overlapping bursts
-      // cannot overwrite one another.
-      const timeoutId = setTimeout(() => {
-        warpTimeoutsRef.current.delete(timeoutId);
+      // If a burst is already in progress, cancel its timer so only
+      // the latest completion callback is invoked.
+      if (warpTimeoutRef.current) {
+        clearTimeout(warpTimeoutRef.current);
+      }
+      
+      warpTimeoutRef.current = setTimeout(() => {
+        warpTimeoutRef.current = null;
         onComplete?.();
       }, 620);
-      warpTimeoutsRef.current.add(timeoutId);
     },
     [progress],
   );

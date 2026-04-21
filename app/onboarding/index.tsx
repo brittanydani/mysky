@@ -32,12 +32,12 @@ export default function OnboardingIndex() {
 
   return (
     <View style={styles.container}>
-      {/* Ethereal Background Glow */}
       <SkiaDynamicCosmos />
-      <LinearGradient
-        colors={['rgba(212, 175, 55,0.1)', 'transparent']}
-        style={styles.glow}
-      />
+
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+      </View>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <KeyboardAvoidingView
           style={styles.keyboardView}
@@ -80,10 +80,17 @@ export default function OnboardingIndex() {
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
+  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
+  velvetBorder: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
   keyboardView: { flex: 1 },
-  glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
-  title: { fontSize: 34, fontWeight: '800', color: theme.textPrimary, marginBottom: 40, letterSpacing: -0.5 },
+  title: { fontSize: 32, fontWeight: '800', color: theme.textPrimary, letterSpacing: -1, marginBottom: 40 },
   input: { fontSize: 24, color: theme.textPrimary, borderBottomWidth: 1, borderColor: 'rgba(212, 175, 55,0.3)', paddingBottom: 16 },
   footer: { paddingHorizontal: 24 },
 });

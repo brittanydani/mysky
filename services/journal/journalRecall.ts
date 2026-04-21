@@ -43,7 +43,13 @@ export async function findMoodRecall(
 
     if (!match) return null;
 
-    const entryDate = new Date(match.date + 'T12:00:00');
+    const entryDateComponents = match.date.split('-'); // e.g. "2026-04-20"
+    const entryDate = new Date(
+      parseInt(entryDateComponents[0]),
+      parseInt(entryDateComponents[1]) - 1,
+      parseInt(entryDateComponents[2]),
+      12, 0, 0
+    );
     const daysAgo = Math.round(
       (today.getTime() - entryDate.getTime()) / 86_400_000,
     );

@@ -46,6 +46,7 @@ const SkiaFallingStarNotification = forwardRef<StarNotificationRef>((_, ref) => 
     return () => {
       if (hideTimer.current) {
         clearTimeout(hideTimer.current);
+        hideTimer.current = null;
       }
     };
   }, []);

@@ -106,6 +106,11 @@ export default function OnboardingRestoreScreen() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
         <SkiaDynamicCosmos />
+
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+          <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+        </View>
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           
           {/* Header */}
@@ -183,21 +188,22 @@ export default function OnboardingRestoreScreen() {
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
-  
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.cardBorder,
+  glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
+  velvetBorder: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.10)',
+    borderRightColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
+  
+  headerBar: { flexDirection: 'row', alignItems: 'center', paddingTop: 48, paddingHorizontal: 24, paddingBottom: 8 },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { 
-    fontSize: 18, 
-    fontWeight: '600', 
-    color: theme.textPrimary, 
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: theme.textPrimary,
+    letterSpacing: -1,
   },
   
   content: { paddingHorizontal: 24, paddingTop: 20 },

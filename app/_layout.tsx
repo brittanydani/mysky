@@ -268,7 +268,12 @@ function AppShell() {
   // Ref so the initializeApp closure always reads the current authLoading value
   // without needing authLoading in the effect dependency array.
   const authLoadingRef = useRef(authLoading);
-  useEffect(() => { authLoadingRef.current = authLoading; }, [authLoading]);
+  useEffect(() => {
+    authLoadingRef.current = authLoading;
+    if (!authLoading) {
+      DeviceEventEmitter.emit('AUTH_LOADING_COMPLETE');
+    }
+  }, [authLoading]);
 
   // Flush any check-ins queued by the Home Screen widget's "Log Energy" button
   usePendingWidgetCheckIns();
@@ -292,7 +297,7 @@ function AppShell() {
   // Prevent double-running the heavy init in edge cases
   const didRunPostConsentInitRef = useRef(false);
   const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const authCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const authListenerRef = useRef<any>(null);
   const didHideSplash = useRef(false);
   // Prevent double-navigation after onboarding completes
   const didNavigatePostOnboarding = useRef(false);
@@ -460,12 +465,13 @@ function AppShell() {
         logger.info('[init] step: waiting for auth context');
         await new Promise<void>((resolve) => {
           if (!authLoadingRef.current) { resolve(); return; }
-          authCheckIntervalRef.current = setInterval(() => {
-            if (!authLoadingRef.current) {
-              if (authCheckIntervalRef.current) clearInterval(authCheckIntervalRef.current);
-              resolve();
+          authListenerRef.current = DeviceEventEmitter.addListener('AUTH_LOADING_COMPLETE', () => {
+            if (authListenerRef.current) {
+              authListenerRef.current.remove();
+              authListenerRef.current = null;
             }
-          }, 20);
+            resolve();
+          });
         });
 
         logger.info('[init] step: privacy consent');
@@ -541,9 +547,9 @@ function AppShell() {
         clearTimeout(initTimeoutRef.current);
         initTimeoutRef.current = null;
       }
-      if (authCheckIntervalRef.current) {
-        clearInterval(authCheckIntervalRef.current);
-        authCheckIntervalRef.current = null;
+      if (authListenerRef.current) {
+        authListenerRef.current.remove();
+        authListenerRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
