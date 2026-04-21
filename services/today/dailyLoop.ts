@@ -234,8 +234,8 @@ export async function getWeeklyReflection(chartId: string): Promise<WeeklyReflec
       c => c.date >= fourteenDaysAgoKey && c.date < sevenDaysAgoKey,
     );
 
-    const thisWeekMoods = thisWeek.map(c => c.moodScore).filter(Boolean) as number[];
-    const lastWeekMoods = lastWeek.map(c => c.moodScore).filter(Boolean) as number[];
+    const thisWeekMoods = thisWeek.map(c => c.moodScore).filter((v): v is number => v != null);
+    const lastWeekMoods = lastWeek.map(c => c.moodScore).filter((v): v is number => v != null);
 
     const avgMood = thisWeekMoods.length > 0 ? mean(thisWeekMoods) : 0;
     const prevAvgMood = lastWeekMoods.length > 0 ? mean(lastWeekMoods) : null;
@@ -246,9 +246,9 @@ export async function getWeeklyReflection(chartId: string): Promise<WeeklyReflec
 
     // Sleep this week
     const thisWeekSleep = sleepEntries
-      .filter(s => new Date(s.date) >= sevenDaysAgo)
+      .filter(s => s.date >= sevenDaysAgoKey)
       .map(s => s.durationHours)
-      .filter(Boolean) as number[];
+      .filter((v): v is number => v != null);
     const avgSleep = thisWeekSleep.length > 0 ? mean(thisWeekSleep) : 0;
 
     // Journal count — getJournalEntries() returns all non-deleted entries
@@ -727,7 +727,7 @@ async function getTriggerCrossRefInsight(
     for (const item of triggers.restores) {
       const tag = resolveTag(item, RESTORE_TAG_MAP);
       if (!tag) continue;
-      const tagged = checkIns.filter(c => c.tags.includes(tag as any) && c.moodScore != null);
+      const tagged = checkIns.filter(c => c.tags?.includes(tag as any) && c.moodScore != null);
       if (tagged.length < 3) continue;
       const tagAvg = mean(tagged.map(c => c.moodScore as number));
       if (tagAvg - overallAvg < 0.4) continue;
@@ -743,7 +743,7 @@ async function getTriggerCrossRefInsight(
     for (const item of triggers.drains) {
       const tag = resolveTag(item, DRAIN_TAG_MAP);
       if (!tag) continue;
-      const tagged = checkIns.filter(c => c.tags.includes(tag as any) && c.moodScore != null);
+      const tagged = checkIns.filter(c => c.tags?.includes(tag as any) && c.moodScore != null);
       if (tagged.length < 3) continue;
       const tagAvg = mean(tagged.map(c => c.moodScore as number));
       if (overallAvg - tagAvg < 0.4) continue;
@@ -858,10 +858,10 @@ async function getWeeklySynthesis(chartId: string): Promise<WeeklySynthesis | nu
 
     // Mood signal
     if (weekCheckIns.length > 0) {
-      const moods = weekCheckIns.map(c => c.moodScore).filter(Boolean) as number[];
+      const moods = weekCheckIns.map(c => c.moodScore).filter((v): v is number => v != null);
       const avgMood = moods.length > 0 ? mean(moods) : 0;
-      const highDays = weekCheckIns.filter(c => c.moodScore >= 7);
-      const lowDays = weekCheckIns.filter(c => c.moodScore <= 4);
+      const highDays = weekCheckIns.filter(c => c.moodScore != null && c.moodScore >= 7);
+      const lowDays = weekCheckIns.filter(c => c.moodScore != null && c.moodScore <= 4);
 
       signals.push({
         domain: 'mood',
@@ -882,7 +882,7 @@ async function getWeeklySynthesis(chartId: string): Promise<WeeklySynthesis | nu
 
     // Sleep-mood connection
     if (weekSleep.length > 0) {
-      const sleepHours = weekSleep.map(s => s.durationHours).filter(Boolean) as number[];
+      const sleepHours = weekSleep.map(s => s.durationHours).filter((v): v is number => v != null);
       const avgSleep = sleepHours.length > 0 ? mean(sleepHours) : 0;
 
       signals.push({

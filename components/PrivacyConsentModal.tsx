@@ -1,6 +1,6 @@
 // components/PrivacyConsentModal.tsx
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
@@ -38,10 +38,15 @@ export default function PrivacyConsentModal({
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const [showDeclineHint, setShowDeclineHint] = useState(false);
+  const declineTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!visible) {
       setShowDeclineHint(false);
+      if (declineTimeoutRef.current) {
+        clearTimeout(declineTimeoutRef.current);
+        declineTimeoutRef.current = null;
+      }
     }
   }, [visible]);
 
@@ -53,7 +58,7 @@ export default function PrivacyConsentModal({
   const handleDecline = useCallback(() => {
     Haptics.selectionAsync().catch(() => {});
     setShowDeclineHint(true);
-    setTimeout(() => {
+    declineTimeoutRef.current = setTimeout(() => {
       onConsent(false);
     }, 2000);
   }, [onConsent]);

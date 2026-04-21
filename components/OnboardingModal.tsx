@@ -48,6 +48,7 @@ import { localDb } from '../services/storage/localDb';
 import { BackupService } from '../services/storage/backupService';
 import { IdentityVault } from '../utils/IdentityVault';
 import { toLocalDateString } from '../utils/dateUtils';
+import { useAuth } from '../context/AuthContext';
 import { logger } from     '../utils/logger';
 import Constants from 'expo-constants';
 import { supabase } from '../lib/supabase';
@@ -287,6 +288,18 @@ export default function OnboardingModal({
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const authSubmitInFlightRef = useRef(false);
+
+  const { session } = useAuth();
+  const previousSessionRef = useRef(!!session);
+
+  useEffect(() => {
+    const hasSession = !!session;
+    if (!previousSessionRef.current && hasSession && step === 'auth') {
+      goToStep('privacy');
+    }
+    previousSessionRef.current = hasSession;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, step]);
 
   useEffect(() => {
     return () => {

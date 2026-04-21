@@ -364,13 +364,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
 
-  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 12, paddingHorizontal: 24 },
+  titleArea: { paddingHorizontal: 24, marginVertical: 32 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: { fontSize: 31, color: theme.textPrimary, fontWeight: '700', letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
-  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.6)' },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
+  headerTitle: { fontSize: 32, color: theme.textPrimary, fontWeight: '800', letterSpacing: -1, marginBottom: 4, maxWidth: '88%' },
+  headerSubtitle: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.6)' },
 
   syncBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 16, marginBottom: 24, overflow: 'hidden' },
   syncText: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },

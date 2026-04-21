@@ -168,16 +168,18 @@ function aggregateByDay(
   }
 
   // Collect all unique dayKeys
-  const allDayKeys = new Set([...checkInsByDay.keys(), ...journalsByDay.keys()]);
+  const allDayKeys = new Set([...checkInsByDay.keys(), ...journalsByDay.keys(), ...sleepByDay.keys()]);
 
   const aggregates: DailyAggregate[] = [];
 
   for (const dayKey of allDayKeys) {
     const dayCheckIns = checkInsByDay.get(dayKey) ?? [];
     const dayJournals = journalsByDay.get(dayKey) ?? [];
+    const daySleeps = sleepByDay.get(dayKey) ?? [];
 
-    // Skip days with no check-ins (journal-only days don't contribute to time series)
-    if (dayCheckIns.length === 0) continue;
+    // Skip days that only have journal entries without check-ins nor sleep logs
+    // so we don't skew the overall timeline with empty/void somatic snapshots
+    if (dayCheckIns.length === 0 && daySleeps.length === 0) continue;
 
     const moods = dayCheckIns.map(c => c.mood);
     const energies = dayCheckIns.map(c => c.energy);

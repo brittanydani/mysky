@@ -539,34 +539,28 @@ export default function HomeScreen() {
 
           {/* ── Streak Row ── */}
           {dailyLoop && (dailyLoop.streak.current > 0 || dailyLoop.streak.atRisk || dailyLoop.streak.totalCheckIns === 0) && (
-            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.streakRow}>
-              {dailyLoop.streak.totalCheckIns === 0 ? (
-                /* First-time user: encourage first check-in */
-                <View style={[styles.streakPill, { backgroundColor: 'rgba(162,194,225,0.12)' }]}>
-                  <MetallicIcon name="flame-outline" size={16} variant="gold" />
-                  <Text style={styles.streakLabel}>Start your streak — log today's check-in</Text>
-                </View>
-              ) : dailyLoop.streak.atRisk ? (
-                /* At risk: show the streak they'll lose */
-                <>
-                  <View style={[styles.streakPill, { backgroundColor: 'rgba(217,140,140,0.15)' }]}>
-                    <MetallicIcon name="flame-outline" size={16} variant="gold" />
-                    <MetallicText style={styles.streakCount} variant="gold">{dailyLoop.streak.current}</MetallicText>
-                    <Text style={[styles.streakLabel, { color: '#D98C8C' }]}>day streak at risk</Text>
-                  </View>
-                  <View style={[styles.streakPill, { backgroundColor: 'rgba(217,140,140,0.10)' }]}>
-                    <MetallicIcon name="warning-outline" size={14} variant="gold" />
-                    <Text style={[styles.streakLabel, { color: '#D98C8C' }]}>Check in to keep it</Text>
-                  </View>
-                </>
-              ) : (
-                /* Normal streak display */
-                <>
-                  <View style={styles.streakPill}>
-                    <MetallicIcon name="flame-outline" size={16} variant="gold" />
-                    <MetallicText style={styles.streakCount} variant="gold">{dailyLoop.streak.current}</MetallicText>
-                    <Text style={styles.streakLabel}>day streak</Text>
-                  </View>
+            <>
+              <Animated.View entering={FadeInDown.delay(200).duration(600)}>
+                <SectionHeader
+                  title={
+                    dailyLoop.streak.totalCheckIns === 0
+                      ? 'Start your streak'
+                      : dailyLoop.streak.atRisk
+                        ? `${dailyLoop.streak.current} day streak at risk`
+                        : `${dailyLoop.streak.current} day streak`
+                  }
+                  icon="flame-outline"
+                />
+              </Animated.View>
+
+              {dailyLoop.streak.totalCheckIns > 0 && (dailyLoop.streak.atRisk || dailyLoop.streak.milestone || dailyLoop.streak.checkedInToday) && (
+                <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.streakRow}>
+                  {dailyLoop.streak.atRisk && (
+                    <View style={[styles.streakPill, { backgroundColor: 'rgba(217,140,140,0.10)' }]}>
+                      <MetallicIcon name="warning-outline" size={14} variant="gold" />
+                      <Text style={[styles.streakLabel, { color: '#D98C8C' }]}>Check in to keep it</Text>
+                    </View>
+                  )}
                   {dailyLoop.streak.milestone && (
                     <Animated.View
                       entering={ZoomIn.springify().damping(10).stiffness(120)}
@@ -585,7 +579,7 @@ export default function HomeScreen() {
                     </Animated.View>
                   )}
                   {dailyLoop.streak.checkedInToday && (
-                    <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}>
+                    <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}> 
                       <MetallicIcon name="checkmark-circle-outline" size={14} variant="green" />
                       {theme.isDark ? (
                         <MetallicText style={styles.streakLabel} variant="green">Today</MetallicText>
@@ -594,9 +588,9 @@ export default function HomeScreen() {
                       )}
                     </View>
                   )}
-                </>
+                </Animated.View>
               )}
-            </Animated.View>
+            </>
           )}
 
           {/* ── Total Check-Ins Counter (shows after first few check-ins) ── */}
@@ -1158,7 +1152,7 @@ const createStyles = (theme: AppTheme) => {
     marginTop: 16,
   },
   safeArea: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
 
   // Header
   header: {
@@ -1177,9 +1171,9 @@ const createStyles = (theme: AppTheme) => {
   },
   greeting: {
     color: theme.textPrimary,
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '800',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   dateLabel: {
     fontSize: 12,
@@ -1340,6 +1334,7 @@ const createStyles = (theme: AppTheme) => {
   streakRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
     marginBottom: 12,
     paddingLeft: 4,
@@ -1353,18 +1348,13 @@ const createStyles = (theme: AppTheme) => {
     paddingVertical: 6,
     borderRadius: 20,
   },
-  streakCount: {
-    color: PALETTE.gold,
-    fontSize: 16,
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'] as const,
-  },
   streakLabel: {
     color: theme.textPrimary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    flexShrink: 1,
   },
   streakLabelLight: {
     color: theme.textSecondary,

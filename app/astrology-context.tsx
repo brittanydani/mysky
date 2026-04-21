@@ -90,6 +90,11 @@ export default function CosmicContext() {
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
+
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+      </View>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <Pressable style={styles.closeButton} onPress={() => router.back()} hitSlop={10}>
@@ -203,19 +208,20 @@ export default function CosmicContext() {
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 10 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   
   velvetBorder: {
     ...theme.velvetBorder,
   },
 
-  header: { paddingHorizontal: 24, paddingVertical: 8 },
+  header: { paddingHorizontal: 24, paddingTop: 12 },
   closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   closeIcon: { color: theme.textPrimary, fontSize: 24 },
 
-  titleArea: { paddingHorizontal: 24, marginBottom: 32 },
+  titleArea: { paddingHorizontal: 24, marginVertical: 32 },
   headerTitle: { fontSize: 32, color: theme.textPrimary, fontWeight: '800', letterSpacing: -1 },
-  headerSubtitle: { fontSize: 13, marginTop: 4 },
+  headerSubtitle: { fontSize: 12, fontWeight: '600' },
+  glowOrb: { position: 'absolute', width: 300, height: 300, borderRadius: 150, opacity: 0.5 },
 
   heroSection: { alignItems: 'center', marginBottom: 40 },
   moonTitle: { fontSize: 24, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 4 },

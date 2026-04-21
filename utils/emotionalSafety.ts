@@ -6,6 +6,7 @@
 
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import { logger } from './logger';
+import { toLocalDateString } from './dateUtils';
 
 // ── Rest Day Suggestion ─────────────────────────────────────────────────────
 // After 7+ consecutive logging days, gently suggest a break.
@@ -117,8 +118,14 @@ const GLIMMER_PROMPTS = [
 
 /** Get today's glimmer prompt (rotates daily based on date). */
 export function getDailyGlimmerPrompt(): string {
-  const today = new Date();
-  const dayIndex = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
+  const todayStr = toLocalDateString(new Date());
+  // simple string hash so the prompt is stable for the local day
+  let hash = 0;
+  for (let i = 0; i < todayStr.length; i++) {
+    hash = (hash << 5) - hash + todayStr.charCodeAt(i);
+    hash |= 0; 
+  }
+  const dayIndex = Math.abs(hash);
   return GLIMMER_PROMPTS[dayIndex % GLIMMER_PROMPTS.length];
 }
 

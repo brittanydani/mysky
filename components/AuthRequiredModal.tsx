@@ -55,11 +55,12 @@ export default function AuthRequiredModal({ visible }: Props) {
   const [recoveryConfirmPassword, setRecoveryConfirmPassword] = useState('');
   const [showRecoveryPassword, setShowRecoveryPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-up');
+  const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-in');
 
   const resetRecoveryState = () => {
     setRecoveryOpen(false);
     setRecoveryCodeSent(false);
+    setRecoveryEmail('');
     setRecoveryCode('');
     setRecoveryPassword('');
     setRecoveryConfirmPassword('');
@@ -77,6 +78,7 @@ export default function AuthRequiredModal({ visible }: Props) {
   };
 
   const handleSendRecoveryCode = async () => {
+    if (loading) return;
     const trimmedEmail = recoveryEmail.trim();
 
     if (!trimmedEmail) {
@@ -104,6 +106,7 @@ export default function AuthRequiredModal({ visible }: Props) {
   };
 
   const handleCompleteRecovery = async () => {
+    if (loading) return;
     const trimmedEmail = recoveryEmail.trim();
 
     if (!trimmedEmail) {
@@ -147,6 +150,7 @@ export default function AuthRequiredModal({ visible }: Props) {
   };
 
   const handleAuth = async () => {
+    if (loading) return;
     if (!email.trim() || !password.trim()) {
       Alert.alert('Missing fields', 'Please enter your email and password.');
       return;

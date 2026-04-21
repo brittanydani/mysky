@@ -12,6 +12,7 @@ import { updateWidgetData, WidgetData } from './widgetDataService';
 import { getStreakStatus } from '../today/dailyLoop';
 import { localDb } from '../storage/localDb';
 import { logger } from '../../utils/logger';
+import { toLocalDateString } from '../../utils/dateUtils';
 
 /** Last-pushed partial so we can merge with energy data. */
 let lastPushed: Partial<WidgetData> = {};
@@ -55,7 +56,7 @@ export async function syncWidgetStreak(): Promise<void> {
       streakCount: streak.current,
       checkedInToday: streak.checkedInToday,
       lastCheckInDate: streak.checkedInToday
-        ? new Date().toISOString().slice(0, 10)
+        ? toLocalDateString(new Date())
         : undefined,
     });
   } catch (e) {

@@ -8,6 +8,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 export interface EditorialPillItem {
   key: string;
@@ -35,6 +36,8 @@ export const EditorialPillGrid = memo(function EditorialPillGrid({
   items,
   style,
 }: EditorialPillGridProps) {
+  const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
   return (
     <View style={[styles.grid, style]}>
       {items.map((item) => {
@@ -46,9 +49,9 @@ export const EditorialPillGrid = memo(function EditorialPillGrid({
         const isCustom = item.variant === 'custom';
 
         return (
-          <Pressable
+          <AnimatedPressable
             key={item.key}
-            style={[
+            style={({ pressed }) => [
               styles.pill,
               isUtility && styles.utilityPill,
               isCustom && styles.customPill,
@@ -59,6 +62,7 @@ export const EditorialPillGrid = memo(function EditorialPillGrid({
               },
               isSelected && item.selectedStyle,
               item.disabled && styles.disabled,
+              pressed && !item.disabled && styles.pillPressed,
             ]}
             onPress={item.onPress}
             onLongPress={item.onLongPress}
@@ -77,7 +81,7 @@ export const EditorialPillGrid = memo(function EditorialPillGrid({
             >
               {item.label}
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         );
       })}
     </View>
@@ -88,17 +92,21 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   pill: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    minHeight: 36,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.04)',
     backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  pillPressed: {
+    transform: [{ scale: 0.975 }],
   },
   utilityPill: {
     backgroundColor: 'rgba(255,255,255,0.04)',
@@ -108,9 +116,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   label: {
-    fontSize: 12,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '600',
     color: 'rgba(226,232,240,0.76)',
+    textAlign: 'center',
   },
   disabled: {
     opacity: 0.45,

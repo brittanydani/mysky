@@ -292,6 +292,7 @@ function AppShell() {
   // Prevent double-running the heavy init in edge cases
   const didRunPostConsentInitRef = useRef(false);
   const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const authCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const didHideSplash = useRef(false);
   // Prevent double-navigation after onboarding completes
   const didNavigatePostOnboarding = useRef(false);
@@ -459,8 +460,11 @@ function AppShell() {
         logger.info('[init] step: waiting for auth context');
         await new Promise<void>((resolve) => {
           if (!authLoadingRef.current) { resolve(); return; }
-          const check = setInterval(() => {
-            if (!authLoadingRef.current) { clearInterval(check); resolve(); }
+          authCheckIntervalRef.current = setInterval(() => {
+            if (!authLoadingRef.current) {
+              if (authCheckIntervalRef.current) clearInterval(authCheckIntervalRef.current);
+              resolve();
+            }
           }, 20);
         });
 
@@ -536,6 +540,10 @@ function AppShell() {
       if (initTimeoutRef.current) {
         clearTimeout(initTimeoutRef.current);
         initTimeoutRef.current = null;
+      }
+      if (authCheckIntervalRef.current) {
+        clearInterval(authCheckIntervalRef.current);
+        authCheckIntervalRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

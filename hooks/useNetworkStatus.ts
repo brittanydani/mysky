@@ -8,14 +8,15 @@ const RECHECK_INTERVAL_MS = 30000;
 const FAILURE_THRESHOLD = 2;
 
 async function probe(): Promise<boolean> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   try {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
     const res = await fetch(PROBE_URL, { method: 'HEAD', signal: controller.signal, cache: 'no-cache' });
-    clearTimeout(id);
     return res.status < 500;
   } catch {
     return false;
+  } finally {
+    clearTimeout(id);
   }
 }
 

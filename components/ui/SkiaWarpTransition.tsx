@@ -22,6 +22,8 @@ import React, {
   useImperativeHandle,
   useCallback,
   memo,
+  useRef,
+  useEffect,
 } from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
 import {
@@ -39,7 +41,6 @@ import {
   withTiming,
   withSequence,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 
 const { width: W, height: H } = Dimensions.get('window');
@@ -90,29 +91,33 @@ const SkiaWarpTransition = forwardRef<WarpRef>(function SkiaWarpTransition(
 ) {
   // 0 = idle, 1 = peak burst
   const progress = useSharedValue(0);
-  const completionCb = useSharedValue<(() => void) | null>(null);
+  const warpTimeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      for (const timeoutId of warpTimeoutsRef.current) {
+        clearTimeout(timeoutId);
+      }
+      warpTimeoutsRef.current.clear();
+    };
+  }, []);
 
   const fire = useCallback(
     (onComplete?: () => void) => {
-      if (onComplete) {
-        completionCb.value = onComplete;
-      }
-      const done = () => {
-        const cb = completionCb.value;
-        completionCb.value = null;
-        if (cb) runOnJS(cb)();
-      };
-
       progress.value = withSequence(
         withTiming(1, { duration: 250, easing: Easing.out(Easing.cubic) }),
         withTiming(0, { duration: 350, easing: Easing.in(Easing.cubic) }),
       );
 
-      // Fire completion after full duration
-      setTimeout(() => done(), 620);
+      // Each fire call keeps its own completion callback so overlapping bursts
+      // cannot overwrite one another.
+      const timeoutId = setTimeout(() => {
+        warpTimeoutsRef.current.delete(timeoutId);
+        onComplete?.();
+      }, 620);
+      warpTimeoutsRef.current.add(timeoutId);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [progress],
   );
 
   useImperativeHandle(ref, () => ({ fire }), [fire]);

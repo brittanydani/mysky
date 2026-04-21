@@ -19,8 +19,14 @@ const getMaxYear = () => {
 };
 
 const isValidDate = (dateString: string): boolean => {
-  const date = new Date(dateString);
-  return Number.isFinite(date.getTime());
+  const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const [_, yearStr, monthStr, dayStr] = match;
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthStr, 10) - 1;
+  const day = parseInt(dayStr, 10);
+  const date = new Date(year, month, day);
+  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day;
 };
 
 const parseTimeString = (value: string): ParsedTime | null => {

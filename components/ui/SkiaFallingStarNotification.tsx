@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useState, useCallback, useMemo, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { StyleSheet, Text, useWindowDimensions } from 'react-native';
 import {
   Canvas,
@@ -12,7 +12,6 @@ import Animated, {
   withSequence,
   useAnimatedStyle,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 
 export interface StarNotificationRef {
@@ -43,6 +42,14 @@ const SkiaFallingStarNotification = forwardRef<StarNotificationRef>((_, ref) => 
   const hide = useCallback(() => setVisible(false), []);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (hideTimer.current) {
+        clearTimeout(hideTimer.current);
+      }
+    };
+  }, []);
+
   useImperativeHandle(ref, () => ({
     show(text: string) {
       if (hideTimer.current) clearTimeout(hideTimer.current);
@@ -63,7 +70,7 @@ const SkiaFallingStarNotification = forwardRef<StarNotificationRef>((_, ref) => 
       starProgress.value = withTiming(1, { duration: 900, easing: Easing.out(Easing.quad) });
 
       // Auto-hide after animation completes
-      hideTimer.current = setTimeout(() => runOnJS(hide)(), 3000);
+      hideTimer.current = setTimeout(() => hide(), 3000);
     },
   }));
 

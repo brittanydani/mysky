@@ -405,10 +405,11 @@ export default function IntelligenceProfileScreen() {
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <LinearGradient
-        colors={['rgba(168, 139, 235, 0.12)', 'transparent']}
-        style={styles.topGlow}
-      />
+
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+      </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
@@ -568,16 +569,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+  glowOrb: { position: 'absolute', width: 300, height: 300, borderRadius: 150, opacity: 0.5 },
 
-  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 10 },
-  titleArea: { paddingHorizontal: 24, paddingBottom: 14 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 12, paddingHorizontal: 24 },
+  titleArea: { paddingHorizontal: 24, marginVertical: 32 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: theme.textPrimary, fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: { fontSize: 26, lineHeight: 31, color: theme.textPrimary, fontWeight: '700', letterSpacing: -0.85, marginBottom: 6, maxWidth: '88%' },
-  headerSubtitle: { fontSize: 13, color: theme.textSecondary, lineHeight: 18 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
+  headerTitle: { fontSize: 32, color: theme.textPrimary, fontWeight: '800', letterSpacing: -1, marginBottom: 6, maxWidth: '88%' },
+  headerSubtitle: { fontSize: 12, fontWeight: '600' },
 
   instruction: { fontSize: 13, color: theme.textMuted, lineHeight: 21, marginBottom: 28, maxWidth: 320 },
 

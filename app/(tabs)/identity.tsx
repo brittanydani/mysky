@@ -333,7 +333,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   glowOrb: { position: 'absolute', width: 400, height: 400, borderRadius: 200, opacity: 0.5 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
 
   // Editorial Header
   header: { marginBottom: 40 },
@@ -341,17 +341,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   titleStack: { flex: 1 },
   heroTitle: { 
     fontSize: 32, 
-    color: '#FFFFFF', 
+    color: theme.textPrimary, 
     fontWeight: '800', 
-    letterSpacing: -0.5, 
+    letterSpacing: -1, 
   },
   heroSubtitle: { 
     fontSize: 12, 
     color: 'rgba(255,255,255,0.6)', 
     fontWeight: '600', 
-    letterSpacing: 2.5, 
     marginTop: 4,
-    textTransform: 'uppercase'
   },
   globalAction: {
     width: 52,

@@ -133,6 +133,12 @@ export default function SkiaMoodSealButton({
     hapticMs.current = 400;
   }, []);
 
+  useEffect(() => {
+    return () => {
+      stopHaptics();
+    };
+  }, [stopHaptics]);
+
   const startHaptics = useCallback(() => {
     stopHaptics();
     const tick = () => {

@@ -9,6 +9,7 @@
 import { localDb } from '../storage/localDb';
 import { JournalEntry } from '../storage/models';
 import { logger } from '../../utils/logger';
+import { toLocalDateString } from '../../utils/dateUtils';
 
 export interface JournalRecallResult {
   entry: JournalEntry;
@@ -29,7 +30,7 @@ export async function findMoodRecall(
     if (!entries.length) return null;
 
     const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
+    const todayStr = toLocalDateString(today);
 
     const match = entries.find(
       (e) =>

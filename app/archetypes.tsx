@@ -229,7 +229,11 @@ export default function ArchetypesScreen() {
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <LinearGradient colors={['rgba(162, 194, 225, 0.12)', 'transparent']} style={styles.topGlow} />
+
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
+      </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
@@ -344,7 +348,7 @@ export default function ArchetypesScreen() {
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 360 },
+  glowOrb: { position: 'absolute', width: 300, height: 300, borderRadius: 150, opacity: 0.5 },
   velvetBorder: {
     borderWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.20)',
@@ -352,13 +356,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRightColor: 'rgba(255,255,255,0.10)',
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  header: { paddingHorizontal: 24, paddingVertical: 8 },
-  titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
+  header: { paddingHorizontal: 24, paddingTop: 12 },
+  titleArea: { paddingHorizontal: 24, marginVertical: 32 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: theme.textPrimary, fontSize: 24 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   headerTitle: { fontSize: 32, color: theme.textPrimary, fontWeight: '800', letterSpacing: -1 },
-  headerSubtitle: { fontSize: 13, marginTop: 4 },
+  headerSubtitle: { fontSize: 12, fontWeight: '600' },
   instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 21, marginBottom: 28 },
 
   promptBlock: { marginBottom: 32 },

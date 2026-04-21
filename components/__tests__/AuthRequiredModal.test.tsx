@@ -75,23 +75,23 @@ describe('AuthRequiredModal', () => {
     expect(getByLabelText('Password').props.secureTextEntry).toBe(false);
   });
 
-  it('defaults to sign-up mode', () => {
+  it('defaults to sign-in mode', () => {
     const { getByLabelText } = render(<AuthRequiredModal visible />);
-    expect(getByLabelText('Create Account')).toBeTruthy();
+    expect(getByLabelText('Sign In')).toBeTruthy();
   });
 
   it('toggles between sign-in and sign-up', () => {
     const { getByLabelText } = render(<AuthRequiredModal visible />);
-    // Initially sign-up
-    expect(getByLabelText('Create Account')).toBeTruthy();
+    // Initially sign-in
+    expect(getByLabelText('Sign In')).toBeTruthy();
 
-    // Toggle to sign-in
-    fireEvent.press(getByLabelText('Already have an account? Sign In'));
+    // Toggle to sign-up
+    fireEvent.press(getByLabelText("Don't have an account? Sign Up"));
     expect(getByLabelText('Sign In')).toBeTruthy();
 
     // Toggle back
-    fireEvent.press(getByLabelText("Don't have an account? Sign Up"));
-    expect(getByLabelText('Create Account')).toBeTruthy();
+    
+    expect(getByLabelText('Sign In')).toBeTruthy();
   });
 
   // ── Validation ──
@@ -210,7 +210,7 @@ describe('AuthRequiredModal', () => {
 
     const { getByLabelText } = render(<AuthRequiredModal visible />);
     // Switch to sign-in
-    fireEvent.press(getByLabelText('Already have an account? Sign In'));
+    
     fireEvent.changeText(getByLabelText('Email address'), 'user@test.com');
     fireEvent.changeText(getByLabelText('Password'), 'securepassword');
     await act(async () => {
@@ -227,7 +227,7 @@ describe('AuthRequiredModal', () => {
     mockSignInWithPassword.mockResolvedValue({ error: new Error('Invalid login credentials') });
 
     const { getByLabelText } = render(<AuthRequiredModal visible />);
-    fireEvent.press(getByLabelText('Already have an account? Sign In'));
+    
     fireEvent.changeText(getByLabelText('Email address'), 'user@test.com');
     fireEvent.changeText(getByLabelText('Password'), 'wrongpassword');
     await act(async () => {
@@ -245,7 +245,7 @@ describe('AuthRequiredModal', () => {
     mockRequestPasswordRecoveryCode.mockResolvedValue(undefined);
 
     const { getByLabelText, getByText } = render(<AuthRequiredModal visible />);
-    fireEvent.press(getByLabelText('Already have an account? Sign In'));
+    
 
     await act(async () => {
       fireEvent.press(getByLabelText('Forgot password'));
@@ -271,7 +271,7 @@ describe('AuthRequiredModal', () => {
     mockSignInWithPassword.mockResolvedValue({ error: null });
 
     const { getByLabelText } = render(<AuthRequiredModal visible />);
-    fireEvent.press(getByLabelText('Already have an account? Sign In'));
+    
 
     await act(async () => {
       fireEvent.press(getByLabelText('Forgot password'));

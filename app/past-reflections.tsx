@@ -416,13 +416,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
-  header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
+  header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 12, paddingHorizontal: 24 },
+  titleArea:   { paddingHorizontal: 24, marginVertical: 32 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
 
   headerTitle: {
     fontSize: 32,
@@ -432,7 +431,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 6,
     maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: theme.textSecondary },
+  headerSubtitle: { fontSize: 12, fontWeight: '600' },
 
   // Filter chips
   filterRow: { marginBottom: 32 },

@@ -39,6 +39,7 @@ import {
 } from '../../utils/selfKnowledgeCrossRef';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
+import { toLocalDateString } from '../../utils/dateUtils';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 import { usePremium } from '../../context/PremiumContext';
 import { useRouter, Href } from 'expo-router';
@@ -69,6 +70,7 @@ export default function PatternsScreen() {
   const [snapshot, setSnapshot] = useState({ avgMood: 0, avgStress: 0, checkInCount: 0 });
   const [trendCheckIns, setTrendCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
+  const [orbitLoading, setOrbitLoading] = useState(true);
   const [crossRefs, setCrossRefs] = useState<CrossRefInsight[]>([]);
   const [dailyAggregates, setDailyAggregates] = useState<DailyAggregate[]>([]);
   const [, setNarrative] = useState<NarrativeInsightBundle | null>(null);
@@ -82,6 +84,7 @@ export default function PatternsScreen() {
     useCallback(() => {
       let active = true;
       setLoading(true);
+      setOrbitLoading(true);
       trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
       (async () => {
         try {
@@ -115,6 +118,7 @@ export default function PatternsScreen() {
           setTrendCheckIns(checkIns);
           setSnapshot({ avgMood, avgStress, checkInCount: checkIns.length });
           setLastUpdated(new Date().toISOString());
+          setOrbitLoading(false);
 
           const skContext = await loadSelfKnowledgeContext();
           if (!active) return;
@@ -160,8 +164,11 @@ export default function PatternsScreen() {
 
   // Rotate through all cross-ref insights daily — users see a fresh insight each day
   const todayIndex = useMemo(() => {
-    const epoch = Math.floor(Date.now() / 86_400_000); // day number since Unix epoch
-    return crossRefs.length > 0 ? epoch % crossRefs.length : 0;
+    const todayStr = toLocalDateString(new Date());
+    let hash = 0;
+    for (let i = 0; i < todayStr.length; i++) hash = (hash << 5) - hash + todayStr.charCodeAt(i);
+    const daySeed = Math.abs(hash | 0);
+    return crossRefs.length > 0 ? daySeed % crossRefs.length : 0;
   }, [crossRefs.length]);
 
   const leadInsight = useMemo(
@@ -273,7 +280,7 @@ export default function PatternsScreen() {
                   <MetallicIcon name="planet-outline" size={14} variant="gold" />
                   <MetallicText style={styles.orbitCardEyebrow} variant="gold">PATTERN ORBIT MAP</MetallicText>
                 </View>
-                {loading ? <ActivityIndicator size="large" color={PALETTE.gold} /> : <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />}
+                {orbitLoading ? <ActivityIndicator size="large" color={PALETTE.gold} /> : <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />}
               </View>
 
               <SectionHeader label="SURFACING TODAY" icon="radio-outline" />

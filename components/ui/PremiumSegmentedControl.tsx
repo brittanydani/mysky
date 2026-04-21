@@ -108,7 +108,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(50, 30, 10, 0.03)',
     borderRadius: 14,
     padding: 4,
-    height: 56,
     position: 'relative',
     marginBottom: 16,
     width: '100%',
@@ -132,6 +131,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 14,
     zIndex: 1,
   },
   label: {

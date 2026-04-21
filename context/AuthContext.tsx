@@ -41,12 +41,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextValue>({
-  session: null,
-  user: null,
-  loading: true,
-  signOut: async () => {},
-});
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
@@ -125,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted.current = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [syncDemoArtifacts]);
 
   // 3. App Lifecycle Management — Stop refresh when backgrounded
   useEffect(() => {
@@ -226,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

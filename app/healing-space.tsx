@@ -171,7 +171,7 @@ export default function HealingSpaceScreen() {
 
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(162, 194, 225, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.08)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(168, 139, 235, 0.06)' }]} />
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -335,10 +335,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
 
-  headerRow: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
+  headerRow: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4 },
   backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   header: { marginBottom: 36 },
   headerTitle: {
     fontSize: 32,
@@ -347,7 +347,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: -1,
     marginBottom: 6,
   },
-  headerSubtitle: { fontSize: 13, color: theme.textSecondary, marginTop: 4 },
+  headerSubtitle: { fontSize: 12, fontWeight: '600' },
 
   loadingText: { color: theme.textMuted, fontSize: 14, fontWeight: '600' },
 

@@ -177,6 +177,8 @@ async function invokeBirthProfileSync(
   return (data ?? { profile: null }) as BirthProfileFunctionResponse;
 }
 
+import * as Crypto from 'expo-crypto';
+
 // ─── Queue management (stored in local SQLite) ────────────────────────────────
 
 export async function enqueue(
@@ -187,7 +189,7 @@ export async function enqueue(
 ): Promise<void> {
   try {
     const db = await localDb.getDb();
-    const id = `${table}:${recordId}:${Date.now()}`;
+    const id = `${table}:${recordId}:${Crypto.randomUUID()}`;
     await db.runAsync(
       `INSERT OR REPLACE INTO sync_queue
          (id, table_name, record_id, operation, payload, created_at, attempts)
