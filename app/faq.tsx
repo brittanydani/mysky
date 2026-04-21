@@ -245,7 +245,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
 
-  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 48, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
   backButton: {
     width: 44,
