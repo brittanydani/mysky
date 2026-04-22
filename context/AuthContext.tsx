@@ -22,7 +22,7 @@ import { isAutoDemoSeedEnabled } from '../constants/config';
 import { processGeminiQueue } from '../services/offline/geminiQueueProcessor';
 import { logger } from '../utils/logger';
 import { revenueCatService } from '../services/premium/revenuecat';
-import { DemoSeedService } from '../services/storage/demoSeedService';
+import { DemoSeedService } from '../services/storage/demoAccountBSeedService';
 import { localDb } from '../services/storage/localDb';
 import { useDreamMapStore } from '../store/dreamMapStore';
 import { useResonanceStore } from '../store/resonanceStore';
@@ -31,6 +31,7 @@ import { useCircadianStore } from '../store/circadianStore';
 import { useCorrelationStore } from '../store/correlationStore';
 import { useCheckInStore } from '../store/checkInStore';
 import * as Haptics from '../utils/haptics';
+import { IdentityVault } from '../utils/IdentityVault';
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
@@ -38,7 +39,7 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signOut: () => Promise<void>;
+  signOut: (options?: { localOnly?: boolean }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -169,39 +170,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.remove();
   }, [syncDemoArtifacts]);
 
-  const signOut = useCallback(async () => {
+  const clearSignedOutState = useCallback(async () => {
+    // Clear sensitive cached data from Zustand stores
+    useDreamMapStore.getState().clearCache();
+    useResonanceStore.getState().clearCache();
+    useSceneStore.getState().clearScene();
+    useCircadianStore.getState().clearCache();
+    useCorrelationStore.getState().clearCache();
+    useCheckInStore.getState().resetStatus();
+
+    // Clear unsynced queue before another account can sign in on this device.
+    try {
+      await localDb.clearSyncQueue();
+    } catch (e) {
+      logger.error('[AuthContext] Failed to clear sync queue during sign-out:', e);
+    }
+
+    // Destroy the hardware-sealed identity to prevent the next user from inheriting it
+    try {
+      await IdentityVault.destroyIdentity();
+    } catch (e) {
+      logger.error('[AuthContext] Failed to destroy IdentityVault during sign-out:', e);
+    }
+
+    if (isMounted.current) {
+      setSession(null);
+    }
+  }, []);
+
+  const signOut = useCallback(async (options?: { localOnly?: boolean }) => {
     try {
       // Tactile confirmation of closing the session
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => { /* haptic not critical */ });
       
-      const { error } = await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut(options?.localOnly ? { scope: 'local' } : undefined);
       if (error) throw error;
 
-      // Clear sensitive cached data from Zustand stores
-      useDreamMapStore.getState().clearCache();
-      useResonanceStore.getState().clearCache();
-      useSceneStore.getState().clearScene();
-      useCircadianStore.getState().clearCache();
-      useCorrelationStore.getState().clearCache();
-      useCheckInStore.getState().resetStatus();
-
-      // Clear unsynced queue before another account can sign in on this device.
-      try {
-        await localDb.clearSyncQueue();
-      } catch (e) {
-        logger.error('[AuthContext] Failed to clear sync queue during sign-out:', e);
-      }
-
-      if (isMounted.current) {
-        setSession(null);
-      }
+      await clearSignedOutState();
       
       logger.info('[AuthContext] User successfully signed out');
     } catch (err) {
       logger.error('[AuthContext] Sign-out failed:', err);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { /* haptic not critical */ });
     }
-  }, []);
+  }, [clearSignedOutState]);
 
   return (
     <AuthContext.Provider

@@ -1,0 +1,177 @@
+# MySky — Project Rules
+
+You are working on MySky, a production Expo + React Native app focused on private self-reflection, journaling, mood/sleep/dream tracking, and personal pattern insights.
+
+## Core behavior
+- Act by default: implement changes directly instead of only describing them.
+- Fix root causes, not superficial symptoms.
+- Keep edits minimal, intentional, and production-safe.
+- Do not change unrelated behavior.
+- Do not remove features unless explicitly asked.
+- Preserve the existing architecture unless there is a strong reason to change it.
+
+## Code output preferences
+- Return full updated files when changes are substantial.
+- Keep code clean, readable, and ready for production.
+- Avoid placeholder logic and half-finished implementations.
+- If the correct fix is clear, implement it instead of stopping at analysis.
+- Summarize changes briefly after editing.
+
+## Stack assumptions
+- Expo + React Native
+- Functional components and hooks
+- Some parts may be JS, some TS; follow local conventions unless migration is requested
+
+## Sensitive product areas
+Be especially careful with:
+- journal entries
+- dream content
+- mood/sleep/check-in data
+- encrypted or privacy-sensitive flows
+- local storage / persistence
+- auth and backup/restore flows
+- analytics boundaries
+- AI/reflection features
+- premium gating
+- native modules and iOS behavior
+
+## Product expectations
+- MySky should feel private, calming, reflective, and emotionally safe.
+- Maintain a refined, premium, Apple-editorial style where applicable.
+- Favor clarity, softness, elegance, and trust.
+- Avoid chaotic or noisy UI.
+- Preserve the sense of emotional containment and privacy.
+
+## Privacy expectations
+- Treat all personal data as highly sensitive.
+- Avoid exposing private content in logs, debug output, or unsafe data flows.
+- Preserve on-device/private-first assumptions wherever possible.
+
+## Debugging expectations
+When debugging:
+1. inspect relevant files first
+2. trace data flow carefully
+3. identify the real failure point
+4. implement the fix directly
+5. note any risks or edge cases briefly
+
+## Dependency rules
+- Do not add dependencies unless truly needed.
+- Prefer existing project patterns and libraries.
+- Avoid unnecessary native complexity.
+
+## Output style
+Unless asked otherwise:
+- do the work directly
+- keep explanations concise
+- optimize for stability, privacy, and production readiness
+
+# MySky — Workflow
+
+For every task, use this workflow:
+
+## 1. Classify the request
+Determine whether it is:
+- bug fix
+- UI refinement
+- journaling/data model work
+- insight/analysis feature work
+- privacy/security-related work
+- build/config issue
+- refactor
+
+## 2. Inspect first
+- Read the most relevant files before editing.
+- Follow state, storage, services, hooks, and screen flow.
+- For data issues, trace how data is created, transformed, stored, and displayed.
+
+## 3. Implement the narrowest correct fix
+- Prefer small, safe changes with strong correctness.
+- Avoid broad rewrites unless the existing structure is causing the problem.
+
+## 4. Validate against product goals
+Before finalizing, check that the change supports:
+- privacy
+- emotional safety
+- app stability
+- iOS release safety
+- data integrity
+- premium/access logic
+- clean UX
+
+## 5. Deliver clearly
+- Apply the code changes directly.
+- Then summarize:
+  - likely root cause
+  - files changed
+  - what was fixed or implemented
+  - short testing guidance if useful
+
+## 6. For UI work
+- Keep the visual result calm, polished, modern, and premium.
+- Avoid visually loud solutions.
+- Prioritize readability and emotional softness.
+
+## 7. For data-related work
+- Be careful not to break saved data, migrations, tags, journaling flows, chart/profile data, sleep entries, dreams, check-ins, or analytics assumptions.
+- Preserve schema compatibility unless explicitly asked to change it.
+
+## 8. For large tasks
+- Start implementation instead of over-planning.
+- Handle the highest-impact pieces first.
+- Keep momentum and do not fall into advice-only mode.
+
+# MySky — Hooks
+
+## Bug Fix Hook
+When I ask for a fix:
+- inspect the likely files
+- trace the actual data/state flow
+- identify the root cause
+- implement the fix directly
+- provide full updated files if the edits are meaningful
+
+## UI Hook
+When I ask to improve a screen:
+- edit the real component code
+- keep the design calm, elegant, premium, and emotionally safe
+- preserve readability and trust
+- avoid clutter and harsh visuals
+
+## Privacy Hook
+When the task touches personal data:
+- use the most privacy-preserving approach
+- avoid unsafe logging
+- preserve encryption/private-first assumptions where present
+- do not expose sensitive data unnecessarily
+
+## Data Integrity Hook
+When the task touches journals, dreams, sleep, mood, tags, chart/profile data, daily check-ins, or insights:
+- be careful with saved data and backward compatibility
+- do not break existing entries
+- preserve schema assumptions unless explicitly changing them
+
+## Build Error Hook
+When I mention a build or launch issue:
+- actively debug it
+- inspect imports, native-sensitive modules, config, and recent changes
+- implement the likely fix directly
+- keep release-build safety in mind
+
+## Refactor Hook
+When I ask for a refactor:
+- preserve behavior
+- improve readability and maintainability
+- avoid changing user-facing behavior unless requested
+- avoid unnecessary churn
+
+## Full File Hook
+If the change is more than tiny:
+- return the full updated file
+- do not rely on partial snippets
+
+## Reflection Feature Hook
+When the task touches insights, journaling intelligence, dream analysis, archetype/profile data, cognitive style, somatic entries, trigger/glimmer logs, or relationship patterns:
+- preserve nuance
+- avoid flattening emotionally meaningful data
+- keep outputs structured, stable, and user-safe

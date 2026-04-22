@@ -41,6 +41,7 @@ import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/O
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 import { VelvetGlassCard } from '../../../components/ui/VelvetGlassCard';
 import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
+import { DemoSeedService } from '../../../services/storage/demoAccountBSeedService';
 
 const FAQ: { question: string; answer: string }[] = [
   {
@@ -142,6 +143,7 @@ export default function SettingsScreen() {
   const [backupInProgress, setBackupInProgress] = useState(false);
   const [restoreInProgress, setRestoreInProgress] = useState(false);
   const [pdfExporting, setPdfExporting] = useState(false);
+  const [demoSendInProgress, setDemoSendInProgress] = useState(false);
   const [backupModalVisible, setBackupModalVisible] = useState(false);
   const [restoreModalVisible, setRestoreModalVisible] = useState(false);
   const [restoreUri, setRestoreUri] = useState<string | null>(null);
@@ -401,6 +403,7 @@ export default function SettingsScreen() {
     });
 
   const disableActions = backupInProgress || restoreInProgress || backupModalVisible || restoreModalVisible;
+  const showDemoSendButton = __DEV__ && DemoSeedService.isDemoAccount(user?.email);
 
   const openSupportEmail = async () => {
     const url = `mailto:${SUPPORT_EMAIL}?subject=MySky%20Support`;
@@ -413,6 +416,27 @@ export default function SettingsScreen() {
       await Linking.openURL(url);
     } catch {
       Alert.alert('Unable to Open Mail', `Please email ${SUPPORT_EMAIL}.`);
+    }
+  };
+
+  const handleSendDemoData = async () => {
+    if (demoSendInProgress) return;
+
+    try {
+      setDemoSendInProgress(true);
+      await DemoSeedService.sendDemoDataToSupabase(user?.email);
+      try {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      } catch {}
+      Alert.alert('Demo Data Sent', 'Account B demo check-ins and daily logs were uploaded to Supabase.');
+    } catch (error: any) {
+      logger.error('[Settings] Demo data send failed:', error);
+      try {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      } catch {}
+      Alert.alert('Send Failed', error?.message || 'Unable to send demo data.');
+    } finally {
+      setDemoSendInProgress(false);
     }
   };
 
@@ -874,6 +898,51 @@ export default function SettingsScreen() {
             </VelvetGlassCard>
           </Animated.View>
 
+          {showDemoSendButton && (
+            <Animated.View entering={FadeInDown.delay(325).duration(600)} style={styles.section}>
+              <VelvetGlassCard
+                interactive={false}
+                style={styles.groupShell}
+                backgroundColor={theme.isDark ? 'rgba(15, 14, 18, 0.56)' : 'rgba(255,255,255,0.78)'}
+                borderColor="rgba(212,175,55,0.12)"
+                topEdgeColor="rgba(255,255,255,0.18)"
+              >
+                <ObsidianSettingsGroup title="Demo Tools" subtitle="Dev-only Account B utilities" style={styles.groupInner}>
+                  <View style={{ paddingHorizontal: 20 }}>
+                    <View style={styles.settingRow}>
+                      <View style={styles.settingInfo}>
+                        <View style={styles.settingHeader}>
+                          <MetallicIcon name="flask-outline" size={20} color={accentGold} />
+                          <Text style={styles.settingTitle}>Send Demo Data</Text>
+                        </View>
+                        <Text style={styles.settingDescription}>
+                          Upload Account B demo check-ins and daily logs to Supabase for this signed-in demo user.
+                        </Text>
+                      </View>
+                    </View>
+
+                    <Pressable
+                      style={[styles.syncButton, demoSendInProgress && styles.syncButtonDisabled]}
+                      onPress={handleSendDemoData}
+                      disabled={demoSendInProgress}
+                      accessibilityRole="button"
+                      accessibilityLabel="Send demo data"
+                    >
+                      {demoSendInProgress ? (
+                        <ActivityIndicator size="small" color={accentGold} />
+                      ) : (
+                        <MetallicIcon name="cloud-upload-outline" size={16} color={accentGold} />
+                      )}
+                      <MetallicText color={accentGold} style={styles.syncButtonText}>
+                        {demoSendInProgress ? 'Sending...' : 'Send Demo Data'}
+                      </MetallicText>
+                    </Pressable>
+                  </View>
+                </ObsidianSettingsGroup>
+              </VelvetGlassCard>
+            </Animated.View>
+          )}
+
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
             <VelvetGlassCard
               interactive={false}
@@ -1135,7 +1204,9 @@ export default function SettingsScreen() {
                         {
                           text: 'Sign Out',
                           style: 'destructive',
-                          onPress: signOut,
+                          onPress: () => {
+                            void signOut();
+                          },
                         },
                       ],
                     );
@@ -1169,7 +1240,7 @@ export default function SettingsScreen() {
                             try {
                               const { error } = await supabase.rpc('delete_user_account');
                               if (error) throw error;
-                              await signOut();
+                              await signOut({ localOnly: true });
                             } catch (err: unknown) {
                               const msg = err instanceof Error ? err.message : 'Something went wrong';
                               Alert.alert('Error', `Could not delete account: ${msg}\n\nPlease contact ${SUPPORT_EMAIL} to request deletion.`);

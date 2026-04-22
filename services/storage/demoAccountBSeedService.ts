@@ -89,6 +89,62 @@ export const DemoSeedService = {
     return email?.toLowerCase() === DEMO_EMAIL;
   },
 
+  async sendDemoDataToSupabase(email: string | null | undefined): Promise<void> {
+    if (!DemoSeedService.isDemoAccount(email)) {
+      throw new Error('Demo data send is only available for the Account B demo user.');
+    }
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      throw sessionError;
+    }
+
+    const user = session?.user;
+    if (!user) {
+      throw new Error('You must be signed in to send demo data.');
+    }
+
+    const checkInRows = ACCOUNT_B_DEMO_SEED.dailyEntries.map((entry) => ({
+      user_id: user.id,
+      mood_value: entry.eveningMood,
+      log_date: entry.date,
+      time_of_day: 'evening',
+      created_at: new Date(`${entry.date}T20:00:00.000Z`).toISOString(),
+      updated_at: new Date(`${entry.date}T20:00:00.000Z`).toISOString(),
+    }));
+
+    const dailyLogRows = ACCOUNT_B_DEMO_SEED.dailyEntries.map((entry) => ({
+      user_id: user.id,
+      log_date: entry.date,
+      created_at: new Date(`${entry.date}T20:30:00.000Z`).toISOString(),
+      stress: DemoSeedService._stressLevelToNumber(entry.eveningStress),
+      anxiety: DemoSeedService._stressLevelToNumber(entry.morningStress),
+      dream_symbols: Array.from(new Set([...entry.morningTags, ...entry.eveningTags])).slice(0, 12),
+    }));
+
+    const { error: checkInError } = await supabase
+      .from('daily_check_ins')
+      .upsert(checkInRows, { onConflict: 'daily_check_ins_user_date_time_key' });
+
+    if (checkInError) {
+      throw new Error(checkInError.message || 'Failed to upload demo check-ins.');
+    }
+
+    const { error: dailyLogError } = await supabase
+      .from('daily_logs')
+      .upsert(dailyLogRows, { onConflict: 'daily_logs_user_log_date_key' });
+
+    if (dailyLogError) {
+      throw new Error(dailyLogError.message || 'Failed to upload demo daily logs.');
+    }
+
+    logger.info(`[DemoSeed] Uploaded ${checkInRows.length} demo check-ins and ${dailyLogRows.length} daily logs to Supabase.`);
+  },
+
   async seedIfNeeded(email: string | null | undefined): Promise<void> {
     if (!DemoSeedService.isDemoAccount(email)) return;
 
@@ -383,8 +439,8 @@ export const DemoSeedService = {
     );
 
     const SCALES: Record<string, number> = { 'Not True': 0, 'Somewhat': 1, 'True': 2, 'Very True': 3 };
-    const SCALES_NUMS = { '0':0, '1':1, '2':2, '3':3 };
-    const validAnswers = ACCOUNT_B_REFLECTIONS.filter(r => r.answer !== '');
+    const SCALES_NUMS = { '0': 0, '1': 1, '2': 2, '3': 3 };
+    const validAnswers = ACCOUNT_B_REFLECTIONS;
     
     if (validAnswers.length > 0) {
       const answersToSave = validAnswers.map((r) => {
@@ -566,6 +622,12 @@ export const DemoSeedService = {
     if (hours >= 6.0) return 3;
     if (hours >= 5.0) return 2;
     return 1;
+  },
+
+  _stressLevelToNumber(level: 'low' | 'medium' | 'high'): number {
+    if (level === 'high') return 8;
+    if (level === 'medium') return 5;
+    return 2;
   },
 
   _titleFromPrompt(promptResponse: string, i: number): string {

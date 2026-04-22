@@ -2,12 +2,11 @@
  * demoSeedService.ts
  *
  * Seeds demo data for Account B only.
- * Triggers automatically on sign-in for brithornick92@gmail.com if the
- * device has no existing seeded data for this account.
+ * Triggers automatically on sign-in for brithornick92@gmail.com.
  *
- * This version preserves the storage style visible in the existing code:
- * - localDb for chart, settings, journals, sleep, and daily check-ins
- * - EncryptedAsyncStorage / AccountScopedAsyncStorage for profile-like surfaces
+ * This version stores the real daily reflection answers alongside
+ * journals, sleep, check-ins, somatic entries, trigger/glimmer events,
+ * relationship patterns, and relationship charts.
  */
 
 import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
@@ -22,14 +21,19 @@ import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { ACCOUNT_B_DEMO_SEED } from './demoAccountBSeed';
+import {
+  ARCHETYPE_QUESTIONS,
+  COGNITIVE_QUESTIONS,
+  INTELLIGENCE_QUESTIONS,
+  VALUES_QUESTIONS,
+} from '../../constants/dailyReflectionQuestions';
 
 const DEMO_EMAIL = 'brithornick92@gmail.com';
-const SEED_FLAG_KEY = '@mysky:demo_seeded_account_b_v1';
+const SEED_FLAG_KEY = '@mysky:demo_seeded_account_b_v2';
 const DAILY_SEED_KEY = '@mysky:demo_last_seeded_account_b';
 
 const CHART_ID = 'account-b-demo-chart';
 const CHART_CREATED = new Date('2026-01-01T09:00:00.000Z').toISOString();
-const SEED_DAYS = ACCOUNT_B_DEMO_SEED.dailyEntries.length;
 
 const MOON_SIGNS = [
   'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -59,10 +63,6 @@ function isoDate(d: Date): string {
   return toLocalDateString(d);
 }
 
-function dateFromISODateString(dateStr: string): Date {
-  return new Date(`${dateStr}T12:00:00.000Z`);
-}
-
 function dayNumber(d: Date): number {
   return Math.floor(d.getTime() / 86400000);
 }
@@ -90,6 +90,8 @@ export const DemoSeedService = {
         await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
         logger.info('[DemoSeed] Account B demo seed complete.');
       } else {
+        await DemoSeedService._ensureChart();
+
         const repaired = await DemoSeedService._repairUnreadableDemoSeedData();
         if (repaired) {
           await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
@@ -97,30 +99,10 @@ export const DemoSeedService = {
         }
 
         await DemoSeedService._restoreLocalDemoDataIfMissing();
-        await DemoSeedService._dailyTopUp();
+        await DemoSeedService._restoreEncryptedDemoDataIfMissing();
       }
     } catch (e) {
       logger.error('[DemoSeed] Seed failed:', e);
-    }
-  },
-
-  async cleanupStaleDemoArtifacts(email: string | null | undefined = null): Promise<void> {
-    try {
-      await localDb.initialize();
-
-      if (DemoSeedService.isDemoAccount(email)) {
-        await DemoSeedService._restoreLocalDemoDataIfMissing();
-      }
-
-      const db = await localDb.getDb();
-      const result = await db.runAsync("DELETE FROM sync_queue WHERE record_id LIKE 'demo-%'");
-      const removed = result?.changes ?? 0;
-
-      if (removed > 0) {
-        logger.info(`[DemoSeed] Removed ${removed} queued demo sync item${removed === 1 ? '' : 's'}.`);
-      }
-    } catch (e) {
-      logger.error('[DemoSeed] Failed to clean queued demo sync items:', e);
     }
   },
 
@@ -135,17 +117,6 @@ export const DemoSeedService = {
       db.runAsync("DELETE FROM sync_queue WHERE record_id LIKE 'demo-%'"),
     ]);
 
-    const allCharts = await localDb.getCharts();
-    const chartIds = allCharts.map((c: any) => c.id);
-    if (chartIds.length > 0) {
-      for (const cid of chartIds) {
-        await db.runAsync('DELETE FROM journal_entries WHERE chart_id = ?', [cid]);
-        await db.runAsync('DELETE FROM sleep_entries WHERE chart_id = ?', [cid]);
-        await db.runAsync('DELETE FROM daily_check_ins WHERE chart_id = ?', [cid]);
-        await db.runAsync('DELETE FROM insight_history WHERE chart_id = ?', [cid]);
-      }
-    }
-
     await DemoSeedService._ensureChart();
     await DemoSeedService._seedHistoricalEntries();
     await DemoSeedService._seedSettingsAndStorage();
@@ -156,8 +127,13 @@ export const DemoSeedService = {
 
   async _ensureChart(): Promise<void> {
     const existingCharts = await localDb.getCharts();
-    const alreadyThere = existingCharts.find((c: any) => c.id === CHART_ID);
-    if (alreadyThere) return;
+    const existingDemoChart = existingCharts.find((chart) => chart.id === CHART_ID);
+
+    for (const chart of existingCharts) {
+      if (chart.id !== CHART_ID) {
+        await localDb.deleteChart(chart.id);
+      }
+    }
 
     await localDb.saveChart({
       id: CHART_ID,
@@ -170,8 +146,8 @@ export const DemoSeedService = {
       longitude: ACCOUNT_B_DEMO_SEED.profile.longitude,
       timezone: ACCOUNT_B_DEMO_SEED.profile.timezone,
       houseSystem: ACCOUNT_B_DEMO_SEED.profile.houseSystem as import('../astrology/types').HouseSystem,
-      createdAt: CHART_CREATED,
-      updatedAt: CHART_CREATED,
+      createdAt: existingDemoChart?.createdAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       isDeleted: false,
     });
   },
@@ -179,20 +155,18 @@ export const DemoSeedService = {
   async _seedHistoricalEntries(): Promise<void> {
     for (let i = 0; i < ACCOUNT_B_DEMO_SEED.dailyEntries.length; i++) {
       const entry = ACCOUNT_B_DEMO_SEED.dailyEntries[i];
-      const d = dateFromISODateString(entry.date);
-      const idx = dayNumber(d);
 
       await localDb.saveJournalEntry({
         id: `demo-journal-${entry.date}`,
         date: entry.date,
         mood: DemoSeedService._journalMoodFromScore(entry.eveningMood),
         moonPhase: simpleMoonPhaseForIndex(i),
-        title: DemoSeedService._titleFromPrompt(entry.promptResponse, i),
+        title: DemoSeedService._titleFromDay(entry.day),
         content: entry.promptResponse,
         chartId: CHART_ID,
         tags: Array.from(new Set([...entry.morningTags, ...entry.eveningTags])).slice(0, 6),
         contentWordCount: entry.promptResponse.trim().split(/\s+/).length,
-        contentReadingMinutes: 1,
+        contentReadingMinutes: 2,
         createdAt: new Date(`${entry.date}T15:00:00.000Z`).toISOString(),
         updatedAt: new Date(`${entry.date}T15:00:00.000Z`).toISOString(),
         isDeleted: false,
@@ -271,8 +245,6 @@ export const DemoSeedService = {
         createdAt: new Date(`${entry.date}T19:00:00.000Z`).toISOString(),
         updatedAt: new Date(`${entry.date}T19:00:00.000Z`).toISOString(),
       });
-
-      await DemoSeedService._seedSupabaseDay(entry.date, idx);
     }
   },
 
@@ -287,24 +259,53 @@ export const DemoSeedService = {
     await EncryptedAsyncStorage.setItem('msky_user_name', ACCOUNT_B_DEMO_SEED.profile.displayName);
     await EncryptedAsyncStorage.setItem('@mysky:demo_premium', 'true');
 
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:core_values',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.coreValues),
-    );
-
-    await AccountScopedAsyncStorage.setItem(
-      'mysky_custom_journal_tags',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.customJournalTags),
-    );
+    await EncryptedAsyncStorage.setItem('@mysky:core_values', JSON.stringify(ACCOUNT_B_DEMO_SEED.coreValues));
+    await AccountScopedAsyncStorage.setItem('mysky_custom_journal_tags', JSON.stringify(ACCOUNT_B_DEMO_SEED.customJournalTags));
+    await EncryptedAsyncStorage.setItem('@mysky:archetype_profile', JSON.stringify(ACCOUNT_B_DEMO_SEED.archetypeProfile));
+    await EncryptedAsyncStorage.setItem('@mysky:cognitive_style', JSON.stringify(ACCOUNT_B_DEMO_SEED.cognitiveStyle));
 
     await EncryptedAsyncStorage.setItem(
-      '@mysky:archetype_profile',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.archetypeProfile),
-    );
+      '@mysky:daily_reflections',
+      JSON.stringify((() => {
+        const scales: Record<string, number> = { 'Not True': 0, 'Somewhat': 1, 'True': 2, 'Very True': 3 };
+        const answers = ACCOUNT_B_DEMO_SEED.reflectionsFlat.map((reflection) => {
+          const bank = reflection.category === 'values'
+            ? VALUES_QUESTIONS
+            : reflection.category === 'archetypes'
+              ? ARCHETYPE_QUESTIONS
+              : reflection.category === 'cognitive'
+                ? COGNITIVE_QUESTIONS
+                : INTELLIGENCE_QUESTIONS;
+          const question = bank.find((item) => item.text === reflection.questionText);
 
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:cognitive_style',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.cognitiveStyle),
+          return {
+            questionId: question?.id ?? 0,
+            category: reflection.category,
+            questionText: reflection.questionText,
+            answer: reflection.answer,
+            scaleValue: scales[reflection.answer] ?? 1,
+            date: reflection.date,
+            sealedAt: new Date(`${reflection.date}T21:00:00.000Z`).toISOString(),
+          };
+        });
+
+        const uniqueDates = Array.from(new Set(answers.map((answer) => answer.date))).sort();
+        const startedAt = uniqueDates[0] ? new Date(`${uniqueDates[0]}T12:00:00.000Z`).toISOString() : null;
+        const totalDaysCompleted = uniqueDates.length > 0
+          ? Math.max(
+              1,
+              dayNumber(new Date(`${uniqueDates[uniqueDates.length - 1]}T12:00:00.000Z`)) -
+                dayNumber(new Date(`${uniqueDates[0]}T12:00:00.000Z`)) +
+                1,
+            )
+          : 0;
+
+        return {
+          answers,
+          totalDaysCompleted,
+          startedAt,
+        };
+      })()),
     );
 
     await EncryptedAsyncStorage.setItem(
@@ -390,78 +391,23 @@ export const DemoSeedService = {
     await DemoSeedService._seed();
   },
 
-  async _dailyTopUp(): Promise<void> {
-    const charts = await localDb.getCharts();
-    if (!charts.length) return;
+  async _restoreEncryptedDemoDataIfMissing(): Promise<void> {
+    const [userName, coreValues, dailyReflections, somaticEntries, relationshipPatterns] = await Promise.all([
+      EncryptedAsyncStorage.getItem('msky_user_name'),
+      EncryptedAsyncStorage.getItem('@mysky:core_values'),
+      EncryptedAsyncStorage.getItem('@mysky:daily_reflections'),
+      EncryptedAsyncStorage.getItem('@mysky:somatic_entries'),
+      EncryptedAsyncStorage.getItem('@mysky:relationship_patterns'),
+    ]);
 
-    const chartId = charts[0].id;
-    const lastStr = await AsyncStorage.getItem(DAILY_SEED_KEY);
-    const today = isoDate(new Date());
+    const customJournalTags = await AccountScopedAsyncStorage.getItem('mysky_custom_journal_tags');
 
-    if (lastStr === today) return;
+    if (userName && coreValues && dailyReflections && somaticEntries && relationshipPatterns && customJournalTags) {
+      return;
+    }
 
-    const todayRow = ACCOUNT_B_DEMO_SEED.dailyEntries[ACCOUNT_B_DEMO_SEED.dailyEntries.length - 1];
-    if (!todayRow) return;
-
-    await localDb.saveSleepEntry({
-      id: `demo-topup-sleep-${today}`,
-      chartId,
-      date: today,
-      durationHours: todayRow.sleepHours,
-      quality: DemoSeedService._sleepQualityFromHours(todayRow.sleepHours),
-      dreamText: '',
-      dreamFeelings: '[]',
-      dreamMetadata: '{}',
-      createdAt: new Date(`${today}T08:00:00.000Z`).toISOString(),
-      updatedAt: new Date(`${today}T08:00:00.000Z`).toISOString(),
-      isDeleted: false,
-    });
-
-    await localDb.saveCheckIn({
-      id: `demo-checkin-${today}-morning`,
-      date: today,
-      chartId,
-      timeOfDay: 'morning',
-      moodScore: todayRow.morningMood,
-      energyLevel: todayRow.morningEnergy,
-      stressLevel: todayRow.morningStress,
-      tags: todayRow.morningTags,
-      note: todayRow.morningNote,
-      wins: todayRow.morningWin,
-      challenges: todayRow.morningChallenge,
-      moonSign: MOON_SIGNS[0],
-      moonHouse: 1,
-      sunHouse: 7,
-      transitEvents: [],
-      lunarPhase: LUNAR_PHASES[0],
-      retrogrades: [],
-      createdAt: new Date(`${today}T09:00:00.000Z`).toISOString(),
-      updatedAt: new Date(`${today}T09:00:00.000Z`).toISOString(),
-    });
-
-    await localDb.saveCheckIn({
-      id: `demo-checkin-${today}-evening`,
-      date: today,
-      chartId,
-      timeOfDay: 'evening',
-      moodScore: todayRow.eveningMood,
-      energyLevel: todayRow.eveningEnergy,
-      stressLevel: todayRow.eveningStress,
-      tags: todayRow.eveningTags,
-      note: todayRow.eveningNote,
-      wins: todayRow.eveningWin,
-      challenges: todayRow.eveningChallenge,
-      moonSign: MOON_SIGNS[2],
-      moonHouse: 2,
-      sunHouse: 8,
-      transitEvents: [],
-      lunarPhase: LUNAR_PHASES[1],
-      retrogrades: [],
-      createdAt: new Date(`${today}T19:00:00.000Z`).toISOString(),
-      updatedAt: new Date(`${today}T19:00:00.000Z`).toISOString(),
-    });
-
-    await AsyncStorage.setItem(DAILY_SEED_KEY, today);
+    logger.info('[DemoSeed] Restoring missing Account B encrypted demo storage.');
+    await DemoSeedService._seedSettingsAndStorage();
   },
 
   async _repairUnreadableDemoSeedData(): Promise<boolean> {
@@ -515,24 +461,23 @@ export const DemoSeedService = {
     return 1;
   },
 
-  _titleFromPrompt(promptResponse: string, i: number): string {
-    const manualTitles = [
-      'Everyone probably hates me',
-      'The hearing part people do not see',
-      'Raising Lucas while running on empty',
-      'Jamie feels safe in a way that matters',
-      'Naomi leaving still hurts',
-      'Dealing with Sarah is its own strain',
-      'I am tired of the system',
-      'Wanting Annie to choose me',
-      'Angela grief is its own kind',
-      'Feeling left out again',
-      'Feeling blurry inside',
-      'Wishing I were easier to be',
+  _titleFromDay(day: number): string {
+    const titles = [
+      'Quietly overstretched',
+      'Trying not to assume rejection',
+      'Body first, mind later',
+      'Holding too much at once',
+      'Socially off again',
+      'Comparison spiral',
+      'What steadied me',
+      'Overstimulated and trying',
+      'Messy but still showing up',
+      'The thought loop again',
+      'Feeling more like myself',
+      'Avoidance with a reason',
     ];
 
-    void promptResponse;
-    return manualTitles[i % manualTitles.length];
+    return titles[(day - 1) % titles.length];
   },
 
   async _seedSupabaseDay(_dateStr: string, _idx: number): Promise<void> {

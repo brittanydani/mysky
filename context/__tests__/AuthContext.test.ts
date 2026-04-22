@@ -19,7 +19,7 @@ jest.mock('../../lib/supabase', () => ({
     auth: {
       getSession: () => mockGetSession(),
       refreshSession: () => mockRefreshSession(),
-      signOut: () => mockSignOut(),
+      signOut: (...args: unknown[]) => mockSignOut(...args),
       onAuthStateChange: (cb: Function) => mockOnAuthStateChange(cb),
       startAutoRefresh: (...args: unknown[]) => mockStartAutoRefresh(...args),
       stopAutoRefresh: (...args: unknown[]) => mockStopAutoRefresh(...args),
@@ -108,7 +108,7 @@ function AuthConsumer() {
     React.createElement(Text, { testID: 'loading' }, String(loading)),
     React.createElement(Text, { testID: 'session' }, session ? 'active' : 'none'),
     React.createElement(Text, { testID: 'user-id' }, user?.id ?? 'no-user'),
-    React.createElement(Text, { testID: 'signout', onPress: signOut }, 'Sign Out'),
+    React.createElement(Text, { testID: 'signout', onPress: () => { void signOut(); } }, 'Sign Out'),
   );
 }
 
@@ -354,6 +354,32 @@ describe('Auth Workflow', () => {
       expect(mockClearCache).toHaveBeenCalled();
       expect(mockClearScene).toHaveBeenCalled();
       expect(mockResetStatus).toHaveBeenCalled();
+    });
+
+    it('supports local-only signOut after account deletion', async () => {
+      const mockSession = { user: { id: 'user-123' } };
+      mockGetSession.mockResolvedValue({ data: { session: mockSession }, error: null });
+      mockSignOut.mockResolvedValue({ error: null });
+
+      let latestAuthValue: ReturnType<typeof useAuth> | null = null;
+
+      function LocalOnlyConsumer() {
+        latestAuthValue = useAuth();
+        return null;
+      }
+
+      render(React.createElement(AuthProvider, null, React.createElement(LocalOnlyConsumer)));
+
+      await waitFor(() => {
+        expect(latestAuthValue?.loading).toBe(false);
+      });
+
+      await act(async () => {
+        await latestAuthValue?.signOut({ localOnly: true });
+      });
+
+      expect(mockSignOut).toHaveBeenCalledWith({ scope: 'local' });
+      expect(mockClearSyncQueue).toHaveBeenCalled();
     });
 
     it('handles signOut failure gracefully', async () => {
