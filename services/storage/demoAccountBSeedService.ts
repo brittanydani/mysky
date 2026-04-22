@@ -6,7 +6,7 @@
  * device has no existing seeded data for this account.
  *
  * This version preserves the storage style visible in the existing code:
- * - localDb for chart, settings, journals, sleep, and daily check-ins
+ * - supabaseDb for chart, settings, journals, sleep, and daily check-ins
  * - EncryptedAsyncStorage / AccountScopedAsyncStorage for profile-like surfaces
  */
 
@@ -14,7 +14,7 @@ import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
 import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { localDb } from './localDb';
+import { supabaseDb } from './supabaseDb';
 import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
 import { AccountScopedAsyncStorage } from './accountScopedStorage';
 import { FieldEncryptionService } from './fieldEncryption';
@@ -119,7 +119,6 @@ export const DemoSeedService = {
 
     const dailyLogRows = ACCOUNT_B_DEMO_SEED.dailyEntries.map((entry) => ({
       user_id: user.id,
-      log_date: entry.date,
       created_at: new Date(`${entry.date}T20:30:00.000Z`).toISOString(),
       stress: DemoSeedService._stressLevelToNumber(entry.eveningStress),
       anxiety: DemoSeedService._stressLevelToNumber(entry.morningStress),
@@ -128,7 +127,7 @@ export const DemoSeedService = {
 
     const { error: checkInError } = await supabase
       .from('daily_check_ins')
-      .upsert(checkInRows, { onConflict: 'daily_check_ins_user_date_time_key' });
+      .upsert(checkInRows, { onConflict: 'user_id,log_date,time_of_day' });
 
     if (checkInError) {
       throw new Error(checkInError.message || 'Failed to upload demo check-ins.');
@@ -136,7 +135,7 @@ export const DemoSeedService = {
 
     const { error: dailyLogError } = await supabase
       .from('daily_logs')
-      .upsert(dailyLogRows, { onConflict: 'daily_logs_user_log_date_key' });
+      .upsert(dailyLogRows, { onConflict: 'user_id,log_date' });
 
     if (dailyLogError) {
       throw new Error(dailyLogError.message || 'Failed to upload demo daily logs.');
@@ -149,8 +148,6 @@ export const DemoSeedService = {
     if (!DemoSeedService.isDemoAccount(email)) return;
 
     try {
-      await localDb.initialize();
-
       const alreadySeeded = await AsyncStorage.getItem(SEED_FLAG_KEY);
       if (alreadySeeded !== 'true') {
         logger.info('[DemoSeed] Seeding Account B demo data…');
@@ -175,44 +172,25 @@ export const DemoSeedService = {
 
   async cleanupStaleDemoArtifacts(email: string | null | undefined = null): Promise<void> {
     try {
-      await localDb.initialize();
-
       if (DemoSeedService.isDemoAccount(email)) {
         await DemoSeedService._restoreLocalDemoDataIfMissing();
       }
-
-      const db = await localDb.getDb();
-      const result = await db.runAsync("DELETE FROM sync_queue WHERE record_id LIKE 'demo-%'");
-      const removed = result?.changes ?? 0;
-
-      if (removed > 0) {
-        logger.info(`[DemoSeed] Removed ${removed} queued demo sync item${removed === 1 ? '' : 's'}.`);
-      }
+      logger.info('[DemoSeed] Cleanup complete.');
     } catch (e) {
-      logger.error('[DemoSeed] Failed to clean queued demo sync items:', e);
+      logger.error('[DemoSeed] Failed to clean demo artifacts:', e);
     }
   },
 
   async _seed(): Promise<void> {
-    const db = await localDb.getDb();
-
-    await Promise.all([
-      db.runAsync("DELETE FROM journal_entries WHERE id LIKE 'demo-%'"),
-      db.runAsync("DELETE FROM sleep_entries WHERE id LIKE 'demo-%'"),
-      db.runAsync("DELETE FROM daily_check_ins WHERE id LIKE 'demo-%'"),
-      db.runAsync("DELETE FROM insight_history WHERE id LIKE 'demo-%'"),
-      db.runAsync("DELETE FROM sync_queue WHERE record_id LIKE 'demo-%'"),
-    ]);
-
-    const allCharts = await localDb.getCharts();
-    const chartIds = allCharts.map((c: any) => c.id);
-    if (chartIds.length > 0) {
-      for (const cid of chartIds) {
-        await db.runAsync('DELETE FROM journal_entries WHERE chart_id = ?', [cid]);
-        await db.runAsync('DELETE FROM sleep_entries WHERE chart_id = ?', [cid]);
-        await db.runAsync('DELETE FROM daily_check_ins WHERE chart_id = ?', [cid]);
-        await db.runAsync('DELETE FROM insight_history WHERE chart_id = ?', [cid]);
-      }
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (userId) {
+      await Promise.all([
+        supabase.from('journal_entries').delete().eq('user_id', userId).like('id', 'demo-%'),
+        supabase.from('sleep_entries').delete().eq('user_id', userId).like('id', 'demo-%'),
+        supabase.from('daily_check_ins').delete().eq('user_id', userId).like('id', 'demo-%'),
+        supabase.from('insight_history').delete().eq('user_id', userId).like('id', 'demo-%'),
+      ]);
     }
 
     await DemoSeedService._ensureChart();
@@ -224,11 +202,11 @@ export const DemoSeedService = {
   },
 
   async _ensureChart(): Promise<void> {
-    const existingCharts = await localDb.getCharts();
+    const existingCharts = await supabaseDb.getCharts();
     const alreadyThere = existingCharts.find((c: any) => c.id === CHART_ID);
     if (alreadyThere) return;
 
-    await localDb.saveChart({
+    await supabaseDb.saveChart({
       id: CHART_ID,
       name: ACCOUNT_B_DEMO_SEED.profile.displayName,
       birthDate: ACCOUNT_B_DEMO_SEED.profile.birthDate,
@@ -251,15 +229,17 @@ export const DemoSeedService = {
       const d = dateFromISODateString(entry.date);
       const idx = dayNumber(d);
 
-      await localDb.saveJournalEntry({
+      await supabaseDb.saveJournalEntry({
         id: `demo-journal-${entry.date}`,
         date: entry.date,
         mood: DemoSeedService._journalMoodFromScore(entry.eveningMood),
         moonPhase: simpleMoonPhaseForIndex(i),
-        title: DemoSeedService._titleFromPrompt(entry.promptResponse, i),
+        title: entry.journalTitle ?? DemoSeedService._titleFromPrompt(entry.promptResponse, i),
         content: entry.promptResponse,
         chartId: CHART_ID,
-        tags: Array.from(new Set([...entry.morningTags, ...entry.eveningTags])).slice(0, 6),
+        tags: entry.journalTags && entry.journalTags.length > 0
+          ? entry.journalTags
+          : Array.from(new Set([...entry.morningTags, ...entry.eveningTags])).slice(0, 6),
         contentWordCount: entry.promptResponse.trim().split(/\s+/).length,
         contentReadingMinutes: 1,
         createdAt: new Date(`${entry.date}T15:00:00.000Z`).toISOString(),
@@ -267,7 +247,7 @@ export const DemoSeedService = {
         isDeleted: false,
       });
 
-      await localDb.saveSleepEntry({
+      await supabaseDb.saveSleepEntry({
         id: `demo-sleep-${entry.date}`,
         chartId: CHART_ID,
         date: entry.date,
@@ -281,7 +261,7 @@ export const DemoSeedService = {
         isDeleted: false,
       });
 
-      await localDb.saveCheckIn({
+      await supabaseDb.saveCheckIn({
         id: `demo-checkin-${entry.date}-morning`,
         date: entry.date,
         chartId: CHART_ID,
@@ -311,7 +291,7 @@ export const DemoSeedService = {
         updatedAt: new Date(`${entry.date}T09:00:00.000Z`).toISOString(),
       });
 
-      await localDb.saveCheckIn({
+      await supabaseDb.saveCheckIn({
         id: `demo-checkin-${entry.date}-evening`,
         date: entry.date,
         chartId: CHART_ID,
@@ -346,7 +326,7 @@ export const DemoSeedService = {
   },
 
   async _seedSettingsAndStorage(): Promise<void> {
-    await localDb.saveSettings({
+    await supabaseDb.saveSettings({
       id: uid(),
       cloudSyncEnabled: false,
       createdAt: CHART_CREATED,
@@ -480,18 +460,17 @@ export const DemoSeedService = {
   },
 
   async _restoreLocalDemoDataIfMissing(): Promise<void> {
-    const db = await localDb.getDb();
-    const [journalRow, sleepRow, checkInRow] = await Promise.all([
-      db.getFirstAsync("SELECT COUNT(*) as cnt FROM journal_entries WHERE id LIKE 'demo-journal-%'"),
-      db.getFirstAsync("SELECT COUNT(*) as cnt FROM sleep_entries WHERE id LIKE 'demo-%'"),
-      db.getFirstAsync("SELECT COUNT(*) as cnt FROM daily_check_ins WHERE id LIKE 'demo-checkin-%'"),
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const [{ count: journalCount }, { count: sleepCount }, { count: checkInCount }] = await Promise.all([
+      supabase.from('journal_entries').select('id', { count: 'exact', head: true }).eq('user_id', userId).like('id', 'demo-journal-%'),
+      supabase.from('sleep_entries').select('id', { count: 'exact', head: true }).eq('user_id', userId).like('id', 'demo-%'),
+      supabase.from('daily_check_ins').select('id', { count: 'exact', head: true }).eq('user_id', userId).like('id', 'demo-checkin-%'),
     ]);
 
-    const journalCount = Number((journalRow as { cnt?: number } | null)?.cnt ?? 0);
-    const sleepCount = Number((sleepRow as { cnt?: number } | null)?.cnt ?? 0);
-    const checkInCount = Number((checkInRow as { cnt?: number } | null)?.cnt ?? 0);
-
-    if (journalCount > 0 && sleepCount > 0 && checkInCount > 0) {
+    if ((journalCount ?? 0) > 0 && (sleepCount ?? 0) > 0 && (checkInCount ?? 0) > 0) {
       return;
     }
 
@@ -500,7 +479,7 @@ export const DemoSeedService = {
   },
 
   async _dailyTopUp(): Promise<void> {
-    const charts = await localDb.getCharts();
+    const charts = await supabaseDb.getCharts();
     if (!charts.length) return;
 
     const chartId = charts[0].id;
@@ -512,7 +491,7 @@ export const DemoSeedService = {
     const todayRow = ACCOUNT_B_DEMO_SEED.dailyEntries[ACCOUNT_B_DEMO_SEED.dailyEntries.length - 1];
     if (!todayRow) return;
 
-    await localDb.saveSleepEntry({
+    await supabaseDb.saveSleepEntry({
       id: `demo-topup-sleep-${today}`,
       chartId,
       date: today,
@@ -526,7 +505,7 @@ export const DemoSeedService = {
       isDeleted: false,
     });
 
-    await localDb.saveCheckIn({
+    await supabaseDb.saveCheckIn({
       id: `demo-checkin-${today}-morning`,
       date: today,
       chartId,
@@ -548,7 +527,7 @@ export const DemoSeedService = {
       updatedAt: new Date(`${today}T09:00:00.000Z`).toISOString(),
     });
 
-    await localDb.saveCheckIn({
+    await supabaseDb.saveCheckIn({
       id: `demo-checkin-${today}-evening`,
       date: today,
       chartId,
@@ -574,19 +553,24 @@ export const DemoSeedService = {
   },
 
   async _repairUnreadableDemoSeedData(): Promise<boolean> {
-    const db = await localDb.getDb();
-    const rows = (await db.getAllAsync(
-      "SELECT id, title, content FROM journal_entries WHERE id LIKE 'demo-journal-%'",
-    )) as Array<{ id: string; title: string | null; content: string | null }>;
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return false;
+    const { data: rows } = await supabase
+      .from('journal_entries')
+      .select('id, title_enc, content_enc')
+      .eq('user_id', userId)
+      .like('id', 'demo-journal-%');
+    const typedRows = (rows ?? []) as Array<{ id: string; title_enc: string | null; content_enc: string | null }>;
 
     const unreadableIds: string[] = [];
 
-    for (const row of rows) {
-      const titleResult = row.title
-        ? await FieldEncryptionService.tryDecryptField(row.title)
+    for (const row of typedRows) {
+      const titleResult = row.title_enc
+        ? await FieldEncryptionService.tryDecryptField(row.title_enc)
         : { ok: true as const, value: '' };
-      const contentResult = row.content
-        ? await FieldEncryptionService.tryDecryptField(row.content)
+      const contentResult = row.content_enc
+        ? await FieldEncryptionService.tryDecryptField(row.content_enc)
         : { ok: true as const, value: '' };
 
       if (!titleResult.ok || !contentResult.ok) {

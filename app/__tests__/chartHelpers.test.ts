@@ -1,4 +1,4 @@
-import { personalizeLifeThemeSummary } from '../(tabs)/chartHelpers';
+import { personalizeLifeThemeSummary } from '../../utils/chartHelpers';
 
 describe('chartHelpers', () => {
   it('personalizes relationship summaries', () => {

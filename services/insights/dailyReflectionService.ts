@@ -341,13 +341,6 @@ export async function sealCategoryAnswers(
   await saveReflections(data);
   await clearDraftAnswers(category, newAnswers[0]?.date);
 
-  // Background cloud synchronization
-  import('../storage/syncService').then(({ enqueueReflectionBatch }) =>
-    enqueueReflectionBatch(newAnswers.map(a => data.answers.find(
-      s => s.date === a.date && s.questionId === a.questionId && s.category === a.category,
-    )!).filter(Boolean)),
-  ).catch(() => {});
-
   return data;
 }
 

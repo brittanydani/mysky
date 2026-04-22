@@ -1,5 +1,5 @@
-import { type DailyAggregate } from '../../services/insights/types';
-import type { CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
+import { type DailyAggregate } from '../services/insights/types';
+import type { CrossRefInsight } from './selfKnowledgeCrossRef';
 
 export type PatternLibraryItem = {
   title: string;

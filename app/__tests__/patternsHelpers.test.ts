@@ -1,5 +1,5 @@
 import { type DailyAggregate } from '../../services/insights/types';
-import { buildPatternLibraryState, readableLabel, refineCrossRefCopy } from '../(tabs)/patternsHelpers';
+import { buildPatternLibraryState, readableLabel, refineCrossRefCopy } from '../../utils/patternsHelpers';
 
 function makeAggregate(overrides: Partial<DailyAggregate> = {}): DailyAggregate {
   return {

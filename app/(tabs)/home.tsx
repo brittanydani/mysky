@@ -44,7 +44,7 @@ import SkiaWarpTransition from '../../components/ui/SkiaWarpTransition';
 import type { WarpRef } from '../../components/ui/SkiaWarpTransition';
 
 import BirthDataModal from '../../components/BirthDataModal';
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { NatalChart, BirthData } from '../../services/astrology/types';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -198,7 +198,7 @@ export default function HomeScreen() {
       };
 
       try {
-        const charts = await localDb.getCharts();
+        const charts = await supabaseDb.getCharts();
         if (!isScreenActiveRef.current) return;
 
         if (charts.length > 0) {
@@ -232,8 +232,8 @@ export default function HomeScreen() {
           // Hydrate data in parallel — checkins, sleep, and self-knowledge are independent
           try {
             const [checkins, sleepEntries, selfKnowledge] = await Promise.all([
-              localDb.getCheckIns(chart.id, 7),
-              localDb.getSleepEntries(chart.id, 7),
+              supabaseDb.getCheckIns(chart.id, 7),
+              supabaseDb.getSleepEntries(chart.id, 7),
               loadSelfKnowledgeContext(),
             ]);
             if (!isScreenActiveRef.current) return;
@@ -358,7 +358,7 @@ export default function HomeScreen() {
       const astroSettings = await AstrologySettingsService.getSettings();
       const chart = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
 
-      const charts = await localDb.getCharts();
+      const charts = await supabaseDb.getCharts();
       const existingId = charts.length > 0 ? charts[0].id : chart.id;
 
       const savedChart = {
@@ -377,7 +377,7 @@ export default function HomeScreen() {
         isDeleted: false,
       };
 
-      await localDb.saveChart(savedChart);
+      await supabaseDb.saveChart(savedChart);
 
       chart.id = existingId;
       chart.name = savedChart.name;
@@ -546,8 +546,8 @@ export default function HomeScreen() {
                     dailyLoop.streak.totalCheckIns === 0
                       ? 'Start your streak'
                       : dailyLoop.streak.atRisk
-                        ? `${dailyLoop.streak.current} day streak at risk`
-                        : `${dailyLoop.streak.current} day streak`
+                        ? `${dailyLoop.streak.current} days - keep your streak`
+                        : `${dailyLoop.streak.current} days`
                   }
                   icon="flame-outline"
                 />
@@ -558,7 +558,7 @@ export default function HomeScreen() {
                   {dailyLoop.streak.atRisk && (
                     <View style={[styles.streakPill, { backgroundColor: 'rgba(217,140,140,0.10)' }]}>
                       <MetallicIcon name="warning-outline" size={14} variant="gold" />
-                      <Text style={[styles.streakLabel, { color: '#D98C8C' }]}>Check in to keep it</Text>
+                      <Text style={[styles.streakLabel, { color: '#D98C8C' }]}>Check in today</Text>
                     </View>
                   )}
                   {dailyLoop.streak.milestone && (
@@ -569,11 +569,11 @@ export default function HomeScreen() {
                       <MetallicIcon name="trophy-outline" size={14} variant="gold" />
                       {theme.isDark ? (
                         <MetallicText style={styles.streakLabel} variant="gold">
-                          {dailyLoop.streak.milestone}-day milestone! ✦
+                          {dailyLoop.streak.milestone} days ✦
                         </MetallicText>
                       ) : (
                         <Text style={[styles.streakLabel, styles.streakLabelLight]}>
-                          {dailyLoop.streak.milestone}-day milestone! ✦
+                          {dailyLoop.streak.milestone} days ✦
                         </Text>
                       )}
                     </Animated.View>
@@ -598,7 +598,7 @@ export default function HomeScreen() {
             <Animated.View entering={FadeInDown.delay(240).duration(600)}>
               <View style={{ paddingHorizontal: 20, paddingBottom: 4 }}>
                 <Text style={{ color: 'rgba(212,175,55,0.45)', fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}>
-                  {dailyLoop.streak.totalCheckIns} DAYS LOGGED TOTAL
+                  {dailyLoop.streak.totalCheckIns} DAYS LOGGED
                 </Text>
               </View>
             </Animated.View>

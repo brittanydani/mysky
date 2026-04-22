@@ -4,8 +4,12 @@ import { consumePendingCheckIns } from '../services/widgets/widgetDataService';
 import { syncWidgetStreak } from '../services/widgets/widgetSyncService';
 import { CheckInService } from '../services/patterns/checkInService';
 import { AstrologyCalculator } from '../services/astrology/calculator';
-import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
+
+async function loadLocalDb() {
+  const mod = await import('../services/storage/localDb');
+  return mod.localDb;
+}
 
 /**
  * Listens for the app returning to the foreground and flushes any check-ins
@@ -46,6 +50,7 @@ async function flushPendingCheckIns(): Promise<void> {
   // native bridge. consumePendingCheckIns atomically removes records, so
   // consuming them without a chart would silently drop the data.
   try {
+    const localDb = await loadLocalDb();
     const charts = await localDb.getCharts();
     if (!charts.length) {
       logger.warn('[Widget] Skipping widget flush — no chart found yet.');

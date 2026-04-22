@@ -15,7 +15,7 @@
  *  - Make the user feel understood, not analyzed
  */
 
-import { localDb } from '../storage/localDb';
+import { supabaseDb } from '../storage/supabaseDb';
 import { toLocalDateString, getCheckInDateString } from '../../utils/dateUtils';
 import { mean } from '../../utils/stats';
 import { logger } from '../../utils/logger';
@@ -124,8 +124,8 @@ function getMilestone(streak: number): number | null {
 
 export async function getStreakStatus(chartId: string): Promise<StreakStatus> {
   try {
-    const checkIns = await localDb.getCheckIns(chartId, 90);
-    const totalCheckIns = await localDb.getTotalCheckInCount();
+    const checkIns = await supabaseDb.getCheckIns(chartId, 90);
+    const totalCheckIns = await supabaseDb.getTotalCheckInCount();
 
     if (checkIns.length === 0) {
       return {
@@ -218,8 +218,8 @@ export async function getStreakStatus(chartId: string): Promise<StreakStatus> {
 
 export async function getWeeklyReflection(chartId: string): Promise<WeeklyReflection> {
   try {
-    const checkIns = await localDb.getCheckIns(chartId, 14);
-    const sleepEntries = await localDb.getSleepEntries(chartId, 14);
+    const checkIns = await supabaseDb.getCheckIns(chartId, 14);
+    const sleepEntries = await supabaseDb.getSleepEntries(chartId, 14);
 
     const now = new Date();
     const sevenDaysAgo = new Date(now);
@@ -254,7 +254,7 @@ export async function getWeeklyReflection(chartId: string): Promise<WeeklyReflec
     // Journal count — getJournalEntries() returns all non-deleted entries
     let journalCount = 0;
     try {
-      const journals = await localDb.getJournalEntries();
+      const journals = await supabaseDb.getJournalEntries();
       journalCount = journals.filter(j => j.date >= sevenDaysAgoKey).length;
     } catch {
       // Journal lookup can fail if table doesn't exist yet
@@ -364,8 +364,8 @@ function buildWeeklySummary(data: {
 
 async function getSleepMoodInsight(chartId: string): Promise<DailyInsight | null> {
   try {
-    const checkIns = await localDb.getCheckIns(chartId, 30);
-    const sleepEntries = await localDb.getSleepEntries(chartId, 30);
+    const checkIns = await supabaseDb.getCheckIns(chartId, 30);
+    const sleepEntries = await supabaseDb.getSleepEntries(chartId, 30);
 
     if (checkIns.length < 7 || sleepEntries.length < 5) return null;
 
@@ -474,7 +474,7 @@ function getConsistencyInsight(streak: StreakStatus): DailyInsight | null {
 
 async function getPatternInsight(chartId: string): Promise<DailyInsight | null> {
   try {
-    const checkIns = await localDb.getCheckIns(chartId, 30);
+    const checkIns = await supabaseDb.getCheckIns(chartId, 30);
     if (checkIns.length < 10) return null;
 
     // Use calendar-date boundaries so "this week" and "last week" are accurate
@@ -713,7 +713,7 @@ async function getTriggerCrossRefInsight(
   triggers: NonNullable<SelfKnowledgeContext['triggers']>,
 ): Promise<DailyInsight | null> {
   try {
-    const checkIns = await localDb.getCheckIns(chartId, 30);
+    const checkIns = await supabaseDb.getCheckIns(chartId, 30);
     if (checkIns.length < 5) return null;
 
     const allMoods = checkIns.map(c => c.moodScore).filter((v): v is number => v != null);
@@ -834,9 +834,9 @@ async function getWeeklySynthesis(chartId: string): Promise<WeeklySynthesis | nu
     const sevenDaysAgoKey = toLocalDateString(sevenDaysAgo);
 
     const [checkIns, sleepEntries, journals] = await Promise.all([
-      localDb.getCheckIns(chartId, 14),
-      localDb.getSleepEntries(chartId, 14),
-      localDb.getJournalEntries(),
+      supabaseDb.getCheckIns(chartId, 14),
+      supabaseDb.getSleepEntries(chartId, 14),
+      supabaseDb.getJournalEntries(),
     ]);
 
     const weekCheckIns = checkIns.filter(c => c.date >= sevenDaysAgoKey);

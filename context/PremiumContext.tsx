@@ -9,6 +9,8 @@ import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-na
 import Constants from 'expo-constants';
 
 import { revenueCatService } from '../services/premium/revenuecat';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { DemoSeedService } from '../services/storage/demoSeedService';
 import { logger } from '../utils/logger';
 import { useAuth } from './AuthContext';
 import * as Haptics from '../utils/haptics';
@@ -30,6 +32,7 @@ interface PremiumContextType {
 const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 
 const DEBUG_FORCE_PREMIUM = __DEV__ && Constants.expoConfig?.extra?.betaPremium === true;
+const DEMO_PREMIUM_KEY = '@mysky:demo_premium';
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const { session, loading: authLoading } = useAuth();
@@ -47,6 +50,19 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   const activeUserEmail = session?.user?.email ?? null;
 
   // ─── Logic ──────────────────────────────────────────────────────────────────
+
+  const getDemoPremiumOverride = useCallback(async (): Promise<boolean> => {
+    if (!DemoSeedService.isDemoAccount(activeUserEmail)) {
+      return false;
+    }
+
+    try {
+      return (await EncryptedAsyncStorage.getItem(DEMO_PREMIUM_KEY)) === 'true';
+    } catch (e) {
+      logger.error('[PremiumContext] demo premium override lookup failed:', e);
+      return false;
+    }
+  }, [activeUserEmail]);
 
   const updatePremiumState = useCallback((info: CustomerInfo | null) => {
     if (!isMounted.current) return;
@@ -76,10 +92,17 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     try {
       const info = await revenueCatService.getCustomerInfo();
       updatePremiumState(info);
+
+      if (!info || !revenueCatService.isPremium(info)) {
+        const hasDemoPremium = await getDemoPremiumOverride();
+        if (isMounted.current && hasDemoPremium) {
+          setIsPremium(true);
+        }
+      }
     } catch (e) {
       logger.error('[PremiumContext] refreshCustomerInfo failed:', e);
     }
-  }, [updatePremiumState]);
+  }, [getDemoPremiumOverride, updatePremiumState]);
 
   const purchase = useCallback(async (pkg: PurchasesPackage): Promise<PurchaseResult> => {
     setLoading(true);
@@ -105,14 +128,20 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       if (result.success && result.customerInfo) {
         updatePremiumState(result.customerInfo);
       }
-      return { success: result.success, hasPremium, error: result.error };
+
+      const hasDemoPremium = hasPremium ? false : await getDemoPremiumOverride();
+      if (result.success && !hasPremium && hasDemoPremium && isMounted.current) {
+        setIsPremium(true);
+      }
+
+      return { success: result.success, hasPremium: hasPremium || hasDemoPremium, error: result.error };
     } catch (e) {
       logger.error('[PremiumContext] restore failed:', e);
       return { success: false, error: 'Restore failed.' };
     } finally {
       if (isMounted.current) setLoading(false);
     }
-  }, [updatePremiumState]);
+  }, [getDemoPremiumOverride, updatePremiumState]);
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -160,6 +189,12 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         if (isMounted.current) {
           setOfferings(activeOfferings);
           updatePremiumState(info);
+          if (!info || !revenueCatService.isPremium(info)) {
+            const hasDemoPremium = await getDemoPremiumOverride();
+            if (isMounted.current && hasDemoPremium) {
+              setIsPremium(true);
+            }
+          }
           setIsReady(true);
           logger.info('[PremiumContext] System Ready');
         }
@@ -182,7 +217,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
           .catch(() => {});
       }
     };
-  }, [activeUserEmail, activeUserId, authLoading, updatePremiumState]);
+  }, [activeUserEmail, activeUserId, authLoading, getDemoPremiumOverride, updatePremiumState]);
 
   const contextValue = useMemo(() => ({
     isPremium,

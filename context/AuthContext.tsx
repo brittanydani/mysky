@@ -19,11 +19,9 @@ import type { Session, User } from '@supabase/supabase-js';
 
 import { supabase } from '../lib/supabase';
 import { isAutoDemoSeedEnabled } from '../constants/config';
-import { processGeminiQueue } from '../services/offline/geminiQueueProcessor';
 import { logger } from '../utils/logger';
 import { revenueCatService } from '../services/premium/revenuecat';
 import { DemoSeedService } from '../services/storage/demoAccountBSeedService';
-import { localDb } from '../services/storage/localDb';
 import { useDreamMapStore } from '../store/dreamMapStore';
 import { useResonanceStore } from '../store/resonanceStore';
 import { useSceneStore } from '../store/sceneStore';
@@ -43,6 +41,11 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+async function loadLocalDb() {
+  const mod = await import('../services/storage/localDb');
+  return mod.localDb;
+}
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
@@ -154,8 +157,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               syncDemoArtifacts(nextSession.user.email).catch((e) => logger.warn('[AuthContext] Demo sync failed:', e));
             }
 
-            // Retry any Gemini requests that failed while offline.
-            processGeminiQueue().catch((e) => logger.warn('[AuthContext] Gemini queue processing failed:', e));
           } catch (e) {
             logger.warn('[AuthContext] Failed to sync session on foreground:', e);
           }
@@ -181,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Clear unsynced queue before another account can sign in on this device.
     try {
+      const localDb = await loadLocalDb();
       await localDb.clearSyncQueue();
     } catch (e) {
       logger.error('[AuthContext] Failed to clear sync queue during sign-out:', e);

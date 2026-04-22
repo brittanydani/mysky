@@ -26,7 +26,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { type AppTheme } from '../../../constants/theme';
 
 import PremiumRequiredScreen from '../../../components/PremiumRequiredScreen';
-import { localDb } from '../../../services/storage/localDb';
+import { supabaseDb } from '../../../services/storage/supabaseDb';
 import { JournalEntry, SleepEntry, generateId } from '../../../services/storage/models';
 import JournalEntryModal from '../../../components/JournalEntryModal';
 import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../../../services/premium/advancedJournal';
@@ -40,7 +40,7 @@ import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { DreamClusterMap } from '../../../components/ui/DreamClusterMap';
 import { PremiumSegmentedControl } from '../../../components/ui/PremiumSegmentedControl';
 import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
-import { buildDreamArchiveSummary } from './dreamArchiveSummary';
+import { buildDreamArchiveSummary } from '../../../utils/dreamArchiveSummary';
 import { loadSelfKnowledgeContext } from '../../../services/insights/selfKnowledgeContext';
 import { enhanceInsightCopy } from '../../../services/insights/geminiInsightsService';
 
@@ -389,14 +389,14 @@ export default function JournalScreen() {
   const loadAiInputs = useCallback(async () => {
     const [context, charts] = await Promise.all([
       loadSelfKnowledgeContext(),
-      localDb.getCharts(),
+      supabaseDb.getCharts(),
     ]);
 
     if (!charts.length) {
-      return { context, checkIns: [] as Awaited<ReturnType<typeof localDb.getCheckIns>> };
+      return { context, checkIns: [] as Awaited<ReturnType<typeof supabaseDb.getCheckIns>> };
     }
 
-    const checkIns = await localDb.getCheckIns(charts[0].id, 90);
+    const checkIns = await supabaseDb.getCheckIns(charts[0].id, 90);
     return { context, checkIns };
   }, []);
 
@@ -479,8 +479,8 @@ export default function JournalScreen() {
         hasMoreRef.current = true;
         setHasMore(true);
         const [page, count] = await Promise.all([
-          localDb.getJournalEntriesPaginated(PAGE_SIZE),
-          localDb.getJournalEntryCount(),
+          supabaseDb.getJournalEntriesPaginated(PAGE_SIZE),
+          supabaseDb.getJournalEntryCount(),
         ]);
         entriesRef.current = page;
         setEntries(page);
@@ -493,7 +493,7 @@ export default function JournalScreen() {
         loadingMoreRef.current = true;
         setLoadingMore(true);
         const last = entriesRef.current[entriesRef.current.length - 1];
-        const page = await localDb.getJournalEntriesPaginated(
+        const page = await supabaseDb.getJournalEntriesPaginated(
           PAGE_SIZE,
           last?.date,
           last?.createdAt,
@@ -522,9 +522,9 @@ export default function JournalScreen() {
 
   const loadSleepEntries = useCallback(async () => {
     try {
-      const charts = await localDb.getCharts();
+      const charts = await supabaseDb.getCharts();
       if (!charts.length) return;
-      const all = await localDb.getSleepEntries(charts[0].id, 365);
+      const all = await supabaseDb.getSleepEntries(charts[0].id, 365);
       setSleepEntries(all.filter(e => !e.isDeleted));
     } catch (error) {
       logger.error('Failed to load sleep entries:', error);
@@ -621,7 +621,7 @@ export default function JournalScreen() {
   const handleDeleteEntry = useCallback(async (entry: JournalEntry) => {
     try {
       setActionEntry((current) => (current?.id === entry.id ? null : current));
-      await localDb.deleteJournalEntry(entry.id);
+      await supabaseDb.deleteJournalEntry(entry.id);
       setExpandedEntryId((current) => (current === entry.id ? null : current));
       await loadEntries(true);
     } catch (error) {
@@ -652,7 +652,7 @@ export default function JournalScreen() {
 
   const handleDeleteDream = useCallback(async (entry: SleepEntry) => {
     try {
-      await localDb.deleteSleepEntry(entry.id);
+      await supabaseDb.deleteSleepEntry(entry.id);
       await loadSleepEntries();
     } catch (error) {
       logger.error('Failed to delete dream entry:', error);
@@ -1024,7 +1024,7 @@ export default function JournalScreen() {
           tags: data.tags ?? editingEntry.tags,
         } as JournalEntry;
 
-        await localDb.updateJournalEntry(updated);
+        await supabaseDb.updateJournalEntry(updated);
       } else {
         const created: JournalEntry = {
           id: generateId(),
@@ -1042,7 +1042,7 @@ export default function JournalScreen() {
           ...nlpFields,
         } as JournalEntry;
 
-        await localDb.addJournalEntry(created);
+        await supabaseDb.addJournalEntry(created);
       }
 
       setShowEntryModal(false);

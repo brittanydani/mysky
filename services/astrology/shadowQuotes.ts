@@ -577,21 +577,21 @@ function scoreQuote(quote: ShadowQuote, ctx: DayActivationContext): number {
 
 
 // ════════════════════════════════════════════════════════════════════════════
-// ANTI-REPETITION (SQLite-backed)
+// ANTI-REPETITION (AsyncStorage-backed)
 // ════════════════════════════════════════════════════════════════════════════
+
+const SHOWN_IDS_KEY = '@mysky:shadow_quotes_shown';
 
 async function getRecentlyShownIds(): Promise<Set<string>> {
   try {
-    const db = await getDb();
+    const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+    const raw = await AsyncStorage.getItem(SHOWN_IDS_KEY);
+    if (!raw) return new Set();
+    const entries: Array<{ id: string; shownAt: string }> = JSON.parse(raw);
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - ANTI_REPEAT_DAYS);
     const cutoffStr = toLocalDateString(cutoff);
-
-    const rows: any[] = await db.getAllAsync(
-      'SELECT quote_id FROM shadow_quotes_shown WHERE shown_at >= ?',
-      [cutoffStr]
-    );
-    return new Set(rows.map((r: any) => r.quote_id));
+    return new Set(entries.filter((e) => e.shownAt >= cutoffStr).map((e) => e.id));
   } catch {
     return new Set();
   }
@@ -599,43 +599,22 @@ async function getRecentlyShownIds(): Promise<Set<string>> {
 
 async function markQuoteShown(quoteId: string): Promise<void> {
   try {
-    const db = await getDb();
+    const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
     const today = toLocalDateString(new Date());
-    await db.runAsync(
-      'INSERT OR REPLACE INTO shadow_quotes_shown (quote_id, shown_at) VALUES (?, ?)',
-      [quoteId, today]
-    );
+    const raw = await AsyncStorage.getItem(SHOWN_IDS_KEY);
+    const existing: Array<{ id: string; shownAt: string }> = raw ? JSON.parse(raw) : [];
 
-    // Cleanup old records (> 30 days)
+    // Upsert + cleanup old entries (> 30 days)
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 30);
-    await db.runAsync(
-      'DELETE FROM shadow_quotes_shown WHERE shown_at < ?',
-      [toLocalDateString(cutoff)]
-    );
+    const cutoffStr = toLocalDateString(cutoff);
+    const updated = existing.filter((e) => e.shownAt >= cutoffStr && e.id !== quoteId);
+    updated.push({ id: quoteId, shownAt: today });
+    await AsyncStorage.setItem(SHOWN_IDS_KEY, JSON.stringify(updated));
   } catch (e) {
     logger.error('[ShadowQuotes] Failed to mark quote shown:', e);
   }
 }
-
-let _quotesTableEnsured = false;
-
-async function getDb() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { localDb } = require('../storage/localDb') as typeof import('../storage/localDb');
-  const db = await localDb.getDb();
-  if (!_quotesTableEnsured) {
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS shadow_quotes_shown (
-        quote_id TEXT PRIMARY KEY,
-        shown_at TEXT NOT NULL
-      );
-    `);
-    _quotesTableEnsured = true;
-  }
-  return db;
-}
-
 
 // ════════════════════════════════════════════════════════════════════════════
 // PUBLIC API

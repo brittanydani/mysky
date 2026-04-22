@@ -6,7 +6,7 @@
  * a journaling app can have.
  */
 
-import { localDb } from '../storage/localDb';
+import { supabaseDb } from '../storage/supabaseDb';
 import { JournalEntry } from '../storage/models';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
@@ -26,7 +26,7 @@ export async function findMoodRecall(
   excludeId?: string,
 ): Promise<JournalRecallResult | null> {
   try {
-    const entries = await localDb.getJournalEntries();
+    const entries = await supabaseDb.getJournalEntries();
     if (!entries.length) return null;
 
     const today = new Date();

@@ -18,12 +18,13 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { runPipeline } from '../../services/insights/pipeline';
 import { type DailyAggregate } from '../../services/insights/types';
 import { computeNarrativeInsights, NarrativeInsightBundle } from '../../utils/narrativeInsights';
 import { buildPersonalProfile } from '../../utils/personalProfile';
 import { computeDeepInsights, DeepInsightBundle } from '../../utils/deepInsights';
+import { buildPatternFeedInsights } from '../../utils/patternFeed';
 import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
@@ -32,7 +33,7 @@ import { MetallicText } from '../../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { enhancePatternInsights } from '../../services/insights/geminiInsightsService';
-import { buildPatternLibraryState, refineCrossRefCopy } from './patternsHelpers';
+import { buildPatternLibraryState, refineCrossRefCopy } from '../../utils/patternsHelpers';
 import {
   computeSelfKnowledgeCrossRef,
   CrossRefInsight,
@@ -74,7 +75,7 @@ export default function PatternsScreen() {
   const [crossRefs, setCrossRefs] = useState<CrossRefInsight[]>([]);
   const [dailyAggregates, setDailyAggregates] = useState<DailyAggregate[]>([]);
   const [, setNarrative] = useState<NarrativeInsightBundle | null>(null);
-  const [, setDeepInsights] = useState<DeepInsightBundle | null>(null);
+  const [deepInsights, setDeepInsights] = useState<DeepInsightBundle | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [showDeepDiveModal, setShowDeepDiveModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -88,14 +89,14 @@ export default function PatternsScreen() {
       trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
       (async () => {
         try {
-          const charts = await localDb.getCharts();
+          const charts = await supabaseDb.getCharts();
           if (!charts?.length) return;
           const chartId = charts[0].id;
           const [checkIns, totalCheckIns, sleepEntries, journalEntries] = await Promise.all([
-            localDb.getCheckIns(chartId, 90),
-            localDb.getTotalCheckInCount(),
-            localDb.getSleepEntries(chartId, 90),
-            localDb.getJournalEntries(),
+            supabaseDb.getCheckIns(chartId, 90),
+            supabaseDb.getTotalCheckInCount(),
+            supabaseDb.getSleepEntries(chartId, 90),
+            supabaseDb.getJournalEntries(),
           ]);
           if (!active) return;
           const recentJournalEntries = journalEntries.filter((entry) => {
@@ -162,19 +163,23 @@ export default function PatternsScreen() {
   );
 
   const libraryState = useMemo(() => buildPatternLibraryState(dailyAggregates, crossRefs), [crossRefs, dailyAggregates]);
+  const feedInsights = useMemo(() => {
+    const profileInsights = buildPatternFeedInsights(deepInsights);
+    return [...profileInsights, ...crossRefs];
+  }, [crossRefs, deepInsights]);
 
-  // Rotate through all cross-ref insights daily — users see a fresh insight each day
+  // Rotate through all surfaced insights daily so the feed keeps evolving with the archive.
   const todayIndex = useMemo(() => {
     // Calculate the number of days since the Unix epoch in the local timezone.
     // This provides a guaranteed sequential increment each local day, whereas 
     // hashing the date string caused unpredictable jumps during date rollovers.
     const localEpochDay = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60_000) / 86_400_000);
-    return crossRefs.length > 0 ? localEpochDay % crossRefs.length : 0;
-  }, [crossRefs.length]);
+    return feedInsights.length > 0 ? localEpochDay % feedInsights.length : 0;
+  }, [feedInsights.length]);
 
   const leadInsight = useMemo(
-    () => (crossRefs.length > 0 ? refineCrossRefCopy(crossRefs[todayIndex]) : null),
-    [crossRefs, todayIndex],
+    () => (feedInsights.length > 0 ? refineCrossRefCopy(feedInsights[todayIndex]) : null),
+    [feedInsights, todayIndex],
   );
   const patternRows = useMemo(() => (leadInsight ? [leadInsight] : []), [leadInsight]);
 
@@ -197,7 +202,7 @@ export default function PatternsScreen() {
                 <View style={styles.cardHeader}>
                   <MetallicText style={styles.cardLabel} variant="gold">TODAY'S INSIGHT</MetallicText>
                   <View style={styles.confirmedBadge}>
-                    <Text style={styles.confirmedText}>{item.isConfirmed ? 'DATA CONFIRMED' : 'PROFILE INSIGHT'}</Text>
+                    <Text style={styles.confirmedText}>{item.isConfirmed ? 'SEEN IN YOUR DATA' : 'BUILDING PICTURE'}</Text>
                   </View>
                 </View>
                 <Text style={styles.patternTitle}>{item.title}</Text>
@@ -215,9 +220,9 @@ export default function PatternsScreen() {
                 {item.takeaway && (
                   <GlassTakeaway label={item.takeaway.label} body={item.takeaway.body} icon="compass-outline" />
                 )}
-                {crossRefs.length > 1 && (
+                {feedInsights.length > 1 && (
                   <Text style={styles.rotationHint}>
-                    Insight {todayIndex + 1} of {crossRefs.length} · refreshes daily
+                    Insight {todayIndex + 1} of {feedInsights.length} · refreshes daily
                   </Text>
                 )}
               </VelvetGlassSurface>
@@ -231,12 +236,12 @@ export default function PatternsScreen() {
                   }}
                   style={styles.deepDiveButton}
                   accessibilityRole="button"
-                  accessibilityLabel="See full pattern analysis"
+                  accessibilityLabel="See what MySky has noticed"
                 >
                   <LinearGradient colors={['rgba(168,139,235,0.25)', 'rgba(168,139,235,0.08)']} style={StyleSheet.absoluteFill} />
                   <View style={{ alignItems: 'center', flex: 1 }}>
-                    <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">Full Pattern Analysis</MetallicText>
-                    <Text style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>All {crossRefs.length} insights from your data</Text>
+                    <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">What MySky Has Noticed</MetallicText>
+                    <Text style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>{feedInsights.length} things your archive has noticed about you</Text>
                   </View>
                 </Pressable>
               ) : (
@@ -250,7 +255,7 @@ export default function PatternsScreen() {
                   <MetallicIcon name="lock-closed-outline" size={16} variant="gold" />
                   <View style={{ flex: 1 }}>
                     <MetallicText style={styles.deepDiveButtonTitle} variant="gold">Unlock Full Analysis</MetallicText>
-                    <Text style={styles.deepDiveButtonSub}>See all {crossRefs.length > 0 ? crossRefs.length : ''} in-depth patterns — premium</Text>
+                    <Text style={styles.deepDiveButtonSub}>See all {feedInsights.length > 0 ? feedInsights.length : ''} in-depth patterns — premium</Text>
                   </View>
                   <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
                 </Pressable>
@@ -261,7 +266,7 @@ export default function PatternsScreen() {
             <>
               <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
                 <Text style={styles.title}>Patterns</Text>
-                <GoldSubtitle style={styles.subtitle}>Analysis of your internal weather</GoldSubtitle>
+                <GoldSubtitle style={styles.subtitle}>A mirror built from your entries</GoldSubtitle>
                 <Text style={styles.freshnessText}>
                   {lastUpdated
                     ? `Last updated ${new Date(lastUpdated).toLocaleDateString()} from your recent entries`
@@ -303,9 +308,9 @@ export default function PatternsScreen() {
                       <MetallicText style={styles.cardLabel} variant="gold">PATTERNS DETECTED</MetallicText>
                       <View style={styles.lockedBadge}><MetallicIcon name="lock-closed-outline" size={10} variant="gold" /><Text style={styles.lockedText}>PREMIUM</Text></View>
                     </View>
-                    <Text style={styles.patternTitle}>We found recurring themes in your data</Text>
+                    <Text style={styles.patternTitle}>Patterns are beginning to surface</Text>
                     <Text style={styles.insightBody}>
-                      With {snapshot.checkInCount} check-ins logged, your mood and stress patterns are starting to reveal what restores you and what drains you. Unlock Deeper Sky to see the full picture.
+                      With {snapshot.checkInCount} check-ins logged, a picture is forming — what restores you, what depletes you, and how you tend to be wired. Unlock to see what your archive has noticed.
                     </Text>
                   </VelvetGlassSurface>
                 </Pressable>
@@ -356,7 +361,7 @@ export default function PatternsScreen() {
             >
               <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
               <MetallicIcon name="library-outline" size={16} variant="gold" />
-              <MetallicText style={styles.libraryButtonText} variant="gold">View Pattern Library</MetallicText>
+              <MetallicText style={styles.libraryButtonText} variant="gold">Your Pattern Archive</MetallicText>
             </Pressable>
           )}
           showsVerticalScrollIndicator={false}
@@ -379,7 +384,7 @@ export default function PatternsScreen() {
           <VelvetGlassSurface style={[styles.deepDiveModalCard, styles.modalCard]} intensity={35}>
             <LinearGradient colors={['rgba(44, 54, 69, 0.92)', 'rgba(26, 30, 41, 0.72)']} style={StyleSheet.absoluteFill} />
             <View style={styles.modalHeader}>
-              <MetallicText style={styles.modalTitle} variant="gold">Full Pattern Analysis</MetallicText>
+              <MetallicText style={styles.modalTitle} variant="gold">What MySky Sees</MetallicText>
               <Pressable
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
@@ -387,14 +392,14 @@ export default function PatternsScreen() {
                 }}
                 hitSlop={12}
                 accessibilityRole="button"
-                accessibilityLabel="Close full pattern analysis"
+                accessibilityLabel="Close"
               >
                 <MetallicIcon name="close-outline" size={18} variant="gold" />
               </Pressable>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: '85%' }}>
               <View style={{ gap: 16, paddingBottom: 8 }}>
-                {crossRefs.map((insight, idx) => (
+                {feedInsights.map((insight, idx) => (
                   <View key={insight.id} style={styles.deepDiveInsightCard}>
                     <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.03)']} style={StyleSheet.absoluteFill} />
                     <Text style={styles.deepDiveInsightTitle}>{insight.title}</Text>
@@ -415,7 +420,7 @@ export default function PatternsScreen() {
                         <Text style={styles.supportCalloutBody}>{insight.takeaway.body}</Text>
                       </View>
                     )}
-                    <Text style={[styles.rotationHint, { textAlign: 'left', marginTop: 8 }]}>Insight {idx + 1} of {crossRefs.length}</Text>
+                    <Text style={[styles.rotationHint, { textAlign: 'left', marginTop: 8 }]}>Insight {idx + 1} of {feedInsights.length}</Text>
                   </View>
                 ))}
               </View>
@@ -435,7 +440,7 @@ export default function PatternsScreen() {
           <VelvetGlassSurface style={styles.modalCard} intensity={35}>
             <LinearGradient colors={['rgba(44, 54, 69, 0.92)', 'rgba(26, 30, 41, 0.72)']} style={StyleSheet.absoluteFill} />
             <View style={styles.modalHeader}>
-              <MetallicText style={styles.modalTitle} variant="gold">Pattern Library</MetallicText>
+              <MetallicText style={styles.modalTitle} variant="gold">Your Archive</MetallicText>
               <Pressable
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
@@ -449,7 +454,7 @@ export default function PatternsScreen() {
               </Pressable>
             </View>
             <Text style={styles.modalBody}>
-              As your check-in history grows, this space will begin surfacing recurring patterns across your mood, nervous system, and reflections.
+              As your history grows, this space surfaces what keeps repeating — across your mood, nervous system, energy, and the way you tend to move through hard things.
             </Text>
             <Text style={styles.modalStatus}>{libraryState.statusLine}</Text>
             <Text style={styles.modalBodyMuted}>{libraryState.helperText}</Text>
@@ -483,8 +488,10 @@ const MetricCard = ({ label, value, wash }: { label: string; value: string; wash
   return (
     <View style={[styles.metricCard, theme.velvetBorder]}>
       <LinearGradient colors={wash} style={StyleSheet.absoluteFill} />
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={styles.metricValue}>{value}</Text>
+      <View style={styles.metricContent}>
+        <Text style={styles.metricLabel}>{label}</Text>
+        <Text style={styles.metricValue}>{value}</Text>
+      </View>
     </View>
   );
 };
@@ -523,10 +530,11 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   subtitle: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' },
   freshnessText: { marginTop: 8, fontSize: 12, color: theme.textSecondary },
   
-  snapshotRow: { flexDirection: 'row', gap: 12, marginBottom: 32 },
-  metricCard: { flex: 1, height: 110, borderRadius: 24, padding: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  metricLabel: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.2, marginBottom: 8 },
-  metricValue: { fontSize: 32, fontWeight: '700', color: theme.textPrimary },
+  snapshotRow: { flexDirection: 'row', gap: 12, marginBottom: 32, alignItems: 'stretch' },
+  metricCard: { flex: 1, height: 110, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  metricContent: { width: '100%', alignItems: 'center', justifyContent: 'center' },
+  metricLabel: { width: '100%', fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.2, marginBottom: 8, textAlign: 'center' },
+  metricValue: { width: '100%', fontSize: 32, fontWeight: '700', color: theme.textPrimary, textAlign: 'center' },
 
   orbitCard: { height: ORBIT_SIZE + 80, borderRadius: 24, marginBottom: 40, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   emptyCard: { borderRadius: 24, padding: 24, marginBottom: 24, overflow: 'hidden' },

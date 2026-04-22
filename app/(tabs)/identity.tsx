@@ -27,7 +27,7 @@ import * as Haptics from 'expo-haptics';
 
 // ── Service & UI Layer ──
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
@@ -122,7 +122,7 @@ export default function BlueprintScreen() {
           const storedName = await EncryptedAsyncStorage.getItem('msky_user_name');
           if (storedName) { setChartName(storedName); }
           else {
-            const charts = await localDb.getCharts();
+            const charts = await supabaseDb.getCharts();
             if (charts.length > 0) {
               const name = charts[0].name;
               const place = charts[0].birthPlace;
@@ -130,9 +130,9 @@ export default function BlueprintScreen() {
             }
           }
           // Load check-in count for progressive card reveal
-          const charts = await localDb.getCharts();
+          const charts = await supabaseDb.getCharts();
           if (charts.length > 0) {
-            const count = await localDb.getCheckInCount(charts[0].id);
+            const count = await supabaseDb.getCheckInCount(charts[0].id);
             // Milestone celebration: fire success haptic when crossing unlock thresholds
             const prev = prevCheckInCount.current;
             if (prev !== null && prev !== count) {

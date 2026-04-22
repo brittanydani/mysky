@@ -26,7 +26,7 @@ import { useFocusEffect } from '@react-navigation/core';
 
 import { type AppTheme } from '../../constants/theme';
 import SkiaMetallicPill from '../ui/SkiaMetallicPill';
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
@@ -126,7 +126,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
       const load = async () => {
         try {
           setLoading(true);
-          const charts = await localDb.getCharts();
+          const charts = await supabaseDb.getCharts();
           if (!charts || charts.length === 0) {
             setHasChart(false);
             return;
@@ -151,8 +151,8 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
           let behavior: BehaviorContext | undefined;
           try {
             const today = getCheckInDateString();
-            const checkIn = await localDb.getCheckInByDate(today, saved.id);
-            const recentCheckIns = await localDb.getCheckIns(saved.id, 7);
+            const checkIn = await supabaseDb.getCheckInByDate(today, saved.id);
+            const recentCheckIns = await supabaseDb.getCheckIns(saved.id, 7);
 
             if (checkIn || recentCheckIns.length > 0) {
               behavior = {};

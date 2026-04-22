@@ -21,7 +21,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import { type AppTheme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import BirthDataModal from '../../components/BirthDataModal';
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { SavedChart, RelationshipChart, generateId } from '../../services/storage/models';
 import { BirthData, NatalChart } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -116,9 +116,9 @@ export default function RelationshipsScreen() {
 
   const loadData = async () => {
     try {
-      await localDb.initialize();
+      await supabaseDb.initialize();
       
-      const charts = await localDb.getCharts();
+      const charts = await supabaseDb.getCharts();
       if (charts.length > 0) {
         const saved = charts[0];
         setSavedUserChart(saved);
@@ -142,7 +142,7 @@ export default function RelationshipsScreen() {
         chart.name = saved.name || 'You';
         setUserChart(chart);
         
-        const rels = await localDb.getRelationshipCharts(saved.id);
+        const rels = await supabaseDb.getRelationshipCharts(saved.id);
         setRelationships(rels);
 
         const previews: Record<string, { aspects: SynastryAspect[]; connection: string }> = {};
@@ -228,7 +228,7 @@ export default function RelationshipsScreen() {
         isDeleted: false,
       };
       
-      await localDb.saveRelationshipChart(newRelationship);
+      await supabaseDb.saveRelationshipChart(newRelationship);
       setRelationships(prev => [...prev, newRelationship]);
       setShowAddModal(false);
 
@@ -359,7 +359,7 @@ export default function RelationshipsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await localDb.deleteRelationshipChart(rel.id);
+              await supabaseDb.deleteRelationshipChart(rel.id);
               setRelationships(prev => prev.filter(r => r.id !== rel.id));
               if (fromDetail) handleBack();
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});

@@ -6,7 +6,7 @@
  */
 
 import { DailyCheckIn, TransitEvent, TimeOfDay, CheckInInput, SkySnapshot } from './types';
-import { localDb } from '../storage/localDb';
+import { supabaseDb } from '../storage/supabaseDb';
 import { NatalChart } from '../astrology/types';
 import { getTransitInfo, getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
 import { generateId } from '../storage/models';
@@ -193,7 +193,7 @@ export class CheckInService {
       updatedAt: now.toISOString(),
     };
 
-    await localDb.saveCheckIn(checkIn);
+    await supabaseDb.saveCheckIn(checkIn);
     logger.info(`[CheckIn] Saved check-in for ${date} (${timeOfDay})`);
     return checkIn;
   }
@@ -203,21 +203,21 @@ export class CheckInService {
    */
   static async getTodayCheckInForSlot(chartId: string, timeOfDay: TimeOfDay): Promise<DailyCheckIn | null> {
     const today = getCheckInDateString();
-    return localDb.getCheckInByDateAndTime(today, chartId, timeOfDay);
+    return supabaseDb.getCheckInByDateAndTime(today, chartId, timeOfDay);
   }
 
   /**
    * Get the check-in for any specific date + time slot
    */
   static async getCheckInForDateAndSlot(chartId: string, date: string, timeOfDay: TimeOfDay): Promise<DailyCheckIn | null> {
-    return localDb.getCheckInByDateAndTime(date, chartId, timeOfDay);
+    return supabaseDb.getCheckInByDateAndTime(date, chartId, timeOfDay);
   }
 
   /**
    * Get which time slots have been filled for any given date
    */
   static async getCompletedTimeSlotsForDate(chartId: string, date: string): Promise<TimeOfDay[]> {
-    const checkIns = await localDb.getCheckInsByDate(date, chartId);
+    const checkIns = await supabaseDb.getCheckInsByDate(date, chartId);
     return checkIns.map(c => c.timeOfDay);
   }
 
@@ -226,7 +226,7 @@ export class CheckInService {
    */
   static async getTodayCheckIn(chartId: string): Promise<DailyCheckIn | null> {
     const today = getCheckInDateString();
-    return localDb.getCheckInByDate(today, chartId);
+    return supabaseDb.getCheckInByDate(today, chartId);
   }
 
   /**
@@ -234,7 +234,7 @@ export class CheckInService {
    */
   static async getTodayCheckIns(chartId: string): Promise<DailyCheckIn[]> {
     const today = getCheckInDateString();
-    return localDb.getCheckInsByDate(today, chartId);
+    return supabaseDb.getCheckInsByDate(today, chartId);
   }
 
   /**
@@ -256,7 +256,7 @@ export class CheckInService {
    * Get all check-ins for a chart (for pattern analysis)
    */
   static async getAllCheckIns(chartId: string, limit?: number): Promise<DailyCheckIn[]> {
-    return localDb.getCheckIns(chartId, limit);
+    return supabaseDb.getCheckIns(chartId, limit);
   }
 
   /**
@@ -264,7 +264,7 @@ export class CheckInService {
    * Uses COUNT(*) query — does NOT decrypt any rows.
    */
   static async getCheckInCount(chartId: string): Promise<number> {
-    return localDb.getCheckInCount(chartId);
+    return supabaseDb.getCheckInCount(chartId);
   }
 
   /**
@@ -272,7 +272,7 @@ export class CheckInService {
    * O(n) via Set lookup instead of O(n²) via Array.find().
    */
   static async getCurrentStreak(chartId: string): Promise<number> {
-    const all = await localDb.getCheckIns(chartId, 90); // last 90 days max
+    const all = await supabaseDb.getCheckIns(chartId, 90); // last 90 days max
     if (all.length === 0) return 0;
 
     // Build a Set of unique dates for O(1) lookups
@@ -304,6 +304,6 @@ export class CheckInService {
     startDate: string,
     endDate: string,
   ): Promise<DailyCheckIn[]> {
-    return localDb.getCheckInsInRange(chartId, startDate, endDate);
+    return supabaseDb.getCheckInsInRange(chartId, startDate, endDate);
   }
 }

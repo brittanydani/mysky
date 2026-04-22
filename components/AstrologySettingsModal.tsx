@@ -36,7 +36,7 @@ import {
   ChartOrientation,
 } from '../services/astrology/astrologySettingsService';
 import { HouseSystem, ZodiacSystem, Ayanamsa } from '../services/astrology/types';
-import { localDb } from '../services/storage/localDb';
+import { supabaseDb } from '../services/storage/supabaseDb';
 import { logger } from '../utils/logger';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
@@ -119,7 +119,7 @@ export default function AstrologySettingsModal({
       });
 
       try {
-        await localDb.updateAllChartsHouseSystem(selectedHouseSystem);
+        await supabaseDb.updateAllChartsHouseSystem(selectedHouseSystem);
       } catch (e) {
         logger.error('[AstrologySettingsModal] Failed to update charts house system:', e);
       }

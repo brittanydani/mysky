@@ -10,7 +10,7 @@
 
 import { updateWidgetData, WidgetData } from './widgetDataService';
 import { getStreakStatus } from '../today/dailyLoop';
-import { localDb } from '../storage/localDb';
+import { supabaseDb } from '../storage/supabaseDb';
 import { logger } from '../../utils/logger';
 import { getCheckInDateString } from '../../utils/dateUtils';
 
@@ -49,7 +49,7 @@ function pushMerged(partial: Partial<WidgetData>): void {
  */
 export async function syncWidgetStreak(): Promise<void> {
   try {
-    const charts = await localDb.getCharts();
+    const charts = await supabaseDb.getCharts();
     if (!charts.length) return;
     const streak = await getStreakStatus(charts[0].id);
     pushMerged({

@@ -1,5 +1,5 @@
 import type { SleepEntry } from '../../services/storage/models';
-import { buildDreamArchiveSummary, toReadableDreamLabel } from '../(tabs)/journal/dreamArchiveSummary';
+import { buildDreamArchiveSummary, toReadableDreamLabel } from '../../utils/dreamArchiveSummary';
 
 function makeSleepEntry(overrides: Partial<SleepEntry> = {}): SleepEntry {
   return {

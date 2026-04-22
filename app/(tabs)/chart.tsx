@@ -63,7 +63,7 @@ import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 
 // ── Services & Storage ──
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { 
   NatalChart, 
@@ -104,7 +104,7 @@ import {
   generateShadowGrowth, 
 } from '../../services/astrology/natalSynthesis';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
-import { personalizeLifeThemeSummary } from './chartHelpers';
+import { personalizeLifeThemeSummary } from '../../utils/chartHelpers';
 import { ChartStorySection } from '../../components/ui/editorial/ChartStorySection';
 
 // ── Advanced System Configurations ──────────────────────────────────────────
@@ -512,7 +512,7 @@ export default function ChartScreen() {
       setZodiacSystemLabel(astroSettings.zodiacSystem === 'sidereal' ? 'Sidereal' : 'Tropical');
       setChartOrientation(astroSettings.chartOrientation ?? 'standard-natal');
 
-      const charts = await localDb.getCharts();
+      const charts = await supabaseDb.getCharts();
       if (charts.length > 0) {
         const saved = charts[0];
         const birthData = {
@@ -542,7 +542,7 @@ export default function ChartScreen() {
         // Load secondary synastry blueprints (Premium Feature)
         if (isPremium) {
           try {
-            const rels = await localDb.getRelationshipCharts(saved.id);
+            const rels = await supabaseDb.getRelationshipCharts(saved.id);
             setPeople(rels);
           } catch (e) {
             logger.error('Synastry synchronization failed', e);
@@ -638,7 +638,7 @@ export default function ChartScreen() {
           updatedAt: now,
           isDeleted: false,
         };
-        await localDb.saveRelationshipChart(newRel);
+        await supabaseDb.saveRelationshipChart(newRel);
         setPeople((prev) => [...prev, newRel]);
         setShowAddModal(false);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -660,7 +660,7 @@ export default function ChartScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await localDb.deleteRelationshipChart(person.id);
+              await supabaseDb.deleteRelationshipChart(person.id);
               setPeople((prev) => prev.filter((p) => p.id !== person.id));
               setActiveOverlays((prev) => prev.filter(o => o.person.id !== person.id));
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});

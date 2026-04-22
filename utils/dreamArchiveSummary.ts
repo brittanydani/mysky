@@ -1,4 +1,4 @@
-import type { SleepEntry } from '../../../services/storage/models';
+import type { SleepEntry } from '../services/storage/models';
 
 export function buildDreamArchiveSummary(entries: SleepEntry[]) {
   const dreamEntries = entries.filter((entry) => !!entry.dreamText?.trim());

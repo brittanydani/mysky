@@ -16,7 +16,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { localDb } from '../storage/localDb';
+import { supabaseDb } from '../storage/supabaseDb';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { logger } from '../../utils/logger';
 
@@ -150,7 +150,7 @@ async function scheduleStreakAndReengagementNotifications(
 ): Promise<void> {
   try {
     const Notifications = await import('expo-notifications');
-    const checkIns = await localDb.getCheckIns(chartId, 14);
+    const checkIns = await supabaseDb.getCheckIns(chartId, 14);
     const dateSet = new Set(checkIns.map((c) => c.date));
 
     const now = new Date();
@@ -274,8 +274,8 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
     if (lastDate === today) return; // Already scheduled today
 
     const [checkIns, sleepEntries] = await Promise.all([
-      localDb.getCheckIns(chartId, 14),
-      localDb.getSleepEntries(chartId, 14),
+      supabaseDb.getCheckIns(chartId, 14),
+      supabaseDb.getSleepEntries(chartId, 14),
     ]);
 
     // ── Streak milestone notification ─────────────────────────────────────────

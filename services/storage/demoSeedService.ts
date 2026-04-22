@@ -13,7 +13,7 @@ import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
 import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { localDb } from './localDb';
+import { supabaseDb } from './supabaseDb';
 import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
 import { AccountScopedAsyncStorage } from './accountScopedStorage';
 import { FieldEncryptionService } from './fieldEncryption';
@@ -80,8 +80,6 @@ export const DemoSeedService = {
     if (!DemoSeedService.isDemoAccount(email)) return;
 
     try {
-      await localDb.initialize();
-
       const alreadySeeded = await AsyncStorage.getItem(SEED_FLAG_KEY);
       if (alreadySeeded !== 'true') {
         logger.info('[DemoSeed] Seeding Account B demo data…');
@@ -107,15 +105,16 @@ export const DemoSeedService = {
   },
 
   async _seed(): Promise<void> {
-    const db = await localDb.getDb();
-
-    await Promise.all([
-      db.runAsync("DELETE FROM journal_entries WHERE id LIKE 'demo-%'"),
-      db.runAsync("DELETE FROM sleep_entries WHERE id LIKE 'demo-%'"),
-      db.runAsync("DELETE FROM daily_check_ins WHERE id LIKE 'demo-%'"),
-      db.runAsync("DELETE FROM insight_history WHERE id LIKE 'demo-%'"),
-      db.runAsync("DELETE FROM sync_queue WHERE record_id LIKE 'demo-%'"),
-    ]);
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (userId) {
+      await Promise.all([
+        supabase.from('journal_entries').delete().eq('user_id', userId).like('id', 'demo-%'),
+        supabase.from('sleep_entries').delete().eq('user_id', userId).like('id', 'demo-%'),
+        supabase.from('daily_check_ins').delete().eq('user_id', userId).like('id', 'demo-%'),
+        supabase.from('insight_history').delete().eq('user_id', userId).like('id', 'demo-%'),
+      ]);
+    }
 
     await DemoSeedService._ensureChart();
     await DemoSeedService._seedHistoricalEntries();
@@ -126,16 +125,16 @@ export const DemoSeedService = {
   },
 
   async _ensureChart(): Promise<void> {
-    const existingCharts = await localDb.getCharts();
+    const existingCharts = await supabaseDb.getCharts();
     const existingDemoChart = existingCharts.find((chart) => chart.id === CHART_ID);
 
     for (const chart of existingCharts) {
       if (chart.id !== CHART_ID) {
-        await localDb.deleteChart(chart.id);
+        await supabaseDb.deleteChart(chart.id);
       }
     }
 
-    await localDb.saveChart({
+    await supabaseDb.saveChart({
       id: CHART_ID,
       name: ACCOUNT_B_DEMO_SEED.profile.displayName,
       birthDate: ACCOUNT_B_DEMO_SEED.profile.birthDate,
@@ -156,7 +155,7 @@ export const DemoSeedService = {
     for (let i = 0; i < ACCOUNT_B_DEMO_SEED.dailyEntries.length; i++) {
       const entry = ACCOUNT_B_DEMO_SEED.dailyEntries[i];
 
-      await localDb.saveJournalEntry({
+      await supabaseDb.saveJournalEntry({
         id: `demo-journal-${entry.date}`,
         date: entry.date,
         mood: DemoSeedService._journalMoodFromScore(entry.eveningMood),
@@ -172,7 +171,7 @@ export const DemoSeedService = {
         isDeleted: false,
       });
 
-      await localDb.saveSleepEntry({
+      await supabaseDb.saveSleepEntry({
         id: `demo-sleep-${entry.date}`,
         chartId: CHART_ID,
         date: entry.date,
@@ -186,7 +185,7 @@ export const DemoSeedService = {
         isDeleted: false,
       });
 
-      await localDb.saveCheckIn({
+      await supabaseDb.saveCheckIn({
         id: `demo-checkin-${entry.date}-morning`,
         date: entry.date,
         chartId: CHART_ID,
@@ -216,7 +215,7 @@ export const DemoSeedService = {
         updatedAt: new Date(`${entry.date}T09:00:00.000Z`).toISOString(),
       });
 
-      await localDb.saveCheckIn({
+      await supabaseDb.saveCheckIn({
         id: `demo-checkin-${entry.date}-evening`,
         date: entry.date,
         chartId: CHART_ID,
@@ -249,7 +248,7 @@ export const DemoSeedService = {
   },
 
   async _seedSettingsAndStorage(): Promise<void> {
-    await localDb.saveSettings({
+    await supabaseDb.saveSettings({
       id: uid(),
       cloudSyncEnabled: false,
       createdAt: CHART_CREATED,
@@ -372,18 +371,17 @@ export const DemoSeedService = {
   },
 
   async _restoreLocalDemoDataIfMissing(): Promise<void> {
-    const db = await localDb.getDb();
-    const [journalRow, sleepRow, checkInRow] = await Promise.all([
-      db.getFirstAsync("SELECT COUNT(*) as cnt FROM journal_entries WHERE id LIKE 'demo-journal-%'"),
-      db.getFirstAsync("SELECT COUNT(*) as cnt FROM sleep_entries WHERE id LIKE 'demo-%'"),
-      db.getFirstAsync("SELECT COUNT(*) as cnt FROM daily_check_ins WHERE id LIKE 'demo-checkin-%'"),
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const [{ count: journalCount }, { count: sleepCount }, { count: checkInCount }] = await Promise.all([
+      supabase.from('journal_entries').select('id', { count: 'exact', head: true }).eq('user_id', userId).like('id', 'demo-journal-%'),
+      supabase.from('sleep_entries').select('id', { count: 'exact', head: true }).eq('user_id', userId).like('id', 'demo-%'),
+      supabase.from('daily_check_ins').select('id', { count: 'exact', head: true }).eq('user_id', userId).like('id', 'demo-checkin-%'),
     ]);
 
-    const journalCount = Number((journalRow as { cnt?: number } | null)?.cnt ?? 0);
-    const sleepCount = Number((sleepRow as { cnt?: number } | null)?.cnt ?? 0);
-    const checkInCount = Number((checkInRow as { cnt?: number } | null)?.cnt ?? 0);
-
-    if (journalCount > 0 && sleepCount > 0 && checkInCount > 0) {
+    if ((journalCount ?? 0) > 0 && (sleepCount ?? 0) > 0 && (checkInCount ?? 0) > 0) {
       return;
     }
 
@@ -411,19 +409,24 @@ export const DemoSeedService = {
   },
 
   async _repairUnreadableDemoSeedData(): Promise<boolean> {
-    const db = await localDb.getDb();
-    const rows = (await db.getAllAsync(
-      "SELECT id, title, content FROM journal_entries WHERE id LIKE 'demo-journal-%'",
-    )) as Array<{ id: string; title: string | null; content: string | null }>;
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return false;
+    const { data: rows } = await supabase
+      .from('journal_entries')
+      .select('id, title_enc, content_enc')
+      .eq('user_id', userId)
+      .like('id', 'demo-journal-%');
+    const typedRows = (rows ?? []) as Array<{ id: string; title_enc: string | null; content_enc: string | null }>;
 
     const unreadableIds: string[] = [];
 
-    for (const row of rows) {
-      const titleResult = row.title
-        ? await FieldEncryptionService.tryDecryptField(row.title)
+    for (const row of typedRows) {
+      const titleResult = row.title_enc
+        ? await FieldEncryptionService.tryDecryptField(row.title_enc)
         : { ok: true as const, value: '' };
-      const contentResult = row.content
-        ? await FieldEncryptionService.tryDecryptField(row.content)
+      const contentResult = row.content_enc
+        ? await FieldEncryptionService.tryDecryptField(row.content_enc)
         : { ok: true as const, value: '' };
 
       if (!titleResult.ok || !contentResult.ok) {

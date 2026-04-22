@@ -9,7 +9,7 @@
  * Free users only see today's insight (no history).
  */
 
-import { localDb } from './localDb';
+import { supabaseDb } from './supabaseDb';
 import { generateId } from './models';
 import { HumanDailyGuidance } from '../astrology/humanGuidance';
 import { logger } from '../../utils/logger';
@@ -97,7 +97,7 @@ class InsightHistoryServiceClass {
         updatedAt: now,
       };
       
-      await localDb.saveInsight(updated);
+      await supabaseDb.saveInsight(updated);
       return updated;
     }
     
@@ -123,7 +123,7 @@ class InsightHistoryServiceClass {
       updatedAt: now,
     };
     
-    await localDb.saveInsight(insight);
+    await supabaseDb.saveInsight(insight);
     logger.info(`[InsightHistory] Saved insight for ${guidance.date}`);
     
     return insight;
@@ -133,7 +133,7 @@ class InsightHistoryServiceClass {
    * Get insight for a specific date
    */
   async getInsightByDate(date: string, chartId: string): Promise<SavedInsight | null> {
-    return localDb.getInsightByDate(date, chartId);
+    return supabaseDb.getInsightByDate(date, chartId);
   }
   
   /**
@@ -157,7 +157,7 @@ class InsightHistoryServiceClass {
       favoritesOnly?: boolean;
     }
   ): Promise<SavedInsight[]> {
-    return localDb.getInsightHistory(chartId, options);
+    return supabaseDb.getInsightHistory(chartId, options);
   }
   
   /**
@@ -174,11 +174,11 @@ class InsightHistoryServiceClass {
    * Toggle favorite status
    */
   async toggleFavorite(insightId: string): Promise<boolean> {
-    const insight = await localDb.getInsightById(insightId);
+    const insight = await supabaseDb.getInsightById(insightId);
     if (!insight) return false;
     
     const newStatus = !insight.isFavorite;
-    await localDb.updateInsightFavorite(insightId, newStatus);
+    await supabaseDb.updateInsightFavorite(insightId, newStatus);
     
     logger.info(`[InsightHistory] ${newStatus ? 'Favorited' : 'Unfavorited'} insight ${insightId}`);
     return newStatus;
@@ -195,7 +195,7 @@ class InsightHistoryServiceClass {
    * Mark insight as viewed
    */
   async markViewed(insightId: string): Promise<void> {
-    await localDb.updateInsightViewedAt(insightId, new Date().toISOString());
+    await supabaseDb.updateInsightViewedAt(insightId, new Date().toISOString());
   }
   
   /**

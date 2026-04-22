@@ -23,7 +23,7 @@ import PrivacySettingsModal from '../../../components/PrivacySettingsModal';
 import BirthDataModal from '../../../components/BirthDataModal';
 import { usePremium } from '../../../context/PremiumContext';
 import PremiumModal from '../../../components/PremiumModal';
-import { localDb } from '../../../services/storage/localDb';
+import { supabaseDb } from '../../../services/storage/supabaseDb';
 import { BackupService } from '../../../services/storage/backupService';
 import { exportChartToPdf } from '../../../services/premium/pdfExport';
 import { FullNatalStoryGenerator } from '../../../services/premium/fullNatalStory';
@@ -166,7 +166,7 @@ export default function SettingsScreen() {
   const [identityChartId, setIdentityChartId] = useState<string | null>(null);
 
   const ensureSettings = useCallback(async () => {
-    const existing = await localDb.getSettings();
+    const existing = await supabaseDb.getSettings();
     if (existing) return existing;
 
     const now = new Date().toISOString();
@@ -177,7 +177,7 @@ export default function SettingsScreen() {
       updatedAt: now,
       lastBackupAt: undefined,
     };
-    await localDb.saveSettings(defaults);
+    await supabaseDb.saveSettings(defaults);
     return defaults;
   }, []);
 
@@ -204,7 +204,7 @@ export default function SettingsScreen() {
 
       // Load identity
       try {
-        const charts = await localDb.getCharts();
+        const charts = await supabaseDb.getCharts();
         if (charts.length > 0) {
           const chart = charts[0];
           setIdentityChartId(chart.id);
@@ -306,7 +306,7 @@ export default function SettingsScreen() {
 
       const settings = await ensureSettings();
       const now = new Date().toISOString();
-      await localDb.saveSettings({ ...settings, lastBackupAt: now, updatedAt: now });
+      await supabaseDb.saveSettings({ ...settings, lastBackupAt: now, updatedAt: now });
 
       setLastBackupAt(now);
       try {
@@ -359,7 +359,7 @@ export default function SettingsScreen() {
 
       // Re-seal identity from restored chart data
       try {
-        const charts = await localDb.getCharts();
+        const charts = await supabaseDb.getCharts();
         if (charts.length > 0) {
           await IdentityVault.sealIdentity({
             name: charts[0].name ?? 'My Chart',
@@ -456,7 +456,7 @@ export default function SettingsScreen() {
     } else {
       // If no chart data, try to load it fresh
       try {
-        const charts = await localDb.getCharts();
+        const charts = await supabaseDb.getCharts();
         if (charts.length > 0) {
           const chart = charts[0];
           setIdentityChartId(chart.id);
@@ -486,7 +486,7 @@ export default function SettingsScreen() {
     try {
       const chart = AstrologyCalculator.generateNatalChart(birthData);
       const now = new Date().toISOString();
-      await localDb.saveChart({
+      await supabaseDb.saveChart({
         id: identityChartId || chart.id,
         name: extra?.chartName ?? chart.name,
         birthDate: chart.birthData.date,

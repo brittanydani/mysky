@@ -16,7 +16,7 @@ import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import BirthDataModal from '../../components/BirthDataModal';
 import { BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { logger } from '../../utils/logger';
 import { IdentityVault, CosmicIdentity } from '../../utils/IdentityVault';
 import { type AppTheme } from '../../constants/theme';
@@ -94,11 +94,11 @@ export default function OnboardingBirthScreen() {
         isDeleted: false,
       };
 
-      await localDb.saveChart(savedChart);
+      await supabaseDb.saveChart(savedChart);
 
       // Seal the sensitive birth data in the hardware keychain / keystore.
       // This runs in parallel with navigation — failure is non-blocking since
-      // the chart is already persisted in localDb.
+      // the chart is already persisted in supabaseDb.
       const identity: CosmicIdentity = {
         name: extra?.chartName ?? 'My Chart',
         birthDate: birthData.date,

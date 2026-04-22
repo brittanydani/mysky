@@ -9,7 +9,7 @@ import { pbkdf2Async } from '@noble/hashes/pbkdf2.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { localDb } from './localDb';
+import { supabaseDb } from './supabaseDb';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
 import { AccountScopedAsyncStorage } from './accountScopedStorage';
@@ -160,9 +160,9 @@ export class BackupService {
     }
 
     const [charts, journalEntries, settings] = await Promise.all([
-      localDb.getCharts(),
-      localDb.getJournalEntries(),
-      localDb.getSettings(),
+      supabaseDb.getCharts(),
+      supabaseDb.getJournalEntries(),
+      supabaseDb.getSettings(),
     ]);
 
     // Load relationship charts, insight history, and sleep entries for all user charts
@@ -172,10 +172,10 @@ export class BackupService {
     const checkIns: import('../patterns/types').DailyCheckIn[] = [];
     await Promise.all(charts.map(async (chart) => {
       const [rels, insights, sleep, dailyCheckIns] = await Promise.all([
-        localDb.getRelationshipCharts(chart.id),
-        localDb.getInsightHistory(chart.id),
-        localDb.getSleepEntries(chart.id, 10000),
-        localDb.getCheckIns(chart.id, 10000),
+        supabaseDb.getRelationshipCharts(chart.id),
+        supabaseDb.getInsightHistory(chart.id),
+        supabaseDb.getSleepEntries(chart.id, 10000),
+        supabaseDb.getCheckIns(chart.id, 10000),
       ]);
       relationshipCharts.push(...rels);
       insightHistory.push(...insights);
@@ -376,7 +376,7 @@ export class BackupService {
       throw new Error('Backup file contains no data to restore.');
     }
 
-    await localDb.clearAccountScopedData();
+    await supabaseDb.clearAccountScopedData();
     await Promise.all([
       ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map((key) => EncryptedAsyncStorage.removeItem(key)),
       ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AccountScopedAsyncStorage.removeItem(key)),
@@ -384,31 +384,31 @@ export class BackupService {
 
     // Restore data into localDb (writes are INSERT OR REPLACE, so safe)
     for (const chart of payload.charts ?? []) {
-      await localDb.saveChart(chart);
+      await supabaseDb.saveChart(chart);
     }
 
     for (const entry of payload.journalEntries ?? []) {
-      await localDb.saveJournalEntry(entry);
+      await supabaseDb.saveJournalEntry(entry);
     }
 
     for (const rel of payload.relationshipCharts ?? []) {
-      await localDb.saveRelationshipChart(rel);
+      await supabaseDb.saveRelationshipChart(rel);
     }
 
     for (const insight of payload.insightHistory ?? []) {
-      await localDb.saveInsight(insight);
+      await supabaseDb.saveInsight(insight);
     }
 
     for (const entry of payload.sleepEntries ?? []) {
-      await localDb.saveSleepEntry(entry);
+      await supabaseDb.saveSleepEntry(entry);
     }
 
     for (const checkIn of payload.checkIns ?? []) {
-      await localDb.saveCheckIn(checkIn);
+      await supabaseDb.saveCheckIn(checkIn);
     }
 
     if (payload.settings) {
-      await localDb.saveSettings(payload.settings);
+      await supabaseDb.saveSettings(payload.settings);
     }
 
     // Restore AsyncStorage user profile data (re-encrypts with new device DEK)
@@ -430,8 +430,6 @@ export class BackupService {
         }
       }
     }
-
-    await localDb.setMigrationMarker('data_migration_completed');
   }
 
   static async shareBackupFile(uri: string, deleteAfter = true): Promise<void> {

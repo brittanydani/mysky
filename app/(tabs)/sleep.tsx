@@ -30,7 +30,7 @@ import SkiaRestorationField from '../../components/ui/SkiaRestorationField';
 import SkiaRestorationInsight from '../../components/ui/SkiaRestorationInsight';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { isDecryptionFailure } from '../../services/storage/fieldEncryption';
 import { SleepEntry, generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
@@ -465,13 +465,13 @@ export default function SleepScreen() {
           setLoading(true);
           const dreamPref = await AsyncStorage.getItem('pref_dream_logging');
           setDreamLoggingEnabled(dreamPref === null || dreamPref === '1');
-          const charts = await localDb.getCharts();
+          const charts = await supabaseDb.getCharts();
           if (charts.length === 0) return;
           const savedChart = charts[0];
           setChartId(savedChart.id);
           const [data, checkIns] = await Promise.all([
-            localDb.getSleepEntries(savedChart.id, 30),
-            localDb.getCheckIns(savedChart.id, 30),
+            supabaseDb.getSleepEntries(savedChart.id, 30),
+            supabaseDb.getCheckIns(savedChart.id, 30),
           ]);
           setEntries(data); setRecentCheckIns(checkIns);
           const requestedEntryId = Array.isArray(entryId) ? entryId[0] : entryId;
@@ -516,8 +516,8 @@ export default function SleepScreen() {
         notes: undefined,
         createdAt: existingCreatedAt, updatedAt: now, isDeleted: false,
       };
-      await localDb.saveSleepEntry(entry);
-      const updated = await localDb.getSleepEntries(chartId, 30);
+      await supabaseDb.saveSleepEntry(entry);
+      const updated = await supabaseDb.getSleepEntries(chartId, 30);
       setEntries(updated);
       const savedEntry = updated.find(e => e.id === entry.id);
       const savedId = entry.id;
@@ -634,9 +634,9 @@ export default function SleepScreen() {
         text: 'Delete', style: 'destructive',
         onPress: async () => {
           try {
-            await localDb.deleteSleepEntry(id);
+            await supabaseDb.deleteSleepEntry(id);
             if (chartId) {
-              const updated = await localDb.getSleepEntries(chartId, 30);
+              const updated = await supabaseDb.getSleepEntries(chartId, 30);
               setEntries(updated);
               if (editingEntryId === id) applyEntryToForm(updated.find(e => e.date === today));
             }

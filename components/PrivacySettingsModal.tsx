@@ -17,7 +17,7 @@ import { type AppTheme } from '../constants/theme';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { logger } from '../utils/logger';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
-import { localDb } from '../services/storage/localDb';
+import { supabaseDb } from '../services/storage/supabaseDb';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
@@ -58,10 +58,10 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
 
   const loadPrivacyInfo = async () => {
     try {
-      await localDb.initialize();
+      await supabaseDb.initialize();
       const [dbCharts, dbEntries, consentStatus] = await Promise.all([
-        localDb.getCharts(),
-        localDb.getJournalEntries(),
+        supabaseDb.getCharts(),
+        supabaseDb.getJournalEntries(),
         compliance.getConsentStatus(),
       ]);
       setHasData(dbCharts.length > 0 || dbEntries.length > 0);

@@ -12,7 +12,6 @@
 import { Ionicons } from '@expo/vector-icons';
 // File: app/_layout.tsx
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { Component, type ReactNode, useEffect, useRef, useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -29,9 +28,6 @@ import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import { initHapticPreference } from '../utils/haptics';
-import { localDb } from '../services/storage/localDb';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
-import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from '../services/storage/userDataKeys';
 import { generateId } from '../services/storage/models';
 import { logger } from '../utils/logger';
 import { supabase } from '../lib/supabase';
@@ -72,7 +68,6 @@ const CosmicBackground = lazyRequire(
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   () => require('../components/ui/CosmicBackground') as { default: React.ComponentType<any> }
 );
-
 
 // Allowlist of routes that notification deep links can navigate to.
 // Prevents injection of arbitrary or external URLs via push notifications.
@@ -161,11 +156,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
     logger.error('Unhandled render error:', error, info.componentStack);
-    loadSentry().then(({ Sentry }) => {
-      Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack } } });
-    }).catch(() => {
-      // Sentry not available
-    });
+    loadSentry()
+      .then(({ Sentry }) => {
+        Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack } } });
+      })
+      .catch(() => {
+        // Sentry not available
+      });
   }
 
   render() {
@@ -174,7 +171,9 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
         <View style={errorBoundaryStyles.errorContainer}>
           <Ionicons name="warning-outline" size={56} color="#E8D6AE" style={{ marginBottom: 20 }} />
           <Text style={errorBoundaryStyles.errorTitle}>Something went wrong</Text>
-          <Text style={errorBoundaryStyles.errorBody}>An unexpected error occurred. Please close the app and reopen it, or try reloading below.</Text>
+          <Text style={errorBoundaryStyles.errorBody}>
+            An unexpected error occurred. Please close the app and reopen it, or try reloading below.
+          </Text>
           <TouchableOpacity activeOpacity={0.8} onPress={() => this.setState({ hasError: false })}>
             <View style={errorBoundaryStyles.errorButtonGradient}>
               <Ionicons name="refresh-outline" size={16} color="#E8D6AE" style={{ marginRight: 8 }} />
@@ -225,11 +224,6 @@ function RootLayout() {
 // Sentry.wrap at module eval time throws ReferenceError on iOS 26 New
 // Architecture because the native Sentry TurboModule isn't available yet.
 export default RootLayout;
-
-function loadSyncService() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return Promise.resolve().then(() => require('../services/storage/syncService'));
-}
 
 function loadSecureStore() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -304,13 +298,13 @@ function AppShell() {
   const sessionBootstrapRef = useRef(0);
   const authEntryIntentRef = useRef<'sign-in-home' | null>(null);
 
-  const bindLocalSettingsToUser = async (userId: string, resetSyncState = false) => {
-    const current = await localDb.getSettings();
+  const bindLocalSettingsToUser = async (userId: string) => {
+    const { getSettings, updateSettings } = await import('../services/storage/supabaseDb');
+    const current = await getSettings();
     const now = new Date().toISOString();
-    await localDb.updateSettings({
+    await updateSettings({
       id: 'default',
-      cloudSyncEnabled: current?.cloudSyncEnabled ?? false,
-      lastSyncAt: resetSyncState ? undefined : current?.lastSyncAt,
+      cloudSyncEnabled: false,
       lastBackupAt: current?.lastBackupAt,
       userId,
       createdAt: current?.createdAt ?? now,
@@ -318,28 +312,9 @@ function AppShell() {
     });
   };
 
-  // Previously used to clear data on account switch. Kept for reference or explicit "Delete Account" flows.
-  const clearLocalDataForUserSwitch = async () => {
-    // localDb is now partitioned per user; we don't blindly wipe it anymore.
-    // await localDb.clearAccountScopedData();
-    
-    await Promise.all([
-      ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map((key) => EncryptedAsyncStorage.removeItem(key)),
-      ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AsyncStorage.removeItem(key)),
-      IdentityVault.destroyIdentity().catch(() => {}),
-    ]);
-  };
-
-  const prepareLocalStateForSession = async (userId: string) => {
-    // 1. Switch to the partitioned SQLite DB for this user
-    await localDb.switchToUserDb(userId);
-
-    // 2. Bind the user without wiping device data
-    await bindLocalSettingsToUser(userId, false);
-  };
-
   const restoreChartFromIdentityVault = async () => {
     try {
+      const { saveChart } = await import('../services/storage/supabaseDb');
       const sealedIdentity = await IdentityVault.openVault();
       if (!sealedIdentity?.birthDate || !sealedIdentity.locationCity.trim()) {
         return false;
@@ -355,7 +330,7 @@ function AppShell() {
 
       const astroSettings = await AstrologySettingsService.getSettings();
       const now = new Date().toISOString();
-      await localDb.saveChart({
+      await saveChart({
         id: generateId(),
         name: sealedIdentity.name.trim() || 'My Chart',
         birthDate: sealedIdentity.birthDate,
@@ -381,15 +356,25 @@ function AppShell() {
 
   const checkIfOnboardingCanBeSkipped = async () => {
     try {
-      await localDb.initialize();
-      const charts = await localDb.getCharts();
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession();
+
+      if (!currentSession) {
+        setOnboardingComplete(false);
+        return false;
+      }
+
+      const { getCharts } = await import('../services/storage/supabaseDb');
+      const charts = await getCharts();
+
       if (charts.length > 0) {
         setOnboardingComplete(true);
         return true;
       }
 
-      // If SQLite was cleared but the device keychain still has the sealed birth
-      // profile, restore the local chart and keep the user out of onboarding.
+      // If no chart on server but the device keychain has the sealed birth
+      // profile, restore it to Supabase and keep the user out of onboarding.
       const restoredFromVault = await restoreChartFromIdentityVault();
       const canSkip = restoredFromVault;
       setOnboardingComplete(canSkip);
@@ -420,17 +405,27 @@ function AppShell() {
         logger.error('Subscription store init failed:', e)
       );
 
-      // If they already accepted terms previously, see if onboarding can be skipped
+      // If they already accepted terms previously, see if onboarding can be skipped.
+      // Only run this check when a live session exists, otherwise startup can hit
+      // auth-protected chart queries too early and log noisy "Not authenticated" errors.
       if (termsAccepted) {
-        const canSkip = await checkIfOnboardingCanBeSkipped();
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
 
-        // If terms were "accepted" but no chart exists, the consent data is stale
-        // (e.g. iOS Keychain surviving an app reinstall). Re-require both consent
-        // gates so users always see terms & privacy during a fresh onboarding flow.
-        if (!canSkip) {
-          await setTermsConsent(false);
-          setNeedsTermsConsent(true);
-          setNeedsPrivacyConsent(true);
+        if (currentSession) {
+          const canSkip = await checkIfOnboardingCanBeSkipped();
+
+          // If terms were "accepted" but no chart exists, the consent data is stale
+          // (e.g. iOS Keychain surviving an app reinstall). Re-require both consent
+          // gates so users always see terms & privacy during a fresh onboarding flow.
+          if (!canSkip) {
+            await setTermsConsent(false);
+            setNeedsTermsConsent(true);
+            setNeedsPrivacyConsent(true);
+          }
+        } else {
+          setOnboardingComplete(false);
         }
       }
     } catch (error) {
@@ -461,7 +456,10 @@ function AppShell() {
         // authLoadingRef is a ref so the closure always reads the latest value.
         logger.info('[init] step: waiting for auth context');
         await new Promise<void>((resolve) => {
-          if (!authLoadingRef.current) { resolve(); return; }
+          if (!authLoadingRef.current) {
+            resolve();
+            return;
+          }
           authListenerRef.current = DeviceEventEmitter.addListener('AUTH_LOADING_COMPLETE', () => {
             if (authListenerRef.current) {
               authListenerRef.current.remove();
@@ -482,7 +480,10 @@ function AppShell() {
         // consent prompt (fresh installs wipe Keychain, but session survives).
         // Read the live session directly — `session` state is null at closure
         // capture time since this effect runs once with [] deps.
-        const { data: { session: initLiveSession } } = await supabase.auth.getSession();
+        const {
+          data: { session: initLiveSession },
+        } = await supabase.auth.getSession();
+
         if (consentStatus.required && initLiveSession) {
           logger.info('[init] session present — auto-restoring privacy consent');
           await privacyManager.recordConsent({
@@ -504,6 +505,7 @@ function AppShell() {
           await setTermsConsent(true);
           termsAccepted = true;
         }
+
         setNeedsPrivacyConsent(consentStatus.required);
         setNeedsTermsConsent(!termsAccepted);
 
@@ -516,6 +518,7 @@ function AppShell() {
           // but we intentionally do NOT run migrations/settings until consent is granted.
           setDbReady(true);
         }
+
         logger.info('[init] complete');
       } catch (error) {
         logger.error('Failed to initialize app:', error);
@@ -622,23 +625,28 @@ function AppShell() {
   // so that foreground notifications are shown (not silently dropped on iOS).
   useEffect(() => {
     let sub: { remove: () => void } | undefined;
-    loadNotifications().then((Notifications) => {
-      Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: true,
-          shouldSetBadge: false,
-          shouldShowBanner: true,
-          shouldShowList: true,
-        }),
-      });
-      sub = Notifications.addNotificationResponseReceivedListener((response: import('expo-notifications').NotificationResponse) => {
-        const route = response.notification.request.content.data?.route as string | undefined;
-        if (route && ALLOWED_NOTIFICATION_ROUTES.has(route)) {
-          router.push(route as import('expo-router').Href);
-        }
-      });
-    }).catch(() => {});
+    loadNotifications()
+      .then((Notifications) => {
+        Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: false,
+            shouldShowBanner: true,
+            shouldShowList: true,
+          }),
+        });
+        sub = Notifications.addNotificationResponseReceivedListener(
+          (response: import('expo-notifications').NotificationResponse) => {
+            const route = response.notification.request.content.data?.route as string | undefined;
+            if (route && ALLOWED_NOTIFICATION_ROUTES.has(route)) {
+              router.push(route as import('expo-router').Href);
+            }
+          }
+        );
+      })
+      .catch(() => {});
+
     return () => sub?.remove();
   }, [router]);
 
@@ -692,8 +700,7 @@ function AppShell() {
     }
   }, [session]);
 
-  // Flush pending sync queue and trigger a pull whenever the user signs in.
-  // Pull is sequenced after flush so that last_sync_at reflects local writes first.
+  // On sign-in, bind settings to the authenticated user and check onboarding state.
   useEffect(() => {
     if (!session) return;
     const bootstrapId = ++sessionBootstrapRef.current;
@@ -703,25 +710,9 @@ function AppShell() {
 
     (async () => {
       if (isStale()) return;
-      await prepareLocalStateForSession(session.user.id).catch((e) =>
-        logger.error('[auth] Failed to prepare local state for session:', e),
+      await bindLocalSettingsToUser(session.user.id).catch((e) =>
+        logger.warn('[auth] Bind settings failed:', e)
       );
-      if (isStale()) return;
-
-      try {
-        const { flushQueue, pullFromSupabase, syncBirthProfileFromLocal } = await loadSyncService();
-        if (isStale()) return;
-        await syncBirthProfileFromLocal().catch((e: unknown) => logger.warn('[auth] Sync profile failed:', e));
-        if (isStale()) return;
-        await flushQueue().catch((e: unknown) => logger.warn('[sync] Queue flush failed:', e));
-        if (isStale()) return;
-        await pullFromSupabase().catch((e: unknown) => logger.warn('[sync] Pull failed:', e));
-      } catch (e) {
-        logger.error('[auth] Failed to load sync service for session bootstrap:', e);
-      }
-
-      if (isStale()) return;
-      await bindLocalSettingsToUser(session.user.id, false).catch((e) => logger.warn('[auth] Bind settings failed:', e));
       if (isStale()) return;
 
       if (authEntryIntentRef.current === 'sign-in-home') {
@@ -734,7 +725,7 @@ function AppShell() {
       if (isStale()) return;
       setSessionDataReady(true);
     })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
 
   // Navigate to home once both onboarding is complete and session is confirmed.
@@ -776,7 +767,10 @@ function AppShell() {
       let canSkip = await checkIfOnboardingCanBeSkipped();
 
       if (!canSkip) {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+
         if (currentSession) {
           const { data, error } = await supabase.functions.invoke('birth-profile-sync', {
             body: { action: 'getLatest', since: '1970-01-01T00:00:00.000Z' },
@@ -800,7 +794,7 @@ function AppShell() {
         }
         return true;
       }
-      
+
       // If they really have no chart, keep onboarding active
       setOnboardingComplete(false);
       return false;
@@ -811,10 +805,16 @@ function AppShell() {
   };
 
   // Hide splash screen once all init gates have passed, then init Sentry.
-  // Sentry must not run at module load or before bootstrap completes \u2014
+  // Sentry must not run at module load or before bootstrap completes —
   // its native TurboModule call was crashing on iOS 26 New Architecture.
   useEffect(() => {
-    if (!checkingConsent && dbReady && !authLoading && (!session || sessionDataReady) && !didHideSplash.current) {
+    if (
+      !checkingConsent &&
+      dbReady &&
+      !authLoading &&
+      (!session || sessionDataReady) &&
+      !didHideSplash.current
+    ) {
       didHideSplash.current = true;
       SplashScreen.hideAsync().catch(() => {});
 
@@ -822,9 +822,15 @@ function AppShell() {
         return;
       }
 
-      loadSentry().then(({ initSentry }) => {
-        try { initSentry(); } catch { /* native module unavailable */ }
-      }).catch(() => {});
+      loadSentry()
+        .then(({ initSentry }) => {
+          try {
+            initSentry();
+          } catch {
+            // native module unavailable
+          }
+        })
+        .catch(() => {});
     }
   }, [checkingConsent, dbReady, authLoading, session, sessionDataReady]);
 
@@ -834,11 +840,11 @@ function AppShell() {
         <View style={styles.errorContainer}>
           <Ionicons name="hourglass-outline" size={56} color="#E8D6AE" style={{ marginBottom: 20 }} />
           <Text style={styles.errorTitle}>Taking longer than expected</Text>
-          <Text style={styles.errorBody}>Initialization is still loading. This can happen if secure storage is temporarily unavailable. Please try again.</Text>
+          <Text style={styles.errorBody}>
+            Initialization is still loading. This can happen if secure storage is temporarily unavailable. Please try again.
+          </Text>
           <TouchableOpacity activeOpacity={0.8} onPress={retryInit}>
-            <View
-              style={styles.errorButtonGradient}
-            >
+            <View style={styles.errorButtonGradient}>
               <Ionicons name="refresh-outline" size={16} color="#E8D6AE" style={{ marginRight: 8 }} />
               <Text style={styles.errorButtonText}>Retry</Text>
             </View>
@@ -851,130 +857,129 @@ function AppShell() {
 
   return (
     <PremiumProvider>
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <KeyboardProvider preload={false}>
-        <View style={{ flex: 1, position: 'relative' }}>
-          {isLightweightDevMode ? (
-            <View style={{ flex: 1, backgroundColor: theme.background }} />
-          ) : (
-            <React.Suspense fallback={<View style={{ flex: 1, backgroundColor: theme.background }} />}>
-              <CosmicBackground />
-            </React.Suspense>
-          )}
-          <SafeAreaProvider>
-            <StatusBar style={theme.statusBarStyle} />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: 'transparent' },
-                animation: 'fade',
-              }}
-            >
-              {/* Keep the screen list static for Expo Router; access is gated by overlays and redirects. */}
-              <Stack.Screen name="(tabs)" />
-
-              {/* --- HIDDEN SCREENS (MODALS) --- */}
-              {/* Slide up over the tab bar — dedicated workspaces */}
-              <Stack.Screen
-                name="checkin"
-                options={{
-                  presentation: 'modal',
-                  contentStyle: { backgroundColor: theme.background },
-                }}
-              />
-              <Stack.Screen
-                name="daily-reflection"
-                options={{
-                  presentation: 'modal',
-                  contentStyle: { backgroundColor: theme.background },
-                }}
-              />
-              <Stack.Screen
-                name="sanctuary"
-                options={{
-                  presentation: 'fullScreenModal',
-                  animation: 'fade_from_bottom',
-                }}
-              />
-              {/* Slide-up from within the tab context (e.g. natal chart detail) */}
-              <Stack.Screen name="astrology-context" options={{ animation: 'slide_from_bottom' }} />
-
-              {/* Legal */}
-              <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
-            </Stack>
-
-            {/* Overlay gates (do NOT unmount navigation) */}
-            <React.Suspense fallback={null}>
-            {/* Re-consent gate only after a signed-in user has reached onboarding-complete state. */}
-            {session && needsPrivacyConsent && onboardingComplete && (
-              <PrivacyConsentModal visible onConsent={handlePrivacyConsent} />
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <KeyboardProvider preload={false}>
+          <View style={{ flex: 1, position: 'relative' }}>
+            {isLightweightDevMode ? (
+              <View style={{ flex: 1, backgroundColor: theme.background }} />
+            ) : (
+              <React.Suspense fallback={<View style={{ flex: 1, backgroundColor: theme.background }} />}>
+                <CosmicBackground />
+              </React.Suspense>
             )}
 
-            {/* Onboarding only starts after authentication, so auth is always the first screen for signed-out users. */}
-            {session && !onboardingComplete && (
-              <OnboardingModal
-                visible
-                onPrivacyConsent={() => handlePrivacyConsent(true)}
-                onSignInComplete={handleExistingSignInComplete}
-                onComplete={handleOnboardingComplete}
-              />
-            )}
+            <SafeAreaProvider>
+              <StatusBar style={theme.statusBarStyle} />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                  animation: 'fade',
+                }}
+              >
+                {/* Keep the screen list static for Expo Router; access is gated by overlays and redirects. */}
+                <Stack.Screen name="(tabs)" />
 
-            {/* Auth gate — first screen for any signed-out user. */}
-            <AuthRequiredModal
-              visible={
-                !completingOnboarding &&
-                !authLoading &&
-                !session
-              }
-            />
-            </React.Suspense>
-          </SafeAreaProvider>
-        </View>
-      </KeyboardProvider>
-    </GestureHandlerRootView>
+                {/* --- HIDDEN SCREENS (MODALS) --- */}
+                {/* Slide up over the tab bar — dedicated workspaces */}
+                <Stack.Screen
+                  name="checkin"
+                  options={{
+                    presentation: 'modal',
+                    contentStyle: { backgroundColor: theme.background },
+                  }}
+                />
+                <Stack.Screen
+                  name="daily-reflection"
+                  options={{
+                    presentation: 'modal',
+                    contentStyle: { backgroundColor: theme.background },
+                  }}
+                />
+                <Stack.Screen
+                  name="sanctuary"
+                  options={{
+                    presentation: 'fullScreenModal',
+                    animation: 'fade_from_bottom',
+                  }}
+                />
+                {/* Slide-up from within the tab context (e.g. natal chart detail) */}
+                <Stack.Screen name="astrology-context" options={{ animation: 'slide_from_bottom' }} />
+
+                {/* Legal */}
+                <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
+              </Stack>
+
+              {/* Overlay gates (do NOT unmount navigation) */}
+              <React.Suspense fallback={null}>
+                {/* Re-consent gate only after a signed-in user has reached onboarding-complete state. */}
+                {session && needsPrivacyConsent && onboardingComplete && (
+                  <PrivacyConsentModal visible onConsent={handlePrivacyConsent} />
+                )}
+
+                {/* Onboarding only starts after authentication, so auth is always the first screen for signed-out users. */}
+                {session && !onboardingComplete && (
+                  <OnboardingModal
+                    visible
+                    onPrivacyConsent={() => handlePrivacyConsent(true)}
+                    onSignInComplete={handleExistingSignInComplete}
+                    onComplete={handleOnboardingComplete}
+                  />
+                )}
+
+                {/* Auth gate — first screen for any signed-out user. */}
+                <AuthRequiredModal
+                  visible={!completingOnboarding && !authLoading && !session}
+                />
+              </React.Suspense>
+            </SafeAreaProvider>
+          </View>
+        </KeyboardProvider>
+      </GestureHandlerRootView>
     </PremiumProvider>
   );
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  errorContainer: {
-    flex: 1,
-    backgroundColor: theme.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-  },
-  errorTitle: {
-    color: theme.textPrimary,
-    fontSize: 26,
-    fontWeight: '700',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  errorBody: {
-    color: theme.textSecondary,
-    fontSize: 15,
-    textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 22,
-    paddingHorizontal: 20,
-  },
-  errorButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    backgroundColor: theme.surface,
-  },
-  errorButtonText: {
-    color: theme.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    errorContainer: {
+      flex: 1,
+      backgroundColor: theme.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+    },
+    errorTitle: {
+      color: theme.textPrimary,
+      fontSize: 26,
+      fontWeight: '700',
+      marginBottom: 12,
+      textAlign: 'center',
+    },
+    errorBody: {
+      color: theme.textSecondary,
+      fontSize: 15,
+      textAlign: 'center',
+      marginBottom: 40,
+      lineHeight: 22,
+      paddingHorizontal: 20,
+    },
+    errorButtonGradient: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 28,
+      paddingVertical: 14,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.cardBorder,
+      backgroundColor: theme.surface,
+    },
+    errorButtonText: {
+      color: theme.textPrimary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+  });
+  

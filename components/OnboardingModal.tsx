@@ -44,7 +44,7 @@ import { LegalOverlay } from './LegalOverlay';
 import { BirthData, HouseSystem, NatalChart } from '../services/astrology/types';
 import { AstrologyCalculator } from '../services/astrology/calculator';
 import { InputValidator } from '../services/astrology/inputValidator';
-import { localDb } from '../services/storage/localDb';
+import { supabaseDb } from '../services/storage/supabaseDb';
 import { BackupService } from '../services/storage/backupService';
 import { IdentityVault } from '../utils/IdentityVault';
 import { toLocalDateString } from '../utils/dateUtils';
@@ -547,7 +547,7 @@ export default function OnboardingModal({
         isDeleted: false,
       };
 
-      await localDb.saveChart(savedChart);
+      await supabaseDb.saveChart(savedChart);
 
       // Seal the sensitive birth data into the hardware keychain — mirrors app/onboarding/birth.tsx
       IdentityVault.sealIdentity({
@@ -654,7 +654,7 @@ export default function OnboardingModal({
     setStep('processing');
     try {
       await BackupService.restoreFromBackupFile(backupUri, passphrase);
-      const charts = await localDb.getCharts();
+      const charts = await supabaseDb.getCharts();
       if (charts.length > 0) {
         const birthDataFromChart = {
           date: charts[0].birthDate,

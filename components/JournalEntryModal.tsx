@@ -42,7 +42,7 @@ import { logger } from '../utils/logger';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { JournalEntry } from '../services/storage/models';
 import { usePremium } from '../context/PremiumContext';
-import { localDb } from '../services/storage/localDb';
+import { supabaseDb } from '../services/storage/supabaseDb';
 import { AccountScopedAsyncStorage } from '../services/storage/accountScopedStorage';
 import { AstrologyCalculator } from '../services/astrology/calculator';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
@@ -535,7 +535,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
   const loadUserChart = async () => {
     try {
-      const charts = await localDb.getCharts();
+      const charts = await supabaseDb.getCharts();
       if (charts.length > 0) {
         const savedChart = charts[0];
         setChartId(savedChart.id);
@@ -1174,50 +1174,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                         </>
                       )}
 
-                      {/* Your Tags — uncategorized custom tags */}
-                      <Text style={styles.tagPickerSectionLabel}>Your Tags</Text>
-                      <View style={[styles.tagPickerRow, { marginBottom: 4 }]}>
-                        {customTags.filter((t) => !t.categoryId).map((tag) => (
-                          <TagChip key={tag.id} tag={tag} isCustom />
-                        ))}
-                        {newTagModalCategory === 'uncategorized' ? (
-                          <View style={styles.inlineTagInputWrap}>
-                            <TextInput
-                              style={styles.inlineTagInput}
-                              value={newTagModalInput}
-                              onChangeText={setNewTagModalInput}
-                              placeholder="Tag name…"
-                              placeholderTextColor={theme.textMuted}
-                              autoFocus
-                              maxLength={30}
-                              returnKeyType="done"
-                              onSubmitEditing={() => {
-                                const v = newTagModalInput.trim();
-                                if (v) saveCustomTag(v, undefined, editingCustomTagId);
-                                else closeCustomTagComposer();
-                              }}
-                            />
-                            <Pressable hitSlop={12} onPress={() => {
-                              const v = newTagModalInput.trim();
-                              if (v) saveCustomTag(v, undefined, editingCustomTagId);
-                              else closeCustomTagComposer();
-                            }}>
-                              <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : theme.textMuted} />
-                            </Pressable>
-                          </View>
-                        ) : (
-                          <Pressable
-                            style={styles.newTagBtn}
-                            onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory('uncategorized'); setNewTagModalInput(''); setEditingCustomTagId(null); }}
-                          >
-                            <Ionicons name="add-outline" size={13} color={PALETTE.jade} />
-                            <Text style={styles.newTagBtnText}>New tag</Text>
-                          </Pressable>
-                        )}
-                      </View>
-                      {customTags.length > 0 && (
-                        <Text style={styles.tagPickerHint}>Hold a custom tag to edit or delete it</Text>
-                      )}
+
 
                       {TAG_CATEGORIES.map((cat) => {
                         const catCustomTags = customTags.filter((ct) => ct.categoryId === cat.id);

@@ -1,5 +1,5 @@
 // File: utils/IdentityVault.ts
-import * as SecureStore from 'expo-secure-store';
+import type * as SecureStoreType from 'expo-secure-store';
 import { logger } from './logger';
 
 /**
@@ -21,10 +21,25 @@ export interface CosmicIdentity {
 
 const IDENTITY_KEY = 'mysky_secure_identity';
 
-const STORE_OPTIONS: SecureStore.SecureStoreOptions = {
-  // Only accessible when the device is unlocked; never migrates to another device.
-  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-};
+let secureStoreModule: typeof SecureStoreType | null = null;
+
+function getSecureStore(): typeof SecureStoreType {
+  if (!secureStoreModule) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    secureStoreModule = require('expo-secure-store') as typeof SecureStoreType;
+  }
+
+  return secureStoreModule;
+}
+
+function getStoreOptions(): SecureStoreType.SecureStoreOptions {
+  const SecureStore = getSecureStore();
+
+  return {
+    // Only accessible when the device is unlocked; never migrates to another device.
+    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+  };
+}
 
 export class IdentityVault {
   /**
@@ -34,7 +49,7 @@ export class IdentityVault {
   static async sealIdentity(identity: CosmicIdentity, userId?: string): Promise<boolean> {
     const key = userId ? `${IDENTITY_KEY}_${userId}` : IDENTITY_KEY;
     try {
-      await SecureStore.setItemAsync(key, JSON.stringify(identity), STORE_OPTIONS);
+      await getSecureStore().setItemAsync(key, JSON.stringify(identity), getStoreOptions());
       return true;
     } catch (error) {
       logger.error('[IdentityVault] Failed to seal identity:', error);
@@ -49,7 +64,7 @@ export class IdentityVault {
   static async openVault(userId?: string): Promise<CosmicIdentity | null> {
     const key = userId ? `${IDENTITY_KEY}_${userId}` : IDENTITY_KEY;
     try {
-      const payload = await SecureStore.getItemAsync(key, STORE_OPTIONS);
+      const payload = await getSecureStore().getItemAsync(key, getStoreOptions());
       if (!payload) return null;
       return JSON.parse(payload) as CosmicIdentity;
     } catch (error) {
@@ -65,7 +80,7 @@ export class IdentityVault {
   static async destroyIdentity(userId?: string): Promise<void> {
     const key = userId ? `${IDENTITY_KEY}_${userId}` : IDENTITY_KEY;
     try {
-      await SecureStore.deleteItemAsync(key, STORE_OPTIONS);
+      await getSecureStore().deleteItemAsync(key, getStoreOptions());
     } catch (error) {
       logger.error('[IdentityVault] Failed to destroy identity:', error);
     }

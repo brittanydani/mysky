@@ -649,10 +649,12 @@ function buildReflectionInsight(
     ? ` Your ${summary.streak}-day streak shows real commitment to self-knowledge.`
     : '';
 
+  const categoryLabel = dominantCategory[0].replace(/_/g, ' ').toLowerCase();
+
   return {
     id: 'reflection-depth',
     title: 'Your Reflection Practice',
-    body: `You\u2019ve reflected on ${summary.totalDays} days (${pct}% of a full 365-day cycle), with ${summary.totalAnswers} total answers. Your deepest exploration is in ${dominantCategory[0]} (${dominantCategory[1]} answers).${streakNote}${crossNote}`,
+    body: `You\u2019ve reflected on ${summary.totalDays} days (${pct}% of a full 365-day cycle), with ${summary.totalAnswers} total answers. So far, your reflection practice leans most toward ${categoryLabel} (${dominantCategory[1]} answers). That is less about volume than about where your mind keeps returning when it wants to understand you more deeply.${streakNote}${crossNote}`,
     accentColor: 'gold',
     source: 'reflection',
     isConfirmed,

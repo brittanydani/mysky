@@ -14,6 +14,7 @@ import type {
 } from 'react-native-purchases';
 import { logger } from '../../utils/logger';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 type PurchasesModule = typeof import('react-native-purchases');
 
@@ -53,14 +54,38 @@ async function getPurchasesAppUserId(Purchases: typeof PurchasesType): Promise<s
 class RevenueCatService {
   private initPromise: Promise<void> | null = null;
   private initialized = false;
+  private disabledReason: string | null = null;
   private currentAppUserId: string | null = null;
   private readonly premiumEntitlementAliases = ['premium', 'pro', 'plus', 'deeper_sky'];
+
+  private getUnsupportedReason(): string | null {
+    if (Platform.OS !== 'ios') {
+      return null;
+    }
+
+    const appVariant = Constants.expoConfig?.extra?.appVariant ?? process.env.APP_VARIANT ?? 'production';
+    const allowDevBundle = process.env.EXPO_PUBLIC_REVENUECAT_ALLOW_DEV_BUNDLE === 'true';
+
+    if (appVariant !== 'development' || allowDevBundle) {
+      return null;
+    }
+
+    return 'disabled for the development app variant';
+  }
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
     if (this.initPromise) return this.initPromise;
 
     this.initPromise = (async () => {
+      const unsupportedReason = this.getUnsupportedReason();
+      if (unsupportedReason) {
+        this.disabledReason = unsupportedReason;
+        this.initialized = true;
+        logger.info('[RevenueCat] Skipping initialization:', unsupportedReason);
+        return;
+      }
+
       const apiKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
 
       // Sanity check logging
@@ -85,6 +110,7 @@ class RevenueCatService {
         // convertNSExceptionToJSError before we can catch it in JS. Removed
         // entirely — RC logs are not needed in production.
         this.initialized = true;
+        this.disabledReason = null;
         logger.info('[RevenueCat] Initialized successfully');
       } catch (error) {
         logger.error('[RevenueCat] Failed to initialize:', error);
@@ -105,6 +131,9 @@ class RevenueCatService {
     if (!this.initialized) {
       await this.initialize();
     }
+    if (this.disabledReason) {
+      return null;
+    }
 
     try {
       const Purchases = await getPurchases();
@@ -124,6 +153,9 @@ class RevenueCatService {
   }> {
     if (!this.initialized) {
       await this.initialize();
+    }
+    if (this.disabledReason) {
+      return { success: false, error: 'Purchases are unavailable in this app build.' };
     }
 
     try {
@@ -181,6 +213,9 @@ class RevenueCatService {
     if (!this.initialized) {
       await this.initialize();
     }
+    if (this.disabledReason) {
+      return { success: false, error: 'Purchases are unavailable in this app build.' };
+    }
 
     try {
       const Purchases = await getPurchases();
@@ -199,6 +234,9 @@ class RevenueCatService {
     if (!this.initialized) {
       await this.initialize();
     }
+    if (this.disabledReason) {
+      return;
+    }
     try {
       const Purchases = await getPurchases();
       const currentAppUserId = this.currentAppUserId ?? await getPurchasesAppUserId(Purchases);
@@ -215,6 +253,9 @@ class RevenueCatService {
 
   async logOut(): Promise<void> {
     if (!this.initialized) return;
+    if (this.disabledReason) {
+      return;
+    }
     try {
       const Purchases = await getPurchases();
       await Purchases.logOut();
@@ -228,6 +269,9 @@ class RevenueCatService {
   async getCustomerInfo(): Promise<CustomerInfo | null> {
     if (!this.initialized) {
       await this.initialize();
+    }
+    if (this.disabledReason) {
+      return null;
     }
 
     try {

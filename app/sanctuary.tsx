@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { KeyboardStickyView } from '../components/keyboard/KeyboardControllerCompat';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { MetallicText } from '../components/ui/MetallicText';
-import { localDb } from '../services/storage/localDb';
+import { supabaseDb } from '../services/storage/supabaseDb';
 import { generateId } from '../services/storage/models';
 import * as Haptics from 'expo-haptics';
 import { logger } from '../utils/logger';
@@ -50,7 +50,7 @@ export default function SanctuaryWorkspace() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
       const now = new Date().toISOString();
-      await localDb.saveJournalEntry({
+      await supabaseDb.saveJournalEntry({
         id: generateId(),
         date: toLocalDateString(),
         mood: 'calm',

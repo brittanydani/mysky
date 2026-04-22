@@ -28,7 +28,7 @@ import { MetallicText } from '../../../components/ui/MetallicText';
 import { MetallicLucideIcon } from '../../../components/ui/MetallicLucideIcon';
 import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 
-import { localDb } from '../../../services/storage/localDb';
+import { supabaseDb } from '../../../services/storage/supabaseDb';
 import { isDecryptionFailure } from '../../../services/storage/fieldEncryption';
 import { SleepEntry } from '../../../services/storage/models';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -114,9 +114,9 @@ export default function SleepDetailScreen() {
 
   const loadEntry = async (entryId: string) => {
     try {
-      const charts = await localDb.getCharts();
+      const charts = await supabaseDb.getCharts();
       if (!charts.length) return;
-      const entries = await localDb.getSleepEntries(charts[0].id, 90);
+      const entries = await supabaseDb.getSleepEntries(charts[0].id, 90);
       setAllEntries(entries);
       const found = entries.find((e) => e.id === entryId);
       if (found) {

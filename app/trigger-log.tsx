@@ -455,9 +455,6 @@ export default function TriggerLogScreen() {
       const updated = [entry, ...existing];
       await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       setHistory(updated);
-      import('../services/storage/syncService').then(({ enqueueTriggerEvent }) =>
-        enqueueTriggerEvent(entry),
-      ).catch(() => {});
     } catch {}
 
     setSaving(false);

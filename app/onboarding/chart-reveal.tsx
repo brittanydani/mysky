@@ -16,7 +16,7 @@ import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { NatalChart } from '../../services/astrology/types';
@@ -39,7 +39,7 @@ export default function ChartRevealScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const charts = await localDb.getCharts();
+        const charts = await supabaseDb.getCharts();
         if (charts.length === 0) {
           router.replace('/(tabs)/home' as Href);
           return;

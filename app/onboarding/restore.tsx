@@ -11,7 +11,7 @@ import { type AppTheme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { BackupService } from '../../services/storage/backupService';
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { IdentityVault } from '../../utils/IdentityVault';
@@ -53,7 +53,7 @@ export default function OnboardingRestoreScreen() {
     try {
       await BackupService.restoreFromBackupFile(backupUri, passphrase);
 
-      const charts = await localDb.getCharts();
+      const charts = await supabaseDb.getCharts();
       if (!charts.length) {
         Alert.alert('No Charts Found', 'The backup did not contain any chart data.');
         setBusy(false);

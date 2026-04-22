@@ -23,7 +23,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { localDb } from '../../services/storage/localDb';
+import { supabaseDb } from '../../services/storage/supabaseDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { CheckInService, getLogicalToday } from '../../services/patterns/checkInService';
@@ -436,7 +436,7 @@ export default function MoodCheckIn() {
       const load = async () => {
         try {
           setIsLoading(true);
-          const charts = await localDb.getCharts();
+          const charts = await supabaseDb.getCharts();
           if (cancelled || !charts || charts.length === 0) {
             setIsLoading(false);
             return;
@@ -456,7 +456,7 @@ export default function MoodCheckIn() {
           const natal = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
           const today = getLogicalToday();
           const sevenDaysAgo = toLocalDateString(new Date(new Date(today + 'T12:00:00').getTime() - 6 * 86_400_000));
-          const recent = await localDb.getCheckInsInRange(saved.id, sevenDaysAgo, today);
+          const recent = await supabaseDb.getCheckInsInRange(saved.id, sevenDaysAgo, today);
 
           if (!cancelled) {
             setChartId(saved.id);
@@ -766,7 +766,7 @@ export default function MoodCheckIn() {
       const slots = await CheckInService.getCompletedTimeSlotsForDate(chartId, selectedDate);
       const today = getLogicalToday();
       const sevenDaysAgo = toLocalDateString(new Date(new Date(today + 'T12:00:00').getTime() - 6 * 86_400_000));
-      const recent = await localDb.getCheckInsInRange(chartId, sevenDaysAgo, today);
+      const recent = await supabaseDb.getCheckInsInRange(chartId, sevenDaysAgo, today);
       setCompletedSlots(slots);
       setRecentCheckIns(recent);
       setIsEditingExisting(true);
