@@ -7,29 +7,29 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06C4B83897011A1BC7ECD4FF /* libPods-MySky.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B6C6E35BEC47047623734205 /* libPods-MySky.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		5E5B439145CA9F3114525C58 /* libPods-MySkyDev.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 533E84E79314EEC187B37601 /* libPods-MySkyDev.a */; };
+		88B23450EA15A9AACA644CA2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09ECBA7EA3ADE5595BAE75E7 /* ExpoModulesProvider.swift */; };
+		8D8F9CC317D04A2EB7AB19BE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2ACE0A1C10B241D5AE9E4547 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		E2C04F63D6AE4E26942433D7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 14A7DD0E0E464C1A9E0C674E /* PrivacyInfo.xcprivacy */; };
-		EB430051181E06A4F545F22C /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E2DA663B85EBD81E7E13D4D /* ExpoModulesProvider.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		13B07F961A680F5B00A75B9A /* MySkyDev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MySkyDev.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MySkyDev/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MySkyDev/Info.plist; sourceTree = "<group>"; };
-		14A7DD0E0E464C1A9E0C674E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = PrivacyInfo.xcprivacy; path = MySkyDev/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		1DEDA16C16E5AAD1733FBFB4 /* Pods-MySkyDev.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MySkyDev.debug.xcconfig"; path = "Target Support Files/Pods-MySkyDev/Pods-MySkyDev.debug.xcconfig"; sourceTree = "<group>"; };
-		533E84E79314EEC187B37601 /* libPods-MySkyDev.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MySkyDev.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		6E2DA663B85EBD81E7E13D4D /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MySkyDev/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		A4E902458083A1C84E007E9A /* Pods-MySkyDev.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MySkyDev.release.xcconfig"; path = "Target Support Files/Pods-MySkyDev/Pods-MySkyDev.release.xcconfig"; sourceTree = "<group>"; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MySkyDev/SplashScreen.storyboard; sourceTree = "<group>"; };
+		09ECBA7EA3ADE5595BAE75E7 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MySky/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* MySky.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MySky.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MySky/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MySky/Info.plist; sourceTree = "<group>"; };
+		2ACE0A1C10B241D5AE9E4547 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = PrivacyInfo.xcprivacy; path = MySky/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MySky/SplashScreen.storyboard; sourceTree = "<group>"; };
+		B6C6E35BEC47047623734205 /* libPods-MySky.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MySky.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MySkyDev/AppDelegate.swift; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* MySkyDev-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MySkyDev-Bridging-Header.h"; path = "MySkyDev/MySkyDev-Bridging-Header.h"; sourceTree = "<group>"; };
+		F097977D9552E2492EF878F7 /* Pods-MySky.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MySky.debug.xcconfig"; path = "Target Support Files/Pods-MySky/Pods-MySky.debug.xcconfig"; sourceTree = "<group>"; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MySky/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* MySky-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MySky-Bridging-Header.h"; path = "MySky/MySky-Bridging-Header.h"; sourceTree = "<group>"; };
+		FC9191E30F31835DB2DEF094 /* Pods-MySky.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MySky.release.xcconfig"; path = "Target Support Files/Pods-MySky/Pods-MySky.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,42 +37,34 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5E5B439145CA9F3114525C58 /* libPods-MySkyDev.a in Frameworks */,
+				06C4B83897011A1BC7ECD4FF /* libPods-MySky.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* MySkyDev */ = {
+		13B07FAE1A68108700A75B9A /* MySky */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* MySkyDev-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* MySky-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				14A7DD0E0E464C1A9E0C674E /* PrivacyInfo.xcprivacy */,
+				2ACE0A1C10B241D5AE9E4547 /* PrivacyInfo.xcprivacy */,
 			);
-			name = MySkyDev;
+			name = MySky;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				533E84E79314EEC187B37601 /* libPods-MySkyDev.a */,
+				B6C6E35BEC47047623734205 /* libPods-MySky.a */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		591F1CAD01BFF41281F9ECA4 /* MySkyDev */ = {
-			isa = PBXGroup;
-			children = (
-				6E2DA663B85EBD81E7E13D4D /* ExpoModulesProvider.swift */,
-			);
-			name = MySkyDev;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -82,15 +74,23 @@
 			name = Libraries;
 			sourceTree = "<group>";
 		};
+		83390C954F117F5336897757 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				C6E462028A010F6E260A4A75 /* MySky */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* MySkyDev */,
+				13B07FAE1A68108700A75B9A /* MySky */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				9E4F83C87EBE51F9B107EDCA /* Pods */,
-				A4E33F4567AFD5E2944C2A9A /* ExpoModulesProviders */,
+				99C92EFEED7E5A8BB3F280EB /* Pods */,
+				83390C954F117F5336897757 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -100,27 +100,19 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* MySkyDev.app */,
+				13B07F961A680F5B00A75B9A /* MySky.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		9E4F83C87EBE51F9B107EDCA /* Pods */ = {
+		99C92EFEED7E5A8BB3F280EB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				1DEDA16C16E5AAD1733FBFB4 /* Pods-MySkyDev.debug.xcconfig */,
-				A4E902458083A1C84E007E9A /* Pods-MySkyDev.release.xcconfig */,
+				F097977D9552E2492EF878F7 /* Pods-MySky.debug.xcconfig */,
+				FC9191E30F31835DB2DEF094 /* Pods-MySky.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
-			sourceTree = "<group>";
-		};
-		A4E33F4567AFD5E2944C2A9A /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				591F1CAD01BFF41281F9ECA4 /* MySkyDev */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -129,33 +121,41 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = MySkyDev/Supporting;
+			path = MySky/Supporting;
+			sourceTree = "<group>";
+		};
+		C6E462028A010F6E260A4A75 /* MySky */ = {
+			isa = PBXGroup;
+			children = (
+				09ECBA7EA3ADE5595BAE75E7 /* ExpoModulesProvider.swift */,
+			);
+			name = MySky;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* MySkyDev */ = {
+		13B07F861A680F5B00A75B9A /* MySky */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MySkyDev" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MySky" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				1C1489BD34C90B067AA5B52E /* [Expo] Configure project */,
+				2081182F28EB6965408A3B8F /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				40DBB5D3C578438FA9A644A9 /* Upload Debug Symbols to Sentry */,
-				35F43FCBE3F0B472C0CDC7CD /* [CP] Embed Pods Frameworks */,
+				68FDD99CCB2D4A49892BBD10 /* Upload Debug Symbols to Sentry */,
+				E8188930EB6FD1A6A13B4E31 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = MySkyDev;
-			productName = MySkyDev;
-			productReference = 13B07F961A680F5B00A75B9A /* MySkyDev.app */;
+			name = MySky;
+			productName = MySky;
+			productReference = 13B07F961A680F5B00A75B9A /* MySky.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -167,13 +167,11 @@
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						DevelopmentTeam = RFZSMR6K78;
 						LastSwiftMigration = 1250;
-						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "MySkyDev" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "MySky" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -186,7 +184,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* MySkyDev */,
+				13B07F861A680F5B00A75B9A /* MySky */,
 			);
 		};
 /* End PBXProject section */
@@ -199,7 +197,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				E2C04F63D6AE4E26942433D7 /* PrivacyInfo.xcprivacy in Resources */,
+				8D8F9CC317D04A2EB7AB19BE /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -238,14 +236,14 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-MySkyDev-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-MySky-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		1C1489BD34C90B067AA5B52E /* [Expo] Configure project */ = {
+		2081182F28EB6965408A3B8F /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -256,42 +254,20 @@
 			inputPaths = (
 				"$(SRCROOT)/.xcode.env",
 				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/MySkyDev/MySkyDev.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-MySkyDev/expo-configure-project.sh",
+				"$(SRCROOT)/MySky/MySky.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-MySky/expo-configure-project.sh",
 			);
 			name = "[Expo] Configure project";
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-MySkyDev/ExpoModulesProvider.swift",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-MySky/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-MySkyDev/expo-configure-project.sh\"\n";
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-MySky/expo-configure-project.sh\"\n";
 		};
-		35F43FCBE3F0B472C0CDC7CD /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-MySkyDev/Pods-MySkyDev-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MySkyDev/Pods-MySkyDev-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		40DBB5D3C578438FA9A644A9 /* Upload Debug Symbols to Sentry */ = {
+		68FDD99CCB2D4A49892BBD10 /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -311,7 +287,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-MySkyDev/Pods-MySkyDev-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-MySky/Pods-MySky-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
@@ -384,7 +360,29 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MySkyDev/Pods-MySkyDev-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MySky/Pods-MySky-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E8188930EB6FD1A6A13B4E31 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-MySky/Pods-MySky-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MySky/Pods-MySky-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -395,7 +393,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				EB430051181E06A4F545F22C /* ExpoModulesProvider.swift in Sources */,
+				88B23450EA15A9AACA644CA2 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -404,21 +402,18 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1DEDA16C16E5AAD1733FBFB4 /* Pods-MySkyDev.debug.xcconfig */;
+			baseConfigurationReference = F097977D9552E2492EF878F7 /* Pods-MySky.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = MySkyDev/MySkyDev.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = MySky/MySky.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = RFZSMR6K78;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = MySkyDev/Info.plist;
+				INFOPLIST_FILE = MySky/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -431,9 +426,9 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.brittany.mysky.dev;
-				PRODUCT_NAME = MySkyDev;
-				SWIFT_OBJC_BRIDGING_HEADER = "MySkyDev/MySkyDev-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = com.brittany.mysky;
+				PRODUCT_NAME = MySky;
+				SWIFT_OBJC_BRIDGING_HEADER = "MySky/MySky-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -443,16 +438,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A4E902458083A1C84E007E9A /* Pods-MySkyDev.release.xcconfig */;
+			baseConfigurationReference = FC9191E30F31835DB2DEF094 /* Pods-MySky.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = MySkyDev/MySkyDev.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = MySky/MySky.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = RFZSMR6K78;
-				INFOPLIST_FILE = MySkyDev/Info.plist;
+				INFOPLIST_FILE = MySky/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -465,9 +457,9 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.brittany.mysky.dev;
-				PRODUCT_NAME = MySkyDev;
-				SWIFT_OBJC_BRIDGING_HEADER = "MySkyDev/MySkyDev-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = com.brittany.mysky;
+				PRODUCT_NAME = MySky;
+				SWIFT_OBJC_BRIDGING_HEADER = "MySky/MySky-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -595,7 +587,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MySkyDev" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MySky" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -604,7 +596,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "MySkyDev" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "MySky" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

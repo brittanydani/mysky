@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>MySky Dev</string>
+    <string>MySky</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -27,8 +27,8 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>mysky-dev</string>
-          <string>com.brittany.mysky.dev</string>
+          <string>mysky</string>
+          <string>com.brittany.mysky</string>
         </array>
       </dict>
       <dict>
