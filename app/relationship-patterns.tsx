@@ -277,7 +277,7 @@ export default function RelationshipPatternsScreen() {
           {entries.length > 0 && (
             <View style={styles.historySection}>
               <SectionHeader title="Previous Reflections" icon="journal-outline" />
-              {entries.slice(0, 10).map(e => (
+              {entries.map(e => (
                 <View key={e.id}>
                   <VelvetGlassSurface style={styles.entryCard as any} intensity={20}>
                      <Text style={styles.entryDate}>{new Date(e.date).toLocaleDateString()}</Text>

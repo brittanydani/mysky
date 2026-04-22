@@ -396,11 +396,13 @@ export const DemoSeedService = {
         
         let ansNum = SCALES[r.answer as string];
         if (ansNum === undefined) {
-           ansNum = SCALES_NUMS[r.answer as string] ?? 1;
+           ansNum = SCALES_NUMS[r.answer as keyof typeof SCALES_NUMS] ?? 1;
         }
 
+        const foundQ = bank.find(q => q.text === r.questionText);
+        
         return {
-          questionId: bank.indexOf(r.questionText),
+          questionId: foundQ ? foundQ.id : 0,
           category: r.category,
           questionText: r.questionText,
           answer: r.answer,

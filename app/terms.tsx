@@ -64,11 +64,11 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
               <Ionicons name="document-text-outline" size={132} color={theme.textGold} />
             </View>
 
-            <Text style={styles.lastUpdated}>Last updated: April 7, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: April 21, 2026</Text>
 
             <Text style={styles.sectionTitle}>Acceptance of Terms of Use</Text>
             <Text style={styles.paragraph}>
-              By downloading, installing, or using MySky ("the App"), you agree to be bound by these Terms of Use (End User License Agreement), our Privacy Policy, and all applicable laws and regulations. If you do not agree to these Terms, do not download, install, or use the App. All personal data is stored locally on your device with <Text style={styles.highlight}>AES-256-GCM field-level encryption</Text> and hardware-backed key storage.
+              By downloading, installing, or using MySky ("the App"), you agree to be bound by these Terms of Use (End User License Agreement), our Privacy Policy, and all applicable laws and regulations. If you do not agree to these Terms, do not download, install, or use the App. All personal data is stored locally on your device with <Text style={styles.highlight}>AES-256-GCM field-level encryption</Text>, hardware-backed key storage, and securely synced to your cloud account.
             </Text>
 
             <Text style={styles.sectionTitle}>Definitions</Text>
@@ -81,7 +81,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Service Description</Text>
             <Text style={styles.paragraph}>
-              MySky provides a local-first personal framework for self-knowledge, growth, and reflection. Tools include daily wellness tracking, dream journaling, emotional pattern mapping, self-discovery exercises (values inventory, somatic body mapping, nervous system trigger logs), and optional astrological context. The app is intended for users aged 17 and older. A free account is required, but core features work fully offline after initial sign-in.
+              MySky provides an account-based personal framework for self-knowledge, growth, and reflection. Tools include daily wellness tracking, dream journaling, emotional pattern mapping, self-discovery exercises (values inventory, somatic body mapping, nervous system trigger logs), and optional astrological context. The app is intended for users aged 17 and older. A free account is required, and core features remain available from the device cache after initial sign-in.
             </Text>
 
             <Text style={styles.sectionTitle}>License Grant</Text>
@@ -135,7 +135,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Data & Privacy</Text>
             <Text style={styles.paragraph}>
-              All core data is stored locally on your device. Sensitive fields are encrypted with AES-256-GCM. No analytics SDKs, advertising identifiers, or cross-app tracking are used. Optional AI features may transmit limited data to third-party processors only when needed to fulfill that feature, as described in our Privacy Policy.
+              All core data is stored locally in partitioned offline caches and securely synced to your dedicated cloud account to prevent data loss across devices. Sensitive fields on-device are encrypted with AES-256-GCM. No analytics SDKs, advertising identifiers, or cross-app tracking are used. Optional AI features may transmit limited data to third-party processors only when needed to fulfill that feature, as described in our Privacy Policy.
             </Text>
 
             <Text style={styles.sectionTitle}>Limitation of Liability</Text>
@@ -159,7 +159,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Termination</Text>
             <Text style={styles.paragraph}>
-              You may stop using MySky at any time by uninstalling the app. If you want a guaranteed local wipe of protected data, use the Hard Reset option in Privacy Settings before uninstalling. You may request deletion of your Supabase account by contacting support.
+              You may stop using MySky at any time by uninstalling the app. To permanently delete your online cloud footprint, you may request full deletion of your Supabase account and data directly through the app or by contacting support.
             </Text>
 
             <Text style={styles.sectionTitle}>Age Requirement</Text>

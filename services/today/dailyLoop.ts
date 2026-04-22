@@ -125,7 +125,7 @@ function getMilestone(streak: number): number | null {
 export async function getStreakStatus(chartId: string): Promise<StreakStatus> {
   try {
     const checkIns = await localDb.getCheckIns(chartId, 90);
-    const totalCheckIns = await localDb.getCheckInCount(chartId);
+    const totalCheckIns = await localDb.getTotalCheckInCount();
 
     if (checkIns.length === 0) {
       return {

@@ -356,7 +356,7 @@ function StatItem({ val, label, color }: { val: string | number; label: string; 
   return (
     <View style={{ alignItems: 'center', flex: 1 }}>
       <MetallicText style={{ fontSize: 20, fontWeight: '700' }} color={color}>{val}</MetallicText>
-      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 }}>{label}</Text>
+      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, marginTop: 2, textAlign: 'center' }}>{label}</Text>
     </View>
   );
 }

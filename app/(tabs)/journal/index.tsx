@@ -170,7 +170,9 @@ interface DreamCardProps {
 const DreamCard = memo(function DreamCard({ entry, formatDate, onPress, onLongPress }: DreamCardProps) {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
-  const hasDream = !!(entry.dreamText?.trim());
+  const textContent = entry.dreamText?.trim() || entry.notes?.trim() || '';
+  const hasText = !!textContent;
+  const hasDreamData = hasText || !!entry.dreamFeelings?.trim() || !!entry.dreamMetadata?.trim() || !!entry.dreamMood?.trim();
   const quality = Math.max(0, Math.min(5, entry.quality ?? 0));
   const moons = quality > 0 ? '☽'.repeat(quality) : null;
   const remainingMoons = quality > 0 ? '☽'.repeat(5 - quality) : null;
@@ -218,8 +220,10 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress, onLongPr
           </View>
           <MetallicIcon name="moon-outline" size={16} color={PALETTE.gold} />
         </View>
-        {hasDream ? (
-          <Text style={styles.dreamExcerpt} numberOfLines={3}>{entry.dreamText}</Text>
+        {hasText ? (
+          <Text style={styles.dreamExcerpt} numberOfLines={3}>{textContent}</Text>
+        ) : hasDreamData ? (
+          <Text style={styles.dreamExcerpt} numberOfLines={1}>Selected dream themes or feelings</Text>
         ) : (
           <Text style={styles.dreamNone}>No dream recalled</Text>
         )}
@@ -322,7 +326,10 @@ export default function JournalScreen() {
     if (!searchQuery.trim()) return sleepEntries.filter(e => !e.isDeleted);
     const q = searchQuery.toLowerCase();
     return sleepEntries.filter(e =>
-      !e.isDeleted && (e.dreamText ?? '').toLowerCase().includes(q)
+      !e.isDeleted && (
+        (e.dreamText ?? '').toLowerCase().includes(q) ||
+        (e.dreamFeelings ?? '').toLowerCase().includes(q)
+      )
     );
   }, [sleepEntries, searchQuery]);
 
@@ -784,7 +791,7 @@ export default function JournalScreen() {
           <PremiumSegmentedControl
             options={[
               { id: 'reflections', label: 'REFLECTIONS', count: totalCount },
-              { id: 'dreams', label: 'DREAMS', count: sleepEntries.length },
+              { id: 'dreams', label: 'DREAMS', count: sleepEntries.filter(e => !e.isDeleted).length },
             ]}
             selectedIndex={activeTab === 'reflections' ? 0 : 1}
             onChange={(index) => {
@@ -904,7 +911,7 @@ export default function JournalScreen() {
           <Text style={styles.entriesCount}>
             {activeTab === 'reflections'
               ? (searchQuery ? `${filteredEntries.length} found · ${totalCount} total` : `${totalCount} entries`)
-              : (searchQuery ? `${filteredSleepEntries.length} found · ${sleepEntries.length} total` : `${sleepEntries.length} entries`)}
+              : (searchQuery ? `${filteredSleepEntries.length} found · ${sleepEntries.filter(e => !e.isDeleted).length} total` : `${sleepEntries.filter(e => !e.isDeleted).length} dreams`)}
           </Text>
         </View>
       </View>
@@ -934,7 +941,8 @@ export default function JournalScreen() {
     }
 
     if (activeTab === 'dreams') {
-      if (sleepEntries.length > 0 && filteredSleepEntries.length === 0) {
+      const hasAnyDreams = sleepEntries.some(e => !e.isDeleted);
+      if (hasAnyDreams && filteredSleepEntries.length === 0) {
         return (
           <View style={styles.emptyContainer}>
             <LinearGradient colors={['rgba(168, 139, 235, 0.10)', 'transparent']} style={[styles.emptyCard, theme.isDark && styles.velvetBorder]}>
@@ -943,7 +951,7 @@ export default function JournalScreen() {
               <Text style={styles.emptyDescription}>
                 {searchQuery
                   ? `No dream entries matching "${searchQuery}".`
-                  : 'No sleep entries yet. Visit the Sleep tab to start recording.'}
+                  : 'No dream entries available.'}
               </Text>
             </LinearGradient>
           </View>

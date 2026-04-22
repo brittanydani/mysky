@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { localDb } from './localDb';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from './accountScopedStorage';
 import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from './userDataKeys';
 import type { AppSettings, SavedChart, JournalEntry, RelationshipChart, SleepEntry } from './models';
 import type { SavedInsight } from './insightHistory';
@@ -211,7 +212,7 @@ export class BackupService {
       }),
       ...PLAIN_ASYNC_USER_DATA_KEYS.map(async (key) => {
         try {
-          const val = await AsyncStorage.getItem(key);
+          const val = await AccountScopedAsyncStorage.getItem(key);
           if (val) asyncStorageData[key] = val;
         } catch (e) {
           logger.error(`[Backup] Failed to read plain key ${key}:`, e);
@@ -378,7 +379,7 @@ export class BackupService {
     await localDb.clearAccountScopedData();
     await Promise.all([
       ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map((key) => EncryptedAsyncStorage.removeItem(key)),
-      ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AsyncStorage.removeItem(key)),
+      ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AccountScopedAsyncStorage.removeItem(key)),
     ]);
 
     // Restore data into localDb (writes are INSERT OR REPLACE, so safe)
@@ -422,7 +423,7 @@ export class BackupService {
           if ((ENCRYPTED_ASYNC_USER_DATA_KEYS as readonly string[]).includes(key)) {
             await EncryptedAsyncStorage.setItem(key, value);
           } else {
-            await AsyncStorage.setItem(key, value);
+            await AccountScopedAsyncStorage.setItem(key, value);
           }
         } catch (e) {
           logger.error(`[Restore] Failed to restore AsyncStorage key ${key}:`, e);

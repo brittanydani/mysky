@@ -26,6 +26,18 @@ jest.mock('../fieldEncryption', () => ({
   },
 }));
 
+const mockGetSession = jest.fn<Promise<{ data: { session: { user: { id: string } } | null } }>, []>(
+  async () => ({ data: { session: null } })
+);
+
+jest.mock('../../../lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: () => mockGetSession(),
+    },
+  },
+}));
+
 jest.mock('../../../utils/logger', () => ({
   logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
@@ -41,6 +53,7 @@ describe('EncryptedAsyncStorage', () => {
     mockDecryptField.mockImplementation(async (v: string) => v.replace(/^enc:/, ''));
     mockIsEncrypted.mockImplementation((v: string) => v.startsWith('enc:'));
     mockTryDecryptField.mockImplementation(async (v: string) => ({ ok: true as const, value: v.replace(/^enc:/, '') }));
+    mockGetSession.mockResolvedValue({ data: { session: null } });
   });
 
   describe('setItem()', () => {
@@ -103,6 +116,17 @@ describe('EncryptedAsyncStorage', () => {
       await EncryptedAsyncStorage.setItem('@roundtrip', 'my secret');
       const result = await EncryptedAsyncStorage.getItem('@roundtrip');
       expect(result).toBe('my secret');
+    });
+
+    it('migrates legacy account-scoped values into the current user namespace', async () => {
+      asyncStore.set('@mysky:core_values', 'enc:hello');
+      mockGetSession.mockResolvedValue({ data: { session: { user: { id: 'user-123' } } } });
+
+      const result = await EncryptedAsyncStorage.getItem('@mysky:core_values');
+
+      expect(result).toBe('hello');
+      expect(asyncStore.get('@mysky:core_values::user::user-123')).toBe('enc:hello');
+      expect(asyncStore.has('@mysky:core_values')).toBe(false);
     });
   });
 

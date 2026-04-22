@@ -16,7 +16,6 @@ import React, {
 } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import type { Session, User } from '@supabase/supabase-js';
-import * as Haptics from 'expo-haptics';
 
 import { supabase } from '../lib/supabase';
 import { isAutoDemoSeedEnabled } from '../constants/config';
@@ -31,6 +30,7 @@ import { useSceneStore } from '../store/sceneStore';
 import { useCircadianStore } from '../store/circadianStore';
 import { useCorrelationStore } from '../store/correlationStore';
 import { useCheckInStore } from '../store/checkInStore';
+import * as Haptics from '../utils/haptics';
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 

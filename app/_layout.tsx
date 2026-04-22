@@ -318,8 +318,11 @@ function AppShell() {
     });
   };
 
+  // Previously used to clear data on account switch. Kept for reference or explicit "Delete Account" flows.
   const clearLocalDataForUserSwitch = async () => {
-    await localDb.clearAccountScopedData();
+    // localDb is now partitioned per user; we don't blindly wipe it anymore.
+    // await localDb.clearAccountScopedData();
+    
     await Promise.all([
       ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map((key) => EncryptedAsyncStorage.removeItem(key)),
       ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AsyncStorage.removeItem(key)),
@@ -328,16 +331,10 @@ function AppShell() {
   };
 
   const prepareLocalStateForSession = async (userId: string) => {
-    const settings = await localDb.getSettings();
-    const storedUserId = settings?.userId ?? null;
+    // 1. Switch to the partitioned SQLite DB for this user
+    await localDb.switchToUserDb(userId);
 
-    if (storedUserId && storedUserId !== userId) {
-      logger.info('[auth] New account detected on device — clearing previous local user data');
-      await clearLocalDataForUserSwitch();
-      await bindLocalSettingsToUser(userId, true);
-      return;
-    }
-
+    // 2. Bind the user without wiping device data
     await bindLocalSettingsToUser(userId, false);
   };
 
@@ -910,12 +907,13 @@ function AppShell() {
 
             {/* Overlay gates (do NOT unmount navigation) */}
             <React.Suspense fallback={null}>
-            {/* Re-consent gate — only shown when consent is withdrawn after onboarding is complete */}
-            {needsPrivacyConsent && onboardingComplete && (
+            {/* Re-consent gate only after a signed-in user has reached onboarding-complete state. */}
+            {session && needsPrivacyConsent && onboardingComplete && (
               <PrivacyConsentModal visible onConsent={handlePrivacyConsent} />
             )}
 
-            {!onboardingComplete && (
+            {/* Onboarding only starts after authentication, so auth is always the first screen for signed-out users. */}
+            {session && !onboardingComplete && (
               <OnboardingModal
                 visible
                 onPrivacyConsent={() => handlePrivacyConsent(true)}
@@ -924,12 +922,10 @@ function AppShell() {
               />
             )}
 
-            {/* Auth gate — shown after onboarding when no session exists */}
+            {/* Auth gate — first screen for any signed-out user. */}
             <AuthRequiredModal
               visible={
                 !completingOnboarding &&
-                !needsPrivacyConsent &&
-                onboardingComplete &&
                 !authLoading &&
                 !session
               }

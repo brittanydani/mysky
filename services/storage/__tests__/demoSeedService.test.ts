@@ -1,5 +1,8 @@
 import { DemoSeedService } from '../demoSeedService';
 
+const mockAccountBSeedIfNeeded = jest.fn();
+const mockAccountBCleanup = jest.fn();
+
 const mockGetItem = jest.fn();
 const mockSetItem = jest.fn();
 const mockInitialize = jest.fn();
@@ -39,6 +42,13 @@ jest.mock('../fieldEncryption', () => ({
   },
 }));
 
+jest.mock('../demoAccountBSeedService', () => ({
+  DemoSeedService: {
+    seedIfNeeded: (...args: unknown[]) => mockAccountBSeedIfNeeded(...args),
+    cleanupStaleDemoArtifacts: (...args: unknown[]) => mockAccountBCleanup(...args),
+  },
+}));
+
 jest.mock('../../astrology/calculator', () => ({}), { virtual: true });
 jest.mock('../../../utils/logger', () => ({ logger: { info: jest.fn(), error: jest.fn(), warn: jest.fn() } }));
 jest.mock('../../../utils/dateUtils', () => ({
@@ -49,10 +59,12 @@ jest.mock('../../../lib/supabase', () => ({
 }));
 
 describe('DemoSeedService.isDemoAccount', () => {
-  it('returns true for the exact demo email (case-insensitive)', () => {
+  it('returns true for both demo emails (case-insensitive)', () => {
     expect(DemoSeedService.isDemoAccount('brittanyapps@outlook.com')).toBe(true);
     expect(DemoSeedService.isDemoAccount('BRITTANYAPPS@OUTLOOK.COM')).toBe(true);
     expect(DemoSeedService.isDemoAccount('BrittanyApps@Outlook.com')).toBe(true);
+    expect(DemoSeedService.isDemoAccount('brithornick92@gmail.com')).toBe(true);
+    expect(DemoSeedService.isDemoAccount('BRITHORNICK92@GMAIL.COM')).toBe(true);
   });
 
   it('returns false for any other email', () => {
@@ -93,5 +105,12 @@ describe('DemoSeedService.seedIfNeeded', () => {
 
     repairSpy.mockRestore();
     topUpSpy.mockRestore();
+  });
+
+  it('delegates Account B seeding to the Account B service', async () => {
+    await DemoSeedService.seedIfNeeded('brithornick92@gmail.com');
+
+    expect(mockAccountBSeedIfNeeded).toHaveBeenCalledWith('brithornick92@gmail.com');
+    expect(mockInitialize).not.toHaveBeenCalled();
   });
 });

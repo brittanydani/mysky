@@ -74,7 +74,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
             </LinearGradient>
           </View>
 
-          <Text style={styles.lastUpdated}>Last updated: April 7, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: April 21, 2026</Text>
 
           {/* Main FAQ Anchor Card */}
           <View style={[styles.faqCard, styles.velvetBorder]}>
@@ -86,7 +86,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
             <View style={styles.faqContent}>
               <Text style={styles.question}>Do I need an account to use MySky?</Text>
               <Text style={styles.answer}>
-                Yes. A free account is required. Your credentials live on Supabase, while all personal data stays on your device. All core features — mood tracking, journaling, sleep, AI dream interpretation, and birth charts — are available for free.
+                Yes. A free account is required. Your personal data is efficiently logged in offline caches on your device and seamlessly synced to the cloud. All core features — mood tracking, journaling, sleep, AI dream interpretation, and birth charts — are available for free.
               </Text>
 
               <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>
@@ -147,7 +147,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>Can I use MySky on multiple devices?</Text>
               <Text style={styles.answer}>
-                MySky is local-first — your data lives on each device separately by design, which is how we protect your privacy. There is no automatic cloud sync. To move data to a new device, create an encrypted .msky backup on your old device (Deeper Sky feature) and restore it on the new one.
+                Your MySky account is the source of truth. When you sign in on a new device, your synced data is restored from your account automatically. This device keeps a local encrypted cache for speed and offline access, but switching accounts does not merge personal data between users.
               </Text>
 
               <Text style={styles.question}>What AI models does MySky use?</Text>

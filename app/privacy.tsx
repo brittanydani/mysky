@@ -76,7 +76,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             </LinearGradient>
           </View>
 
-          <Text style={styles.lastUpdated}>Last updated: April 7, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: April 21, 2026</Text>
 
           {/* ── Commitment (Midnight Slate Anchor) ── */}
           <View style={[styles.glassSection, styles.velvetBorder]}>
@@ -97,12 +97,12 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Internal Weather & Journal</Text>
-              <Text style={styles.paragraph}>Mood scores, tags, and free-text entries are processed entirely on-device via local NLP. Raw content is encrypted at rest and never leaves your device sandbox.</Text>
+              <Text style={styles.paragraph}>Mood scores, tags, and free-text entries are processed securely. Your data is synced to your cloud account to prevent data loss, using your email space as a sovereign locker. Everything is partitioned per user, so sharing a device remains completely private.</Text>
             </View>
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Somatic & Nervous System Entries</Text>
-              <Text style={styles.paragraph}>Body sensation logs and trigger descriptions are stored locally with hardware-backed encryption. This is your most sensitive data and is never transmitted to any server.</Text>
+              <Text style={styles.paragraph}>Body sensation logs and trigger descriptions are stored locally with hardware-backed encryption and securely synced to your dedicated cloud schema. Your data is isolated and safely preserved.</Text>
             </View>
           </View>
 
@@ -124,10 +124,10 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
               <LinearGradient colors={['rgba(110, 191, 139, 0.12)', 'rgba(110, 191, 139, 0.04)']} style={StyleSheet.absoluteFill} />
               <View style={styles.securityHeader}>
                 <MetallicIcon name="cloud-offline-outline" size={18} color={PALETTE.emerald} />
-                <Text style={styles.securityTitle}>Local-First Protocols</Text>
+                <Text style={styles.securityTitle}>Account-Synced Protocols</Text>
               </View>
               <Text style={styles.paragraph}>
-                SecureStore payloads use <MetallicText color={PALETTE.atmosphere} style={styles.boldText}>HMAC-SHA256</MetallicText> tamper detection. Backups are shared via your device's share sheet; we never upload them.
+                SecureStore payloads use <MetallicText color={PALETTE.atmosphere} style={styles.boldText}>HMAC-SHA256</MetallicText> tamper detection. Your local device acts as an offline-first cache backed by seamless cloud sync, so your data is never lost.
               </Text>
             </View>
           </View>
@@ -142,7 +142,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
 
               <View style={styles.dataBlock}>
                 <Text style={styles.subSectionTitle}>Supabase</Text>
-                <Text style={styles.paragraph}>Handles account authentication and session management. Only your email address, hashed password, and anonymous user ID are stored on Supabase servers. No personal reflection data, journal content, somatic logs, or chart data is ever sent to Supabase.</Text>
+                <Text style={styles.paragraph}>Handles account authentication, session management, and your primary cloud data synchronization. Your email address, hashed password, and a unique user ID are stored securely on Supabase servers, alongside your synchronized journal entries, check-ins, and charts which are isolated under rigorous Row Level Security.</Text>
               </View>
 
               <View style={styles.dataBlock}>
@@ -177,15 +177,15 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <Text style={styles.sectionLabel}>DATA RETENTION & DELETION</Text>
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>On-Device Data</Text>
-              <Text style={styles.paragraph}>All personal data — journal entries, check-ins, dreams, birth charts, somatic logs, relationship charts — lives in a SQLite database on your device. This data persists until you uninstall the app or perform a Hard Reset.</Text>
+              <Text style={styles.paragraph}>All personal data is cached locally in partitioned SQLite databases per user, meaning you can share devices without sharing data. Local data persists until you explicitly remove it from the device or delete the cloud account.</Text>
             </View>
             <View style={styles.dataBlock}>
-              <Text style={styles.subSectionTitle}>Hard Reset</Text>
-              <Text style={styles.paragraph}>Settings → Privacy & Data → Hard Reset performs a cryptographic key wipe followed by a full database purge. After a Hard Reset, your data is irrecoverable even by us. We strongly recommend creating an encrypted .msky backup before resetting.</Text>
+              <Text style={styles.subSectionTitle}>Cloud Sync Data</Text>
+              <Text style={styles.paragraph}>Your data automatically syncs to Supabase to prevent data loss. You can restore your data continuously across all your personal devices just by logging in.</Text>
             </View>
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Account Deletion</Text>
-              <Text style={styles.paragraph}>You can request deletion of your Supabase auth account by emailing us. Account deletion removes your email and credentials from Supabase. It does not automatically delete on-device data — use Hard Reset first if you want a complete wipe.</Text>
+              <Text style={styles.paragraph}>You can request full deletion of your Supabase auth account through the app or by emailing us. This deletes all your cloud records and purges your email, credentials, and synced history from Supabase.</Text>
             </View>
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Crash & Diagnostic Logs</Text>
@@ -199,7 +199,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <View style={[styles.glassSection, styles.velvetBorder]}>
               <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
               <Text style={styles.sectionTitle}>Access, Control & Portability</Text>
-              <Text style={styles.paragraph}>Because MySky is local-first, you already have direct access to all your data at all times through the app. In addition, you have the following rights:</Text>
+              <Text style={styles.paragraph}>Because MySky keeps your account as the source of truth while maintaining an encrypted local cache, you have direct access to your data across devices. In addition, you have the following rights:</Text>
 
               <View style={styles.dataBlock}>
                 <Text style={styles.subSectionTitle}>Right to Access</Text>

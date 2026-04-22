@@ -6,6 +6,7 @@ jest.mock('../logger', () => ({
 }));
 
 import { IdentityVault, CosmicIdentity } from '../IdentityVault';
+import * as SecureStore from 'expo-secure-store';
 
 const sample: CosmicIdentity = {
   name: 'Astrid',
@@ -52,6 +53,16 @@ describe('IdentityVault', () => {
       expect(result).toBe(false);
       SecureStore.setItemAsync = original;
     });
+
+    it('writes to a user-scoped key when userId is provided', async () => {
+      await IdentityVault.sealIdentity(sample, 'user-a');
+
+      const scoped = await SecureStore.getItemAsync('mysky_secure_identity_user-a');
+      const global = await SecureStore.getItemAsync('mysky_secure_identity');
+
+      expect(scoped).not.toBeNull();
+      expect(global).toBeNull();
+    });
   });
 
   describe('openVault()', () => {
@@ -91,6 +102,14 @@ describe('IdentityVault', () => {
       expect(result).toBeNull();
       SecureStore.getItemAsync = original;
     });
+
+    it('reads from a user-scoped key when userId is provided', async () => {
+      await IdentityVault.sealIdentity(sample, 'user-a');
+
+      const identity = await IdentityVault.openVault('user-a');
+
+      expect(identity).toEqual(sample);
+    });
   });
 
   describe('destroyIdentity()', () => {
@@ -103,6 +122,16 @@ describe('IdentityVault', () => {
 
     it('does not throw when there is nothing to destroy', async () => {
       await expect(IdentityVault.destroyIdentity()).resolves.not.toThrow();
+    });
+
+    it('deletes only the targeted user-scoped identity', async () => {
+      await IdentityVault.sealIdentity(sample, 'user-a');
+      await IdentityVault.sealIdentity({ ...sample, name: 'Nova' }, 'user-b');
+
+      await IdentityVault.destroyIdentity('user-a');
+
+      expect(await IdentityVault.openVault('user-a')).toBeNull();
+      expect((await IdentityVault.openVault('user-b'))?.name).toBe('Nova');
     });
   });
 });

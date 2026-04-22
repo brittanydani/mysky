@@ -14,6 +14,40 @@ const CURRENT_DB_VERSION = 22;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
+  private dbName: string = 'mysky.db';
+
+  async switchToUserDb(userId: string): Promise<void> {
+    const newDbName = `mysky_${userId}.db`;
+    if (this.dbName === newDbName && this.db) return;
+    
+    if (this.db) {
+      await this.db.closeAsync();
+      this.db = null;
+    }
+    
+    this.dbName = newDbName;
+    
+    // Re-initialize for this user's DB
+    this.initPromise = (async () => {
+      const MAX_RETRIES = 3;
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          this.db = await SQLite.openDatabaseAsync(this.dbName);
+          await FieldEncryptionService.initialize();
+          await this.handleMigrations();
+          return;
+        } catch (error) {
+          this.db = null;
+          if (attempt === MAX_RETRIES) {
+            this.initPromise = null;
+            throw error;
+          }
+          await new Promise(res => setTimeout(res, 500 * attempt)); // Short delay before retry
+        }
+      }
+    })();
+    await this.initPromise;
+  }
 
   private isHydratedChartValid(chart: {
     id: string;
@@ -121,7 +155,7 @@ class LocalDatabase {
       const MAX_RETRIES = 3;
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
-          this.db = await SQLite.openDatabaseAsync('mysky.db');
+          this.db = await SQLite.openDatabaseAsync(this.dbName);
           // Initialize field encryption DEK (creates key on first run)
           await FieldEncryptionService.initialize();
           await this.handleMigrations();
@@ -266,6 +300,7 @@ class LocalDatabase {
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS saved_charts (
+        user_id TEXT,
         id TEXT PRIMARY KEY,
         name TEXT,
         birth_date TEXT NOT NULL,
@@ -284,6 +319,7 @@ class LocalDatabase {
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS journal_entries (
+        user_id TEXT,
         id TEXT PRIMARY KEY,
         date TEXT NOT NULL,
         mood TEXT NOT NULL CHECK (mood IN ('calm', 'soft', 'okay', 'heavy', 'stormy')),
@@ -367,6 +403,7 @@ class LocalDatabase {
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS insight_history (
+        user_id TEXT,
         id TEXT PRIMARY KEY,
         date TEXT NOT NULL,
         chart_id TEXT NOT NULL,
@@ -405,6 +442,7 @@ class LocalDatabase {
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS relationship_charts (
+        user_id TEXT,
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         relationship TEXT NOT NULL,
@@ -441,6 +479,7 @@ class LocalDatabase {
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS daily_check_ins (
+        user_id TEXT,
         id TEXT PRIMARY KEY,
         date TEXT NOT NULL,
         chart_id TEXT NOT NULL,
@@ -759,6 +798,8 @@ class LocalDatabase {
     const db = await this.ensureReady();
     logger.info('[LocalDB] Starting version 12 migration — adding time_of_day for multi check-ins...');
 
+    await db.execAsync('DROP TABLE IF EXISTS daily_check_ins_v12');
+
     // Add time_of_day column with default 'morning' for existing rows
     try {
       await db.execAsync(`ALTER TABLE daily_check_ins ADD COLUMN time_of_day TEXT NOT NULL DEFAULT 'morning'`);
@@ -784,6 +825,7 @@ class LocalDatabase {
     // Rebuild table to replace UNIQUE(date, chart_id) with UNIQUE(date, chart_id, time_of_day)
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS daily_check_ins_v12 (
+        user_id TEXT,
         id TEXT PRIMARY KEY NOT NULL,
         date TEXT NOT NULL,
         chart_id TEXT NOT NULL,
@@ -807,6 +849,9 @@ class LocalDatabase {
       );
 
       INSERT OR IGNORE INTO daily_check_ins_v12
+        (id, date, chart_id, time_of_day, mood_score, energy_level, stress_level,
+         tags, note, wins, challenges, moon_sign, moon_house, sun_house,
+         transit_events, lunar_phase, retrogrades, created_at, updated_at)
         SELECT id, date, chart_id, time_of_day, mood_score, energy_level, stress_level,
                tags, note, wins, challenges, moon_sign, moon_house, sun_house,
                transit_events, lunar_phase, retrogrades, created_at, updated_at
@@ -857,8 +902,11 @@ class LocalDatabase {
       /* already exists */
     }
 
+    await db.execAsync('DROP TABLE IF EXISTS daily_check_ins_v13');
+
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS daily_check_ins_v13 (
+        user_id TEXT,
         id TEXT PRIMARY KEY NOT NULL,
         date TEXT NOT NULL,
         chart_id TEXT NOT NULL,
@@ -882,6 +930,9 @@ class LocalDatabase {
       );
 
       INSERT OR IGNORE INTO daily_check_ins_v13
+        (id, date, chart_id, time_of_day, mood_score, energy_level, stress_level,
+         tags, note, wins, challenges, moon_sign, moon_house, sun_house,
+         transit_events, lunar_phase, retrogrades, created_at, updated_at)
         SELECT id, date, chart_id, time_of_day, mood_score, energy_level, stress_level,
                tags, note, wins, challenges, moon_sign, moon_house, sun_house,
                transit_events, lunar_phase, retrogrades, created_at, updated_at
@@ -977,6 +1028,7 @@ class LocalDatabase {
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS sleep_entries (
+        user_id TEXT,
         id TEXT PRIMARY KEY,
         chart_id TEXT NOT NULL,
         date TEXT NOT NULL,
@@ -1134,6 +1186,7 @@ class LocalDatabase {
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS sync_queue (
+        user_id TEXT,
         id          TEXT PRIMARY KEY,
         table_name  TEXT NOT NULL,
         record_id   TEXT NOT NULL,
@@ -1721,9 +1774,10 @@ class LocalDatabase {
   async getSleepEntries(chartId: string, limit = 30): Promise<SleepEntry[]> {
     const db = await this.ensureReady();
 
+    // Removed chart_id filter. Sleep progress is connected to the user's overall account/email.
     const rows = (await db.getAllAsync(
-      'SELECT * FROM sleep_entries WHERE chart_id = ? AND is_deleted = 0 ORDER BY date DESC LIMIT ?',
-      [chartId, limit]
+      'SELECT * FROM sleep_entries WHERE is_deleted = 0 ORDER BY date DESC LIMIT ?',
+      [limit]
     )) as any[];
 
     return Promise.all(rows.map(async (row) => {
@@ -2164,8 +2218,8 @@ class LocalDatabase {
     const db = await this.ensureReady();
 
     const row = await db.getFirstAsync(
-      'SELECT * FROM daily_check_ins WHERE date = ? AND chart_id = ? ORDER BY created_at DESC LIMIT 1',
-      [date, chartId]
+      'SELECT * FROM daily_check_ins WHERE date = ? ORDER BY created_at DESC LIMIT 1',
+      [date]
     );
 
     if (!row) return null;
@@ -2175,9 +2229,10 @@ class LocalDatabase {
   async getCheckInsByDate(date: string, chartId: string): Promise<DailyCheckIn[]> {
     const db = await this.ensureReady();
 
+    // Removed chart_id filter to accurately block duplicate submissions today across their email
     const rows = await db.getAllAsync(
-      'SELECT * FROM daily_check_ins WHERE date = ? AND chart_id = ? ORDER BY created_at ASC',
-      [date, chartId]
+      'SELECT * FROM daily_check_ins WHERE date = ? ORDER BY created_at ASC',
+      [date]
     );
 
     return Promise.all((rows as any[]).map((row: any) => this.mapCheckInRow(row)));
@@ -2186,9 +2241,10 @@ class LocalDatabase {
   async getCheckInByDateAndTime(date: string, chartId: string, timeOfDay: string): Promise<DailyCheckIn | null> {
     const db = await this.ensureReady();
 
+    // Removed chart_id filter to accurately block duplicate submissions today across their email
     const row = await db.getFirstAsync(
-      'SELECT * FROM daily_check_ins WHERE date = ? AND chart_id = ? AND time_of_day = ?',
-      [date, chartId, timeOfDay]
+      'SELECT * FROM daily_check_ins WHERE date = ? AND time_of_day = ?',
+      [date, timeOfDay]
     );
 
     if (!row) return null;
@@ -2198,8 +2254,9 @@ class LocalDatabase {
   async getCheckIns(chartId: string, limit?: number): Promise<DailyCheckIn[]> {
     const db = await this.ensureReady();
 
-    let query = 'SELECT * FROM daily_check_ins WHERE chart_id = ? ORDER BY date DESC, created_at DESC';
-    const params: any[] = [chartId];
+    // Removed chart_id filter. Progress is connected to user's overall account/email.
+    let query = 'SELECT * FROM daily_check_ins ORDER BY date DESC, created_at DESC';
+    const params: any[] = [];
 
     if (limit) {
       query += ' LIMIT ?';
@@ -2219,11 +2276,12 @@ class LocalDatabase {
     endDate: string,
   ): Promise<DailyCheckIn[]> {
     const db = await this.ensureReady();
+    // Removed chart_id filter. Progress is connected to user's overall account/email.
     const rows = await db.getAllAsync(
       `SELECT * FROM daily_check_ins
-       WHERE chart_id = ? AND date >= ? AND date <= ?
+       WHERE date >= ? AND date <= ?
        ORDER BY date DESC, created_at DESC`,
-      [chartId, startDate, endDate],
+      [startDate, endDate],
     );
     return Promise.all((rows as any[]).map((row: any) => this.mapCheckInRow(row)));
   }
@@ -2234,9 +2292,36 @@ class LocalDatabase {
   async getCheckInCount(chartId: string): Promise<number> {
     const db = await this.ensureReady();
     const row = await db.getFirstAsync(
-      'SELECT COUNT(*) as cnt FROM daily_check_ins WHERE chart_id = ?',
-      [chartId],
+      'SELECT COUNT(*) as cnt FROM daily_check_ins',
+      [],
     );
+    return (row as any)?.cnt ?? 0;
+  }
+
+  /**
+   * Count all check-ins across all charts.
+   */
+  async getTotalCheckInCount(): Promise<number> {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const userId = data?.session?.user?.id;
+      if (userId) {
+        const { count, error } = await supabase
+          .from('daily_check_ins')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('is_deleted', false);
+        
+        if (!error && count !== null) {
+          return count;
+        }
+      }
+    } catch (e) {
+      logger.warn('[LocalDB] Failed to fetch total check-ins from remote, falling back to local.', e);
+    }
+
+    const db = await this.ensureReady();
+    const row = await db.getFirstAsync('SELECT COUNT(*) as cnt FROM daily_check_ins');
     return (row as any)?.cnt ?? 0;
   }
 
@@ -2330,8 +2415,8 @@ class LocalDatabase {
   async getSleepEntryByDate(chartId: string, date: string): Promise<SleepEntry | null> {
     const db = await this.ensureReady();
     const rows = await db.getAllAsync(
-      'SELECT * FROM sleep_entries WHERE chart_id = ? AND date = ? AND is_deleted = 0 ORDER BY created_at ASC LIMIT 1',
-      [chartId, date]
+      'SELECT * FROM sleep_entries WHERE date = ? AND is_deleted = 0 ORDER BY created_at ASC LIMIT 1',
+      [date]
     );
     if (!rows || rows.length === 0) return null;
     const row = rows[0] as any;
@@ -2560,6 +2645,7 @@ class LocalDatabase {
 interface LocalDatabase {
   deleteChartFromSync(id: string, updatedAt: string): Promise<void>;
   clearAccountScopedData(): Promise<void>;
+  switchToUserDb(userId: string): Promise<void>;
 }
 
 export const localDb = new LocalDatabase();

@@ -424,7 +424,7 @@ export default function SleepScreen() {
       setQuality(entry.quality ?? 0);
       if (entry.durationHours != null) { setHasDuration(true); setDurationHours(entry.durationHours); }
       else { setHasDuration(false); setDurationHours(7.5); }
-      setDreamText(entry.dreamText ?? '');
+      setDreamText(entry.dreamText?.trim() || entry.notes?.trim() || '');
       if (entry.dreamFeelings) {
         try { const parsed = JSON.parse(entry.dreamFeelings) as SelectedFeeling[]; setSelectedFeelings(Array.isArray(parsed) ? parsed : []); }
         catch { setSelectedFeelings([]); }
@@ -1247,8 +1247,8 @@ export default function SleepScreen() {
             <Animated.View entering={FadeInDown.delay(210).duration(600)} style={styles.section}>
               <Text style={styles.editorialSectionLabel}>Recent Dreams</Text>
               {entries.map((entry, index) => {
-                const hasDream = !!entry.dreamText?.trim();
-                const dreamPreview = hasDream ? entry.dreamText!.trim() : 'No dream notes saved for this night.';
+                const hasDream = !!(entry.dreamText?.trim() || entry.notes?.trim());
+                const dreamPreview = hasDream ? (entry.dreamText?.trim() || entry.notes!.trim()) : 'No dream notes saved for this night.';
                 const selectedInterpretation = interpretations[entry.id];
                 const selectedAiInterpretation = aiInterpretations[entry.id];
                 const isExpanded = expandedEntryId === entry.id;

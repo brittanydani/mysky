@@ -20,8 +20,42 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FieldEncryptionService } from './fieldEncryption';
 import { logger } from '../../utils/logger';
+import { supabase } from '../../lib/supabase';
+import { ENCRYPTED_ASYNC_USER_DATA_KEYS } from './userDataKeys';
 
 const reportedUnreadableKeys = new Set<string>();
+const ACCOUNT_SCOPED_ENCRYPTED_KEYS = new Set<string>(ENCRYPTED_ASYNC_USER_DATA_KEYS);
+
+function buildScopedKey(key: string, userId: string): string {
+  return `${key}::user::${userId}`;
+}
+
+async function getScopedKey(key: string): Promise<string> {
+  if (!ACCOUNT_SCOPED_ENCRYPTED_KEYS.has(key)) return key;
+
+  const { data } = await supabase.auth.getSession();
+  const userId = data.session?.user?.id;
+  if (!userId) return key;
+
+  return buildScopedKey(key, userId);
+}
+
+async function getRawStoredValue(key: string): Promise<string | null> {
+  const scopedKey = await getScopedKey(key);
+  if (scopedKey === key) {
+    return AsyncStorage.getItem(key);
+  }
+
+  const scopedValue = await AsyncStorage.getItem(scopedKey);
+  if (scopedValue !== null) return scopedValue;
+
+  const legacyValue = await AsyncStorage.getItem(key);
+  if (legacyValue === null) return null;
+
+  await AsyncStorage.setItem(scopedKey, legacyValue);
+  await AsyncStorage.removeItem(key);
+  return legacyValue;
+}
 
 function logUnreadableKeyOnce(key: string, reason: 'key_missing' | 'auth_failed' | 'invalid_format'): void {
   const marker = `${key}:${reason}`;
@@ -45,7 +79,7 @@ export const EncryptedAsyncStorage = {
    * values gracefully (plaintext is returned as-is for backward compat).
    */
   async getItem(key: string): Promise<string | null> {
-    const raw = await AsyncStorage.getItem(key);
+    const raw = await getRawStoredValue(key);
     if (raw === null) return null;
 
     if (FieldEncryptionService.isEncrypted(raw)) {
@@ -67,8 +101,12 @@ export const EncryptedAsyncStorage = {
    */
   async setItem(key: string, value: string): Promise<void> {
     try {
+      const scopedKey = await getScopedKey(key);
       const encrypted = await FieldEncryptionService.encryptField(value);
-      await AsyncStorage.setItem(key, encrypted);
+      await AsyncStorage.setItem(scopedKey, encrypted);
+      if (scopedKey !== key) {
+        await AsyncStorage.removeItem(key);
+      }
       reportedUnreadableKeys.delete(`${key}:key_missing`);
       reportedUnreadableKeys.delete(`${key}:auth_failed`);
       reportedUnreadableKeys.delete(`${key}:invalid_format`);
@@ -83,7 +121,11 @@ export const EncryptedAsyncStorage = {
    */
   async removeItem(key: string): Promise<void> {
     try {
-      await AsyncStorage.removeItem(key);
+      const scopedKey = await getScopedKey(key);
+      await AsyncStorage.removeItem(scopedKey);
+      if (scopedKey !== key) {
+        await AsyncStorage.removeItem(key);
+      }
       reportedUnreadableKeys.delete(`${key}:key_missing`);
       reportedUnreadableKeys.delete(`${key}:auth_failed`);
       reportedUnreadableKeys.delete(`${key}:invalid_format`);

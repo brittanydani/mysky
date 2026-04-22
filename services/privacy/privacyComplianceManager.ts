@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { secureStorage } from '../storage/secureStorage';
 import { localDb } from '../storage/localDb';
 import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
 import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from '../storage/userDataKeys';
 import { generateId } from '../storage/models';
 import { LawfulBasisAuditService } from './lawfulBasisAudit';
@@ -254,7 +255,7 @@ export class PrivacyComplianceManager {
       secureStorage.deleteAllUserData(),
       localDb.hardDeleteAllData(),
       ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map((key) => EncryptedAsyncStorage.removeItem(key)),
-      ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AsyncStorage.removeItem(key)),
+      ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AccountScopedAsyncStorage.removeItem(key)),
     ]);
 
     // Destroy the data encryption key and identity vault so no plaintext can be recovered
@@ -318,7 +319,7 @@ export class PrivacyComplianceManager {
         if (value != null) data[key] = value;
       }),
       ...PLAIN_ASYNC_USER_DATA_KEYS.map(async (key) => {
-        const value = await AsyncStorage.getItem(key);
+        const value = await AccountScopedAsyncStorage.getItem(key);
         if (value != null) data[key] = value;
       }),
     ]);

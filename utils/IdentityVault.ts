@@ -31,9 +31,10 @@ export class IdentityVault {
    * Encrypts and saves the user's birth data to the hardware keychain / keystore.
    * Returns true on success, false if the OS-level write failed.
    */
-  static async sealIdentity(identity: CosmicIdentity): Promise<boolean> {
+  static async sealIdentity(identity: CosmicIdentity, userId?: string): Promise<boolean> {
+    const key = userId ? `${IDENTITY_KEY}_${userId}` : IDENTITY_KEY;
     try {
-      await SecureStore.setItemAsync(IDENTITY_KEY, JSON.stringify(identity), STORE_OPTIONS);
+      await SecureStore.setItemAsync(key, JSON.stringify(identity), STORE_OPTIONS);
       return true;
     } catch (error) {
       logger.error('[IdentityVault] Failed to seal identity:', error);
@@ -45,9 +46,10 @@ export class IdentityVault {
    * Decrypts and returns the user's birth data into volatile memory.
    * Returns null if nothing is stored or decryption fails.
    */
-  static async openVault(): Promise<CosmicIdentity | null> {
+  static async openVault(userId?: string): Promise<CosmicIdentity | null> {
+    const key = userId ? `${IDENTITY_KEY}_${userId}` : IDENTITY_KEY;
     try {
-      const payload = await SecureStore.getItemAsync(IDENTITY_KEY, STORE_OPTIONS);
+      const payload = await SecureStore.getItemAsync(key, STORE_OPTIONS);
       if (!payload) return null;
       return JSON.parse(payload) as CosmicIdentity;
     } catch (error) {
@@ -60,9 +62,10 @@ export class IdentityVault {
    * Permanently destroys the sealed identity from the hardware vault.
    * Called during a Hard Reset — irreversible.
    */
-  static async destroyIdentity(): Promise<void> {
+  static async destroyIdentity(userId?: string): Promise<void> {
+    const key = userId ? `${IDENTITY_KEY}_${userId}` : IDENTITY_KEY;
     try {
-      await SecureStore.deleteItemAsync(IDENTITY_KEY, STORE_OPTIONS);
+      await SecureStore.deleteItemAsync(key, STORE_OPTIONS);
     } catch (error) {
       logger.error('[IdentityVault] Failed to destroy identity:', error);
     }

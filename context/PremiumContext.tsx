@@ -6,12 +6,12 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode, useRef } from 'react';
 import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
-import * as Haptics from 'expo-haptics';
 import Constants from 'expo-constants';
 
 import { revenueCatService } from '../services/premium/revenuecat';
 import { logger } from '../utils/logger';
 import { useAuth } from './AuthContext';
+import * as Haptics from '../utils/haptics';
 
 type PurchaseResult = { success: boolean; error?: string; userCancelled?: boolean };
 type RestoreResult = { success: boolean; hasPremium?: boolean; error?: string };

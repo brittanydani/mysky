@@ -325,9 +325,9 @@ function buildArchetypeInsight(
       ? shadow.body
       : `Your dominant archetype is ${dominantName}, and that pattern is still the clearest frame for how you respond under pressure. ${shadow.body.replace(/^Your dominant pattern is [^.]+\.\s*/, '')}`,
     heroMetrics: [
-      metric(`${pct}% HIGH-STRESS DAYS`, 'Pressure load', pct >= 30 ? 'caution' : 'default'),
-      metric(dominantName.toUpperCase(), 'Dominant archetype'),
-      ...(secondaryName ? [metric(secondaryName.toUpperCase(), 'Backup pattern')] : []),
+      metric(`${pct}%`, 'HIGH-STRESS DAYS', pct >= 30 ? 'caution' : 'default'),
+      metric(dominantName.toUpperCase(), 'DOMINANT ARCHETYPE', 'default'),
+      ...(secondaryName ? [metric(secondaryName.toUpperCase(), 'BACKUP PATTERN', 'default')] : []),
     ],
     takeaway: takeaway(
       'Shadow work',

@@ -131,7 +131,7 @@ describe('selfKnowledgeCrossRef', () => {
       const archetypeInsight = result.find((insight) => insight.id === 'archetype-shadow');
       const somaticInsight = result.find((insight) => insight.id === 'somatic-dominant');
 
-      expect(archetypeInsight?.heroMetrics?.[0]?.value).toMatch(/HIGH-STRESS DAYS/);
+      expect(archetypeInsight?.heroMetrics?.[0]?.label).toMatch(/HIGH-STRESS DAYS/);
       expect(archetypeInsight?.heroMetrics?.[1]?.value).toBe('THE SEEKER');
       expect(archetypeInsight?.takeaway?.label).toBe('Shadow work');
 

@@ -91,8 +91,9 @@ export default function PatternsScreen() {
           const charts = await localDb.getCharts();
           if (!charts?.length) return;
           const chartId = charts[0].id;
-          const [checkIns, sleepEntries, journalEntries] = await Promise.all([
+          const [checkIns, totalCheckIns, sleepEntries, journalEntries] = await Promise.all([
             localDb.getCheckIns(chartId, 90),
+            localDb.getTotalCheckInCount(),
             localDb.getSleepEntries(chartId, 90),
             localDb.getJournalEntries(),
           ]);
@@ -116,7 +117,7 @@ export default function PatternsScreen() {
 
           if (!active) return;
           setTrendCheckIns(checkIns);
-          setSnapshot({ avgMood, avgStress, checkInCount: checkIns.length });
+          setSnapshot({ avgMood, avgStress, checkInCount: totalCheckIns });
           setLastUpdated(new Date().toISOString());
           setOrbitLoading(false);
 
@@ -589,8 +590,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderTopWidth: 1, borderTopColor: theme.cardBorder,
   },
   heroMetricChip: { flex: 1, alignItems: 'center', gap: 4 },
-  heroMetricValue: { fontSize: 15, fontWeight: '700', color: theme.textPrimary, textAlign: 'center' },
-  heroMetricLabel: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 },
+  heroMetricValue: { fontSize: 18, fontWeight: '900', color: theme.textPrimary, textAlign: 'center', marginBottom: 2 },
+  heroMetricLabel: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center' },
 
   deepDiveModalCard: { maxHeight: '90%', paddingBottom: 24 },
   deepDiveInsightCard: { borderRadius: 20, padding: 24, overflow: 'hidden' },

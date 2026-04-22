@@ -8,13 +8,49 @@
  * Haptics respect the user's `pref_haptic` AsyncStorage preference.
  * Call `initHapticPreference()` once on app startup to seed the cache,
  * and `setHapticsEnabled()` whenever the user changes the setting.
+ *
+ * expo-haptics is lazy-loaded to avoid touching the native module during
+ * startup-critical module evaluation.
  */
 
-import * as Haptics from 'expo-haptics';
+import type * as ExpoHaptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ── In-memory cache — defaults to enabled until loaded ───────────────────────
 let _hapticsEnabled = true;
+let hapticsModule: typeof ExpoHaptics | null = null;
+
+export enum ImpactFeedbackStyle {
+  Light = 'light',
+  Medium = 'medium',
+  Heavy = 'heavy',
+  Rigid = 'rigid',
+  Soft = 'soft',
+}
+
+export enum NotificationFeedbackType {
+  Success = 'success',
+  Warning = 'warning',
+  Error = 'error',
+}
+
+type ImpactFeedbackStyleValue = ImpactFeedbackStyle;
+type NotificationFeedbackTypeValue = NotificationFeedbackType;
+
+function getHapticsModule(): typeof ExpoHaptics | null {
+  if (hapticsModule) {
+    return hapticsModule;
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    hapticsModule = require('expo-haptics') as typeof ExpoHaptics;
+  } catch {
+    hapticsModule = null;
+  }
+
+  return hapticsModule;
+}
 
 /** Load the persisted preference from storage. Call once at app startup. */
 export async function initHapticPreference(): Promise<void> {
@@ -34,19 +70,19 @@ export function setHapticsEnabled(enabled: boolean): void {
 /** Light tap — used for selections, toggles, navigation. */
 export function selection() {
   if (!_hapticsEnabled) return;
-  Haptics.selectionAsync().catch(() => {});
+  getHapticsModule()?.selectionAsync().catch(() => {});
 }
 
 /** Physical impact — used for confirming actions. */
-export function impact(style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Medium) {
+export function impact(style: ImpactFeedbackStyleValue = ImpactFeedbackStyle.Medium) {
   if (!_hapticsEnabled) return;
-  Haptics.impactAsync(style).catch(() => {});
+  getHapticsModule()?.impactAsync(style as unknown as ExpoHaptics.ImpactFeedbackStyle).catch(() => {});
 }
 
 /** Success / warning / error notification feedback. */
-export function notification(type: Haptics.NotificationFeedbackType = Haptics.NotificationFeedbackType.Success) {
+export function notification(type: NotificationFeedbackTypeValue = NotificationFeedbackType.Success) {
   if (!_hapticsEnabled) return;
-  Haptics.notificationAsync(type).catch(() => {});
+  getHapticsModule()?.notificationAsync(type as unknown as ExpoHaptics.NotificationFeedbackType).catch(() => {});
 }
 
 /**
@@ -57,18 +93,15 @@ export function notification(type: Haptics.NotificationFeedbackType = Haptics.No
  */
 export function selectionAsync(): Promise<void> {
   if (!_hapticsEnabled) return Promise.resolve();
-  return Haptics.selectionAsync().catch(() => {});
+  return getHapticsModule()?.selectionAsync().catch(() => {}) ?? Promise.resolve();
 }
 
-export function impactAsync(style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Medium): Promise<void> {
+export function impactAsync(style: ImpactFeedbackStyleValue = ImpactFeedbackStyle.Medium): Promise<void> {
   if (!_hapticsEnabled) return Promise.resolve();
-  return Haptics.impactAsync(style).catch(() => {});
+  return getHapticsModule()?.impactAsync(style as unknown as ExpoHaptics.ImpactFeedbackStyle).catch(() => {}) ?? Promise.resolve();
 }
 
-export function notificationAsync(type: Haptics.NotificationFeedbackType = Haptics.NotificationFeedbackType.Success): Promise<void> {
+export function notificationAsync(type: NotificationFeedbackTypeValue = NotificationFeedbackType.Success): Promise<void> {
   if (!_hapticsEnabled) return Promise.resolve();
-  return Haptics.notificationAsync(type).catch(() => {});
+  return getHapticsModule()?.notificationAsync(type as unknown as ExpoHaptics.NotificationFeedbackType).catch(() => {}) ?? Promise.resolve();
 }
-
-// Re-export enums for convenience
-export { ImpactFeedbackStyle, NotificationFeedbackType } from 'expo-haptics';

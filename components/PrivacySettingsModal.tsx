@@ -163,7 +163,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                 <Text style={styles.sectionLabel}>System Integrity</Text>
                 <LinearGradient colors={panelGradient} style={styles.glassCard}>
                   {[
-                    { label: 'Architecture', val: 'Local-First', icon: 'server-outline', color: theme.textPrimary },
+                    { label: 'Architecture', val: 'Account-Synced', icon: 'server-outline', color: theme.textPrimary },
                     { label: 'Encryption', val: 'AES-256-GCM', icon: 'lock-closed-outline', color: theme.textPrimary },
                     { label: 'Sharing', val: 'Never Sold', icon: 'ban-outline', color: theme.textPrimary },
                   ].map((item, i) => (

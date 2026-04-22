@@ -121,14 +121,15 @@ export default function SleepDetailScreen() {
       const found = entries.find((e) => e.id === entryId);
       if (found) {
         setEntry(found);
-        setDreamText(found.dreamText ?? '');
+        const savedText = found.dreamText?.trim() || found.notes?.trim() || '';
+        setDreamText(savedText);
         const dreamKey = getDreamReinterpretKey(found.id, user?.id);
         const used = await AsyncStorage.getItem(dreamKey);
         const parsedUsed = Number.parseInt(used ?? '0', 10);
         setDreamReinterpretUsedCount(Number.isFinite(parsedUsed) ? parsedUsed : 0);
         // Auto-generate interpretation if entry already has dream text
-        if (found.dreamText && !isDecryptionFailure(found.dreamText)) {
-          void runInterpretation(found, found.dreamText, entries);
+        if (savedText && !isDecryptionFailure(savedText)) {
+          void runInterpretation(found, savedText, entries);
         }
       }
     } catch (e) {
