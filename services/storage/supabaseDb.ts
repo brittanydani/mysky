@@ -352,7 +352,7 @@ export async function getJournalEntries(): Promise<JournalEntry[]> {
     .select('*')
     .eq('user_id', userId)
     .eq('is_deleted', false)
-    .order('date', { ascending: false });
+    .order('log_date', { ascending: false });
 
   if (error) throw error;
   if (!data?.length) return [];
@@ -549,7 +549,7 @@ export async function getSleepEntryByDate(
     .select('*')
     .eq('user_id', userId)
     .eq('chart_id', chartId)
-    .eq('date', date)
+    .eq('log_date', date)
     .eq('is_deleted', false)
     .maybeSingle();
 
@@ -967,7 +967,7 @@ export async function getInsightByDate(
     .select('*')
     .eq('user_id', userId)
     .eq('chart_id', chartId)
-    .eq('date', date)
+    .eq('log_date', date)
     .eq('is_deleted', false)
     .maybeSingle();
 
@@ -1005,7 +1005,7 @@ export async function getInsightHistory(
     .eq('user_id', userId)
     .eq('chart_id', chartId)
     .eq('is_deleted', false)
-    .order('date', { ascending: false });
+    .order('log_date', { ascending: false });
 
   if (options?.favoritesOnly) query = query.eq('is_favorite', true);
   if (options?.limit) query = query.limit(options.limit);

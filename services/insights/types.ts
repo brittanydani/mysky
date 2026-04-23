@@ -93,7 +93,7 @@ export interface DailyAggregate {
   /** Union of keywords across all entries for this day (top N by freq) */
   keywordsUnion: string[];
   /** Summed emotion counts across entries for this day */
-  emotionCountsTotal: Partial<Record<string, number>>;
+  journalEmotionCountsTotal: Partial<Record<string, number>>;
   /** Average sentiment across entries for this day (if present) */
   sentimentAvg: number | null;
 

@@ -33,7 +33,7 @@ function makeAggregate(
     journalCount: 0,
     journalWordCount: 0,
     keywordsUnion: [],
-    emotionCountsTotal: {},
+    journalEmotionCountsTotal: {},
     sentimentAvg: null,
     checkInTimestamps: [],
     timeOfDayLabels: [],

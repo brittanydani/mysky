@@ -196,7 +196,7 @@ function computeDayScores(agg: DailyAggregate): DailyScores {
   );
 
   // ── D. Emotional intensity ──
-  const emotionCount = Object.values(agg.emotionCountsTotal)
+  const emotionCount = Object.values(agg.journalEmotionCountsTotal)
     .reduce<number>((s, v) => s + (v ?? 0), 0);
   const emotionDensity = scaleTo100(Math.min(emotionCount, 10), 0, 10);
   const sentimentSwing = agg.sentimentAvg != null
@@ -434,7 +434,7 @@ function buildDayProfile(scoredDays: ScoredDay[]): BestHardDayProfile | null {
     for (const t of d.aggregate.tagsUnion) {
       tagCounts[t] = (tagCounts[t] ?? 0) + 1;
     }
-    for (const [k, v] of Object.entries(d.aggregate.emotionCountsTotal)) {
+    for (const [k, v] of Object.entries(d.aggregate.journalEmotionCountsTotal)) {
       emotionCounts[k] = (emotionCounts[k] ?? 0) + (v ?? 0);
     }
   }

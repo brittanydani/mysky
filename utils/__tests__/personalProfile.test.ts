@@ -14,7 +14,7 @@ function makeAggregate(index: number, overrides: Partial<DailyAggregate> = {}): 
     journalCount: 0,
     journalWordCount: 0,
     keywordsUnion: [],
-    emotionCountsTotal: {},
+    journalEmotionCountsTotal: {},
     sentimentAvg: null,
     checkInTimestamps: [`2026-03-${day}T12:00:00Z`],
     timeOfDayLabels: ['morning'],

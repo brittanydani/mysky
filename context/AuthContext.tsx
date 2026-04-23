@@ -51,9 +51,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isMounted = useRef(true);
   const lastDemoSyncTimestamp = useRef(0);
   const demoSyncInFlight = useRef<Promise<void> | null>(null);
+  const demoSyncedForEmail = useRef<string | null>(null);
+  const demoCleanupAttempted = useRef(false);
+
+  const setSessionIfChanged = useCallback((nextSession: Session | null) => {
+    if (!isMounted.current) return;
+
+    setSession((prevSession) => {
+      const prevAccessToken = prevSession?.access_token ?? null;
+      const nextAccessToken = nextSession?.access_token ?? null;
+
+      if (prevAccessToken === nextAccessToken) {
+        return prevSession;
+      }
+
+      return nextSession;
+    });
+  }, []);
 
   const syncDemoArtifacts = useCallback(async (email: string | null | undefined) => {
     if (!email) return;
+
+    if (demoSyncedForEmail.current === email) {
+      return;
+    }
+
+    if (!isAutoDemoSeedEnabled() && demoCleanupAttempted.current) {
+      return;
+    }
 
     if (demoSyncInFlight.current) {
       return demoSyncInFlight.current;
@@ -67,12 +92,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const run = (async () => {
       lastDemoSyncTimestamp.current = Date.now();
 
-      if (isAutoDemoSeedEnabled()) {
-        await DemoSeedService.seedIfNeeded(email);
+      if (demoSyncedForEmail.current === email) {
         return;
       }
 
-      await DemoSeedService.cleanupStaleDemoArtifacts(email);
+      if (isAutoDemoSeedEnabled()) {
+        await DemoSeedService.seedIfNeeded(email);
+      } else {
+        await DemoSeedService.cleanupStaleDemoArtifacts(email);
+        demoCleanupAttempted.current = true;
+      }
+
+      demoSyncedForEmail.current = email;
     })();
 
     demoSyncInFlight.current = run;
@@ -101,9 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (error) throw error;
 
-          if (isMounted.current) {
-            setSession(restored);
-          }
+          setSessionIfChanged(restored);
 
           if (restored?.user) {
             await revenueCatService.logIn(restored.user.id);
@@ -140,21 +169,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange((event, newSession) => {
       logger.info(`[AuthContext] State change: ${event}`);
 
-      if (isMounted.current) {
-        setSession(newSession);
-      }
+      setSessionIfChanged(newSession);
 
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && newSession?.user) {
         void revenueCatService
           .logIn(newSession.user.id)
           .catch((e) => logger.error('[AuthContext] RC logIn failed:', e));
 
-        if (newSession.user.email) {
+        if (newSession.user.email && demoSyncedForEmail.current !== newSession.user.email) {
           void syncDemoArtifacts(newSession.user.email).catch((e) =>
             logger.warn('[AuthContext] Demo sync failed:', e),
           );
         }
       } else if (event === 'SIGNED_OUT') {
+        demoSyncedForEmail.current = null;
+        lastDemoSyncTimestamp.current = 0;
+        demoSyncInFlight.current = null;
+        demoCleanupAttempted.current = false;
+
         void revenueCatService
           .logOut()
           .catch((e) => logger.error('[AuthContext] RC logOut failed:', e));
@@ -165,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted.current = false;
       subscription.unsubscribe();
     };
-  }, [syncDemoArtifacts]);
+  }, [setSessionIfChanged, syncDemoArtifacts]);
 
   useEffect(() => {
     const handleAppState = (state: AppStateStatus) => {
@@ -197,13 +229,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               nextSession = data.session ?? hydratedSession;
             }
 
-            if (isMounted.current) {
-              setSession(nextSession ?? null);
-            }
+            setSessionIfChanged(nextSession ?? null);
 
-            if (nextSession?.user?.email) {
-              await syncDemoArtifacts(nextSession.user.email);
-            }
+            // Do not re-run demo seeding every foreground activation.
+            // That work is handled once per signed-in user during auth init/sign-in.
           } catch (e) {
             logger.warn('[AuthContext] Failed to sync session on foreground:', e);
           }
@@ -215,7 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const sub = AppState.addEventListener('change', handleAppState);
     return () => sub.remove();
-  }, [syncDemoArtifacts]);
+  }, [setSessionIfChanged]);
 
   const clearSignedOutState = useCallback(async () => {
     useDreamMapStore.getState().clearCache();
@@ -238,8 +267,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.error('[AuthContext] Failed to destroy IdentityVault during sign-out:', e);
     }
 
+    demoSyncedForEmail.current = null;
     lastDemoSyncTimestamp.current = 0;
     demoSyncInFlight.current = null;
+    demoCleanupAttempted.current = false;
 
     if (isMounted.current) {
       setSession(null);

@@ -551,7 +551,7 @@ function buildHardDayReflection(profile: PatternProfile): NarrativeInsight | nul
     body = 'Your harder days don\'t follow a single identifiable pattern yet. Emotional difficulty often comes from accumulation rather than any one cause.';
   }
   if (hp.topEmotions.length > 0) {
-    body += ` Emotionally, ${hp.topEmotions.map(e => e.emotion).join(' and ')} show up more prominently on these days.`;
+    body += ` In your journal language, ${hp.topEmotions.map(e => e.emotion).join(' and ')} themes show up more prominently on these days.`;
   }
 
   return {
@@ -850,7 +850,7 @@ function buildEmergingPattern(profile: PatternProfile): NarrativeInsight | null 
 
   const recentEmotions: Record<string, number> = {};
   for (const d of recent) {
-    for (const [k, v] of Object.entries(d.aggregate.emotionCountsTotal)) {
+    for (const [k, v] of Object.entries(d.aggregate.journalEmotionCountsTotal)) {
       recentEmotions[k] = (recentEmotions[k] ?? 0) + (v ?? 0);
     }
   }

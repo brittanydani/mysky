@@ -242,7 +242,7 @@ function aggregateByDay(
       journalCount: dayJournals.length,
       journalWordCount: dayJournals.reduce((sum, j) => sum + j.wordCount, 0),
       keywordsUnion,
-      emotionCountsTotal: Object.keys(emotionCountsSum).length > 0 ? emotionCountsSum : {},
+      journalEmotionCountsTotal: Object.keys(emotionCountsSum).length > 0 ? emotionCountsSum : {},
       sentimentAvg,
       checkInTimestamps: dayCheckIns.map(c => c.createdAt),
       timeOfDayLabels: dayCheckIns.map(c => c.timeOfDay),

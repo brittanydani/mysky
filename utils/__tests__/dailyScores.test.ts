@@ -13,7 +13,7 @@ function makeAggregate(overrides: Partial<DailyAggregate> = {}): DailyAggregate 
     journalCount: 0,
     journalWordCount: 0,
     keywordsUnion: [],
-    emotionCountsTotal: {},
+    journalEmotionCountsTotal: {},
     sentimentAvg: null,
     checkInTimestamps: [],
     timeOfDayLabels: [],

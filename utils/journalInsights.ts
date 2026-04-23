@@ -5,7 +5,7 @@
  * insightsEngine.ts. All functions are pure — no I/O, no side effects.
  *
  * Relies on DailyAggregate rows produced by the pipeline (which now
- * include keywordsUnion, emotionCountsTotal, sentimentAvg).
+ * include keywordsUnion, journalEmotionCountsTotal, sentimentAvg).
  */
 
 import { DailyAggregate, ChartProfile, Element } from '../services/insights/types';
@@ -303,10 +303,10 @@ export function computeEmotionBucketLift(
 
   for (const cat of categories) {
     const bestPresence =
-      bestDays.filter(d => (d.emotionCountsTotal[cat] ?? 0) >= 2).length /
+      bestDays.filter(d => (d.journalEmotionCountsTotal[cat] ?? 0) >= 2).length /
       bestDays.length;
     const hardPresence =
-      hardDays.filter(d => (d.emotionCountsTotal[cat] ?? 0) >= 2).length /
+      hardDays.filter(d => (d.journalEmotionCountsTotal[cat] ?? 0) >= 2).length /
       hardDays.length;
     const lift = bestPresence - hardPresence;
 
@@ -317,7 +317,7 @@ export function computeEmotionBucketLift(
         lift,
         bestPresence,
         hardPresence,
-        insight: `${capitalize(cat)} language appears more on your ${direction} days.`,
+        insight: `${capitalize(cat)}-leaning journal language appears more on your ${direction} days.`,
       });
     }
   }
@@ -652,14 +652,14 @@ export function computeEmotionalProcessing(
   aggregates: DailyAggregate[],
 ): JournalImpactCard | null {
   const withEmotions = aggregates.filter(
-    d => d.journalCount >= 1 && Object.keys(d.emotionCountsTotal).length > 0,
+    d => d.journalCount >= 1 && Object.keys(d.journalEmotionCountsTotal).length > 0,
   );
 
   if (withEmotions.length < 6) return null;
 
   // Count distinct emotions per day
   const entries = withEmotions.map(d => ({
-    distinctEmotions: Object.keys(d.emotionCountsTotal).length,
+    distinctEmotions: Object.keys(d.journalEmotionCountsTotal).length,
     moodAvg: d.moodAvg,
     stressAvg: d.stressAvg,
   }));
@@ -687,19 +687,19 @@ export function computeEmotionalProcessing(
 
   let insight: string;
   if (moodDiff >= 0.4) {
-    insight = 'Entries where you name more emotions tend to align with better mood days.';
+    insight = 'Journal entries with a wider detected emotional vocabulary tend to align with better mood days.';
   } else if (moodDiff <= -0.4) {
-    insight = 'You dig deeper emotionally on harder days — that\'s healthy processing.';
+    insight = 'Your journal language tends to become more emotionally layered on harder days — that can reflect real processing.';
   } else if (stressDiff <= -0.4) {
-    insight = 'Richer emotional vocabulary in your entries correlates with lower stress.';
+    insight = 'A richer detected emotional vocabulary in your journal entries correlates with lower stress.';
   } else {
-    insight = 'You express a range of emotions in your writing — that awareness is itself the benefit.';
+    insight = 'Your journal language reflects a range of emotions in your writing — that awareness may itself be part of the benefit.';
   }
 
   return {
     type: 'emotional_processing',
     insight,
-    stat: `${medianDistinct}+ emotions: mood ${moodDeep.toFixed(1)} · stress ${stressDeep.toFixed(1)}`,
+    stat: `${medianDistinct}+ detected journal emotions: mood ${moodDeep.toFixed(1)} · stress ${stressDeep.toFixed(1)}`,
     confidence: journalConfidence(aggregates.length, withEmotions.length),
     data: {
       moodDeep: parseFloat(moodDeep.toFixed(1)),
@@ -1033,7 +1033,7 @@ export function computeBlendedInsights(
 
   const recentEmotions: Record<string, number> = {};
   for (const d of recentDays) {
-    for (const [cat, count] of Object.entries(d.emotionCountsTotal || {})) {
+    for (const [cat, count] of Object.entries(d.journalEmotionCountsTotal || {})) {
       recentEmotions[cat] = (recentEmotions[cat] ?? 0) + (count ?? 0);
     }
   }
@@ -1157,7 +1157,7 @@ export function computeEmotionToneShift(
     const sums: Record<string, number> = {};
     let total = 0;
     for (const d of days) {
-      for (const [cat, count] of Object.entries(d.emotionCountsTotal || {})) {
+      for (const [cat, count] of Object.entries(d.journalEmotionCountsTotal || {})) {
         const c = count ?? 0;
         sums[cat] = (sums[cat] ?? 0) + c;
         total += c;

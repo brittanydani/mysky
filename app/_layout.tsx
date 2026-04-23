@@ -283,6 +283,7 @@ function AppShell() {
 
   // Prevent double-running the heavy init in edge cases
   const didRunPostConsentInitRef = useRef(false);
+  const didRunInitializeAppRef = useRef(false);
   const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const authListenerRef = useRef<any>(null);
   const didHideSplash = useRef(false);
@@ -429,6 +430,11 @@ function AppShell() {
   };
 
   useEffect(() => {
+    if (didRunInitializeAppRef.current) {
+      return;
+    }
+    didRunInitializeAppRef.current = true;
+
     const initializeApp = async () => {
       try {
         // Install the Web Crypto polyfill now that the JS engine is bootstrapped.
@@ -518,6 +524,10 @@ function AppShell() {
         setDbReady(true);
       } finally {
         setCheckingConsent(false);
+        if (!didHideSplash.current) {
+          didHideSplash.current = true;
+          SplashScreen.hideAsync().catch(() => {});
+        }
         if (initTimeoutRef.current) {
           clearTimeout(initTimeoutRef.current);
           initTimeoutRef.current = null;
@@ -580,6 +590,10 @@ function AppShell() {
         setDbReady(true);
       } finally {
         setCheckingConsent(false);
+        if (!didHideSplash.current) {
+          didHideSplash.current = true;
+          SplashScreen.hideAsync().catch(() => {});
+        }
         if (initTimeoutRef.current) {
           clearTimeout(initTimeoutRef.current);
           initTimeoutRef.current = null;
@@ -797,17 +811,11 @@ function AppShell() {
     }
   };
 
-  // Hide splash screen once all init gates have passed, then init Sentry.
-  // Sentry must not run at module load or before bootstrap completes —
-  // its native TurboModule call was crashing on iOS 26 New Architecture.
+  // Hide splash screen once core bootstrap is done.
+  // Do not wait on sessionDataReady/onboarding routing, or the splash can stay
+  // up forever while auth/session events churn.
   useEffect(() => {
-    if (
-      !checkingConsent &&
-      dbReady &&
-      !authLoading &&
-      (!session || sessionDataReady) &&
-      !didHideSplash.current
-    ) {
+    if (!checkingConsent && dbReady && !authLoading && !didHideSplash.current) {
       didHideSplash.current = true;
       SplashScreen.hideAsync().catch(() => {});
 
@@ -825,7 +833,7 @@ function AppShell() {
         })
         .catch(() => {});
     }
-  }, [checkingConsent, dbReady, authLoading, session, sessionDataReady]);
+  }, [checkingConsent, dbReady, authLoading]);
 
   if (checkingConsent || !dbReady) {
     if (initTimedOut) {

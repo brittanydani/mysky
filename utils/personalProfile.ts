@@ -474,8 +474,15 @@ function detectInnerThemes(profile: PatternProfile): InnerTheme[] {
     for (const word of words) {
       let count = 0;
       for (const d of scoredDays) {
-        const text = [...d.aggregate.keywordsUnion, ...d.aggregate.tagsUnion, ...Object.keys(d.aggregate.emotionCountsTotal)].join(' ').toLowerCase();
-        if (text.includes(word)) count++;
+        const tokens = new Set(
+          [
+            ...d.aggregate.tagsUnion,
+          ]
+            .map((s) => s.toLowerCase().trim())
+            .filter(Boolean)
+        );
+
+        if (tokens.has(word)) count++;
       }
       if (count >= 2) {
         themes.push({
@@ -694,7 +701,7 @@ function detectStrengths(profile: PatternProfile, traits: PersonalTrait[], recov
 
   // Perceptiveness (rich journal content, many keywords/emotions tracked)
   const avgKeywords = mean(days.map(d => d.aggregate.keywordsUnion.length));
-  const avgEmotions = mean(days.map(d => Object.keys(d.aggregate.emotionCountsTotal).length));
+  const avgEmotions = mean(days.map(d => Object.keys(d.aggregate.journalEmotionCountsTotal).length));
   if (avgKeywords > 2 || avgEmotions > 2) {
     strengths.push({
       id: 'inner-perceptiveness',

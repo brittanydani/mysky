@@ -11,7 +11,7 @@ function makeAggregate(overrides: Partial<DailyAggregate> = {}): DailyAggregate 
     sleepQuality: overrides.sleepQuality ?? 4,
     tagsUnion: overrides.tagsUnion ?? ['relationships'],
     keywordsUnion: overrides.keywordsUnion ?? [],
-    emotionCountsTotal: overrides.emotionCountsTotal ?? { calm: 1 },
+    journalEmotionCountsTotal: overrides.journalEmotionCountsTotal ?? { calm: 1 },
     hasJournalText: overrides.hasJournalText ?? false,
     journalCount: overrides.journalCount ?? 0,
     journalWordCount: overrides.journalWordCount ?? 0,

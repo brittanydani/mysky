@@ -403,7 +403,7 @@ export default function SettingsScreen() {
     });
 
   const disableActions = backupInProgress || restoreInProgress || backupModalVisible || restoreModalVisible;
-  const showDemoSendButton = __DEV__ && DemoSeedService.isDemoAccount(user?.email);
+  const showDemoSendButton = DemoSeedService.isDemoAccount(user?.email);
 
   const openSupportEmail = async () => {
     const url = `mailto:${SUPPORT_EMAIL}?subject=MySky%20Support`;

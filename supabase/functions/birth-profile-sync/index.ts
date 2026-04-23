@@ -49,23 +49,49 @@ function fromBase64(value: string): Uint8Array {
   return bytes;
 }
 
+function toCryptoBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
+  const arrayBuffer = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+
+  return new Uint8Array(arrayBuffer);
+}
+
 async function getEncryptionKey(): Promise<CryptoKey> {
   if (!cachedKeyPromise) {
     cachedKeyPromise = (async () => {
       const secret = Deno.env.get("BIRTH_PROFILE_ENCRYPTION_KEY");
       if (!secret) throw new Error("BIRTH_PROFILE_ENCRYPTION_KEY secret is not set");
-      const digest = await crypto.subtle.digest("SHA-256", textEncoder.encode(secret));
-      return crypto.subtle.importKey("raw", digest, "AES-GCM", false, ["encrypt", "decrypt"]);
+
+      const secretBytes = toCryptoBytes(textEncoder.encode(secret));
+      const digest = await crypto.subtle.digest("SHA-256", secretBytes);
+
+      return await crypto.subtle.importKey(
+        "raw",
+        digest,
+        "AES-GCM",
+        false,
+        ["encrypt", "decrypt"],
+      );
     })();
   }
+
   return cachedKeyPromise;
 }
 
 async function encryptProfile(profile: BirthProfilePayload): Promise<string> {
   const key = await getEncryptionKey();
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const plaintext = textEncoder.encode(JSON.stringify(profile));
-  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext));
+  const iv = toCryptoBytes(crypto.getRandomValues(new Uint8Array(12)));
+  const plaintext = toCryptoBytes(textEncoder.encode(JSON.stringify(profile)));
+
+  const encryptedBuffer = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    plaintext,
+  );
+
+  const ciphertext = new Uint8Array(encryptedBuffer);
   return `${toBase64(iv)}:${toBase64(ciphertext)}`;
 }
 
@@ -73,9 +99,16 @@ async function decryptProfile(payload: string): Promise<BirthProfilePayload> {
   const key = await getEncryptionKey();
   const [ivBase64, cipherBase64] = payload.split(":");
   if (!ivBase64 || !cipherBase64) throw new Error("Invalid encrypted birth profile payload");
-  const iv = fromBase64(ivBase64);
-  const ciphertext = fromBase64(cipherBase64);
-  const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+
+  const iv = toCryptoBytes(fromBase64(ivBase64));
+  const ciphertext = toCryptoBytes(fromBase64(cipherBase64));
+
+  const plaintext = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    ciphertext,
+  );
+
   return JSON.parse(new TextDecoder().decode(plaintext)) as BirthProfilePayload;
 }
 
@@ -118,7 +151,10 @@ async function getUser(req: Request) {
     Deno.env.get("SUPABASE_ANON_KEY") ?? "",
     { global: { headers: { Authorization: authHeader } } },
   );
-  const { data: { user }, error } = await supabaseClient.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabaseClient.auth.getUser();
   if (error || !user) throw new Error("Unauthorized");
   return user;
 }
@@ -140,7 +176,10 @@ async function readLatestRow(admin: ReturnType<typeof createClient>, userId: str
   return data as Record<string, unknown> | null;
 }
 
-async function materializeProfile(admin: ReturnType<typeof createClient>, row: Record<string, unknown> | null): Promise<BirthProfilePayload | null> {
+async function materializeProfile(
+  admin: ReturnType<typeof createClient>,
+  row: Record<string, unknown> | null,
+): Promise<BirthProfilePayload | null> {
   if (!row) return null;
 
   if (row.profile_enc) {
@@ -194,11 +233,13 @@ serve(async (req: Request) => {
     if (body.action === "getLatest") {
       const row = await readLatestRow(admin, user.id);
       const profile = await materializeProfile(admin, row);
+
       if (!profile || (body.since && profile.updatedAt <= body.since)) {
         return new Response(JSON.stringify({ profile: null }), {
           headers: { ...corsHeaders, "content-type": "application/json" },
         });
       }
+
       return new Response(JSON.stringify({ profile }), {
         headers: { ...corsHeaders, "content-type": "application/json" },
       });
@@ -208,7 +249,12 @@ serve(async (req: Request) => {
       const profile = validateProfile(body.profile);
       const existingRow = await readLatestRow(admin, user.id);
       const existing = await materializeProfile(admin, existingRow);
-      if (existing && existing.updatedAt > profile.updatedAt) {
+
+      if (
+        existing &&
+        existing.updatedAt > profile.updatedAt &&
+        existing.chartId === profile.chartId
+      ) {
         return new Response(JSON.stringify({ profile: existing }), {
           headers: { ...corsHeaders, "content-type": "application/json" },
         });
@@ -216,25 +262,29 @@ serve(async (req: Request) => {
 
       const encrypted = await encryptProfile(profile);
       const createdAt = existing?.createdAt ?? profile.createdAt ?? new Date().toISOString();
-      const { error } = await admin.from("birth_profiles").upsert({
-        id: user.id,
-        user_id: user.id,
-        chart_id: profile.chartId,
-        profile_enc: encrypted,
-        name: null,
-        birth_date: null,
-        birth_time: null,
-        birth_place: null,
-        latitude: null,
-        longitude: null,
-        timezone: null,
-        house_system: null,
-        has_unknown_time: profile.hasUnknownTime,
-        is_deleted: false,
-        deleted_at: null,
-        created_at: createdAt,
-        updated_at: profile.updatedAt,
-      }, { onConflict: "user_id" });
+
+      const { error } = await admin.from("birth_profiles").upsert(
+        {
+          id: user.id,
+          user_id: user.id,
+          chart_id: profile.chartId,
+          profile_enc: encrypted,
+          name: null,
+          birth_date: null,
+          birth_time: null,
+          birth_place: null,
+          latitude: null,
+          longitude: null,
+          timezone: null,
+          house_system: null,
+          has_unknown_time: profile.hasUnknownTime,
+          is_deleted: false,
+          deleted_at: null,
+          created_at: createdAt,
+          updated_at: profile.updatedAt,
+        },
+        { onConflict: "user_id" },
+      );
       if (error) throw error;
 
       return new Response(JSON.stringify({ profile: { ...profile, createdAt } }), {
@@ -246,6 +296,7 @@ serve(async (req: Request) => {
       const deleteUpdatedAt = body.updatedAt ?? new Date().toISOString();
       const existingRow = await readLatestRow(admin, user.id);
       const existing = await materializeProfile(admin, existingRow);
+
       if (existing && existing.updatedAt > deleteUpdatedAt) {
         return new Response(JSON.stringify({ profile: existing }), {
           headers: { ...corsHeaders, "content-type": "application/json" },
@@ -266,25 +317,28 @@ serve(async (req: Request) => {
         deletedAt: body.deletedAt ?? new Date().toISOString(),
       };
 
-      const { error } = await admin.from("birth_profiles").upsert({
-        id: user.id,
-        user_id: user.id,
-        chart_id: tombstone.chartId,
-        profile_enc: null,
-        name: null,
-        birth_date: null,
-        birth_time: null,
-        birth_place: null,
-        latitude: null,
-        longitude: null,
-        timezone: null,
-        house_system: null,
-        has_unknown_time: false,
-        is_deleted: true,
-        deleted_at: tombstone.deletedAt,
-        created_at: createdAt,
-        updated_at: tombstone.updatedAt,
-      }, { onConflict: "user_id" });
+      const { error } = await admin.from("birth_profiles").upsert(
+        {
+          id: user.id,
+          user_id: user.id,
+          chart_id: tombstone.chartId,
+          profile_enc: null,
+          name: null,
+          birth_date: null,
+          birth_time: null,
+          birth_place: null,
+          latitude: null,
+          longitude: null,
+          timezone: null,
+          house_system: null,
+          has_unknown_time: false,
+          is_deleted: true,
+          deleted_at: tombstone.deletedAt,
+          created_at: createdAt,
+          updated_at: tombstone.updatedAt,
+        },
+        { onConflict: "user_id" },
+      );
       if (error) throw error;
 
       return new Response(JSON.stringify({ profile: tombstone }), {
@@ -298,7 +352,9 @@ serve(async (req: Request) => {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
-    const status = message === "Unauthorized" || message === "Missing authorization header" ? 401 : 500;
+    const status =
+      message === "Unauthorized" || message === "Missing authorization header" ? 401 : 500;
+
     return new Response(JSON.stringify({ error: message }), {
       status,
       headers: { ...corsHeaders, "content-type": "application/json" },

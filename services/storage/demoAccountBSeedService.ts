@@ -2,6 +2,13 @@
  * demoAccountBSeedService.ts
  *
  * Demo seeding logic for the real Account B user.
+ *
+ * Server-authoritative version:
+ * - Supabase/Auth-backed data is the source of truth
+ * - Demo data is seeded once and then read from Supabase
+ * - No repeated "restore local demo content" loop
+ * - No encrypted-field repair path
+ * - AsyncStorage only used for small control flags, not canonical demo data
  */
 
 import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
@@ -9,28 +16,20 @@ import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabaseDb } from './supabaseDb';
-import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
-import { AccountScopedAsyncStorage } from './accountScopedStorage';
-import { FieldEncryptionService } from './fieldEncryption';
 import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { ACCOUNT_B_DEMO_SEED } from './demoAccountBSeed';
-import {
-  VALUES_QUESTIONS,
-  ARCHETYPE_QUESTIONS,
-  COGNITIVE_QUESTIONS,
-  INTELLIGENCE_QUESTIONS,
-} from '../../constants/dailyReflectionQuestions';
 
 const DEMO_EMAIL = 'brithornick92@gmail.com';
-const SEED_FLAG_KEY = '@mysky:demo_seeded_account_b_v2';
+const SEED_FLAG_KEY = '@mysky:demo_seeded_account_b_v3';
 const DAILY_SEED_KEY = '@mysky:demo_last_seeded_account_b';
+const REPAIR_ATTEMPT_KEY = '@mysky:demo_account_b_repair_attempted_v1';
 
 const CHART_SEED_KEY = 'account-b-demo-chart';
 const CHART_ID = stableUuidFromString(CHART_SEED_KEY);
 const SETTINGS_ID = stableUuidFromString('account-b-demo-settings');
-const CHART_CREATED = new Date('2026-01-01T09:00:00.000Z').toISOString();
+const CHART_CREATED = new Date().toISOString();
 
 const MOON_SIGNS = [
   'Aries',
@@ -96,11 +95,6 @@ function fnv1a32(input: string): string {
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
-/**
- * Deterministic UUID-shaped id from a string seed.
- * This keeps demo ids stable without sending raw strings like
- * "demo-checkin-2026-01-22-morning" into uuid-backed columns.
- */
 function stableUuidFromString(seed: string): string {
   const hex =
     fnv1a32(`a:${seed}`) +
@@ -183,7 +177,6 @@ export const DemoAccountBSeedService = {
 
     const dailyLogRows = ACCOUNT_B_DEMO_SEED.dailyEntries.map((entry) => ({
       user_id: user.id,
-      log_date: entry.date,
       created_at: new Date(`${entry.date}T20:30:00.000Z`).toISOString(),
       stress: DemoAccountBSeedService._stressLevelToNumber(entry.eveningStress),
       anxiety: DemoAccountBSeedService._stressLevelToNumber(entry.morningStress),
@@ -224,17 +217,12 @@ export const DemoAccountBSeedService = {
         await DemoAccountBSeedService._seed();
         await AsyncStorage.setItem(SEED_FLAG_KEY, 'true');
         await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
+        await AsyncStorage.removeItem(REPAIR_ATTEMPT_KEY);
         logger.info('[DemoSeed] Account B demo seed complete.');
         return;
       }
 
-      const repaired = await DemoAccountBSeedService._repairUnreadableDemoSeedData();
-      if (repaired) {
-        await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
-        return;
-      }
-
-      await DemoAccountBSeedService._restoreLocalDemoDataIfMissing();
+      await DemoAccountBSeedService._restoreServerDemoDataIfMissing();
       await DemoAccountBSeedService._dailyTopUp();
     } catch (e) {
       logger.error('[DemoSeed] Seed failed:', e);
@@ -248,11 +236,7 @@ export const DemoAccountBSeedService = {
         return;
       }
 
-      const repaired = await DemoAccountBSeedService._repairUnreadableDemoSeedData();
-      if (!repaired) {
-        await DemoAccountBSeedService._restoreLocalDemoDataIfMissing();
-      }
-
+      await DemoAccountBSeedService._restoreServerDemoDataIfMissing();
       logger.info('[DemoSeed] Cleanup complete.');
     } catch (e) {
       logger.error('[DemoSeed] Failed to clean demo artifacts:', e);
@@ -262,15 +246,14 @@ export const DemoAccountBSeedService = {
   async _seed(): Promise<void> {
     await DemoAccountBSeedService._ensureChart();
     await DemoAccountBSeedService._seedHistoricalEntries();
-    await DemoAccountBSeedService._seedSettingsAndStorage();
+    await DemoAccountBSeedService._seedSettings();
     await AsyncStorage.setItem(SEED_FLAG_KEY, 'true');
     await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
   },
 
   async _ensureChart(): Promise<void> {
     const existingCharts = (await supabaseDb.getCharts()) as ExistingChart[];
-    const alreadyThere = existingCharts.find((c) => c.id === CHART_ID);
-    if (alreadyThere) return;
+    if (existingCharts.length > 0) return;
 
     await supabaseDb.saveChart({
       id: CHART_ID,
@@ -321,6 +304,7 @@ export const DemoAccountBSeedService = {
         dreamText: entry.dreamText || '',
         dreamFeelings: JSON.stringify(entry.dreamFeelings || []),
         dreamMetadata: JSON.stringify(entry.dreamMetadata || {}),
+        notes: undefined,
         createdAt: new Date(`${entry.date}T08:00:00.000Z`).toISOString(),
         updatedAt: new Date(`${entry.date}T08:00:00.000Z`).toISOString(),
         isDeleted: false,
@@ -390,162 +374,33 @@ export const DemoAccountBSeedService = {
     }
   },
 
-  async _seedSettingsAndStorage(): Promise<void> {
+  async _seedSettings(): Promise<void> {
     await supabaseDb.saveSettings({
       id: SETTINGS_ID,
       cloudSyncEnabled: false,
       createdAt: CHART_CREATED,
       updatedAt: CHART_CREATED,
     });
-
-    await EncryptedAsyncStorage.setItem(
-      'msky_user_name',
-      ACCOUNT_B_DEMO_SEED.profile.displayName,
-    );
-    await EncryptedAsyncStorage.setItem('@mysky:demo_premium', 'true');
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:core_values',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.coreValues),
-    );
-    await AccountScopedAsyncStorage.setItem(
-      'mysky_custom_journal_tags',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.customJournalTags),
-    );
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:archetype_profile',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.archetypeProfile),
-    );
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:cognitive_style',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.cognitiveStyle),
-    );
-
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:somatic_entries',
-      JSON.stringify(
-        ACCOUNT_B_DEMO_SEED.somaticEntries.map((entry) => ({
-          id: stableUuidFromString(
-            `somatic:${entry.date}:${entry.region}:${entry.emotion}:${entry.note}`,
-          ),
-          date: entry.date,
-          region: entry.region,
-          emotion: entry.emotion,
-          intensity: entry.intensity,
-          note: entry.note,
-          trigger: entry.trigger ?? '',
-          whatHelped: entry.whatHelped ?? '',
-        })),
-      ),
-    );
-
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:trigger_events',
-      JSON.stringify(
-        ACCOUNT_B_DEMO_SEED.triggerEvents.map((entry) => ({
-          id: stableUuidFromString(
-            `trigger:${entry.date}:${entry.mode}:${entry.event}:${entry.note}`,
-          ),
-          timestamp: new Date(entry.date).getTime(),
-          mode: entry.mode,
-          event: entry.event,
-          nsState: entry.nsState,
-          sensations: entry.sensations,
-          note: entry.note,
-        })),
-      ),
-    );
-
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:relationship_patterns',
-      JSON.stringify(
-        ACCOUNT_B_DEMO_SEED.relationshipPatterns.map((entry) => ({
-          id: stableUuidFromString(
-            `relationship-pattern:${entry.date}:${entry.note}`,
-          ),
-          date: entry.date,
-          note: entry.note,
-          tags: entry.tags,
-        })),
-      ),
-    );
-
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:relationship_charts',
-      JSON.stringify(
-        ACCOUNT_B_DEMO_SEED.relationshipCharts.map((entry) => ({
-          id: stableUuidFromString(
-            `relationship-chart:${entry.name}:${entry.relationship}:${entry.birthDate}`,
-          ),
-          name: entry.name,
-          relationship: entry.relationship,
-          birthDate: entry.birthDate,
-          birthTime: entry.birthTime,
-          hasUnknownTime: entry.hasUnknownTime,
-          birthPlace: entry.birthPlace,
-          latitude: entry.latitude,
-          longitude: entry.longitude,
-          timezone: entry.timezone,
-          dynamicNote: entry.dynamicNote,
-        })),
-      ),
-    );
-
-    const SCALES: Record<string, number> = {
-      'Not True': 0,
-      Somewhat: 1,
-      True: 2,
-      'Very True': 3,
-    };
-
-    const validAnswers = ACCOUNT_B_DEMO_SEED.reflectionsFlat;
-
-    if (validAnswers.length > 0) {
-      const answersToSave = validAnswers.map((r) => {
-        let bank;
-
-        if (r.category === 'values') bank = VALUES_QUESTIONS;
-        else if (r.category === 'archetypes') bank = ARCHETYPE_QUESTIONS;
-        else if (r.category === 'cognitive') bank = COGNITIVE_QUESTIONS;
-        else bank = INTELLIGENCE_QUESTIONS;
-
-        const foundQ = bank.find((q) => q.text === r.questionText);
-
-        return {
-          questionId: foundQ ? foundQ.id : 0,
-          category: r.category,
-          questionText: r.questionText,
-          answer: r.answer,
-          scaleValue: SCALES[r.answer] ?? 1,
-          date: r.date,
-          sealedAt: new Date(`${r.date}T21:00:00.000Z`).toISOString(),
-        };
-      });
-
-      const firstDateStr = `${validAnswers[0].date}T12:00:00.000Z`;
-      const lastDateStr =
-        `${validAnswers[validAnswers.length - 1].date}T12:00:00.000Z`;
-
-      await EncryptedAsyncStorage.setItem(
-        '@mysky:daily_reflections',
-        JSON.stringify({
-          answers: answersToSave,
-          totalDaysCompleted: Math.max(
-            1,
-            dayNumber(new Date(lastDateStr)) - dayNumber(new Date(firstDateStr)) + 1,
-          ),
-          startedAt: new Date(firstDateStr).toISOString(),
-        }),
-      );
-    }
   },
 
-  async _restoreLocalDemoDataIfMissing(): Promise<void> {
+  async _restoreServerDemoDataIfMissing(): Promise<void> {
     const existingCharts = (await supabaseDb.getCharts()) as ExistingChart[];
-    const demoChart = existingCharts.find((c) => c.id === CHART_ID);
 
-    if (demoChart) return;
+    if (existingCharts.length > 0) {
+      await AsyncStorage.removeItem(REPAIR_ATTEMPT_KEY);
+      return;
+    }
 
-    logger.info('[DemoSeed] Restoring missing Account B local demo content.');
+    const alreadyTriedRepair = await AsyncStorage.getItem(REPAIR_ATTEMPT_KEY);
+    if (alreadyTriedRepair === 'true') {
+      logger.warn(
+        '[DemoSeed] Demo chart still missing after one repair attempt; skipping reseed to avoid loop.',
+      );
+      return;
+    }
+
+    logger.warn('[DemoSeed] Demo chart missing. Attempting one repair reseed.');
+    await AsyncStorage.setItem(REPAIR_ATTEMPT_KEY, 'true');
     await DemoAccountBSeedService._seed();
   },
 
@@ -553,10 +408,7 @@ export const DemoAccountBSeedService = {
     const charts = (await supabaseDb.getCharts()) as ExistingChart[];
     if (!charts.length) return;
 
-    const demoChart = charts.find((c) => c.id === CHART_ID);
-    if (!demoChart) return;
-
-    const chartId = demoChart.id;
+    const chartId = charts[0].id;
     const lastStr = await AsyncStorage.getItem(DAILY_SEED_KEY);
     const today = isoDate(new Date());
 
@@ -575,6 +427,7 @@ export const DemoAccountBSeedService = {
       dreamText: '',
       dreamFeelings: '[]',
       dreamMetadata: '{}',
+      notes: undefined,
       createdAt: new Date(`${today}T08:00:00.000Z`).toISOString(),
       updatedAt: new Date(`${today}T08:00:00.000Z`).toISOString(),
       isDeleted: false,
@@ -625,62 +478,6 @@ export const DemoAccountBSeedService = {
     });
 
     await AsyncStorage.setItem(DAILY_SEED_KEY, today);
-  },
-
-  async _repairUnreadableDemoSeedData(): Promise<boolean> {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const userId = session?.user?.id;
-    if (!userId) return false;
-
-    const { data: rows, error } = await supabase
-      .from('journal_entries')
-      .select('id, chart_id, title_enc, content_enc')
-      .eq('user_id', userId)
-      .eq('chart_id', CHART_ID);
-
-    if (error) {
-      logger.warn('[DemoSeed] Unable to scan demo journals for repair:', error);
-      return false;
-    }
-
-    const typedRows = (rows ?? []) as Array<{
-      id: string;
-      chart_id: string | null;
-      title_enc: string | null;
-      content_enc: string | null;
-    }>;
-
-    const unreadableIds: string[] = [];
-
-    for (const row of typedRows) {
-      const titleResult = row.title_enc
-        ? await FieldEncryptionService.tryDecryptField(row.title_enc)
-        : { ok: true as const, value: '' };
-
-      const contentResult = row.content_enc
-        ? await FieldEncryptionService.tryDecryptField(row.content_enc)
-        : { ok: true as const, value: '' };
-
-      if (!titleResult.ok || !contentResult.ok) {
-        unreadableIds.push(row.id);
-      }
-    }
-
-    if (unreadableIds.length === 0) return false;
-
-    logger.warn(
-      `[DemoSeed] Found ${unreadableIds.length} unreadable demo journal entr${
-        unreadableIds.length === 1 ? 'y' : 'ies'
-      }; reseeding Account B.`,
-      unreadableIds.slice(0, 5),
-    );
-
-    await DemoAccountBSeedService._seed();
-    logger.info('[DemoSeed] Account B content reseeded after unreadable journal recovery.');
-    return true;
   },
 
   _journalMoodFromScore(score: number): 'calm' | 'soft' | 'okay' | 'heavy' | 'stormy' {

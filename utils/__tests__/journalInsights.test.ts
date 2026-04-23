@@ -41,7 +41,7 @@ function makeAggregate(
     journalCount: 0,
     journalWordCount: 0,
     keywordsUnion: [],
-    emotionCountsTotal: {},
+    journalEmotionCountsTotal: {},
     sentimentAvg: null,
     checkInTimestamps: [],
     timeOfDayLabels: [],
@@ -281,7 +281,7 @@ describe('computeEmotionBucketLift', () => {
       return makeAggregate(key, {
         moodAvg: i >= 16 ? 2 : 8,  // last 5 days = hard
         stressAvg: i >= 16 ? 9 : 2, // last 5 days = high stress
-        emotionCountsTotal: i >= 16 ? { anxiety: 4 } : {},
+        journalEmotionCountsTotal: i >= 16 ? { anxiety: 4 } : {},
       });
     });
     const result = computeEmotionBucketLift(aggs);
@@ -295,7 +295,7 @@ describe('computeEmotionBucketLift', () => {
       return makeAggregate(key, {
         moodAvg: i < 5 ? 9 : 3,
         stressAvg: 3,
-        emotionCountsTotal: i < 5 ? { joy: 5, calm: 5 } : {},
+        journalEmotionCountsTotal: i < 5 ? { joy: 5, calm: 5 } : {},
       });
     });
     const result = computeEmotionBucketLift(aggs);
@@ -484,7 +484,7 @@ describe('computeEmotionalProcessing', () => {
   it('returns null with fewer than 6 journal days with emotions', () => {
     const aggs = makeAggregates(10, {
       journalCount: 1,
-      emotionCountsTotal: { joy: 1 },
+      journalEmotionCountsTotal: { joy: 1 },
     });
     // Only 5 with emotions
     aggs.length = 5;
@@ -502,7 +502,7 @@ describe('computeEmotionalProcessing', () => {
         journalCount: 1,
         moodAvg: 7,
         stressAvg: 3,
-        emotionCountsTotal: { joy: 2, gratitude: 1, calm: 1, hope: 1, curiosity: 1 },
+        journalEmotionCountsTotal: { joy: 2, gratitude: 1, calm: 1, hope: 1, curiosity: 1 },
       }));
     }
     // 2 days with medium emotions (2 distinct) — at/near median
@@ -514,7 +514,7 @@ describe('computeEmotionalProcessing', () => {
         journalCount: 1,
         moodAvg: 5,
         stressAvg: 5,
-        emotionCountsTotal: { sadness: 1, fatigue: 1 },
+        journalEmotionCountsTotal: { sadness: 1, fatigue: 1 },
       }));
     }
     // 4 days with shallow emotions (1 distinct) — below median
@@ -526,7 +526,7 @@ describe('computeEmotionalProcessing', () => {
         journalCount: 1,
         moodAvg: 4,
         stressAvg: 7,
-        emotionCountsTotal: { anxiety: 1 },
+        journalEmotionCountsTotal: { anxiety: 1 },
       }));
     }
 
@@ -540,7 +540,7 @@ describe('computeEmotionalProcessing', () => {
   it('returns null when no entries have emotions', () => {
     const aggs = makeAggregates(10, {
       journalCount: 1,
-      emotionCountsTotal: {},
+      journalEmotionCountsTotal: {},
     });
     expect(computeEmotionalProcessing(aggs)).toBeNull();
   });
