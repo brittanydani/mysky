@@ -14,6 +14,8 @@
 import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
 import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { enqueueReflectionBatch, enqueueSomaticEntry, enqueueTriggerEvent, enqueueRelationshipPattern } from './syncService';
+import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
 
 import { supabaseDb } from './supabaseDb';
 import { supabase } from '../../lib/supabase';
@@ -156,24 +158,130 @@ export const DemoAccountBSeedService = {
     const user = session?.user;
     if (!user) throw new Error('You must be signed in to send demo data.');
 
-    const checkInRows = ACCOUNT_B_DEMO_SEED.dailyEntries.flatMap((entry) => [
-      {
-        user_id: user.id,
-        mood_value: entry.morningMood,
-        log_date: entry.date,
-        time_of_day: 'morning',
-        created_at: new Date(`${entry.date}T09:00:00.000Z`).toISOString(),
-        updated_at: new Date(`${entry.date}T09:00:00.000Z`).toISOString(),
-      },
-      {
-        user_id: user.id,
-        mood_value: entry.eveningMood,
-        log_date: entry.date,
-        time_of_day: 'evening',
-        created_at: new Date(`${entry.date}T20:00:00.000Z`).toISOString(),
-        updated_at: new Date(`${entry.date}T20:00:00.000Z`).toISOString(),
-      },
-    ]);
+    await supabaseDb.saveChart({
+      id: CHART_ID,
+      name: ACCOUNT_B_DEMO_SEED.profile.displayName,
+      birthDate: ACCOUNT_B_DEMO_SEED.profile.birthDate,
+      birthTime: ACCOUNT_B_DEMO_SEED.profile.birthTime,
+      hasUnknownTime: ACCOUNT_B_DEMO_SEED.profile.hasUnknownTime,
+      birthPlace: ACCOUNT_B_DEMO_SEED.profile.birthPlace,
+      latitude: ACCOUNT_B_DEMO_SEED.profile.latitude,
+      longitude: ACCOUNT_B_DEMO_SEED.profile.longitude,
+      timezone: ACCOUNT_B_DEMO_SEED.profile.timezone,
+      houseSystem:
+        ACCOUNT_B_DEMO_SEED.profile.houseSystem as import('../astrology/types').HouseSystem,
+      createdAt: CHART_CREATED,
+      updatedAt: CHART_CREATED,
+      isDeleted: false,
+    });
+
+    for (let i = 0; i < ACCOUNT_B_DEMO_SEED.dailyEntries.length; i += 1) {
+      const entry = ACCOUNT_B_DEMO_SEED.dailyEntries[i];
+      const d = dateFromISODateString(entry.date);
+      const idx = dayNumber(d);
+
+      await supabaseDb.saveJournalEntry({
+        id: journalIdForDate(entry.date),
+        date: entry.date,
+        mood: DemoAccountBSeedService._journalMoodFromScore(entry.eveningMood),
+        moonPhase: simpleMoonPhaseForIndex(i),
+        title: entry.journalTitle,
+        content: entry.promptResponse,
+        chartId: CHART_ID,
+        tags: entry.journalTags,
+        contentWordCount: entry.promptResponse.trim().split(/\s+/).length,
+        contentReadingMinutes: 2,
+        createdAt: new Date(`${entry.date}T15:00:00.000Z`).toISOString(),
+        updatedAt: new Date(`${entry.date}T15:00:00.000Z`).toISOString(),
+        isDeleted: false,
+      });
+
+      await supabaseDb.saveSleepEntry({
+        id: sleepIdForDate(entry.date),
+        chartId: CHART_ID,
+        date: entry.date,
+        durationHours: entry.sleepHours,
+        quality: DemoAccountBSeedService._sleepQualityFromHours(entry.sleepHours),
+        dreamText: entry.dreamText || '',
+        dreamFeelings: JSON.stringify(entry.dreamFeelings || []),
+        dreamMetadata: JSON.stringify(entry.dreamMetadata || {}),
+        notes: undefined,
+        createdAt: new Date(`${entry.date}T08:00:00.000Z`).toISOString(),
+        updatedAt: new Date(`${entry.date}T08:00:00.000Z`).toISOString(),
+        isDeleted: false,
+      });
+
+      await supabaseDb.saveCheckIn({
+        id: morningCheckInIdForDate(entry.date),
+        date: entry.date,
+        chartId: CHART_ID,
+        timeOfDay: 'morning',
+        moodScore: entry.morningMood,
+        energyLevel: entry.morningEnergy,
+        stressLevel: entry.morningStress,
+        tags: entry.morningTags,
+        note: entry.morningNote,
+        wins: entry.morningWin,
+        challenges: entry.morningChallenge,
+        moonSign: MOON_SIGNS[i % MOON_SIGNS.length],
+        moonHouse: 1 + (i % 12),
+        sunHouse: 1 + ((i + 6) % 12),
+        transitEvents: [
+          {
+            transitPlanet: 'Moon',
+            natalPlanet: 'Venus',
+            aspect: 'trine',
+            orb: 1.2,
+            isApplying: true,
+          },
+        ],
+        lunarPhase: LUNAR_PHASES[i % LUNAR_PHASES.length],
+        retrogrades: i % 5 === 0 ? ['Mercury'] : [],
+        createdAt: new Date(`${entry.date}T09:00:00.000Z`).toISOString(),
+        updatedAt: new Date(`${entry.date}T09:00:00.000Z`).toISOString(),
+      });
+
+      await supabaseDb.saveCheckIn({
+        id: eveningCheckInIdForDate(entry.date),
+        date: entry.date,
+        chartId: CHART_ID,
+        timeOfDay: 'evening',
+        moodScore: entry.eveningMood,
+        energyLevel: entry.eveningEnergy,
+        stressLevel: entry.eveningStress,
+        tags: entry.eveningTags,
+        note: entry.eveningNote,
+        wins: entry.eveningWin,
+        challenges: entry.eveningChallenge,
+        moonSign: MOON_SIGNS[(i + 2) % MOON_SIGNS.length],
+        moonHouse: 1 + ((i + 1) % 12),
+        sunHouse: 1 + ((i + 7) % 12),
+        transitEvents: [
+          {
+            transitPlanet: 'Moon',
+            natalPlanet: 'Saturn',
+            aspect: 'opposition',
+            orb: 2.1,
+            isApplying: false,
+          },
+        ],
+        lunarPhase: LUNAR_PHASES[(i + 1) % LUNAR_PHASES.length],
+        retrogrades: i % 7 === 0 ? ['Mercury'] : [],
+        createdAt: new Date(`${entry.date}T19:00:00.000Z`).toISOString(),
+        updatedAt: new Date(`${entry.date}T19:00:00.000Z`).toISOString(),
+      });
+
+      await DemoAccountBSeedService._seedSupabaseDay(entry.date, idx);
+    }
+
+    await supabaseDb.saveSettings({
+      id: SETTINGS_ID,
+      cloudSyncEnabled: false,
+      createdAt: CHART_CREATED,
+      updatedAt: CHART_CREATED,
+    });
+
+    await DemoAccountBSeedService._seedSelfKnowledgeAndSync();
 
     const dailyLogRows = ACCOUNT_B_DEMO_SEED.dailyEntries.map((entry) => ({
       user_id: user.id,
@@ -185,14 +293,6 @@ export const DemoAccountBSeedService = {
       ).slice(0, 12),
     }));
 
-    const { error: checkInError } = await supabase
-      .from('daily_check_ins')
-      .upsert(checkInRows, { onConflict: 'user_id,log_date,time_of_day' });
-
-    if (checkInError) {
-      throw new Error(checkInError.message || 'Failed to upload demo check-ins.');
-    }
-
     const { error: dailyLogError } = await supabase
       .from('daily_logs')
       .upsert(dailyLogRows, { onConflict: 'user_id,log_date' });
@@ -201,8 +301,12 @@ export const DemoAccountBSeedService = {
       throw new Error(dailyLogError.message || 'Failed to upload demo daily logs.');
     }
 
+    await AsyncStorage.setItem(SEED_FLAG_KEY, 'true');
+    await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
+    await AsyncStorage.removeItem(REPAIR_ATTEMPT_KEY);
+
     logger.info(
-      `[DemoSeed] Uploaded ${checkInRows.length} demo check-ins and ${dailyLogRows.length} daily logs to Supabase.`,
+      `[DemoSeed] Uploaded full demo dataset: chart, journals, sleep, check-ins, settings, and ${dailyLogRows.length} daily logs.`,
     );
   },
 
@@ -247,6 +351,7 @@ export const DemoAccountBSeedService = {
     await DemoAccountBSeedService._ensureChart();
     await DemoAccountBSeedService._seedHistoricalEntries();
     await DemoAccountBSeedService._seedSettings();
+    await DemoAccountBSeedService._seedSelfKnowledgeAndSync();
     await AsyncStorage.setItem(SEED_FLAG_KEY, 'true');
     await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
   },
@@ -372,6 +477,110 @@ export const DemoAccountBSeedService = {
 
       await DemoAccountBSeedService._seedSupabaseDay(entry.date, idx);
     }
+  },
+
+  async _seedSelfKnowledgeAndSync(): Promise<void> {
+    const reflectionData = {
+      answers: ACCOUNT_B_DEMO_SEED.reflectionsFlat.map((row, i) => ({
+        questionId: i + 1,
+        category: row.category,
+        questionText: row.questionText,
+        answer: row.answer,
+        scaleValue:
+          row.answer === 'Not True' ? 1 :
+          row.answer === 'Somewhat' ? 2 :
+          row.answer === 'True' ? 3 : 4,
+        date: row.date,
+        sealedAt: new Date(`${row.date}T21:00:00.000Z`).toISOString(),
+      })),
+      totalDaysCompleted: new Set(ACCOUNT_B_DEMO_SEED.reflectionsFlat.map((r) => r.date)).size,
+      startedAt: ACCOUNT_B_DEMO_SEED.reflectionsFlat.length
+        ? new Date(`${ACCOUNT_B_DEMO_SEED.reflectionsFlat[0].date}T21:00:00.000Z`).toISOString()
+        : null,
+    };
+
+    await EncryptedAsyncStorage.setItem(
+      '@mysky:daily_reflections',
+      JSON.stringify(reflectionData),
+    );
+
+    const somaticEntries = ACCOUNT_B_DEMO_SEED.somaticEntries.map((entry, i) => ({
+      id: stableUuidFromString(`demo-somatic:${entry.date}:${i}`),
+      date: entry.date,
+      region: entry.region,
+      side: undefined,
+      emotion: entry.emotion,
+      intensity: entry.intensity,
+    }));
+
+    await EncryptedAsyncStorage.setItem(
+      '@mysky:somatic_entries',
+      JSON.stringify(somaticEntries),
+    );
+
+    const triggerEvents = ACCOUNT_B_DEMO_SEED.triggerEvents.map((entry, i) => ({
+      id: stableUuidFromString(`demo-trigger:${entry.date}:${i}`),
+      timestamp: new Date(`${entry.date}T18:${String(i % 60).padStart(2, '0')}:00.000Z`).getTime(),
+      mode: entry.mode,
+      event: entry.event,
+      nsState: entry.nsState as any,
+      sensations: entry.sensations,
+      resolution: entry.note,
+      contextArea: undefined,
+      beforeState: undefined,
+    }));
+
+    await EncryptedAsyncStorage.setItem(
+      '@mysky:trigger_events',
+      JSON.stringify(triggerEvents),
+    );
+
+    const relationshipPatterns = ACCOUNT_B_DEMO_SEED.relationshipPatterns.map((entry, i) => ({
+      id: stableUuidFromString(`demo-relationship-pattern:${entry.date}:${i}`),
+      date: entry.date,
+      note: entry.note,
+      tags: entry.tags,
+    }));
+
+    await EncryptedAsyncStorage.setItem(
+      '@mysky:relationship_patterns',
+      JSON.stringify(relationshipPatterns),
+    );
+
+    await EncryptedAsyncStorage.setItem(
+      '@mysky:core_values',
+      JSON.stringify(ACCOUNT_B_DEMO_SEED.coreValues),
+    );
+
+    await EncryptedAsyncStorage.setItem(
+      'mysky_custom_journal_tags',
+      JSON.stringify(ACCOUNT_B_DEMO_SEED.customJournalTags),
+    );
+
+    await EncryptedAsyncStorage.setItem(
+      '@mysky:archetype_profile',
+      JSON.stringify(ACCOUNT_B_DEMO_SEED.archetypeProfile),
+    );
+
+    await EncryptedAsyncStorage.setItem(
+      '@mysky:cognitive_style',
+      JSON.stringify(ACCOUNT_B_DEMO_SEED.cognitiveStyle),
+    );
+
+    await enqueueReflectionBatch(reflectionData.answers);
+    for (const entry of somaticEntries) {
+      await enqueueSomaticEntry(entry);
+    }
+    for (const event of triggerEvents) {
+      await enqueueTriggerEvent(event);
+    }
+    for (const entry of relationshipPatterns) {
+      await enqueueRelationshipPattern(entry);
+    }
+
+    logger.info(
+      `[DemoSeed] Seeded self-knowledge data: ${reflectionData.answers.length} reflections, ${somaticEntries.length} somatic entries, ${triggerEvents.length} trigger events, ${relationshipPatterns.length} relationship patterns.`,
+    );
   },
 
   async _seedSettings(): Promise<void> {
