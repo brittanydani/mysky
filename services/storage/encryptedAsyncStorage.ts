@@ -20,7 +20,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FieldEncryptionService } from './fieldEncryption';
 import { logger } from '../../utils/logger';
-import { supabase } from '../../lib/supabase';
+// supabase is required lazily inside getScopedKey to break the circular
+// dependency: encryptedAsyncStorage -> lib/supabase -> encryptedAsyncStorage
 import { ENCRYPTED_ASYNC_USER_DATA_KEYS } from './userDataKeys';
 
 const reportedUnreadableKeys = new Set<string>();
@@ -33,6 +34,8 @@ function buildScopedKey(key: string, userId: string): string {
 async function getScopedKey(key: string): Promise<string> {
   if (!ACCOUNT_SCOPED_ENCRYPTED_KEYS.has(key)) return key;
 
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { supabase } = require('../../lib/supabase') as typeof import('../../lib/supabase');
   const { data } = await supabase.auth.getSession();
   const userId = data.session?.user?.id;
   if (!userId) return key;

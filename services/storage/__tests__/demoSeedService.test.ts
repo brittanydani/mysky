@@ -1,4 +1,4 @@
-import { DemoSeedService } from '../demoSeedService';
+import { DemoSeedService } from '../demoAccountBSeedService';
 
 const mockAccountBSeedIfNeeded = jest.fn();
 const mockAccountBCleanup = jest.fn();

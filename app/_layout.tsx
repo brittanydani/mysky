@@ -33,7 +33,6 @@ import { logger } from '../utils/logger';
 import { supabase } from '../lib/supabase';
 import { darkTheme, type AppTheme } from '../constants/theme';
 import { IdentityVault } from '../utils/IdentityVault';
-import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import { ThemeProvider, useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
@@ -74,13 +73,10 @@ const CosmicBackground = lazyRequire(
 const ALLOWED_NOTIFICATION_ROUTES = new Set([
   '/(tabs)/home',
   '/(tabs)/journal',
-
   '/(tabs)/chart',
   '/(tabs)/sleep',
-
   '/(tabs)/internal-weather',
   '/(tabs)/patterns',
-
   '/(tabs)/identity',
   '/(tabs)/healing',
   '/(tabs)/sanctuary',
@@ -268,9 +264,6 @@ function AppShell() {
       DeviceEventEmitter.emit('AUTH_LOADING_COMPLETE');
     }
   }, [authLoading]);
-
-  // Flush any check-ins queued by the Home Screen widget's "Log Energy" button
-  usePendingWidgetCheckIns();
 
   const [checkingConsent, setCheckingConsent] = useState(true);
   const [dbReady, setDbReady] = useState(false);
@@ -877,11 +870,8 @@ function AppShell() {
                   animation: 'fade',
                 }}
               >
-                {/* Keep the screen list static for Expo Router; access is gated by overlays and redirects. */}
                 <Stack.Screen name="(tabs)" />
 
-                {/* --- HIDDEN SCREENS (MODALS) --- */}
-                {/* Slide up over the tab bar — dedicated workspaces */}
                 <Stack.Screen
                   name="checkin"
                   options={{
@@ -903,23 +893,18 @@ function AppShell() {
                     animation: 'fade_from_bottom',
                   }}
                 />
-                {/* Slide-up from within the tab context (e.g. natal chart detail) */}
                 <Stack.Screen name="astrology-context" options={{ animation: 'slide_from_bottom' }} />
 
-                {/* Legal */}
                 <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
                 <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
                 <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
               </Stack>
 
-              {/* Overlay gates (do NOT unmount navigation) */}
               <React.Suspense fallback={null}>
-                {/* Re-consent gate only after a signed-in user has reached onboarding-complete state. */}
                 {session && needsPrivacyConsent && onboardingComplete && (
                   <PrivacyConsentModal visible onConsent={handlePrivacyConsent} />
                 )}
 
-                {/* Onboarding only starts after authentication, so auth is always the first screen for signed-out users. */}
                 {session && !onboardingComplete && (
                   <OnboardingModal
                     visible
@@ -929,7 +914,6 @@ function AppShell() {
                   />
                 )}
 
-                {/* Auth gate — first screen for any signed-out user. */}
                 <AuthRequiredModal
                   visible={!completingOnboarding && !authLoading && !session}
                 />

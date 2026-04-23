@@ -45,7 +45,7 @@ jest.mock('../../services/premium/revenuecat', () => ({
 const mockSeedIfNeeded = jest.fn().mockResolvedValue(undefined);
 const mockCleanupStaleDemoArtifacts = jest.fn().mockResolvedValue(undefined);
 
-jest.mock('../../services/storage/demoSeedService', () => ({
+jest.mock('../../services/storage/demoAccountBSeedService', () => ({
   DemoSeedService: {
     seedIfNeeded: (...args: unknown[]) => mockSeedIfNeeded(...args),
     cleanupStaleDemoArtifacts: (...args: unknown[]) => mockCleanupStaleDemoArtifacts(...args),

@@ -17,91 +17,198 @@
  */
 
 import { supabase } from '../../lib/supabase';
-import { SavedChart, JournalEntry, AppSettings, RelationshipChart, SleepEntry } from './models';
+import {
+  SavedChart,
+  JournalEntry,
+  AppSettings,
+  RelationshipChart,
+  SleepEntry,
+} from './models';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 import { IdentityVault } from '../../utils/IdentityVault';
 import { logger } from '../../utils/logger';
 import type { HouseSystem } from '../astrology/types';
 import type { SavedInsight } from './insightHistory';
 import type { DailyCheckIn } from '../patterns/types';
+import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+type Row = Record<string, unknown>;
+
+const SETTINGS_KEY = '@mysky:app_settings';
+
 async function getUserId(): Promise<string> {
-  const { data } = await supabase.auth.getSession();
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+
   const uid = data.session?.user?.id;
   if (!uid) throw new Error('Not authenticated');
   return uid;
 }
 
-function parseCoord(value: string | undefined | null, field: string, id: string): number {
-  if (!value || isDecryptionFailure(value)) {
-    logger.error(`[SupabaseDb] ${field} for ${id} is unreadable`);
-    return Number.NaN;
+function asOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+}
+
+function asRequiredString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback;
+}
+
+function safeJsonParse<T>(value: unknown, fallback: T): T {
+  if (typeof value !== 'string' || !value.trim()) return fallback;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
   }
-  const n = Number.parseFloat(value);
+}
+
+function coerceNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+async function decryptOptionalField(value: unknown): Promise<string | undefined> {
+  if (typeof value !== 'string' || !value.trim()) return undefined;
+
+  try {
+    const decrypted = await FieldEncryptionService.decryptField(value);
+    if (!decrypted || isDecryptionFailure(decrypted)) return undefined;
+    return decrypted;
+  } catch {
+    return undefined;
+  }
+}
+
+async function decryptRequiredField(
+  value: unknown,
+  field: string,
+  rowId: string,
+): Promise<string | undefined> {
+  const decrypted = await decryptOptionalField(value);
+  if (!decrypted) {
+    logger.error(`[SupabaseDb] ${field} for ${rowId} is unreadable`);
+    return undefined;
+  }
+  return decrypted;
+}
+
+function parseCoord(value: string | undefined, field: string, id: string): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const n = Number.parseFloat(trimmed);
   if (!Number.isFinite(n)) {
-    logger.error(`[SupabaseDb] ${field} for ${id} is invalid: ${value}`);
-    return Number.NaN;
+    logger.error(`[SupabaseDb] ${field} for ${id} is invalid: ${trimmed}`);
+    return undefined;
   }
+
   return n;
 }
 
-function isValidChart(chart: { id: string; birthDate: string; birthPlace: string; latitude: number; longitude: number }): boolean {
+function isValidChart(
+  chart: Pick<SavedChart, 'id' | 'birthDate' | 'birthPlace' | 'latitude' | 'longitude'>,
+): boolean {
   if (!chart.birthDate || !chart.birthPlace?.trim()) {
     logger.error(`[SupabaseDb] Dropping invalid chart ${chart.id}: missing birth data`);
     return false;
   }
-  if (!Number.isFinite(chart.latitude) || !Number.isFinite(chart.longitude)) {
-    logger.error(`[SupabaseDb] Dropping invalid chart ${chart.id}: bad coordinates`);
-    return false;
-  }
+
+  // Coordinates are helpful, but should not cause the entire chart to be discarded.
   return true;
 }
 
 // ─── Charts ──────────────────────────────────────────────────────────────────
 
-async function mapChartRow(row: Record<string, unknown>): Promise<SavedChart> {
+async function mapChartRow(row: Row): Promise<SavedChart> {
+  const rowId = asRequiredString(row.id);
+
   const [name, birthDate, birthTime, birthPlace, latStr, lngStr] = await Promise.all([
-    row.name_enc ? FieldEncryptionService.decryptField(row.name_enc as string) : Promise.resolve(undefined),
-    FieldEncryptionService.decryptField(row.birth_date_enc as string),
-    row.birth_time_enc ? FieldEncryptionService.decryptField(row.birth_time_enc as string) : Promise.resolve(undefined),
-    FieldEncryptionService.decryptField(row.birth_place_enc as string),
-    FieldEncryptionService.decryptField(row.latitude_enc as string),
-    FieldEncryptionService.decryptField(row.longitude_enc as string),
+    decryptOptionalField(row.name_enc),
+    decryptRequiredField(row.birth_date_enc, 'birth_date', rowId),
+    decryptOptionalField(row.birth_time_enc),
+    decryptRequiredField(row.birth_place_enc, 'birth_place', rowId),
+    decryptOptionalField(row.latitude_enc),
+    decryptOptionalField(row.longitude_enc),
   ]);
+
   return {
-    id: row.id as string,
-    name: name && !isDecryptionFailure(name) ? name : undefined,
-    birthDate: birthDate && !isDecryptionFailure(birthDate) ? birthDate : '',
-    birthTime: birthTime && !isDecryptionFailure(birthTime) ? birthTime : undefined,
+    id: rowId,
+    name,
+    birthDate: birthDate ?? '',
+    birthTime,
     hasUnknownTime: Boolean(row.has_unknown_time),
-    birthPlace: birthPlace && !isDecryptionFailure(birthPlace) ? birthPlace : '',
-    latitude: parseCoord(latStr, 'latitude', row.id as string),
-    longitude: parseCoord(lngStr, 'longitude', row.id as string),
-    timezone: (row.timezone as string | undefined) ?? undefined,
-    houseSystem: (row.house_system as HouseSystem | undefined) ?? undefined,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    birthPlace: birthPlace ?? '',
+    latitude: parseCoord(latStr, 'latitude', rowId) ?? 0,
+    longitude: parseCoord(lngStr, 'longitude', rowId) ?? 0,
+    timezone: asOptionalString(row.timezone),
+    houseSystem: row.house_system as HouseSystem | undefined,
+    createdAt: asRequiredString(row.created_at),
+    updatedAt: asRequiredString(row.updated_at),
     isDeleted: Boolean(row.is_deleted),
-    deletedAt: (row.deleted_at as string | undefined) ?? undefined,
+    deletedAt: asOptionalString(row.deleted_at),
   };
 }
 
 export async function getCharts(): Promise<SavedChart[]> {
-  const userId = await getUserId();
-  const { data, error } = await supabase
-    .from('birth_profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('is_deleted', false)
-    .order('updated_at', { ascending: false });
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) return [];
+
+  const { data, error } = await supabase.functions.invoke('birth-profile-sync', {
+    body: { action: 'getLatest' },
+  });
 
   if (error) throw error;
-  if (!data?.length) return [];
 
-  const charts = await Promise.all((data as Record<string, unknown>[]).map(mapChartRow));
-  return charts.filter(isValidChart);
+  const profile = data?.profile as ({
+    chartId: string;
+    name?: string | null;
+    birthDate: string;
+    birthTime?: string | null;
+    hasUnknownTime: boolean;
+    birthPlace: string;
+    latitude: number;
+    longitude: number;
+    timezone?: string | null;
+    houseSystem?: string | null;
+    createdAt?: string;
+    updatedAt: string;
+    isDeleted: boolean;
+    deletedAt?: string | null;
+  } | null);
+
+  if (!profile || profile.isDeleted) return [];
+
+  const chart: SavedChart = {
+    id: profile.chartId,
+    name: profile.name ?? undefined,
+    birthDate: profile.birthDate,
+    birthTime: profile.birthTime ?? undefined,
+    hasUnknownTime: Boolean(profile.hasUnknownTime),
+    birthPlace: profile.birthPlace,
+    latitude: profile.latitude,
+    longitude: profile.longitude,
+    timezone: profile.timezone ?? undefined,
+    houseSystem: profile.houseSystem as HouseSystem | undefined,
+    createdAt: profile.createdAt ?? new Date().toISOString(),
+    updatedAt: profile.updatedAt,
+    isDeleted: false,
+    deletedAt: undefined,
+  };
+
+  if (!isValidChart(chart)) return [];
+  return [chart];
 }
 
 async function encryptChartFields(chart: SavedChart) {
@@ -110,37 +217,41 @@ async function encryptChartFields(chart: SavedChart) {
     FieldEncryptionService.encryptField(chart.birthDate),
     chart.birthTime ? FieldEncryptionService.encryptField(chart.birthTime) : Promise.resolve(null),
     FieldEncryptionService.encryptField(chart.birthPlace),
-    FieldEncryptionService.encryptField(String(chart.latitude)),
-    FieldEncryptionService.encryptField(String(chart.longitude)),
+    chart.latitude != null
+      ? FieldEncryptionService.encryptField(String(chart.latitude))
+      : Promise.resolve(null),
+    chart.longitude != null
+      ? FieldEncryptionService.encryptField(String(chart.longitude))
+      : Promise.resolve(null),
   ]);
+
   return { name, birthDate, birthTime, birthPlace, latitude, longitude };
 }
 
 export async function saveChart(chart: SavedChart): Promise<void> {
-  const userId = await getUserId();
-  const enc = await encryptChartFields(chart);
-
-  await supabase.functions.invoke('birth-profile-sync', {
+  const { error } = await supabase.functions.invoke('birth-profile-sync', {
     body: {
       action: 'upsert',
-      id: chart.id,
-      user_id: userId,
-      chart_id: chart.id,
-      name_enc: enc.name,
-      birth_date_enc: enc.birthDate,
-      birth_time_enc: enc.birthTime,
-      has_unknown_time: chart.hasUnknownTime,
-      birth_place_enc: enc.birthPlace,
-      latitude_enc: enc.latitude,
-      longitude_enc: enc.longitude,
-      timezone: chart.timezone ?? null,
-      house_system: chart.houseSystem ?? null,
-      is_deleted: chart.isDeleted,
-      deleted_at: chart.deletedAt ?? null,
-      created_at: chart.createdAt,
-      updated_at: chart.updatedAt,
+      profile: {
+        chartId: chart.id,
+        name: chart.name ?? null,
+        birthDate: chart.birthDate,
+        birthTime: chart.birthTime ?? null,
+        hasUnknownTime: chart.hasUnknownTime,
+        birthPlace: chart.birthPlace,
+        latitude: chart.latitude,
+        longitude: chart.longitude,
+        timezone: chart.timezone ?? null,
+        houseSystem: chart.houseSystem ?? null,
+        createdAt: chart.createdAt,
+        updatedAt: chart.updatedAt,
+        isDeleted: chart.isDeleted,
+        deletedAt: chart.deletedAt ?? null,
+      },
     },
   });
+
+  if (error) throw error;
 
   await IdentityVault.sealIdentity({
     name: chart.name ?? 'My Chart',
@@ -159,14 +270,22 @@ export async function upsertChart(chart: SavedChart): Promise<void> {
 }
 
 export async function deleteChart(id: string): Promise<void> {
-  const userId = await getUserId();
   const now = new Date().toISOString();
-  await supabase.functions.invoke('birth-profile-sync', {
-    body: { action: 'delete', chart_id: id, user_id: userId, deleted_at: now, updated_at: now },
+
+  const { error } = await supabase.functions.invoke('birth-profile-sync', {
+    body: {
+      action: 'delete',
+      chartId: id,
+      updatedAt: now,
+      deletedAt: now,
+    },
   });
 
+  if (error) throw error;
+
   const charts = await getCharts();
-  const remaining = charts.filter(c => c.id !== id);
+  const remaining = charts.filter((c) => c.id !== id);
+
   if (remaining.length > 0) {
     await saveChart(remaining[0]);
   } else {
@@ -176,43 +295,58 @@ export async function deleteChart(id: string): Promise<void> {
 
 export async function updateAllChartsHouseSystem(houseSystem: HouseSystem): Promise<void> {
   const charts = await getCharts();
-  await Promise.all(charts.map(c => saveChart({ ...c, houseSystem, updatedAt: new Date().toISOString() })));
+  await Promise.all(
+    charts.map((c) =>
+      saveChart({
+        ...c,
+        houseSystem,
+        updatedAt: new Date().toISOString(),
+      }),
+    ),
+  );
 }
 
 // ─── Journal Entries ──────────────────────────────────────────────────────────
 
-async function mapJournalRow(row: Record<string, unknown>): Promise<JournalEntry> {
-  const [title, content, contentKeywords, contentEmotions, contentSentiment] = await Promise.all([
-    row.title_enc ? FieldEncryptionService.decryptField(row.title_enc as string) : Promise.resolve(undefined),
-    FieldEncryptionService.decryptField(row.content_enc as string),
-    row.content_keywords_enc ? FieldEncryptionService.decryptField(row.content_keywords_enc as string) : Promise.resolve(undefined),
-    row.content_emotions_enc ? FieldEncryptionService.decryptField(row.content_emotions_enc as string) : Promise.resolve(undefined),
-    row.content_sentiment_enc ? FieldEncryptionService.decryptField(row.content_sentiment_enc as string) : Promise.resolve(undefined),
-  ]);
+async function mapJournalRow(row: Row): Promise<JournalEntry> {
+  const [title, content, contentKeywords, contentEmotions, contentSentiment] =
+    await Promise.all([
+      decryptOptionalField(row.title_enc),
+      decryptOptionalField(row.content_enc),
+      decryptOptionalField(row.content_keywords_enc),
+      decryptOptionalField(row.content_emotions_enc),
+      decryptOptionalField(row.content_sentiment_enc),
+    ]);
+
   return {
-    id: row.id as string,
-    date: row.date as string,
+    id: asRequiredString(row.id),
+    date: asRequiredString(row.date),
     mood: row.mood as JournalEntry['mood'],
     moonPhase: row.moon_phase as JournalEntry['moonPhase'],
-    title: title && !isDecryptionFailure(title) ? title : undefined,
-    content: content && !isDecryptionFailure(content) ? content : '',
-    chartId: (row.chart_id as string | undefined) ?? undefined,
-    transitSnapshot: (row.transit_snapshot as string | undefined) ?? undefined,
-    contentKeywords: contentKeywords && !isDecryptionFailure(contentKeywords) ? contentKeywords : undefined,
-    contentEmotions: contentEmotions && !isDecryptionFailure(contentEmotions) ? contentEmotions : undefined,
-    contentSentiment: contentSentiment && !isDecryptionFailure(contentSentiment) ? contentSentiment : undefined,
-    contentWordCount: row.content_word_count as number | undefined,
-    contentReadingMinutes: row.content_reading_minutes as number | undefined,
-    tags: row.tags ? JSON.parse(row.tags as string) : undefined,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    title,
+    content: content ?? '',
+    chartId: asOptionalString(row.chart_id),
+    transitSnapshot: asOptionalString(row.transit_snapshot),
+    contentKeywords,
+    contentEmotions,
+    contentSentiment,
+    contentWordCount:
+      typeof row.content_word_count === 'number' ? row.content_word_count : undefined,
+    contentReadingMinutes:
+      typeof row.content_reading_minutes === 'number'
+        ? row.content_reading_minutes
+        : undefined,
+    tags: safeJsonParse<string[] | undefined>(row.tags, undefined),
+    createdAt: asRequiredString(row.created_at),
+    updatedAt: asRequiredString(row.updated_at),
     isDeleted: Boolean(row.is_deleted),
-    deletedAt: (row.deleted_at as string | undefined) ?? undefined,
+    deletedAt: asOptionalString(row.deleted_at),
   };
 }
 
 export async function getJournalEntries(): Promise<JournalEntry[]> {
   const userId = await getUserId();
+
   const { data, error } = await supabase
     .from('journal_entries')
     .select('*')
@@ -222,7 +356,8 @@ export async function getJournalEntries(): Promise<JournalEntry[]> {
 
   if (error) throw error;
   if (!data?.length) return [];
-  return Promise.all((data as Record<string, unknown>[]).map(mapJournalRow));
+
+  return Promise.all((data as Row[]).map(mapJournalRow));
 }
 
 export async function getJournalEntriesPaginated(
@@ -231,6 +366,7 @@ export async function getJournalEntriesPaginated(
   afterCreatedAt?: string,
 ): Promise<JournalEntry[]> {
   const userId = await getUserId();
+
   let query = supabase
     .from('journal_entries')
     .select('*')
@@ -241,57 +377,72 @@ export async function getJournalEntriesPaginated(
     .limit(pageSize);
 
   if (afterDate && afterCreatedAt) {
-    query = query.or(`date.lt.${afterDate},and(date.eq.${afterDate},created_at.lt.${afterCreatedAt})`);
+    query = query.or(
+      `date.lt.${afterDate},and(date.eq.${afterDate},created_at.lt.${afterCreatedAt})`,
+    );
   }
 
   const { data, error } = await query;
   if (error) throw error;
   if (!data?.length) return [];
-  return Promise.all((data as Record<string, unknown>[]).map(mapJournalRow));
+
+  return Promise.all((data as Row[]).map(mapJournalRow));
 }
 
 export async function getJournalEntryCount(): Promise<number> {
   const userId = await getUserId();
+
   const { count, error } = await supabase
     .from('journal_entries')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('is_deleted', false);
+
   if (error) throw error;
   return count ?? 0;
 }
 
 export async function saveJournalEntry(entry: JournalEntry): Promise<void> {
   const userId = await getUserId();
+
   const [titleEnc, contentEnc, keywordsEnc, emotionsEnc, sentimentEnc] = await Promise.all([
     entry.title ? FieldEncryptionService.encryptField(entry.title) : Promise.resolve(null),
     FieldEncryptionService.encryptField(entry.content),
-    entry.contentKeywords ? FieldEncryptionService.encryptField(entry.contentKeywords) : Promise.resolve(null),
-    entry.contentEmotions ? FieldEncryptionService.encryptField(entry.contentEmotions) : Promise.resolve(null),
-    entry.contentSentiment ? FieldEncryptionService.encryptField(entry.contentSentiment) : Promise.resolve(null),
+    entry.contentKeywords
+      ? FieldEncryptionService.encryptField(entry.contentKeywords)
+      : Promise.resolve(null),
+    entry.contentEmotions
+      ? FieldEncryptionService.encryptField(entry.contentEmotions)
+      : Promise.resolve(null),
+    entry.contentSentiment
+      ? FieldEncryptionService.encryptField(entry.contentSentiment)
+      : Promise.resolve(null),
   ]);
 
-  const { error } = await supabase.from('journal_entries').upsert({
-    id: entry.id,
-    user_id: userId,
-    date: entry.date,
-    mood: entry.mood,
-    moon_phase: entry.moonPhase,
-    title_enc: titleEnc,
-    content_enc: contentEnc,
-    content_keywords_enc: keywordsEnc,
-    content_emotions_enc: emotionsEnc,
-    content_sentiment_enc: sentimentEnc,
-    tags: entry.tags ? JSON.stringify(entry.tags) : null,
-    content_word_count: entry.contentWordCount ?? null,
-    content_reading_minutes: entry.contentReadingMinutes ?? null,
-    chart_id: entry.chartId ?? null,
-    transit_snapshot: entry.transitSnapshot ?? null,
-    is_deleted: entry.isDeleted,
-    deleted_at: entry.deletedAt ?? null,
-    created_at: entry.createdAt,
-    updated_at: entry.updatedAt,
-  }, { onConflict: 'id' });
+  const { error } = await supabase.from('journal_entries').upsert(
+    {
+      id: entry.id,
+      user_id: userId,
+      date: entry.date,
+      mood: entry.mood,
+      moon_phase: entry.moonPhase,
+      title_enc: titleEnc,
+      content_enc: contentEnc,
+      content_keywords_enc: keywordsEnc,
+      content_emotions_enc: emotionsEnc,
+      content_sentiment_enc: sentimentEnc,
+      tags: entry.tags ? JSON.stringify(entry.tags) : null,
+      content_word_count: entry.contentWordCount ?? null,
+      content_reading_minutes: entry.contentReadingMinutes ?? null,
+      chart_id: entry.chartId ?? null,
+      transit_snapshot: entry.transitSnapshot ?? null,
+      is_deleted: entry.isDeleted,
+      deleted_at: entry.deletedAt ?? null,
+      created_at: entry.createdAt,
+      updated_at: entry.updatedAt,
+    },
+    { onConflict: 'id' },
+  );
 
   if (error) throw error;
 }
@@ -307,26 +458,22 @@ export async function updateJournalEntry(entry: JournalEntry): Promise<void> {
 export async function deleteJournalEntry(id: string): Promise<void> {
   const userId = await getUserId();
   const now = new Date().toISOString();
+
   const { error } = await supabase
     .from('journal_entries')
     .update({ is_deleted: true, deleted_at: now, updated_at: now })
     .eq('id', id)
     .eq('user_id', userId);
+
   if (error) throw error;
 }
 
 // ─── Settings ────────────────────────────────────────────────────────────────
-// App settings are not synced to Supabase — they are purely local preferences
-// stored in EncryptedAsyncStorage.
-
-import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
-
-const SETTINGS_KEY = '@mysky:app_settings';
 
 export async function getSettings(): Promise<AppSettings | null> {
   try {
     const raw = await EncryptedAsyncStorage.getItem(SETTINGS_KEY);
-    return raw ? JSON.parse(raw) : null;
+    return raw ? (JSON.parse(raw) as AppSettings) : null;
   } catch {
     return null;
   }
@@ -344,32 +491,38 @@ export const saveSettings = updateSettings;
 
 // ─── Sleep Entries ────────────────────────────────────────────────────────────
 
-async function mapSleepRow(row: Record<string, unknown>): Promise<SleepEntry> {
+async function mapSleepRow(row: Row): Promise<SleepEntry> {
   const [dreamText, dreamFeelings, dreamMetadata, notes] = await Promise.all([
-    row.dream_text_enc ? FieldEncryptionService.decryptField(row.dream_text_enc as string) : Promise.resolve(undefined),
-    row.dream_feelings_enc ? FieldEncryptionService.decryptField(row.dream_feelings_enc as string) : Promise.resolve(undefined),
-    row.dream_metadata_enc ? FieldEncryptionService.decryptField(row.dream_metadata_enc as string) : Promise.resolve(undefined),
-    row.notes_enc ? FieldEncryptionService.decryptField(row.notes_enc as string) : Promise.resolve(undefined),
+    decryptOptionalField(row.dream_text_enc),
+    decryptOptionalField(row.dream_feelings_enc),
+    decryptOptionalField(row.dream_metadata_enc),
+    decryptOptionalField(row.notes_enc),
   ]);
+
   return {
-    id: row.id as string,
-    chartId: row.chart_id as string,
-    date: row.date as string,
-    durationHours: row.duration_hours as number | undefined,
-    quality: row.quality as number | undefined,
-    dreamText: dreamText && !isDecryptionFailure(dreamText) ? dreamText : undefined,
-    dreamMood: (row.dream_mood as string | undefined) ?? undefined,
-    dreamFeelings: dreamFeelings && !isDecryptionFailure(dreamFeelings) ? dreamFeelings : undefined,
-    dreamMetadata: dreamMetadata && !isDecryptionFailure(dreamMetadata) ? dreamMetadata : undefined,
-    notes: notes && !isDecryptionFailure(notes) ? notes : undefined,
+    id: asRequiredString(row.id),
+    chartId: asRequiredString(row.chart_id),
+    date: asRequiredString(row.date),
+    durationHours:
+      typeof row.duration_hours === 'number' ? row.duration_hours : undefined,
+    quality: typeof row.quality === 'number' ? row.quality : undefined,
+    dreamText,
+    dreamMood: asOptionalString(row.dream_mood),
+    dreamFeelings,
+    dreamMetadata,
+    notes,
     isDeleted: Boolean(row.is_deleted),
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    createdAt: asRequiredString(row.created_at),
+    updatedAt: asRequiredString(row.updated_at),
   };
 }
 
-export async function getSleepEntries(chartId: string, limit = 30): Promise<SleepEntry[]> {
+export async function getSleepEntries(
+  chartId: string,
+  limit = 30,
+): Promise<SleepEntry[]> {
   const userId = await getUserId();
+
   const { data, error } = await supabase
     .from('sleep_entries')
     .select('*')
@@ -381,11 +534,16 @@ export async function getSleepEntries(chartId: string, limit = 30): Promise<Slee
 
   if (error) throw error;
   if (!data?.length) return [];
-  return Promise.all((data as Record<string, unknown>[]).map(mapSleepRow));
+
+  return Promise.all((data as Row[]).map(mapSleepRow));
 }
 
-export async function getSleepEntryByDate(chartId: string, date: string): Promise<SleepEntry | null> {
+export async function getSleepEntryByDate(
+  chartId: string,
+  date: string,
+): Promise<SleepEntry | null> {
   const userId = await getUserId();
+
   const { data, error } = await supabase
     .from('sleep_entries')
     .select('*')
@@ -397,34 +555,46 @@ export async function getSleepEntryByDate(chartId: string, date: string): Promis
 
   if (error) throw error;
   if (!data) return null;
-  return mapSleepRow(data as Record<string, unknown>);
+
+  return mapSleepRow(data as Row);
 }
 
 export async function saveSleepEntry(entry: SleepEntry): Promise<void> {
   const userId = await getUserId();
-  const [dreamTextEnc, dreamFeelingsEnc, dreamMetadataEnc, notesEnc] = await Promise.all([
-    entry.dreamText ? FieldEncryptionService.encryptField(entry.dreamText) : Promise.resolve(null),
-    entry.dreamFeelings ? FieldEncryptionService.encryptField(entry.dreamFeelings) : Promise.resolve(null),
-    entry.dreamMetadata ? FieldEncryptionService.encryptField(entry.dreamMetadata) : Promise.resolve(null),
-    entry.notes ? FieldEncryptionService.encryptField(entry.notes) : Promise.resolve(null),
-  ]);
 
-  const { error } = await supabase.from('sleep_entries').upsert({
-    id: entry.id,
-    user_id: userId,
-    chart_id: entry.chartId,
-    date: entry.date,
-    duration_hours: entry.durationHours ?? null,
-    quality: entry.quality ?? null,
-    dream_text_enc: dreamTextEnc,
-    dream_mood: entry.dreamMood ?? null,
-    dream_feelings_enc: dreamFeelingsEnc,
-    dream_metadata_enc: dreamMetadataEnc,
-    notes_enc: notesEnc,
-    is_deleted: entry.isDeleted ?? false,
-    created_at: entry.createdAt,
-    updated_at: entry.updatedAt,
-  }, { onConflict: 'id' });
+  const [dreamTextEnc, dreamFeelingsEnc, dreamMetadataEnc, notesEnc] =
+    await Promise.all([
+      entry.dreamText
+        ? FieldEncryptionService.encryptField(entry.dreamText)
+        : Promise.resolve(null),
+      entry.dreamFeelings
+        ? FieldEncryptionService.encryptField(entry.dreamFeelings)
+        : Promise.resolve(null),
+      entry.dreamMetadata
+        ? FieldEncryptionService.encryptField(entry.dreamMetadata)
+        : Promise.resolve(null),
+      entry.notes ? FieldEncryptionService.encryptField(entry.notes) : Promise.resolve(null),
+    ]);
+
+  const { error } = await supabase.from('sleep_entries').upsert(
+    {
+      id: entry.id,
+      user_id: userId,
+      chart_id: entry.chartId,
+      date: entry.date,
+      duration_hours: entry.durationHours ?? null,
+      quality: entry.quality ?? null,
+      dream_text_enc: dreamTextEnc,
+      dream_mood: entry.dreamMood ?? null,
+      dream_feelings_enc: dreamFeelingsEnc,
+      dream_metadata_enc: dreamMetadataEnc,
+      notes_enc: notesEnc,
+      is_deleted: entry.isDeleted ?? false,
+      created_at: entry.createdAt,
+      updated_at: entry.updatedAt,
+    },
+    { onConflict: 'id' },
+  );
 
   if (error) throw error;
 }
@@ -432,54 +602,74 @@ export async function saveSleepEntry(entry: SleepEntry): Promise<void> {
 export async function deleteSleepEntry(id: string): Promise<void> {
   const userId = await getUserId();
   const now = new Date().toISOString();
+
   const { error } = await supabase
     .from('sleep_entries')
     .update({ is_deleted: true, updated_at: now })
     .eq('id', id)
     .eq('user_id', userId);
+
   if (error) throw error;
 }
 
 // ─── Daily Check-Ins ──────────────────────────────────────────────────────────
 
-async function mapCheckInRow(row: Record<string, unknown>): Promise<DailyCheckIn> {
-  const [moodScore, energyLevel, stressLevel, tags, note, wins, challenges] = await Promise.all([
-    row.mood_score_enc ? FieldEncryptionService.decryptField(row.mood_score_enc as string) : Promise.resolve(String(row.mood_value ?? '0')),
-    row.energy_level_enc ? FieldEncryptionService.decryptField(row.energy_level_enc as string) : Promise.resolve('medium'),
-    row.stress_level_enc ? FieldEncryptionService.decryptField(row.stress_level_enc as string) : Promise.resolve('medium'),
-    row.tags_enc ? FieldEncryptionService.decryptField(row.tags_enc as string) : Promise.resolve('[]'),
-    row.note_enc ? FieldEncryptionService.decryptField(row.note_enc as string) : Promise.resolve(undefined),
-    row.wins_enc ? FieldEncryptionService.decryptField(row.wins_enc as string) : Promise.resolve(undefined),
-    row.challenges_enc ? FieldEncryptionService.decryptField(row.challenges_enc as string) : Promise.resolve(undefined),
-  ]);
+async function mapCheckInRow(row: Row): Promise<DailyCheckIn> {
+  const [moodScore, energyLevel, stressLevel, tags, note, wins, challenges] =
+    await Promise.all([
+      row.mood_score_enc
+        ? decryptOptionalField(row.mood_score_enc)
+        : Promise.resolve(
+            row.mood_value != null ? String(row.mood_value) : '0',
+          ),
+      row.energy_level_enc
+        ? decryptOptionalField(row.energy_level_enc)
+        : Promise.resolve('medium'),
+      row.stress_level_enc
+        ? decryptOptionalField(row.stress_level_enc)
+        : Promise.resolve('medium'),
+      row.tags_enc ? decryptOptionalField(row.tags_enc) : Promise.resolve('[]'),
+      decryptOptionalField(row.note_enc),
+      decryptOptionalField(row.wins_enc),
+      decryptOptionalField(row.challenges_enc),
+    ]);
 
-  const moodNum = moodScore && !isDecryptionFailure(moodScore) ? Number(moodScore) : 0;
+  const moodNum = coerceNumber(moodScore, 0);
 
   return {
-    id: row.id as string,
-    date: (row.log_date ?? row.date) as string,
-    chartId: (row.chart_id as string | undefined) ?? '',
-    moodScore: Number.isFinite(moodNum) ? moodNum : 0,
-    energyLevel: (energyLevel && !isDecryptionFailure(energyLevel) ? energyLevel : 'medium') as DailyCheckIn['energyLevel'],
-    stressLevel: (stressLevel && !isDecryptionFailure(stressLevel) ? stressLevel : 'medium') as DailyCheckIn['stressLevel'],
-    tags: (() => { try { return JSON.parse((tags && !isDecryptionFailure(tags)) ? tags : '[]'); } catch { return []; } })(),
-    note: note && !isDecryptionFailure(note) ? note : undefined,
-    wins: wins && !isDecryptionFailure(wins) ? wins : undefined,
-    challenges: challenges && !isDecryptionFailure(challenges) ? challenges : undefined,
-    moonSign: (row.moon_sign as string | undefined) ?? 'unknown',
-    moonHouse: (row.moon_house as number | undefined) ?? 0,
-    sunHouse: (row.sun_house as number | undefined) ?? 0,
-    transitEvents: row.transit_events ? JSON.parse(row.transit_events as string) : undefined,
-    lunarPhase: ((row.lunar_phase as string | undefined) ?? 'unknown') as DailyCheckIn['lunarPhase'],
-    retrogrades: row.retrogrades ? JSON.parse(row.retrogrades as string) : undefined,
-    timeOfDay: ((row.time_of_day as DailyCheckIn['timeOfDay'] | undefined) ?? 'morning') as DailyCheckIn['timeOfDay'],
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    id: asRequiredString(row.id),
+    date: asRequiredString(row.log_date ?? row.date),
+    chartId: asOptionalString(row.chart_id) ?? '',
+    moodScore: moodNum,
+    energyLevel: ((energyLevel ?? 'medium') as DailyCheckIn['energyLevel']),
+    stressLevel: ((stressLevel ?? 'medium') as DailyCheckIn['stressLevel']),
+    tags: safeJsonParse<string[]>(tags, []),
+    note,
+    wins,
+    challenges,
+    moonSign: asOptionalString(row.moon_sign) ?? 'unknown',
+    moonHouse: typeof row.moon_house === 'number' ? row.moon_house : 0,
+    sunHouse: typeof row.sun_house === 'number' ? row.sun_house : 0,
+    transitEvents: safeJsonParse<DailyCheckIn['transitEvents']>(
+      row.transit_events,
+      [],
+    ),
+    lunarPhase:
+      ((asOptionalString(row.lunar_phase) ?? 'unknown') as DailyCheckIn['lunarPhase']),
+    retrogrades: safeJsonParse<string[]>(row.retrogrades, []),
+    timeOfDay:
+      ((asOptionalString(row.time_of_day) ?? 'morning') as DailyCheckIn['timeOfDay']),
+    createdAt: asRequiredString(row.created_at),
+    updatedAt: asRequiredString(row.updated_at),
   };
 }
 
-export async function getCheckIns(chartId: string, limit?: number): Promise<DailyCheckIn[]> {
+export async function getCheckIns(
+  chartId: string,
+  limit?: number,
+): Promise<DailyCheckIn[]> {
   const userId = await getUserId();
+
   let query = supabase
     .from('daily_check_ins')
     .select('*')
@@ -492,11 +682,16 @@ export async function getCheckIns(chartId: string, limit?: number): Promise<Dail
   const { data, error } = await query;
   if (error) throw error;
   if (!data?.length) return [];
-  return Promise.all((data as Record<string, unknown>[]).map(mapCheckInRow));
+
+  return Promise.all((data as Row[]).map(mapCheckInRow));
 }
 
-export async function getCheckInByDate(date: string, chartId: string): Promise<DailyCheckIn | null> {
+export async function getCheckInByDate(
+  date: string,
+  chartId: string,
+): Promise<DailyCheckIn | null> {
   const userId = await getUserId();
+
   const { data, error } = await supabase
     .from('daily_check_ins')
     .select('*')
@@ -509,11 +704,16 @@ export async function getCheckInByDate(date: string, chartId: string): Promise<D
 
   if (error) throw error;
   if (!data) return null;
-  return mapCheckInRow(data as Record<string, unknown>);
+
+  return mapCheckInRow(data as Row);
 }
 
-export async function getCheckInsByDate(date: string, chartId: string): Promise<DailyCheckIn[]> {
+export async function getCheckInsByDate(
+  date: string,
+  chartId: string,
+): Promise<DailyCheckIn[]> {
   const userId = await getUserId();
+
   const { data, error } = await supabase
     .from('daily_check_ins')
     .select('*')
@@ -524,7 +724,8 @@ export async function getCheckInsByDate(date: string, chartId: string): Promise<
 
   if (error) throw error;
   if (!data?.length) return [];
-  return Promise.all((data as Record<string, unknown>[]).map(mapCheckInRow));
+
+  return Promise.all((data as Row[]).map(mapCheckInRow));
 }
 
 export async function getCheckInByDateAndTime(
@@ -533,6 +734,7 @@ export async function getCheckInByDateAndTime(
   timeOfDay: string,
 ): Promise<DailyCheckIn | null> {
   const userId = await getUserId();
+
   const { data, error } = await supabase
     .from('daily_check_ins')
     .select('*')
@@ -544,7 +746,8 @@ export async function getCheckInByDateAndTime(
 
   if (error) throw error;
   if (!data) return null;
-  return mapCheckInRow(data as Record<string, unknown>);
+
+  return mapCheckInRow(data as Row);
 }
 
 export async function getCheckInsInRange(
@@ -553,6 +756,7 @@ export async function getCheckInsInRange(
   endDate: string,
 ): Promise<DailyCheckIn[]> {
   const userId = await getUserId();
+
   const { data, error } = await supabase
     .from('daily_check_ins')
     .select('*')
@@ -564,93 +768,118 @@ export async function getCheckInsInRange(
 
   if (error) throw error;
   if (!data?.length) return [];
-  return Promise.all((data as Record<string, unknown>[]).map(mapCheckInRow));
+
+  return Promise.all((data as Row[]).map(mapCheckInRow));
 }
 
 export async function getCheckInCount(chartId: string): Promise<number> {
   const userId = await getUserId();
+
   const { count, error } = await supabase
     .from('daily_check_ins')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('chart_id', chartId);
+
   if (error) throw error;
   return count ?? 0;
 }
 
 export async function getTotalCheckInCount(): Promise<number> {
   const userId = await getUserId();
+
   const { count, error } = await supabase
     .from('daily_check_ins')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId);
+
   if (error) throw error;
   return count ?? 0;
 }
 
 export async function saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
   const userId = await getUserId();
-  const [moodEnc, energyEnc, stressEnc, tagsEnc, noteEnc, winsEnc, challengesEnc] = await Promise.all([
-    FieldEncryptionService.encryptField(String(checkIn.moodScore)),
-    FieldEncryptionService.encryptField(checkIn.energyLevel),
-    FieldEncryptionService.encryptField(checkIn.stressLevel),
-    FieldEncryptionService.encryptField(JSON.stringify(checkIn.tags ?? [])),
-    checkIn.note ? FieldEncryptionService.encryptField(checkIn.note) : Promise.resolve(null),
-    checkIn.wins ? FieldEncryptionService.encryptField(checkIn.wins) : Promise.resolve(null),
-    checkIn.challenges ? FieldEncryptionService.encryptField(checkIn.challenges) : Promise.resolve(null),
-  ]);
+
+  const [moodEnc, energyEnc, stressEnc, tagsEnc, noteEnc, winsEnc, challengesEnc] =
+    await Promise.all([
+      FieldEncryptionService.encryptField(String(checkIn.moodScore)),
+      FieldEncryptionService.encryptField(checkIn.energyLevel),
+      FieldEncryptionService.encryptField(checkIn.stressLevel),
+      FieldEncryptionService.encryptField(JSON.stringify(checkIn.tags ?? [])),
+      checkIn.note ? FieldEncryptionService.encryptField(checkIn.note) : Promise.resolve(null),
+      checkIn.wins ? FieldEncryptionService.encryptField(checkIn.wins) : Promise.resolve(null),
+      checkIn.challenges
+        ? FieldEncryptionService.encryptField(checkIn.challenges)
+        : Promise.resolve(null),
+    ]);
 
   const moodNum = Math.max(0, Math.min(10, Math.round(checkIn.moodScore)));
 
-  const { error } = await supabase.from('daily_check_ins').upsert({
-    id: checkIn.id,
-    user_id: userId,
-    log_date: checkIn.date,
-    chart_id: checkIn.chartId,
-    mood_value: moodNum,
-    mood_score_enc: moodEnc,
-    energy_level_enc: energyEnc,
-    stress_level_enc: stressEnc,
-    tags_enc: tagsEnc,
-    note_enc: noteEnc,
-    wins_enc: winsEnc,
-    challenges_enc: challengesEnc,
-    moon_sign: checkIn.moonSign ?? null,
-    moon_house: checkIn.moonHouse ?? null,
-    sun_house: checkIn.sunHouse ?? null,
-    transit_events: checkIn.transitEvents ? JSON.stringify(checkIn.transitEvents) : null,
-    lunar_phase: checkIn.lunarPhase ?? null,
-    retrogrades: checkIn.retrogrades ? JSON.stringify(checkIn.retrogrades) : null,
-    time_of_day: checkIn.timeOfDay ?? null,
-    created_at: checkIn.createdAt,
-    updated_at: checkIn.updatedAt,
-  }, { onConflict: 'user_id,log_date,time_of_day' });
+  const { error } = await supabase.from('daily_check_ins').upsert(
+    {
+      id: checkIn.id,
+      user_id: userId,
+      log_date: checkIn.date,
+      chart_id: checkIn.chartId,
+      mood_value: moodNum,
+      mood_score_enc: moodEnc,
+      energy_level_enc: energyEnc,
+      stress_level_enc: stressEnc,
+      tags_enc: tagsEnc,
+      note_enc: noteEnc,
+      wins_enc: winsEnc,
+      challenges_enc: challengesEnc,
+      moon_sign: checkIn.moonSign ?? null,
+      moon_house: checkIn.moonHouse ?? null,
+      sun_house: checkIn.sunHouse ?? null,
+      transit_events: checkIn.transitEvents
+        ? JSON.stringify(checkIn.transitEvents)
+        : null,
+      lunar_phase: checkIn.lunarPhase ?? null,
+      retrogrades: checkIn.retrogrades ? JSON.stringify(checkIn.retrogrades) : null,
+      time_of_day: checkIn.timeOfDay ?? null,
+      created_at: checkIn.createdAt,
+      updated_at: checkIn.updatedAt,
+    },
+    { onConflict: 'user_id,log_date,time_of_day' },
+  );
 
   if (error) throw error;
 }
 
 // ─── Insight History ──────────────────────────────────────────────────────────
 
-async function mapInsightRow(row: Record<string, unknown>): Promise<SavedInsight> {
-  const [greeting, loveHeadline, loveMessage, energyHeadline, energyMessage, growthHeadline, growthMessage, gentleReminder, journalPrompt, signals] = await Promise.all([
-    FieldEncryptionService.decryptField(row.greeting_enc as string),
-    FieldEncryptionService.decryptField(row.love_headline_enc as string),
-    FieldEncryptionService.decryptField(row.love_message_enc as string),
-    FieldEncryptionService.decryptField(row.energy_headline_enc as string),
-    FieldEncryptionService.decryptField(row.energy_message_enc as string),
-    FieldEncryptionService.decryptField(row.growth_headline_enc as string),
-    FieldEncryptionService.decryptField(row.growth_message_enc as string),
-    FieldEncryptionService.decryptField(row.gentle_reminder_enc as string),
-    FieldEncryptionService.decryptField(row.journal_prompt_enc as string),
-    row.signals_enc ? FieldEncryptionService.decryptField(row.signals_enc as string) : Promise.resolve(undefined),
+async function mapInsightRow(row: Row): Promise<SavedInsight> {
+  const [
+    greeting,
+    loveHeadline,
+    loveMessage,
+    energyHeadline,
+    energyMessage,
+    growthHeadline,
+    growthMessage,
+    gentleReminder,
+    journalPrompt,
+    signals,
+  ] = await Promise.all([
+    decryptOptionalField(row.greeting_enc),
+    decryptOptionalField(row.love_headline_enc),
+    decryptOptionalField(row.love_message_enc),
+    decryptOptionalField(row.energy_headline_enc),
+    decryptOptionalField(row.energy_message_enc),
+    decryptOptionalField(row.growth_headline_enc),
+    decryptOptionalField(row.growth_message_enc),
+    decryptOptionalField(row.gentle_reminder_enc),
+    decryptOptionalField(row.journal_prompt_enc),
+    decryptOptionalField(row.signals_enc),
   ]);
 
-  const clean = (v: string | undefined) => (v && !isDecryptionFailure(v) ? v : '');
+  const clean = (v?: string) => v ?? '';
 
   return {
-    id: row.id as string,
-    date: row.date as string,
-    chartId: row.chart_id as string,
+    id: asRequiredString(row.id),
+    date: asRequiredString(row.date),
+    chartId: asRequiredString(row.chart_id),
     greeting: clean(greeting),
     loveHeadline: clean(loveHeadline),
     loveMessage: clean(loveMessage),
@@ -660,19 +889,31 @@ async function mapInsightRow(row: Record<string, unknown>): Promise<SavedInsight
     growthMessage: clean(growthMessage),
     gentleReminder: clean(gentleReminder),
     journalPrompt: clean(journalPrompt),
-    moonSign: (row.moon_sign as string | undefined) ?? undefined,
-    moonPhase: (row.moon_phase as string | undefined) ?? undefined,
-    signals: signals && !isDecryptionFailure(signals) ? signals : undefined,
+    moonSign: asOptionalString(row.moon_sign),
+    moonPhase: asOptionalString(row.moon_phase),
+    signals,
     isFavorite: Boolean(row.is_favorite),
-    viewedAt: (row.viewed_at as string | undefined) ?? undefined,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    viewedAt: asOptionalString(row.viewed_at),
+    createdAt: asRequiredString(row.created_at),
+    updatedAt: asRequiredString(row.updated_at),
   };
 }
 
 export async function saveInsight(insight: SavedInsight): Promise<void> {
   const userId = await getUserId();
-  const [greetingEnc, loveHEnc, loveMEnc, energyHEnc, energyMEnc, growthHEnc, growthMEnc, gentleEnc, journalEnc, signalsEnc] = await Promise.all([
+
+  const [
+    greetingEnc,
+    loveHEnc,
+    loveMEnc,
+    energyHEnc,
+    energyMEnc,
+    growthHEnc,
+    growthMEnc,
+    gentleEnc,
+    journalEnc,
+    signalsEnc,
+  ] = await Promise.all([
     FieldEncryptionService.encryptField(insight.greeting),
     FieldEncryptionService.encryptField(insight.loveHeadline),
     FieldEncryptionService.encryptField(insight.loveMessage),
@@ -685,35 +926,42 @@ export async function saveInsight(insight: SavedInsight): Promise<void> {
     insight.signals ? FieldEncryptionService.encryptField(insight.signals) : Promise.resolve(null),
   ]);
 
-  const { error } = await supabase.from('insight_history').upsert({
-    id: insight.id,
-    user_id: userId,
-    date: insight.date,
-    chart_id: insight.chartId,
-    greeting_enc: greetingEnc,
-    love_headline_enc: loveHEnc,
-    love_message_enc: loveMEnc,
-    energy_headline_enc: energyHEnc,
-    energy_message_enc: energyMEnc,
-    growth_headline_enc: growthHEnc,
-    growth_message_enc: growthMEnc,
-    gentle_reminder_enc: gentleEnc,
-    journal_prompt_enc: journalEnc,
-    moon_sign: insight.moonSign ?? null,
-    moon_phase: insight.moonPhase ?? null,
-    signals_enc: signalsEnc,
-    is_favorite: insight.isFavorite,
-    viewed_at: insight.viewedAt ?? null,
-    is_deleted: false,
-    created_at: insight.createdAt,
-    updated_at: insight.updatedAt,
-  }, { onConflict: 'id' });
+  const { error } = await supabase.from('insight_history').upsert(
+    {
+      id: insight.id,
+      user_id: userId,
+      date: insight.date,
+      chart_id: insight.chartId,
+      greeting_enc: greetingEnc,
+      love_headline_enc: loveHEnc,
+      love_message_enc: loveMEnc,
+      energy_headline_enc: energyHEnc,
+      energy_message_enc: energyMEnc,
+      growth_headline_enc: growthHEnc,
+      growth_message_enc: growthMEnc,
+      gentle_reminder_enc: gentleEnc,
+      journal_prompt_enc: journalEnc,
+      moon_sign: insight.moonSign ?? null,
+      moon_phase: insight.moonPhase ?? null,
+      signals_enc: signalsEnc,
+      is_favorite: insight.isFavorite,
+      viewed_at: insight.viewedAt ?? null,
+      is_deleted: false,
+      created_at: insight.createdAt,
+      updated_at: insight.updatedAt,
+    },
+    { onConflict: 'id' },
+  );
 
   if (error) throw error;
 }
 
-export async function getInsightByDate(date: string, chartId: string): Promise<SavedInsight | null> {
+export async function getInsightByDate(
+  date: string,
+  chartId: string,
+): Promise<SavedInsight | null> {
   const userId = await getUserId();
+
   const { data, error } = await supabase
     .from('insight_history')
     .select('*')
@@ -725,11 +973,13 @@ export async function getInsightByDate(date: string, chartId: string): Promise<S
 
   if (error) throw error;
   if (!data) return null;
-  return mapInsightRow(data as Record<string, unknown>);
+
+  return mapInsightRow(data as Row);
 }
 
 export async function getInsightById(id: string): Promise<SavedInsight | null> {
   const userId = await getUserId();
+
   const { data, error } = await supabase
     .from('insight_history')
     .select('*')
@@ -739,7 +989,8 @@ export async function getInsightById(id: string): Promise<SavedInsight | null> {
 
   if (error) throw error;
   if (!data) return null;
-  return mapInsightRow(data as Record<string, unknown>);
+
+  return mapInsightRow(data as Row);
 }
 
 export async function getInsightHistory(
@@ -747,6 +998,7 @@ export async function getInsightHistory(
   options?: { limit?: number; favoritesOnly?: boolean },
 ): Promise<SavedInsight[]> {
   const userId = await getUserId();
+
   let query = supabase
     .from('insight_history')
     .select('*')
@@ -761,61 +1013,78 @@ export async function getInsightHistory(
   const { data, error } = await query;
   if (error) throw error;
   if (!data?.length) return [];
-  return Promise.all((data as Record<string, unknown>[]).map(mapInsightRow));
+
+  return Promise.all((data as Row[]).map(mapInsightRow));
 }
 
-export async function updateInsightFavorite(id: string, isFavorite: boolean): Promise<void> {
+export async function updateInsightFavorite(
+  id: string,
+  isFavorite: boolean,
+): Promise<void> {
   const userId = await getUserId();
+
   const { error } = await supabase
     .from('insight_history')
     .update({ is_favorite: isFavorite, updated_at: new Date().toISOString() })
     .eq('id', id)
     .eq('user_id', userId);
+
   if (error) throw error;
 }
 
-export async function updateInsightViewedAt(id: string, viewedAt: string): Promise<void> {
+export async function updateInsightViewedAt(
+  id: string,
+  viewedAt: string,
+): Promise<void> {
   const userId = await getUserId();
+
   const { error } = await supabase
     .from('insight_history')
     .update({ viewed_at: viewedAt, updated_at: new Date().toISOString() })
     .eq('id', id)
     .eq('user_id', userId);
+
   if (error) throw error;
 }
 
 // ─── Relationship Charts ──────────────────────────────────────────────────────
 
-async function mapRelationshipRow(row: Record<string, unknown>): Promise<RelationshipChart> {
+async function mapRelationshipRow(row: Row): Promise<RelationshipChart> {
+  const rowId = asRequiredString(row.id);
+
   const [name, birthDate, birthTime, birthPlace, latStr, lngStr] = await Promise.all([
-    FieldEncryptionService.decryptField(row.name_enc as string),
-    FieldEncryptionService.decryptField(row.birth_date_enc as string),
-    row.birth_time_enc ? FieldEncryptionService.decryptField(row.birth_time_enc as string) : Promise.resolve(undefined),
-    FieldEncryptionService.decryptField(row.birth_place_enc as string),
-    FieldEncryptionService.decryptField(row.latitude_enc as string),
-    FieldEncryptionService.decryptField(row.longitude_enc as string),
+    decryptRequiredField(row.name_enc, 'relationship name', rowId),
+    decryptRequiredField(row.birth_date_enc, 'relationship birth_date', rowId),
+    decryptOptionalField(row.birth_time_enc),
+    decryptRequiredField(row.birth_place_enc, 'relationship birth_place', rowId),
+    decryptOptionalField(row.latitude_enc),
+    decryptOptionalField(row.longitude_enc),
   ]);
+
   return {
-    id: row.id as string,
-    name: name && !isDecryptionFailure(name) ? name : '',
+    id: rowId,
+    name: name ?? '',
     relationship: row.relationship as RelationshipChart['relationship'],
-    birthDate: birthDate && !isDecryptionFailure(birthDate) ? birthDate : '',
-    birthTime: birthTime && !isDecryptionFailure(birthTime) ? birthTime : undefined,
+    birthDate: birthDate ?? '',
+    birthTime,
     hasUnknownTime: Boolean(row.has_unknown_time),
-    birthPlace: birthPlace && !isDecryptionFailure(birthPlace) ? birthPlace : '',
-    latitude: parseCoord(latStr, 'latitude', row.id as string),
-    longitude: parseCoord(lngStr, 'longitude', row.id as string),
-    timezone: (row.timezone as string | undefined) ?? undefined,
-    userChartId: row.user_chart_id as string,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    birthPlace: birthPlace ?? '',
+    latitude: parseCoord(latStr, 'latitude', rowId) ?? 0,
+    longitude: parseCoord(lngStr, 'longitude', rowId) ?? 0,
+    timezone: asOptionalString(row.timezone),
+    userChartId: asRequiredString(row.user_chart_id),
+    createdAt: asRequiredString(row.created_at),
+    updatedAt: asRequiredString(row.updated_at),
     isDeleted: Boolean(row.is_deleted),
-    deletedAt: (row.deleted_at as string | undefined) ?? undefined,
+    deletedAt: asOptionalString(row.deleted_at),
   };
 }
 
-export async function getRelationshipCharts(userChartId?: string): Promise<RelationshipChart[]> {
+export async function getRelationshipCharts(
+  userChartId?: string,
+): Promise<RelationshipChart[]> {
   const userId = await getUserId();
+
   let query = supabase
     .from('relationship_charts')
     .select('*')
@@ -828,11 +1097,15 @@ export async function getRelationshipCharts(userChartId?: string): Promise<Relat
   const { data, error } = await query;
   if (error) throw error;
   if (!data?.length) return [];
-  return Promise.all((data as Record<string, unknown>[]).map(mapRelationshipRow));
+
+  return Promise.all((data as Row[]).map(mapRelationshipRow));
 }
 
-export async function getRelationshipChartById(id: string): Promise<RelationshipChart | null> {
+export async function getRelationshipChartById(
+  id: string,
+): Promise<RelationshipChart | null> {
   const userId = await getUserId();
+
   const { data, error } = await supabase
     .from('relationship_charts')
     .select('*')
@@ -842,38 +1115,50 @@ export async function getRelationshipChartById(id: string): Promise<Relationship
 
   if (error) throw error;
   if (!data) return null;
-  return mapRelationshipRow(data as Record<string, unknown>);
+
+  return mapRelationshipRow(data as Row);
 }
 
-export async function saveRelationshipChart(chart: RelationshipChart): Promise<void> {
+export async function saveRelationshipChart(
+  chart: RelationshipChart,
+): Promise<void> {
   const userId = await getUserId();
-  const [nameEnc, birthDateEnc, birthTimeEnc, birthPlaceEnc, latEnc, lngEnc] = await Promise.all([
-    FieldEncryptionService.encryptField(chart.name),
-    FieldEncryptionService.encryptField(chart.birthDate),
-    chart.birthTime ? FieldEncryptionService.encryptField(chart.birthTime) : Promise.resolve(null),
-    FieldEncryptionService.encryptField(chart.birthPlace),
-    FieldEncryptionService.encryptField(String(chart.latitude)),
-    FieldEncryptionService.encryptField(String(chart.longitude)),
-  ]);
 
-  const { error } = await supabase.from('relationship_charts').upsert({
-    id: chart.id,
-    user_id: userId,
-    name_enc: nameEnc,
-    relationship: chart.relationship,
-    birth_date_enc: birthDateEnc,
-    birth_time_enc: birthTimeEnc,
-    has_unknown_time: chart.hasUnknownTime,
-    birth_place_enc: birthPlaceEnc,
-    latitude_enc: latEnc,
-    longitude_enc: lngEnc,
-    timezone: chart.timezone ?? null,
-    user_chart_id: chart.userChartId,
-    is_deleted: chart.isDeleted ?? false,
-    deleted_at: chart.deletedAt ?? null,
-    created_at: chart.createdAt,
-    updated_at: chart.updatedAt,
-  }, { onConflict: 'id' });
+  const [nameEnc, birthDateEnc, birthTimeEnc, birthPlaceEnc, latEnc, lngEnc] =
+    await Promise.all([
+      FieldEncryptionService.encryptField(chart.name),
+      FieldEncryptionService.encryptField(chart.birthDate),
+      chart.birthTime ? FieldEncryptionService.encryptField(chart.birthTime) : Promise.resolve(null),
+      FieldEncryptionService.encryptField(chart.birthPlace),
+      chart.latitude != null
+        ? FieldEncryptionService.encryptField(String(chart.latitude))
+        : Promise.resolve(null),
+      chart.longitude != null
+        ? FieldEncryptionService.encryptField(String(chart.longitude))
+        : Promise.resolve(null),
+    ]);
+
+  const { error } = await supabase.from('relationship_charts').upsert(
+    {
+      id: chart.id,
+      user_id: userId,
+      name_enc: nameEnc,
+      relationship: chart.relationship,
+      birth_date_enc: birthDateEnc,
+      birth_time_enc: birthTimeEnc,
+      has_unknown_time: chart.hasUnknownTime,
+      birth_place_enc: birthPlaceEnc,
+      latitude_enc: latEnc,
+      longitude_enc: lngEnc,
+      timezone: chart.timezone ?? null,
+      user_chart_id: chart.userChartId,
+      is_deleted: chart.isDeleted ?? false,
+      deleted_at: chart.deletedAt ?? null,
+      created_at: chart.createdAt,
+      updated_at: chart.updatedAt,
+    },
+    { onConflict: 'id' },
+  );
 
   if (error) throw error;
 }
@@ -881,50 +1166,51 @@ export async function saveRelationshipChart(chart: RelationshipChart): Promise<v
 export async function deleteRelationshipChart(id: string): Promise<void> {
   const userId = await getUserId();
   const now = new Date().toISOString();
+
   const { error } = await supabase
     .from('relationship_charts')
     .update({ is_deleted: true, deleted_at: now, updated_at: now })
     .eq('id', id)
     .eq('user_id', userId);
+
   if (error) throw error;
 }
 
-export async function getRelationshipChartCount(userChartId?: string): Promise<number> {
+export async function getRelationshipChartCount(
+  userChartId?: string,
+): Promise<number> {
   const userId = await getUserId();
+
   let query = supabase
     .from('relationship_charts')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('is_deleted', false);
+
   if (userChartId) query = query.eq('user_chart_id', userChartId);
+
   const { count, error } = await query;
   if (error) throw error;
+
   return count ?? 0;
 }
 
 // ─── Account cleanup ──────────────────────────────────────────────────────────
 
-/**
- * Clears local non-Supabase state (AsyncStorage keys) on sign-out.
- * Supabase rows are owned by the user and governed by RLS — they are not
- * deleted here. Account deletion goes through a dedicated server-side flow.
- */
 export async function clearAccountScopedData(): Promise<void> {
   try {
     await EncryptedAsyncStorage.removeItem(SETTINGS_KEY);
-  } catch {}
+  } catch {
+    // ignore
+  }
 }
 
 // ─── No-op stubs kept for call-site compatibility ─────────────────────────────
-// These were SQLite-only concerns that no longer apply.
 
-/** No-op: DB initialization is handled by Supabase session management. */
 export async function initialize(): Promise<void> {}
 
-/** No-op: No local DB to switch — Supabase is always the source of truth. */
 export async function switchToUserDb(_userId: string): Promise<void> {}
 
-/** No-op: No sync queue in network-first architecture. */
 export async function clearSyncQueue(): Promise<void> {}
 
 /**
@@ -933,6 +1219,7 @@ export async function clearSyncQueue(): Promise<void> {}
  */
 export async function hardDeleteAllData(): Promise<void> {
   const userId = await getUserId();
+
   await Promise.all([
     supabase.from('birth_profiles').delete().eq('user_id', userId),
     supabase.from('journal_entries').delete().eq('user_id', userId),
@@ -941,6 +1228,7 @@ export async function hardDeleteAllData(): Promise<void> {
     supabase.from('relationship_charts').delete().eq('user_id', userId),
     supabase.from('sleep_entries').delete().eq('user_id', userId),
   ]);
+
   await clearAccountScopedData();
 }
 

@@ -10,7 +10,7 @@ import Constants from 'expo-constants';
 
 import { revenueCatService } from '../services/premium/revenuecat';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
-import { DemoSeedService } from '../services/storage/demoSeedService';
+import { DemoSeedService } from '../services/storage/demoAccountBSeedService';
 import { logger } from '../utils/logger';
 import { useAuth } from './AuthContext';
 import * as Haptics from '../utils/haptics';
