@@ -817,21 +817,30 @@ export default function JournalScreen() {
 
       {(totalCount > 0 || sleepEntries.length > 0) && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
-          <LinearGradient colors={theme.isDark ? ['rgba(107, 144, 128, 0.16)', 'rgba(26,30,41,0.35)'] : ['rgba(240,245,252,0.7)', 'rgba(240,245,252,0.4)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
-            <View style={styles.insightHeader}>
-              <MetallicIcon name="pulse-outline" size={18} color={PALETTE.gold} />
-              <MetallicText color={PALETTE.gold} style={styles.insightTitle}>{archiveDepth.label}</MetallicText>
-              <Text style={styles.depthCount}>{archiveDepth.totalSignals} signals</Text>
-            </View>
-            <Text style={styles.insightDescription}>{archiveDepth.headline}</Text>
-            <Text style={styles.depthBody}>{archiveDepth.body}</Text>
-            <View style={styles.depthProgressTrack}>
-              <View style={[styles.depthProgressFill, { width: `${Math.max(8, archiveDepth.progress * 100)}%` }]} />
-            </View>
-            {!!archiveDepth.nextMilestone && (
-              <Text style={styles.depthMeta}>{archiveDepth.remaining} more to reach {archiveDepth.nextMilestone}</Text>
-            )}
-          </LinearGradient>
+          <Pressable onPress={() => router.push('/(tabs)/patterns' as Href)}>
+            <LinearGradient colors={theme.isDark ? ['rgba(107, 144, 128, 0.16)', 'rgba(26,30,41,0.35)'] : ['rgba(240,245,252,0.7)', 'rgba(240,245,252,0.4)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
+              <View style={styles.insightHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1, marginRight: 8 }}>
+                  <MetallicIcon name="pulse-outline" size={18} color={PALETTE.gold} />
+                  <MetallicText color={PALETTE.gold} style={[styles.insightTitle, { marginLeft: 8 }]} numberOfLines={1}>{archiveDepth.label}</MetallicText>
+                </View>
+                <Text style={styles.depthCount}>{archiveDepth.totalSignals} signals</Text>
+              </View>
+              <Text style={styles.insightDescription}>{archiveDepth.headline}</Text>
+              <Text style={styles.depthBody}>{archiveDepth.body}</Text>
+              <View style={styles.depthProgressTrack}>
+                <View style={[styles.depthProgressFill, { width: `${Math.max(8, archiveDepth.progress * 100)}%` }]} />
+              </View>
+              {!!archiveDepth.nextMilestone ? (
+                <Text style={styles.depthMeta}>{archiveDepth.remaining} more to reach {archiveDepth.nextMilestone}</Text>
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
+                  <Text style={[styles.insightActionable, { marginTop: 0, color: PALETTE.gold }]} numberOfLines={1}>Read Patterns</Text>
+                  <MetallicIcon name="arrow-forward-outline" size={14} color={PALETTE.gold} />
+                </View>
+              )}
+            </LinearGradient>
+          </Pressable>
         </Animated.View>
       )}
 
@@ -902,8 +911,10 @@ export default function JournalScreen() {
           {displayedDreamArchiveSummary && (
             <LinearGradient colors={theme.isDark ? ['rgba(168, 139, 235, 0.16)', 'rgba(44, 54, 69, 0.30)'] : ['rgba(168, 139, 235, 0.12)', 'rgba(240, 245, 252, 0.55)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
               <View style={styles.insightHeader}>
-                <MetallicIcon name="pulse-outline" size={18} color={PALETTE.gold} />
-                <MetallicText color={PALETTE.gold} style={styles.insightTitle}>Dream Pattern Read</MetallicText>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1, marginRight: 8 }}>
+                  <MetallicIcon name="pulse-outline" size={18} color={PALETTE.gold} />
+                  <MetallicText color={PALETTE.gold} style={[styles.insightTitle, { marginLeft: 8 }]} numberOfLines={1}>Dream Pattern Read</MetallicText>
+                </View>
               </View>
               {!!aiDreamFreshness && <Text style={styles.aiFreshnessText}>{aiDreamFreshness}</Text>}
               <Text style={styles.insightDescription}>{displayedDreamArchiveSummary.summary}</Text>
