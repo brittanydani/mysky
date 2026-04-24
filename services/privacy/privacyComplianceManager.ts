@@ -5,7 +5,6 @@ import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
 import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from '../storage/userDataKeys';
 import { generateId } from '../storage/models';
 import { LawfulBasisAuditService } from './lawfulBasisAudit';
-import { FieldEncryptionService } from '../storage/fieldEncryption';
 import { IdentityVault } from '../../utils/IdentityVault';
 import {
   ConsentData,
@@ -265,9 +264,6 @@ export class PrivacyComplianceManager {
     // Destroy any remaining local encrypted-key material and the identity vault.
     await IdentityVault.destroyIdentity().catch((e: unknown) =>
       secureStorage.auditDataAccess('gdpr_destroy_identity_error', { error: String(e) })
-    );
-    await FieldEncryptionService.destroyDek().catch((e: unknown) =>
-      secureStorage.auditDataAccess('gdpr_destroy_dek_error', { error: String(e) })
     );
 
     return {

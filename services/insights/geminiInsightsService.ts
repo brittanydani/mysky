@@ -36,7 +36,7 @@ const CACHE_KEY = '@mysky:gemini_pattern_insights';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface GeminiPatternResult {
-  insights: { id: string; body: string }[];
+  insights: { id: string; title?: string; body: string }[];
   generatedAt: string;
 }
 
@@ -374,7 +374,11 @@ export async function enhanceInsightCopy(
 
       const validInsights = data.insights.filter(
         (i: any) => typeof i?.id === 'string' && typeof i?.body === 'string' && i.body.trim().length > 0,
-      );
+      ).map((i: any) => ({
+        id: i.id,
+        title: i.title,
+        body: i.body,
+      }));
       if (!validInsights.length) {
         logger.error('[GeminiPatterns] No valid insights in response');
         return null;

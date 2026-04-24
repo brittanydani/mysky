@@ -24,7 +24,7 @@ import { logger } from '../../utils/logger';
 import type { HouseSystem } from '../astrology/types';
 import type { SavedInsight } from './insightHistory';
 import type { DailyCheckIn } from '../patterns/types';
-import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from './accountScopedStorage';
 import {
   invokeBirthProfileSync,
   isBirthProfileSyncUnavailableError,
@@ -401,7 +401,7 @@ export async function deleteJournalEntry(id: string): Promise<void> {
 
 export async function getSettings(): Promise<AppSettings | null> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(SETTINGS_KEY);
+    const raw = await AccountScopedAsyncStorage.getItem(SETTINGS_KEY);
     return raw ? (JSON.parse(raw) as AppSettings) : null;
   } catch {
     return null;
@@ -410,7 +410,7 @@ export async function getSettings(): Promise<AppSettings | null> {
 
 export async function updateSettings(settings: AppSettings): Promise<void> {
   try {
-    await EncryptedAsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    await AccountScopedAsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   } catch (e) {
     logger.error('[SupabaseDb] Failed to save settings:', e);
   }
@@ -1041,7 +1041,7 @@ export async function getRelationshipChartCount(
 
 export async function clearAccountScopedData(): Promise<void> {
   try {
-    await EncryptedAsyncStorage.removeItem(SETTINGS_KEY);
+    await AccountScopedAsyncStorage.removeItem(SETTINGS_KEY);
   } catch {
     // ignore
   }

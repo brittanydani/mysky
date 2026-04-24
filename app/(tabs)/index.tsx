@@ -1,7 +1,7 @@
 
 import { Redirect } from 'expo-router';
 
-// Default tab index — redirect to primary tab (Mood)
+// Default tab index — redirect to primary tab (Today)
 export default function Index() {
-  return <Redirect href="/(tabs)/internal-weather" />;
+  return <Redirect href="/(tabs)/home" />;
 }

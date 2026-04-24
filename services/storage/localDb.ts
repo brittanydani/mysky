@@ -55,7 +55,6 @@ class LocalDatabase {
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
           this.db = await SQLite.openDatabaseAsync(this.dbName);
-          await FieldEncryptionService.initialize();
           await this.handleMigrations();
           return;
         } catch (error) {
@@ -171,8 +170,6 @@ class LocalDatabase {
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
           this.db = await SQLite.openDatabaseAsync(this.dbName);
-          // Initialize field encryption DEK (creates key on first run)
-          await FieldEncryptionService.initialize();
           await this.handleMigrations();
           return; // success
         } catch (error) {

@@ -39,6 +39,10 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const demoLastSyncByKey = new Map<string, number>();
+let demoSyncInFlight: Promise<void> | null = null;
+let demoSyncedForKey: string | null = null;
+
 async function loadLocalDb() {
   const mod = await import('../services/storage/localDb');
   return mod.localDb;
@@ -49,10 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const isMounted = useRef(true);
-  const lastDemoSyncTimestamp = useRef(0);
-  const demoSyncInFlight = useRef<Promise<void> | null>(null);
-  const demoSyncedForEmail = useRef<string | null>(null);
-  const demoCleanupAttempted = useRef(false);
 
   const setSessionIfChanged = useCallback((nextSession: Session | null) => {
     if (!isMounted.current) return;
@@ -72,47 +72,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const syncDemoArtifacts = useCallback(async (email: string | null | undefined) => {
     if (!email) return;
 
-    if (demoSyncedForEmail.current === email) {
+    const syncMode = isAutoDemoSeedEnabled() ? 'seed' : 'cleanup';
+    const syncKey = `${syncMode}:${email}`;
+    const shouldGuardDemoSync =
+      (DemoSeedService as { isDemoAccount?: (value: string | null | undefined) => boolean })
+        .isDemoAccount?.(email) === true;
+
+    if (shouldGuardDemoSync && demoSyncedForKey === syncKey) {
       return;
     }
 
-    if (!isAutoDemoSeedEnabled() && demoCleanupAttempted.current) {
-      return;
-    }
-
-    if (demoSyncInFlight.current) {
-      return demoSyncInFlight.current;
+    if (demoSyncInFlight) {
+      return demoSyncInFlight;
     }
 
     const now = Date.now();
-    if (now - lastDemoSyncTimestamp.current < 30_000) {
+    const lastSyncAt = demoLastSyncByKey.get(syncKey) ?? 0;
+    if (shouldGuardDemoSync && now - lastSyncAt < 30_000) {
       return;
     }
 
     const run = (async () => {
-      lastDemoSyncTimestamp.current = Date.now();
+      if (shouldGuardDemoSync) {
+        demoLastSyncByKey.set(syncKey, Date.now());
+      }
 
-      if (demoSyncedForEmail.current === email) {
+      if (shouldGuardDemoSync && demoSyncedForKey === syncKey) {
         return;
       }
 
-      if (isAutoDemoSeedEnabled()) {
+      if (syncMode === 'seed') {
         await DemoSeedService.seedIfNeeded(email);
       } else {
         await DemoSeedService.cleanupStaleDemoArtifacts(email);
-        demoCleanupAttempted.current = true;
       }
 
-      demoSyncedForEmail.current = email;
+      if (shouldGuardDemoSync) {
+        demoSyncedForKey = syncKey;
+      }
     })();
 
-    demoSyncInFlight.current = run;
+    demoSyncInFlight = run;
 
     try {
       await run;
     } finally {
-      if (demoSyncInFlight.current === run) {
-        demoSyncInFlight.current = null;
+      if (demoSyncInFlight === run) {
+        demoSyncInFlight = null;
       }
     }
   }, []);
@@ -176,16 +182,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .logIn(newSession.user.id)
           .catch((e) => logger.error('[AuthContext] RC logIn failed:', e));
 
-        if (newSession.user.email && demoSyncedForEmail.current !== newSession.user.email) {
+        if (newSession.user.email) {
           void syncDemoArtifacts(newSession.user.email).catch((e) =>
             logger.warn('[AuthContext] Demo sync failed:', e),
           );
         }
       } else if (event === 'SIGNED_OUT') {
-        demoSyncedForEmail.current = null;
-        lastDemoSyncTimestamp.current = 0;
-        demoSyncInFlight.current = null;
-        demoCleanupAttempted.current = false;
+        demoSyncedForKey = null;
+        demoLastSyncByKey.clear();
+        demoSyncInFlight = null;
 
         void revenueCatService
           .logOut()
@@ -267,10 +272,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.error('[AuthContext] Failed to destroy IdentityVault during sign-out:', e);
     }
 
-    demoSyncedForEmail.current = null;
-    lastDemoSyncTimestamp.current = 0;
-    demoSyncInFlight.current = null;
-    demoCleanupAttempted.current = false;
+    demoSyncedForKey = null;
+    demoLastSyncByKey.clear();
+    demoSyncInFlight = null;
 
     if (isMounted.current) {
       setSession(null);

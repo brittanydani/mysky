@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../../lib/supabase';
 import { PLAIN_ASYNC_USER_DATA_KEYS } from './userDataKeys';
 
+// All user-data keys (formerly split between encrypted and plain) are now
+// stored as plain, account-scoped AsyncStorage values.
 const ACCOUNT_SCOPED_PLAIN_KEYS = new Set<string>(PLAIN_ASYNC_USER_DATA_KEYS);
 
 function buildScopedKey(key: string, userId: string): string {

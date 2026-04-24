@@ -3,16 +3,22 @@
  *
  * Single shared Supabase client for the MySky Expo app.
  *
- * Persists the Supabase auth session via encrypted AsyncStorage.
+ * Persists the Supabase auth session via plain AsyncStorage.
  * The session payload can exceed Expo SecureStore's recommended size limit,
- * so SecureStore is only used indirectly for the DEK that protects the
- * encrypted AsyncStorage value at rest.
+ * so AsyncStorage is used directly. The session token is already protected
+ * by TLS in transit and Supabase Auth server-side — no additional
+ * client-side encryption layer is needed.
+ *
  * Reads project URL + anon key from EXPO_PUBLIC_ env vars.
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '../utils/logger';
+
+// ─── Supabase session storage adapter ─────────────────────────────────────────
+// Uses plain AsyncStorage. On first read, migrates any legacy value that was
+// stored in expo-secure-store by the old encrypted adapter.
 
 type SecureStoreModule = typeof import('expo-secure-store');
 
@@ -26,42 +32,61 @@ function getSecureStore(): SecureStoreModule {
   return secureStoreModule;
 }
 
-// ─── Supabase session storage adapter ─────────────────────────────────────────
-// The serialized Supabase session can exceed Expo SecureStore's 2 KB guidance.
-// Persist it in encrypted AsyncStorage, and migrate any legacy SecureStore
-// value on first read so existing users keep their session.
+/** Returns true if the value looks like a legacy encrypted blob (ENC2: or ENC: prefix). */
+function isLegacyEncryptedBlob(value: string): boolean {
+  return value.startsWith('ENC2:') || value.startsWith('ENC:');
+}
 
 const SupabaseSessionStorageAdapter = {
   async getItem(key: string): Promise<string | null> {
     try {
-      const encryptedValue = await EncryptedAsyncStorage.getItem(key);
-      if (encryptedValue !== null) {
-        return encryptedValue;
+      // Check plain AsyncStorage first (current location)
+      const raw = await AsyncStorage.getItem(key);
+      if (raw !== null) {
+        // Guard: if the stored value is a legacy encrypted blob, it cannot be
+        // used as a session. Clear it so Supabase falls back to a fresh sign-in
+        // instead of crashing with "Cannot create property 'user' on string".
+        if (isLegacyEncryptedBlob(raw)) {
+          logger.warn(`[supabase] Found legacy encrypted blob in AsyncStorage for key "${key}"; clearing`);
+          await AsyncStorage.removeItem(key).catch(() => {});
+          return null;
+        }
+        return raw;
       }
 
-      const legacyValue = await getSecureStore().getItemAsync(key);
+      // One-time migration: move legacy SecureStore session to AsyncStorage.
+      // Discard if it is also an encrypted blob (can't be used as a session).
+      const legacyValue = await getSecureStore().getItemAsync(key).catch(() => null);
       if (legacyValue !== null) {
-        await EncryptedAsyncStorage.setItem(key, legacyValue);
-        await getSecureStore().deleteItemAsync(key);
+        if (isLegacyEncryptedBlob(legacyValue)) {
+          logger.warn(`[supabase] Found legacy encrypted blob in SecureStore for key "${key}"; discarding`);
+          await getSecureStore().deleteItemAsync(key).catch(() => {});
+          return null;
+        }
+        await AsyncStorage.setItem(key, legacyValue);
+        await getSecureStore().deleteItemAsync(key).catch(() => {});
+        return legacyValue;
       }
 
-      return legacyValue;
+      return null;
     } catch {
       logger.warn(`[supabase] Session read failed for key "${key}"`);
       return null;
     }
   },
+
   async setItem(key: string, value: string): Promise<void> {
     try {
-      await EncryptedAsyncStorage.setItem(key, value);
+      await AsyncStorage.setItem(key, value);
     } catch {
       logger.warn(`[supabase] Session write failed for key "${key}"`);
     }
   },
+
   async removeItem(key: string): Promise<void> {
     try {
       await Promise.allSettled([
-        EncryptedAsyncStorage.removeItem(key),
+        AsyncStorage.removeItem(key),
         getSecureStore().deleteItemAsync(key),
       ]);
     } catch {

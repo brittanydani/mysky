@@ -249,6 +249,26 @@ function loadSentry() {
 const isLightweightDevMode =
   __DEV__ && Constants.expoConfig?.extra?.lightweightDevMode === true;
 
+type PostConsentInitResult = {
+  needsPrivacyConsent?: boolean;
+  needsTermsConsent?: boolean;
+  onboardingComplete?: boolean;
+};
+
+type RootInitSnapshot = {
+  dbReady: boolean;
+  needsPrivacyConsent: boolean;
+  needsTermsConsent: boolean;
+  onboardingComplete: boolean;
+};
+
+let rootInitSnapshot: RootInitSnapshot | null = null;
+let rootInitInFlight: Promise<RootInitSnapshot> | null = null;
+
+function readRootInitSnapshot(): RootInitSnapshot | null {
+  return rootInitSnapshot;
+}
+
 function AppShell() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
@@ -265,17 +285,23 @@ function AppShell() {
     }
   }, [authLoading]);
 
-  const [checkingConsent, setCheckingConsent] = useState(true);
-  const [dbReady, setDbReady] = useState(false);
+  const [checkingConsent, setCheckingConsent] = useState(() => readRootInitSnapshot() === null);
+  const [dbReady, setDbReady] = useState(() => readRootInitSnapshot()?.dbReady ?? false);
   const [initTimedOut, setInitTimedOut] = useState(false);
 
-  const [needsPrivacyConsent, setNeedsPrivacyConsent] = useState(false);
+  const [needsPrivacyConsent, setNeedsPrivacyConsent] = useState(
+    () => readRootInitSnapshot()?.needsPrivacyConsent ?? false,
+  );
   // Terms consent is tracked alongside privacy consent (combined modal).
   // The value is unused but setters maintain state for future separation.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [needsTermsConsent, setNeedsTermsConsent] = useState(false);
+  const [needsTermsConsent, setNeedsTermsConsent] = useState(
+    () => readRootInitSnapshot()?.needsTermsConsent ?? false,
+  );
 
-  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(
+    () => readRootInitSnapshot()?.onboardingComplete ?? false,
+  );
   const [sessionDataReady, setSessionDataReady] = useState(false);
   // Suppresses AuthRequiredModal during the window between onboardingComplete
   // becoming true and the Supabase SIGNED_IN event updating session in AuthContext.
@@ -291,6 +317,13 @@ function AppShell() {
   const didNavigatePostOnboarding = useRef(false);
   const sessionBootstrapRef = useRef(0);
   const authEntryIntentRef = useRef<'sign-in-home' | null>(null);
+
+  const applyRootInitSnapshot = (snapshot: RootInitSnapshot) => {
+    setDbReady(snapshot.dbReady);
+    setNeedsPrivacyConsent(snapshot.needsPrivacyConsent);
+    setNeedsTermsConsent(snapshot.needsTermsConsent);
+    setOnboardingComplete(snapshot.onboardingComplete);
+  };
 
   const bindLocalSettingsToUser = async (userId: string) => {
     const { getSettings, updateSettings } = await import('../services/storage/supabaseDb');
@@ -356,6 +389,9 @@ function AppShell() {
 
       if (!currentSession) {
         setOnboardingComplete(false);
+        if (rootInitSnapshot) {
+          rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: false };
+        }
         return false;
       }
 
@@ -364,6 +400,9 @@ function AppShell() {
 
       if (charts.length > 0) {
         setOnboardingComplete(true);
+        if (rootInitSnapshot) {
+          rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: true };
+        }
         return true;
       }
 
@@ -372,17 +411,26 @@ function AppShell() {
       const restoredFromVault = await restoreChartFromIdentityVault();
       const canSkip = restoredFromVault;
       setOnboardingComplete(canSkip);
+      if (rootInitSnapshot) {
+        rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: canSkip };
+      }
       return canSkip;
     } catch (e) {
       logger.error('Failed to check existing charts:', e);
       setOnboardingComplete(false);
+      if (rootInitSnapshot) {
+        rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: false };
+      }
       return false;
     }
   };
 
-  const runPostPrivacyConsentInit = async (termsAccepted: boolean) => {
-    if (didRunPostConsentInitRef.current) return;
+  const runPostPrivacyConsentInit = async (
+    termsAccepted: boolean,
+  ): Promise<PostConsentInitResult> => {
+    if (didRunPostConsentInitRef.current) return {};
     didRunPostConsentInitRef.current = true;
+    const result: PostConsentInitResult = {};
 
     try {
       // DB migration + settings should only happen once consent is granted
@@ -409,6 +457,7 @@ function AppShell() {
 
         if (currentSession) {
           const canSkip = await checkIfOnboardingCanBeSkipped();
+          result.onboardingComplete = canSkip;
 
           // If terms were "accepted" but no chart exists, the consent data is stale
           // (e.g. iOS Keychain surviving an app reinstall). Re-require both consent
@@ -417,9 +466,12 @@ function AppShell() {
             await setTermsConsent(false);
             setNeedsTermsConsent(true);
             setNeedsPrivacyConsent(true);
+            result.needsTermsConsent = true;
+            result.needsPrivacyConsent = true;
           }
         } else {
           setOnboardingComplete(false);
+          result.onboardingComplete = false;
         }
       }
     } catch (error) {
@@ -427,6 +479,8 @@ function AppShell() {
     } finally {
       setDbReady(true);
     }
+
+    return result;
   };
 
   useEffect(() => {
@@ -437,92 +491,134 @@ function AppShell() {
 
     const initializeApp = async () => {
       try {
-        // Install the Web Crypto polyfill now that the JS engine is bootstrapped.
-        // expo-standard-web-crypto → expo-crypto → requireNativeModule('ExpoCrypto')
-        // must not run at module eval time (iOS 26 New Architecture crash vector).
-        logger.info('[init] step: webCrypto polyfill');
-        try {
-          await loadWebCrypto().then((m) => {
-            if (typeof m.polyfillWebCrypto === 'function') m.polyfillWebCrypto();
-          });
-        } catch (e) {
-          logger.error('[init] webCrypto polyfill failed:', e);
+        if (rootInitSnapshot) {
+          applyRootInitSnapshot(rootInitSnapshot);
+          return;
         }
 
-        // Wait for AuthContext to finish its own SecureStore/Keychain reads
-        // (session restore) before we start our own. Concurrent Keychain
-        // access on iOS 26 was causing TurboModule queue crashes at launch.
-        // authLoadingRef is a ref so the closure always reads the latest value.
-        logger.info('[init] step: waiting for auth context');
-        await new Promise<void>((resolve) => {
-          if (!authLoadingRef.current) {
-            resolve();
-            return;
+        if (rootInitInFlight) {
+          applyRootInitSnapshot(await rootInitInFlight);
+          return;
+        }
+
+        const initPromise = (async (): Promise<RootInitSnapshot> => {
+          let nextNeedsPrivacyConsent = false;
+          let nextNeedsTermsConsent = false;
+          let nextOnboardingComplete = false;
+
+          // Install the Web Crypto polyfill now that the JS engine is bootstrapped.
+          // expo-standard-web-crypto → expo-crypto → requireNativeModule('ExpoCrypto')
+          // must not run at module eval time (iOS 26 New Architecture crash vector).
+          logger.info('[init] step: webCrypto polyfill');
+          try {
+            await loadWebCrypto().then((m) => {
+              if (typeof m.polyfillWebCrypto === 'function') m.polyfillWebCrypto();
+            });
+          } catch (e) {
+            logger.error('[init] webCrypto polyfill failed:', e);
           }
-          authListenerRef.current = DeviceEventEmitter.addListener('AUTH_LOADING_COMPLETE', () => {
-            if (authListenerRef.current) {
-              authListenerRef.current.remove();
-              authListenerRef.current = null;
+
+          // Wait for AuthContext to finish its own SecureStore/Keychain reads
+          // (session restore) before we start our own. Concurrent Keychain
+          // access on iOS 26 was causing TurboModule queue crashes at launch.
+          // authLoadingRef is a ref so the closure always reads the latest value.
+          logger.info('[init] step: waiting for auth context');
+          await new Promise<void>((resolve) => {
+            if (!authLoadingRef.current) {
+              resolve();
+              return;
             }
-            resolve();
+            authListenerRef.current = DeviceEventEmitter.addListener('AUTH_LOADING_COMPLETE', () => {
+              if (authListenerRef.current) {
+                authListenerRef.current.remove();
+                authListenerRef.current = null;
+              }
+              resolve();
+            });
           });
-        });
 
-        logger.info('[init] step: privacy consent');
-        const privacyManager = new PrivacyComplianceManager();
-        let consentStatus = await privacyManager.requestConsent();
+          logger.info('[init] step: privacy consent');
+          const privacyManager = new PrivacyComplianceManager();
+          let consentStatus = await privacyManager.requestConsent();
 
-        logger.info('[init] step: terms consent');
-        let termsAccepted = await getTermsConsent();
-        // If the user already has a valid session they previously accepted the
-        // terms — re-hydrate the SecureStore key so future cold starts skip the
-        // consent prompt (fresh installs wipe Keychain, but session survives).
-        // Read the live session directly — `session` state is null at closure
-        // capture time since this effect runs once with [] deps.
-        const {
-          data: { session: initLiveSession },
-        } = await supabase.auth.getSession();
+          logger.info('[init] step: terms consent');
+          let termsAccepted = await getTermsConsent();
+          // If the user already has a valid session they previously accepted the
+          // terms — re-hydrate the SecureStore key so future cold starts skip the
+          // consent prompt (fresh installs wipe Keychain, but session survives).
+          // Read the live session directly — `session` state is null at closure
+          // capture time since this effect runs once with [] deps.
+          const {
+            data: { session: initLiveSession },
+          } = await supabase.auth.getSession();
 
-        if (consentStatus.required && initLiveSession) {
-          logger.info('[init] session present — auto-restoring privacy consent');
-          await privacyManager.recordConsent({
-            granted: true,
-            policyVersion: consentStatus.policyVersion,
-            timestamp: new Date().toISOString(),
-            method: 'explicit',
-            lawfulBasis: 'consent',
-            purpose: 'astrology_personalization',
-          });
-          consentStatus = {
-            ...consentStatus,
-            required: false,
+          if (consentStatus.required && initLiveSession) {
+            logger.info('[init] session present — auto-restoring privacy consent');
+            await privacyManager.recordConsent({
+              granted: true,
+              policyVersion: consentStatus.policyVersion,
+              timestamp: new Date().toISOString(),
+              method: 'explicit',
+              lawfulBasis: 'consent',
+              purpose: 'astrology_personalization',
+            });
+            consentStatus = {
+              ...consentStatus,
+              required: false,
+            };
+          }
+
+          if (!termsAccepted && initLiveSession) {
+            logger.info('[init] session present — auto-restoring terms consent');
+            await setTermsConsent(true);
+            termsAccepted = true;
+          }
+
+          setNeedsPrivacyConsent(consentStatus.required);
+          setNeedsTermsConsent(!termsAccepted);
+          nextNeedsPrivacyConsent = consentStatus.required;
+          nextNeedsTermsConsent = !termsAccepted;
+
+          // Only initialize DB / settings after privacy consent is granted
+          if (!consentStatus.required) {
+            logger.info('[init] step: post-privacy-consent init');
+            const postConsentResult = await runPostPrivacyConsentInit(termsAccepted);
+            nextNeedsPrivacyConsent =
+              postConsentResult.needsPrivacyConsent ?? nextNeedsPrivacyConsent;
+            nextNeedsTermsConsent =
+              postConsentResult.needsTermsConsent ?? nextNeedsTermsConsent;
+            nextOnboardingComplete =
+              postConsentResult.onboardingComplete ?? nextOnboardingComplete;
+          } else {
+            // We still consider the "app ready" enough to render UI (Stack + consent modal),
+            // but we intentionally do NOT run migrations/settings until consent is granted.
+            setDbReady(true);
+          }
+
+          logger.info('[init] complete');
+          const snapshot = {
+            dbReady: true,
+            needsPrivacyConsent: nextNeedsPrivacyConsent,
+            needsTermsConsent: nextNeedsTermsConsent,
+            onboardingComplete: nextOnboardingComplete,
           };
-        }
+          rootInitSnapshot = snapshot;
+          return snapshot;
+        })();
 
-        if (!termsAccepted && initLiveSession) {
-          logger.info('[init] session present — auto-restoring terms consent');
-          await setTermsConsent(true);
-          termsAccepted = true;
-        }
-
-        setNeedsPrivacyConsent(consentStatus.required);
-        setNeedsTermsConsent(!termsAccepted);
-
-        // Only initialize DB / settings after privacy consent is granted
-        if (!consentStatus.required) {
-          logger.info('[init] step: post-privacy-consent init');
-          await runPostPrivacyConsentInit(termsAccepted);
-        } else {
-          // We still consider the "app ready" enough to render UI (Stack + consent modal),
-          // but we intentionally do NOT run migrations/settings until consent is granted.
-          setDbReady(true);
-        }
-
-        logger.info('[init] complete');
+        rootInitInFlight = initPromise;
+        applyRootInitSnapshot(await initPromise);
       } catch (error) {
         logger.error('Failed to initialize app:', error);
         setDbReady(true);
+        rootInitSnapshot = {
+          dbReady: true,
+          needsPrivacyConsent: false,
+          needsTermsConsent: false,
+          onboardingComplete: false,
+        };
       } finally {
+        rootInitInFlight = null;
         setCheckingConsent(false);
         if (!didHideSplash.current) {
           didHideSplash.current = true;
@@ -559,6 +655,8 @@ function AppShell() {
   }, []);
 
   const retryInit = () => {
+    rootInitSnapshot = null;
+    rootInitInFlight = null;
     setInitTimedOut(false);
     setCheckingConsent(true);
     setDbReady(false);
@@ -607,6 +705,13 @@ function AppShell() {
   // Listen for consent withdrawal from settings — immediately re-gate the session
   useEffect(() => {
     const consentSub = DeviceEventEmitter.addListener('CONSENT_WITHDRAWN', () => {
+      rootInitSnapshot = {
+        dbReady: true,
+        needsPrivacyConsent: true,
+        needsTermsConsent: true,
+        onboardingComplete: false,
+      };
+      rootInitInFlight = null;
       setNeedsPrivacyConsent(true);
       setNeedsTermsConsent(true);
       setOnboardingComplete(false);
@@ -618,6 +723,9 @@ function AppShell() {
     // Legacy onboarding screens can complete outside the root modal. Keep root
     // gate state in sync so tabs can mount immediately after profile creation.
     const onboardingSub = DeviceEventEmitter.addListener('ONBOARDING_COMPLETE', () => {
+      if (rootInitSnapshot) {
+        rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: true };
+      }
       setOnboardingComplete(true);
     });
 
@@ -688,7 +796,13 @@ function AppShell() {
 
       // Now that consent is granted, complete the deferred initialization
       // Pass false to skip the stale-reinstall check — user just explicitly consented.
-      await runPostPrivacyConsentInit(false);
+      const postConsentResult = await runPostPrivacyConsentInit(false);
+      rootInitSnapshot = {
+        dbReady: true,
+        needsPrivacyConsent: false,
+        needsTermsConsent: false,
+        onboardingComplete: postConsentResult.onboardingComplete ?? onboardingComplete,
+      };
     } catch (error) {
       logger.error('Privacy consent handling failed:', error);
       setNeedsPrivacyConsent(true);
@@ -699,6 +813,9 @@ function AppShell() {
   // signing back in via AuthRequiredModal correctly navigates to home.
   useEffect(() => {
     if (!session) {
+      if (rootInitSnapshot) {
+        rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: false };
+      }
       sessionBootstrapRef.current += 1;
       didNavigatePostOnboarding.current = false;
       setCompletingOnboarding(false);
@@ -723,6 +840,9 @@ function AppShell() {
       if (isStale()) return;
 
       if (authEntryIntentRef.current === 'sign-in-home') {
+        if (rootInitSnapshot) {
+          rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: true };
+        }
         setOnboardingComplete(true);
         setSessionDataReady(true);
         return;
@@ -753,6 +873,9 @@ function AppShell() {
   }, [onboardingComplete, session, sessionDataReady, needsPrivacyConsent, router]);
 
   const handleOnboardingComplete = async (_chart?: import('../services/astrology/types').NatalChart) => {
+    if (rootInitSnapshot) {
+      rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: true };
+    }
     setCompletingOnboarding(true);
     setOnboardingComplete(true);
 
@@ -854,7 +977,7 @@ function AppShell() {
               </React.Suspense>
             )}
 
-            <SafeAreaProvider>
+            <SafeAreaProvider style={{ flex: 1 }}>
               <StatusBar style={theme.statusBarStyle} />
               <Stack
                 screenOptions={{

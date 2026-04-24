@@ -14,7 +14,6 @@
 import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
 import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
 import { AccountScopedAsyncStorage } from './accountScopedStorage';
 import {
   addRelationshipPattern,
@@ -547,7 +546,7 @@ export const DemoAccountBSeedService = {
       await addRelationshipPattern(entry);
     }
 
-    await EncryptedAsyncStorage.setItem(
+    await AccountScopedAsyncStorage.setItem(
       '@mysky:core_values',
       JSON.stringify(ACCOUNT_B_DEMO_SEED.coreValues),
     );
@@ -557,12 +556,12 @@ export const DemoAccountBSeedService = {
       JSON.stringify(ACCOUNT_B_DEMO_SEED.customJournalTags),
     );
 
-    await EncryptedAsyncStorage.setItem(
+    await AccountScopedAsyncStorage.setItem(
       '@mysky:archetype_profile',
       JSON.stringify(ACCOUNT_B_DEMO_SEED.archetypeProfile),
     );
 
-    await EncryptedAsyncStorage.setItem(
+    await AccountScopedAsyncStorage.setItem(
       '@mysky:cognitive_style',
       JSON.stringify(ACCOUNT_B_DEMO_SEED.cognitiveStyle),
     );

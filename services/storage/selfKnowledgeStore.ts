@@ -1,9 +1,7 @@
 import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 import type { TriggerEvent } from '../../utils/triggerEventTypes';
-import { FieldEncryptionService } from './fieldEncryption';
 import { AccountScopedAsyncStorage } from './accountScopedStorage';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DailyReflectionData, ReflectionAnswer } from '../insights/dailyReflectionService';
 
 export interface SomaticEntryRecord {
@@ -67,25 +65,28 @@ function buildLegacyScopedKey(key: string, userId: string): string {
   return `${key}::user::${userId}`;
 }
 
+/**
+ * Read a legacy key from AccountScopedAsyncStorage (or its un-scoped fallback).
+ * The EncryptedAsyncStorage shim already handles transparent decryption of any
+ * old ENC2: blobs on first read, so we just delegate to AccountScopedAsyncStorage.
+ */
 async function readLegacyEncryptedItem(key: string): Promise<string | null> {
-  const userId = await getUserId();
-  const scopedKey = userId ? buildLegacyScopedKey(key, userId) : key;
-  const raw = (await AsyncStorage.getItem(scopedKey)) ?? (await AsyncStorage.getItem(key));
-  if (raw === null) return null;
-
-  if (!FieldEncryptionService.isEncrypted(raw)) {
-    return raw;
-  }
-
-  try {
-    return await FieldEncryptionService.decryptField(raw);
-  } catch {
-    return null;
-  }
+  // AccountScopedAsyncStorage handles user-scoping and legacy key migration.
+  // The EncryptedAsyncStorage shim (which wraps AccountScopedAsyncStorage) will
+  // transparently decrypt any old ENC2: values on first access.
+  const { EncryptedAsyncStorage } = await import('./encryptedAsyncStorage');
+  return EncryptedAsyncStorage.getItem(key);
 }
 
+/**
+ * Pass-through: legacy _enc columns in Supabase may still hold ENC2: blobs
+ * written by the old field-encryption layer. Decrypt them via the shim so
+ * callers receive plain text. Once all rows are re-written without encryption
+ * these columns will be empty and this path will never be hit.
+ */
 async function decryptLegacyValue(value: string | null | undefined): Promise<string | undefined> {
   if (!value) return undefined;
+  const { FieldEncryptionService } = await import('./fieldEncryption');
   try {
     return await FieldEncryptionService.decryptField(value);
   } catch {
@@ -401,15 +402,81 @@ function parseStringArray(value: unknown): string[] {
   }
 }
 
+function parseTimestampValue(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+
+  if (typeof value !== 'string' || !value.trim()) {
+    return null;
+  }
+
+  const numeric = Number(value);
+  if (Number.isFinite(numeric)) {
+    return Math.trunc(numeric);
+  }
+
+  const parsedDate = Date.parse(value);
+  return Number.isFinite(parsedDate) ? parsedDate : null;
+}
+
+function normalizeTriggerTimestamp(event: TriggerEvent, fallbackNow: number): number {
+  const runtimeEvent = event as TriggerEvent & {
+    createdAt?: unknown;
+    updatedAt?: unknown;
+    date?: unknown;
+  };
+
+  const explicitTimestamp = parseTimestampValue(runtimeEvent.timestamp);
+  if (explicitTimestamp !== null) {
+    return explicitTimestamp;
+  }
+
+  const timestampFromId = parseTimestampValue(
+    typeof runtimeEvent.id === 'string' ? runtimeEvent.id.split('-')[0] : null,
+  );
+  if (timestampFromId !== null) {
+    return timestampFromId;
+  }
+
+  return (
+    parseTimestampValue(runtimeEvent.createdAt) ??
+    parseTimestampValue(runtimeEvent.updatedAt) ??
+    parseTimestampValue(runtimeEvent.date) ??
+    fallbackNow
+  );
+}
+
+function normalizeTriggerEvents(events: TriggerEvent[]): {
+  changed: boolean;
+  events: TriggerEvent[];
+} {
+  const source = Array.isArray(events) ? events : [];
+  const fallbackNow = Date.now();
+  let changed = source !== events;
+
+  const normalized = source.map((event) => {
+    const timestamp = normalizeTriggerTimestamp(event, fallbackNow);
+    if (timestamp !== event.timestamp) {
+      changed = true;
+      return { ...event, timestamp };
+    }
+    return event;
+  });
+
+  return { changed, events: normalized };
+}
+
 async function upsertTriggerRows(events: TriggerEvent[]): Promise<void> {
   const userId = await getUserId();
   if (!userId || events.length === 0) return;
 
   const now = new Date().toISOString();
+  const fallbackNow = Date.now();
   const rows = events.map((event) => ({
     id: event.id,
     user_id: userId,
-    timestamp: event.timestamp,
+    timestamp: normalizeTriggerTimestamp(event, fallbackNow),
     mode: event.mode,
     event: event.event,
     ns_state: event.nsState,
@@ -431,11 +498,16 @@ async function upsertTriggerRows(events: TriggerEvent[]): Promise<void> {
 }
 
 export async function loadTriggerEvents(): Promise<TriggerEvent[]> {
-  const fallback = await loadPlainAccountScopedJson<TriggerEvent[]>(
+  const cachedFallback = await loadPlainAccountScopedJson<TriggerEvent[]>(
     CACHE_KEYS.triggerEvents,
     [],
     LEGACY_KEYS.triggerEvents,
   );
+  const { changed: fallbackChanged, events: fallback } = normalizeTriggerEvents(cachedFallback);
+  if (fallbackChanged) {
+    await savePlainAccountScopedJson(CACHE_KEYS.triggerEvents, fallback);
+  }
+
   const userId = await getUserId();
   if (!userId) return fallback;
 
@@ -502,16 +574,23 @@ export async function loadTriggerEvents(): Promise<TriggerEvent[]> {
 }
 
 export async function addTriggerEvent(event: TriggerEvent): Promise<void> {
+  const normalizedEvent = {
+    ...event,
+    timestamp: normalizeTriggerTimestamp(event, Date.now()),
+  };
   const existing = await loadPlainAccountScopedJson<TriggerEvent[]>(
     CACHE_KEYS.triggerEvents,
     [],
     LEGACY_KEYS.triggerEvents,
   );
-  const next = [event, ...existing.filter((candidate) => candidate.id !== event.id)];
+  const next = [
+    normalizedEvent,
+    ...existing.filter((candidate) => candidate.id !== normalizedEvent.id),
+  ];
   await savePlainAccountScopedJson(CACHE_KEYS.triggerEvents, next);
 
   try {
-    await upsertTriggerRows([event]);
+    await upsertTriggerRows([normalizedEvent]);
   } catch (error) {
     logger.warn('[SelfKnowledgeStore] Failed to persist trigger event to Supabase', error);
   }
