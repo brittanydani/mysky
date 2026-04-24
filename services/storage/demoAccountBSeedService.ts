@@ -14,8 +14,14 @@
 import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
 import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { enqueueReflectionBatch, enqueueSomaticEntry, enqueueTriggerEvent, enqueueRelationshipPattern } from './syncService';
 import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from './accountScopedStorage';
+import {
+  addRelationshipPattern,
+  addSomaticEntry,
+  addTriggerEvent,
+  persistDailyReflectionData,
+} from './selfKnowledgeStore';
 
 import { supabaseDb } from './supabaseDb';
 import { supabase } from '../../lib/supabase';
@@ -499,10 +505,7 @@ export const DemoAccountBSeedService = {
         : null,
     };
 
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:daily_reflections',
-      JSON.stringify(reflectionData),
-    );
+    await persistDailyReflectionData(reflectionData, reflectionData.answers);
 
     const somaticEntries = ACCOUNT_B_DEMO_SEED.somaticEntries.map((entry, i) => ({
       id: stableUuidFromString(`demo-somatic:${entry.date}:${i}`),
@@ -513,10 +516,9 @@ export const DemoAccountBSeedService = {
       intensity: entry.intensity,
     }));
 
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:somatic_entries',
-      JSON.stringify(somaticEntries),
-    );
+    for (const entry of somaticEntries) {
+      await addSomaticEntry(entry);
+    }
 
     const triggerEvents = ACCOUNT_B_DEMO_SEED.triggerEvents.map((entry, i) => ({
       id: stableUuidFromString(`demo-trigger:${entry.date}:${i}`),
@@ -530,10 +532,9 @@ export const DemoAccountBSeedService = {
       beforeState: undefined,
     }));
 
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:trigger_events',
-      JSON.stringify(triggerEvents),
-    );
+    for (const event of triggerEvents) {
+      await addTriggerEvent(event);
+    }
 
     const relationshipPatterns = ACCOUNT_B_DEMO_SEED.relationshipPatterns.map((entry, i) => ({
       id: stableUuidFromString(`demo-relationship-pattern:${entry.date}:${i}`),
@@ -542,17 +543,16 @@ export const DemoAccountBSeedService = {
       tags: entry.tags,
     }));
 
-    await EncryptedAsyncStorage.setItem(
-      '@mysky:relationship_patterns',
-      JSON.stringify(relationshipPatterns),
-    );
+    for (const entry of relationshipPatterns) {
+      await addRelationshipPattern(entry);
+    }
 
     await EncryptedAsyncStorage.setItem(
       '@mysky:core_values',
       JSON.stringify(ACCOUNT_B_DEMO_SEED.coreValues),
     );
 
-    await EncryptedAsyncStorage.setItem(
+    await AccountScopedAsyncStorage.setItem(
       'mysky_custom_journal_tags',
       JSON.stringify(ACCOUNT_B_DEMO_SEED.customJournalTags),
     );
@@ -586,19 +586,6 @@ export const DemoAccountBSeedService = {
         isDeleted: false,
       });
     }
-
-
-    await enqueueReflectionBatch(reflectionData.answers);
-    for (const entry of somaticEntries) {
-      await enqueueSomaticEntry(entry);
-    }
-    for (const event of triggerEvents) {
-      await enqueueTriggerEvent(event);
-    }
-    for (const entry of relationshipPatterns) {
-      await enqueueRelationshipPattern(entry);
-    }
-
     logger.info(
       `[DemoSeed] Seeded self-knowledge data: ${reflectionData.answers.length} reflections, ${somaticEntries.length} somatic entries, ${triggerEvents.length} trigger events, ${relationshipPatterns.length} relationship patterns.`,
     );

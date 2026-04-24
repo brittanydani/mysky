@@ -1,6 +1,12 @@
 // ── Inline maps for all storage layers ──────────────────────────────────────
+import type { RelationshipPatternRecord, SomaticEntryRecord } from '../../storage/selfKnowledgeStore';
+import type { TriggerEvent } from '../../../utils/triggerEventTypes';
+
 const plainStore = new Map<string, string>();
 const encryptedStore = new Map<string, string>();
+const mockLoadSomaticEntries = jest.fn<Promise<SomaticEntryRecord[]>, []>(async () => []);
+const mockLoadTriggerEvents = jest.fn<Promise<TriggerEvent[]>, []>(async () => []);
+const mockLoadRelationshipPatterns = jest.fn<Promise<RelationshipPatternRecord[]>, []>(async () => []);
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(async (key: string) => plainStore.get(key) ?? null),
@@ -21,6 +27,12 @@ jest.mock('../dailyReflectionService', () => ({
   getReflectionSummary: mockGetReflectionSummary,
 }));
 
+jest.mock('../../storage/selfKnowledgeStore', () => ({
+  loadSomaticEntries: mockLoadSomaticEntries,
+  loadTriggerEvents: mockLoadTriggerEvents,
+  loadRelationshipPatterns: mockLoadRelationshipPatterns,
+}));
+
 jest.mock('../../../utils/logger', () => ({
   logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
@@ -31,9 +43,6 @@ const KEYS = {
   coreValues:           '@mysky:core_values',
   archetypeProfile:     '@mysky:archetype_profile',
   cognitiveStyle:       '@mysky:cognitive_style',
-  somaticEntries:       '@mysky:somatic_entries',
-  triggerEvents:        '@mysky:trigger_events',
-  relationshipPatterns: '@mysky:relationship_patterns',
 };
 
 describe('selfKnowledgeContext – loadSelfKnowledgeContext()', () => {
@@ -42,6 +51,9 @@ describe('selfKnowledgeContext – loadSelfKnowledgeContext()', () => {
     encryptedStore.clear();
     jest.clearAllMocks();
     mockGetReflectionSummary.mockResolvedValue(null);
+    mockLoadSomaticEntries.mockResolvedValue([]);
+    mockLoadTriggerEvents.mockResolvedValue([]);
+    mockLoadRelationshipPatterns.mockResolvedValue([]);
   });
 
   it('returns all-null/empty context when nothing is stored', async () => {
@@ -80,29 +92,29 @@ describe('selfKnowledgeContext – loadSelfKnowledgeContext()', () => {
     expect(ctx.cognitiveStyle).toEqual(style);
   });
 
-  it('loads somaticEntries from encrypted AsyncStorage', async () => {
-    const entries = [
+  it('loads somaticEntries from the self-knowledge store', async () => {
+    const entries: SomaticEntryRecord[] = [
       { id: '1', date: '2026-01-01T00:00:00Z', region: 'chest', emotion: 'anxiety', intensity: 3 },
     ];
-    encryptedStore.set(KEYS.somaticEntries, JSON.stringify(entries));
+    mockLoadSomaticEntries.mockResolvedValue(entries);
     const ctx = await loadSelfKnowledgeContext();
     expect(ctx.somaticEntries).toEqual(entries);
   });
 
   it('returns empty array for somaticEntries when stored value is null', async () => {
-    encryptedStore.set(KEYS.somaticEntries, 'null');
+    mockLoadSomaticEntries.mockResolvedValue([]);
     const ctx = await loadSelfKnowledgeContext();
     expect(ctx.somaticEntries).toEqual([]);
   });
 
   describe('trigger loading', () => {
     it('converts TriggerEvent[] into drains/restores data', async () => {
-      const events = [
-        { id: '1', timestamp: 1000, mode: 'drain', event: 'Loud noise', nsState: 'activated', sensations: [] },
-        { id: '2', timestamp: 2000, mode: 'nourish', event: 'Nature walk', nsState: 'calm', sensations: [] },
-        { id: '3', timestamp: 3000, mode: 'drain', event: 'Loud noise', nsState: 'activated', sensations: [] },
+      const events: TriggerEvent[] = [
+        { id: '1', timestamp: 1000, mode: 'drain', event: 'Loud noise', nsState: 'sympathetic', sensations: [] },
+        { id: '2', timestamp: 2000, mode: 'nourish', event: 'Nature walk', nsState: 'ventral', sensations: [] },
+        { id: '3', timestamp: 3000, mode: 'drain', event: 'Loud noise', nsState: 'sympathetic', sensations: [] },
       ];
-      encryptedStore.set(KEYS.triggerEvents, JSON.stringify(events));
+      mockLoadTriggerEvents.mockResolvedValue(events);
       const ctx = await loadSelfKnowledgeContext();
       // Deduplicates 'Loud noise'
       expect(ctx.triggers?.drains).toEqual(['Loud noise']);
@@ -115,22 +127,22 @@ describe('selfKnowledgeContext – loadSelfKnowledgeContext()', () => {
     });
 
     it('returns null triggers when all events have empty event strings', async () => {
-      const events = [{ id: '1', timestamp: 1000, mode: 'drain', event: '  ', nsState: 'activated', sensations: [] }];
-      encryptedStore.set(KEYS.triggerEvents, JSON.stringify(events));
+      const events: TriggerEvent[] = [{ id: '1', timestamp: 1000, mode: 'drain', event: '  ', nsState: 'sympathetic', sensations: [] }];
+      mockLoadTriggerEvents.mockResolvedValue(events);
       const ctx = await loadSelfKnowledgeContext();
       expect(ctx.triggers).toBeNull();
     });
 
     it('returns null triggers when array is empty', async () => {
-      encryptedStore.set(KEYS.triggerEvents, JSON.stringify([]));
+      mockLoadTriggerEvents.mockResolvedValue([]);
       const ctx = await loadSelfKnowledgeContext();
       expect(ctx.triggers).toBeNull();
     });
   });
 
-  it('loads relationshipPatterns from encrypted AsyncStorage', async () => {
-    const patterns = [{ id: '1', date: '2026-01-01', note: 'avoidant', tags: ['avoidance'] }];
-    encryptedStore.set(KEYS.relationshipPatterns, JSON.stringify(patterns));
+  it('loads relationshipPatterns from the self-knowledge store', async () => {
+    const patterns: RelationshipPatternRecord[] = [{ id: '1', date: '2026-01-01', note: 'avoidant', tags: ['avoidance'] }];
+    mockLoadRelationshipPatterns.mockResolvedValue(patterns);
     const ctx = await loadSelfKnowledgeContext();
     expect(ctx.relationshipPatterns).toEqual(patterns);
   });

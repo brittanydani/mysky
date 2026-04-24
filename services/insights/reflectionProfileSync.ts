@@ -11,9 +11,11 @@
  */
 
 import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import { loadSomaticEntries } from '../storage/selfKnowledgeStore';
 import {
   getAnswersByCategory,
   getDraftAnswersByCategory,
+  loadReflections,
   ReflectionAnswer,
   ReflectionDraftAnswer,
 } from './dailyReflectionService';
@@ -648,15 +650,11 @@ export async function syncIntelligenceFromReflections(
  */
 export async function getSomaticReflectionCorrelations(): Promise<SomaticCorrelation[]> {
   try {
-    const [reflRaw, somaticRaw] = await Promise.all([
-      EncryptedAsyncStorage.getItem('@mysky:daily_reflections'),
-      EncryptedAsyncStorage.getItem('@mysky:somatic_entries'),
+    const [reflData, somaticEntries] = await Promise.all([
+      loadReflections(),
+      loadSomaticEntries(),
     ]);
-    if (!reflRaw || !somaticRaw) return [];
-
-    const reflData = JSON.parse(reflRaw) as { answers?: RawSomaticEntry[] };
     const answers = (reflData as { answers?: Array<{ category: string; date: string; scaleValue?: number }> }).answers ?? [];
-    const somaticEntries: RawSomaticEntry[] = JSON.parse(somaticRaw);
 
     // Index the dominant somatic emotions by calendar date (YYYY-MM-DD)
     const somaticByDate = getDominantEmotionLabelsByDate(somaticEntries);

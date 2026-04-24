@@ -8,37 +8,16 @@
  *   4. On connectivity/app resume, queued writes are flushed to Supabase.
  *
  * Core app content is transmitted as plaintext over TLS and stored in plaintext
- * server columns protected by RLS. Some non-core local-only/self-knowledge
- * payloads still use existing encrypted storage helpers until those flows are
- * migrated separately.
+ * server columns protected by RLS.
  */
 
 import { supabase } from '../../lib/supabase';
 import { localDb } from './localDb';
-import { FieldEncryptionService } from './fieldEncryption';
 import { logger } from '../../utils/logger';
 import { JournalEntry, SavedChart, SleepEntry } from './models';
 import { DailyCheckIn } from '../patterns/types';
-import { ReflectionAnswer } from '../insights/dailyReflectionService';
-import type { TriggerEvent } from '../../utils/triggerEventTypes';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-
-export interface SomaticEntrySync {
-  id: string;
-  date: string;
-  region: string;
-  side?: 'front' | 'back';
-  emotion: string;
-  intensity: number;
-}
-
-export interface PatternEntrySync {
-  id: string;
-  date: string;
-  note: string;
-  tags: string[];
-}
 
 export interface BirthProfileSync {
   id: string;
@@ -71,11 +50,7 @@ export type SyncTable =
   | 'birth_profiles'
   | 'journal_entries'
   | 'sleep_entries'
-  | 'daily_check_ins'
-  | 'daily_reflections'
-  | 'somatic_entries'
-  | 'trigger_events'
-  | 'relationship_patterns';
+  | 'daily_check_ins';
 
 export interface SyncQueueItem {
   id: string;
@@ -316,13 +291,9 @@ export async function pullFromSupabase(): Promise<{
   journalPulled: number;
   sleepPulled: number;
   checkInsPulled: number;
-  reflectionsPulled: number;
-  somaticPulled: number;
-  triggersPulled: number;
-  patternsPulled: number;
 }> {
   const session = await getSession();
-  if (!session) return { birthProfilesPulled: 0, journalPulled: 0, sleepPulled: 0, checkInsPulled: 0, reflectionsPulled: 0, somaticPulled: 0, triggersPulled: 0, patternsPulled: 0 };
+  if (!session) return { birthProfilesPulled: 0, journalPulled: 0, sleepPulled: 0, checkInsPulled: 0 };
 
   const settings = await localDb.getSettings();
   const since = settings?.lastSyncAt ?? '1970-01-01T00:00:00.000Z';
@@ -332,10 +303,6 @@ export async function pullFromSupabase(): Promise<{
   let journalPulled = 0;
   let sleepPulled = 0;
   let checkInsPulled = 0;
-  let reflectionsPulled = 0;
-  let somaticPulled = 0;
-  let triggersPulled = 0;
-  let patternsPulled = 0;
   let maxUpdatedAt: string | null = null;
 
   const trackMax = (rows: any[] | null) => {
@@ -411,201 +378,6 @@ export async function pullFromSupabase(): Promise<{
     logger.error('[SyncService] Check-ins pull failed:', e);
   }
 
-  // ── Daily Reflections ──
-  try {
-    const { data, error } = await supabase
-      .from('daily_reflections')
-      .select('*')
-      .eq('user_id', userId)
-      .gt('updated_at', since)
-      .order('updated_at', { ascending: true })
-      .limit(500);
-
-    if (error) throw error;
-    trackMax(data ?? []);
-
-    if (data && data.length > 0) {
-      const { EncryptedAsyncStorage } = await import('../storage/encryptedAsyncStorage');
-      const raw = await EncryptedAsyncStorage.getItem('@mysky:daily_reflections');
-      const local: { answers: ReflectionAnswer[]; totalDaysCompleted: number; startedAt: string | null } =
-        raw ? JSON.parse(raw) : { answers: [], totalDaysCompleted: 0, startedAt: null };
-
-      for (const row of data) {
-        if (row.is_deleted) {
-          local.answers = local.answers.filter(
-            a => !(a.date === row.date && a.questionId === row.question_id && a.category === row.category),
-          );
-        } else {
-          const decrypt = (v: string | null) => v ? FieldEncryptionService.decryptField(v).catch(() => v) : '';
-          const answer: ReflectionAnswer = {
-            questionId: row.question_id,
-            category: row.category,
-            questionText: await decrypt(row.question_text_enc),
-            answer: await decrypt(row.answer_enc),
-            scaleValue: row.scale_value ?? undefined,
-            date: row.date,
-            sealedAt: row.sealed_at,
-            notes: row.notes_enc ? await decrypt(row.notes_enc) : undefined,
-          };
-          const idx = local.answers.findIndex(
-            a => a.date === answer.date && a.questionId === answer.questionId && a.category === answer.category,
-          );
-          if (idx >= 0) local.answers[idx] = answer;
-          else local.answers.push(answer);
-        }
-        reflectionsPulled++;
-      }
-
-      local.totalDaysCompleted = new Set(local.answers.map(a => a.date)).size;
-      if (!local.startedAt && local.answers.length > 0) {
-        local.startedAt = local.answers[local.answers.length - 1].sealedAt;
-      }
-      await EncryptedAsyncStorage.setItem('@mysky:daily_reflections', JSON.stringify(local));
-    }
-  } catch (e) {
-    logger.error('[SyncService] Reflections pull failed:', e);
-  }
-
-  // ── Somatic Entries ──
-  try {
-    const { data, error } = await supabase
-      .from('somatic_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .gt('updated_at', since)
-      .order('updated_at', { ascending: true })
-      .limit(500);
-
-    if (error) throw error;
-    trackMax(data ?? []);
-
-    if (data && data.length > 0) {
-      const { EncryptedAsyncStorage } = await import('../storage/encryptedAsyncStorage');
-      const raw = await EncryptedAsyncStorage.getItem('@mysky:somatic_entries');
-      let local: SomaticEntrySync[] = raw ? JSON.parse(raw) : [];
-
-      for (const row of data) {
-        if (row.is_deleted) {
-          local = local.filter(e => e.id !== row.id);
-        } else {
-          const entry: SomaticEntrySync = {
-            id: row.id,
-            date: row.date,
-            region: row.region,
-            side: row.side ?? undefined,
-            emotion: row.emotion_enc
-              ? await FieldEncryptionService.decryptField(row.emotion_enc).catch(() => row.emotion_enc)
-              : '',
-            intensity: row.intensity,
-          };
-          const idx = local.findIndex(e => e.id === entry.id);
-          if (idx >= 0) local[idx] = entry;
-          else local.unshift(entry);
-        }
-        somaticPulled++;
-      }
-
-      await EncryptedAsyncStorage.setItem('@mysky:somatic_entries', JSON.stringify(local));
-    }
-  } catch (e) {
-    logger.error('[SyncService] Somatic pull failed:', e);
-  }
-
-  // ── Trigger Events ──
-  try {
-    const { data, error } = await supabase
-      .from('trigger_events')
-      .select('*')
-      .eq('user_id', userId)
-      .gt('updated_at', since)
-      .order('updated_at', { ascending: true })
-      .limit(500);
-
-    if (error) throw error;
-    trackMax(data ?? []);
-
-    if (data && data.length > 0) {
-      const { EncryptedAsyncStorage } = await import('../storage/encryptedAsyncStorage');
-      const raw = await EncryptedAsyncStorage.getItem('@mysky:trigger_events');
-      let local: TriggerEvent[] = raw ? JSON.parse(raw) : [];
-
-      for (const row of data) {
-        if (row.is_deleted) {
-          local = local.filter(e => e.id !== row.id);
-        } else {
-          const decryptOrFallback = (v: string) => FieldEncryptionService.decryptField(v).catch(() => v);
-          const eventText = row.event_enc ? await decryptOrFallback(row.event_enc) : '';
-          const sensationsRaw = row.sensations_enc ? await decryptOrFallback(row.sensations_enc) : '[]';
-          const resolutionText = row.resolution_enc ? await decryptOrFallback(row.resolution_enc) : undefined;
-          const event: TriggerEvent = {
-            id: row.id,
-            timestamp: row.timestamp,
-            mode: row.mode,
-            event: eventText,
-            nsState: row.ns_state,
-            sensations: (() => { try { return JSON.parse(sensationsRaw); } catch { return []; } })(),
-            ...(row.intensity != null ? { intensity: row.intensity } : {}),
-            ...(resolutionText !== undefined ? { resolution: resolutionText } : {}),
-            ...(row.context_area ? { contextArea: row.context_area } : {}),
-            ...(row.before_state ? { beforeState: row.before_state } : {}),
-          };
-          const idx = local.findIndex(e => e.id === event.id);
-          if (idx >= 0) local[idx] = event;
-          else local.unshift(event);
-        }
-        triggersPulled++;
-      }
-
-      await EncryptedAsyncStorage.setItem('@mysky:trigger_events', JSON.stringify(local));
-    }
-  } catch (e) {
-    logger.error('[SyncService] Trigger events pull failed:', e);
-  }
-
-  // ── Relationship Patterns ──
-  try {
-    const { data, error } = await supabase
-      .from('relationship_patterns')
-      .select('*')
-      .eq('user_id', userId)
-      .gt('updated_at', since)
-      .order('updated_at', { ascending: true })
-      .limit(500);
-
-    if (error) throw error;
-    trackMax(data ?? []);
-
-    if (data && data.length > 0) {
-      const { EncryptedAsyncStorage } = await import('../storage/encryptedAsyncStorage');
-      const raw = await EncryptedAsyncStorage.getItem('@mysky:relationship_patterns');
-      let local: PatternEntrySync[] = raw ? JSON.parse(raw) : [];
-
-      for (const row of data) {
-        if (row.is_deleted) {
-          local = local.filter(e => e.id !== row.id);
-        } else {
-          const decryptPat = (v: string) => FieldEncryptionService.decryptField(v).catch(() => v);
-          const noteText = row.note_enc ? await decryptPat(row.note_enc) : '';
-          const tagsRaw = row.tags_enc ? await decryptPat(row.tags_enc) : '[]';
-          const entry: PatternEntrySync = {
-            id: row.id,
-            date: row.date,
-            note: noteText,
-            tags: (() => { try { return JSON.parse(tagsRaw); } catch { return []; } })(),
-          };
-          const idx = local.findIndex(e => e.id === entry.id);
-          if (idx >= 0) local[idx] = entry;
-          else local.unshift(entry);
-        }
-        patternsPulled++;
-      }
-
-      await EncryptedAsyncStorage.setItem('@mysky:relationship_patterns', JSON.stringify(local));
-    }
-  } catch (e) {
-    logger.error('[SyncService] Relationship patterns pull failed:', e);
-  }
-
   // Update last sync timestamp — only advance if rows were actually fetched,
   // and use max(updated_at) of fetched rows so rows 501+ are not permanently skipped.
   if (maxUpdatedAt !== null) {
@@ -626,8 +398,8 @@ export async function pullFromSupabase(): Promise<{
     }
   }
 
-  logger.info(`[SyncService] Pull complete — birth:${birthProfilesPulled} journal:${journalPulled} sleep:${sleepPulled} checkIns:${checkInsPulled} reflections:${reflectionsPulled} somatic:${somaticPulled} triggers:${triggersPulled} patterns:${patternsPulled}`);
-  return { birthProfilesPulled, journalPulled, sleepPulled, checkInsPulled, reflectionsPulled, somaticPulled, triggersPulled, patternsPulled };
+  logger.info(`[SyncService] Pull complete — birth:${birthProfilesPulled} journal:${journalPulled} sleep:${sleepPulled} checkIns:${checkInsPulled}`);
+  return { birthProfilesPulled, journalPulled, sleepPulled, checkInsPulled };
 }
 
 // ─── Convenience: enqueue helpers called by localDb write paths ───────────────
@@ -782,111 +554,4 @@ function birthProfileToSupabase(chart: SavedChart): BirthProfileSync {
     createdAt: chart.createdAt,
     updatedAt: chart.updatedAt,
   };
-}
-
-// ─── Self-knowledge sync: enqueue helpers ─────────────────────────────────────
-// Unlike journal/sleep/check-ins, these features use EncryptedAsyncStorage
-// (not SQLite), so sensitive fields must be encrypted with FieldEncryptionService
-// at enqueue time.
-
-export async function enqueueReflectionAnswer(answer: ReflectionAnswer, operation: 'upsert' | 'delete' = 'upsert') {
-  try {
-    const id = `${answer.date}:${answer.questionId}:${answer.category}`;
-    const now = new Date().toISOString();
-    const payload = operation === 'delete'
-      ? { id }
-      : {
-          id,
-          question_id: answer.questionId,
-          category: answer.category,
-          question_text_enc: await FieldEncryptionService.encryptField(answer.questionText),
-          answer_enc: await FieldEncryptionService.encryptField(answer.answer),
-          scale_value: answer.scaleValue ?? null,
-          date: answer.date,
-          sealed_at: answer.sealedAt,
-          notes_enc: answer.notes ? await FieldEncryptionService.encryptField(answer.notes) : null,
-          is_deleted: false,
-          created_at: now,
-          updated_at: now,
-        };
-    await enqueue('daily_reflections', id, operation, payload);
-  } catch (e) {
-    logger.error('[SyncService] Failed to enqueue reflection:', e);
-  }
-}
-
-export async function enqueueReflectionBatch(answers: ReflectionAnswer[]) {
-  for (const answer of answers) {
-    await enqueueReflectionAnswer(answer);
-  }
-}
-
-export async function enqueueSomaticEntry(entry: SomaticEntrySync, operation: 'upsert' | 'delete' = 'upsert') {
-  try {
-    const now = new Date().toISOString();
-    const payload = operation === 'delete'
-      ? { id: entry.id }
-      : {
-          id: entry.id,
-          date: entry.date,
-          region: entry.region,
-          side: entry.side ?? null,
-          emotion_enc: await FieldEncryptionService.encryptField(entry.emotion),
-          intensity: entry.intensity,
-          is_deleted: false,
-          created_at: now,
-          updated_at: now,
-        };
-    await enqueue('somatic_entries', entry.id, operation, payload);
-  } catch (e) {
-    logger.error('[SyncService] Failed to enqueue somatic entry:', e);
-  }
-}
-
-export async function enqueueTriggerEvent(event: TriggerEvent, operation: 'upsert' | 'delete' = 'upsert') {
-  try {
-    const now = new Date().toISOString();
-    const payload = operation === 'delete'
-      ? { id: event.id }
-      : {
-          id: event.id,
-          timestamp: event.timestamp,
-          mode: event.mode,
-          event_enc: await FieldEncryptionService.encryptField(event.event),
-          ns_state: event.nsState,
-          sensations_enc: await FieldEncryptionService.encryptField(JSON.stringify(event.sensations)),
-          intensity: event.intensity ?? null,
-          resolution_enc: event.resolution
-            ? await FieldEncryptionService.encryptField(event.resolution)
-            : null,
-          context_area: event.contextArea ?? null,
-          before_state: event.beforeState ?? null,
-          is_deleted: false,
-          created_at: now,
-          updated_at: now,
-        };
-    await enqueue('trigger_events', event.id, operation, payload);
-  } catch (e) {
-    logger.error('[SyncService] Failed to enqueue trigger event:', e);
-  }
-}
-
-export async function enqueueRelationshipPattern(entry: PatternEntrySync, operation: 'upsert' | 'delete' = 'upsert') {
-  try {
-    const now = new Date().toISOString();
-    const payload = operation === 'delete'
-      ? { id: entry.id }
-      : {
-          id: entry.id,
-          date: entry.date,
-          note_enc: await FieldEncryptionService.encryptField(entry.note),
-          tags_enc: await FieldEncryptionService.encryptField(JSON.stringify(entry.tags)),
-          is_deleted: false,
-          created_at: now,
-          updated_at: now,
-        };
-    await enqueue('relationship_patterns', entry.id, operation, payload);
-  } catch (e) {
-    logger.error('[SyncService] Failed to enqueue relationship pattern:', e);
-  }
 }

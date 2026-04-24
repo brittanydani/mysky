@@ -44,7 +44,7 @@ import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { PsychologicalForcesRadar } from '../../components/ui/PsychologicalForcesRadar';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { supabaseDb } from '../../services/storage/supabaseDb';
-import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
+import { loadTriggerEvents } from '../../services/storage/selfKnowledgeStore';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import type { TriggerEvent } from '../../utils/triggerEventTypes';
@@ -525,14 +525,11 @@ export default function InnerTensionsScreen() {
       (async () => {
         try {
           setLoading(true);
-          const [charts, journalEntries, triggerRaw] = await Promise.all([
+          const [charts, journalEntries, triggerEvents] = await Promise.all([
             supabaseDb.getCharts(),
             supabaseDb.getJournalEntries(),
-            EncryptedAsyncStorage.getItem('@mysky:trigger_events').catch(() => null),
+            loadTriggerEvents(),
           ]);
-          const triggerEvents: TriggerEvent[] = (() => {
-            try { return triggerRaw ? JSON.parse(triggerRaw) : []; } catch { return []; }
-          })();
           const sleepEntries = charts.length
             ? await supabaseDb.getSleepEntries(charts[0].id, 90)
             : [];

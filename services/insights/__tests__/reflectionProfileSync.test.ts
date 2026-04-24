@@ -1,5 +1,6 @@
 import { EncryptedAsyncStorage } from '../../storage/encryptedAsyncStorage';
-import { getAnswersByCategory, getDraftAnswersByCategory } from '../dailyReflectionService';
+import { getAnswersByCategory, getDraftAnswersByCategory, loadReflections } from '../dailyReflectionService';
+import { loadSomaticEntries } from '../../storage/selfKnowledgeStore';
 import {
   getSomaticReflectionCorrelations,
   syncArchetypeProfileFromReflections,
@@ -17,16 +18,25 @@ jest.mock('../../storage/encryptedAsyncStorage', () => ({
 jest.mock('../dailyReflectionService', () => ({
   getAnswersByCategory: jest.fn(),
   getDraftAnswersByCategory: jest.fn(),
+  loadReflections: jest.fn(),
+}));
+
+jest.mock('../../storage/selfKnowledgeStore', () => ({
+  loadSomaticEntries: jest.fn(),
 }));
 
 const mockedStorage = EncryptedAsyncStorage as jest.Mocked<typeof EncryptedAsyncStorage>;
 const mockedGetAnswersByCategory = getAnswersByCategory as jest.MockedFunction<typeof getAnswersByCategory>;
 const mockedGetDraftAnswersByCategory = getDraftAnswersByCategory as jest.MockedFunction<typeof getDraftAnswersByCategory>;
+const mockedLoadReflections = loadReflections as jest.MockedFunction<typeof loadReflections>;
+const mockedLoadSomaticEntries = loadSomaticEntries as jest.MockedFunction<typeof loadSomaticEntries>;
 
 describe('syncArchetypeProfileFromReflections', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedGetDraftAnswersByCategory.mockResolvedValue([]);
+    mockedLoadReflections.mockResolvedValue({ answers: [], totalDaysCompleted: 0, startedAt: null });
+    mockedLoadSomaticEntries.mockResolvedValue([]);
   });
 
   it('merges draft archetype answers into the visible score breakdown while preserving quiz scores', async () => {
@@ -236,21 +246,22 @@ describe('syncArchetypeProfileFromReflections', () => {
   });
 
   it('falls back to an overall somatic pattern when the same reflection days drive every category', async () => {
-    mockedStorage.getItem
-      .mockResolvedValueOnce(JSON.stringify({
-        answers: [
-          { category: 'values', date: '2026-04-01' },
-          { category: 'archetypes', date: '2026-04-01' },
-          { category: 'cognitive', date: '2026-04-01' },
-          { category: 'values', date: '2026-04-02' },
-          { category: 'archetypes', date: '2026-04-02' },
-          { category: 'cognitive', date: '2026-04-02' },
-        ],
-      }))
-      .mockResolvedValueOnce(JSON.stringify([
-        { date: '2026-04-01T08:00:00.000Z', emotion: 'Tension', intensity: 3 },
-        { date: '2026-04-02T08:00:00.000Z', emotion: 'Tension', intensity: 2 },
-      ]));
+    mockedLoadReflections.mockResolvedValue({
+      answers: [
+        { category: 'values', date: '2026-04-01' },
+        { category: 'archetypes', date: '2026-04-01' },
+        { category: 'cognitive', date: '2026-04-01' },
+        { category: 'values', date: '2026-04-02' },
+        { category: 'archetypes', date: '2026-04-02' },
+        { category: 'cognitive', date: '2026-04-02' },
+      ] as any,
+      totalDaysCompleted: 2,
+      startedAt: null,
+    });
+    mockedLoadSomaticEntries.mockResolvedValue([
+      { date: '2026-04-01T08:00:00.000Z', emotion: 'Tension', intensity: 3 } as any,
+      { date: '2026-04-02T08:00:00.000Z', emotion: 'Tension', intensity: 2 } as any,
+    ]);
 
     await expect(getSomaticReflectionCorrelations()).resolves.toEqual([
       { category: 'overall', topEmotion: 'Tension', count: 2 },
@@ -258,25 +269,26 @@ describe('syncArchetypeProfileFromReflections', () => {
   });
 
   it('returns a category emotion when it is more specific than the overall reflection baseline', async () => {
-    mockedStorage.getItem
-      .mockResolvedValueOnce(JSON.stringify({
-        answers: [
-          { category: 'values', date: '2026-04-01' },
-          { category: 'values', date: '2026-04-02' },
-          { category: 'archetypes', date: '2026-04-03' },
-          { category: 'archetypes', date: '2026-04-04' },
-          { category: 'cognitive', date: '2026-04-05' },
-          { category: 'cognitive', date: '2026-04-06' },
-        ],
-      }))
-      .mockResolvedValueOnce(JSON.stringify([
-        { date: '2026-04-01T08:00:00.000Z', emotion: 'Warmth', intensity: 3 },
-        { date: '2026-04-02T08:00:00.000Z', emotion: 'Warmth', intensity: 2 },
-        { date: '2026-04-03T08:00:00.000Z', emotion: 'Tension', intensity: 3 },
-        { date: '2026-04-04T08:00:00.000Z', emotion: 'Tension', intensity: 2 },
-        { date: '2026-04-05T08:00:00.000Z', emotion: 'Calm', intensity: 3 },
-        { date: '2026-04-06T08:00:00.000Z', emotion: 'Warmth', intensity: 2 },
-      ]));
+    mockedLoadReflections.mockResolvedValue({
+      answers: [
+        { category: 'values', date: '2026-04-01' },
+        { category: 'values', date: '2026-04-02' },
+        { category: 'archetypes', date: '2026-04-03' },
+        { category: 'archetypes', date: '2026-04-04' },
+        { category: 'cognitive', date: '2026-04-05' },
+        { category: 'cognitive', date: '2026-04-06' },
+      ] as any,
+      totalDaysCompleted: 6,
+      startedAt: null,
+    });
+    mockedLoadSomaticEntries.mockResolvedValue([
+      { date: '2026-04-01T08:00:00.000Z', emotion: 'Warmth', intensity: 3 } as any,
+      { date: '2026-04-02T08:00:00.000Z', emotion: 'Warmth', intensity: 2 } as any,
+      { date: '2026-04-03T08:00:00.000Z', emotion: 'Tension', intensity: 3 } as any,
+      { date: '2026-04-04T08:00:00.000Z', emotion: 'Tension', intensity: 2 } as any,
+      { date: '2026-04-05T08:00:00.000Z', emotion: 'Calm', intensity: 3 } as any,
+      { date: '2026-04-06T08:00:00.000Z', emotion: 'Warmth', intensity: 2 } as any,
+    ]);
 
     await expect(getSomaticReflectionCorrelations()).resolves.toEqual([
       { category: 'values', topEmotion: 'Warmth', count: 2 },
@@ -285,23 +297,24 @@ describe('syncArchetypeProfileFromReflections', () => {
   });
 
   it('uses the dominant somatic emotion for each day instead of counting every logged emotion equally', async () => {
-    mockedStorage.getItem
-      .mockResolvedValueOnce(JSON.stringify({
-        answers: [
-          { category: 'values', date: '2026-04-01' },
-          { category: 'values', date: '2026-04-02' },
-          { category: 'archetypes', date: '2026-04-03' },
-          { category: 'archetypes', date: '2026-04-04' },
-        ],
-      }))
-      .mockResolvedValueOnce(JSON.stringify([
-        { date: '2026-04-01T08:00:00.000Z', emotion: 'Warmth', intensity: 4 },
-        { date: '2026-04-01T08:30:00.000Z', emotion: 'Tension', intensity: 1 },
-        { date: '2026-04-02T08:00:00.000Z', emotion: 'Warmth', intensity: 3 },
-        { date: '2026-04-03T08:00:00.000Z', emotion: 'Tension', intensity: 4 },
-        { date: '2026-04-03T08:30:00.000Z', emotion: 'Warmth', intensity: 1 },
-        { date: '2026-04-04T08:00:00.000Z', emotion: 'Tension', intensity: 3 },
-      ]));
+    mockedLoadReflections.mockResolvedValue({
+      answers: [
+        { category: 'values', date: '2026-04-01' },
+        { category: 'values', date: '2026-04-02' },
+        { category: 'archetypes', date: '2026-04-03' },
+        { category: 'archetypes', date: '2026-04-04' },
+      ] as any,
+      totalDaysCompleted: 4,
+      startedAt: null,
+    });
+    mockedLoadSomaticEntries.mockResolvedValue([
+      { date: '2026-04-01T08:00:00.000Z', emotion: 'Warmth', intensity: 4 } as any,
+      { date: '2026-04-01T08:30:00.000Z', emotion: 'Tension', intensity: 1 } as any,
+      { date: '2026-04-02T08:00:00.000Z', emotion: 'Warmth', intensity: 3 } as any,
+      { date: '2026-04-03T08:00:00.000Z', emotion: 'Tension', intensity: 4 } as any,
+      { date: '2026-04-03T08:30:00.000Z', emotion: 'Warmth', intensity: 1 } as any,
+      { date: '2026-04-04T08:00:00.000Z', emotion: 'Tension', intensity: 3 } as any,
+    ]);
 
     await expect(getSomaticReflectionCorrelations()).resolves.toEqual([
       { category: 'values', topEmotion: 'Warmth', count: 2 },

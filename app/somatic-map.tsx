@@ -24,7 +24,6 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 import { logger } from '../utils/logger';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
@@ -33,9 +32,13 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import {
+  addSomaticEntry,
+  deleteSomaticEntry,
+  loadSomaticEntries,
+} from '../services/storage/selfKnowledgeStore';
 
 const { width: SCREEN_W } = Dimensions.get('window');
-const STORAGE_KEY = '@mysky:somatic_entries';
 const FIGURE_WIDTH = Math.min(SCREEN_W - 96, 200);
 const BODY_SCALE = FIGURE_WIDTH / 200;
 
@@ -69,7 +72,7 @@ export default function SomaticMapScreen() {
   const [gender, setGender] = useState<'female' | 'male'>('female');
 
   useFocusEffect(useCallback(() => {
-    EncryptedAsyncStorage.getItem(STORAGE_KEY).then(raw => raw && setEntries(JSON.parse(raw))).catch(e => logger.warn(e));
+    loadSomaticEntries().then(setEntries).catch(e => logger.warn(e));
   }, []));
 
   const logEntry = async () => {
@@ -77,7 +80,7 @@ export default function SomaticMapScreen() {
     const entry = { id: Date.now().toString(), date: new Date().toISOString(), region: selectedRegion, side, gender, emotion: selectedEmotion, sensation: selectedSensation, intensity };
     const updated = [entry, ...entries];
     setEntries(updated);
-    await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    await addSomaticEntry(entry);
     setSelectedRegion(null); setSelectedEmotion(null); setSelectedSensation(null);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
@@ -89,7 +92,7 @@ export default function SomaticMapScreen() {
         text: 'Delete', style: 'destructive', onPress: async () => {
           const updated = entries.filter(e => e.id !== id);
           setEntries(updated);
-          await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          await deleteSomaticEntry(id);
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         },
       },

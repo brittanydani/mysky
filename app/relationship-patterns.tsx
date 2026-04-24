@@ -24,7 +24,6 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 import { logger } from '../utils/logger';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,8 +38,12 @@ import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 import { usePremium } from '../context/PremiumContext';
 import { ReflectionDisclaimer } from '../components/ui/ReflectionDisclaimer';
+import {
+  addRelationshipPattern,
+  loadPlainAccountScopedJson,
+  loadRelationshipPatterns,
+} from '../services/storage/selfKnowledgeStore';
 
-const STORAGE_KEY = '@mysky:relationship_patterns';
 const CUSTOM_TAGS_KEY = '@mysky:relationship_pattern_custom_tags';
 
 type PatternCategory = 'anxious' | 'avoidant' | 'control' | 'secure';
@@ -92,13 +95,13 @@ export default function RelationshipPatternsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-        if (raw) setEntries(JSON.parse(raw));
-      }).catch(e => logger.warn('[RelationshipPatterns] Load failed', e));
-      
-      EncryptedAsyncStorage.getItem(CUSTOM_TAGS_KEY).then((raw) => {
-        if (raw) setCustomTags(JSON.parse(raw));
-      }).catch(e => logger.warn('[RelationshipPatterns] Custom tags failed', e));
+      loadRelationshipPatterns()
+        .then(setEntries)
+        .catch(e => logger.warn('[RelationshipPatterns] Load failed', e));
+
+      loadPlainAccountScopedJson<PatternTag[]>(CUSTOM_TAGS_KEY, [], CUSTOM_TAGS_KEY)
+        .then(setCustomTags)
+        .catch(e => logger.warn('[RelationshipPatterns] Custom tags failed', e));
     }, []),
   );
 
@@ -122,7 +125,7 @@ export default function RelationshipPatternsScreen() {
     const updated = [newEntry, ...entries];
     setEntries(updated);
     try {
-      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      await addRelationshipPattern(newEntry);
     } catch (e) {
       logger.error('[RelationshipPatterns] Failed to save entry', e);
       setEntries(entries);

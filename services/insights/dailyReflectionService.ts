@@ -2,20 +2,26 @@
  * Daily Reflection Service
  *
  * The foundational logic engine for the "Inner World" dossier. 
- * Handles deterministic daily question rotation, encrypted biological synchronization, 
- * and persistent state management for the Identity Blueprint system.
+ * Handles deterministic daily question rotation and persistent state
+ * management for the Identity Blueprint system, with Supabase as the
+ * canonical store and local cache for drafts/offline UX.
  * * Aesthetic: Lunar Sky / Deep Space Logic
  * - 2–3 questions per category per day (3 on days divisible by 3).
  * - Deterministic rotation: Uses Fisher-Yates yearly shuffles seeded by user identity.
  * - Sealed States: Once a category is "sealed," it is committed to the psychological dossier.
  */
 
-import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
 import {
   QUESTION_BANKS,
   ReflectionCategory,
   ReflectionQuestion,
 } from '../../constants/dailyReflectionQuestions';
+import {
+  loadDailyReflectionData,
+  loadPlainAccountScopedJson,
+  persistDailyReflectionData,
+  savePlainAccountScopedJson,
+} from '../storage/selfKnowledgeStore';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -55,9 +61,10 @@ interface DraftReflectionData {
 // Persistence Logic
 // ─────────────────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = '@mysky:daily_reflections';
-const DRAFT_STORAGE_KEY = '@mysky:daily_reflection_drafts';
-const PENDING_QUESTIONS_KEY = '@mysky:pending_reflection_questions';
+const DRAFT_STORAGE_KEY = '@mysky:cache:daily_reflection_drafts';
+const LEGACY_DRAFT_STORAGE_KEY = '@mysky:daily_reflection_drafts';
+const PENDING_QUESTIONS_KEY = '@mysky:cache:pending_reflection_questions';
+const LEGACY_PENDING_QUESTIONS_KEY = '@mysky:pending_reflection_questions';
 
 interface PendingQuestionSet {
   date: string; // YYYY-MM-DD when these questions were generated
@@ -66,20 +73,23 @@ interface PendingQuestionSet {
 
 async function loadPendingQuestions(): Promise<PendingQuestionSet | null> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(PENDING_QUESTIONS_KEY);
-    return raw ? JSON.parse(raw) : null;
+    return await loadPlainAccountScopedJson<PendingQuestionSet | null>(
+      PENDING_QUESTIONS_KEY,
+      null,
+      LEGACY_PENDING_QUESTIONS_KEY,
+    );
   } catch { return null; }
 }
 
 async function savePendingQuestions(pending: PendingQuestionSet): Promise<void> {
   try {
-    await EncryptedAsyncStorage.setItem(PENDING_QUESTIONS_KEY, JSON.stringify(pending));
+    await savePlainAccountScopedJson(PENDING_QUESTIONS_KEY, pending);
   } catch {}
 }
 
 async function clearPendingQuestions(): Promise<void> {
   try {
-    await EncryptedAsyncStorage.removeItem(PENDING_QUESTIONS_KEY);
+    await savePlainAccountScopedJson<PendingQuestionSet | null>(PENDING_QUESTIONS_KEY, null);
   } catch {}
 }
 
@@ -227,30 +237,28 @@ export function getAllTodayQuestions(date: Date = new Date(), userSeed?: string)
 
 export async function loadReflections(): Promise<DailyReflectionData> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as DailyReflectionData;
+    return await loadDailyReflectionData();
   } catch {}
   return { answers: [], totalDaysCompleted: 0, startedAt: null };
 }
 
-async function saveReflections(data: DailyReflectionData): Promise<void> {
-  await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
 async function loadDraftReflectionData(): Promise<DraftReflectionData> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(DRAFT_STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as DraftReflectionData;
+    return await loadPlainAccountScopedJson<DraftReflectionData>(
+      DRAFT_STORAGE_KEY,
+      { answers: [] },
+      LEGACY_DRAFT_STORAGE_KEY,
+    );
   } catch {}
   return { answers: [] };
 }
 
 async function saveDraftReflectionData(data: DraftReflectionData): Promise<void> {
   if (data.answers.length === 0) {
-    await EncryptedAsyncStorage.removeItem(DRAFT_STORAGE_KEY);
+    await savePlainAccountScopedJson(DRAFT_STORAGE_KEY, { answers: [] });
     return;
   }
-  await EncryptedAsyncStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(data));
+  await savePlainAccountScopedJson(DRAFT_STORAGE_KEY, data);
 }
 
 function buildReflectionAnswerKey(
@@ -338,7 +346,12 @@ export async function sealCategoryAnswers(
   }
 
   data.totalDaysCompleted = new Set(data.answers.map(a => a.date)).size;
-  await saveReflections(data);
+  await persistDailyReflectionData(
+    data,
+    data.answers.filter(
+      (answer) => answer.category === category && answer.date === newAnswers[0]?.date,
+    ),
+  );
   await clearDraftAnswers(category, newAnswers[0]?.date);
 
   return data;

@@ -1,10 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from '../../lib/supabase';
+import { PLAIN_ASYNC_USER_DATA_KEYS } from './userDataKeys';
 
-const ACCOUNT_SCOPED_PLAIN_KEYS = new Set<string>([
-  'mysky_custom_journal_tags',
-]);
+const ACCOUNT_SCOPED_PLAIN_KEYS = new Set<string>(PLAIN_ASYNC_USER_DATA_KEYS);
 
 function buildScopedKey(key: string, userId: string): string {
   return `${key}::user::${userId}`;

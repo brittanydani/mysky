@@ -1,7 +1,7 @@
 // app/trigger-log.tsx
 // MySky — Polyvagal Trigger Log
 // Log and review nervous system events (Drains & Glimmers), mapped to
-// Polyvagal Theory states. All data stored locally. Nothing transmitted.
+// Polyvagal Theory states. Supabase is canonical; local storage is cache only.
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -19,7 +19,6 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, FadeOut } from 'react-native-reanimated';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
@@ -32,9 +31,14 @@ import { keepLastWordsTogether } from '../utils/textLayout';
 import type { TriggerEvent, LogMode, NSState } from '../utils/triggerEventTypes';
 import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import {
+  addTriggerEvent,
+  loadPlainAccountScopedJson,
+  loadTriggerEvents,
+  savePlainAccountScopedJson,
+} from '../services/storage/selfKnowledgeStore';
 export type { TriggerEvent } from '../utils/triggerEventTypes';
 
-const STORAGE_KEY = '@mysky:trigger_events';
 const CUSTOM_AREAS_KEY = '@mysky:trigger_custom_areas';
 const CUSTOM_SENSATIONS_KEY = '@mysky:trigger_custom_sensations';
 
@@ -250,8 +254,7 @@ export default function TriggerLogScreen() {
 
   const loadHistory = async () => {
     try {
-      const raw = await EncryptedAsyncStorage.getItem(STORAGE_KEY);
-      setHistory(raw ? JSON.parse(raw) : []);
+      setHistory(await loadTriggerEvents());
     } catch {
       setHistory([]);
     } finally {
@@ -262,11 +265,11 @@ export default function TriggerLogScreen() {
   const loadCustomOptions = async () => {
     try {
       const [areasRaw, sensationsRaw] = await Promise.all([
-        EncryptedAsyncStorage.getItem(CUSTOM_AREAS_KEY),
-        EncryptedAsyncStorage.getItem(CUSTOM_SENSATIONS_KEY),
+        loadPlainAccountScopedJson<CustomAreaOption[]>(CUSTOM_AREAS_KEY, [], CUSTOM_AREAS_KEY),
+        loadPlainAccountScopedJson<CustomSensationOption[]>(CUSTOM_SENSATIONS_KEY, [], CUSTOM_SENSATIONS_KEY),
       ]);
-      setCustomAreaOptions(areasRaw ? JSON.parse(areasRaw) : []);
-      setCustomSensationOptions(sensationsRaw ? JSON.parse(sensationsRaw) : []);
+      setCustomAreaOptions(areasRaw);
+      setCustomSensationOptions(sensationsRaw);
     } catch {
       setCustomAreaOptions([]);
       setCustomSensationOptions([]);
@@ -286,11 +289,11 @@ export default function TriggerLogScreen() {
   };
 
   const persistCustomAreas = (next: CustomAreaOption[]) => {
-    EncryptedAsyncStorage.setItem(CUSTOM_AREAS_KEY, JSON.stringify(next)).catch(() => {});
+    savePlainAccountScopedJson(CUSTOM_AREAS_KEY, next).catch(() => {});
   };
 
   const persistCustomSensations = (next: CustomSensationOption[]) => {
-    EncryptedAsyncStorage.setItem(CUSTOM_SENSATIONS_KEY, JSON.stringify(next)).catch(() => {});
+    savePlainAccountScopedJson(CUSTOM_SENSATIONS_KEY, next).catch(() => {});
   };
 
   const toggleMode = (newMode: LogMode) => {
@@ -450,10 +453,9 @@ export default function TriggerLogScreen() {
     };
 
     try {
-      const raw = await EncryptedAsyncStorage.getItem(STORAGE_KEY);
-      const existing: TriggerEvent[] = raw ? JSON.parse(raw) : [];
+      const existing = await loadTriggerEvents();
       const updated = [entry, ...existing];
-      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      await addTriggerEvent(entry);
       setHistory(updated);
     } catch {}
 

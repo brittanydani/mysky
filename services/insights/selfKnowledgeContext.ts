@@ -1,16 +1,21 @@
 /**
  * Self-Knowledge Context Loader
  *
- * Reads all six self-knowledge AsyncStorage stores and returns a unified,
- * typed context object. Used by the cross-reference engine and daily loop
- * to personalise insights with the user's own profile data.
+ * Reads the self-knowledge profile stores plus the Supabase-backed
+ * reflection/body/trigger/pattern datasets and returns a unified, typed
+ * context object. Used by the cross-reference engine and daily loop to
+ * personalise insights with the user's own profile data.
  *
  * All reads are fire-and-forget-safe: any parse error or missing key
  * returns null/[] rather than throwing.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import {
+  loadRelationshipPatterns,
+  loadSomaticEntries,
+  loadTriggerEvents,
+} from '../storage/selfKnowledgeStore';
 import {
   getReflectionSummary,
   ReflectionAnswer,
@@ -152,35 +157,9 @@ const STORAGE_KEYS = {
   archetypeProfile:     '@mysky:archetype_profile',
   cognitiveStyle:       '@mysky:cognitive_style',
   intelligenceProfile:  '@mysky:intelligence_profile',
-  somaticEntries:       '@mysky:somatic_entries',
-  triggerEvents:        '@mysky:trigger_events',
-  relationshipPatterns: '@mysky:relationship_patterns',
 } as const;
 
-// Raw shape written by trigger-log.tsx
-interface TriggerEvent {
-  id: string;
-  timestamp: number;
-  mode: 'drain' | 'nourish';
-  event: string;
-  nsState: string;
-  sensations: string[];
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Internal helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function readJson<T>(key: string): Promise<T | null> {
-  try {
-    const raw = await AsyncStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Like readJson but reads from encrypted storage (for sensitive personal data). */
+/** Reads JSON from encrypted storage for the profile stores that remain local. */
 async function readEncryptedJson<T>(key: string): Promise<T | null> {
   try {
     const raw = await EncryptedAsyncStorage.getItem(key);
@@ -197,7 +176,7 @@ async function readEncryptedJson<T>(key: string): Promise<T | null> {
  * appears only once.
  */
 async function loadTriggerData(): Promise<TriggerData | null> {
-  const events = await readEncryptedJson<TriggerEvent[]>(STORAGE_KEYS.triggerEvents);
+  const events = await loadTriggerEvents().catch(() => []);
   if (!events || !Array.isArray(events) || events.length === 0) return null;
 
   const drains = [
@@ -242,18 +221,27 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     readEncryptedJson<ArchetypeProfile>(STORAGE_KEYS.archetypeProfile),
     readEncryptedJson<CognitiveScores>(STORAGE_KEYS.cognitiveStyle),
     readEncryptedJson<IntelligenceProfile>(STORAGE_KEYS.intelligenceProfile),
-    readEncryptedJson<SomaticEntry[]>(STORAGE_KEYS.somaticEntries),
+    loadSomaticEntries(),
     loadTriggerData(),
-    readEncryptedJson<RelationshipPatternEntry[]>(STORAGE_KEYS.relationshipPatterns),
+    loadRelationshipPatterns(),
     getReflectionSummary().catch(() => null),
   ]);
+
+  const normalizedSomaticEntries: SomaticEntry[] = (somaticEntries ?? []).map((entry) => ({
+    id: entry.id,
+    date: entry.date,
+    region: entry.region,
+    emotion: entry.emotion,
+    intensity: entry.intensity,
+    ...(entry.sensation ? { sensation: entry.sensation } : {}),
+  }));
 
   return {
     coreValues,
     archetypeProfile,
     cognitiveStyle,
     intelligenceProfile,
-    somaticEntries: somaticEntries ?? [],
+    somaticEntries: normalizedSomaticEntries,
     triggers,
     relationshipPatterns: relationshipPatterns ?? [],
     dailyReflections: reflectionSummary,
