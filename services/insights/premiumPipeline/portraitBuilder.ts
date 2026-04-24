@@ -106,11 +106,15 @@ Your job is to identify:
 - self-conflicts and longing themes
 - paradoxes the user appears to be holding
 - cross-domain patterns that recur across multiple data types
+- condition-based sequences, such as what tends to change after low sleep, hard mornings, specific triggers, or better days
+- differences between hardest days and best days
+- gaps between what the user reports directly and what body/journal/sleep patterns suggest indirectly
 
 Use the user's actual wording whenever possible in recurring_phrases and tone summaries.
 Prefer repeated patterns over one-off events.
 Prefer intersections over single metrics.
 Prefer emotionally meaningful patterns over trivial ones.
+Do not treat generic labels like "stress", "mood", "sleep", "trigger", or "journal" as personalized language by themselves.
 
 A pattern is stronger when it appears across multiple domains, such as:
 - sleep + check-ins + journal tone
@@ -122,7 +126,9 @@ Output only structured JSON matching the requested contract.`;
 export async function buildPortrait(
   input: PortraitBuilderInput,
   accessToken: string,
+  options?: { logErrors?: boolean },
 ): Promise<PortraitBuilderOutput | null> {
+  const logErrors = options?.logErrors ?? true;
   try {
     const { data, error } = await supabase.functions.invoke('gemini-proxy', {
       headers: {
@@ -141,12 +147,12 @@ export async function buildPortrait(
     });
 
     if (error) {
-      logger.error('[PortraitBuilder] Edge function error:', error);
+      if (logErrors) logger.error('[PortraitBuilder] Edge function error:', error);
       return null;
     }
 
     if (!data?.text) {
-      logger.error('[PortraitBuilder] No text returned from proxy');
+      if (logErrors) logger.error('[PortraitBuilder] No text returned from proxy');
       return null;
     }
 
@@ -154,7 +160,7 @@ export async function buildPortrait(
     const parsed = JSON.parse(jsonText);
     return parsed as PortraitBuilderOutput;
   } catch (error) {
-    logger.error('[PortraitBuilder] Failed to build portrait:', error);
+    if (logErrors) logger.error('[PortraitBuilder] Failed to build portrait:', error);
     return null;
   }
 }

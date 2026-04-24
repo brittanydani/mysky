@@ -1,6 +1,7 @@
 import { selectPattern } from '../patternSelector';
 import { writePremiumInsight } from '../premiumInsightWriter';
 import { runQualityGate } from '../insightQualityGate';
+import { evaluateEligibility } from '../../premium/eligibility';
 import { supabase } from '../../../../lib/supabase';
 
 jest.mock('../../../../lib/supabase', () => ({
@@ -128,6 +129,85 @@ describe('Premium Insight Pipeline', () => {
       expect(result.allowed).toBe(false);
       expect(result.downgradeTo).toBe('emerging_pattern');
       expect(result.reasons).toContain('needs cross-domain evidence');
+    });
+
+    it('should reject non-archive insights built from generic categories alone', () => {
+      const { canRenderInsight } = require('../insightQualityGate');
+      const evidence = {
+        insightClass: 'emerging_pattern',
+        phraseHealth: 'clean',
+        confidence: 0.7,
+        domainsUsed: ['check_ins', 'journal'],
+        timeWindowDays: 14,
+        repeatCount: 4,
+        primarySignals: ['stress was high'],
+        supportingSignals: ['mood was low'],
+        crossDomainLinks: [],
+        userLanguageAnchors: ['stress', 'mood'],
+        extractedPhrases: [],
+        isIdentityClaim: false,
+      };
+
+      const result = canRenderInsight(evidence as any);
+      expect(result.allowed).toBe(false);
+      expect(result.reasons).toContain('missing specific recurring user language');
+    });
+
+    it('should allow an emerging pattern with time, language, pattern, and second-domain support', () => {
+      const { canRenderInsight } = require('../insightQualityGate');
+      const evidence = {
+        insightClass: 'emerging_pattern',
+        phraseHealth: 'clean',
+        confidence: 0.72,
+        domainsUsed: ['journal', 'sleep'],
+        timeWindowDays: 10,
+        repeatCount: 4,
+        primarySignals: ['after lower-sleep nights, entries become more self-conscious'],
+        supportingSignals: ['sleep drops below 6 hours nearby'],
+        crossDomainLinks: ['low sleep + guarded journal language recur together'],
+        userLanguageAnchors: ['trying to hold it together'],
+        extractedPhrases: ['bracing'],
+        isIdentityClaim: false,
+      };
+
+      const result = canRenderInsight(evidence as any);
+      expect(result.allowed).toBe(true);
+    });
+  });
+
+  describe('evaluateEligibility', () => {
+    it('should block premium evidence without the three tailored anchors', () => {
+      const result = evaluateEligibility({
+        id: 'generic-category-pattern',
+        insightClass: 'emerging_pattern',
+        claim: 'stress and mood are recurring themes',
+        userFacingTopic: 'Stress',
+        domainsUsed: ['check_ins'],
+        timeWindowDays: 0,
+        repeatCount: 3,
+        confidence: 0.7,
+        novelty: 0.5,
+        emotionalWeight: 0.6,
+        stability: 0.5,
+        primarySignals: [],
+        supportingSignals: [],
+        crossDomainLinks: [],
+        userLanguageAnchors: ['stress'],
+        extractedPhrases: [],
+        phraseHealth: 'clean',
+        paradox: null,
+        paradoxStrength: 0.1,
+        valenceClass: 'negative',
+        causalStrength: 0.2,
+        isIdentityClaim: false,
+        stats: {},
+      });
+
+      expect(result.allowed).toBe(false);
+      expect(result.reasons).toContain('missing specific recurring user language');
+      expect(result.reasons).toContain('missing temporal anchor');
+      expect(result.reasons).toContain('missing behavioral or emotional pattern signal');
+      expect(result.reasons).toContain('missing support signal from second domain');
     });
   });
 

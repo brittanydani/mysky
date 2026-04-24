@@ -27,6 +27,51 @@ export interface InsightQualityGateOutput {
   suggested_revision: string | null;
 }
 
+const GENERIC_CATEGORY_ANCHORS = new Set([
+  'angry',
+  'anxiety',
+  'anxious',
+  'body',
+  'check ins',
+  'check_in',
+  'check_ins',
+  'check-in',
+  'drain',
+  'emotion',
+  'fatigue',
+  'glimmer',
+  'grief',
+  'happy',
+  'journal',
+  'loneliness',
+  'lonely',
+  'mood',
+  'negative',
+  'neutral',
+  'overwhelm',
+  'overwhelmed',
+  'positive',
+  'reflection',
+  'relationship',
+  'rest',
+  'sad',
+  'shame',
+  'sleep',
+  'somatic',
+  'stress',
+  'stressed',
+  'trigger',
+  'tired',
+]);
+
+function hasPersonalLanguageTexture(e: PatternSelectorOutput['selected_pattern']): boolean {
+  const anchors = [...(e.userLanguageAnchors ?? []), ...(e.extractedPhrases ?? [])]
+    .map((anchor) => anchor.trim().toLowerCase().replace(/\s+/g, ' '))
+    .filter(Boolean);
+
+  return anchors.some((anchor) => !GENERIC_CATEGORY_ANCHORS.has(anchor));
+}
+
 export function canRenderInsight(e: PatternSelectorOutput['selected_pattern']): { allowed: boolean; downgradeTo?: InsightClass; reasons: string[] } {
   const reasons: string[] = [];
 
@@ -40,8 +85,28 @@ export function canRenderInsight(e: PatternSelectorOutput['selected_pattern']): 
     return { allowed: false, reasons };
   }
 
+  if (e.insightClass !== 'archive_stat') {
+    const domainsUsed = e.domainsUsed ?? [];
+    const crossDomainLinks = e.crossDomainLinks ?? [];
+    const primarySignals = e.primarySignals ?? [];
+    const supportingSignals = e.supportingSignals ?? [];
+    const hasCrossDomainPattern = domainsUsed.length >= 2 || crossDomainLinks.length > 0;
+    const hasSupportSignal =
+      supportingSignals.length > 0 ||
+      domainsUsed.some((d) => ['sleep', 'somatic', 'trigger', 'relationship', 'reflections'].includes(d));
+
+    if (!hasPersonalLanguageTexture(e)) reasons.push('missing specific recurring user language');
+    if ((e.timeWindowDays ?? 0) <= 0) reasons.push('missing temporal anchor');
+    if (!primarySignals.length && !crossDomainLinks.length) {
+      reasons.push('missing behavioral or emotional pattern signal');
+    }
+    if (!hasCrossDomainPattern || !hasSupportSignal) {
+      reasons.push('missing support signal from second domain');
+    }
+  }
+
   if (e.insightClass === 'deep_pattern') {
-    if (e.domainsUsed.length < 2) reasons.push('needs cross-domain evidence');
+    if ((e.domainsUsed ?? []).length < 2) reasons.push('needs cross-domain evidence');
     if (e.repeatCount < 5) reasons.push('insufficient repetition');
     if (e.confidence < 0.8) reasons.push('confidence too low for deep pattern');
     if (e.isIdentityClaim) reasons.push('identity claim not allowed in deep pattern');
@@ -50,9 +115,13 @@ export function canRenderInsight(e: PatternSelectorOutput['selected_pattern']): 
 
   if (e.insightClass === 'profile_inference') {
     if (e.confidence < 0.88) reasons.push('profile inference confidence too low');
-    if (e.domainsUsed.length < 2) reasons.push('profile inference needs multiple domains');
+    if ((e.domainsUsed ?? []).length < 2) reasons.push('profile inference needs multiple domains');
     if (e.repeatCount < 8) reasons.push('profile inference repetition too low');
     if (reasons.length) return { allowed: false, downgradeTo: 'emerging_pattern', reasons };
+  }
+
+  if (reasons.length) {
+    return { allowed: false, reasons };
   }
 
   return { allowed: true, reasons: [] };
@@ -80,6 +149,9 @@ Thresholds by class:
 
 Reject the insight (set approved to false) if:
 - Scores do not meet the thresholds above for the given class.
+- The evidence or copy relies on generic categories alone, such as mood/stress/emotion/tag labels, without the user's repeated wording.
+- It does not include at least three user-specific anchors: a temporal anchor, a behavioral/emotional pattern signal, and a supporting second-domain signal.
+- It does not write from a real intersection of signals (for example sleep + check-in + journal language, somatic region + trigger + relationship entry, or best-day vs hard-day differences).
 - The insight class requires high confidence but the wording is overconfident given the evidence.
 - It uses typologies, archetype names (e.g., "The Caregiver"), or clinical categories without translating them into lived, human behavior.
 - It makes flat identity claims ("you are...") instead of observational claims.
