@@ -3,14 +3,8 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
-import * as Crypto from 'expo-crypto';
-import { gcm } from '@noble/ciphers/aes.js';
-import { pbkdf2Async } from '@noble/hashes/pbkdf2.js';
-import { sha256 } from '@noble/hashes/sha2.js';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabaseDb } from './supabaseDb';
-import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
 import { AccountScopedAsyncStorage } from './accountScopedStorage';
 import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from './userDataKeys';
@@ -18,18 +12,8 @@ import type { AppSettings, SavedChart, JournalEntry, RelationshipChart, SleepEnt
 import type { SavedInsight } from './insightHistory';
 import { logger } from '../../utils/logger';
 
-/* ============================================================================
- * Types
- * ============================================================================
- */
-
-/**
- * AsyncStorage keys that hold user-generated personal data.
- * Encrypted keys use EncryptedAsyncStorage (DEK-based AES-256-GCM).
- * Plain keys use raw AsyncStorage.
- */
 type BackupPayload = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   exportedAt: string;
   charts: SavedChart[];
   journalEntries: JournalEntry[];
@@ -38,138 +22,24 @@ type BackupPayload = {
   sleepEntries: SleepEntry[];
   checkIns?: import('../patterns/types').DailyCheckIn[];
   settings: AppSettings | null;
-  /** Decrypted user profile data from AsyncStorage (added in backup v1.1). */
   asyncStorageData?: Record<string, string>;
 };
 
-type BackupEnvelope = {
-  schemaVersion: 1;
-  kdf: {
-    name: 'pbkdf2-sha256';
-    iterations: number;
-    saltHex: string;
-    keyLen: number;
-  };
-  cipher: {
-    name: 'aes-256-gcm';
-    ivHex: string;
-  };
-  ciphertextHex: string;
-  createdAt: string;
-};
-
-/* ============================================================================
- * Constants
- * ============================================================================
- */
-
-// 100,000 iterations meets OWASP 2021 guidance and is practical on mobile JS
-// (310,000 caused multi-second stalls in pure-JS environments with no WebCrypto acceleration).
-// The envelope stores the actual iteration count so existing backups restore correctly.
-const KDF_ITERATIONS = 100_000;
-const KEY_LEN = 32; // bytes (AES-256)
-const SALT_LEN = 16;
-const IV_LEN = 12;
-
-/* ============================================================================
- * Encoding helpers
- * ============================================================================
- */
-
-const toHex = (bytes: Uint8Array): string =>
-  Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-
-const fromHex = (hex: string): Uint8Array => {
-  if (!hex || hex.length % 2 !== 0) {
-    throw new Error('Invalid hex payload');
-  }
-  const out = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    out[i / 2] = parseInt(hex.slice(i, i + 2), 16);
-  }
-  return out;
-};
-
-const encodeUtf8 = (value: string): Uint8Array =>
-  new TextEncoder().encode(value);
-
-const decodeUtf8 = (value: Uint8Array): string =>
-  new TextDecoder().decode(value);
-
-/* ============================================================================
- * Crypto primitives — pure JS via @noble/ciphers + @noble/hashes
- * (no WebCrypto / expo-standard-web-crypto polyfill required)
- * ============================================================================
- */
-
-async function deriveAesKeyPBKDF2(
-  passphrase: string,
-  salt: Uint8Array,
-  iterations: number = KDF_ITERATIONS,
-  keyLen: number = KEY_LEN
-): Promise<Uint8Array> {
-  const passBytes = encodeUtf8(passphrase);
-  return pbkdf2Async(sha256, passBytes, salt, {
-    c: iterations,
-    dkLen: keyLen,
-  });
-}
-
-function encryptAesGcm(
-  plaintext: Uint8Array,
-  key: Uint8Array,
-  iv: Uint8Array
-): Uint8Array {
-  const cipher = gcm(key, iv);
-  return cipher.encrypt(plaintext);
-}
-
-function decryptAesGcm(
-  ciphertext: Uint8Array,
-  key: Uint8Array,
-  iv: Uint8Array
-): Uint8Array {
-  const cipher = gcm(key, iv);
-  return cipher.decrypt(ciphertext);
-}
-
-/* ============================================================================
- * Backup Service
- * ============================================================================
- */
+const MAX_BACKUP_SIZE = 50 * 1024 * 1024;
 
 export class BackupService {
-  static async createEncryptedBackupFile(
-    passphrase: string
-  ): Promise<{ uri: string; filename: string }> {
-    if (!passphrase || passphrase.trim().length < 12) {
-      throw new Error('Passphrase must be at least 12 characters long');
-    }
-
-    // Guard: refuse to create a backup when the encryption key is missing.
-    // Without the DEK, getCharts()/getJournalEntries() would silently return
-    // placeholder strings instead of real data, producing a poisoned backup.
-    const keyAvailable = await FieldEncryptionService.isKeyAvailable();
-    if (!keyAvailable) {
-      throw new Error(
-        'Cannot create a backup on this device because encrypted data is not accessible. ' +
-        'You can restore a previous backup or delete all data to start fresh.'
-      );
-    }
-
+  static async createBackupFile(): Promise<{ uri: string; filename: string }> {
     const [charts, journalEntries, settings] = await Promise.all([
       supabaseDb.getCharts(),
       supabaseDb.getJournalEntries(),
       supabaseDb.getSettings(),
     ]);
 
-    // Load relationship charts, insight history, and sleep entries for all user charts
     const relationshipCharts: RelationshipChart[] = [];
     const insightHistory: SavedInsight[] = [];
     const sleepEntries: SleepEntry[] = [];
     const checkIns: import('../patterns/types').DailyCheckIn[] = [];
+
     await Promise.all(charts.map(async (chart) => {
       const [rels, insights, sleep, dailyCheckIns] = await Promise.all([
         supabaseDb.getRelationshipCharts(chart.id),
@@ -183,45 +53,28 @@ export class BackupService {
       checkIns.push(...dailyCheckIns);
     }));
 
-    // Refuse to proceed if any decrypted field returned the failure placeholder.
-    // This prevents exporting a backup with corrupted/placeholder content.
-    const allEntities = [
-      ...charts.map(c => [c.name, c.birthPlace, c.birthDate, c.birthTime]),
-      ...journalEntries.map(e => [e.content, e.title]),
-      ...relationshipCharts.map(r => [r.name, r.birthPlace, r.birthDate, r.birthTime]),
-      ...insightHistory.map(i => [i.greeting, i.loveMessage, i.energyMessage]),
-      ...checkIns.map(c => [c.note, c.wins, c.challenges]),
-    ].flat();
-    if (allEntities.some(v => isDecryptionFailure(v))) {
-      throw new Error(
-        'Some encrypted data could not be decrypted. Cannot create a safe backup. ' +
-        'This may happen after a device migration or keychain reset.'
-      );
-    }
-
-    // Gather user profile data from AsyncStorage (decrypted for backup)
     const asyncStorageData: Record<string, string> = {};
     await Promise.all([
       ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map(async (key) => {
         try {
-          const val = await EncryptedAsyncStorage.getItem(key);
-          if (val) asyncStorageData[key] = val;
-        } catch (e) {
-          logger.error(`[Backup] Failed to read encrypted key ${key}:`, e);
+          const value = await EncryptedAsyncStorage.getItem(key);
+          if (value) asyncStorageData[key] = value;
+        } catch (error) {
+          logger.error(`[Backup] Failed to read encrypted key ${key}:`, error);
         }
       }),
       ...PLAIN_ASYNC_USER_DATA_KEYS.map(async (key) => {
         try {
-          const val = await AccountScopedAsyncStorage.getItem(key);
-          if (val) asyncStorageData[key] = val;
-        } catch (e) {
-          logger.error(`[Backup] Failed to read plain key ${key}:`, e);
+          const value = await AccountScopedAsyncStorage.getItem(key);
+          if (value) asyncStorageData[key] = value;
+        } catch (error) {
+          logger.error(`[Backup] Failed to read plain key ${key}:`, error);
         }
       }),
     ]);
 
     const payload: BackupPayload = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       charts,
       journalEntries,
@@ -233,77 +86,33 @@ export class BackupService {
       asyncStorageData: Object.keys(asyncStorageData).length > 0 ? asyncStorageData : undefined,
     };
 
-    const plaintext = encodeUtf8(JSON.stringify(payload));
-
-    const MAX_BACKUP_SIZE = 50 * 1024 * 1024;
-    if (plaintext.length > MAX_BACKUP_SIZE) {
+    const serialized = JSON.stringify(payload);
+    const size = new TextEncoder().encode(serialized).length;
+    if (size > MAX_BACKUP_SIZE) {
       throw new Error(
-        `Backup too large (${Math.round(plaintext.length / 1024 / 1024)} MB). The maximum is 50 MB.`
+        `Backup too large (${Math.round(size / 1024 / 1024)} MB). The maximum is 50 MB.`,
       );
     }
 
-    const salt = await Crypto.getRandomBytesAsync(SALT_LEN);
-    const iv = await Crypto.getRandomBytesAsync(IV_LEN);
-
-    // Yield to the macrotask queue so the UI can update before heavy crypto work
-    await new Promise<void>((r) => setTimeout(r, 50));
-
-    const key = await deriveAesKeyPBKDF2(passphrase, salt);
-    // Yield before synchronous AES-GCM so the UI remains responsive
-    await new Promise<void>((r) => setTimeout(r, 0));
-    const ciphertext = await encryptAesGcm(plaintext, key, iv);
-
-    const envelope: BackupEnvelope = {
-      schemaVersion: 1,
-      kdf: {
-        name: 'pbkdf2-sha256',
-        iterations: KDF_ITERATIONS,
-        saltHex: toHex(salt),
-        keyLen: KEY_LEN,
-      },
-      cipher: {
-        name: 'aes-256-gcm',
-        ivHex: toHex(iv),
-      },
-      ciphertextHex: toHex(ciphertext),
-      createdAt: new Date().toISOString(),
-    };
-
-    const filename = `mysky-backup-${new Date()
-      .toISOString()
-      .replace(/[:.]/g, '-')}.msky`;
-
-    // Use documentDirectory so iOS does not purge the file before sharing completes.
+    const filename = `mysky-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.msky`;
     const baseDir = FileSystem.documentDirectory;
-
     if (!baseDir) {
       throw new Error('No writable directory available for backup');
     }
 
     const uri = `${baseDir}${filename}`;
-
-    await FileSystem.writeAsStringAsync(uri, JSON.stringify(envelope), {
+    await FileSystem.writeAsStringAsync(uri, serialized, {
       encoding: FileSystem.EncodingType.UTF8,
     });
 
     return { uri, filename };
   }
 
-  static async restoreFromBackupFile(
-    uri: string,
-    passphrase: string
-  ): Promise<void> {
-    // Accept 8-char minimum for backward compatibility with older backups
-    if (!passphrase || passphrase.trim().length < 8) {
-      throw new Error('Passphrase must be at least 8 characters long');
-    }
-
-    // File size guard — reject backups > 50 MB to prevent OOM
+  static async restoreFromBackupFile(uri: string): Promise<void> {
     const fileInfo = await FileSystem.getInfoAsync(uri);
     if (!fileInfo.exists) {
       throw new Error('Backup file does not exist');
     }
-    const MAX_BACKUP_SIZE = 50 * 1024 * 1024; // 50 MB
     if (fileInfo.exists && 'size' in fileInfo && (fileInfo.size as number) > MAX_BACKUP_SIZE) {
       throw new Error('Backup file is too large (max 50 MB)');
     }
@@ -312,66 +121,22 @@ export class BackupService {
       encoding: FileSystem.EncodingType.UTF8,
     });
 
-    let envelope: BackupEnvelope;
+    let payload: BackupPayload;
     try {
-      envelope = JSON.parse(raw) as BackupEnvelope;
+      payload = JSON.parse(raw) as BackupPayload;
     } catch {
       throw new Error('Invalid backup file — could not parse. The file may be corrupted.');
     }
 
-    if (envelope?.schemaVersion !== 1) {
+    if (payload?.schemaVersion !== 2) {
       throw new Error('Unsupported backup format');
     }
 
-    if (
-      envelope.kdf.name !== 'pbkdf2-sha256' ||
-      envelope.cipher.name !== 'aes-256-gcm'
-    ) {
-      throw new Error('Unsupported encryption parameters');
-    }
-
-    const salt = fromHex(envelope.kdf.saltHex);
-    const iv = fromHex(envelope.cipher.ivHex);
-    const ciphertext = fromHex(envelope.ciphertextHex);
-
-    // AES-256-GCM ciphertext must contain at least the 16-byte auth tag
-    if (ciphertext.length < 16) {
-      throw new Error(
-        'Backup file appears truncated or corrupted. Try re-exporting from the original device.'
-      );
-    }
-
-    const key = await deriveAesKeyPBKDF2(
-      passphrase,
-      salt,
-      envelope.kdf.iterations,
-      envelope.kdf.keyLen
-    );
-
-    // Yield before synchronous AES-GCM so the UI remains responsive
-    await new Promise<void>((r) => setTimeout(r, 0));
-    let plaintextBytes: Uint8Array;
-    try {
-      plaintextBytes = await decryptAesGcm(ciphertext, key, iv);
-    } catch {
-      throw new Error(
-        'Unable to decrypt backup. Passphrase may be incorrect or file corrupted.'
-      );
-    }
-
-    const payload = JSON.parse(
-      decodeUtf8(plaintextBytes)
-    ) as BackupPayload;
-
-    if (payload?.schemaVersion !== 1) {
-      throw new Error('Invalid backup contents');
-    }
-
-    // Validate backup has actual data before replacing existing local data.
-    const hasData = (payload.charts?.length ?? 0) > 0 ||
-                    (payload.journalEntries?.length ?? 0) > 0 ||
-                    (payload.checkIns?.length ?? 0) > 0 ||
-                    payload.settings !== null;
+    const hasData =
+      (payload.charts?.length ?? 0) > 0 ||
+      (payload.journalEntries?.length ?? 0) > 0 ||
+      (payload.checkIns?.length ?? 0) > 0 ||
+      payload.settings !== null;
     if (!hasData) {
       throw new Error('Backup file contains no data to restore.');
     }
@@ -382,51 +147,43 @@ export class BackupService {
       ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AccountScopedAsyncStorage.removeItem(key)),
     ]);
 
-    // Restore data into localDb (writes are INSERT OR REPLACE, so safe)
     for (const chart of payload.charts ?? []) {
       await supabaseDb.saveChart(chart);
     }
-
     for (const entry of payload.journalEntries ?? []) {
       await supabaseDb.saveJournalEntry(entry);
     }
-
     for (const rel of payload.relationshipCharts ?? []) {
       await supabaseDb.saveRelationshipChart(rel);
     }
-
     for (const insight of payload.insightHistory ?? []) {
       await supabaseDb.saveInsight(insight);
     }
-
     for (const entry of payload.sleepEntries ?? []) {
       await supabaseDb.saveSleepEntry(entry);
     }
-
     for (const checkIn of payload.checkIns ?? []) {
       await supabaseDb.saveCheckIn(checkIn);
     }
-
     if (payload.settings) {
       await supabaseDb.saveSettings(payload.settings);
     }
 
-    // Restore AsyncStorage user profile data (re-encrypts with new device DEK)
     if (payload.asyncStorageData) {
-      const ALLOWED_ASYNC_KEYS = new Set<string>([
+      const allowedKeys = new Set<string>([
         ...(ENCRYPTED_ASYNC_USER_DATA_KEYS as readonly string[]),
         ...(PLAIN_ASYNC_USER_DATA_KEYS as readonly string[]),
       ]);
       for (const [key, value] of Object.entries(payload.asyncStorageData)) {
-        if (!ALLOWED_ASYNC_KEYS.has(key)) continue;
+        if (!allowedKeys.has(key)) continue;
         try {
           if ((ENCRYPTED_ASYNC_USER_DATA_KEYS as readonly string[]).includes(key)) {
             await EncryptedAsyncStorage.setItem(key, value);
           } else {
             await AccountScopedAsyncStorage.setItem(key, value);
           }
-        } catch (e) {
-          logger.error(`[Restore] Failed to restore AsyncStorage key ${key}:`, e);
+        } catch (error) {
+          logger.error(`[Restore] Failed to restore AsyncStorage key ${key}:`, error);
         }
       }
     }
@@ -440,18 +197,14 @@ export class BackupService {
     await Sharing.shareAsync(uri);
 
     if (deleteAfter) {
-      // Delay cleanup to allow iOS to finish copying the file to the
-      // share destination (iCloud, Mail, etc.). The share sheet resolves
-      // when dismissed, but the actual file transfer may still be in
-      // progress asynchronously.
-      await new Promise<void>((r) => setTimeout(r, 2000));
+      await new Promise<void>((resolve) => setTimeout(resolve, 2000));
       try {
         const info = await FileSystem.getInfoAsync(uri);
         if (info.exists) {
           await FileSystem.deleteAsync(uri, { idempotent: true });
         }
       } catch {
-        // Best-effort cleanup — don't fail the share operation
+        // Best-effort cleanup
       }
     }
   }

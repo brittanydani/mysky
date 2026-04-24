@@ -1,16 +1,9 @@
 -- 20260404_cloud_sync_tables.sql
 --
--- Encrypted cloud mirror for journal entries, sleep entries, and daily check-ins.
---
--- Security model:
---   All sensitive text fields are AES-256-GCM encrypted CLIENT-SIDE before
---   upload using the device DEK stored in Keychain/Keystore. The server
---   stores only opaque ciphertext with an ENC2: prefix. No plaintext PII is
---   ever stored here.
---
--- Sync model:
---   Client is authoritative. Supabase is an encrypted mirror / backup.
---   Conflict resolution: last-writer-wins on updated_at.
+-- Historical migration from the earlier encrypted/offline-first architecture.
+-- Core app content now uses plaintext server columns with Supabase as the
+-- canonical store. Legacy encrypted columns created here were retained only
+-- temporarily for transition and are superseded by later migrations.
 
 -- ─── set_updated_at helper (idempotent) ────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.set_updated_at()

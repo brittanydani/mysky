@@ -262,7 +262,7 @@ export class PrivacyComplianceManager {
       ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AccountScopedAsyncStorage.removeItem(key)),
     ]);
 
-    // Destroy the data encryption key and identity vault so no plaintext can be recovered
+    // Destroy any remaining local encrypted-key material and the identity vault.
     await IdentityVault.destroyIdentity().catch((e: unknown) =>
       secureStorage.auditDataAccess('gdpr_destroy_identity_error', { error: String(e) })
     );

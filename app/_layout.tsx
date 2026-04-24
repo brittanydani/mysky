@@ -773,21 +773,6 @@ function AppShell() {
     try {
       let canSkip = await checkIfOnboardingCanBeSkipped();
 
-      if (!canSkip) {
-        const {
-          data: { session: currentSession },
-        } = await supabase.auth.getSession();
-
-        if (currentSession) {
-          const { data, error } = await supabase.functions.invoke('birth-profile-sync', {
-            body: { action: 'getLatest', since: '1970-01-01T00:00:00.000Z' },
-          });
-          if (!error && data?.profile && !data.profile.isDeleted) {
-            canSkip = true;
-          }
-        }
-      }
-
       if (canSkip) {
         authEntryIntentRef.current = 'sign-in-home';
         setCompletingOnboarding(true);

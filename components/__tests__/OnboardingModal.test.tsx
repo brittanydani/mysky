@@ -2,7 +2,7 @@
  * OnboardingModal — component tests
  *
  * Validates: auth-first onboarding flow,
- * backup restore passphrase validation, chart generation trigger.
+ * backup restore flow and chart generation trigger.
  */
 import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react-native';
@@ -220,7 +220,7 @@ describe('OnboardingModal', () => {
         user: { id: 'user-1' },
         requiresEmailConfirmation: false,
       });
-      global.fetch = jest.fn().mockResolvedValue({
+      globalThis.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ([{
           place_id: '123',
@@ -304,28 +304,18 @@ describe('OnboardingModal', () => {
   });
 
   describe('backup restore', () => {
-    it('validates short passphrase', async () => {
+    it('starts restore after selecting a backup file', async () => {
       mockPickBackupFile.mockResolvedValue('file:///backup.msky');
+      mockRestoreFromBackupFile.mockResolvedValue(undefined);
 
-      const { getByText, getByPlaceholderText } = render(<OnboardingModal {...defaultProps} />);
+      const { getByText } = render(<OnboardingModal {...defaultProps} />);
 
       const restoreBtn = getByText(/restore|backup/i);
       await act(async () => {
         fireEvent.press(restoreBtn);
       });
 
-      // Should navigate to passphrase step after picking file
-      // Enter a short passphrase and try to submit
-      const passphraseInput = getByPlaceholderText(/passphrase/i);
-      fireEvent.changeText(passphraseInput, 'short');
-
-      const submitBtn = getByText(/restore|submit|confirm/i);
-      await act(async () => {
-        fireEvent.press(submitBtn);
-      });
-
-      expect(alertSpy).toHaveBeenCalledWith('Invalid Passphrase', expect.any(String));
-      expect(mockRestoreFromBackupFile).not.toHaveBeenCalled();
+      expect(mockRestoreFromBackupFile).toHaveBeenCalledWith('file:///backup.msky');
     });
   });
 });

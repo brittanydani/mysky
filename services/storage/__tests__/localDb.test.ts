@@ -11,12 +11,13 @@ jest.mock('expo-sqlite', () => ({
   openDatabaseAsync: jest.fn().mockResolvedValue(mockDb),
 }));
 
-// Mock field encryption — pass through unencrypted for tests
+// Mock field encryption — legacy encrypted rows still read as pass-through in tests
 jest.mock('../fieldEncryption', () => ({
   FieldEncryptionService: {
     initialize: jest.fn().mockResolvedValue(undefined),
     encryptField: jest.fn(async (val: string) => val),
     decryptField: jest.fn(async (val: string) => val),
+    isEncrypted: jest.fn(() => false),
   },
   isDecryptionFailure: jest.fn(() => false),
 }));
@@ -90,7 +91,7 @@ describe('localDb', () => {
       jest.clearAllMocks();
     });
 
-    it('upsertChart calls runAsync with encrypted fields', async () => {
+    it('upsertChart calls runAsync with cached chart values', async () => {
       const chart = {
         id: 'chart-1',
         name: 'Test',
@@ -341,7 +342,7 @@ describe('localDb', () => {
       jest.clearAllMocks();
     });
 
-    it('getSleepEntries decodes optional encrypted fields', async () => {
+    it('getSleepEntries reads optional cached fields', async () => {
       mockDb.getAllAsync.mockResolvedValueOnce([
         {
           id: 'sleep-1',

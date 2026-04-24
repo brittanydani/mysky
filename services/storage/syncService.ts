@@ -1,20 +1,16 @@
 /**
- * SyncService — Offline-first encrypted cloud sync
+ * SyncService — queue and cache coordination
  *
- * Strategy:
- *   1. All writes go to local SQLite first (authoritative).
- *   2. After each write, enqueue a background Supabase upsert.
- *   3. On network restore / app foreground, flush the queue.
- *   4. On new device sign-in, pull from Supabase → write to local DB so
- *      the app has data immediately (user must re-derive the DEK via backup
- *      restore to decrypt; encrypted blobs are stored verbatim locally).
+ * Architecture:
+ *   1. Supabase is the canonical store for core app content.
+ *   2. Local SQLite is used only for queueing pending writes and optional cache.
+ *   3. When the device is offline, writes are queued locally.
+ *   4. On connectivity/app resume, queued writes are flushed to Supabase.
  *
- * Encryption:
- *   Data is encrypted by FieldEncryptionService BEFORE being passed here.
- *   This service transmits encrypted blobs as-is — the server never sees
- *   plaintext.
- *
- * Conflict resolution: last-writer-wins on updated_at (client is authoritative).
+ * Core app content is transmitted as plaintext over TLS and stored in plaintext
+ * server columns protected by RLS. Some non-core local-only/self-knowledge
+ * payloads still use existing encrypted storage helpers until those flows are
+ * migrated separately.
  */
 
 import { supabase } from '../../lib/supabase';
@@ -121,17 +117,10 @@ async function normalizeDailyCheckInPayload(payload: Record<string, unknown>): P
     return normalized;
   }
 
-  const encryptedMoodScore = normalized.mood_score_enc;
-  if (typeof encryptedMoodScore === 'string' && encryptedMoodScore.length > 0) {
-    try {
-      const decryptedMoodScore = await FieldEncryptionService.decryptField(encryptedMoodScore);
-      const parsedMoodValue = Number(decryptedMoodScore);
-      if (Number.isFinite(parsedMoodValue)) {
-        normalized.mood_value = clampMoodValue(parsedMoodValue);
-      }
-    } catch (error) {
-      logger.warn('[SyncService] Failed to derive mood_value from encrypted daily_check_ins payload.', error);
-    }
+  const plainMoodScore = normalized.mood_score;
+  if (typeof plainMoodScore === 'number' && Number.isFinite(plainMoodScore)) {
+    normalized.mood_value = clampMoodValue(plainMoodScore);
+    return normalized;
   }
 
   return normalized;
@@ -144,31 +133,37 @@ async function getSession() {
   return data.session;
 }
 
-async function invokeBirthProfileSync(
+export function isBirthProfileSyncUnavailableError(error: unknown): boolean {
+  const candidate = error as NamedError | null;
+  return candidate?.name === 'FunctionsHttpError'
+    || candidate?.message?.includes('non-2xx status code') === true;
+}
+
+export function warnBirthProfileSyncUnavailable(error: unknown) {
+  if (didWarnBirthProfileSyncUnavailable) return;
+  didWarnBirthProfileSyncUnavailable = true;
+  logger.warn(
+    '[SyncService] Birth profile Edge Function is unavailable or misconfigured; skipping remote birth profile reads for this session.',
+    error,
+  );
+}
+
+export async function invokeBirthProfileSync(
   action: 'getLatest' | 'upsert' | 'delete',
   payload: Record<string, unknown> = {},
+  options: { swallowUnavailableReadError?: boolean } = {},
 ): Promise<BirthProfileFunctionResponse> {
-  const isFunctionHttpError = (error: unknown): boolean => {
-    const candidate = error as NamedError | null;
-    return candidate?.name === 'FunctionsHttpError'
-      || candidate?.message?.includes('non-2xx status code') === true;
-  };
-
-  const warnBirthProfileSyncUnavailable = (error: unknown) => {
-    if (didWarnBirthProfileSyncUnavailable) return;
-    didWarnBirthProfileSyncUnavailable = true;
-    logger.warn(
-      '[SyncService] Birth profile Edge Function is unavailable or misconfigured; skipping remote birth profile reads for this session.',
-      error,
-    );
-  };
-
+  const { swallowUnavailableReadError = true } = options;
   const { data, error } = await supabase.functions.invoke('birth-profile-sync', {
     body: { action, ...payload },
   });
 
   if (error) {
-    if (action === 'getLatest' && isFunctionHttpError(error)) {
+    if (
+      action === 'getLatest'
+      && swallowUnavailableReadError
+      && isBirthProfileSyncUnavailableError(error)
+    ) {
       warnBirthProfileSyncUnavailable(error);
       return { profile: null };
     }
@@ -314,7 +309,7 @@ export async function flushQueue(): Promise<void> {
   }
 }
 
-// ─── Pull: fetch remote records newer than local last_sync_at ─────────────────
+// ─── Pull: refresh cache metadata and selected local-only datasets ────────────
 
 export async function pullFromSupabase(): Promise<{
   birthProfilesPulled: number;
@@ -351,40 +346,18 @@ export async function pullFromSupabase(): Promise<{
     }
   };
 
-  // ── Birth profile ──
+  // ── Birth profile (canonical on Supabase; not cached into localDb here) ──
   try {
     const { profile } = await invokeBirthProfileSync('getLatest', { since });
     if (profile) {
       trackMax([{ updated_at: profile.updatedAt }]);
-
-      if (profile.isDeleted) {
-        await localDb.deleteChart(profile.chartId).catch(() => {});
-      } else {
-        const chart: SavedChart = {
-          id: profile.chartId,
-          name: profile.name ?? undefined,
-          birthDate: profile.birthDate,
-          birthTime: profile.birthTime ?? undefined,
-          hasUnknownTime: profile.hasUnknownTime,
-          birthPlace: profile.birthPlace,
-          latitude: profile.latitude,
-          longitude: profile.longitude,
-          timezone: profile.timezone ?? undefined,
-          houseSystem: profile.houseSystem as SavedChart['houseSystem'],
-          createdAt: profile.createdAt ?? profile.updatedAt,
-          updatedAt: profile.updatedAt,
-          isDeleted: false,
-        };
-
-        await localDb.upsertChartFromSync(chart);
-      }
       birthProfilesPulled++;
     }
   } catch (e) {
     logger.error('[SyncService] Birth profile pull failed:', e);
   }
 
-  // ── Journal ──
+  // ── Journal metadata (canonical on Supabase; not mirrored into localDb) ──
   try {
     const { data, error } = await supabase
       .from('journal_entries')
@@ -397,37 +370,12 @@ export async function pullFromSupabase(): Promise<{
     if (error) throw error;
 
     trackMax(data ?? []);
-
-    for (const row of data ?? []) {
-      const entry: JournalEntry = {
-        id: row.id,
-        date: row.date,
-        mood: row.mood,
-        moonPhase: row.moon_phase,
-        title: row.title_enc,        // encrypted blob — stored verbatim locally
-        content: row.content_enc,    // encrypted blob
-        contentKeywords: row.content_keywords_enc,
-        contentEmotions: row.content_emotions_enc,
-        contentSentiment: row.content_sentiment_enc,
-        tags: row.tags ? (() => { try { return JSON.parse(row.tags); } catch { return undefined; } })() : undefined,
-        contentWordCount: row.content_word_count,
-        contentReadingMinutes: row.content_reading_minutes,
-        chartId: row.chart_id,
-        transitSnapshot: row.transit_snapshot,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        isDeleted: row.is_deleted ?? false,
-      };
-
-      // Write raw encrypted blobs directly to local DB (bypass re-encryption)
-      await localDb.upsertJournalEntryRaw(entry);
-      journalPulled++;
-    }
+    journalPulled += data?.length ?? 0;
   } catch (e) {
     logger.error('[SyncService] Journal pull failed:', e);
   }
 
-  // ── Sleep entries ──
+  // ── Sleep metadata (canonical on Supabase; not mirrored into localDb) ──
   try {
     const { data, error } = await supabase
       .from('sleep_entries')
@@ -440,32 +388,12 @@ export async function pullFromSupabase(): Promise<{
     if (error) throw error;
 
     trackMax(data ?? []);
-
-    for (const row of data ?? []) {
-      const entry: SleepEntry = {
-        id: row.id,
-        chartId: row.chart_id,
-        date: row.date,
-        durationHours: row.duration_hours,
-        quality: row.quality,
-        dreamText: row.dream_text_enc,       // encrypted blob
-        dreamMood: row.dream_mood,
-        dreamFeelings: row.dream_feelings_enc,
-        dreamMetadata: row.dream_metadata_enc,
-        notes: row.notes_enc,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        isDeleted: row.is_deleted ?? false,
-      };
-
-      await localDb.upsertSleepEntryRaw(entry);
-      sleepPulled++;
-    }
+    sleepPulled += data?.length ?? 0;
   } catch (e) {
     logger.error('[SyncService] Sleep pull failed:', e);
   }
 
-  // ── Check-ins ──
+  // ── Check-ins metadata (canonical on Supabase; not mirrored into localDb) ──
   try {
     const { data, error } = await supabase
       .from('daily_check_ins')
@@ -478,34 +406,7 @@ export async function pullFromSupabase(): Promise<{
     if (error) throw error;
 
     trackMax(data ?? []);
-
-    for (const row of data ?? []) {
-      const checkIn: DailyCheckIn = {
-        id: row.id,
-        date: row.log_date ?? row.date,
-        chartId: row.chart_id ?? '',
-        timeOfDay: row.time_of_day ?? 'evening',
-        moodScore: row.mood_score_enc ?? row.mood_value ?? 5,  // encrypted blob or legacy int
-        energyLevel: row.energy_level_enc ?? 'medium',          // encrypted blob
-        stressLevel: row.stress_level_enc ?? 'medium',
-          tags: row.tags_enc ?? [],   // encrypted blob — stored verbatim, decrypted at read time
-        note: row.note_enc,
-        wins: row.wins_enc,
-        challenges: row.challenges_enc,
-        moonSign: row.moon_sign ?? '',
-        moonHouse: row.moon_house ?? 0,
-        sunHouse: row.sun_house ?? 0,
-        transitEvents: row.transit_events ? (Array.isArray(row.transit_events) ? row.transit_events : []) : [],
-        lunarPhase: row.lunar_phase ?? 'unknown',
-        retrogrades: row.retrogrades ? (Array.isArray(row.retrogrades) ? row.retrogrades : []) : [],
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-          isDeleted: row.is_deleted ?? false,
-        } as DailyCheckIn & { isDeleted: boolean };
-
-      await localDb.upsertCheckInRaw(checkIn);
-      checkInsPulled++;
-    }
+    checkInsPulled += data?.length ?? 0;
   } catch (e) {
     logger.error('[SyncService] Check-ins pull failed:', e);
   }
@@ -760,21 +661,7 @@ export async function syncBirthProfileFromLocal() {
       return;
     }
 
-    await localDb.upsertChartFromSync({
-      id: remoteProfile.chartId,
-      name: remoteProfile.name ?? undefined,
-      birthDate: remoteProfile.birthDate,
-      birthTime: remoteProfile.birthTime ?? undefined,
-      hasUnknownTime: remoteProfile.hasUnknownTime,
-      birthPlace: remoteProfile.birthPlace,
-      latitude: remoteProfile.latitude,
-      longitude: remoteProfile.longitude,
-      timezone: remoteProfile.timezone ?? undefined,
-      houseSystem: remoteProfile.houseSystem as SavedChart['houseSystem'],
-      createdAt: remoteProfile.createdAt ?? remoteProfile.updatedAt,
-      updatedAt: remoteProfile.updatedAt,
-      isDeleted: false,
-    });
+    logger.info('[SyncService] Remote birth profile is newer; leaving Supabase as source of truth.');
     return;
   }
 
@@ -807,10 +694,7 @@ export function enqueueCheckIn(checkIn: DailyCheckIn, operation: 'upsert' | 'del
 }
 
 // ─── Row mappers: local model → Supabase column names ────────────────────────
-// NOTE: caller passes already-encrypted blobs (from the localDb write path).
-// The localDb methods encrypt with FieldEncryptionService before storing;
-// we re-read the raw encrypted columns from the DB for upload rather than
-// re-encrypting the plaintext value.
+// These helpers now emit plaintext payloads for canonical Supabase storage.
 
 function journalToSupabase(entry: JournalEntry) {
   return {
@@ -818,11 +702,11 @@ function journalToSupabase(entry: JournalEntry) {
     date: entry.date,
     mood: entry.mood,
     moon_phase: entry.moonPhase,
-    title_enc: entry.title,                       // already-encrypted blob
-    content_enc: entry.content,                   // already-encrypted blob
-    content_keywords_enc: entry.contentKeywords,
-    content_emotions_enc: entry.contentEmotions,
-    content_sentiment_enc: entry.contentSentiment,
+    title: entry.title ?? null,
+    content: entry.content,
+    content_keywords: entry.contentKeywords ?? null,
+    content_emotions: entry.contentEmotions ?? null,
+    content_sentiment: entry.contentSentiment ?? null,
     tags: entry.tags ? JSON.stringify(entry.tags) : null,
     content_word_count: entry.contentWordCount ?? null,
     content_reading_minutes: entry.contentReadingMinutes ?? null,
@@ -842,11 +726,11 @@ function sleepToSupabase(entry: SleepEntry) {
     date: entry.date,
     duration_hours: entry.durationHours ?? null,
     quality: entry.quality ?? null,
-    dream_text_enc: entry.dreamText ?? null,      // already-encrypted blob
+    dream_text: entry.dreamText ?? null,
     dream_mood: entry.dreamMood ?? null,
-    dream_feelings_enc: entry.dreamFeelings ?? null,
-    dream_metadata_enc: entry.dreamMetadata ?? null,
-    notes_enc: entry.notes ?? null,
+    dream_feelings: entry.dreamFeelings ?? null,
+    dream_metadata: entry.dreamMetadata ?? null,
+    notes: entry.notes ?? null,
     is_deleted: entry.isDeleted,
     created_at: entry.createdAt,
     updated_at: entry.updatedAt,
@@ -854,18 +738,20 @@ function sleepToSupabase(entry: SleepEntry) {
 }
 
 function checkInToSupabase(checkIn: DailyCheckIn) {
+  const moodScore = clampMoodValue(Number(checkIn.moodScore));
   return {
     id: checkIn.id,
     log_date: checkIn.date,
     chart_id: checkIn.chartId,
     time_of_day: checkIn.timeOfDay,
-    mood_score_enc: checkIn.moodScore,            // already-encrypted blob
-    energy_level_enc: checkIn.energyLevel,
-    stress_level_enc: checkIn.stressLevel,
-    tags_enc: typeof checkIn.tags === 'string' ? checkIn.tags : JSON.stringify(checkIn.tags),
-    note_enc: checkIn.note ?? null,
-    wins_enc: checkIn.wins ?? null,
-    challenges_enc: checkIn.challenges ?? null,
+    mood_value: moodScore,
+    mood_score: moodScore,
+    energy_level: checkIn.energyLevel,
+    stress_level: checkIn.stressLevel,
+    tags: Array.isArray(checkIn.tags) ? checkIn.tags : [],
+    note: checkIn.note ?? null,
+    wins: checkIn.wins ?? null,
+    challenges: checkIn.challenges ?? null,
     moon_sign: checkIn.moonSign,
     moon_house: checkIn.moonHouse,
     sun_house: checkIn.sunHouse,

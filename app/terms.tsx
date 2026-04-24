@@ -68,7 +68,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Acceptance of Terms of Use</Text>
             <Text style={styles.paragraph}>
-              By downloading, installing, or using MySky ("the App"), you agree to be bound by these Terms of Use (End User License Agreement), our Privacy Policy, and all applicable laws and regulations. If you do not agree to these Terms, do not download, install, or use the App. All personal data is stored locally on your device with <Text style={styles.highlight}>AES-256-GCM field-level encryption</Text>, hardware-backed key storage, and securely synced to your cloud account.
+              By downloading, installing, or using MySky ("the App"), you agree to be bound by these Terms of Use (End User License Agreement), our Privacy Policy, and all applicable laws and regulations. If you do not agree to these Terms, do not download, install, or use the App. Supabase is the canonical store for your account data, and this device may keep local cache or queued offline writes for convenience.
             </Text>
 
             <Text style={styles.sectionTitle}>Definitions</Text>
@@ -95,7 +95,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
                 <Text style={styles.boldText}>Free:</Text> Personal birth chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, AI dream interpretation using the standard Gemini model, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context.
               </Text>
               <Text style={styles.paragraph}>
-                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with AI interpretation using a richer Gemini model, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, reflective daily guidance with action prompts, sensitivity and growth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
+                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with AI interpretation using a richer Gemini model, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, reflective daily guidance with action prompts, sensitivity and growth mapping, PDF chart export, backup and restore, and extended pattern reflections.
               </Text>
             </View>
 
@@ -135,7 +135,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Data & Privacy</Text>
             <Text style={styles.paragraph}>
-              All core data is stored locally in partitioned offline caches and securely synced to your dedicated cloud account to prevent data loss across devices. Sensitive fields on-device are encrypted with AES-256-GCM. No analytics SDKs, advertising identifiers, or cross-app tracking are used. Optional AI features may transmit limited data to third-party processors only when needed to fulfill that feature, as described in our Privacy Policy.
+              Core app data is stored in your dedicated cloud account, with this device optionally keeping local cache and queued writes for resilience and responsiveness. No analytics SDKs, advertising identifiers, or cross-app tracking are used. Optional AI features may transmit limited data to third-party processors only when needed to fulfill that feature, as described in our Privacy Policy.
             </Text>
 
             <Text style={styles.sectionTitle}>Limitation of Liability</Text>
@@ -169,7 +169,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>User Conduct</Text>
             <Text style={styles.paragraph}>
-              You agree to use MySky only for its intended purpose of personal reflection and self-awareness. You agree not to reverse-engineer, decompile, disassemble, or attempt to derive the source code of the app, or use it to develop a competing product. You are solely responsible for maintaining the confidentiality of any backup passphrases and account credentials.
+              You agree to use MySky only for its intended purpose of personal reflection and self-awareness. You agree not to reverse-engineer, decompile, disassemble, or attempt to derive the source code of the app, or use it to develop a competing product. You are solely responsible for maintaining the confidentiality of your account credentials and any backup files you export.
             </Text>
 
             <Text style={styles.sectionTitle}>Changes to These Terms</Text>

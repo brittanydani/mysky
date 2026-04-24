@@ -566,6 +566,27 @@ export const DemoAccountBSeedService = {
       '@mysky:cognitive_style',
       JSON.stringify(ACCOUNT_B_DEMO_SEED.cognitiveStyle),
     );
+    for (const rel of ACCOUNT_B_DEMO_SEED.relationshipCharts) {
+      await supabaseDb.saveRelationshipChart({
+        id: stableUuidFromString(
+          `demo-relationship-chart:${rel.name}:${rel.relationship}:${rel.birthDate}:${rel.birthTime}`
+        ),
+        name: rel.name,
+        relationship: rel.relationship as 'partner' | 'ex' | 'child' | 'parent' | 'friend' | 'sibling' | 'other',
+        birthDate: rel.birthDate,
+        birthTime: rel.birthTime,
+        hasUnknownTime: rel.hasUnknownTime,
+        birthPlace: rel.birthPlace,
+        latitude: rel.latitude,
+        longitude: rel.longitude,
+        timezone: rel.timezone,
+        userChartId: CHART_ID,
+        createdAt: CHART_CREATED,
+        updatedAt: CHART_CREATED,
+        isDeleted: false,
+      });
+    }
+
 
     await enqueueReflectionBatch(reflectionData.answers);
     for (const entry of somaticEntries) {

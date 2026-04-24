@@ -24,10 +24,17 @@ const ACCENT_MAP: Record<DeepInsight['accent'], CrossRefInsight['accentColor']> 
 };
 
 function toHeroMetrics(insight: DeepInsight, bundle: DeepInsightBundle): InsightMetric[] {
+  const confidenceLabel =
+    insight.confidence === 'strong'
+      ? 'Strong signal'
+      : insight.confidence === 'growing'
+        ? 'Growing signal'
+        : 'Early signal';
+
   return [
-    { value: CATEGORY_LABELS[insight.category].toUpperCase(), label: 'Category' },
-    { value: `${bundle.totalDays} DAYS`, label: 'Observed' },
-    { value: insight.confidence.toUpperCase(), label: 'Confidence' },
+    { value: CATEGORY_LABELS[insight.category], label: 'Pattern' },
+    { value: `${bundle.totalDays} days`, label: 'Observed across' },
+    { value: confidenceLabel, label: 'Confidence' },
   ];
 }
 

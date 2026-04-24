@@ -22,7 +22,7 @@ describe('logger', () => {
 
   describe('in dev mode (__DEV__ = true)', () => {
     beforeAll(() => {
-      (global as any).__DEV__ = true;
+      (globalThis as any).__DEV__ = true;
     });
 
     it('logger.debug emits to console.debug', () => {
@@ -48,7 +48,7 @@ describe('logger', () => {
 
   describe('redaction', () => {
     beforeAll(() => {
-      (global as any).__DEV__ = true;
+      (globalThis as any).__DEV__ = true;
     });
 
     it('redacts sensitive keys in plain objects', () => {

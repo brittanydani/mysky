@@ -114,6 +114,20 @@ const LEVELS_BY_MATURITY: Record<DataMaturity, InsightLevel[]> = {
   deep: ['pattern', 'meaning', 'need', 'growth', 'identity'],
 };
 
+function signalLead(confidence: DeepInsight['confidence']): string {
+  if (confidence === 'strong') return 'Your data consistently suggests';
+  if (confidence === 'growing') return 'A growing pattern in your data suggests';
+  return 'Early signs suggest';
+}
+
+function daysReceipt(totalDays: number, scope: TemporalScope): string {
+  if (scope === 'daily') return 'from the last several days';
+  if (scope === 'weekly') return `across roughly ${Math.min(totalDays, 14)} recent days`;
+  if (scope === 'monthly') return `across ${Math.min(totalDays, 30)} tracked days`;
+  if (scope === 'seasonal') return `across ${totalDays} tracked days`;
+  return `across ${totalDays} tracked days`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Pattern-level insights (Level 1): "What keeps happening?"
 // ─────────────────────────────────────────────────────────────────────────────
@@ -125,38 +139,41 @@ function buildPatternInsights(p: PersonalProfile): DeepInsight[] {
   // Sleep–stability pattern
   if (p.sleepSensitivity > 55) {
     const sleepCorr = pp.correlations.find(c => c.metricA === 'sleep' && c.metricB === 'stability');
+    const confidence: DeepInsight['confidence'] = p.sleepSensitivity > 70 ? 'strong' : 'growing';
     insights.push({
       job: 'name',
       id: 'pattern-sleep',
       level: 'pattern',
       category: 'nervous-system',
       scope: 'weekly',
-      title: 'Sleep & Steadiness',
-      body: 'A pattern in your entries suggests that low sleep changes more than your energy. On harder-rest nights, your nervous system seems quicker to lose steadiness and more likely to tip into strain the next day.',
+      title: 'Sleep Changes More Than Energy',
+      body: `${signalLead(confidence)} that sleep affects more than tiredness for you ${daysReceipt(p.totalDays, 'weekly')}. After lower-rest nights, your system appears easier to knock off center the next day. What shows up here is not just fatigue, but reduced steadiness.`,
       detail: sleepCorr ? `Correlation strength: ${sleepCorr.strength > 0.5 ? 'strong' : sleepCorr.strength > 0.3 ? 'moderate' : 'mild'}` : undefined,
       reflectionPrompt: 'How does a bad night of sleep tend to show up for you the next day?',
       selfLanguage: 'sleep-sensitive',
-      confidence: p.sleepSensitivity > 70 ? 'strong' : 'growing',
+      confidence,
       accent: 'silverBlue',
     });
   }
 
   // Strain accumulation pattern
   if (p.stressPattern.buildupStyle === 'gradual') {
+    const confidence: DeepInsight['confidence'] = p.stressPattern.confidence >= 60 ? 'strong' : 'growing';
     insights.push({
       job: 'name',
       id: 'pattern-strain-buildup',
       level: 'pattern',
       category: 'how-you-protect-yourself',
       scope: 'weekly',
-      title: 'Gradual Strain Buildup',
-      body: `Stress seems to build quietly for you, often over about ${Math.round(p.stressPattern.avgBuildupDays)} days before it becomes obvious. The pattern is less "sudden collapse" and more "I was carrying more than I realized."`,
+      title: 'Strain That Builds in the Background',
+      body: `${signalLead(confidence)} that strain builds quietly for you, often over about ${Math.round(p.stressPattern.avgBuildupDays)} days before it becomes obvious. The pattern is less sudden collapse and more delayed recognition: by the time it feels unmistakable, you have usually been carrying it for a while.`,
       reflectionPrompt: 'When you think back to recent hard stretches, did you notice strain building before it peaked?',
       selfLanguage: 'quietly depleted',
-      confidence: p.stressPattern.confidence >= 60 ? 'strong' : 'growing',
+      confidence,
       accent: 'copper',
     });
   } else if (p.stressPattern.buildupStyle === 'sudden') {
+    const confidence: DeepInsight['confidence'] = p.stressPattern.confidence >= 60 ? 'strong' : 'growing';
     insights.push({
       job: 'name',
       id: 'pattern-strain-sudden',
@@ -164,27 +181,28 @@ function buildPatternInsights(p: PersonalProfile): DeepInsight[] {
       category: 'what-activates-you',
       scope: 'weekly',
       title: 'Sudden Stress Spikes',
-      body: 'Your system appears to react strongly to specific moments rather than only to long buildup. Sudden shifts in environment, tone, or demand may land hard and change your state faster than practical stress alone would suggest.',
+      body: `${signalLead(confidence)} that your system reacts strongly to specific moments rather than only to long buildup ${daysReceipt(p.totalDays, 'weekly')}. Sudden shifts in tone, environment, or demand seem able to change your state quickly. This looks less like overreaction and more like fast signal detection.`,
       reflectionPrompt: 'What was happening around you the last time stress seemed to appear out of nowhere?',
       selfLanguage: 'environmentally reactive',
-      confidence: p.stressPattern.confidence >= 60 ? 'strong' : 'growing',
+      confidence,
       accent: 'copper',
     });
   }
 
   // Connection pattern
   if (p.connectionSensitivity > 55) {
+    const confidence: DeepInsight['confidence'] = p.connectionSensitivity > 70 ? 'strong' : 'growing';
     insights.push({
       job: 'name',
       id: 'pattern-connection',
       level: 'pattern',
       category: 'attachment-and-closeness',
       scope: 'weekly',
-      title: 'Connection & Mood',
-      body: 'Connection appears to change your state in a real way. When you feel more understood, responded to, or emotionally met, your entries tend to show more steadiness and less strain.',
+      title: 'Connection Changes Your State',
+      body: `${signalLead(confidence)} that connection changes your state in a real way ${daysReceipt(p.totalDays, 'weekly')}. When you feel understood, responded to, or emotionally met, your entries tend to show more steadiness and less strain. The pattern suggests connection helps regulate you, not just comfort you.`,
       reflectionPrompt: 'When do you feel most connected? Is it about being around people, or something more specific?',
       selfLanguage: 'connection-regulated',
-      confidence: p.connectionSensitivity > 70 ? 'strong' : 'growing',
+      confidence,
       accent: 'rose',
     });
   }
@@ -197,8 +215,8 @@ function buildPatternInsights(p: PersonalProfile): DeepInsight[] {
       level: 'pattern',
       category: 'what-restores-you',
       scope: 'monthly',
-      title: 'Your Best Days',
-      body: `Your steadier days tend to share a few ingredients: ${p.bestDayIngredients.slice(0, 4).join(', ')}. That repetition looks less like luck and more like a map of what helps you come back to yourself.`,
+      title: 'What Your Better Days Have in Common',
+      body: `Across your steadier days, the same ingredients keep reappearing: ${p.bestDayIngredients.slice(0, 4).join(', ')}. That repetition matters. It suggests your better days are not random; they are built from conditions your system reliably responds to.`,
       reflectionPrompt: 'When was the last time a day just felt right? What made it work?',
       confidence: p.patternProfile.bestDayProfile && p.patternProfile.bestDayProfile.dayCount >= 5 ? 'strong' : 'growing',
       accent: 'gold',
@@ -213,8 +231,8 @@ function buildPatternInsights(p: PersonalProfile): DeepInsight[] {
       level: 'pattern',
       category: 'who-you-are-underneath',
       scope: 'weekly',
-      title: 'Wide Emotional Range',
-      body: 'Your entries suggest a wider emotional range than simple good-day or bad-day swings. This may not be instability so much as depth: a system that registers life strongly and responds to shifts in its environment with real intensity.',
+      title: 'You Register Life Strongly',
+      body: `${signalLead(p.totalDays >= 21 ? 'strong' : 'growing')} that your emotional range is wider than simple good-day or bad-day swings ${daysReceipt(p.totalDays, 'weekly')}. This may not be instability so much as depth: a system that registers shifts strongly and responds to them with real intensity.`,
       reflectionPrompt: 'What kind of tired or drained is it when your emotions run high? Is it the same each time?',
       selfLanguage: 'emotionally wide-ranging',
       confidence: p.totalDays >= 21 ? 'strong' : 'growing',
@@ -244,7 +262,7 @@ function buildMeaningInsights(p: PersonalProfile): DeepInsight[] {
         category: 'nervous-system',
         scope: 'monthly',
         title: 'Sleep Sensitivity',
-        body: 'Sleep seems to affect you on an emotional level, not just a physical one. When rest is disrupted, your ability to regulate appears to get shakier more quickly. Your nervous system may need sleep as a form of calibration, not just recovery.',
+        body: `${signalLead(trait.strength >= 70 ? 'strong' : 'growing')} that sleep affects you on an emotional level, not just a physical one ${daysReceipt(p.totalDays, 'monthly')}. When rest is disrupted, your regulation appears to get shakier faster. For you, sleep may function less like a bonus and more like calibration.`,
         reflectionPrompt: 'When your sleep is off, do you notice it more in your mood, your patience, or your body?',
         selfLanguage: 'physiologically sensitive to sleep disruption',
         confidence: trait.strength >= 70 ? 'strong' : 'growing',
@@ -258,7 +276,7 @@ function buildMeaningInsights(p: PersonalProfile): DeepInsight[] {
         category: 'attachment-and-closeness',
         scope: 'monthly',
         title: 'Relational Sensitivity',
-        body: 'Connection looks like more than a preference for you. Feeling understood appears to help your system settle in ways that solitude alone does not fully replace. This may mean closeness functions as real regulation, not just comfort.',
+        body: `${signalLead(trait.strength >= 70 ? 'strong' : 'growing')} that connection is more than a preference for you ${daysReceipt(p.totalDays, 'monthly')}. Feeling understood appears to help your system settle in ways solitude alone does not fully replace. This may mean closeness functions as regulation, not just reassurance.`,
         reflectionPrompt: 'When you feel most settled, is there usually someone who helped you get there?',
         selfLanguage: 'relationally regulated',
         confidence: trait.strength >= 70 ? 'strong' : 'growing',
@@ -272,7 +290,7 @@ function buildMeaningInsights(p: PersonalProfile): DeepInsight[] {
         category: 'who-you-are-underneath',
         scope: 'monthly',
         title: 'Emotional Depth',
-        body: 'You seem to be someone who feels life deeply rather than lightly. That depth may be part of what gives you richness, sincerity, and meaning, even if it also makes certain seasons heavier to carry.',
+        body: `${signalLead(trait.strength >= 70 ? 'strong' : 'growing')} that you do not move through life lightly ${daysReceipt(p.totalDays, 'monthly')}. You seem to register meaning, tension, and feeling with more depth than average. That depth can be a source of richness, but it can also make certain seasons heavier to carry.`,
         reflectionPrompt: 'Does feeling deeply ever feel like a strength to you, or does it mostly feel like a cost?',
         selfLanguage: 'someone who feels deeply',
         confidence: trait.strength >= 70 ? 'strong' : 'growing',
@@ -285,8 +303,8 @@ function buildMeaningInsights(p: PersonalProfile): DeepInsight[] {
         level: 'meaning',
         category: 'how-you-protect-yourself',
         scope: 'monthly',
-        title: 'Slow-Building Strain',
-        body: `You seem to absorb stress quietly while staying functional on the surface. That can make you look fine longer than you actually feel fine. Early signals matter here, because your strain often becomes visible only after it has already been building for days.`,
+        title: 'Stress You Carry Quietly',
+        body: `${signalLead(trait.strength >= 70 ? 'strong' : 'growing')} that you often stay capable after strain has already started building ${daysReceipt(p.totalDays, 'monthly')}. From the outside, you may still sound clear and look functional. Inside, your system may already be paying a cost. That is why your early signals matter so much here: by the time the strain feels obvious, it has often been with you for a while.`,
         reflectionPrompt: 'Do you often realize you were carrying more than you thought, only after it becomes too much?',
         selfLanguage: 'carrying more than I realized',
         confidence: trait.strength >= 70 ? 'strong' : 'growing',
@@ -299,8 +317,8 @@ function buildMeaningInsights(p: PersonalProfile): DeepInsight[] {
         level: 'meaning',
         category: 'how-your-mind-works',
         scope: 'monthly',
-        title: 'Gravitating Toward Steadiness',
-        body: 'Your system seems especially affected by unpredictability. It may not be the hard thing itself that drains you most, but the uncertainty around it. Steadiness looks less like a preference here and more like a condition that helps you feel safe enough to stay open.',
+        title: 'You Need More Steadiness Than Chaos',
+        body: `${signalLead(trait.strength >= 70 ? 'strong' : 'growing')} that unpredictability affects you more than the average disruption ${daysReceipt(p.totalDays, 'monthly')}. It may not be the hard thing itself that drains you most, but the uncertainty around it. Steadiness looks less like a preference here and more like a condition that helps you stay open.`,
         reflectionPrompt: 'Is it the hard thing itself that drains you, or the not knowing when it will end?',
         selfLanguage: 'in need of steadiness, not stimulation',
         confidence: trait.strength >= 70 ? 'strong' : 'growing',
@@ -312,12 +330,12 @@ function buildMeaningInsights(p: PersonalProfile): DeepInsight[] {
   // Recovery meaning
   if (recoveryStyle.confidence >= 50) {
     const meanings: Record<RecoveryStyle['mode'], string> = {
-      softness: 'Your recovery pattern suggests your system needs gentleness after difficulty — not productivity, not distraction, but quiet permission to rest. This may say something about how you carry effort.',
-      structure: 'When things feel chaotic, your system seems to restabilize through routine and predictability. Structure may not feel exciting, but it appears to be genuinely restorative for you.',
-      connection: 'You seem to recover not through solitude or rest alone, but through feeling seen and supported. Emotional intimacy may function as medicine for your nervous system.',
-      solitude: 'Your recovery draws heavily on solitude and quiet. This doesn\'t mean you don\'t value connection — it suggests your system processes and resets best when external demands are low.',
-      movement: 'Physical movement appears to be one of your most reliable reset mechanisms. Your body may be a more important part of your emotional processing than you might assume.',
-      mixed: 'Your recovery draws from many sources — quiet, connection, movement, and structure all play a role at different times. You may be someone whose needs shift depending on what depleted you.',
+      softness: 'Your recovery pattern suggests your system needs gentleness after difficulty. Not productivity. Not distraction. Quiet permission to soften. That may say something important about how much effort you carry before you stop.',
+      structure: 'When things feel chaotic, your system seems to restabilize through routine and predictability. Structure may not feel exciting, but it appears to help you come back to yourself faster.',
+      connection: 'You seem to recover not through rest alone, but through feeling seen and supported. Emotional closeness may function as medicine for your nervous system.',
+      solitude: 'Your recovery draws heavily on solitude and quiet. That does not mean you do not value connection. It suggests your system resets best when external demands are low enough for you to hear yourself again.',
+      movement: 'Physical movement appears to be one of your most reliable reset mechanisms. Your body may be doing more emotional processing for you than you consciously realize.',
+      mixed: 'Your recovery does not seem to come from one thing every time. Sometimes you need quiet. Sometimes you need structure, movement, or one steady point of connection. The deeper pattern is not inconsistency. It is sensitivity to what depleted you in the first place.',
     };
     insights.push({
       job: 'clarify',
@@ -325,7 +343,7 @@ function buildMeaningInsights(p: PersonalProfile): DeepInsight[] {
       level: 'meaning',
       category: recoveryStyle.mode === 'connection' ? 'what-restores-you' : recoveryStyle.mode === 'solitude' ? 'what-restores-you' : 'nervous-system',
       scope: 'monthly',
-      title: 'How You Recover',
+      title: recoveryStyle.mode === 'mixed' ? 'Recovery Depends on What Drained You' : 'How You Recover',
       body: meanings[recoveryStyle.mode],
       reflectionPrompt: 'What tends to restore you most when life feels crowded?',
       selfLanguage: recoveryStyle.mode === 'softness' ? 'in need of gentleness, not productivity' : recoveryStyle.mode === 'solitude' ? 'in need of spaciousness, not company' : recoveryStyle.mode === 'connection' ? 'healed through being understood' : undefined,
@@ -350,7 +368,7 @@ function buildMeaningInsights(p: PersonalProfile): DeepInsight[] {
       category: dominant.domain === 'relational' ? 'attachment-and-closeness' : dominant.domain === 'somatic' ? 'nervous-system' : 'how-your-mind-works',
       scope: 'monthly',
       title: 'Recurring Theme',
-      body: `The theme of "${dominant.theme}" appears repeatedly in your reflections. It seems connected to ${domainLabels[dominant.domain]}. That repetition usually means your inner world is still trying to understand or work through something important.`,
+      body: `The theme of "${dominant.theme}" appears repeatedly in your reflections, showing up across ${dominant.frequency} logged days. It seems connected to ${domainLabels[dominant.domain]}. Repetition like this usually means your inner world is still working on something that has not fully settled.`,
       reflectionPrompt: `When "${dominant.theme}" comes up for you, what does it usually feel like underneath?`,
       confidence: dominant.strength >= 60 ? 'strong' : dominant.strength >= 35 ? 'growing' : 'emerging',
       accent: 'lavender',
@@ -376,7 +394,7 @@ function buildNeedInsights(p: PersonalProfile): DeepInsight[] {
       category: 'nervous-system',
       scope: 'monthly',
       title: 'Rest as Foundation',
-      body: 'Many of your harder patterns seem to intensify when rest is thin. Protecting sleep may not be a basic wellness suggestion for you so much as one of the clearest forms of care your system responds to.',
+      body: 'Many of your harder patterns seem to intensify when rest is thin. Protecting sleep may not be generic wellness advice for you so much as one of the clearest forms of care your system responds to.',
       reflectionPrompt: 'What gets in the way of protecting your rest? Is it circumstance, or something harder to name?',
       confidence: p.sleepSensitivity > 75 ? 'strong' : 'growing',
       accent: 'silverBlue',
@@ -392,7 +410,7 @@ function buildNeedInsights(p: PersonalProfile): DeepInsight[] {
       category: 'attachment-and-closeness',
       scope: 'monthly',
       title: 'Need for Connection',
-      body: 'Your entries suggest that emotionally accurate connection is not a small bonus for you. When closeness or reassurance drops, your system often feels it. You may need to protect the kinds of connection that actually help you settle, not just the fact of being around people.',
+      body: 'Your entries suggest that emotionally accurate connection is not a small bonus for you. When closeness or reassurance drops, your system often feels it. The useful distinction here may be between contact and real settling connection.',
       reflectionPrompt: 'What kind of connection helps you most — being listened to, being around people, or something else?',
       selfLanguage: 'connection as a need, not a luxury',
       confidence: p.connectionSensitivity > 75 ? 'strong' : 'growing',
@@ -406,12 +424,12 @@ function buildNeedInsights(p: PersonalProfile): DeepInsight[] {
     if (avgDays > 3) {
       insights.push({
         job: 'guide',
-        id: 'need-recovery-time',
-        level: 'need',
-        category: 'what-restores-you',
-        scope: 'monthly',
-        title: 'Extended Recovery Time',
-        body: `After difficult stretches, your system seems to need about ${Math.round(avgDays)} days to come back to itself. If you expect yourself to bounce back instantly, you may end up being harsh with yourself during a process that is actually normal for you.`,
+      id: 'need-recovery-time',
+      level: 'need',
+      category: 'what-restores-you',
+      scope: 'monthly',
+      title: 'You May Need Longer to Come Back',
+      body: `After difficult stretches, your system seems to need about ${Math.round(avgDays)} days to come back to itself. That is useful evidence, not a flaw. If you expect yourself to bounce back instantly, you may end up judging a recovery process that is actually normal for you.`,
         reflectionPrompt: 'When you try to recover faster than your system needs, what tends to happen?',
         confidence: 'growing',
         accent: 'emerald',
@@ -426,7 +444,7 @@ function buildNeedInsights(p: PersonalProfile): DeepInsight[] {
         category: 'what-restores-you',
         scope: 'monthly',
         title: 'Your Recovery Ingredients',
-        body: `When you recover, certain conditions keep helping: ${p.recoveryStyle.recoveryIngredients.slice(0, 4).join(', ')}. This looks like a return path worth remembering on purpose, especially when you are too tired to improvise your way back.`,
+        body: `When you recover, certain conditions keep helping: ${p.recoveryStyle.recoveryIngredients.slice(0, 4).join(', ')}. This looks like a return path worth remembering on purpose, especially on the days when you are too depleted to improvise.`,
         confidence: p.recoveryStyle.confidence >= 70 ? 'strong' : 'growing',
         accent: 'emerald',
       });
@@ -442,7 +460,7 @@ function buildNeedInsights(p: PersonalProfile): DeepInsight[] {
       category: 'how-you-protect-yourself',
       scope: 'monthly',
       title: 'Earlier Self-Awareness',
-      body: 'Because your stress tends to build quietly, it may help to check in before you feel obviously overwhelmed. By the time the signal is loud, your system may already have been carrying too much for a while.',
+      body: 'Because your stress tends to build quietly, it may help to check in before you feel obviously overwhelmed. By the time the signal is loud, your system may already have been compensating for longer than it should.',
       reflectionPrompt: 'What are the earliest signs that you\'re beginning to carry too much?',
       selfLanguage: 'tender but functional',
       confidence: p.stressPattern.confidence >= 70 ? 'strong' : 'growing',
@@ -460,7 +478,7 @@ function buildNeedInsights(p: PersonalProfile): DeepInsight[] {
       category: 'what-restores-you',
       scope: 'monthly',
       title: 'Emotional Spaciousness',
-      body: 'Too many simultaneous demands or feelings seem to crowd your system quickly. You may need more emotional spaciousness than the average person: room to feel one thing at a time, room to slow down, room to hear yourself clearly again.',
+      body: 'Too many simultaneous demands or feelings seem to crowd your system quickly. You may need more emotional spaciousness than the average person: room to feel one thing at a time, slow enough space to hear yourself clearly again.',
       reflectionPrompt: 'When do you feel most like yourself — in stillness, in motion, or somewhere in between?',
       selfLanguage: 'emotionally crowded rather than simply stressed',
       confidence: crowdingTrait.strength >= 70 ? 'strong' : 'growing',
@@ -490,7 +508,7 @@ function buildGrowthInsights(p: PersonalProfile): DeepInsight[] {
       category: 'growth-and-change',
       scope: 'monthly',
       title: 'Growing Steadiness',
-      body: 'Your entries suggest a quieter kind of growth: not perfection, but more solid ground. Day to day it may be easy to miss, but over time your system looks less easily knocked off center than it did before.',
+      body: `Compared with your earlier entries, your data suggests a quieter kind of growth: not perfection, but more solid ground. Day to day it may be easy to miss. Across time, though, your system looks less easily knocked off center than it did before.`,
       reflectionPrompt: 'Can you sense this steadiness growing, or does it only become visible looking back?',
       confidence: stabTrend.volatility < 10 ? 'strong' : 'growing',
       accent: 'gold',
@@ -503,7 +521,7 @@ function buildGrowthInsights(p: PersonalProfile): DeepInsight[] {
       category: 'growth-and-change',
       scope: 'monthly',
       title: 'A Period of Difficulty',
-      body: 'Lately your entries look less steady than your usual baseline. That does not read like failure. It reads more like a genuinely harder season, one that may ask for patience and gentleness more than self-improvement pressure.',
+      body: `Lately your entries look less steady than your usual baseline. That does not read like failure. It reads like a genuinely harder season, especially compared with your earlier baseline, and one that may ask for patience and gentleness more than self-improvement pressure.`,
       reflectionPrompt: 'What kind of season does this feel like? And what would patience look like right here?',
       confidence: stabTrend.volatility < 10 ? 'strong' : 'growing',
       accent: 'copper',
@@ -521,7 +539,7 @@ function buildGrowthInsights(p: PersonalProfile): DeepInsight[] {
       category: 'growth-and-change',
       scope: 'monthly',
       title: 'Strain Is Easing',
-      body: 'Something appears to be easing. Your recent entries carry less overall strain than before, even if it does not feel dramatic from the inside. Sometimes healing looks more like less pressure than more joy.',
+      body: `Something appears to be easing. Your recent entries carry less overall strain than before, even if it does not feel dramatic from the inside. Sometimes progress looks more like less pressure than more joy.`,
       reflectionPrompt: 'What shifted recently? Was it something you did, or something that changed around you?',
       confidence: strainTrend.volatility < 10 ? 'strong' : 'growing',
       accent: 'emerald',
@@ -539,7 +557,7 @@ function buildGrowthInsights(p: PersonalProfile): DeepInsight[] {
       category: 'what-restores-you',
       scope: 'monthly',
       title: 'More Restoration',
-      body: 'You have been reaching for restoration more often lately. Whether that has been intentional or instinctive, it suggests part of you is learning how to return to yourself instead of only pushing through.',
+      body: `You have been reaching for restoration more often lately. Whether that has been intentional or instinctive, it suggests part of you is learning how to return to yourself instead of only pushing through.`,
       reflectionPrompt: 'Is this something you\'re doing deliberately, or is your body finding its own way back?',
       confidence: restTrend.volatility < 10 ? 'strong' : 'growing',
       accent: 'emerald',
@@ -582,12 +600,12 @@ function buildIdentityInsights(p: PersonalProfile): DeepInsight[] {
     if (trait.id === 'steadiness-seeker') {
       insights.push({
         job: 'integrate',
-        id: 'identity-steadiness',
+      id: 'identity-steadiness',
         level: 'identity',
         category: 'who-you-are-underneath',
         scope: 'truth',
-        title: 'A Person Who Values Steadiness',
-        body: 'Across months of data, one theme surfaces again and again: you gravitate toward emotional consistency. It\'s not that you avoid feeling — it\'s that you seem to need a stable inner ground from which to feel safely. Steadiness may be less a preference and more a part of how you\'re built.',
+        title: 'Steadiness Looks Foundational for You',
+        body: `Across months of data, one theme surfaces again and again: you gravitate toward emotional consistency. It is not that you avoid feeling. It is that you seem to need stable ground in order to feel safely and stay open.`,
         reflectionPrompt: 'When do you feel most like yourself?',
         selfLanguage: 'someone who needs stable ground to feel safely from',
         confidence: 'strong',
@@ -596,12 +614,12 @@ function buildIdentityInsights(p: PersonalProfile): DeepInsight[] {
     } else if (trait.id === 'deep-feeler') {
       insights.push({
         job: 'integrate',
-        id: 'identity-depth',
+      id: 'identity-depth',
         level: 'identity',
         category: 'how-your-mind-works',
         scope: 'truth',
-        title: 'Someone Who Feels Deeply',
-        body: 'You seem to be someone who feels life intensely and then has to make meaning from that intensity. This shapes how you connect, what wounds you, what restores you, and what feels true enough to trust.',
+        title: 'Depth Is Part of How You Work',
+        body: `Across ${p.totalDays} tracked days, you seem to feel life intensely and then need to make meaning from that intensity. That shape shows up in how you connect, what wounds you, what restores you, and what feels true enough to trust.`,
         reflectionPrompt: 'If you could describe your inner world to someone who had never been inside it, what would you say?',
         selfLanguage: 'someone whose feelings are primary, not secondary',
         confidence: 'strong',
@@ -618,24 +636,24 @@ function buildIdentityInsights(p: PersonalProfile): DeepInsight[] {
     if (recovery === 'connection' && stress === 'push-through') {
       insights.push({
         job: 'integrate',
-        id: 'identity-composite-connector',
+      id: 'identity-composite-connector',
         level: 'identity',
         category: 'inner-contradictions',
         scope: 'truth',
-        title: 'A Quiet Carrier',
-        body: 'You appear to carry difficulty quietly while healing most through being met in it. There is a real tension here: part of you keeps going alone, while another part deeply needs to feel seen, helped, and accurately held.',
+        title: 'You Carry More Than People Can See',
+        body: `Your data suggests a real contradiction here: you carry difficulty quietly while healing most through being met in it. Part of you keeps going alone, while another part deeply needs to feel seen, helped, and accurately held.`,
         confidence: 'strong',
         accent: 'rose',
       });
     } else if (recovery === 'solitude' && stress === 'withdraw') {
       insights.push({
         job: 'integrate',
-        id: 'identity-composite-solitary',
+      id: 'identity-composite-solitary',
         level: 'identity',
         category: 'how-you-protect-yourself',
         scope: 'truth',
-        title: 'Someone Who Processes Alone',
-        body: 'Your entries suggest that you process difficulty inwardly. Pulling back may be one of the ways you protect yourself and make sense of what you feel. Solitude seems restorative for you, but it may also hide how much is happening underneath.',
+        title: 'You Process a Great Deal Alone',
+        body: `Your entries suggest that you process difficulty inwardly. Pulling back may be one of the ways you protect yourself and make sense of what you feel. Solitude seems restorative for you, but it may also hide how much is happening underneath.`,
         confidence: 'strong',
         accent: 'silverBlue',
       });
@@ -650,7 +668,7 @@ function buildIdentityInsights(p: PersonalProfile): DeepInsight[] {
       level: 'identity',
       category: 'who-you-are-underneath',
       scope: 'truth',
-      title: 'What Your Data Knows About You',
+      title: 'What Your History Keeps Confirming',
       body: `Across ${p.totalDays} days of reflection, certain truths keep holding. ${p.personalTruths.slice(0, 2).join(' ')} They may not explain everything about you, but they do sound like real parts of your emotional logic.`,
       confidence: 'strong',
       accent: 'gold',
@@ -674,7 +692,7 @@ function buildIdentityInsights(p: PersonalProfile): DeepInsight[] {
       level: 'identity',
       category: dominantDomain === 'relational' ? 'attachment-and-closeness' : dominantDomain === 'somatic' ? 'nervous-system' : 'who-you-are-underneath',
       scope: 'truth',
-      title: 'Your Inner Landscape',
+      title: 'The Landscape Your Inner World Returns To',
       body: domainReflection[dominantDomain],
       confidence: 'strong',
       accent: 'lavender',
@@ -949,7 +967,7 @@ function buildDiscomfortInsights(p: PersonalProfile): DeepInsight[] {
       category: 'nervous-system',
       scope: 'daily',
       title: 'Emotionally Crowded',
-      body: 'You seem to be carrying a lot of emotional intensity right now. This isn\'t something to fix — it may just need space to settle.',
+      body: 'You seem to be carrying a lot of emotional intensity right now. This does not necessarily need solving first. It may need enough space for one feeling at a time to become legible again.',
       selfLanguage: 'I feel emotionally crowded today',
       confidence: 'growing',
       accent: 'lavender',
@@ -966,7 +984,7 @@ function buildDiscomfortInsights(p: PersonalProfile): DeepInsight[] {
       category: 'nervous-system',
       scope: 'daily',
       title: 'Quietly Depleted',
-      body: 'Your body may be running a deficit right now — high strain without enough restoration. This kind of depletion can feel like emotional flatness or disengagement.',
+      body: 'Your body may be running a deficit right now: high strain without enough restoration. This kind of depletion can masquerade as flatness, irritability, or disconnection when the deeper issue is simply that your reserves are low.',
       selfLanguage: 'I\'m quietly depleted — not sad, just running on empty',
       confidence: 'growing',
       accent: 'copper',
@@ -983,7 +1001,7 @@ function buildDiscomfortInsights(p: PersonalProfile): DeepInsight[] {
       category: 'attachment-and-closeness',
       scope: 'daily',
       title: 'Emotionally Lonely',
-      body: 'Connection has been low alongside reduced stability. You may not need more people — you may need more presence, more being-seen.',
+      body: 'Connection has been low alongside reduced stability. You may not need more people right now so much as more presence, more felt safety, more being-seen.',
       selfLanguage: 'I feel emotionally lonely today — not alone, but unseen',
       confidence: 'emerging',
       accent: 'rose',
@@ -1000,7 +1018,7 @@ function buildDiscomfortInsights(p: PersonalProfile): DeepInsight[] {
       category: 'nervous-system',
       scope: 'daily',
       title: 'Overstimulated',
-      body: 'Everything seems elevated — intensity, strain, without corresponding recovery. This pattern often means your nervous system needs less input, not more solutions.',
+      body: 'Everything seems elevated right now: intensity, strain, and not enough corresponding recovery. This pattern often means your nervous system needs less input before it needs more solutions.',
       selfLanguage: 'I\'m overstimulated — I don\'t need more, I need less',
       confidence: 'growing',
       accent: 'silverBlue',

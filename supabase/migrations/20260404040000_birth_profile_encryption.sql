@@ -1,6 +1,5 @@
--- ─────────────────────────────────────────────────────────────────────────────
--- Encrypt remote birth-profile payloads server-side and retire plaintext fields
--- ─────────────────────────────────────────────────────────────────────────────
+-- Historical migration from the earlier encrypted birth-profile design.
+-- Later migrations restore plaintext server fields and drop profile_enc.
 
 ALTER TABLE public.birth_profiles
   ADD COLUMN IF NOT EXISTS profile_enc TEXT;

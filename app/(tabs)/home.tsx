@@ -57,6 +57,7 @@ import { loadSelfKnowledgeContext, SelfKnowledgeContext } from '../../services/i
 import { enhanceInsightCopy } from '../../services/insights/geminiInsightsService';
 import { logger } from '../../utils/logger';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
+import { getArchiveDepth, getPersonalizedPremiumTeaser } from '../../utils/archiveDepth';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
@@ -183,6 +184,16 @@ export default function HomeScreen() {
 
   // Self-knowledge context — used to personalize affirmations
   const [selfKnowledge, setSelfKnowledge] = useState<SelfKnowledgeContext | null>(null);
+
+  const archiveDepthCounts = useMemo(() => ({
+    checkIns: dailyLoop?.streak.totalCheckIns ?? weeklyCheckIns.length,
+    journalEntries: dailyLoop?.weeklyReflection.journalCount ?? 0,
+  }), [dailyLoop?.streak.totalCheckIns, dailyLoop?.weeklyReflection.journalCount, weeklyCheckIns.length]);
+  const archiveDepth = useMemo(() => getArchiveDepth(archiveDepthCounts), [archiveDepthCounts]);
+  const premiumTeaser = useMemo(
+    () => getPersonalizedPremiumTeaser(archiveDepthCounts, { surface: 'today' }),
+    [archiveDepthCounts],
+  );
 
   // ── Chart Loading ──
 
@@ -829,6 +840,35 @@ export default function HomeScreen() {
           )}
 
           {/* ── Premium Teaser ── */}
+          {(archiveDepth.totalSignals > 0 || !hasDataToday) && (
+            <Animated.View entering={FadeInDown.delay(940).duration(600)}>
+              <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
+                <LinearGradient
+                  pointerEvents="none"
+                  colors={['rgba(162, 194, 225, 0.16)', 'rgba(26, 30, 41, 0.40)']}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.insightPadding}>
+                  <View style={styles.insightHeader}>
+                    <MetallicIcon name="analytics-outline" size={16} variant="gold" />
+                    <MetallicText style={styles.insightEyebrow} variant="gold">{archiveDepth.label.toUpperCase()}</MetallicText>
+                  </View>
+                  <Text style={styles.weeklySummaryText}>{archiveDepth.headline}</Text>
+                  <Text style={styles.archiveDepthBody}>{archiveDepth.body}</Text>
+                  <View style={styles.archiveProgressTrack}>
+                    <View style={[styles.archiveProgressFill, { width: `${Math.max(8, archiveDepth.progress * 100)}%` }]} />
+                  </View>
+                  {archiveDepth.nextMilestone ? (
+                    <Text style={styles.archiveDepthMeta}>
+                      {archiveDepth.remaining} more {archiveDepth.remaining === 1 ? 'signal' : 'signals'} to reach {archiveDepth.nextMilestone}
+                    </Text>
+                  ) : (
+                    <Text style={styles.archiveDepthMeta}>Keep logging to make the read more specific.</Text>
+                  )}
+                </View>
+              </VelvetGlassSurface>
+            </Animated.View>
+          )}
           {dailyLoop?.weeklySynthesis?.hasEnoughData && (
             <Animated.View entering={FadeInDown.delay(950).duration(600)}>
               <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
@@ -864,16 +904,16 @@ export default function HomeScreen() {
                   <View style={styles.insightPadding}>
                     <View style={styles.premiumHeader}>
                       <MetallicIcon name="sparkles-outline" size={18} variant="gold" />
-                      <MetallicText style={styles.premiumLabel} variant="gold">Pattern Unlocked</MetallicText>
+                      <MetallicText style={styles.premiumLabel} variant="gold">{premiumTeaser.eyebrow}</MetallicText>
                     </View>
                     <Text style={styles.premiumTitle}>
-                      You have {dailyLoop.weeklyReflection.checkInCount} check-ins this week — your first pattern trends are ready
+                      {premiumTeaser.title}
                     </Text>
                     <Text style={styles.premiumSub}>
-                      Deeper Sky can now show you what restores your energy, what drains it, and how your mood shifts across your week.
+                      {premiumTeaser.body}
                     </Text>
                     <View style={styles.premiumCta}>
-                      <MetallicText style={styles.premiumCtaText} variant="gold">See Your Patterns</MetallicText>
+                      <MetallicText style={styles.premiumCtaText} variant="gold">{premiumTeaser.cta}</MetallicText>
                       <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
                     </View>
                   </View>
@@ -893,16 +933,16 @@ export default function HomeScreen() {
                   <View style={styles.insightPadding}>
                     <View style={styles.premiumHeader}>
                       <MetallicIcon name="sparkles-outline" size={18} variant="gold" />
-                      <MetallicText style={styles.premiumLabel} variant="gold">Deeper Insight</MetallicText>
+                      <MetallicText style={styles.premiumLabel} variant="gold">{premiumTeaser.eyebrow}</MetallicText>
                     </View>
                     <Text style={styles.premiumTitle}>
-                      Unlock the full Personal Reflection Engine
+                      {premiumTeaser.title}
                     </Text>
                     <Text style={styles.premiumSub}>
-                      Extended pattern reflections, personal connections, guided breath journaling, and full sleep pattern insights.
+                      {premiumTeaser.body}
                     </Text>
                     <View style={styles.premiumCta}>
-                      <MetallicText style={styles.premiumCtaText} variant="gold">Explore Deeper Insight</MetallicText>
+                      <MetallicText style={styles.premiumCtaText} variant="gold">{premiumTeaser.cta}</MetallicText>
                       <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
                     </View>
                   </View>
@@ -1380,6 +1420,32 @@ const createStyles = (theme: AppTheme) => {
     color: theme.isDark ? 'rgba(255, 255, 255, 0.65)' : theme.textPrimary,
     fontSize: 14,
     lineHeight: 22,
+  },
+  archiveDepthBody: {
+    marginTop: 8,
+    fontSize: 13,
+    color: theme.textSecondary,
+    lineHeight: 20,
+  },
+  archiveProgressTrack: {
+    height: 5,
+    borderRadius: 999,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    marginTop: 16,
+  },
+  archiveProgressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: PALETTE.gold,
+  },
+  archiveDepthMeta: {
+    marginTop: 8,
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(212,175,55,0.72)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   weeklyMetrics: {
     flexDirection: 'row',

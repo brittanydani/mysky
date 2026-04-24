@@ -245,7 +245,7 @@ function buildSomaticInsight(
 
   return {
     id: 'somatic-dominant',
-    title: 'Body Awareness Pattern',
+    title: 'Your Body Keeps Pointing to the Same Place',
     body: `Your physical and emotional logs are pointing to the same place. When ${topEmotion.toLowerCase()} surfaces, your body most often stores it in your ${regionLabel}.${sensationNote}${overlapBody}`,
     heroMetrics: [
       metric(heavyLabel.toUpperCase(), 'Somatic days', overlap >= 2 ? 'caution' : 'default'),
@@ -271,27 +271,27 @@ function buildSomaticInsight(
 const ARCHETYPE_SHADOWS: Record<ArchetypeKey, { title: string; body: string; takeaway: string }> = {
   hero: {
     title: 'The Hero Under Pressure',
-    body: 'Your dominant pattern is The Hero — driven to overcome and prove strength. The shadow to watch: striving harder when rest is what your system actually needs. On high-load days, strategic recovery is the most courageous move.',
+    body: 'Your dominant pattern is The Hero: driven to overcome and prove strength. The shadow to watch is striving harder when rest is what your system actually needs. On high-load days, strategic recovery may be the more courageous move.',
     takeaway: 'When pressure spikes, notice whether you are trying to earn safety by doing more. What would strategic recovery look like before you prove anything else?',
   },
   caregiver: {
     title: 'The Caregiver Under Pressure',
-    body: 'Your dominant pattern is The Caregiver — moving through the world by nurturing others. The shadow to watch: over-giving until quietly depleted. On hard days, ask honestly: who is taking care of you?',
+    body: 'Your dominant pattern is The Caregiver: moving through the world by tending to others. The shadow to watch is over-giving until you are quietly depleted. On hard days, the real question may be who is taking care of you.',
     takeaway: 'Catch the reflex to caretake before it empties you. What need are you about to meet for someone else that you have not named for yourself yet?',
   },
   seeker: {
     title: 'The Seeker Under Pressure',
-    body: 'When pressure rises, your instinct is movement and escape. The data suggests your Seeker pattern is activating under stress, favoring restlessness when staying present might resolve the tension faster.',
+    body: 'When pressure rises, your instinct is movement and escape. The data suggests your Seeker pattern activates under stress, favoring restlessness when staying present might resolve the tension faster.',
     takeaway: 'Notice the urge to pull away today. What happens if you stay still for five more minutes instead of changing course?',
   },
   sage: {
     title: 'The Sage Under Pressure',
-    body: 'Your dominant pattern is The Sage — seeking truth and understanding above all. The shadow to watch: over-analyzing when the answer lives below thought. On heavy days, feeling through it may matter more than figuring it out.',
+    body: 'Your dominant pattern is The Sage: seeking truth and understanding above all. The shadow to watch is over-analyzing when the answer lives below thought. On heavy days, feeling through it may matter more than figuring it out.',
     takeaway: 'When the mind speeds up, pause before solving. What feeling are you trying to out-think right now?',
   },
   rebel: {
     title: 'The Rebel Under Pressure',
-    body: 'Your dominant pattern is The Rebel — questioning structures and catalyzing change. The shadow to watch: resistance as a stress response — fighting what feels constraining, even when it isn\'t. Discernment protects your energy better than friction does.',
+    body: 'Your dominant pattern is The Rebel: questioning structures and catalyzing change. The shadow to watch is resistance as a stress response, fighting what feels constraining even when it is not the real problem. Discernment protects your energy better than friction does.',
     takeaway: 'Spot the moment resistance becomes reflex. Which part of today is actually misaligned, and which part only feels intolerable because you are already overloaded?',
   },
 };
@@ -432,10 +432,10 @@ function buildRelationshipInsight(
   let body = `Your relationship reflections keep circling ${topThemeLabel.toLowerCase()}.`;
   if (impact !== null && Math.abs(impact) >= 0.4) {
     body = impact > 0
-      ? 'When relational themes appear in your check-ins, your emotional baseline tends to lift. Your data is linking connection with expansion rather than collapse.'
-      : 'When relational themes appear in your check-ins, your emotional baseline tends to drop. The pattern suggests some forms of connection are still landing as stress in your system.';
+      ? 'When relational themes appear in your check-ins, your emotional baseline tends to lift. Your data is linking certain forms of connection with expansion rather than collapse.'
+      : 'When relational themes appear in your check-ins, your emotional baseline tends to drop. The pattern suggests some forms of connection are still landing in your system as stress rather than support.';
   } else if (secureThemeLabel) {
-    body = `Your reflections show recurring struggle themes, but they also show secure behavior through ${secureThemeLabel.toLowerCase()}. The pattern is not static; you are already recording a different way of relating.`;
+    body = `Your reflections show recurring struggle themes, but they also show secure behavior through ${secureThemeLabel.toLowerCase()}. The pattern is not static. You are already recording a different way of relating.`;
   }
 
   return {
@@ -493,7 +493,7 @@ function buildValuesInsight(
   return {
     id: 'values-pressure',
     title: 'Your Core Values in Practice',
-    body: `Your top values are ${topList}.${hardDayNote} When you feel stuck or heavy, asking "which value is being constrained right now?" often surfaces the real issue.`,
+    body: `Your top values are ${topList}.${hardDayNote} When you feel stuck or heavy, asking which value is being constrained right now can surface the real issue faster than analysis alone.`,
     accentColor: 'gold',
     source: 'values',
     isConfirmed,
@@ -542,15 +542,15 @@ const INTELLIGENCE_DIMENSION_LABELS: Record<IntelligenceDimensionId, string> = {
 };
 
 const INTELLIGENCE_NOTES: Record<IntelligenceDimensionId, string> = {
-  linguistic: 'You process the world through language — writing, reading, and conversation are how you make sense of complexity. Your insights often arrive as words.',
-  logical: 'Patterns, systems, and logic are your native language. You naturally deconstruct problems into solvable parts and spot inconsistencies others miss.',
-  musical: 'Rhythm, tone, and sound carry meaning for you. Music isn\'t just background — it\'s a processing tool that shapes your emotional landscape.',
-  spatial: 'You think in images and dimensions. Mental maps, visualizations, and spatial relationships come naturally, giving you an intuitive sense of design and navigation.',
-  kinesthetic: 'Your body is a primary thinking tool. Movement, touch, and physical engagement help you learn, remember, and regulate far more than sitting still.',
-  interpersonal: 'You read people fluently — motivations, emotions, and group dynamics are legible to you. Your intelligence shines brightest in connection with others.',
-  intrapersonal: 'You have unusual access to your own inner world. Self-awareness, reflection, and understanding your own patterns are where your intelligence runs deepest.',
-  naturalistic: 'You notice patterns in the living world — seasons, ecosystems, animal behavior, and natural systems speak to you in ways that feel intuitive.',
-  existential: 'You\'re drawn to the biggest questions — meaning, purpose, mortality, and the nature of existence. Your thinking naturally gravitates toward depth.',
+  linguistic: 'Language looks like one of your primary ways of making sense of experience. Writing, reading, and conversation may be where your clarity arrives fastest.',
+  logical: 'Patterns, systems, and internal coherence appear central to how you think. You naturally break complexity into parts and notice what does not fit.',
+  musical: 'Rhythm, tone, and sound seem to carry real meaning for you. Music may function less like background and more like a way your system processes feeling.',
+  spatial: 'You seem to think in images, layouts, and relationships in space. Mental maps and visual structure may come to you faster than verbal explanation.',
+  kinesthetic: 'Your body looks like a real thinking tool for you. Movement, touch, and physical engagement may help you learn, remember, and regulate better than stillness does.',
+  interpersonal: 'You appear to read people fluently. Motivations, emotional shifts, and group dynamics may be legible to you in ways others miss.',
+  intrapersonal: 'You appear to have strong access to your own inner world. Self-observation, reflection, and pattern recognition seem to be among your sharpest forms of intelligence.',
+  naturalistic: 'You seem to notice patterns in the living world instinctively. Seasons, ecosystems, and natural systems may make intuitive sense to you.',
+  existential: 'Your mind appears drawn to the biggest questions. Meaning, purpose, mortality, and depth do not seem optional topics for you; they seem native territory.',
 };
 
 function buildIntelligenceInsight(profile: IntelligenceProfile): CrossRefInsight | null {
@@ -574,8 +574,8 @@ function buildIntelligenceInsight(profile: IntelligenceProfile): CrossRefInsight
   const note = INTELLIGENCE_NOTES[top.id];
 
   const body = top.score === second.score
-    ? `Your ${topLabel} and ${secondLabel} intelligences are equally strong. ${note}`
-    : `${topLabel} intelligence leads your profile, with ${secondLabel} close behind. ${note}`;
+    ? `Your data suggests two equally strong channels here: ${topLabel} and ${secondLabel}. ${note}`
+    : `${topLabel} appears to lead your profile, with ${secondLabel} close behind. ${note}`;
 
   return {
     id: 'intelligence-profile',
@@ -598,7 +598,7 @@ function buildCognitiveInsight(scores: NonNullable<SelfKnowledgeContext['cogniti
   return {
     id: 'cognitive-workflow',
     title: 'Your Cognitive Style in Practice',
-    body: note,
+    body: `A pattern in your reflection data suggests this cognitive style: ${note}`,
     accentColor: 'silverBlue',
     source: 'cognitive',
     isConfirmed: false,
@@ -725,8 +725,8 @@ function buildDreamSomaticInsight(
 
   return {
     id: 'dream-somatic-link',
-    title: 'Your Dreams Echo Your Body',
-    body: `You frequently dream with a feeling of "${primary.dreamFeeling.replace(/_/g, ' ')}" — and your body map shows ${primary.count} logged entries of ${primary.somaticEmotion.toLowerCase()}.${bodyLabel} Your dreams and your body may be processing the same material. What one holds, the other speaks.`,
+    title: 'Your Dreams and Body Are Carrying Similar Material',
+    body: `You frequently dream with a feeling of "${primary.dreamFeeling.replace(/_/g, ' ')}," and your body map shows ${primary.count} logged entries of ${primary.somaticEmotion.toLowerCase()}.${bodyLabel} Your dreams and your body may be processing the same material from different directions.`,
     accentColor: 'silverBlue',
     source: 'somatic',
     isConfirmed: true,
@@ -759,7 +759,7 @@ function buildJournalBodyInsight(
     return {
       id: 'journal-body-pattern',
       title: 'Your Journal and Your Body',
-      body: `Your heavier journal days are clustering around signals in your ${topRegion[0]}. The body region showing up most often is carrying part of the story your writing is processing.`,
+      body: `Your heavier journal days are clustering around signals in your ${topRegion[0]}. The region showing up most often may be carrying part of the story your writing is trying to process.`,
       heroMetrics: [
         metric(String(journal.heavyDays.length), 'Heavy days'),
         metric(String(topRegion[1]), `${topRegion[0]} entries`),
@@ -785,7 +785,7 @@ function buildJournalBodyInsight(
   return {
     id: 'journal-body-pattern',
     title: 'Your Heaviest Days Have a Body Signature',
-    body: `Your heaviest journal days repeatedly land in the body as ${topEmotion[0].toLowerCase()}. The overlap is strong enough that your body and your writing are tracking the same load from different angles.`,
+    body: `Your heaviest journal days repeatedly land in the body as ${topEmotion[0].toLowerCase()}. The overlap is strong enough to suggest your body and your writing are tracking the same load from different angles.`,
     heroMetrics: [
       metric(String(onHeavyDays.length), 'Overlap days'),
       metric(String(topEmotion[1]), topEmotion[0].toLowerCase()),
@@ -829,7 +829,7 @@ function buildDreamArchetypeInsight(
   return {
     id: 'dream-archetype-pattern',
     title: `Your Dreams Reflect The ${archetype}`,
-    body: `Your dominant archetype is The ${archetype}, and your most recurring dream themes include ${themeLabel} — themes that mirror this pattern. Your unconscious mind may be actively working through the same psychological territory your archetype profile points to. Dreams are often where integration begins before the waking mind catches up.`,
+    body: `Your dominant archetype is The ${archetype}, and your recurring dream themes include ${themeLabel}, themes that mirror this pattern. Your dreaming mind may be working through the same territory your archetype profile points to before your waking mind fully names it.`,
     accentColor: 'lavender',
     source: 'archetype',
     isConfirmed: true,
@@ -881,7 +881,7 @@ function buildSleepMoodInsight(
   return {
     id: 'sleep-mood-link',
     title: 'Sleep Shapes Your Days',
-    body: `The night before is materially shaping the next day for you. Morning mood shifts enough after tracked sleep to register as a real lever rather than background noise.${qualNote}`,
+    body: `The night before appears to shape the next day for you in a measurable way. Morning mood shifts enough after tracked sleep to register as a real lever rather than background noise.${qualNote}`,
     heroMetrics: [
       metric(`${dir === 'higher' ? '+' : '−'}${Math.abs(diff).toFixed(1)}`, 'Next-day mood', dir === 'higher' ? 'positive' : 'caution'),
       metric(String(nightBeforeCheckIns.length), 'Tracked mornings'),

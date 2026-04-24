@@ -1,9 +1,8 @@
 -- 20260422000100_relationship_charts.sql
 --
--- Relationship charts cloud table.
--- Migrated from local-only SQLite storage to Supabase for network-first architecture.
--- Sensitive fields (name, birth_date, birth_time, birth_place, lat/lng) are encrypted
--- client-side before upload.
+-- Historical base migration for relationship charts.
+-- Later migrations convert core relationship data to plaintext server storage
+-- under the Supabase-canonical architecture.
 
 CREATE TABLE IF NOT EXISTS public.relationship_charts (
     id                  TEXT        PRIMARY KEY,

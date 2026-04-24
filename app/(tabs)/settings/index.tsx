@@ -18,7 +18,6 @@ import { type AppTheme } from '../../../constants/theme';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
-import BackupPassphraseModal from '../../../components/BackupPassphraseModal';
 import PrivacySettingsModal from '../../../components/PrivacySettingsModal';
 import BirthDataModal from '../../../components/BirthDataModal';
 import { usePremium } from '../../../context/PremiumContext';
@@ -30,7 +29,6 @@ import { FullNatalStoryGenerator } from '../../../services/premium/fullNatalStor
 import { BirthData } from '../../../services/astrology/types';
 import { AstrologyCalculator } from '../../../services/astrology/calculator';
 import Constants from 'expo-constants';
-import { FieldEncryptionService } from '../../../services/storage/fieldEncryption';
 import { IdentityVault } from '../../../utils/IdentityVault';
 import { logger } from '../../../utils/logger';
 import { SUPPORT_EMAIL } from '../../../constants/config';
@@ -57,12 +55,12 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Where is my data stored?',
     answer:
-      'All your data stays on your device. Birth data, journal entries, and chart information are stored in a local database with sensitive fields encrypted using AES-256-GCM. Encryption keys are kept in your device’s secure keychain. Nothing is uploaded to any server.',
+      'Supabase is the source of truth for your core app data. Birth data, journal entries, check-ins, sleep logs, and charts are stored in your account and protected by row-level access controls. This device may keep local cache and draft data to improve responsiveness and support queued offline writes.',
   },
   {
     question: 'Where does my backup go?',
     answer:
-      'When you create a backup, an encrypted .msky file is saved to your device’s cache, then your device’s share sheet opens so you choose the destination — Files, iCloud Drive, AirDrop, email, or any other app. MySky never uploads your backup to any server.',
+      'When you create a backup, a .msky file is saved to your device’s cache, then your device’s share sheet opens so you choose the destination — Files, iCloud Drive, AirDrop, email, or any other app.',
   },
   {
     question: 'What does the PDF export include?',
@@ -72,7 +70,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'What does Deeper Sky include?',
     answer:
-      'Deeper Sky unlocks encrypted backup & restore, the full personal story (10 chapters), attachment and inner-work reflections, unlimited relationship charts, journal pattern analysis, deeper insight summaries, Chiron & Node depth mapping, reflective daily guidance with action prompts, extended pattern analysis, full energy chakra mapping, and symbolic dream reflections.',
+      'Deeper Sky unlocks backup & restore, the full personal story (10 chapters), attachment and inner-work reflections, unlimited relationship charts, journal pattern analysis, deeper insight summaries, Chiron & Node depth mapping, reflective daily guidance with action prompts, extended pattern analysis, full energy chakra mapping, and symbolic dream reflections.',
   },
   {
     question: 'How does mood and energy tracking work?',
@@ -87,7 +85,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'What behavioral patterns does MySky track?',
     answer:
-      'MySky tracks mood trends, energy highs and lows, stress patterns, sleep quality over time, journal keyword frequency, and emotional tone shifts in your writing — all on your device. The Insights tab shows weekly averages, what your best energy days look like, and what consistently restores or drains you based on your own data.',
+      'MySky tracks mood trends, energy highs and lows, stress patterns, sleep quality over time, journal keyword frequency, and emotional tone shifts in your writing across your account history. The Insights tab shows weekly averages, what your best energy days look like, and what consistently restores or drains you based on your own data.',
   },
   {
     question: 'What is the Energy section?',
@@ -112,7 +110,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Is my journal private?',
     answer:
-      'Completely. Journal entries are stored only on your device with sensitive fields encrypted at rest. They are never uploaded, analyzed externally, or shared with anyone. Your device passcode and biometrics provide an additional layer of protection.',
+      'Completely. Journal entries are private to your account, stored in MySky\'s Supabase backend with row-level access controls so only you can access them. They are not sold or shared for advertising, and optional AI features only send the minimal content needed when you explicitly request them.',
   },
   {
     question: 'How do symbolic dream reflections work?',
@@ -144,14 +142,9 @@ export default function SettingsScreen() {
   const [restoreInProgress, setRestoreInProgress] = useState(false);
   const [pdfExporting, setPdfExporting] = useState(false);
   const [demoSendInProgress, setDemoSendInProgress] = useState(false);
-  const [backupModalVisible, setBackupModalVisible] = useState(false);
-  const [restoreModalVisible, setRestoreModalVisible] = useState(false);
-  const [restoreUri, setRestoreUri] = useState<string | null>(null);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [showFaq, setShowFaq] = useState(false);
-  const [encryptionKeyLost, setEncryptionKeyLost] = useState(false);
-
   // ── Calibration preferences (persisted via AsyncStorage) ──
   const [hapticEnabled, setHapticEnabled] = useState(true);
   const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
@@ -185,10 +178,6 @@ export default function SettingsScreen() {
     try {
       const settings = await ensureSettings();
       setLastBackupAt(settings.lastBackupAt || null);
-
-      // Detect encryption key loss — if the DEK is gone, warn the user
-      const keyOk = await FieldEncryptionService.isKeyAvailable();
-      setEncryptionKeyLost(!keyOk);
 
       // Calibration preferences
       const [haptic, reminder, mood, dream] = await Promise.all([
@@ -284,7 +273,7 @@ export default function SettingsScreen() {
     } catch {}
     Alert.alert(
       'Deeper Sky Feature',
-      'Encrypted backup & restore keeps your data safe. Available with a Deeper Sky subscription.',
+      'Backup & restore is available with a Deeper Sky subscription.',
       [
         { text: 'Not now', style: 'cancel' },
         { text: 'Learn more', onPress: () => router.push('/(tabs)/premium' as Href) },
@@ -295,13 +284,13 @@ export default function SettingsScreen() {
 
   const handleBackup = async () => {
     if (!(await gatePremium())) return;
-    setBackupModalVisible(true);
+    await performBackup();
   };
 
-  const performBackup = async (passphrase: string) => {
+  const performBackup = async () => {
     try {
       setBackupInProgress(true);
-      const { uri } = await BackupService.createEncryptedBackupFile(passphrase);
+      const { uri } = await BackupService.createBackupFile();
       await BackupService.shareBackupFile(uri);
 
       const settings = await ensureSettings();
@@ -312,7 +301,7 @@ export default function SettingsScreen() {
       try {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       } catch {}
-      Alert.alert('Backup Ready', 'Your encrypted backup is ready to save or share.');
+      Alert.alert('Backup Ready', 'Your backup is ready to save or share.');
     } catch (error: any) {
       logger.error('Backup failed:', error);
       try {
@@ -339,8 +328,7 @@ export default function SettingsScreen() {
             try {
               const uri = await BackupService.pickBackupFile();
               if (!uri) return;
-              setRestoreUri(uri);
-              setRestoreModalVisible(true);
+              await performRestore(uri);
             } catch (error: any) {
               logger.error('Restore file selection failed:', error);
               Alert.alert('Restore Failed', error?.message || 'Unable to select backup file');
@@ -351,11 +339,10 @@ export default function SettingsScreen() {
     );
   };
 
-  const performRestore = async (passphrase: string) => {
-    if (!restoreUri) return;
+  const performRestore = async (restoreUri: string) => {
     try {
       setRestoreInProgress(true);
-      await BackupService.restoreFromBackupFile(restoreUri, passphrase);
+      await BackupService.restoreFromBackupFile(restoreUri);
 
       // Re-seal identity from restored chart data
       try {
@@ -380,7 +367,6 @@ export default function SettingsScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       } catch {}
       Alert.alert('Restore Complete', 'Your data has been restored on this device.');
-      setRestoreUri(null);
       await loadSettings();
     } catch (error: any) {
       logger.error('Restore failed:', error);
@@ -402,7 +388,7 @@ export default function SettingsScreen() {
       minute: '2-digit',
     });
 
-  const disableActions = backupInProgress || restoreInProgress || backupModalVisible || restoreModalVisible;
+  const disableActions = backupInProgress || restoreInProgress;
   const showDemoSendButton = DemoSeedService.isDemoAccount(user?.email);
 
   const openSupportEmail = async () => {
@@ -592,43 +578,6 @@ export default function SettingsScreen() {
           bounces={true}
           keyboardShouldPersistTaps="handled"
         >
-          {encryptionKeyLost && (
-            <Animated.View entering={FadeInDown.duration(500)} style={styles.keyLossBanner}>
-              <LinearGradient
-                colors={['rgba(224, 122, 122, 0.15)', 'rgba(224, 122, 122, 0.05)']}
-                style={styles.keyLossBannerGradient}
-              >
-                <View style={styles.keyLossBannerHeader}>
-                  <MetallicIcon name="warning-outline" size={22} color={errorColor} />
-                  <MetallicText color={errorColor} style={[styles.keyLossBannerTitle, { color: errorColor }]}>Encryption Key Unavailable</MetallicText>
-                </View>
-                <Text style={styles.keyLossBannerText}>
-                  Your encrypted data cannot be read on this device. This can happen after a device migration, OS update, or app reinstall.
-                </Text>
-                <View style={styles.keyLossBannerActions}>
-                  <Pressable
-                    style={styles.keyLossBannerButton}
-                    onPress={handleRestore}
-                    accessibilityRole="button"
-                    accessibilityLabel="Restore backup"
-                  >
-                    <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
-                    <Text style={styles.keyLossBannerButtonText}>Restore Backup</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.keyLossBannerButton, styles.keyLossBannerButtonDestructive]}
-                    onPress={() => setShowPrivacyModal(true)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Delete all data"
-                  >
-                    <MetallicIcon name="trash-outline" size={16} color={errorColor} />
-                    <MetallicText color={errorColor} style={[styles.keyLossBannerButtonText, { color: errorColor }]}>Delete All Data</MetallicText>
-                  </Pressable>
-                </View>
-              </LinearGradient>
-            </Animated.View>
-          )}
-
           {/* ── Your Identity ── */}
           <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.section}>
             <VelvetGlassCard
@@ -681,7 +630,7 @@ export default function SettingsScreen() {
               borderColor="rgba(212,175,55,0.12)"
               topEdgeColor="rgba(255,255,255,0.18)"
             >
-            <ObsidianSettingsGroup title="Encrypted Backup" subtitle="End-to-end encrypted, you control the key" style={styles.groupInner}>
+            <ObsidianSettingsGroup title="Backup" subtitle="Save or restore your account data" style={styles.groupInner}>
                 <View style={{ paddingHorizontal: 20 }}>
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
@@ -696,7 +645,7 @@ export default function SettingsScreen() {
                       </View>
 
                       <Text style={styles.settingDescription}>
-                        Create an end-to-end encrypted backup you control.
+                        Save a portable backup file you control.
                       </Text>
 
                       {lastBackupAt && (
@@ -788,15 +737,15 @@ export default function SettingsScreen() {
               borderColor="rgba(212,175,55,0.12)"
               topEdgeColor="rgba(255,255,255,0.18)"
             >
-            <ObsidianSettingsGroup title="Security & Data Protection" subtitle="Your data is fully encrypted" style={styles.groupInner}>
+            <ObsidianSettingsGroup title="Security & Data Protection" subtitle="Supabase-first with local queueing and cache" style={styles.groupInner}>
                 <View style={styles.securityGrid}>
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
                       <MetallicIcon name="lock-closed-outline" size={16} color={accentGold} />
                     </View>
                     <View style={styles.securityContent}>
-                      <Text style={styles.securityLabel}>Local Encryption</Text>
-                      <Text style={styles.securityDetail}>AES-256-GCM with a per-device key stored in your hardware keychain</Text>
+                      <Text style={styles.securityLabel}>Canonical Cloud Storage</Text>
+                      <Text style={styles.securityDetail}>Core app content is stored in your Supabase account and protected by row-level access controls.</Text>
                     </View>
                   </View>
 
@@ -805,8 +754,8 @@ export default function SettingsScreen() {
                       <MetallicIcon name="airplane-outline" size={16} color={accentGold} />
                     </View>
                     <View style={styles.securityContent}>
-                      <Text style={styles.securityLabel}>No Content Transmitted</Text>
-                      <Text style={styles.securityDetail}>Journal entries, dreams, and check-ins never leave your device. Birth-city text is sent to Nominatim for geocoding.</Text>
+                      <Text style={styles.securityLabel}>Queued Offline Writes</Text>
+                      <Text style={styles.securityDetail}>When you are offline, writes can be queued locally and synced to Supabase later instead of being treated as the source of truth.</Text>
                     </View>
                   </View>
 
@@ -951,7 +900,7 @@ export default function SettingsScreen() {
               borderColor="rgba(212,175,55,0.12)"
               topEdgeColor="rgba(255,255,255,0.18)"
             >
-            <ObsidianSettingsGroup title="Privacy & Data" subtitle="Device-only, encrypted at rest" style={styles.groupInner}>
+            <ObsidianSettingsGroup title="Privacy & Data" subtitle="Supabase-canonical with local cache and queueing" style={styles.groupInner}>
               <Pressable style={{ paddingHorizontal: 20, paddingVertical: 14 }} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button" accessibilityLabel="Privacy settings">
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
@@ -960,7 +909,7 @@ export default function SettingsScreen() {
                       <Text style={styles.settingTitle}>Privacy Settings</Text>
                     </View>
                     <Text style={styles.settingDescription}>
-                      Export, delete, or manage your data on this device
+                      Export, delete, or manage your account data
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward-outline" size={16} color={styles.chevronTint.color} />
@@ -970,7 +919,7 @@ export default function SettingsScreen() {
               <View style={[styles.privacyInfo, { marginHorizontal: 16, marginBottom: 8 }]}>
                 <View style={styles.privacyItem}>
                   <MetallicIcon name="phone-portrait-outline" size={16} color={accentGold} />
-                  <Text style={styles.privacyText}>Data stored locally on your device</Text>
+                  <Text style={styles.privacyText}>Core data stored in your Supabase account</Text>
                 </View>
                 <View style={styles.privacyItem}>
                   <MetallicIcon name="shield-outline" size={16} color={accentGold} />
@@ -1140,7 +1089,7 @@ export default function SettingsScreen() {
                         <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
-                        Full personal story, deeper reflection insights, unlimited relationships, pattern analysis, encrypted backup, and reflective guidance — $4.99/mo or $29.99/yr.
+                        Full personal story, deeper reflection insights, unlimited relationships, pattern analysis, backup & restore, and reflective guidance — $4.99/mo or $29.99/yr.
                       </Text>
                     </View>
                     <Ionicons name="arrow-forward-outline" size={16} color={styles.chevronTint.color} />
@@ -1281,29 +1230,6 @@ export default function SettingsScreen() {
 
       <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
       <PrivacySettingsModal visible={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
-
-      <BackupPassphraseModal
-        visible={backupModalVisible}
-        mode="backup"
-        onCancel={() => setBackupModalVisible(false)}
-        onConfirm={async (passphrase) => {
-          setBackupModalVisible(false);
-          await performBackup(passphrase);
-        }}
-      />
-
-      <BackupPassphraseModal
-        visible={restoreModalVisible}
-        mode="restore"
-        onCancel={() => {
-          setRestoreModalVisible(false);
-          setRestoreUri(null);
-        }}
-        onConfirm={async (passphrase) => {
-          setRestoreModalVisible(false);
-          await performRestore(passphrase);
-        }}
-      />
 
       <BirthDataModal
         visible={showBirthModal}

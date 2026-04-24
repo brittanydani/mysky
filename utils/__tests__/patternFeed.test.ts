@@ -42,9 +42,9 @@ describe('patternFeed', () => {
       isConfirmed: true,
     });
     expect(cards[0].heroMetrics?.map((metric) => metric.value)).toEqual([
-      'HOW YOUR MIND WORKS',
-      '12 DAYS',
-      'STRONG',
+      'How Your Mind Works',
+      '12 days',
+      'Strong signal',
     ]);
     expect(cards[0].takeaway?.body).toContain('misunderstood');
   });

@@ -86,18 +86,18 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
             <View style={styles.faqContent}>
               <Text style={styles.question}>Do I need an account to use MySky?</Text>
               <Text style={styles.answer}>
-                Yes. A free account is required. Your personal data is efficiently logged in offline caches on your device and seamlessly synced to the cloud. All core features — mood tracking, journaling, sleep, AI dream interpretation, and birth charts — are available for free.
+                Yes. A free account is required. Supabase is the source of truth for your data, and this device may keep local cache or queued offline writes to support responsiveness. All core features — mood tracking, journaling, sleep, AI dream interpretation, and birth charts — are available for free.
               </Text>
 
               <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>
               <Text style={styles.answer}>
                 <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>Free:</MetallicText> Personal birth chart, Big Three, daily mood/energy/stress check-ins, basic journaling, and standard AI dream interpretation.{"\n\n"}
-                <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>Deeper Sky:</MetallicText> Richer AI models, extended reflection trends, unlimited charts, full chakra Energy system, encrypted backup, and more reflective guidance grounded in your own history.
+                <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>Deeper Sky:</MetallicText> Richer AI models, extended reflection trends, unlimited charts, full chakra Energy system, backup & restore, and more reflective guidance grounded in your own history.
               </Text>
 
               <Text style={styles.question}>What data does MySky store and where?</Text>
               <Text style={styles.answer}>
-                Birth data, journal entries, check-ins, and dreams are stored locally in a SQLite database. Sensitive fields are encrypted using <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>AES-256-GCM</MetallicText> with keys stored in your device's hardware-backed Secure Enclave.
+                Birth data, journal entries, check-ins, dreams, and charts are stored in your Supabase account and protected by row-level access controls. This device may keep local cache and queued drafts or writes to support offline use, but the cloud account is the canonical source of truth.
               </Text>
 
               <Text style={styles.question}>Are dream reflections powered by AI?</Text>
@@ -112,7 +112,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>How does backup and restore work?</Text>
               <Text style={styles.answer}>
-                Premium users can create an encrypted <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>.msky</MetallicText> backup file protected with a passphrase. You control the destination (Files, iCloud, AirDrop). We never see your backup.
+                Premium users can create a <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>.msky</MetallicText> backup file and choose the destination with the system share sheet. Restore imports that file back onto a device and writes the data into your account-backed storage.
               </Text>
 
               <Text style={styles.question}>Is MySky a therapy substitute?</Text>
@@ -122,7 +122,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>Does MySky work offline?</Text>
               <Text style={styles.answer}>
-                Yes. After initial sign-in, all core features work fully offline. Internet is only required for authentication, geocoding, and optional AI features.
+                Partially. You can still draft or queue some actions while offline, and the app can rely on local cache for recently loaded data. Supabase remains canonical, so some features may need a connection to fully refresh or complete sync.
               </Text>
 
               <Text style={styles.question}>How do I cancel my Deeper Sky subscription?</Text>
@@ -137,7 +137,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>What happens to my data if I delete the app?</Text>
               <Text style={styles.answer}>
-                Deleting the app may leave the local database behind depending on system settings. For a guaranteed full wipe, go to Settings → Privacy & Data → Hard Reset before uninstalling. This cryptographically destroys your encryption key and purges the database — data becomes irrecoverable.
+                Your canonical account data remains in Supabase until you delete your account. Deleting the app removes device-local cache and queued data according to your OS behavior, but it does not delete the cloud record by itself.
               </Text>
 
               <Text style={styles.question}>How do I delete my account?</Text>
@@ -147,7 +147,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>Can I use MySky on multiple devices?</Text>
               <Text style={styles.answer}>
-                Your MySky account is the source of truth. When you sign in on a new device, your synced data is restored from your account automatically. This device keeps a local encrypted cache for speed and offline access, but switching accounts does not merge personal data between users.
+                Yes. Your MySky account is the source of truth. When you sign in on a new device, your synced data is restored from your account automatically. Devices may keep local cache for speed and offline queueing, but switching accounts does not merge personal data between users.
               </Text>
 
               <Text style={styles.question}>What AI models does MySky use?</Text>
@@ -182,7 +182,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>What is the nervous system trigger log?</Text>
               <Text style={styles.answer}>
-                The trigger log lets you record situations, thoughts, or sensations that activate your nervous system — fight, flight, freeze, or fawn responses. Logging these over time helps you recognize personal patterns. All entries are encrypted and stored locally only.
+                The trigger log lets you record situations, thoughts, or sensations that activate your nervous system — fight, flight, freeze, or fawn responses. Logging these over time helps you recognize personal patterns.
               </Text>
 
               <Text style={styles.question}>How do I update my birth data or relationship charts?</Text>
@@ -195,19 +195,19 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
                 Deeper Sky subscribers can export a PDF of their birth chart via the chart screen using the export button. Use your device's share sheet to send it to Files, email, AirDrop, or any app. Free users can take screenshots of their chart.
               </Text>
 
-              <Text style={styles.question}>What is the encrypted .msky backup file?</Text>
+              <Text style={styles.question}>What is the .msky backup file?</Text>
               <Text style={styles.answer}>
-                A .msky file is a full encrypted snapshot of your MySky database protected by a passphrase you choose. It is created and decrypted entirely on-device — we never have access to it. Store it in iCloud Drive, a Files folder, or anywhere you keep important documents. If you forget the passphrase, the backup cannot be recovered by anyone.
+                A .msky file is a portable backup export of your MySky data. Store it in iCloud Drive, a Files folder, or anywhere you keep important documents.
               </Text>
 
               <Text style={styles.question}>What platforms does MySky support?</Text>
               <Text style={styles.answer}>
-                MySky is available on iOS (iPhone and iPad) and Android. The minimum supported iOS version is iOS 16. Some features — such as encrypted backup — rely on platform-specific secure hardware and may behave slightly differently between iOS and Android.
+                MySky is available on iOS (iPhone and iPad) and Android. The minimum supported iOS version is iOS 16.
               </Text>
 
-              <Text style={styles.question}>Why does MySky require an account if everything is stored locally?</Text>
+              <Text style={styles.question}>Why does MySky require an account?</Text>
               <Text style={styles.answer}>
-                A free account serves three purposes: it enables subscription restoration across devices, it gates optional network features (AI interpretation, geocoding), and it provides a way to recover Deeper Sky access on a new device. Your account stores only your email and subscription status — no personal reflection data.
+                A free account is required because Supabase is the canonical store for your charts, entries, and history. It also enables subscription restoration across devices and gates optional network features such as AI interpretation and geocoding.
               </Text>
 
               <Text style={styles.question}>I'm having trouble signing in. What should I do?</Text>

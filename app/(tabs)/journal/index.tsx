@@ -43,6 +43,7 @@ import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
 import { buildDreamArchiveSummary } from '../../../utils/dreamArchiveSummary';
 import { loadSelfKnowledgeContext } from '../../../services/insights/selfKnowledgeContext';
 import { enhanceInsightCopy } from '../../../services/insights/geminiInsightsService';
+import { getArchiveDepth, getPersonalizedPremiumTeaser } from '../../../utils/archiveDepth';
 
 const VALID_MOODS = ['calm', 'soft', 'okay', 'heavy', 'stormy'] as const;
 
@@ -338,6 +339,11 @@ export default function JournalScreen() {
   const displayedDreamArchiveSummary = aiDreamArchiveKey === dreamArchiveKey
     ? (aiDreamArchiveSummary ?? dreamArchiveSummary)
     : dreamArchiveSummary;
+  const archiveDepthCounts = useMemo(() => ({
+    journalEntries: totalCount,
+    dreamEntries: sleepEntries.filter((entry) => !!entry.dreamText?.trim() && !entry.isDeleted).length,
+  }), [sleepEntries, totalCount]);
+  const archiveDepth = useMemo(() => getArchiveDepth(archiveDepthCounts), [archiveDepthCounts]);
   const aiPatternFreshness = useMemo(() => formatAiFreshness(aiPatternGeneratedAt), [aiPatternGeneratedAt]);
   const aiDreamFreshness = useMemo(
     () => (aiDreamArchiveKey === dreamArchiveKey ? formatAiFreshness(aiDreamGeneratedAt) : null),
@@ -352,6 +358,13 @@ export default function JournalScreen() {
         aiEnhanced: enhancedIds.has(String(index)),
       }));
   }, [aiPatternEnhancedIds, patternInsights]);
+  const premiumTeaser = useMemo(
+    () => getPersonalizedPremiumTeaser(archiveDepthCounts, {
+      detectedPatterns: visiblePatternInsights.length,
+      surface: 'archive',
+    }),
+    [archiveDepthCounts, visiblePatternInsights.length],
+  );
 
   const toggleBrowseSearch = useCallback(() => {
     Haptics.selectionAsync().catch(() => {});
@@ -802,6 +815,26 @@ export default function JournalScreen() {
         </Animated.View>
       )}
 
+      {(totalCount > 0 || sleepEntries.length > 0) && (
+        <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
+          <LinearGradient colors={theme.isDark ? ['rgba(107, 144, 128, 0.16)', 'rgba(26,30,41,0.35)'] : ['rgba(240,245,252,0.7)', 'rgba(240,245,252,0.4)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
+            <View style={styles.insightHeader}>
+              <MetallicIcon name="pulse-outline" size={18} color={PALETTE.gold} />
+              <MetallicText color={PALETTE.gold} style={styles.insightTitle}>{archiveDepth.label}</MetallicText>
+              <Text style={styles.depthCount}>{archiveDepth.totalSignals} signals</Text>
+            </View>
+            <Text style={styles.insightDescription}>{archiveDepth.headline}</Text>
+            <Text style={styles.depthBody}>{archiveDepth.body}</Text>
+            <View style={styles.depthProgressTrack}>
+              <View style={[styles.depthProgressFill, { width: `${Math.max(8, archiveDepth.progress * 100)}%` }]} />
+            </View>
+            {!!archiveDepth.nextMilestone && (
+              <Text style={styles.depthMeta}>{archiveDepth.remaining} more to reach {archiveDepth.nextMilestone}</Text>
+            )}
+          </LinearGradient>
+        </Animated.View>
+      )}
+
       {/* ── Pattern Insights (Atmosphere Wash) ── */}
       {activeTab === 'reflections' && isPremium && moodInsightsEnabled && visiblePatternInsights.length > 0 && (
         <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.insightsSection}>
@@ -846,17 +879,16 @@ export default function JournalScreen() {
             <LinearGradient colors={theme.isDark ? ['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)'] : ['rgba(240, 245, 252, 0.7)', 'rgba(240, 245, 252, 0.4)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
               <View style={styles.insightHeader}>
                 <MetallicIcon name="analytics-outline" size={18} color={PALETTE.gold} />
-                <MetallicText color={PALETTE.gold} style={styles.insightTitle}>Pattern Insights</MetallicText>
+                <MetallicText color={PALETTE.gold} style={styles.insightTitle}>{premiumTeaser.eyebrow}</MetallicText>
                 <View style={[styles.premiumBadge, { marginLeft: 'auto' }]}>
                   <MetallicIcon name="sparkles-outline" size={10} color={PALETTE.gold} />
                   <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
                 </View>
               </View>
-              <Text style={styles.insightDescription}>
-                With {totalCount} entries, Deeper Sky can reveal which energy patterns lift your mood, when you tend to journal most, and what emotional themes keep appearing.
-              </Text>
+              <Text style={styles.insightDescription}>{premiumTeaser.title}</Text>
+              <Text style={styles.depthBody}>{premiumTeaser.body}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                <Text style={[styles.insightActionable, { marginTop: 0, color: PALETTE.gold }]} numberOfLines={1}>Reveal your patterns</Text>
+                <Text style={[styles.insightActionable, { marginTop: 0, color: PALETTE.gold }]} numberOfLines={1}>{premiumTeaser.cta}</Text>
                 <MetallicIcon name="arrow-forward-outline" size={14} color={PALETTE.gold} />
               </View>
             </LinearGradient>
@@ -1361,6 +1393,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   confidenceTextLight: { color: LIGHT_MODE_INK },
   aiFreshnessText: { fontSize: 11, color: theme.isDark ? 'rgba(255,255,255,0.48)' : LIGHT_MODE_META, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 12 },
   insightDescription: { fontSize: 16, color: theme.isDark ? 'rgba(255,255,255,0.68)' : theme.textSecondary, lineHeight: 26, letterSpacing: 0.2, marginBottom: 12 },
+  depthBody: { fontSize: 13, color: theme.textSecondary, lineHeight: 20, marginBottom: 12 },
+  depthCount: { marginLeft: 'auto', fontSize: 11, fontWeight: '800', color: 'rgba(212,175,55,0.72)', textTransform: 'uppercase', letterSpacing: 1 },
+  depthProgressTrack: {
+    height: 5,
+    borderRadius: 999,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    marginTop: 6,
+  },
+  depthProgressFill: { height: '100%', borderRadius: 999, backgroundColor: PALETTE.gold },
+  depthMeta: { marginTop: 8, fontSize: 11, fontWeight: '700', color: 'rgba(212,175,55,0.68)', textTransform: 'uppercase', letterSpacing: 0.8 },
   insightEvidence: { fontSize: 13, color: theme.isDark ? theme.textMuted : LIGHT_MODE_META, lineHeight: 21, marginBottom: 8 },
   insightActionable: { fontSize: 15, fontWeight: '600', marginTop: 6, lineHeight: 22, color: theme.isDark ? 'rgba(255,255,255,0.78)' : theme.textPrimary },
 
@@ -1655,4 +1698,3 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 0.2,
   },
 });
-

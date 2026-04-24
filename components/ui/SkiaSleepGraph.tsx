@@ -62,14 +62,6 @@ const COLORS = {
   gridLine: 'rgba(255, 255, 255, 0.06)',
 };
 
-function qualityToLabel(quality: number): string {
-  if (quality >= 4.5) return 'Restorative';
-  if (quality >= 3.5) return 'Deep';
-  if (quality >= 2.5) return 'Steady';
-  if (quality >= 1.5) return 'Light';
-  return 'Restless';
-}
-
 function formatDuration(duration: number): string {
   const wholeHours = Math.floor(duration);
   const minutes = Math.round((duration - wholeHours) * 60);
@@ -360,7 +352,7 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
             <View style={styles.tooltipMetaRow}>
               <View style={styles.tooltipMetaItem}>
                 <View style={[styles.tooltipDot, { backgroundColor: COLORS.deepRest }]} />
-                <Text style={styles.tooltipMetaLabel}>{qualityToLabel(activeDatum.quality)}</Text>
+                <Text style={styles.tooltipMetaLabel}>Quality</Text>
               </View>
               <Text style={styles.tooltipMetaValue}>{activeDatum.quality.toFixed(1)}/5</Text>
             </View>

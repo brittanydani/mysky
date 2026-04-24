@@ -33,85 +33,6 @@ interface RequestBody {
   deletedAt?: string | null;
 }
 
-const textEncoder = new TextEncoder();
-let cachedKeyPromise: Promise<CryptoKey> | null = null;
-
-function toBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary);
-}
-
-function fromBase64(value: string): Uint8Array {
-  const binary = atob(value);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-
-function toCryptoBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
-  const arrayBuffer = bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  ) as ArrayBuffer;
-
-  return new Uint8Array(arrayBuffer);
-}
-
-async function getEncryptionKey(): Promise<CryptoKey> {
-  if (!cachedKeyPromise) {
-    cachedKeyPromise = (async () => {
-      const secret = Deno.env.get("BIRTH_PROFILE_ENCRYPTION_KEY");
-      if (!secret) throw new Error("BIRTH_PROFILE_ENCRYPTION_KEY secret is not set");
-
-      const secretBytes = toCryptoBytes(textEncoder.encode(secret));
-      const digest = await crypto.subtle.digest("SHA-256", secretBytes);
-
-      return await crypto.subtle.importKey(
-        "raw",
-        digest,
-        "AES-GCM",
-        false,
-        ["encrypt", "decrypt"],
-      );
-    })();
-  }
-
-  return cachedKeyPromise;
-}
-
-async function encryptProfile(profile: BirthProfilePayload): Promise<string> {
-  const key = await getEncryptionKey();
-  const iv = toCryptoBytes(crypto.getRandomValues(new Uint8Array(12)));
-  const plaintext = toCryptoBytes(textEncoder.encode(JSON.stringify(profile)));
-
-  const encryptedBuffer = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    key,
-    plaintext,
-  );
-
-  const ciphertext = new Uint8Array(encryptedBuffer);
-  return `${toBase64(iv)}:${toBase64(ciphertext)}`;
-}
-
-async function decryptProfile(payload: string): Promise<BirthProfilePayload> {
-  const key = await getEncryptionKey();
-  const [ivBase64, cipherBase64] = payload.split(":");
-  if (!ivBase64 || !cipherBase64) throw new Error("Invalid encrypted birth profile payload");
-
-  const iv = toCryptoBytes(fromBase64(ivBase64));
-  const ciphertext = toCryptoBytes(fromBase64(cipherBase64));
-
-  const plaintext = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    key,
-    ciphertext,
-  );
-
-  return JSON.parse(new TextDecoder().decode(plaintext)) as BirthProfilePayload;
-}
-
 function sanitizeLegacyRow(row: Record<string, unknown>): BirthProfilePayload {
   return {
     chartId: String(row.chart_id ?? ""),
@@ -182,35 +103,7 @@ async function materializeProfile(
 ): Promise<BirthProfilePayload | null> {
   if (!row) return null;
 
-  if (row.profile_enc) {
-    const decrypted = await decryptProfile(String(row.profile_enc));
-    return {
-      ...decrypted,
-      createdAt: String(row.created_at ?? decrypted.createdAt ?? decrypted.updatedAt),
-      updatedAt: String(row.updated_at ?? decrypted.updatedAt),
-      isDeleted: Boolean(row.is_deleted),
-      deletedAt: row.deleted_at != null ? String(row.deleted_at) : decrypted.deletedAt ?? null,
-    };
-  }
-
-  const legacy = sanitizeLegacyRow(row);
-  const encrypted = await encryptProfile(legacy);
-  const { error } = await admin
-    .from("birth_profiles")
-    .update({
-      profile_enc: encrypted,
-      name: null,
-      birth_date: null,
-      birth_time: null,
-      birth_place: null,
-      latitude: null,
-      longitude: null,
-      timezone: null,
-      house_system: null,
-    })
-    .eq("user_id", row.user_id as string);
-  if (error) throw error;
-  return legacy;
+  return sanitizeLegacyRow(row);
 }
 
 serve(async (req: Request) => {
@@ -260,23 +153,24 @@ serve(async (req: Request) => {
         });
       }
 
-      const encrypted = await encryptProfile(profile);
       const createdAt = existing?.createdAt ?? profile.createdAt ?? new Date().toISOString();
+      const birthTimeValue = profile.birthTime
+        ? (profile.birthTime.length === 5 ? `${profile.birthTime}:00` : profile.birthTime)
+        : null;
 
       const { error } = await admin.from("birth_profiles").upsert(
         {
           id: user.id,
           user_id: user.id,
           chart_id: profile.chartId,
-          profile_enc: encrypted,
-          name: null,
-          birth_date: null,
-          birth_time: null,
-          birth_place: null,
-          latitude: null,
-          longitude: null,
-          timezone: null,
-          house_system: null,
+          name: profile.name ?? null,
+          birth_date: profile.birthDate,
+          birth_time: birthTimeValue,
+          birth_place: profile.birthPlace,
+          latitude: profile.latitude,
+          longitude: profile.longitude,
+          timezone: profile.timezone ?? null,
+          house_system: profile.houseSystem ?? null,
           has_unknown_time: profile.hasUnknownTime,
           is_deleted: false,
           deleted_at: null,
@@ -322,16 +216,17 @@ serve(async (req: Request) => {
           id: user.id,
           user_id: user.id,
           chart_id: tombstone.chartId,
-          profile_enc: null,
-          name: null,
-          birth_date: null,
-          birth_time: null,
-          birth_place: null,
-          latitude: null,
-          longitude: null,
-          timezone: null,
-          house_system: null,
-          has_unknown_time: false,
+          name: existing?.name ?? null,
+          birth_date: existing?.birthDate || null,
+          birth_time: existing?.birthTime
+            ? (existing.birthTime.length === 5 ? `${existing.birthTime}:00` : existing.birthTime)
+            : null,
+          birth_place: existing?.birthPlace || null,
+          latitude: existing?.latitude ?? null,
+          longitude: existing?.longitude ?? null,
+          timezone: existing?.timezone ?? null,
+          house_system: existing?.houseSystem ?? null,
+          has_unknown_time: existing?.hasUnknownTime ?? false,
           is_deleted: true,
           deleted_at: tombstone.deletedAt,
           created_at: createdAt,

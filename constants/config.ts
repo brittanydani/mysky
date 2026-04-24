@@ -26,7 +26,7 @@ function getDreamReinterpretAllowlist(): Set<string> {
   return new Set(
     raw
       .split(',')
-      .map((value) => value.trim().toLowerCase())
+      .map((value: string) => value.trim().toLowerCase())
       .filter(Boolean),
   );
 }

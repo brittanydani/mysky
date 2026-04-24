@@ -6,8 +6,8 @@
  *  2. Emotion bucket scoring (7 categories)
  *  3. Sentiment scoring (-1 to +1)
  *
- * All processing happens in-memory on plaintext before encryption.
- * Results are stored encrypted at rest — no raw text leaves the device.
+ * All processing happens in-memory on plaintext.
+ * Results are stored as normal app data in the Supabase-canonical model.
  *
  * Pure functions — no I/O, no side effects.
  */
@@ -344,7 +344,7 @@ export function computeSentiment(text: string): SentimentResult {
 
 /**
  * Run all NLP analysis on a journal entry's plaintext content.
- * Call this before encryption, then store results encrypted.
+ * Store the derived summaries alongside the entry in the normal app data path.
  */
 export function analyzeJournalContent(content: string): JournalNLPResult {
   const text = (content ?? '').trim();

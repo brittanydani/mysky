@@ -675,9 +675,9 @@ export default function SleepScreen() {
   }, [entries]);
 
   const historicalSleep: SleepPoint[] = useMemo(() => {
-    return entries.filter(e => e.durationHours != null || e.quality != null)
+    return entries.filter(e => e.durationHours != null && e.quality != null)
       .sort((a, b) => a.date.localeCompare(b.date)).slice(-14)
-      .map(e => ({ duration: e.durationHours ?? 0, quality: e.quality ?? 3, date: e.date }));
+      .map(e => ({ duration: e.durationHours!, quality: e.quality!, date: e.date }));
   }, [entries]);
 
   return (
@@ -1186,12 +1186,12 @@ export default function SleepScreen() {
                   <Text style={styles.statSub}>logged</Text>
                 </View>
                 <View style={styles.statCard}>
-                  <MetallicText style={styles.statLabel} variant="gold">AVG SLEEP</MetallicText>
+                  <MetallicText style={styles.statLabel} variant="gold">SLEEP</MetallicText>
                   <Text style={styles.statValue}>{stats.avgDuration != null ? formatMetricDuration(stats.avgDuration) : '—'}</Text>
                   <Text style={styles.statSub}>per night</Text>
                 </View>
                 <View style={styles.statCard}>
-                  <MetallicText style={styles.statLabel} variant="gold">AVG REST</MetallicText>
+                  <MetallicText style={styles.statLabel} variant="gold">REST</MetallicText>
                   <Text style={styles.statValue}>{stats.avgQuality != null ? `${stats.avgQuality.toFixed(1)}/5` : '—'}</Text>
                   <Text style={styles.statSub}>quality</Text>
                 </View>

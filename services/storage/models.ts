@@ -37,10 +37,10 @@ export interface JournalEntry {
   chartId?: string;           // references saved_charts.id
   transitSnapshot?: string;   // JSON-serialized TransitSnapshot
 
-  // v10 — journal NLP summaries (encrypted at rest)
-  contentKeywords?: string;     // encrypted JSON: { keywords, top, tokenCount }
-  contentEmotions?: string;     // encrypted JSON: { counts, rates }
-  contentSentiment?: string;    // encrypted JSON: { sentiment }
+  // v10 — journal NLP summaries
+  contentKeywords?: string;     // JSON: { keywords, top, tokenCount }
+  contentEmotions?: string;     // JSON: { counts, rates }
+  contentSentiment?: string;    // JSON: { sentiment }
   contentWordCount?: number;    // plaintext word count
   contentReadingMinutes?: number; // estimated reading time
 
@@ -108,7 +108,6 @@ export interface RelationshipChart {
 
 /**
  * Sleep entry — tracks nightly rest quality, duration, and dream journal.
- * dream_text and notes are encrypted at rest.
  */
 export interface SleepEntry {
   id: string;
@@ -117,11 +116,11 @@ export interface SleepEntry {
   date: string;              // YYYY-MM-DD (the night being logged)
   durationHours?: number;    // e.g. 7.5
   quality?: number;          // 1–5 (moons)
-  dreamText?: string;        // encrypted — dream journal
+  dreamText?: string;        // dream journal
   dreamMood?: string;        // how the dream felt (legacy — kept for migration compat)
-  dreamFeelings?: string;    // JSON: SelectedFeeling[] — encrypted at rest
-  dreamMetadata?: string;    // JSON: DreamMetadata — encrypted at rest
-  notes?: string;            // encrypted — legacy general sleep notes (no longer shown in UI)
+  dreamFeelings?: string;    // JSON: SelectedFeeling[]
+  dreamMetadata?: string;    // JSON: DreamMetadata
+  notes?: string;            // legacy general sleep notes (no longer shown in UI)
 
   createdAt: string;
   updatedAt: string;

@@ -41,6 +41,7 @@ import {
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 import { toLocalDateString } from '../../utils/dateUtils';
+import { getArchiveDepth, getPersonalizedPremiumTeaser, type ArchiveDepthCounts } from '../../utils/archiveDepth';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 import { usePremium } from '../../context/PremiumContext';
 import { useRouter, Href } from 'expo-router';
@@ -69,6 +70,7 @@ export default function PatternsScreen() {
   const { isPremium } = usePremium();
   const router = useRouter();
   const [snapshot, setSnapshot] = useState({ avgMood: 0, avgStress: 0, checkInCount: 0 });
+  const [archiveDepthCounts, setArchiveDepthCounts] = useState<ArchiveDepthCounts>({});
   const [trendCheckIns, setTrendCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
   const [orbitLoading, setOrbitLoading] = useState(true);
@@ -86,23 +88,36 @@ export default function PatternsScreen() {
       let active = true;
       setLoading(true);
       setOrbitLoading(true);
+      setLoadError(false);
       trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
       (async () => {
         try {
           const charts = await supabaseDb.getCharts();
-          if (!charts?.length) return;
+          if (!charts?.length) {
+            if (!active) return;
+            setTrendCheckIns([]);
+            setSnapshot({ avgMood: 0, avgStress: 0, checkInCount: 0 });
+            setArchiveDepthCounts({});
+            setLastUpdated(null);
+            setCrossRefs([]);
+            setDailyAggregates([]);
+            setDeepInsights(null);
+            setOrbitLoading(false);
+            return;
+          }
           const chartId = charts[0].id;
-          const [checkIns, totalCheckIns, sleepEntries, journalEntries] = await Promise.all([
-            supabaseDb.getCheckIns(chartId, 90),
-            supabaseDb.getTotalCheckInCount(),
-            supabaseDb.getSleepEntries(chartId, 90),
+          const today = toLocalDateString();
+          const ninetyDaysAgo = toLocalDateString(
+            new Date(new Date(`${today}T12:00:00`).getTime() - 89 * 86_400_000),
+          );
+          const [checkIns, sleepEntries, journalEntries] = await Promise.all([
+            supabaseDb.getCheckInsInRange(chartId, ninetyDaysAgo, today),
+            supabaseDb.getSleepEntriesInRange(chartId, ninetyDaysAgo, today),
             supabaseDb.getJournalEntries(),
           ]);
           if (!active) return;
           const recentJournalEntries = journalEntries.filter((entry) => {
-            const cutoff = new Date();
-            cutoff.setDate(cutoff.getDate() - 90);
-            return new Date(`${entry.date}T12:00:00`) >= cutoff;
+            return entry.date >= ninetyDaysAgo && entry.date <= today;
           });
           
           const moods = checkIns.map(c => c.moodScore).filter(v => v != null) as number[];
@@ -118,7 +133,12 @@ export default function PatternsScreen() {
 
           if (!active) return;
           setTrendCheckIns(checkIns);
-          setSnapshot({ avgMood, avgStress, checkInCount: totalCheckIns });
+          setSnapshot({ avgMood, avgStress, checkInCount: checkIns.length });
+          setArchiveDepthCounts({
+            checkIns: checkIns.length,
+            journalEntries: recentJournalEntries.length,
+            dreamEntries: sleepEntries.filter((entry) => !!entry.dreamText?.trim()).length,
+          });
           setLastUpdated(new Date().toISOString());
           setOrbitLoading(false);
 
@@ -182,6 +202,14 @@ export default function PatternsScreen() {
     [feedInsights, todayIndex],
   );
   const patternRows = useMemo(() => (leadInsight ? [leadInsight] : []), [leadInsight]);
+  const archiveDepth = useMemo(() => getArchiveDepth(archiveDepthCounts), [archiveDepthCounts]);
+  const premiumTeaser = useMemo(
+    () => getPersonalizedPremiumTeaser(archiveDepthCounts, {
+      detectedPatterns: feedInsights.length,
+      surface: 'patterns',
+    }),
+    [archiveDepthCounts, feedInsights.length],
+  );
 
   return (
     <View style={styles.container}>
@@ -200,9 +228,9 @@ export default function PatternsScreen() {
               <VelvetGlassSurface style={styles.insightCard} intensity={25}>
                 <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.cardHeader}>
-                  <MetallicText style={styles.cardLabel} variant="gold">TODAY'S INSIGHT</MetallicText>
+                  <MetallicText style={styles.cardLabel} variant="gold">WHAT'S BECOMING CLEAR</MetallicText>
                   <View style={styles.confirmedBadge}>
-                    <Text style={styles.confirmedText}>{item.isConfirmed ? 'SEEN IN YOUR DATA' : 'BUILDING PICTURE'}</Text>
+                    <Text style={styles.confirmedText}>{item.isConfirmed ? 'SEEN REPEATEDLY' : 'EARLY SIGNAL'}</Text>
                   </View>
                 </View>
                 <Text style={styles.patternTitle}>{item.title}</Text>
@@ -234,14 +262,14 @@ export default function PatternsScreen() {
                     Haptics.selectionAsync().catch(() => {});
                     setShowDeepDiveModal(true);
                   }}
-                  style={styles.deepDiveButton}
-                  accessibilityRole="button"
-                  accessibilityLabel="See what MySky has noticed"
+                    style={styles.deepDiveButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="See what MySky has noticed"
                 >
                   <LinearGradient colors={['rgba(168,139,235,0.25)', 'rgba(168,139,235,0.08)']} style={StyleSheet.absoluteFill} />
                   <View style={{ alignItems: 'center', flex: 1 }}>
-                    <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">What MySky Has Noticed</MetallicText>
-                    <Text style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>{feedInsights.length} things your archive has noticed about you</Text>
+                    <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">What Your Archive Is Learning</MetallicText>
+                    <Text style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>{feedInsights.length} patterns your history is beginning to name</Text>
                   </View>
                 </Pressable>
               ) : (
@@ -254,8 +282,8 @@ export default function PatternsScreen() {
                   <LinearGradient colors={['rgba(44,54,69,0.85)', 'rgba(26,30,41,0.40)']} style={StyleSheet.absoluteFill} />
                   <MetallicIcon name="lock-closed-outline" size={16} variant="gold" />
                   <View style={{ flex: 1 }}>
-                    <MetallicText style={styles.deepDiveButtonTitle} variant="gold">Unlock Full Analysis</MetallicText>
-                    <Text style={styles.deepDiveButtonSub}>See all {feedInsights.length > 0 ? feedInsights.length : ''} in-depth patterns — premium</Text>
+                    <MetallicText style={styles.deepDiveButtonTitle} variant="gold">{premiumTeaser.cta}</MetallicText>
+                    <Text style={styles.deepDiveButtonSub}>{premiumTeaser.title}</Text>
                   </View>
                   <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
                 </Pressable>
@@ -280,6 +308,22 @@ export default function PatternsScreen() {
                 <MetricCard label="Logged" value={snapshot.checkInCount.toString()} wash={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} />
               </View>
 
+              <VelvetGlassSurface style={styles.depthCard} intensity={25}>
+                <LinearGradient colors={['rgba(107, 144, 128, 0.16)', 'rgba(26,30,41,0.35)']} style={StyleSheet.absoluteFill} />
+                <View style={styles.cardHeader}>
+                  <MetallicText style={styles.cardLabel} variant="gold">{archiveDepth.label.toUpperCase()}</MetallicText>
+                  <Text style={styles.depthCount}>{archiveDepth.totalSignals} signals</Text>
+                </View>
+                <Text style={styles.patternTitle}>{archiveDepth.headline}</Text>
+                <Text style={styles.insightBody}>{archiveDepth.body}</Text>
+                <View style={styles.depthProgressTrack}>
+                  <View style={[styles.depthProgressFill, { width: `${Math.max(8, archiveDepth.progress * 100)}%` }]} />
+                </View>
+                {!!archiveDepth.nextMilestone && (
+                  <Text style={styles.depthMeta}>{archiveDepth.remaining} more to reach {archiveDepth.nextMilestone}</Text>
+                )}
+              </VelvetGlassSurface>
+
               <View style={[styles.orbitCard, theme.velvetBorder]}>
                 <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.orbitCardHeader}>
@@ -289,7 +333,7 @@ export default function PatternsScreen() {
                 {orbitLoading ? <ActivityIndicator size="large" color={PALETTE.gold} /> : <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />}
               </View>
 
-              <SectionHeader label="SURFACING TODAY" icon="radio-outline" />
+              <SectionHeader label="BECOMING CLEAR" icon="radio-outline" />
               {!isPremium && !loading && snapshot.checkInCount >= 5 && (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                   <VelvetGlassSurface style={styles.insightCard} intensity={25}>
@@ -308,9 +352,9 @@ export default function PatternsScreen() {
                       <MetallicText style={styles.cardLabel} variant="gold">PATTERNS DETECTED</MetallicText>
                       <View style={styles.lockedBadge}><MetallicIcon name="lock-closed-outline" size={10} variant="gold" /><Text style={styles.lockedText}>PREMIUM</Text></View>
                     </View>
-                    <Text style={styles.patternTitle}>Patterns are beginning to surface</Text>
+                    <Text style={styles.patternTitle}>{premiumTeaser.title}</Text>
                     <Text style={styles.insightBody}>
-                      With {snapshot.checkInCount} check-ins logged, a picture is forming — what restores you, what depletes you, and how you tend to be wired. Unlock to see what your archive has noticed.
+                      {premiumTeaser.body}
                     </Text>
                   </VelvetGlassSurface>
                 </Pressable>
@@ -384,7 +428,7 @@ export default function PatternsScreen() {
           <VelvetGlassSurface style={[styles.deepDiveModalCard, styles.modalCard]} intensity={35}>
             <LinearGradient colors={['rgba(44, 54, 69, 0.92)', 'rgba(26, 30, 41, 0.72)']} style={StyleSheet.absoluteFill} />
             <View style={styles.modalHeader}>
-              <MetallicText style={styles.modalTitle} variant="gold">What MySky Sees</MetallicText>
+              <MetallicText style={styles.modalTitle} variant="gold">What Your Archive Is Learning</MetallicText>
               <Pressable
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
@@ -397,6 +441,9 @@ export default function PatternsScreen() {
                 <MetallicIcon name="close-outline" size={18} variant="gold" />
               </Pressable>
             </View>
+            <Text style={styles.modalIntro}>
+              These are not generic traits. They are patterns forming from what your history keeps repeating, reinforcing, and revealing over time.
+            </Text>
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: '85%' }}>
               <View style={{ gap: 16, paddingBottom: 8 }}>
                 {feedInsights.map((insight, idx) => (
@@ -547,6 +594,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   sectionHeaderLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },
 
   insightCard: { padding: 32, borderRadius: 24, marginBottom: 24, overflow: 'hidden' },
+  depthCard: { padding: 28, borderRadius: 24, marginBottom: 24, overflow: 'hidden' },
+  depthCount: { fontSize: 11, fontWeight: '800', color: 'rgba(212,175,55,0.72)', textTransform: 'uppercase', letterSpacing: 1 },
+  depthProgressTrack: {
+    height: 5,
+    borderRadius: 999,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    marginTop: 18,
+  },
+  depthProgressFill: { height: '100%', borderRadius: 999, backgroundColor: PALETTE.gold },
+  depthMeta: { marginTop: 8, fontSize: 11, fontWeight: '700', color: 'rgba(212,175,55,0.68)', textTransform: 'uppercase', letterSpacing: 0.8 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   cardLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   confirmedBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(107,144,128,0.15)', borderWidth: 1, borderColor: 'rgba(107,144,128,0.3)' },
@@ -571,6 +629,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   modalCard: { borderRadius: 24, padding: 24, overflow: 'hidden' },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   modalTitle: { fontSize: 20, fontWeight: '800' },
+  modalIntro: { fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.72)', marginBottom: 16 },
   modalBody: { fontSize: 15, lineHeight: 24, color: theme.textPrimary, marginBottom: 12 },
   modalStatus: { fontSize: 12, fontWeight: '700', color: 'rgba(212,175,55,0.9)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8 },
   modalBodyMuted: { fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.62)' },
@@ -591,19 +650,46 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
   deepDiveButtonTitle: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
-  deepDiveButtonSub: { fontSize: 12, color: 'rgba(255,255,255,0.45)' },
+  deepDiveButtonSub: { fontSize: 12, color: 'rgba(255,255,255,0.56)', lineHeight: 18 },
 
   heroMetricsRow: {
-    flexDirection: 'row', gap: 8, marginTop: 20, paddingTop: 16,
+    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8, marginTop: 20, paddingTop: 16,
     borderTopWidth: 1, borderTopColor: theme.cardBorder,
   },
-  heroMetricChip: { flex: 1, alignItems: 'center', gap: 4 },
-  heroMetricValue: { fontSize: 18, fontWeight: '900', color: theme.textPrimary, textAlign: 'center', marginBottom: 2 },
-  heroMetricLabel: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center' },
+  heroMetricChip: {
+    width: '48%',
+    minWidth: 130,
+    minHeight: 78,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  heroMetricValue: {
+    width: '100%',
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '800',
+    color: theme.textPrimary,
+    textAlign: 'left',
+    marginBottom: 8,
+  },
+  heroMetricLabel: {
+    width: '100%',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.46)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    textAlign: 'left',
+  },
 
   deepDiveModalCard: { maxHeight: '90%', paddingBottom: 24 },
   deepDiveInsightCard: { borderRadius: 20, padding: 24, overflow: 'hidden' },
   deepDiveInsightTitle: { fontSize: 16, fontWeight: '700', color: theme.textPrimary, marginBottom: 10 },
 });
-
-

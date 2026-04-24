@@ -1,6 +1,6 @@
 // File: app/onboarding/restore.tsx
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput, Alert, Keyboard, TouchableWithoutFeedback, DeviceEventEmitter } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Keyboard, TouchableWithoutFeedback, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,7 +25,6 @@ export default function OnboardingRestoreScreen() {
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const [backupUri, setBackupUri] = useState<string | null>(null);
-  const [passphrase, setPassphrase] = useState('');
   const [busy, setBusy] = useState(false);
 
   const pick = useCallback(async () => {
@@ -44,14 +43,10 @@ export default function OnboardingRestoreScreen() {
       Alert.alert('No file selected', 'Please choose a backup file first.');
       return;
     }
-    if (!passphrase || passphrase.trim().length < 8) {
-      Alert.alert('Invalid Passphrase', 'Passphrase must be at least 8 characters.');
-      return;
-    }
 
     setBusy(true);
     try {
-      await BackupService.restoreFromBackupFile(backupUri, passphrase);
+      await BackupService.restoreFromBackupFile(backupUri);
 
       const charts = await supabaseDb.getCharts();
       if (!charts.length) {
@@ -96,11 +91,11 @@ export default function OnboardingRestoreScreen() {
       router.replace('/onboarding/chart-reveal' as Href);
     } catch (e) {
       logger.error('[Restore] restore failed:', e);
-      Alert.alert('Restore Failed', 'Could not restore from backup. Please check your passphrase and try again.');
+      Alert.alert('Restore Failed', 'Could not restore from backup. Please check the backup file and try again.');
     } finally {
       setBusy(false);
     }
-  }, [backupUri, passphrase, router]);
+  }, [backupUri, router]);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -136,7 +131,7 @@ export default function OnboardingRestoreScreen() {
                 <MetallicIcon name="cloud-download-outline" size={32} color={theme.textGold} style={{ marginBottom: 12 }} />
                 <Text style={styles.cardTitle}>Recover Your Data</Text>
                 <Text style={styles.cardSubtitle}>
-                  Select your encrypted .msky backup file and enter the passphrase used to secure it.
+                  Select your .msky backup file to restore it on this device.
                 </Text>
               </View>
 
@@ -155,18 +150,6 @@ export default function OnboardingRestoreScreen() {
                 </MetallicText>
               </Pressable>
 
-              <TextInput
-                style={styles.input}
-                value={passphrase}
-                onChangeText={setPassphrase}
-                placeholder="Enter passphrase"
-                placeholderTextColor={theme.textMuted}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="done"
-              />
-
               <SkiaMetallicPill
                 label={busy ? 'Restoring...' : 'Restore Data'}
                 onPress={restore}
@@ -175,7 +158,7 @@ export default function OnboardingRestoreScreen() {
               />
 
               <Text style={styles.note}>
-                Your backup is decrypted entirely on your device.
+                Your backup is restored on this device.
               </Text>
             </LinearGradient>
           </View>
@@ -250,20 +233,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: 'rgba(110, 191, 139, 0.1)',
   },
   pickText: { color: theme.textGold, fontWeight: '600', fontSize: 15 },
-  
-  input: {
-    width: '100%',
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    fontSize: 16,
-    color: theme.textPrimary,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
   
   ctaButton: { 
     borderRadius: 16, 

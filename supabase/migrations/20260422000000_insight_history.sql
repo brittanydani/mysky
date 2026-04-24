@@ -1,10 +1,8 @@
 -- 20260422000000_insight_history.sql
 --
--- Insight history table — stores daily AI-generated guidance per chart.
--- Migrated from local-only SQLite storage to Supabase for network-first architecture.
---
--- Security: RLS ensures each user can only access their own rows.
--- Sensitive text fields are AES-256-GCM encrypted client-side (ENC2: prefix).
+-- Historical base migration for insight history.
+-- Later migrations convert this table to plaintext server storage for the
+-- Supabase-canonical architecture.
 
 CREATE TABLE IF NOT EXISTS public.insight_history (
     id                  TEXT        PRIMARY KEY,

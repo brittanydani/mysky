@@ -83,7 +83,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
             <Text style={styles.sectionTitle}>Our Framework</Text>
             <Text style={styles.paragraph}>
-              MySky is built on <MetallicText color={PALETTE.atmosphere} style={styles.boldText}>Privacy by Design</MetallicText>. We do not collect advertising IDs, perform cross-app tracking, or sell your data. Your inner world is encrypted at rest and belongs entirely to you.
+              MySky is built on <MetallicText color={PALETTE.atmosphere} style={styles.boldText}>Privacy by Design</MetallicText>. We do not collect advertising IDs, perform cross-app tracking, or sell your data. Your account data belongs to you and is stored in infrastructure protected by row-level access controls.
             </Text>
           </View>
 
@@ -92,17 +92,17 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Birth Data & Charts</Text>
-              <Text style={styles.paragraph}>Stored exclusively on-device. Sensitive fields use <MetallicText color={PALETTE.atmosphere} style={styles.boldText}>AES-256-GCM</MetallicText> field-level encryption. Calculations are performed locally via Swiss Ephemeris.</Text>
+              <Text style={styles.paragraph}>Stored in your Supabase account as the canonical record. Chart calculations are still performed locally via Swiss Ephemeris.</Text>
             </View>
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Internal Weather & Journal</Text>
-              <Text style={styles.paragraph}>Mood scores, tags, and free-text entries are processed securely. Your data is synced to your cloud account to prevent data loss, using your email space as a sovereign locker. Everything is partitioned per user, so sharing a device remains completely private.</Text>
+              <Text style={styles.paragraph}>Mood scores, tags, and free-text entries are stored in your Supabase account and isolated per user with Row Level Security. Devices may keep local cache and queued offline writes, but the cloud account remains canonical.</Text>
             </View>
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Somatic & Nervous System Entries</Text>
-              <Text style={styles.paragraph}>Body sensation logs and trigger descriptions are stored locally with hardware-backed encryption and securely synced to your dedicated cloud schema. Your data is isolated and safely preserved.</Text>
+              <Text style={styles.paragraph}>Body sensation logs and trigger descriptions are stored in account-scoped application storage with per-user isolation.</Text>
             </View>
           </View>
 
@@ -113,10 +113,10 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
               <LinearGradient colors={['rgba(110, 191, 139, 0.12)', 'rgba(110, 191, 139, 0.04)']} style={StyleSheet.absoluteFill} />
               <View style={styles.securityHeader}>
                 <MetallicIcon name="lock-closed-outline" size={18} color={PALETTE.emerald} />
-                <Text style={styles.securityTitle}>Encryption at Rest</Text>
+                <Text style={styles.securityTitle}>Canonical Cloud Storage</Text>
               </View>
               <Text style={styles.paragraph}>
-                We utilize <MetallicText color={PALETTE.atmosphere} style={styles.boldText}>AES-256-GCM</MetallicText> encryption. The data key is stored in your device's hardware-backed Secure Enclave (iOS Keychain).
+                Core app content is stored in Supabase and protected by row-level access controls tied to your authenticated user.
               </Text>
             </View>
 
@@ -124,10 +124,10 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
               <LinearGradient colors={['rgba(110, 191, 139, 0.12)', 'rgba(110, 191, 139, 0.04)']} style={StyleSheet.absoluteFill} />
               <View style={styles.securityHeader}>
                 <MetallicIcon name="cloud-offline-outline" size={18} color={PALETTE.emerald} />
-                <Text style={styles.securityTitle}>Account-Synced Protocols</Text>
+                <Text style={styles.securityTitle}>Cache & Queueing</Text>
               </View>
               <Text style={styles.paragraph}>
-                SecureStore payloads use <MetallicText color={PALETTE.atmosphere} style={styles.boldText}>HMAC-SHA256</MetallicText> tamper detection. Your local device acts as an offline-first cache backed by seamless cloud sync, so your data is never lost.
+                Devices may keep local cache and queued offline writes so recent data stays available and pending updates can sync later. Those local copies are not treated as the source of truth.
               </Text>
             </View>
           </View>
@@ -177,7 +177,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <Text style={styles.sectionLabel}>DATA RETENTION & DELETION</Text>
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>On-Device Data</Text>
-              <Text style={styles.paragraph}>All personal data is cached locally in partitioned SQLite databases per user, meaning you can share devices without sharing data. Local data persists until you explicitly remove it from the device or delete the cloud account.</Text>
+              <Text style={styles.paragraph}>Devices may keep local cache and queued writes for performance and offline resilience. Those copies can be cleared locally without changing the canonical account record.</Text>
             </View>
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Cloud Sync Data</Text>
@@ -199,7 +199,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <View style={[styles.glassSection, styles.velvetBorder]}>
               <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
               <Text style={styles.sectionTitle}>Access, Control & Portability</Text>
-              <Text style={styles.paragraph}>Because MySky keeps your account as the source of truth while maintaining an encrypted local cache, you have direct access to your data across devices. In addition, you have the following rights:</Text>
+              <Text style={styles.paragraph}>Because MySky keeps your account as the source of truth while using local cache only as a convenience layer, you have direct access to your data across devices. In addition, you have the following rights:</Text>
 
               <View style={styles.dataBlock}>
                 <Text style={styles.subSectionTitle}>Right to Access</Text>
@@ -207,7 +207,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
               </View>
               <View style={styles.dataBlock}>
                 <Text style={styles.subSectionTitle}>Right to Export</Text>
-                <Text style={styles.paragraph}>Deeper Sky subscribers can export an encrypted .msky backup via the app. Free users can export a PDF birth chart. Additional plain-text export options are in development.</Text>
+                <Text style={styles.paragraph}>Deeper Sky subscribers can export a .msky backup via the app. Free users can export a PDF birth chart. Additional export options are in development.</Text>
               </View>
               <View style={styles.dataBlock}>
                 <Text style={styles.subSectionTitle}>Right to Delete</Text>
@@ -245,7 +245,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>INTERNATIONAL USERS</Text>
             <View style={styles.dataBlock}>
-              <Text style={styles.paragraph}>MySky is operated from the United States. By using the app, users outside the US acknowledge that authentication credentials are processed via Supabase infrastructure, which operates in the US. All personal reflection data remains on your device regardless of your location.</Text>
+              <Text style={styles.paragraph}>MySky is operated from the United States. By using the app, users outside the US acknowledge that authentication credentials and account data are processed via Supabase infrastructure, which may operate in the US.</Text>
               <Text style={styles.paragraph}>If you are located in the European Economic Area (EEA) or United Kingdom, you have rights under GDPR — including the right to access, rectify, erase, restrict processing, and data portability. Our legal basis for processing your email and auth credentials is contractual necessity. Contact us to exercise any GDPR rights.</Text>
             </View>
           </View>

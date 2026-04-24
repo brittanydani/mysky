@@ -1,4 +1,7 @@
 // File: services/storage/localDb.ts
+//
+// Legacy SQLite layer retained for local queueing, cache, and migration
+// compatibility. Supabase is the canonical store for core app content.
 
 import * as SQLite from 'expo-sqlite';
 import { SavedChart, JournalEntry, AppSettings, RelationshipChart, SleepEntry } from './models';
@@ -15,6 +18,25 @@ const CURRENT_DB_VERSION = 22;
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
   private dbName: string = 'mysky.db';
+
+  private async readCachedText(value: string | undefined | null): Promise<string | undefined> {
+    if (value == null) return undefined;
+    if (!FieldEncryptionService.isEncrypted(value)) return value;
+    return FieldEncryptionService.decryptField(value);
+  }
+
+  private async readRequiredCachedText(
+    value: string | undefined | null,
+    field: string,
+    rowId: string,
+  ): Promise<string> {
+    const resolved = await this.readCachedText(value);
+    if (!resolved) {
+      logger.error(`[LocalDB] ${field} for ${rowId} is unreadable`);
+      return '';
+    }
+    return resolved;
+  }
 
   async switchToUserDb(userId: string): Promise<void> {
     const newDbName = `mysky_${userId}.db`;
@@ -98,26 +120,19 @@ class LocalDatabase {
   private async writeChart(chart: SavedChart): Promise<void> {
     const db = await this.ensureReady();
 
-    const encBirthPlace = await FieldEncryptionService.encryptField(chart.birthPlace);
-    const encName = chart.name ? await FieldEncryptionService.encryptField(chart.name) : null;
-    const encBirthDate = await FieldEncryptionService.encryptField(chart.birthDate);
-    const encBirthTime = chart.birthTime ? await FieldEncryptionService.encryptField(chart.birthTime) : null;
-    const encLatitude = await FieldEncryptionService.encryptField(String(chart.latitude));
-    const encLongitude = await FieldEncryptionService.encryptField(String(chart.longitude));
-
     await db.runAsync(
       `INSERT OR REPLACE INTO saved_charts
        (id, name, birth_date, birth_time, has_unknown_time, birth_place, latitude, longitude, timezone, house_system, created_at, updated_at, is_deleted)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         chart.id,
-        encName,
-        encBirthDate,
-        encBirthTime,
+        chart.name ?? null,
+        chart.birthDate,
+        chart.birthTime ?? null,
         chart.hasUnknownTime ? 1 : 0,
-        encBirthPlace,
-        encLatitude,
-        encLongitude,
+        chart.birthPlace,
+        String(chart.latitude),
+        String(chart.longitude),
         chart.timezone || null,
         chart.houseSystem || null,
         chart.createdAt,
@@ -352,9 +367,8 @@ class LocalDatabase {
       );
     `);
 
-    // cached_interpretations table removed — it stored derived personal data
-    // (interpretation text) in plaintext. If reintroduced, content MUST be
-    // encrypted via FieldEncryptionService before writing.
+    // cached_interpretations table removed. If reintroduced, it should follow
+    // the current Supabase-canonical/cache-only architecture.
 
     await db.execAsync(`
       CREATE INDEX IF NOT EXISTS idx_saved_charts_updated_at ON saved_charts(updated_at);
@@ -526,12 +540,12 @@ class LocalDatabase {
   }
 
   // ═══════════════════════════════════════════════════
-  // Migration v7: Encrypt sensitive fields at rest
-  // Idempotent: safe to re-run; uses migration marker + ENC prefix check.
+  // Migration v7: Legacy on-device encryption rollout
+  // Idempotent: safe to re-run; preserved only for backward compatibility.
   // ═══════════════════════════════════════════════════
   private async migrateToVersion7(): Promise<void> {
     const db = await this.ensureReady();
-    logger.info('[LocalDB] Migrating to version 7 (field encryption at rest)...');
+    logger.info('[LocalDB] Migrating to version 7 (legacy field encryption rollout)...');
 
     // Idempotency: skip if already completed
     const markerKey = 'v7_field_encryption';
@@ -726,9 +740,8 @@ class LocalDatabase {
   }
 
   /**
-   * Version 11 — Encrypt existing plaintext PII fields.
-   * Encrypts name, birth_date, and birth_time in saved_charts and relationship_charts
-   * for rows that haven't been encrypted yet (i.e., not already prefixed with ENC2: or ENC:).
+   * Version 11 — Legacy PII encryption rollout.
+   * Kept only so older databases can still be opened and read.
    */
   private async migrateToVersion11(): Promise<void> {
     const db = await this.ensureReady();
@@ -1020,7 +1033,7 @@ class LocalDatabase {
 
   /**
    * Version 15 — Add sleep_entries table for sleep tracking and dream journaling.
-   * dream_text and notes are encrypted at rest (like journal_entries.content).
+   * Legacy local cache schema for sleep entries.
    */
   private async migrateToVersion15(): Promise<void> {
     const db = await this.ensureReady();
@@ -1069,8 +1082,8 @@ class LocalDatabase {
 
   /**
    * Version 17 — Add dream_feelings and dream_metadata columns to sleep_entries.
-   * dream_feelings: JSON string of SelectedFeeling[] (encrypted at rest)
-   * dream_metadata: JSON string of DreamMetadata (encrypted at rest)
+   * dream_feelings: JSON string of SelectedFeeling[]
+   * dream_metadata: JSON string of DreamMetadata
    */
   private async migrateToVersion17(): Promise<void> {
     const db = await this.ensureReady();
@@ -1178,7 +1191,7 @@ class LocalDatabase {
   }
 
   /**
-   * Version 21 — Add sync_queue table for offline-first cloud sync.
+   * Version 21 — Add sync_queue table for deferred sync and cache support.
    */
   private async migrateToVersion21(): Promise<void> {
     const db = await this.ensureReady();
@@ -1234,15 +1247,18 @@ class LocalDatabase {
       'SELECT * FROM saved_charts WHERE is_deleted = 0 ORDER BY created_at DESC'
     );
 
-    // Decrypt sensitive fields after reading from SQLite
     const charts = await Promise.all(
       (result as any[]).map(async (row: any) => {
-        const latStr = row.latitude != null ? await FieldEncryptionService.decryptField(String(row.latitude)) : '0';
-        const lngStr = row.longitude != null ? await FieldEncryptionService.decryptField(String(row.longitude)) : '0';
-        const decName = row.name ? await FieldEncryptionService.decryptField(row.name) : row.name;
-        const decBirthDate = await FieldEncryptionService.decryptField(row.birth_date);
-        const decBirthTime = row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time;
-        const decBirthPlace = await FieldEncryptionService.decryptField(row.birth_place);
+        const latStr = row.latitude != null
+          ? await this.readRequiredCachedText(String(row.latitude), 'saved_charts.latitude', row.id)
+          : '0';
+        const lngStr = row.longitude != null
+          ? await this.readRequiredCachedText(String(row.longitude), 'saved_charts.longitude', row.id)
+          : '0';
+        const decName = await this.readCachedText(row.name);
+        const decBirthDate = await this.readRequiredCachedText(row.birth_date, 'saved_charts.birth_date', row.id);
+        const decBirthTime = await this.readCachedText(row.birth_time);
+        const decBirthPlace = await this.readRequiredCachedText(row.birth_place, 'saved_charts.birth_place', row.id);
 
         // Guard against DECRYPTION_FAILED_PLACEHOLDER producing NaN coordinates
         const safeLat = this.parseDecryptedCoordinate(latStr, 'saved_charts.latitude', row.id);
@@ -1372,13 +1388,6 @@ class LocalDatabase {
   async addJournalEntry(entry: JournalEntry): Promise<void> {
     const db = await this.ensureReady();
 
-    // Encrypt sensitive fields
-    const encContent = await FieldEncryptionService.encryptField(entry.content);
-    const encTitle = entry.title ? await FieldEncryptionService.encryptField(entry.title) : null;
-    const encKeywords = entry.contentKeywords ? await FieldEncryptionService.encryptField(entry.contentKeywords) : null;
-    const encEmotions = entry.contentEmotions ? await FieldEncryptionService.encryptField(entry.contentEmotions) : null;
-    const encSentiment = entry.contentSentiment ? await FieldEncryptionService.encryptField(entry.contentSentiment) : null;
-
     await db.runAsync(
       `INSERT INTO journal_entries
        (id, date, mood, moon_phase, title, content, chart_id, transit_snapshot,
@@ -1391,13 +1400,13 @@ class LocalDatabase {
         entry.date,
         entry.mood,
         entry.moonPhase,
-        encTitle,
-        encContent,
+        entry.title ?? null,
+        entry.content,
         entry.chartId || null,
         entry.transitSnapshot || null,
-        encKeywords,
-        encEmotions,
-        encSentiment,
+        entry.contentKeywords ?? null,
+        entry.contentEmotions ?? null,
+        entry.contentSentiment ?? null,
         entry.contentWordCount ?? null,
         entry.contentReadingMinutes ?? null,
         entry.tags && entry.tags.length > 0 ? JSON.stringify(entry.tags) : null,
@@ -1465,17 +1474,11 @@ class LocalDatabase {
   }
 
   private async mapJournalRow(row: any): Promise<JournalEntry> {
-    const decTitle = row.title ? await FieldEncryptionService.decryptField(row.title) : row.title;
-    const decContent = await FieldEncryptionService.decryptField(row.content);
-    const decContentKeywords = row.content_keywords_enc
-      ? await FieldEncryptionService.decryptField(row.content_keywords_enc)
-      : undefined;
-    const decContentEmotions = row.content_emotions_enc
-      ? await FieldEncryptionService.decryptField(row.content_emotions_enc)
-      : undefined;
-    const decContentSentiment = row.content_sentiment_enc
-      ? await FieldEncryptionService.decryptField(row.content_sentiment_enc)
-      : undefined;
+    const decTitle = await this.readCachedText(row.title);
+    const decContent = await this.readRequiredCachedText(row.content, 'journal_entries.content', row.id);
+    const decContentKeywords = await this.readCachedText(row.content_keywords_enc);
+    const decContentEmotions = await this.readCachedText(row.content_emotions_enc);
+    const decContentSentiment = await this.readCachedText(row.content_sentiment_enc);
 
     this.logUnreadableEncryptedRow('Journal entry', row.id, this.getUnreadableEncryptedFields({
       title: decTitle,
@@ -1509,12 +1512,6 @@ class LocalDatabase {
   async updateJournalEntry(entry: JournalEntry): Promise<void> {
     const db = await this.ensureReady();
 
-    const encContent = await FieldEncryptionService.encryptField(entry.content);
-    const encTitle = entry.title ? await FieldEncryptionService.encryptField(entry.title) : null;
-    const encKeywords = entry.contentKeywords ? await FieldEncryptionService.encryptField(entry.contentKeywords) : null;
-    const encEmotions = entry.contentEmotions ? await FieldEncryptionService.encryptField(entry.contentEmotions) : null;
-    const encSentiment = entry.contentSentiment ? await FieldEncryptionService.encryptField(entry.contentSentiment) : null;
-
     await db.runAsync(
       `UPDATE journal_entries
        SET date = ?, mood = ?, moon_phase = ?, title = ?, content = ?, chart_id = ?, transit_snapshot = ?,
@@ -1526,13 +1523,13 @@ class LocalDatabase {
         entry.date,
         entry.mood,
         entry.moonPhase,
-        encTitle,
-        encContent,
+        entry.title ?? null,
+        entry.content,
         entry.chartId || null,
         entry.transitSnapshot || null,
-        encKeywords,
-        encEmotions,
-        encSentiment,
+        entry.contentKeywords ?? null,
+        entry.contentEmotions ?? null,
+        entry.contentSentiment ?? null,
         entry.contentWordCount ?? null,
         entry.contentReadingMinutes ?? null,
         entry.tags && entry.tags.length > 0 ? JSON.stringify(entry.tags) : null,
@@ -1622,13 +1619,13 @@ class LocalDatabase {
     return Promise.all(
       (result as any[]).map(async (row: any) => ({
         id: row.id,
-        name: row.name ? await FieldEncryptionService.decryptField(row.name) : row.name,
-        birthDate: await FieldEncryptionService.decryptField(row.birth_date),
-        birthTime: row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time,
+        name: await this.readCachedText(row.name),
+        birthDate: await this.readRequiredCachedText(row.birth_date, 'saved_charts.birth_date', row.id),
+        birthTime: await this.readCachedText(row.birth_time),
         hasUnknownTime: row.has_unknown_time === 1,
-        birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
-        latitude: row.latitude,
-        longitude: row.longitude,
+        birthPlace: await this.readRequiredCachedText(row.birth_place, 'saved_charts.birth_place', row.id),
+        latitude: Number.parseFloat(await this.readRequiredCachedText(String(row.latitude), 'saved_charts.latitude', row.id)),
+        longitude: Number.parseFloat(await this.readRequiredCachedText(String(row.longitude), 'saved_charts.longitude', row.id)),
         timezone: row.timezone || undefined,
         houseSystem: row.house_system || undefined,
         createdAt: row.created_at,
@@ -1702,7 +1699,7 @@ class LocalDatabase {
       await this.addJournalEntry(entry);
     }
 
-    // Fire-and-forget cloud sync (reads back the already-encrypted row)
+    // Fire-and-forget queued sync for compatibility with older local write paths.
     this.getSession().then((session) => {
       if (session) {
         import('../storage/syncService').then(({ enqueueJournalEntry }) =>
@@ -1725,19 +1722,6 @@ class LocalDatabase {
   async saveSleepEntry(entry: SleepEntry): Promise<void> {
     const db = await this.ensureReady();
 
-    const encDreamText = entry.dreamText
-      ? await FieldEncryptionService.encryptField(entry.dreamText)
-      : null;
-    const encNotes = entry.notes
-      ? await FieldEncryptionService.encryptField(entry.notes)
-      : null;
-    const encDreamFeelings = entry.dreamFeelings
-      ? await FieldEncryptionService.encryptField(entry.dreamFeelings)
-      : null;
-    const encDreamMetadata = entry.dreamMetadata
-      ? await FieldEncryptionService.encryptField(entry.dreamMetadata)
-      : null;
-
     await db.runAsync(
       `INSERT OR REPLACE INTO sleep_entries
        (id, chart_id, date, duration_hours, quality, dream_text, dream_mood, dream_feelings, dream_metadata, notes, created_at, updated_at, is_deleted)
@@ -1748,11 +1732,11 @@ class LocalDatabase {
         entry.date,
         entry.durationHours ?? null,
         entry.quality ?? null,
-        encDreamText,
-        entry.dreamMood ? await FieldEncryptionService.encryptField(entry.dreamMood) : null,
-        encDreamFeelings,
-        encDreamMetadata,
-        encNotes,
+        entry.dreamText ?? null,
+        entry.dreamMood ?? null,
+        entry.dreamFeelings ?? null,
+        entry.dreamMetadata ?? null,
+        entry.notes ?? null,
         entry.createdAt,
         entry.updatedAt,
         entry.isDeleted ? 1 : 0,
@@ -1781,21 +1765,11 @@ class LocalDatabase {
     )) as any[];
 
     return Promise.all(rows.map(async (row) => {
-      const decDreamText = row.dream_text
-        ? await FieldEncryptionService.decryptField(row.dream_text)
-        : undefined;
-      const decDreamMood = row.dream_mood
-        ? await FieldEncryptionService.decryptField(row.dream_mood)
-        : undefined;
-      const decDreamFeelings = row.dream_feelings
-        ? await FieldEncryptionService.decryptField(row.dream_feelings)
-        : undefined;
-      const decDreamMetadata = row.dream_metadata
-        ? await FieldEncryptionService.decryptField(row.dream_metadata)
-        : undefined;
-      const decNotes = row.notes
-        ? await FieldEncryptionService.decryptField(row.notes)
-        : undefined;
+      const decDreamText = await this.readCachedText(row.dream_text);
+      const decDreamMood = await this.readCachedText(row.dream_mood);
+      const decDreamFeelings = await this.readCachedText(row.dream_feelings);
+      const decDreamMetadata = await this.readCachedText(row.dream_metadata);
+      const decNotes = await this.readCachedText(row.notes);
 
       this.logUnreadableEncryptedRow('Sleep entry', row.id, this.getUnreadableEncryptedFields({
         dreamText: decDreamText,
@@ -1868,17 +1842,6 @@ class LocalDatabase {
   async saveInsight(insight: SavedInsight): Promise<void> {
     const db = await this.ensureReady();
 
-    const encGreeting = await FieldEncryptionService.encryptField(insight.greeting);
-    const encLoveHeadline = await FieldEncryptionService.encryptField(insight.loveHeadline);
-    const encLoveMessage = await FieldEncryptionService.encryptField(insight.loveMessage);
-    const encEnergyHeadline = await FieldEncryptionService.encryptField(insight.energyHeadline);
-    const encEnergyMessage = await FieldEncryptionService.encryptField(insight.energyMessage);
-    const encGrowthHeadline = await FieldEncryptionService.encryptField(insight.growthHeadline);
-    const encGrowthMessage = await FieldEncryptionService.encryptField(insight.growthMessage);
-    const encGentleReminder = await FieldEncryptionService.encryptField(insight.gentleReminder);
-    const encJournalPrompt = await FieldEncryptionService.encryptField(insight.journalPrompt);
-    const encSignals = insight.signals ? await FieldEncryptionService.encryptField(insight.signals) : null;
-
     await db.runAsync(
       `INSERT OR REPLACE INTO insight_history
        (id, date, chart_id, greeting, love_headline, love_message, energy_headline,
@@ -1889,18 +1852,18 @@ class LocalDatabase {
         insight.id,
         insight.date,
         insight.chartId,
-        encGreeting,
-        encLoveHeadline,
-        encLoveMessage,
-        encEnergyHeadline,
-        encEnergyMessage,
-        encGrowthHeadline,
-        encGrowthMessage,
-        encGentleReminder,
-        encJournalPrompt,
+        insight.greeting,
+        insight.loveHeadline,
+        insight.loveMessage,
+        insight.energyHeadline,
+        insight.energyMessage,
+        insight.growthHeadline,
+        insight.growthMessage,
+        insight.gentleReminder,
+        insight.journalPrompt,
         insight.moonSign || null,
         insight.moonPhase || null,
-        encSignals,
+        insight.signals ?? null,
         insight.isFavorite ? 1 : 0,
         insight.viewedAt || null,
         insight.createdAt,
@@ -1985,18 +1948,18 @@ class LocalDatabase {
       id: row.id,
       date: row.date,
       chartId: row.chart_id,
-      greeting: await FieldEncryptionService.decryptField(row.greeting),
-      loveHeadline: await FieldEncryptionService.decryptField(row.love_headline),
-      loveMessage: await FieldEncryptionService.decryptField(row.love_message),
-      energyHeadline: await FieldEncryptionService.decryptField(row.energy_headline),
-      energyMessage: await FieldEncryptionService.decryptField(row.energy_message),
-      growthHeadline: await FieldEncryptionService.decryptField(row.growth_headline),
-      growthMessage: await FieldEncryptionService.decryptField(row.growth_message),
-      gentleReminder: await FieldEncryptionService.decryptField(row.gentle_reminder),
-      journalPrompt: await FieldEncryptionService.decryptField(row.journal_prompt),
+      greeting: await this.readRequiredCachedText(row.greeting, 'insight_history.greeting', row.id),
+      loveHeadline: await this.readRequiredCachedText(row.love_headline, 'insight_history.love_headline', row.id),
+      loveMessage: await this.readRequiredCachedText(row.love_message, 'insight_history.love_message', row.id),
+      energyHeadline: await this.readRequiredCachedText(row.energy_headline, 'insight_history.energy_headline', row.id),
+      energyMessage: await this.readRequiredCachedText(row.energy_message, 'insight_history.energy_message', row.id),
+      growthHeadline: await this.readRequiredCachedText(row.growth_headline, 'insight_history.growth_headline', row.id),
+      growthMessage: await this.readRequiredCachedText(row.growth_message, 'insight_history.growth_message', row.id),
+      gentleReminder: await this.readRequiredCachedText(row.gentle_reminder, 'insight_history.gentle_reminder', row.id),
+      journalPrompt: await this.readRequiredCachedText(row.journal_prompt, 'insight_history.journal_prompt', row.id),
       moonSign: row.moon_sign,
       moonPhase: row.moon_phase,
-      signals: row.signals ? await FieldEncryptionService.decryptField(row.signals) : row.signals,
+      signals: await this.readCachedText(row.signals),
       isFavorite: row.is_favorite === 1,
       viewedAt: row.viewed_at,
       createdAt: row.created_at,
@@ -2011,13 +1974,6 @@ class LocalDatabase {
   async saveRelationshipChart(chart: RelationshipChart): Promise<void> {
     const db = await this.ensureReady();
 
-    const encBirthPlace = await FieldEncryptionService.encryptField(chart.birthPlace);
-    const encName = await FieldEncryptionService.encryptField(chart.name);
-    const encBirthDate = await FieldEncryptionService.encryptField(chart.birthDate);
-    const encBirthTime = chart.birthTime ? await FieldEncryptionService.encryptField(chart.birthTime) : null;
-    const encLatitude = await FieldEncryptionService.encryptField(String(chart.latitude));
-    const encLongitude = await FieldEncryptionService.encryptField(String(chart.longitude));
-
     await db.runAsync(
       `INSERT OR REPLACE INTO relationship_charts 
        (id, name, relationship, birth_date, birth_time, has_unknown_time, birth_place, 
@@ -2025,14 +1981,14 @@ class LocalDatabase {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         chart.id,
-        encName,
+        chart.name,
         chart.relationship,
-        encBirthDate,
-        encBirthTime,
+        chart.birthDate,
+        chart.birthTime ?? null,
         chart.hasUnknownTime ? 1 : 0,
-        encBirthPlace,
-        encLatitude,
-        encLongitude,
+        chart.birthPlace,
+        String(chart.latitude),
+        String(chart.longitude),
         chart.timezone || null,
         chart.userChartId,
         chart.createdAt,
@@ -2098,12 +2054,12 @@ class LocalDatabase {
   }
 
   private async mapRelationshipRow(row: any): Promise<RelationshipChart | null> {
-    const decName = await FieldEncryptionService.decryptField(row.name);
-    const decBirthDate = await FieldEncryptionService.decryptField(row.birth_date);
-    const decBirthTime = row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time;
-    const decBirthPlace = await FieldEncryptionService.decryptField(row.birth_place);
-    const latStr = await FieldEncryptionService.decryptField(String(row.latitude));
-    const lngStr = await FieldEncryptionService.decryptField(String(row.longitude));
+    const decName = await this.readRequiredCachedText(row.name, 'relationship_charts.name', row.id);
+    const decBirthDate = await this.readRequiredCachedText(row.birth_date, 'relationship_charts.birth_date', row.id);
+    const decBirthTime = await this.readCachedText(row.birth_time);
+    const decBirthPlace = await this.readRequiredCachedText(row.birth_place, 'relationship_charts.birth_place', row.id);
+    const latStr = await this.readRequiredCachedText(String(row.latitude), 'relationship_charts.latitude', row.id);
+    const lngStr = await this.readRequiredCachedText(String(row.longitude), 'relationship_charts.longitude', row.id);
 
     const safeLat = this.parseDecryptedCoordinate(latStr, 'relationship_charts.latitude', row.id);
     const safeLng = this.parseDecryptedCoordinate(lngStr, 'relationship_charts.longitude', row.id);
@@ -2140,15 +2096,6 @@ class LocalDatabase {
   async saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
     const db = await this.ensureReady();
 
-    const encNote = checkIn.note ? await FieldEncryptionService.encryptField(checkIn.note) : null;
-    const encWins = checkIn.wins ? await FieldEncryptionService.encryptField(checkIn.wins) : null;
-    const encChallenges = checkIn.challenges ? await FieldEncryptionService.encryptField(checkIn.challenges) : null;
-    // Encrypt mental-health indicators — these are sensitive health data
-    const encMoodScore = await FieldEncryptionService.encryptField(String(checkIn.moodScore));
-    const encEnergyLevel = await FieldEncryptionService.encryptField(checkIn.energyLevel);
-    const encStressLevel = await FieldEncryptionService.encryptField(checkIn.stressLevel);
-    const encTags = await FieldEncryptionService.encryptField(JSON.stringify(checkIn.tags));
-
     // Atomic UPSERT — eliminates the check-then-act race condition.
     // Requires a UNIQUE index on (date, chart_id, time_of_day); the v12/v13
     // migration already rebuilt the table with these columns.
@@ -2177,13 +2124,13 @@ class LocalDatabase {
         checkIn.date,
         checkIn.chartId,
         checkIn.timeOfDay,
-        encMoodScore,
-        encEnergyLevel,
-        encStressLevel,
-        encTags,
-        encNote,
-        encWins,
-        encChallenges,
+        String(checkIn.moodScore),
+        checkIn.energyLevel,
+        checkIn.stressLevel,
+        JSON.stringify(checkIn.tags),
+        checkIn.note ?? null,
+        checkIn.wins ?? null,
+        checkIn.challenges ?? null,
         checkIn.moonSign,
         checkIn.moonHouse,
         checkIn.sunHouse,
@@ -2326,23 +2273,21 @@ class LocalDatabase {
   }
 
   private async mapCheckInRow(row: any): Promise<DailyCheckIn> {
-    // Safely decrypt each field, guarding against DECRYPTION_FAILED_PLACEHOLDER
-    // which would crash Number() / JSON.parse() calls.
-    const decMoodScore = row.mood_score ? await FieldEncryptionService.decryptField(row.mood_score) : null;
-    const decEnergyLevel = row.energy_level ? await FieldEncryptionService.decryptField(row.energy_level) : null;
-    const decStressLevel = row.stress_level ? await FieldEncryptionService.decryptField(row.stress_level) : null;
-    const decTags = row.tags ? await FieldEncryptionService.decryptField(row.tags) : null;
-    const decNote = row.note ? await FieldEncryptionService.decryptField(row.note) : null;
-    const decWins = row.wins ? await FieldEncryptionService.decryptField(row.wins) : null;
-    const decChallenges = row.challenges ? await FieldEncryptionService.decryptField(row.challenges) : null;
+    const decMoodScore = await this.readCachedText(row.mood_score);
+    const decEnergyLevel = await this.readCachedText(row.energy_level);
+    const decStressLevel = await this.readCachedText(row.stress_level);
+    const decTags = await this.readCachedText(row.tags);
+    const decNote = await this.readCachedText(row.note);
+    const decWins = await this.readCachedText(row.wins);
+    const decChallenges = await this.readCachedText(row.challenges);
 
-    const safeParseMood = (val: string | null): number => {
+    const safeParseMood = (val: string | null | undefined): number => {
       if (!val || isDecryptionFailure(val)) return 0;
       const n = Number(val);
       return Number.isFinite(n) ? n : 0;
     };
 
-    const safeParseArray = (val: string | null): any[] => {
+    const safeParseArray = (val: string | null | undefined): any[] => {
       if (!val || isDecryptionFailure(val)) return [];
       try { return JSON.parse(val); } catch { return []; }
     };
@@ -2385,7 +2330,7 @@ class LocalDatabase {
     return data.session;
   }
 
-  /** Read a journal entry row with its raw encrypted blobs (no decryption). */
+  /** Read a journal entry row with cached/raw field values. */
   async getJournalEntryRaw(id: string): Promise<JournalEntry | null> {
     const db = await this.ensureReady();
     const row = await db.getFirstAsync('SELECT * FROM journal_entries WHERE id = ?', [id]) as any;
@@ -2411,7 +2356,7 @@ class LocalDatabase {
     };
   }
 
-  /** Read a sleep entry row with its raw encrypted blobs (no decryption). */
+  /** Read a sleep entry row with cached/raw field values. */
   async getSleepEntryByDate(chartId: string, date: string): Promise<SleepEntry | null> {
     const db = await this.ensureReady();
     const rows = await db.getAllAsync(
@@ -2458,7 +2403,7 @@ class LocalDatabase {
     };
   }
 
-  /** Read a check-in row with its raw encrypted blobs (no decryption). */
+  /** Read a check-in row with cached/raw field values. */
   async getCheckInRaw(id: string): Promise<(DailyCheckIn & { isDeleted: boolean }) | null> {
     const db = await this.ensureReady();
     const row = await db.getFirstAsync('SELECT * FROM daily_check_ins WHERE id = ?', [id]) as any;
@@ -2468,10 +2413,10 @@ class LocalDatabase {
       date: row.date,
       chartId: row.chart_id,
       timeOfDay: row.time_of_day,
-      moodScore: row.mood_score,   // raw encrypted blob
+      moodScore: row.mood_score,
       energyLevel: row.energy_level,
       stressLevel: row.stress_level,
-      tags: row.tags,              // raw encrypted blob
+      tags: row.tags,
       note: row.note ?? undefined,
       wins: row.wins ?? undefined,
       challenges: row.challenges ?? undefined,
@@ -2489,8 +2434,8 @@ class LocalDatabase {
   }
 
   /**
-   * Write a journal entry whose text fields are ALREADY encrypted blobs.
-   * Used by the sync pull path — avoids double-encrypting data from the server.
+   * Write a journal entry using cached/raw field values.
+   * Used by legacy local cache hydration paths.
    */
   async upsertJournalEntryRaw(entry: JournalEntry): Promise<void> {
     const db = await this.ensureReady();
@@ -2525,8 +2470,7 @@ class LocalDatabase {
   }
 
   /**
-   * Write a sleep entry whose text fields are ALREADY encrypted blobs.
-   * Used by the sync pull path.
+   * Write a sleep entry using cached/raw field values.
    */
   async upsertSleepEntryRaw(entry: SleepEntry): Promise<void> {
     const db = await this.ensureReady();
@@ -2554,8 +2498,7 @@ class LocalDatabase {
   }
 
   /**
-   * Write a check-in whose sensitive fields are ALREADY encrypted blobs.
-   * Used by the sync pull path.
+   * Write a check-in using cached/raw field values.
    */
   async upsertCheckInRaw(checkIn: DailyCheckIn): Promise<void> {
     const db = await this.ensureReady();
@@ -2593,7 +2536,7 @@ class LocalDatabase {
       'SELECT * FROM daily_check_ins WHERE updated_at > ? ORDER BY updated_at ASC',
       [timestamp],
     )) as any[];
-    // Return raw rows so the SyncService can upload encrypted blobs directly
+    // Return raw rows for legacy compatibility helpers.
     return rows.map((row) => ({
       id: row.id,
       date: row.date,

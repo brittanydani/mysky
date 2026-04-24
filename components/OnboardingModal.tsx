@@ -93,7 +93,7 @@ interface LocationSuggestion {
   lon: string;
 }
 
-type OnboardingStep = 'auth' | 'privacy' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing' | 'passphrase';
+type OnboardingStep = 'auth' | 'privacy' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing';
 
 const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   auth: -1,
@@ -103,7 +103,6 @@ const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   birthTime: 2,
   location: 3,
   processing: -1,
-  passphrase: -1,
 };
 
 // ── Living Volumetric Nebula ──
@@ -278,8 +277,6 @@ export default function OnboardingModal({
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const [backupUri, setBackupUri] = useState<string | null>(null);
-  const [passphrase, setPassphrase] = useState('');
   const [isNameFocused, setIsNameFocused] = useState(false);
 
   // ── Hardware Tactility: Scale animations ──
@@ -637,23 +634,9 @@ export default function OnboardingModal({
     try {
       const uri = await BackupService.pickBackupFile();
       if (!uri) return;
-      setBackupUri(uri);
-      setPassphrase('');
-      setStep('passphrase');
-    } catch (error) {
-      logger.error('Failed to pick backup file:', error);
-    }
-  };
-
-  const handlePassphraseSubmit = async () => {
-    if (!backupUri || !passphrase || passphrase.trim().length < 8) {
-      Alert.alert('Invalid Passphrase', 'Passphrase must be at least 8 characters.');
-      return;
-    }
-    Keyboard.dismiss();
-    setStep('processing');
-    try {
-      await BackupService.restoreFromBackupFile(backupUri, passphrase);
+      Keyboard.dismiss();
+      setStep('processing');
+      await BackupService.restoreFromBackupFile(uri);
       const charts = await supabaseDb.getCharts();
       if (charts.length > 0) {
         const birthDataFromChart = {
@@ -668,7 +651,6 @@ export default function OnboardingModal({
         };
         const chart = AstrologyCalculator.generateNatalChart(birthDataFromChart);
 
-        // Seal the restored identity into the hardware keychain
         IdentityVault.sealIdentity({
           name: charts[0].name ?? 'My Chart',
           birthDate: charts[0].birthDate,
@@ -684,17 +666,17 @@ export default function OnboardingModal({
           }
         });
 
-          timeoutRef.current = setTimeout(async () => {
-            await completeChart(chart);
-          }, 900);
+        timeoutRef.current = setTimeout(async () => {
+          await completeChart(chart);
+        }, 900);
       } else {
         Alert.alert('No Data Found', 'The backup did not contain any profile data.', [
           { text: 'OK', onPress: () => setStep('auth') },
         ]);
       }
     } catch (error) {
-      logger.error('Failed to restore backup:', error);
-      Alert.alert('Restore Failed', 'Could not restore from backup. Please check your passphrase and try again.', [
+      logger.error('Failed to pick backup file:', error);
+      Alert.alert('Restore Failed', 'Could not restore from backup. Please check the backup file and try again.', [
         { text: 'OK', onPress: () => setStep('auth') },
       ]);
     }
@@ -1290,57 +1272,6 @@ export default function OnboardingModal({
                     </View>
                   </Animated.View>
                 </View>
-              )}
-
-              {/* ══════ PASSPHRASE (Restore) ══════ */}
-              {step === 'passphrase' && (
-                <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
-                  <Animated.View entering={FadeIn.delay(100).duration(800)} style={st.singleQuestionContainer}>
-                    <View style={st.passphraseIconWrap}>
-                      <MetallicIcon name="lock-closed-outline" size={32} color={PREMIUM.titanium} />
-                    </View>
-                    <Text style={st.etherealQuestion}>Enter Encryption Key</Text>
-                    <Text style={st.etherealSubtext}>
-                      Provide the passphrase used to secure your backup.
-                    </Text>
-                    
-                    <BlurView intensity={30} tint={theme.blurTint} style={[st.passphraseInputWrapper, st.velvetBorder]}>
-                      <TextInput
-                        style={st.passphraseInput}
-                        value={passphrase}
-                        onChangeText={setPassphrase}
-                        placeholder="Enter passphrase"
-                        placeholderTextColor={PREMIUM.textMuted}
-                        secureTextEntry
-                        autoFocus
-                        returnKeyType="done"
-                        onSubmitEditing={handlePassphraseSubmit}
-                        selectionColor={PREMIUM.titanium}
-                      />
-                    </BlurView>
-
-                    <Animated.View style={[st.primaryActionBtn, { width: '100%', marginBottom: 16 }, ctaAnimStyle]}>
-                      <Pressable
-                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
-                        onPressIn={() => { ctaScale.value = withSpring(0.97, { mass: 0.5, stiffness: 400 }); }}
-                        onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
-                        onPress={handlePassphraseSubmit}
-                      >
-                        <LinearGradient
-                          colors={LIQUID_GOLD}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={st.liquidGoldFill}
-                        />
-                        <Text style={st.primaryActionBtnText}>Decrypt & Restore</Text>
-                      </Pressable>
-                    </Animated.View>
-
-                    <Pressable style={[st.restoreButton, { alignSelf: 'center' }]} onPress={() => setStep('auth')}>
-                      <Text style={st.restoreText}>Cancel</Text>
-                    </Pressable>
-                  </Animated.View>
-                </Pressable>
               )}
             </View>
           </KeyboardAvoidingView>

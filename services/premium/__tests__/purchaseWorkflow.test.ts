@@ -8,7 +8,7 @@
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
 // Define __DEV__ for the test environment
-(global as any).__DEV__ = false;
+(globalThis as any).__DEV__ = false;
 
 const mockConfigure = jest.fn().mockResolvedValue(undefined);
 const mockGetOfferings = jest.fn();
