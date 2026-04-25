@@ -14,7 +14,7 @@ export interface PremiumInsightWriterInput {
     required_structure: string[];
     title_rules?: string[];
     anchor_requirements?: string[];
-    tier?: 'daily' | 'premium_deep';
+    tier?: 'daily' | 'premium_deep' | 'deep';
   };
 }
 

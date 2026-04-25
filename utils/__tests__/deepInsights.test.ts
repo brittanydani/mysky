@@ -4,6 +4,8 @@ function makeProfile(overrides: Record<string, unknown> = {}) {
   const scoredDays = Array.from({ length: 16 }, (_, index) => ({
     aggregate: {
       sleepQuality: index % 2 === 0 ? 5 : 2,
+      tagsUnion: index % 4 === 0 ? ['tension', 'glimmer'] : index % 5 === 0 ? ['conflict', 'triggered'] : [],
+      hasDream: index % 3 === 0,
     },
     scores: {
       stability: index < 8 ? 45 : 65,
@@ -108,5 +110,58 @@ describe('deepInsights', () => {
       previousStruggles: [],
       persistentTruths: [],
     });
+  });
+
+  it('replaces old generic premium copy with seeded, specific narratives', () => {
+    const bundle = computeDeepInsights(makeProfile());
+    const hardDayBundle = computeDeepInsights(makeProfile({
+      patternProfile: {
+        ...makeProfile().patternProfile,
+        overallAvg: {
+          ...makeProfile().patternProfile.overallAvg,
+          stability: 80,
+          strain: 35,
+          restoration: 75,
+        },
+      },
+    }));
+    const progressReceipt = bundle.insights.find((insight) => insight.id === 'premium-progress-receipt');
+    const hardDayMap = hardDayBundle.insights.find((insight) => insight.id === 'premium-hard-day-map');
+
+    expect(progressReceipt?.body).toBeDefined();
+    expect(progressReceipt?.body).not.toContain('Your archive is showing movement over time.');
+    expect(progressReceipt?.body).toMatch(/Monthly|progress marker|trajectory/i);
+
+    expect(hardDayMap?.body).toBeDefined();
+    expect(hardDayMap?.body).not.toContain('The warning pattern is not one single feeling');
+  });
+
+  it('produces multiple premium progress receipt variants across different archive states', () => {
+    const bodies = new Set(
+      Array.from({ length: 12 }, (_, index) => {
+        const bundle = computeDeepInsights(
+          makeProfile({
+            totalDays: 120 + index * 11,
+            progressMarkers: Array.from({ length: (index % 4) + 1 }, (_, markerIndex) => ({
+              id: `marker-${index}-${markerIndex}`,
+              description: `Marker ${markerIndex}`,
+              type: 'protecting',
+              strength: 60 + markerIndex,
+            })),
+            patternProfile: {
+              ...makeProfile().patternProfile,
+              overallAvg: {
+                ...makeProfile().patternProfile.overallAvg,
+                stability: 48 + index,
+                strain: 66 - index,
+              },
+            },
+          }),
+        );
+        return bundle.insights.find((insight) => insight.id === 'premium-progress-receipt')?.body;
+      }).filter(Boolean),
+    );
+
+    expect(bodies.size).toBeGreaterThan(3);
   });
 });

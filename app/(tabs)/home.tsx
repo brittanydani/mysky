@@ -18,6 +18,7 @@ import {
   StyleSheet,
   Pressable,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -52,12 +53,13 @@ import { AstrologySettingsService } from '../../services/astrology/astrologySett
 import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop';
 import { getLogicalToday } from '../../services/patterns/checkInService';
 import { toLocalDateString } from '../../utils/dateUtils';
+import { normalizeDisplayText } from '../../utils/textLayout';
 import { getDailyAffirmation, PersonalAffirmationContext } from '../../services/today/todayContentLibrary';
-import { loadSelfKnowledgeContext, SelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
-import { enhanceInsightCopy } from '../../services/insights/geminiInsightsService';
+import { SelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { logger } from '../../utils/logger';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { getArchiveDepth, getPersonalizedPremiumTeaser } from '../../utils/archiveDepth';
+import { hasDreamContent } from '../../utils/dreamArchiveSummary';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
@@ -67,6 +69,12 @@ import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 import { scheduleTransitNotification } from '../../services/astrology/transitNotifications';
 import { scheduleInsightNotification } from '../../services/today/insightNotifications';
 import * as StoreReview from 'expo-store-review';
+import { buildInsightSurface } from '../../services/insights/buildInsightSurface';
+import type { CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
+import type { PremiumInsightResult } from '../../services/insights/premiumPipeline';
+import { runKnowledgeEngine } from '../../services/insights/knowledgeEngine';
+import { GeneratedInsight } from '../../services/insights/types/knowledgeEngine';
+import { KnowledgeInsightCard } from '../../components/KnowledgeInsightCard';
 
 const { width } = Dimensions.get('window');
 
@@ -108,20 +116,25 @@ function generateInsight(
   energy: number,
   sleep: number,
 ): string {
-  const sleepDeficit = 8 - sleep;
+  const sleepDeficit = Math.max(0, 8 - sleep);
+
+  if (energy <= 4 && sleepDeficit >= 1) {
+    return 'Your energy is lower than your emotional load today, so ordinary things may feel heavier than usual. This may be a day for smaller expectations and earlier pauses.';
+  }
+
+  if (sleepDeficit >= 2) {
+    return 'Your stress is likely louder than your recovery today, which can make simple decisions feel sharper than they are. Gentle pacing and early rest may help your system settle.';
+  }
+
+  if (mood <= 4 && energy <= 5) {
+    return 'Your inner weather looks tender today, even if you are still showing up. Move more softly where you can and let steady be enough.';
+  }
+
   if (stabilityIndex >= 80) {
-    return `Your stability is ${stabilityIndex}% today. Your signals are coherent — maintain this rhythm and your vitality will continue to build.`;
+    return 'Today reads as relatively steady, with enough fuel to hold what matters. Keep the rhythm that is helping you feel grounded.';
   }
-  if (sleepDeficit > 1.5) {
-    return `Your stability is ${stabilityIndex}% today. Increasing rest by ${sleepDeficit.toFixed(0)} hours could help stabilise your energy and lift mood coherence.`;
-  }
-  if (energy < 5) {
-    return `Your stability is ${stabilityIndex}% today. Your energy signal is low — consider gentle movement or sunlight exposure to restore your baseline.`;
-  }
-  if (mood < 4) {
-    return `Your stability is ${stabilityIndex}% today. Your emotional weather is heavy. A gentle breathing pause could help re-center your inner landscape.`;
-  }
-  return `Your stability is ${stabilityIndex}% today. Small adjustments to rest and movement could shift your coherence toward alignment.`;
+
+  return 'Your mood may look steady on the surface, but your body may still be carrying pressure underneath. Take this as a cue for gentler pacing, not self-criticism.';
 }
 
 function computeBalanceScore(mood: number, energy: number, sleep: number): number {
@@ -167,6 +180,8 @@ export default function HomeScreen() {
   const [energy, setEnergy] = useState(8);
 
   const [latestSleep, setLatestSleep] = useState(7);
+  const [sleepSignalCount, setSleepSignalCount] = useState(0);
+  const [dreamSignalCount, setDreamSignalCount] = useState(0);
 
   // Weekly check-ins — used by 7-day Stability Map
   const [weeklyCheckIns, setWeeklyCheckIns] = useState<DailyCheckIn[]>([]);
@@ -179,7 +194,11 @@ export default function HomeScreen() {
 
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
-  const [aiInsightText, setAiInsightText] = useState<string | null>(null);
+  const [surfaceLeadInsight, setSurfaceLeadInsight] = useState<CrossRefInsight | null>(null);
+  const [surfaceInsightCount, setSurfaceInsightCount] = useState(0);
+  const [knowledgeInsight, setKnowledgeInsight] = useState<GeneratedInsight | null>(null);
+  const [premiumInsight, setPremiumInsight] = useState<PremiumInsightResult | null>(null);
+  const [premiumInsightLoading, setPremiumInsightLoading] = useState(false);
   const prevMilestoneRef = useRef<number | null>(null);
 
   // Self-knowledge context — used to personalize affirmations
@@ -188,7 +207,9 @@ export default function HomeScreen() {
   const archiveDepthCounts = useMemo(() => ({
     checkIns: dailyLoop?.streak.totalCheckIns ?? weeklyCheckIns.length,
     journalEntries: dailyLoop?.weeklyReflection.journalCount ?? 0,
-  }), [dailyLoop?.streak.totalCheckIns, dailyLoop?.weeklyReflection.journalCount, weeklyCheckIns.length]);
+    sleepEntries: sleepSignalCount,
+    dreamEntries: dreamSignalCount,
+  }), [dailyLoop?.streak.totalCheckIns, dailyLoop?.weeklyReflection.journalCount, dreamSignalCount, sleepSignalCount, weeklyCheckIns.length]);
   const archiveDepth = useMemo(() => getArchiveDepth(archiveDepthCounts), [archiveDepthCounts]);
   const premiumTeaser = useMemo(
     () => getPersonalizedPremiumTeaser(archiveDepthCounts, { surface: 'today' }),
@@ -242,15 +263,38 @@ export default function HomeScreen() {
 
           // Hydrate data in parallel — checkins, sleep, and self-knowledge are independent
           try {
-            const [checkins, sleepEntries, selfKnowledge] = await Promise.all([
-              supabaseDb.getCheckIns(chart.id, 7),
-              supabaseDb.getSleepEntries(chart.id, 7),
-              loadSelfKnowledgeContext(),
+            const [checkins, sleepEntries, allJournals, surface] = await Promise.all([
+              supabaseDb.getCheckIns(chart.id, 90),
+              supabaseDb.getSleepEntries(chart.id, 90),
+              supabaseDb.getJournalEntries(),
+              buildInsightSurface({
+                chartId: chart.id,
+                isPremium,
+                rangeDays: 90,
+                includePremiumPipeline: isPremium,
+                tier: 'daily',
+              }),
             ]);
             if (!isScreenActiveRef.current) return;
 
             setIfActive(setWeeklyCheckIns, checkins);
-            setIfActive(setSelfKnowledge, selfKnowledge);
+            setIfActive(setSelfKnowledge, surface.selfKnowledgeContext);
+            setIfActive(setSurfaceLeadInsight, surface.leadInsight);
+            setIfActive(setSurfaceInsightCount, surface.feedInsights.length);
+
+            // Knowledge Engine Integration
+            const kInsight = runKnowledgeEngine(
+              checkins,
+              allJournals,
+              sleepEntries,
+              surface.selfKnowledgeContext,
+              new Date().toISOString(),
+              { recentlyShownPatternKeys: [], recentlyShownCopyHashes: [] }
+            );
+            setIfActive(setKnowledgeInsight, kInsight);
+
+            setIfActive(setPremiumInsight, surface.premiumInsight);
+            setIfActive(setPremiumInsightLoading, false);
             let nextMood = mood;
             let nextEnergy = energy;
             if (checkins.length > 0) {
@@ -271,9 +315,17 @@ export default function HomeScreen() {
               nextSleep = sleepEntries[0].durationHours;
               setIfActive(setLatestSleep, nextSleep);
             }
+            setIfActive(
+              setSleepSignalCount,
+              sleepEntries.filter((entry) => (entry.quality != null || entry.durationHours != null) && !hasDreamContent(entry)).length,
+            );
+            setIfActive(
+              setDreamSignalCount,
+              sleepEntries.filter(hasDreamContent).length,
+            );
 
             try {
-              const loopData = await getDailyLoopData(chart.id, selfKnowledge);
+              const loopData = await getDailyLoopData(chart.id, surface.selfKnowledgeContext);
               if (!isScreenActiveRef.current) return;
               setIfActive(setDailyLoop, loopData);
 
@@ -294,52 +346,32 @@ export default function HomeScreen() {
               // Schedule data-driven insight notification
               if (chart?.id) scheduleInsightNotification(chart.id).catch(() => {});
 
-              const hasCheckInToday = checkins.some((checkIn) => checkIn.date === getLogicalToday());
-              const localInsightText = loopData.todayInsight.text || (
-                hasCheckInToday
-                  ? generateInsight(Math.round(computeBalanceScore(nextMood, nextEnergy, nextSleep) * 10), nextMood, nextEnergy, nextSleep)
-                  : 'Log a check-in today to see your personalised daily reflection.'
-              );
-              try {
-                const enhancedInsight = await enhanceInsightCopy(
-                  [{
-                    id: `today-${chart.id}`,
-                    source: loopData.todayInsight.type,
-                    title: 'Today\'s reflection',
-                    body: localInsightText,
-                    isConfirmed: hasCheckInToday,
-                  }],
-                  selfKnowledge,
-                  checkins,
-                );
-                if (!isScreenActiveRef.current) return;
-                setIfActive(setAiInsightText, enhancedInsight?.insights[0]?.body ?? null);
-              } catch (err) {
-                logger.error('AI insight enhancement failed:', err);
-                setIfActive(setAiInsightText, 'We could not refresh your reflective insight right now. Your local summary is still available.');
-              }
             } catch (err) {
               logger.error('Daily loop data failed:', err);
-              setIfActive(setAiInsightText, 'We could not refresh your reflective insight right now. Try again in a moment.');
             }
           } catch (err) {
             logger.error('Failed to load check-ins, sleep, or self-knowledge:', err);
-            setIfActive(setAiInsightText, 'We could not refresh your reflective insight right now. Your check-ins are still saved locally.');
           }
         } else {
           setIfActive(setUserChart, null);
-          setIfActive(setAiInsightText, null);
+          setIfActive(setSurfaceLeadInsight, null);
+          setIfActive(setSurfaceInsightCount, 0);
+          setIfActive(setSleepSignalCount, 0);
+          setIfActive(setDreamSignalCount, 0);
 
         }
       } catch (error) {
         logger.error('Failed to load user chart:', error);
         setIfActive(setUserChart, null);
-        setIfActive(setAiInsightText, null);
+        setIfActive(setSurfaceLeadInsight, null);
+        setIfActive(setSurfaceInsightCount, 0);
+        setIfActive(setSleepSignalCount, 0);
+        setIfActive(setDreamSignalCount, 0);
       } finally {
         if (!silent && isScreenActiveRef.current) setLoading(false);
       }
     },
-    [energy, latestSleep, mood],
+    [energy, isPremium, latestSleep, mood],
   );
 
   useFocusEffect(
@@ -399,8 +431,6 @@ export default function HomeScreen() {
       logger.error('Failed to update chart:', error);
     }
   };
-
-  const insightIcon = dailyLoop?.todayInsight?.icon ?? 'analytics';
 
   // ── Daily Affirmation ──
   const affirmation = useMemo(() => {
@@ -462,17 +492,15 @@ export default function HomeScreen() {
     return computeBalanceScore(mood, energy, latestSleep);
   }, [mood, energy, latestSleep]);
 
-  // Prefer daily loop insight; fall back to legacy insight engine
-  const insightText = useMemo(() => {
-    if (aiInsightText) return aiInsightText;
-    if (dailyLoop?.todayInsight?.text) return dailyLoop.todayInsight.text;
-    // Only generate a score-based insight if today's check-in data is present;
-    // otherwise fall back to a neutral prompt to avoid showing fabricated numbers.
-    if (hasDataToday) {
-      return generateInsight(Math.round(balanceScore * 10), mood, energy, latestSleep);
-    }
-    return 'Log a check-in today to see your personalised daily reflection.';
-  }, [aiInsightText, dailyLoop, balanceScore, mood, energy, latestSleep, hasDataToday]);
+  const insightMeta = useMemo(() => {
+    return {
+      icon: dailyLoop?.todayInsight?.icon ?? 'analytics',
+      label: dailyLoop?.todayInsight?.type?.toUpperCase() || 'REFLECTION',
+      text: dailyLoop?.todayInsight?.text ?? (hasDataToday
+        ? generateInsight(Math.round(balanceScore * 10), mood, energy, latestSleep)
+        : 'Log a check-in today to see your personalised daily reflection.'),
+    };
+  }, [dailyLoop, hasDataToday, balanceScore, mood, energy, latestSleep]);
 
   /** Pixel heights (max ~120px) for each of the past 7 days, oldest → today */
   const stabilityBars = useMemo(() => {
@@ -555,12 +583,12 @@ export default function HomeScreen() {
                 <SectionHeader
                   title={
                     dailyLoop.streak.totalCheckIns === 0
-                      ? 'Start your streak'
+                      ? 'Start your archive'
                       : dailyLoop.streak.atRisk
-                        ? `${dailyLoop.streak.current} days - keep your streak`
-                        : `${dailyLoop.streak.current} days`
+                        ? 'Leave one signal for future you'
+                        : 'Archive momentum'
                   }
-                  icon="flame-outline"
+                  icon="bookmark-outline"
                 />
               </Animated.View>
 
@@ -568,8 +596,8 @@ export default function HomeScreen() {
                 <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.streakRow}>
                   {dailyLoop.streak.atRisk && (
                     <View style={[styles.streakPill, { backgroundColor: 'rgba(217,140,140,0.10)' }]}>
-                      <MetallicIcon name="warning-outline" size={14} variant="gold" />
-                      <Text style={[styles.streakLabel, { color: '#D98C8C' }]}>Check in today</Text>
+                      <MetallicIcon name="bookmark-outline" size={14} variant="gold" />
+                      <Text style={[styles.streakLabel, { color: '#D98C8C' }]}>One signal helps</Text>
                     </View>
                   )}
                   {dailyLoop.streak.milestone && (
@@ -580,22 +608,22 @@ export default function HomeScreen() {
                       <MetallicIcon name="trophy-outline" size={14} variant="gold" />
                       {theme.isDark ? (
                         <MetallicText style={styles.streakLabel} variant="gold">
-                          {dailyLoop.streak.milestone} days ✦
+                          {dailyLoop.streak.milestone} signals
                         </MetallicText>
                       ) : (
                         <Text style={[styles.streakLabel, styles.streakLabelLight]}>
-                          {dailyLoop.streak.milestone} days ✦
+                          {dailyLoop.streak.milestone} signals
                         </Text>
                       )}
                     </Animated.View>
                   )}
                   {dailyLoop.streak.checkedInToday && (
-                    <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}> 
+                    <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}>
                       <MetallicIcon name="checkmark-circle-outline" size={14} variant="green" />
                       {theme.isDark ? (
-                        <MetallicText style={styles.streakLabel} variant="green">Today</MetallicText>
+                        <MetallicText style={styles.streakLabel} variant="green">Saved today</MetallicText>
                       ) : (
-                        <Text style={[styles.streakLabel, styles.streakLabelLight]}>Today</Text>
+                        <Text style={[styles.streakLabel, styles.streakLabelLight]}>Saved today</Text>
                       )}
                     </View>
                   )}
@@ -609,7 +637,7 @@ export default function HomeScreen() {
             <Animated.View entering={FadeInDown.delay(240).duration(600)}>
               <View style={{ paddingHorizontal: 20, paddingBottom: 4 }}>
                 <Text style={{ color: 'rgba(212,175,55,0.45)', fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}>
-                  {dailyLoop.streak.totalCheckIns} DAYS LOGGED
+                  {dailyLoop.streak.totalCheckIns} SIGNALS SAVED
                 </Text>
               </View>
             </Animated.View>
@@ -624,7 +652,7 @@ export default function HomeScreen() {
                   router.push('/checkin' as Href);
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="Log your first check-in"
+                accessibilityLabel="Give MySky one signal"
               >
                 <VelvetGlassSurface style={styles.firstCheckInCard} intensity={20}>
                   <LinearGradient
@@ -635,8 +663,8 @@ export default function HomeScreen() {
                   <View style={styles.firstCheckInContent}>
                     <MetallicIcon name="add-circle-outline" size={28} variant="gold" />
                     <View style={{ flex: 1 }}>
-                      <MetallicText style={styles.firstCheckInTitle} variant="gold">Log your first check-in</MetallicText>
-                      <Text style={styles.firstCheckInBody}>Track your mood, energy, and sleep — your first step toward understanding your patterns.</Text>
+                      <MetallicText style={styles.firstCheckInTitle} variant="gold">Give MySky one signal</MetallicText>
+                      <Text style={styles.firstCheckInBody}>Mood, energy, or one sentence is enough. Your archive starts learning from the first signal.</Text>
                     </View>
                     <MetallicIcon name="chevron-forward-outline" size={18} variant="gold" />
                   </View>
@@ -646,7 +674,7 @@ export default function HomeScreen() {
           )}
 
           {/* ── Daily Balance Score ── */}
-          <SectionHeader title="Daily Balance" icon="pulse-outline" />
+          <SectionHeader title="Today's Balance" icon="pulse-outline" />
           <Animated.View entering={FadeInDown.delay(400).duration(600)}>
             <VelvetGlassSurface style={styles.scoreCard} intensity={20}>
               <LinearGradient
@@ -655,7 +683,7 @@ export default function HomeScreen() {
                 style={StyleSheet.absoluteFill}
               />
               <View style={styles.scoreHeader}>
-                <Text style={styles.cardLabel}>DAILY BALANCE</Text>
+                <Text style={styles.cardLabel}>TODAY'S BALANCE</Text>
               </View>
               {hasDataToday ? (
                 <>
@@ -671,7 +699,7 @@ export default function HomeScreen() {
                 </>
               ) : (
                 <View style={styles.scoreMain}>
-                  <Text style={styles.noDataText}>No data yet</Text>
+                  <Text style={styles.noDataText}>Waiting for one signal</Text>
                 </View>
               )}
             </VelvetGlassSurface>
@@ -691,25 +719,29 @@ export default function HomeScreen() {
             </VelvetGlassSurface>
           </Animated.View>
 
-          {/* ── Actionable Insight ── */}
-          <SectionHeader title="Daily Reflection" icon="sparkles-outline" />
+          {/* ── Daily Insight ── */}
+          <SectionHeader title="Daily Insight" icon="sparkles-outline" />
           <Animated.View entering={FadeInDown.delay(700).duration(600)}>
-            <VelvetGlassSurface style={styles.insightCard} intensity={20}>
-              <LinearGradient
-                pointerEvents="none"
-                colors={['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)']}
-                style={StyleSheet.absoluteFill}
-              />
-              <View style={styles.insightPadding}>
-                <View style={styles.insightHeader}>
-                  <MetallicIcon name={insightIcon as any} size={16} variant="gold" />
-                  <MetallicText style={styles.insightEyebrow} variant="gold">
-                    {dailyLoop?.todayInsight?.type?.toUpperCase() || 'REFLECTION'}
-                  </MetallicText>
+            {knowledgeInsight ? (
+              <KnowledgeInsightCard insight={knowledgeInsight} />
+            ) : (
+              <VelvetGlassSurface style={styles.insightCard} intensity={20}>
+                <LinearGradient
+                  pointerEvents="none"
+                  colors={['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)']}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.insightPadding}>
+                  <View style={styles.insightHeader}>
+                    <MetallicIcon name={insightMeta.icon as any} size={16} variant="gold" />
+                    <MetallicText style={styles.insightEyebrow} variant="gold">
+                      {insightMeta.label}
+                    </MetallicText>
+                  </View>
+                  <Text style={styles.insightText}>{normalizeDisplayText(insightMeta.text)}</Text>
                 </View>
-                <Text style={styles.insightText}>{insightText}</Text>
-              </View>
-            </VelvetGlassSurface>
+              </VelvetGlassSurface>
+            )}
           </Animated.View>
 
           {/* ── Daily Affirmation ── */}
@@ -726,70 +758,11 @@ export default function HomeScreen() {
                   <MetallicIcon name="sunny-outline" size={16} variant="gold" />
                   <MetallicText style={styles.insightEyebrow} variant="gold">TODAY'S AFFIRMATION</MetallicText>
                 </View>
-                <Text style={styles.affirmationText}>{affirmation.text}</Text>
+                <Text style={styles.affirmationText}>{normalizeDisplayText(affirmation.text)}</Text>
               </View>
             </VelvetGlassSurface>
           </Animated.View>
 
-          {/* ── Weekly Reflection ── */}
-          {dailyLoop?.weeklyReflection?.hasEnoughData && (
-            <Animated.View entering={FadeInDown.delay(800).duration(600)}>
-              <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']}
-                  style={StyleSheet.absoluteFill}
-                />
-                <View style={styles.insightPadding}>
-                  <View style={styles.insightHeader}>
-                    <MetallicIcon name="calendar-outline" size={16} variant="gold" />
-                    <MetallicText style={styles.insightEyebrow} variant="gold">THIS WEEK</MetallicText>
-                    {dailyLoop.weeklyReflection.moodDirection === 'up' && (
-                      <View style={styles.trendBadge}>
-                        <MetallicIcon name="trending-up-outline" size={12} variant="green" />
-                      </View>
-                    )}
-                    {dailyLoop.weeklyReflection.moodDirection === 'down' && (
-                      <View style={styles.trendBadge}>
-                        <MetallicIcon name="trending-down-outline" size={12} variant="copper" />
-                      </View>
-                    )}
-                  </View>
-                  <Text style={styles.weeklySummaryText}>{dailyLoop.weeklyReflection.summary}</Text>
-                  <View style={styles.weeklyMetrics}>
-                    <MetricChip value={dailyLoop.weeklyReflection.avgMood.toFixed(1)} label="Mood" />
-                    {dailyLoop.weeklyReflection.avgSleep > 0 && (
-                      <MetricChip value={`${dailyLoop.weeklyReflection.avgSleep.toFixed(1)}h`} label="Sleep" />
-                    )}
-                    <MetricChip value={String(dailyLoop.weeklyReflection.checkInCount)} label="Check-ins" />
-                    {dailyLoop.weeklyReflection.journalCount > 0 && (
-                      <MetricChip value={String(dailyLoop.weeklyReflection.journalCount)} label="Journals" />
-                    )}
-                  </View>
-                </View>
-              </VelvetGlassSurface>
-            </Animated.View>
-          )}
-
-          {/* ── Gentle CTA when not enough data ── */}
-          {dailyLoop && !dailyLoop.weeklyReflection.hasEnoughData && dailyLoop.weeklyReflection.checkInCount > 0 && (
-            <Animated.View entering={FadeInDown.delay(800).duration(600)}>
-              <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']}
-                  style={StyleSheet.absoluteFill}
-                />
-                <View style={styles.insightPadding}>
-                  <View style={styles.insightHeader}>
-                    <MetallicIcon name="sparkles-outline" size={16} variant="gold" />
-                    <MetallicText style={styles.insightEyebrow} variant="gold">WEEKLY REFLECTION</MetallicText>
-                  </View>
-                  <Text style={styles.weeklySummaryText}>{dailyLoop.weeklyReflection.summary}</Text>
-                </View>
-              </VelvetGlassSurface>
-            </Animated.View>
-          )}
 
           {/* ── Engagement Nudge ── */}
           {dailyLoop && dailyLoop.streak.current >= 3 && dailyLoop.weeklyReflection.journalCount === 0 && (
@@ -807,7 +780,7 @@ export default function HomeScreen() {
                       <MetallicText style={styles.insightEyebrow} variant="gold">NEXT STEP</MetallicText>
                     </View>
                     <Text style={styles.weeklySummaryText}>
-                      You have {dailyLoop.streak.current} days of mood data building. Try logging a sleep entry or journal to see how they connect in your weekly story.
+                      Your archive has {dailyLoop.streak.current} recent mood signal{dailyLoop.streak.current === 1 ? '' : 's'}. Add sleep or a journal note to help MySky connect what restores, drains, and shifts.
                     </Text>
                   </View>
                 </VelvetGlassSurface>
@@ -839,59 +812,6 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
-          {/* ── Premium Teaser ── */}
-          {(archiveDepth.totalSignals > 0 || !hasDataToday) && (
-            <Animated.View entering={FadeInDown.delay(940).duration(600)}>
-              <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={['rgba(162, 194, 225, 0.16)', 'rgba(26, 30, 41, 0.40)']}
-                  style={StyleSheet.absoluteFill}
-                />
-                <View style={styles.insightPadding}>
-                  <View style={styles.insightHeader}>
-                    <MetallicIcon name="analytics-outline" size={16} variant="gold" />
-                    <MetallicText style={styles.insightEyebrow} variant="gold">{archiveDepth.label.toUpperCase()}</MetallicText>
-                  </View>
-                  <Text style={styles.weeklySummaryText}>{archiveDepth.headline}</Text>
-                  <Text style={styles.archiveDepthBody}>{archiveDepth.body}</Text>
-                  <View style={styles.archiveProgressTrack}>
-                    <View style={[styles.archiveProgressFill, { width: `${Math.max(8, archiveDepth.progress * 100)}%` }]} />
-                  </View>
-                  {archiveDepth.nextMilestone ? (
-                    <Text style={styles.archiveDepthMeta}>
-                      {archiveDepth.remaining} more {archiveDepth.remaining === 1 ? 'signal' : 'signals'} to reach {archiveDepth.nextMilestone}
-                    </Text>
-                  ) : (
-                    <Text style={styles.archiveDepthMeta}>Keep logging to make the read more specific.</Text>
-                  )}
-                </View>
-              </VelvetGlassSurface>
-            </Animated.View>
-          )}
-          {dailyLoop?.weeklySynthesis?.hasEnoughData && (
-            <Animated.View entering={FadeInDown.delay(950).duration(600)}>
-              <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={['rgba(107, 144, 128, 0.20)', 'rgba(26, 30, 41, 0.40)']}
-                  style={StyleSheet.absoluteFill}
-                />
-                <View style={styles.insightPadding}>
-                  <View style={styles.insightHeader}>
-                    <MetallicIcon name="git-network-outline" size={16} variant="gold" />
-                    <MetallicText style={styles.insightEyebrow} variant="gold">THIS WEEK'S STORY</MetallicText>
-                  </View>
-                  <Text style={styles.weeklySummaryText}>{dailyLoop.weeklySynthesis.narrative}</Text>
-                  <View style={styles.weeklyMetrics}>
-                    {dailyLoop.weeklySynthesis.signals.map((sig) => (
-                      <MetricChip key={sig.domain} value={sig.label.split(' ')[0]} label={sig.domain.charAt(0).toUpperCase() + sig.domain.slice(1)} />
-                    ))}
-                  </View>
-                </View>
-              </VelvetGlassSurface>
-            </Animated.View>
-          )}
           {!isPremium && dailyLoop?.weeklyReflection?.hasEnoughData && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
@@ -906,11 +826,9 @@ export default function HomeScreen() {
                       <MetallicIcon name="sparkles-outline" size={18} variant="gold" />
                       <MetallicText style={styles.premiumLabel} variant="gold">{premiumTeaser.eyebrow}</MetallicText>
                     </View>
-                    <Text style={styles.premiumTitle}>
-                      {premiumTeaser.title}
-                    </Text>
+                    <Text style={styles.premiumTitle}>{normalizeDisplayText(premiumTeaser.title)}</Text>
                     <Text style={styles.premiumSub}>
-                      {premiumTeaser.body}
+                      {normalizeDisplayText(premiumTeaser.body)}
                     </Text>
                     <View style={styles.premiumCta}>
                       <MetallicText style={styles.premiumCtaText} variant="gold">{premiumTeaser.cta}</MetallicText>
@@ -935,11 +853,9 @@ export default function HomeScreen() {
                       <MetallicIcon name="sparkles-outline" size={18} variant="gold" />
                       <MetallicText style={styles.premiumLabel} variant="gold">{premiumTeaser.eyebrow}</MetallicText>
                     </View>
-                    <Text style={styles.premiumTitle}>
-                      {premiumTeaser.title}
-                    </Text>
+                    <Text style={styles.premiumTitle}>{normalizeDisplayText(premiumTeaser.title)}</Text>
                     <Text style={styles.premiumSub}>
-                      {premiumTeaser.body}
+                      {normalizeDisplayText(premiumTeaser.body)}
                     </Text>
                     <View style={styles.premiumCta}>
                       <MetallicText style={styles.premiumCtaText} variant="gold">{premiumTeaser.cta}</MetallicText>

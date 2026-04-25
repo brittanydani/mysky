@@ -32,10 +32,10 @@ describe('patternsHelpers', () => {
       makeAggregate({ dayKey: '2026-04-11', checkInCount: 2 }),
     ]);
 
-    expect(state.statusLine).toBe('Needs more entries');
     expect(state.items).toEqual([]);
     expect(state.sections).toEqual([]);
-    expect(state.helperText).toContain('relationship reflections');
+    expect(state.statusLine).toBe('Archive still too thin for a real pattern read');
+    expect(state.helperText).toContain('MySky should not guess');
   });
 
   it('builds recurring pattern items from tags, keywords, dreams, and stress', () => {
@@ -45,13 +45,13 @@ describe('patternsHelpers', () => {
       makeAggregate({ dayKey: '2026-04-12', tagsUnion: ['creative'], keywordsUnion: ['repair'], hasDream: true, stressAvg: 6.2, checkInCount: 1 }),
     ]);
 
-    expect(state.statusLine).toBe('Building deeper analysis');
+    expect(state.statusLine).toBe('Check-in read is live');
     expect(state.items).toHaveLength(3);
     expect(state.sections).toHaveLength(1);
     expect(state.sections[0].title).toBe('Check-In Trends');
     expect(state.items[0].body).toContain('Overwhelm');
     expect(state.items[1].body).toContain('Boundaries');
-    expect(state.items[2].body).toContain('3 recent days include dream material');
+    expect(state.items[2].body).toContain('3 recent days included dream material');
   });
 
   it('includes real computed cross-reference insights in the library', () => {
@@ -65,11 +65,11 @@ describe('patternsHelpers', () => {
       } as any,
     ]);
 
-    expect(state.statusLine).toBe('Last updated today');
-    expect(state.helperText).toContain('built from your current pattern analysis');
-    expect(state.sections[0].title).toBe('Relationship Patterns');
+    expect(state.statusLine).toBe('Archive read refreshed today');
+    expect(state.helperText).toContain('patterns your archive keeps repeating strongly enough to name');
+    expect(state.sections[0].title).toBe('Relational Patterns');
     expect(state.items[0]).toEqual({
-      title: 'Your Relational Mirror',
+      title: 'The same relationship pressure points keep returning',
       body: 'When relational themes appear in your check-ins, your emotional baseline tends to drop.',
     });
   });
@@ -80,8 +80,8 @@ describe('patternsHelpers', () => {
       makeAggregate({ dayKey: '2026-04-11', tagsUnion: ['eq_overwhelm'], checkInCount: 2 }),
     ]);
 
-    expect(state.statusLine).toBe('Building deeper analysis');
-    expect(state.helperText).toContain('Add relationship patterns, trigger logs, somatic entries, or daily reflections');
+    expect(state.statusLine).toBe('Check-in read is live');
+    expect(state.helperText).toContain('deeper source-specific sections need more relational, somatic, trigger, or reflection evidence');
     expect(state.sections[0].title).toBe('Check-In Trends');
   });
 
@@ -98,7 +98,7 @@ describe('patternsHelpers', () => {
       isConfirmed: true,
     } as any);
 
-    expect(refined.title).toBe('Your core anchors are becoming clearer');
-    expect(refined.body).toContain('Connection, compassion, and stability are showing up as your core anchors right now');
+    expect(refined.title).toBe('The values underneath your decisions are getting harder to miss');
+    expect(refined.body).toContain('Across your recent reflections, the same values keep sitting underneath the story');
   });
 });

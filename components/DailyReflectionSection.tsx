@@ -98,7 +98,7 @@ export default function DailyReflectionSection({
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    
+
     const showSub = Keyboard.addListener(showEvent, () => { headerOpacity.value = 0; });
     const hideSub = Keyboard.addListener(hideEvent, () => { headerOpacity.value = 1; });
     return () => { showSub.remove(); hideSub.remove(); };
@@ -209,6 +209,20 @@ export default function DailyReflectionSection({
       setStreak(await getCurrentStreak());
       await clearPendingIfAllSealed();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+
+      const allWillBeSealed = CATEGORIES.every(c => (c === category ? true : categorySealed[c]));
+      if (allWillBeSealed) {
+        Alert.alert("All Sets Complete", "Beautiful. Your reflections for today are securely sealed.");
+      } else {
+        const encouragement = [
+          "Beautiful insight. You're building a powerful map of your inner world.",
+          "Recorded. Every entry brings you closer to deep self-mastery.",
+          "Safely sealed. Your dedication to your own growth is inspiring.",
+          "Well done. You're showing up for yourself today.",
+          "Brilliant. Another piece of your cosmic puzzle is in place."
+        ][Math.floor(Math.random() * 5)];
+        Alert.alert("Recorded", encouragement);
+      }
     } catch {
       Alert.alert('Error', 'Failed to save reflections.');
     }
@@ -293,14 +307,14 @@ export default function DailyReflectionSection({
                           accessibilityLabel={opt.label}
                           style={[
                             styles.scalePill,
-                            isSelected 
-                              ? { backgroundColor: pillBg, borderColor: pillBorder, transform: [{translateY: -1}] } 
+                            isSelected
+                              ? { backgroundColor: pillBg, borderColor: pillBorder, transform: [{translateY: -1}] }
                               : styles.scalePillUnselected,
                             isSealed && styles.scalePillSealed,
                           ]}
                         >
                           <Text style={[
-                            styles.scalePillText, 
+                            styles.scalePillText,
                             isSelected ? { color: '#FFFFFF', fontWeight: '700' } : { color: 'rgba(255, 255, 255, 0.4)', fontWeight: '600' }
                           ]}>
                             {opt.label}

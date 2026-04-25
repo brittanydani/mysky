@@ -1,7 +1,15 @@
 import type { SleepEntry } from '../services/storage/models';
 
+export function hasDreamContent(entry: Pick<SleepEntry, 'dreamText' | 'dreamFeelings' | 'dreamMetadata'>) {
+  return Boolean(
+    entry.dreamText?.trim()
+      || entry.dreamFeelings?.trim()
+      || entry.dreamMetadata?.trim(),
+  );
+}
+
 export function buildDreamArchiveSummary(entries: SleepEntry[]) {
-  const dreamEntries = entries.filter((entry) => !!entry.dreamText?.trim());
+  const dreamEntries = entries.filter(hasDreamContent);
   if (dreamEntries.length < 3) return null;
 
   const feelingCounts = new Map<string, number>();
@@ -45,17 +53,32 @@ export function buildDreamArchiveSummary(entries: SleepEntry[]) {
   ].slice(0, 4);
 
   if (chips.length === 0) {
+    const themeHint = [...themeCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([theme]) => toReadableDreamLabel(theme));
+    const feelingHint = [...feelingCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([feeling]) => toReadableDreamLabel(feeling));
+    const hints = [...themeHint, ...feelingHint].slice(0, 2);
     return {
-      summary: `You already have ${dreamEntries.length} dream entries in your archive. That is enough history for something meaningful to start taking shape, even if the pattern still feels quiet or just out of reach.`,
+      summary: hints.length > 0
+        ? `You have ${dreamEntries.length} dream entries, but the signal is still wide rather than repetitive. ${hints.join(' and ')} have appeared, though not often enough yet to call the dream pattern settled.`
+        : `You already have ${dreamEntries.length} dream entries in your archive. That is enough to know your dream life is active, but not enough repetition yet to trust the first interpretation.`,
       chips: ['Needs more repeated signals'],
-      grounding: 'Keep saving one feeling or one clear symbol after each dream. A gentle thread is already forming, and a little more consistency will make it easier to recognize.',
+      grounding: 'Keep saving one feeling, one place, or one symbol after each dream. The next few mornings are what usually reveal whether the thread is emotional, relational, or environmental.',
     };
   }
 
+  const topThemeCount = topThemes[0]?.[1] ?? 0;
+  const topFeelingCount = topFeelings[0]?.[1] ?? 0;
+  const leadPieces: string[] = [];
+  if (topThemes[0]) {
+    leadPieces.push(`${toReadableDreamLabel(topThemes[0][0])} appeared ${topThemeCount} time${topThemeCount === 1 ? '' : 's'}`);
+  }
+  if (topFeelings[0]) {
+    leadPieces.push(`${toReadableDreamLabel(topFeelings[0][0])} showed up ${topFeelingCount} time${topFeelingCount === 1 ? '' : 's'}`);
+  }
+
   return {
-    summary: `${chips.slice(0, 2).join(' and ')} keep returning across your recent dreams. That repetition can be worth trusting. Your inner world may be drawing your attention back to an emotional theme that wants a little more care, curiosity, or understanding.`,
+    summary: `${leadPieces.join(', ')} across your recent dreams. When the same setting, theme, or feeling keeps returning, MySky treats that as emotional pattern rather than dream noise. ${chips.slice(0, 2).join(' and ')} look like part of what your inner world is still trying to work through.`,
     chips,
-    grounding: 'Notice where this same theme brushes up against your waking life this week. The insight is usually not in a single symbol, but in the overlap between the dream and what you are already living.',
+    grounding: 'Notice where this same theme brushes against waking life this week. The useful part is usually not a single symbol by itself, but the overlap between the dream pattern and what already feels unresolved during the day.',
   };
 }
 

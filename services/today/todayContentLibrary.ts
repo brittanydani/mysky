@@ -2778,6 +2778,53 @@ export function getDailyJournalPrompt(sunElement?: 'fire' | 'earth' | 'air' | 'w
   return candidates[dayOfYear % candidates.length];
 }
 
+function buildAttunedAffirmationPool(context: PersonalAffirmationContext): string[] {
+  const mood = context.mood ?? 5;
+  const lowCapacity = mood <= 4 || context.energy === 'low';
+  const lowWeek = context.weeklyMoodTrend === 'down';
+  const shortSleep = typeof context.sleep === 'number' && context.sleep > 0 && context.sleep < 6.8;
+  const reflective = (context.topReflectionCategory != null)
+    || (context.relationshipTags?.length ?? 0) > 0
+    || (context.drains?.length ?? 0) > 0
+    || (context.restores?.length ?? 0) > 0;
+
+  if ((lowCapacity || lowWeek) && (shortSleep || reflective)) {
+    return [
+      'I do not have to turn every feeling into a lesson before I am allowed to be cared for.',
+      'My low days are not proof that I am failing. They are signals asking for gentler support.',
+      'I am allowed to need support before I reach my breaking point.',
+      'I can be in the middle of the storm and still be moving toward myself.',
+    ];
+  }
+
+  if (lowCapacity || lowWeek) {
+    return [
+      'I am allowed to move more gently before things become unbearable.',
+      'Needing softness earlier is wisdom, not weakness.',
+      'What I feel deserves care even before I fully understand it.',
+    ];
+  }
+
+  if (context.weeklyMoodTrend === 'up' || mood >= 7) {
+    return [
+      'I do not have to rush past steadiness. I am allowed to trust what is finally helping.',
+      'Feeling lighter does not make me less deep. It means something in me is being supported.',
+      'The support that helps me feel better is worth protecting.',
+    ];
+  }
+
+  if (reflective || mood <= 6) {
+    return [
+      'I can stay with what I feel without turning it into a verdict about who I am.',
+      'Understanding myself is still progress, even before relief arrives.',
+      'Naming what is true is already a form of care.',
+      'I do not need to be fully better for my inner life to deserve attention.',
+    ];
+  }
+
+  return [];
+}
+
 /**
  * Select an affirmation for today, personalized using full user context.
  * Uses day-of-year as a stable seed so the affirmation stays consistent all day.
@@ -2789,6 +2836,15 @@ export function getDailyAffirmation(context: PersonalAffirmationContext = {}): T
   const now = new Date();
   const startOfYear = new Date(now.getFullYear(), 0, 0);
   const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86_400_000);
+
+  const attunedPool = buildAttunedAffirmationPool(context);
+  if (attunedPool.length > 0) {
+    return {
+      id: -1000 - (dayOfYear % attunedPool.length),
+      text: attunedPool[dayOfYear % attunedPool.length],
+      tags: ['universal'],
+    };
+  }
 
   // ── Derive active tags from context ──────────────────────────────────────
 

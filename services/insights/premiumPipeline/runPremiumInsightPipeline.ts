@@ -89,10 +89,11 @@ export async function runPremiumInsightPipeline(
   portraitInput: PortraitBuilderInput,
   patternSelectorInput: Omit<PatternSelectorInput, 'portrait'>,
   accessToken: string,
-  options?: { logLifecycle?: boolean; logErrors?: boolean },
+  options?: { logLifecycle?: boolean; logErrors?: boolean; tier?: 'daily' | 'deep' },
 ): Promise<PremiumInsightResult | null> {
   const logLifecycle = options?.logLifecycle ?? true;
   const logErrors = options?.logErrors ?? true;
+  const tier = options?.tier ?? 'deep';
   const info = (...args: any[]) => { if (logLifecycle) logger.info(...args); };
   const warn = (...args: any[]) => { if (logErrors || logLifecycle) logger.warn(...args); };
   // ── Step 1: Build portrait ──────────────────────────────────────────────────
@@ -219,8 +220,27 @@ export async function runPremiumInsightPipeline(
       ...sp,
       insightClass: evidence.insightClass,
     },
-    writing_constraints: patternResult.writing_constraints,
-    style_guide: STYLE_GUIDE,
+    writing_constraints: {
+      ...patternResult.writing_constraints,
+      word_count_target: tier === 'daily' ? 120 : 280,
+    },
+    style_guide: {
+      ...STYLE_GUIDE,
+      tier,
+      title_rules: tier === 'daily'
+        ? ['short, immediate, emotionally precise']
+        : ['short, elegant, emotionally precise'],
+      anchor_requirements: tier === 'daily'
+        ? [
+            'one time or sequence anchor',
+            'one emotional/behavioral anchor',
+          ]
+        : [
+            'one time or sequence anchor',
+            'one unique emotional/behavioral anchor',
+            'one supporting second-domain anchor (body, sleep, trigger, glimmer, relationships, etc.)',
+          ],
+    },
   };
 
   const written = await writePremiumInsight(writerInput, accessToken);

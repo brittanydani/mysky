@@ -290,6 +290,7 @@ export async function enhancePatternInsights(
   context: SelfKnowledgeContext,
   checkIns: DailyCheckIn[],
   isPremium = false,
+  options?: { logErrors?: boolean },
 ): Promise<GeminiPatternResult | null> {
   return enhanceInsightCopy(
     insights.map((insight) => ({
@@ -302,6 +303,7 @@ export async function enhancePatternInsights(
     context,
     checkIns,
     isPremium,
+    options,
   );
 }
 
@@ -310,8 +312,10 @@ export async function enhanceInsightCopy(
   context: SelfKnowledgeContext,
   checkIns: DailyCheckIn[],
   isPremium = false,
+  options?: { logErrors?: boolean },
 ): Promise<GeminiPatternResult | null> {
   if (!insights.length) return null;
+  const logErrors = options?.logErrors ?? true;
 
   const modelTier = isPremium ? 'premium' : 'free';
   const payload = buildPatternInsightPayload(insights, context, checkIns, modelTier);
@@ -349,7 +353,7 @@ export async function enhanceInsightCopy(
         const retriable = status === 0 || status === 408 || status === 503 || status >= 500;
 
         if (status === 401 || status === 403) {
-          logger.warn('[GeminiPatterns] Edge function unauthorized; using local pattern insights fallback.');
+          if (logErrors) logger.warn('[GeminiPatterns] Edge function unauthorized; using local pattern insights fallback.');
           return null;
         }
 
@@ -359,16 +363,16 @@ export async function enhanceInsightCopy(
         }
 
         if (retriable) {
-          logger.warn('[GeminiPatterns] Edge function unavailable; using local pattern insights fallback.', status, message);
+          if (logErrors) logger.warn('[GeminiPatterns] Edge function unavailable; using local pattern insights fallback.', status, message);
           return null;
         }
 
-        logger.error('[GeminiPatterns] Edge function error:', status, message);
+        if (logErrors) logger.error('[GeminiPatterns] Edge function error:', status, message);
         return null;
       }
 
       if (!data?.insights || !Array.isArray(data.insights)) {
-        logger.error('[GeminiPatterns] Invalid response structure');
+        if (logErrors) logger.error('[GeminiPatterns] Invalid response structure');
         return null;
       }
 
@@ -380,7 +384,7 @@ export async function enhanceInsightCopy(
         body: i.body,
       }));
       if (!validInsights.length) {
-        logger.error('[GeminiPatterns] No valid insights in response');
+        if (logErrors) logger.error('[GeminiPatterns] No valid insights in response');
         return null;
       }
 
@@ -397,7 +401,7 @@ export async function enhanceInsightCopy(
         await wait(computeRetryDelayMs(attempt));
         continue;
       }
-      logger.error('[GeminiPatterns] Request failed:', error?.message);
+      if (logErrors) logger.error('[GeminiPatterns] Request failed:', error?.message);
       return null;
     }
   }

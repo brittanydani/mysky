@@ -29,7 +29,6 @@ import { MetallicLucideIcon } from '../../../components/ui/MetallicLucideIcon';
 import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 
 import { supabaseDb } from '../../../services/storage/supabaseDb';
-import { isDecryptionFailure } from '../../../services/storage/fieldEncryption';
 import { SleepEntry } from '../../../services/storage/models';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePremium } from '../../../context/PremiumContext';
@@ -128,7 +127,7 @@ export default function SleepDetailScreen() {
         const parsedUsed = Number.parseInt(used ?? '0', 10);
         setDreamReinterpretUsedCount(Number.isFinite(parsedUsed) ? parsedUsed : 0);
         // Auto-generate interpretation if entry already has dream text
-        if (savedText && !isDecryptionFailure(savedText)) {
+        if (savedText) {
           void runInterpretation(found, savedText, entries);
         }
       }

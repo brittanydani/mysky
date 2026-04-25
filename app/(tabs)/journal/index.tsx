@@ -9,7 +9,7 @@
 // 5. Reserved Metallic Gold strictly for hardware elements and icons.
 
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, Modal, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
@@ -40,7 +40,7 @@ import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { DreamClusterMap } from '../../../components/ui/DreamClusterMap';
 import { PremiumSegmentedControl } from '../../../components/ui/PremiumSegmentedControl';
 import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
-import { buildDreamArchiveSummary } from '../../../utils/dreamArchiveSummary';
+import { buildDreamArchiveSummary, hasDreamContent } from '../../../utils/dreamArchiveSummary';
 import { loadSelfKnowledgeContext } from '../../../services/insights/selfKnowledgeContext';
 import { enhanceInsightCopy } from '../../../services/insights/geminiInsightsService';
 import { getArchiveDepth, getPersonalizedPremiumTeaser } from '../../../utils/archiveDepth';
@@ -304,7 +304,6 @@ export default function JournalScreen() {
   const [aiDreamArchiveSummary, setAiDreamArchiveSummary] = useState<DreamArchiveSummary | null>(null);
   const [aiDreamGeneratedAt, setAiDreamGeneratedAt] = useState<string | null>(null);
   const [aiDreamArchiveKey, setAiDreamArchiveKey] = useState<string | null>(null);
-  const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'reflections' | 'dreams'>('reflections');
   const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
@@ -341,7 +340,7 @@ export default function JournalScreen() {
     : dreamArchiveSummary;
   const archiveDepthCounts = useMemo(() => ({
     journalEntries: totalCount,
-    dreamEntries: sleepEntries.filter((entry) => !!entry.dreamText?.trim() && !entry.isDeleted).length,
+    dreamEntries: sleepEntries.filter((entry) => !entry.isDeleted && hasDreamContent(entry)).length,
   }), [sleepEntries, totalCount]);
   const archiveDepth = useMemo(() => getArchiveDepth(archiveDepthCounts), [archiveDepthCounts]);
   const aiPatternFreshness = useMemo(() => formatAiFreshness(aiPatternGeneratedAt), [aiPatternGeneratedAt]);
@@ -548,9 +547,6 @@ export default function JournalScreen() {
     useCallback(() => {
       void loadEntries(true);
       void loadSleepEntries();
-      AsyncStorage.getItem('pref_mood_insights').then(v => {
-        setMoodInsightsEnabled(v === null || v === '1');
-      }).catch(() => {});
     }, [loadEntries, loadSleepEntries])
   );
 
@@ -584,7 +580,7 @@ export default function JournalScreen() {
               id: 'dream-summary',
               source: 'dream-archive-summary',
               title: 'Dream Pattern Read',
-              body: `${dreamArchiveSummary.summary}\nSignals: ${dreamArchiveSummary.chips.join(', ')}\nDream entries analyzed: ${sleepEntries.filter((entry) => !!entry.dreamText?.trim()).length}`,
+              body: `${dreamArchiveSummary.summary}\nSignals: ${dreamArchiveSummary.chips.join(', ')}\nDream entries analyzed: ${sleepEntries.filter(hasDreamContent).length}`,
               isConfirmed: dreamArchiveSummary.chips[0] !== 'Needs more repeated signals',
             },
             {
@@ -824,9 +820,9 @@ export default function JournalScreen() {
                   <MetallicIcon name="pulse-outline" size={18} color={PALETTE.gold} />
                   <MetallicText color={PALETTE.gold} style={[styles.insightTitle, { marginLeft: 8 }]} numberOfLines={1}>{archiveDepth.label}</MetallicText>
                 </View>
-                <Text style={styles.depthCount}>{archiveDepth.totalSignals} signals</Text>
               </View>
               <Text style={styles.insightDescription}>{archiveDepth.headline}</Text>
+              <Text style={styles.depthCount}>{archiveDepth.totalSignals} signals</Text>
               <Text style={styles.depthBody}>{archiveDepth.body}</Text>
               <View style={styles.depthProgressTrack}>
                 <View style={[styles.depthProgressFill, { width: `${Math.max(8, archiveDepth.progress * 100)}%` }]} />
@@ -844,14 +840,14 @@ export default function JournalScreen() {
         </Animated.View>
       )}
 
-      {/* ── Pattern Insights (Atmosphere Wash) ── */}
-      {activeTab === 'reflections' && isPremium && moodInsightsEnabled && visiblePatternInsights.length > 0 && (
+      {/* ── Reflection Insights (journal-based only) ── */}
+      {activeTab === 'reflections' && visiblePatternInsights.length > 0 && (
         <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.insightsSection}>
-          <SectionHeader title="Pattern Insights" icon="analytics-outline" />
-          <Text style={styles.insightsSubtitle}>What your journal reveals over time</Text>
+          <SectionHeader title="What Your Reflections Are Showing" icon="analytics-outline" />
+          <Text style={styles.insightsSubtitle}>Insights grounded only in your journal entries, writing cadence, and repeated reflection themes.</Text>
 
           {visiblePatternInsights.map((insight, idx) => (
-            <LinearGradient key={`${insight.title}-${idx}`} colors={theme.isDark ? ['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)'] : ['rgba(240, 245, 252, 0.7)', 'rgba(240, 245, 252, 0.4)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
+            <LinearGradient key={`${insight.title}-${idx}`} colors={theme.isDark ? ['rgba(107, 144, 128, 0.20)', 'rgba(162, 194, 225, 0.05)'] : ['rgba(236, 247, 241, 0.75)', 'rgba(240, 245, 252, 0.42)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
               <View style={styles.insightHeader}>
                 <MetallicIcon
                   name={(insight.icon ?? 'analytics-outline') as any}
@@ -866,13 +862,12 @@ export default function JournalScreen() {
                     <Text style={styles.insightTitleLight}>{insight.title}</Text>
                   )}
                 </View>
-                <View style={[styles.confidenceBadge, theme.isDark ? insight.confidence === 'strong' && styles.confidenceStrong : styles.confidenceLight, theme.isDark && insight.confidence === 'suggested' && styles.confidenceSuggested]}>
-                  <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && insight.confidence === 'suggested' && { color: PALETTE.gold }]}>{insight.confidence.toUpperCase()}</Text>
+                <View style={[styles.confidenceBadge, theme.isDark ? insight.confidence === 'strong' && styles.confidenceStrong : styles.confidenceLight, theme.isDark && insight.confidence !== 'strong' && styles.confidenceSuggested]}>
+                  <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && insight.confidence !== 'strong' && { color: PALETTE.gold }]}>{insight.confidence === 'strong' ? 'CONFIRMED' : 'EMERGING'}</Text>
                 </View>
               </View>
               {!!(insight.aiEnhanced && aiPatternFreshness) && <Text style={styles.aiFreshnessText}>{aiPatternFreshness}</Text>}
               <Text style={styles.insightDescription}>{insight.description}</Text>
-              {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
               {!!insight.actionable && (
                 <Text style={[styles.insightActionable, { color: theme.textPrimary }]}>{insight.actionable}</Text>
               )}
@@ -1405,7 +1400,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   aiFreshnessText: { fontSize: 11, color: theme.isDark ? 'rgba(255,255,255,0.48)' : LIGHT_MODE_META, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 12 },
   insightDescription: { fontSize: 16, color: theme.isDark ? 'rgba(255,255,255,0.68)' : theme.textSecondary, lineHeight: 26, letterSpacing: 0.2, marginBottom: 12 },
   depthBody: { fontSize: 13, color: theme.textSecondary, lineHeight: 20, marginBottom: 12 },
-  depthCount: { marginLeft: 'auto', fontSize: 11, fontWeight: '800', color: 'rgba(212,175,55,0.72)', textTransform: 'uppercase', letterSpacing: 1 },
+  depthCount: { marginTop: -4, marginBottom: 10, fontSize: 10, fontWeight: '700', color: 'rgba(212,175,55,0.62)', textTransform: 'uppercase', letterSpacing: 0.8 },
   depthProgressTrack: {
     height: 5,
     borderRadius: 999,

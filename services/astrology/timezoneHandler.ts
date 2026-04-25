@@ -265,6 +265,11 @@ export class TimezoneHandler {
   }
 
   private static normalizeDateTimeString(value: string): string {
+    // Clean up malformed formats like "YYYY-MM-DDTHH:MM:SS:SS" -> "YYYY-MM-DDTHH:MM:SS"
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}:\d{2}$/.test(value)) {
+      return value.substring(0, 19); // Keep just the valid YYYY-MM-DDTHH:MM:SS part
+    }
+
     // If date only, append midnight
     if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
       return `${value}T00:00:00`;

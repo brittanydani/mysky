@@ -31,7 +31,6 @@ import SkiaRestorationInsight from '../../components/ui/SkiaRestorationInsight';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabaseDb } from '../../services/storage/supabaseDb';
-import { isDecryptionFailure } from '../../services/storage/fieldEncryption';
 import { SleepEntry, generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
@@ -69,6 +68,8 @@ import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
 import SegmentRating from '../../components/ui/SegmentRating';
 import AwakenStateSheet from '../../components/ui/AwakenStateSheet';
 import PremiumPill from '../../components/ui/PremiumPill';
+import { getArchiveDepth } from '../../utils/archiveDepth';
+import { hasDreamContent } from '../../utils/dreamArchiveSummary';
 // GoldSubtitle reserved for future premium labels
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
@@ -279,6 +280,97 @@ function formatMetricDuration(hours: number): string {
   return `${hours.toFixed(1)}h`;
 }
 
+interface SaveReflection {
+  icon: string;
+  eyebrow: string;
+  title: string;
+  body: string;
+  contribution: string;
+}
+
+function parseDreamFeelings(value?: string): SelectedFeeling[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value) as SelectedFeeling[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function formatDreamFeelings(value?: string): string | null {
+  const parsed = parseDreamFeelings(value);
+  if (parsed.length === 0) return null;
+
+  const labels = parsed
+    .map((feeling) => FEELING_LOOKUP.get(feeling.id)?.label ?? feeling.label ?? feeling.id)
+    .filter(Boolean);
+
+  if (labels.length === 0) return null;
+  if (labels.length <= 4) return labels.join(', ');
+  return `${labels.slice(0, 4).join(', ')} +${labels.length - 4} more`;
+}
+
+function buildSaveReflection(entry: SleepEntry, updatedEntries: SleepEntry[]): SaveReflection {
+  const dreamFeelings = parseDreamFeelings(entry.dreamFeelings);
+  const hasDream = !!entry.dreamText?.trim();
+  const hasHardDreamSignal = dreamFeelings.some((feeling) => {
+    const builtIn = FEELING_LOOKUP.get(feeling.id);
+    const tier = feeling.tier ?? builtIn?.tier;
+    return tier === 'negative' || tier === 'hard';
+  });
+  const dreamEntries = updatedEntries.filter((item) => !!item.dreamText?.trim()).length;
+  const sleepEntries = updatedEntries.filter((item) => item.quality != null || item.durationHours != null).length;
+
+  if ((entry.quality != null && entry.quality <= 2) || (entry.durationHours != null && entry.durationHours < 6)) {
+    return {
+      icon: 'alert-circle-outline',
+      eyebrow: 'Saved signal',
+      title: 'This looks like a lower-capacity signal',
+      body: 'MySky will remember this as part of your rest-and-strain map. If today feels harder to interpret, start by lowering input before analyzing.',
+      contribution: `This gives your archive ${sleepEntries} sleep signal${sleepEntries === 1 ? '' : 's'} for spotting what usually comes before harder days.`,
+    };
+  }
+
+  if ((entry.quality != null && entry.quality >= 4) || (entry.durationHours != null && entry.durationHours >= 7.5)) {
+    return {
+      icon: 'leaf-outline',
+      eyebrow: 'Recovery map',
+      title: 'This belongs in your better-day formula',
+      body: 'A restored night gives MySky a comparison point for what steadier capacity can feel like in your body and mood.',
+      contribution: `This helps separate your recovery conditions from your overload conditions across ${sleepEntries} logged night${sleepEntries === 1 ? '' : 's'}.`,
+    };
+  }
+
+  if (hasDream && hasHardDreamSignal) {
+    return {
+      icon: 'moon-outline',
+      eyebrow: 'Dream signal',
+      title: 'Your dream carried an emotional signal',
+      body: 'You do not have to solve it right now. Naming the tone gives MySky a thread to compare with future sleep, mood, and body cues.',
+      contribution: `This adds to ${dreamEntries} dream signal${dreamEntries === 1 ? '' : 's'} in your archive.`,
+    };
+  }
+
+  if (hasDream) {
+    return {
+      icon: 'sparkles-outline',
+      eyebrow: 'Archive memory',
+      title: 'This gives future you more context',
+      body: 'Dream fragments can become useful later, especially when they repeat near the same stress, recovery, or relationship signals.',
+      contribution: `MySky now has ${dreamEntries} dream signal${dreamEntries === 1 ? '' : 's'} to compare over time.`,
+    };
+  }
+
+  return {
+    icon: 'analytics-outline',
+    eyebrow: 'Saved signal',
+    title: 'One signal is enough',
+    body: 'This entry gives MySky one more point of context. You can add words later if they come.',
+    contribution: `Your sleep archive now has ${sleepEntries} logged night${sleepEntries === 1 ? '' : 's'}.`,
+  };
+}
+
 // ── Component ──
 export default function SleepScreen() {
   const theme = useAppTheme();
@@ -303,6 +395,7 @@ export default function SleepScreen() {
   const [recentCheckIns, setRecentCheckIns] = useState<DailyCheckIn[]>([]);
   const [interpretations, setInterpretations] = useState<Record<string, DreamInterpretation>>({});
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
+  const [saveReflection, setSaveReflection] = useState<SaveReflection | null>(null);
 
   // Gemini AI interpretation state
   const [aiInterpretations, setAiInterpretations] = useState<Record<string, GeminiDreamResult>>({});
@@ -367,6 +460,13 @@ export default function SleepScreen() {
     return showCustomThemeInput || (!!dreamMetadata.overallTheme && !BUILT_IN_THEME_IDS.has(dreamMetadata.overallTheme));
   }, [dreamMetadata.overallTheme, showCustomThemeInput]);
 
+  const sleepArchiveDepth = useMemo(() => {
+    return getArchiveDepth({
+      sleepEntries: entries.filter((entry) => (entry.quality != null || entry.durationHours != null) && !hasDreamContent(entry)).length,
+      dreamEntries: entries.filter(hasDreamContent).length,
+    });
+  }, [entries]);
+
   const selectedCustomFeelings = useMemo(() => {
     if (!selectedTier) return [];
     return selectedFeelings.filter((feel) => {
@@ -417,6 +517,7 @@ export default function SleepScreen() {
   }, [selectedFeelings]);
 
   const applyEntryToForm = useCallback((entry: SleepEntry | undefined) => {
+    setSaveReflection(null);
     if (entry) {
       setEditingEntryId(entry.id);
       setIsEditingUnlocked(false);
@@ -521,8 +622,9 @@ export default function SleepScreen() {
       setEntries(updated);
       const savedEntry = updated.find(e => e.id === entry.id);
       const savedId = entry.id;
+      const nextSaveReflection = savedEntry ? buildSaveReflection(savedEntry, updated) : null;
       setInterpretations(prev => { const next = { ...prev }; delete next[savedId]; return next; });
-      if (savedEntry?.dreamText && !isDecryptionFailure(savedEntry.dreamText)) {
+      if (savedEntry?.dreamText) {
         try {
           const aggregates = computeDreamAggregates(selectedFeelings, natalChart);
           const patterns = computeDreamPatterns(selectedFeelings, updated.filter(e => e.id !== savedEntry.id));
@@ -561,6 +663,7 @@ export default function SleepScreen() {
         if (expandedEntryId === savedId) setExpandedEntryId(null);
       }
       applyEntryToForm(savedEntry);
+      setSaveReflection(nextSaveReflection);
       if (savedEntry) setIsEditingUnlocked(false);
       setSaving(false);
       return true;
@@ -575,7 +678,7 @@ export default function SleepScreen() {
   };
 
   const handleDreamReflect = useCallback((entry: SleepEntry) => {
-    if (!entry.dreamText || isDecryptionFailure(entry.dreamText)) return;
+    if (!entry.dreamText) return;
     if (expandedEntryId === entry.id) { setExpandedEntryId(null); return; }
     setExpandedEntryId(entry.id);
     Haptics.selectionAsync().catch(() => {});
@@ -710,7 +813,7 @@ export default function SleepScreen() {
         >
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Nightly Log</Text>
+            <Text style={styles.title}>Nightly Signals</Text>
             <GoldSubtitle style={styles.subtitle}>
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -718,6 +821,9 @@ export default function SleepScreen() {
                 day: 'numeric',
               })}
             </GoldSubtitle>
+            <Text style={styles.headerDesc}>
+              No need to explain everything. Rest quality, hours, or one dream fragment is enough for MySky to remember the pattern.
+            </Text>
           </Animated.View>
 
           {/* ── Main Form (Volumetric Glass Card) ── */}
@@ -729,9 +835,9 @@ export default function SleepScreen() {
                   <Text style={styles.formTitle}>
                     {editingEntryId
                       ? editingDate === today
-                        ? (isEditingUnlocked ? 'Editing today' : "Today's log")
+                        ? (isEditingUnlocked ? 'Editing today' : "Today's signal")
                         : `Edit ${formatDate(editingDate!)}`
-                      : 'How was last night?'}
+                      : 'Give MySky one signal'}
                   </Text>
                   {editingEntryId && (editingDate !== today || isEditingUnlocked) && (
                     <Pressable
@@ -745,6 +851,25 @@ export default function SleepScreen() {
                       <Ionicons name="close-circle-outline" size={16} color={theme.textMuted} />
                     </Pressable>
                   )}
+                </View>
+                <View style={styles.signalHintCard}>
+                  <View style={styles.signalHintHeader}>
+                    <MetallicIcon name="bookmark-outline" size={15} variant="gold" />
+                    <MetallicText style={styles.signalHintEyebrow} variant="gold">ARCHIVE MOMENTUM</MetallicText>
+                  </View>
+                  <Text style={styles.signalHintBody}>
+                    {sleepArchiveDepth.totalSignals > 0
+                      ? `${sleepArchiveDepth.totalSignals} signal${sleepArchiveDepth.totalSignals === 1 ? '' : 's'} are helping MySky compare sleep, dreams, and recovery over time.`
+                      : 'Your archive begins with one low-pressure signal. You can add words later.'}
+                  </Text>
+                  <View style={styles.archiveProgressTrack}>
+                    <View style={[styles.archiveProgressFill, { width: `${Math.max(8, sleepArchiveDepth.progress * 100)}%` }]} />
+                  </View>
+                  <Text style={styles.archiveProgressText}>
+                    {sleepArchiveDepth.nextMilestone
+                      ? `${sleepArchiveDepth.remaining} more to reach ${sleepArchiveDepth.nextMilestone} signals`
+                      : 'Your sleep archive has enough history for deeper reads.'}
+                  </Text>
                 </View>
 
                 <View pointerEvents={(editingEntryId && !isEditingUnlocked) ? 'none' : 'auto'} style={{ opacity: (editingEntryId && !isEditingUnlocked) ? 0.5 : 1 }}>
@@ -1175,6 +1300,23 @@ export default function SleepScreen() {
             </LinearGradient>
           </Animated.View>
 
+          {saveReflection && (
+            <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.section}>
+              <LinearGradient colors={['rgba(107, 144, 128, 0.18)', 'rgba(10, 12, 18, 0.82)']} style={styles.saveReflectionCard}>
+                <View style={styles.saveReflectionHeader}>
+                  <MetallicIcon name={saveReflection.icon as any} size={17} variant="gold" />
+                  <MetallicText style={styles.saveReflectionEyebrow} variant="gold">{saveReflection.eyebrow}</MetallicText>
+                </View>
+                <Text style={styles.saveReflectionTitle}>{saveReflection.title}</Text>
+                <Text style={styles.saveReflectionBody}>{saveReflection.body}</Text>
+                <View style={styles.saveContributionBox}>
+                  <Ionicons name="git-network-outline" size={15} color={PALETTE.emerald} />
+                  <Text style={styles.saveContributionText}>{saveReflection.contribution}</Text>
+                </View>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
           {/* ── Stats Section ── */}
           {stats.count > 0 && (
             <Animated.View entering={FadeInDown.delay(180).duration(600)} style={styles.section}>
@@ -1252,6 +1394,7 @@ export default function SleepScreen() {
                 const selectedInterpretation = interpretations[entry.id];
                 const selectedAiInterpretation = aiInterpretations[entry.id];
                 const isExpanded = expandedEntryId === entry.id;
+                const dreamFeelingsLabel = formatDreamFeelings(entry.dreamFeelings);
 
                 if (index === 0) {
                   return (
@@ -1274,9 +1417,9 @@ export default function SleepScreen() {
                         <Text style={hasDream ? styles.featuredDream : styles.featuredNoDream} numberOfLines={isExpanded ? undefined : 4}>
                           {dreamPreview}
                         </Text>
-                        {entry.dreamFeelings ? (
+                        {dreamFeelingsLabel ? (
                           <View style={styles.featuredFeelingRow}>
-                            <Text style={styles.featuredFeelingText}>{entry.dreamFeelings}</Text>
+                            <Text style={styles.featuredFeelingText}>{dreamFeelingsLabel}</Text>
                           </View>
                         ) : null}
                         {isExpanded && selectedInterpretation?.paragraph ? (
@@ -1319,9 +1462,9 @@ export default function SleepScreen() {
                         <Text style={styles.entryListMeta}>{entry.durationHours ? formatDuration(entry.durationHours) : 'No duration'}</Text>
                       </View>
                     </View>
-                    {entry.dreamFeelings ? (
+                    {dreamFeelingsLabel ? (
                       <View style={styles.entryListFeelingTag}>
-                        <Text style={styles.entryListFeelingText}>{entry.dreamFeelings}</Text>
+                        <Text style={styles.entryListFeelingText}>{dreamFeelingsLabel}</Text>
                       </View>
                     ) : null}
                   </Pressable>
@@ -1402,6 +1545,13 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   formTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 },
   formTitle: { fontSize: 22, fontWeight: '700', color: theme.textPrimary },
   cancelEditBtn: { padding: 8 },
+  signalHintCard: { borderRadius: 18, borderWidth: 1, borderColor: 'rgba(107, 144, 128, 0.24)', backgroundColor: theme.isDark ? 'rgba(107, 144, 128, 0.09)' : 'rgba(107, 144, 128, 0.08)', padding: 16, marginBottom: 28 },
+  signalHintHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  signalHintEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.4 },
+  signalHintBody: { fontSize: 13, color: theme.textMuted, lineHeight: 20 },
+  archiveProgressTrack: { height: 7, borderRadius: 4, overflow: 'hidden', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(22,32,51,0.10)', marginTop: 14 },
+  archiveProgressFill: { height: '100%', borderRadius: 4, backgroundColor: PALETTE.emerald },
+  archiveProgressText: { fontSize: 11, color: theme.textSecondary, lineHeight: 17, marginTop: 8 },
 
   fieldLabel: { fontSize: 11, fontWeight: '800', color: theme.textPrimary, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 },
 
@@ -1488,6 +1638,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(205, 127, 93, 0.15)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 14, marginTop: 16 },
   errorBannerText: { flex: 1, color: PALETTE.copper, fontSize: 14, lineHeight: 20 },
+
+  saveReflectionCard: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(107, 144, 128, 0.26)', borderTopColor: 'rgba(212, 175, 55, 0.24)' },
+  saveReflectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  saveReflectionEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase' },
+  saveReflectionTitle: { fontSize: 20, fontWeight: '700', color: theme.textPrimary, lineHeight: 25, marginBottom: 8 },
+  saveReflectionBody: { fontSize: 14, color: theme.textMuted, lineHeight: 22 },
+  saveContributionBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 9, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(107, 144, 128, 0.22)', backgroundColor: 'rgba(107, 144, 128, 0.10)', padding: 14, marginTop: 16 },
+  saveContributionText: { flex: 1, fontSize: 13, color: theme.textPrimary, lineHeight: 20 },
 
   // Today's dream reflection
   todayInterpretCard: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.25)', borderTopColor: 'rgba(157, 118, 193, 0.4)' },

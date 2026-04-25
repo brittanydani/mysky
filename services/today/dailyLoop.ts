@@ -21,6 +21,7 @@ import { mean } from '../../utils/stats';
 import { logger } from '../../utils/logger';
 import type { SelfKnowledgeContext } from '../insights/selfKnowledgeContext';
 import { DRAIN_TAG_MAP, RESTORE_TAG_MAP } from '../../utils/selfKnowledgeCrossRef';
+import { generateWeeklySynthesis, type WeeklySynthesisContext } from './weeklySynthesisLibrary';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -321,41 +322,47 @@ function buildWeeklySummary(data: {
     return `You have ${data.checkInCount} check-ins so far this week. ${moodHint} A couple more entries will help this reflection separate a passing day from a meaningful pattern.`;
   }
 
-  const moodLabel =
-    data.avgMood >= 7 ? 'positive' : data.avgMood >= 5 ? 'balanced' : 'lower';
+  const trendFragment = data.prevAvgMood != null
+    ? data.moodDirection === 'up'
+      ? `, up from ${data.prevAvgMood.toFixed(1)} last week`
+      : data.moodDirection === 'down'
+        ? `, down from ${data.prevAvgMood.toFixed(1)} last week`
+        : `, close to ${data.prevAvgMood.toFixed(1)} last week`
+    : '';
+  const sleepFragment = data.avgSleep > 0 ? ` while sleep averaged ${data.avgSleep.toFixed(1)} hours.` : '.';
+  const lead = `Your mood averaged ${data.avgMood.toFixed(1)} this week${trendFragment}${sleepFragment}`;
 
-  const parts: string[] = [];
+  const highObservation = data.checkInCount >= 5;
+  const deepReflection = data.journalCount >= 3;
+  const lowerBaseline = data.avgMood > 0 && data.avgMood < 5.5;
 
-  // Mood trajectory
-  if (data.prevAvgMood != null) {
-    if (data.moodDirection === 'up') {
-      parts.push(`Your mood has lifted this week, averaging ${data.avgMood.toFixed(1)} compared with ${data.prevAvgMood.toFixed(1)} last week. That suggests something in your recent rhythm may be giving you a little more room to breathe.`);
-    } else if (data.moodDirection === 'down') {
-      parts.push(`Your mood has softened a bit this week, averaging ${data.avgMood.toFixed(1)} after ${data.prevAvgMood.toFixed(1)} last week. It may not feel dramatic, but the shift suggests something underneath is asking for attention or more care.`);
-    } else {
-      parts.push(`Your mood has stayed relatively steady this week at ${data.avgMood.toFixed(1)}. Even without a dramatic swing, consistency like this can say a lot about what is quietly supporting you.`);
-    }
-  } else {
-    parts.push(`Your average mood this week is ${data.avgMood.toFixed(1)}, which points to a ${moodLabel} emotional baseline right now. Think of it as a starting signal rather than a verdict.`);
-  }
-
-  // Sleep
-  if (data.avgSleep > 0) {
-    if (data.avgSleep >= 7) {
-      parts.push(`You averaged ${data.avgSleep.toFixed(1)} hours of sleep, which gives your system a steadier recovery base. That kind of support often shows up emotionally before you fully notice it mentally.`);
-    } else {
-      parts.push(`Your sleep averaged ${data.avgSleep.toFixed(1)} hours. If things have felt thinner or harder to hold lately, the body may be part of that story.`);
-    }
-  }
-
-  // Journaling
-  if (data.journalCount >= 3) {
-    parts.push('You journaled regularly this week, which usually helps subtle feelings become easier to understand before they spill over.');
+  let interpretation: string;
+  if (highObservation && deepReflection) {
+    interpretation = `What stands out is that you still checked in ${data.checkInCount} times and wrote ${data.journalCount} journal entries. That combination usually means you were not avoiding yourself - you were trying to stay close enough to understand what was happening.`;
+  } else if (highObservation) {
+    interpretation = `What stands out is that you still checked in ${data.checkInCount} times. That usually means the week was being observed instead of left to blur together.`;
+  } else if (deepReflection) {
+    interpretation = `You wrote ${data.journalCount} journal entries this week. That usually means you were reaching for language, not disappearing from what you felt.`;
   } else if (data.journalCount > 0) {
-    parts.push(`You reflected ${data.journalCount} time${data.journalCount === 1 ? '' : 's'} this week. Even brief entries give this reflection more texture and make it easier to ground the pattern in something real.`);
+    interpretation = `Even a lighter archive can still say something real. Your ${data.journalCount} journal ${data.journalCount === 1 ? 'entry adds' : 'entries add'} context around the mood pattern instead of leaving it as a number alone.`;
+  } else {
+    interpretation = 'The strongest signal here is the combination, not the average alone. Mood and sleep are moving together enough to treat this as pattern rather than noise.';
   }
 
-  return parts.join(' ');
+  let meaning: string;
+  if (lowerBaseline && (highObservation || deepReflection)) {
+    meaning = 'MySky reads this as emotional effort while your baseline was low, not as a failure week.';
+  } else if (data.moodDirection === 'up') {
+    meaning = 'MySky reads this as a recovery week that became visible because you kept leaving signals behind.';
+  } else if (data.moodDirection === 'stable' && (highObservation || deepReflection)) {
+    meaning = 'MySky reads this as a self-awareness week: steady enough to track, and observed closely enough to understand.';
+  } else if (data.avgSleep > 0 && data.avgSleep < 6.8) {
+    meaning = 'MySky reads the body as part of the story here. When sleep stays short, emotional strain usually has less room to soften.';
+  } else {
+    meaning = 'MySky reads this as an emerging pattern, not a finished conclusion.';
+  }
+
+  return [lead, interpretation, meaning].join(' ');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -831,6 +838,8 @@ async function getWeeklySynthesis(chartId: string): Promise<WeeklySynthesis | nu
     const now = new Date();
     const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const fourteenDaysAgo = new Date(now);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
     const sevenDaysAgoKey = toLocalDateString(sevenDaysAgo);
 
     const [checkIns, sleepEntries, journals] = await Promise.all([
@@ -844,6 +853,11 @@ async function getWeeklySynthesis(chartId: string): Promise<WeeklySynthesis | nu
     const weekJournals = journals.filter(j => j.date >= sevenDaysAgoKey);
     const weekDreams = weekSleep.filter(s => s.dreamText?.trim());
 
+    // Previous week for trend analysis
+    const prevWeekCheckIns = checkIns.filter(
+      c => c.date >= toLocalDateString(fourteenDaysAgo) && c.date < sevenDaysAgoKey
+    );
+
     const domains = [
       weekCheckIns.length > 0,
       weekSleep.length > 0,
@@ -853,96 +867,112 @@ async function getWeeklySynthesis(chartId: string): Promise<WeeklySynthesis | nu
 
     if (domains < 2) return null;
 
+    // Build signals for UI display
     const signals: SynthesisSignal[] = [];
-    const narrativeParts: string[] = [];
 
-    // Mood signal
+    // Compute mood metrics
+    const moods = weekCheckIns.map(c => c.moodScore).filter((v): v is number => v != null);
+    const avgMood = moods.length > 0 ? mean(moods) : 0;
+    const highDays = weekCheckIns.filter(c => c.moodScore != null && c.moodScore >= 7).length;
+    const lowDays = weekCheckIns.filter(c => c.moodScore != null && c.moodScore <= 4).length;
+    const moodRange = moods.length > 0 ? { high: Math.max(...moods), low: Math.min(...moods) } : { high: 0, low: 0 };
+
+    // Determine mood trend
+    const prevMoods = prevWeekCheckIns.map(c => c.moodScore).filter((v): v is number => v != null);
+    const prevAvgMood = prevMoods.length > 0 ? mean(prevMoods) : null;
+    let moodTrend: 'rising' | 'falling' | 'stable' | 'volatile' = 'stable';
+    if (prevAvgMood !== null) {
+      const delta = avgMood - prevAvgMood;
+      if (delta > 0.5) moodTrend = 'rising';
+      else if (delta < -0.5) moodTrend = 'falling';
+    }
+    if (highDays > 0 && lowDays > 0 && moodRange.high - moodRange.low >= 3) {
+      moodTrend = 'volatile';
+    }
+
+    // Compute sleep metrics
+    const sleepHours = weekSleep.map(s => s.durationHours).filter((v): v is number => v != null);
+    const avgSleep = sleepHours.length > 0 ? mean(sleepHours) : 0;
+
+    // Extract top tags
+    const tagCounts: Record<string, number> = {};
+    for (const c of weekCheckIns) {
+      if (c.tags) {
+        for (const tag of c.tags) {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        }
+      }
+    }
+    const topTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]).slice(0, 3);
+
+    // Get current week number and season
+    const weekNumber = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
+    const month = now.getMonth();
+    const season = month >= 2 && month <= 4 ? 'spring'
+      : month >= 5 && month <= 7 ? 'summer'
+      : month >= 8 && month <= 10 ? 'fall'
+      : 'winter';
+
+    // Build context for premium narrative generation
+    const ctx: WeeklySynthesisContext = {
+      checkIns: weekCheckIns,
+      avgMood,
+      moodRange,
+      moodTrend,
+      highDays,
+      lowDays,
+      sleepEntries: weekSleep,
+      avgSleep,
+      sleepQuality: null,
+      sleepConsistency: null,
+      journals: weekJournals,
+      journalCount: weekJournals.length,
+      dreams: weekDreams,
+      dreamCount: weekDreams.length,
+      sleepMoodCorrelation: null,
+      topTags,
+      weekNumber,
+      season,
+    };
+
+    // Generate premium narrative using library
+    const narrative = generateWeeklySynthesis(ctx);
+
+    // Build signals for UI
     if (weekCheckIns.length > 0) {
-      const moods = weekCheckIns.map(c => c.moodScore).filter((v): v is number => v != null);
-      const avgMood = moods.length > 0 ? mean(moods) : 0;
-      const highDays = weekCheckIns.filter(c => c.moodScore != null && c.moodScore >= 7);
-      const lowDays = weekCheckIns.filter(c => c.moodScore != null && c.moodScore <= 4);
-
       signals.push({
         domain: 'mood',
-        label: `${weekCheckIns.length} check-ins`,
+        label: `${weekCheckIns.length} mood signals`,
         detail: `Avg mood ${avgMood.toFixed(1)}/10`,
       });
-
-      if (lowDays.length > 0 && highDays.length > 0) {
-        narrativeParts.push(`Your mood ranged widely this week — ${highDays.length} brighter day${highDays.length !== 1 ? 's' : ''} and ${lowDays.length} heavier one${lowDays.length !== 1 ? 's' : ''}.`);
-      } else if (avgMood >= 7) {
-        narrativeParts.push('Your mood stayed elevated most of the week.');
-      } else if (avgMood <= 4) {
-        narrativeParts.push('This was a heavier week emotionally.');
-      } else {
-        narrativeParts.push('Your mood held steady in the middle range this week.');
-      }
     }
 
-    // Sleep-mood connection
     if (weekSleep.length > 0) {
-      const sleepHours = weekSleep.map(s => s.durationHours).filter((v): v is number => v != null);
-      const avgSleep = sleepHours.length > 0 ? mean(sleepHours) : 0;
-
       signals.push({
         domain: 'sleep',
-        label: `${weekSleep.length} nights logged`,
+        label: `${weekSleep.length} sleep logs`,
         detail: avgSleep > 0 ? `Avg ${avgSleep.toFixed(1)}h` : 'Quality tracked',
       });
-
-      if (weekCheckIns.length >= 3 && sleepHours.length >= 3) {
-        // Simple correlation: compare mood on good-sleep vs bad-sleep days
-        const sleepDateMap = new Map(weekSleep.map(s => [s.date, s.durationHours ?? 0]));
-        const goodSleepMoods: number[] = [];
-        const poorSleepMoods: number[] = [];
-        for (const c of weekCheckIns) {
-          const hours = sleepDateMap.get(c.date);
-          if (hours != null && c.moodScore) {
-            if (hours >= 7) goodSleepMoods.push(c.moodScore);
-            else if (hours < 6) poorSleepMoods.push(c.moodScore);
-          }
-        }
-        if (goodSleepMoods.length > 0 && poorSleepMoods.length > 0) {
-          const goodAvg = mean(goodSleepMoods);
-          const poorAvg = mean(poorSleepMoods);
-          if (goodAvg - poorAvg >= 1.5) {
-            narrativeParts.push('Your mood was noticeably higher on nights you slept 7+ hours.');
-          } else if (poorAvg - goodAvg >= 1) {
-            narrativeParts.push('Interestingly, shorter sleep nights didn\'t bring your mood down as much this week.');
-          }
-        }
-      } else if (avgSleep > 0) {
-        if (avgSleep < 6) {
-          narrativeParts.push(`Sleep averaged ${avgSleep.toFixed(1)} hours — your body may be carrying a deficit.`);
-        } else if (avgSleep >= 8) {
-          narrativeParts.push(`Sleep was generous this week at ${avgSleep.toFixed(1)} hours on average.`);
-        }
-      }
     }
 
-    // Journal signal
     if (weekJournals.length > 0) {
       signals.push({
         domain: 'journal',
         label: `${weekJournals.length} journal entr${weekJournals.length !== 1 ? 'ies' : 'y'}`,
         detail: 'Written reflections',
       });
-      narrativeParts.push(`You wrote ${weekJournals.length} journal entr${weekJournals.length !== 1 ? 'ies' : 'y'} — that level of reflection compounds.`);
     }
 
-    // Dream signal
     if (weekDreams.length > 0) {
       signals.push({
         domain: 'dream',
-        label: `${weekDreams.length} dream${weekDreams.length !== 1 ? 's' : ''} logged`,
+        label: `${weekDreams.length} dream${weekDreams.length !== 1 ? 's' : ''}`,
         detail: 'Subconscious processing',
       });
-      narrativeParts.push(`${weekDreams.length} dream${weekDreams.length !== 1 ? 's were' : ' was'} recorded, keeping your subconscious patterns visible.`);
     }
 
     return {
-      narrative: narrativeParts.join(' '),
+      narrative,
       signals,
       hasEnoughData: domains >= 2,
     };

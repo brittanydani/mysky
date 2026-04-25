@@ -22,6 +22,18 @@ import {
   ScoredDay,
   buildPatternProfile,
 } from './dailyScores';
+import {
+  generateSleepSensitivityTrait,
+  generateConnectionSensitivityTrait,
+  generateCrowdingSensitivityTrait,
+  generateGradualAccumulatorTrait,
+  generateResilientRecovererTrait,
+  generateRecoveryStyleDescription,
+  generateStressPatternDescription,
+  generateStrengthDescription,
+  generateAnticipationBody,
+  generateProgressMarkerDescription,
+} from './personalProfileLibrary';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -199,12 +211,15 @@ function detectTraits(profile: PatternProfile): PersonalTrait[] {
     const good = withSleep.filter(d => (d.aggregate.sleepQuality ?? 0) >= 4);
     const poor = withSleep.filter(d => (d.aggregate.sleepQuality ?? 0) <= 2);
     if (good.length >= 2 && poor.length >= 2) {
-      const diff = mean(good.map(d => d.scores.stability)) - mean(poor.map(d => d.scores.stability));
+      const goodAvg = mean(good.map(d => d.scores.stability));
+      const poorAvg = mean(poor.map(d => d.scores.stability));
+      const diff = goodAvg - poorAvg;
       if (diff > 10) {
+        const strength = Math.min(diff * 2, 100);
         traits.push({
           id: 'sleep-sensitive',
-          description: 'You appear to be highly sensitive to sleep quality. Poor sleep has a measurable effect on your emotional steadiness.',
-          strength: Math.min(diff * 2, 100),
+          description: generateSleepSensitivityTrait(strength, goodAvg, poorAvg),
+          strength,
           domain: 'sensitivity',
           firstDetectedDays: days,
         });
@@ -216,12 +231,15 @@ function detectTraits(profile: PatternProfile): PersonalTrait[] {
   const connected = scoredDays.filter(d => d.scores.connection > 60);
   const disconnected = scoredDays.filter(d => d.scores.connection < 40);
   if (connected.length >= 3 && disconnected.length >= 3) {
-    const spread = mean(connected.map(d => d.scores.stability)) - mean(disconnected.map(d => d.scores.stability));
+    const connectedAvg = mean(connected.map(d => d.scores.stability));
+    const disconnectedAvg = mean(disconnected.map(d => d.scores.stability));
+    const spread = connectedAvg - disconnectedAvg;
     if (spread > 10) {
+      const strength = Math.min(spread * 2, 100);
       traits.push({
         id: 'connection-sensitive',
-        description: 'Connection appears to deeply affect your emotional state. Feeling supported steadies you; disconnection lingers.',
-        strength: Math.min(spread * 2, 100),
+        description: generateConnectionSensitivityTrait(strength, connectedAvg, disconnectedAvg),
+        strength,
         domain: 'sensitivity',
         firstDetectedDays: days,
       });
@@ -234,10 +252,11 @@ function detectTraits(profile: PatternProfile): PersonalTrait[] {
     const hiStab = mean(highIntensity.map(d => d.scores.stability));
     const loStab = mean(scoredDays.filter(d => d.scores.emotionalIntensity <= 50).map(d => d.scores.stability));
     if (loStab - hiStab > 10) {
+      const strength = Math.min((loStab - hiStab) * 2, 100);
       traits.push({
         id: 'crowding-sensitive',
-        description: 'You seem especially affected by emotional crowding — too many feelings or demands at once lowers your stability more than single stressors.',
-        strength: Math.min((loStab - hiStab) * 2, 100),
+        description: generateCrowdingSensitivityTrait(strength, loStab, hiStab),
+        strength,
         domain: 'sensitivity',
         firstDetectedDays: days,
       });
@@ -256,10 +275,11 @@ function detectTraits(profile: PatternProfile): PersonalTrait[] {
     }
   }
   if (maxBuildupStreak >= 3) {
+    const strength = Math.min(maxBuildupStreak * 20, 100);
     traits.push({
       id: 'gradual-accumulator',
-      description: 'You tend to accumulate stress gradually rather than crashing suddenly. By the time you feel depleted, your system has often been carrying too much for several days.',
-      strength: Math.min(maxBuildupStreak * 20, 100),
+      description: generateGradualAccumulatorTrait(strength, maxBuildupStreak),
+      strength,
       domain: 'regulation',
       firstDetectedDays: days,
     });
@@ -275,10 +295,25 @@ function detectTraits(profile: PatternProfile): PersonalTrait[] {
     }
   }
   if (lows >= 3 && bounces / lows > 0.5) {
+    const bounceRate = bounces / lows;
+    const strength = Math.min(Math.round(bounceRate * 100), 100);
+    // Calculate average recovery days for this trait
+    const recoveryGaps: number[] = [];
+    for (let i = 0; i < scoredDays.length - 1; i++) {
+      if (scoredDays[i].scores.stability < 40) {
+        for (let j = i + 1; j < scoredDays.length && j <= i + 7; j++) {
+          if (scoredDays[j].scores.stability > overallAvg.stability) {
+            recoveryGaps.push(j - i);
+            break;
+          }
+        }
+      }
+    }
+    const avgRecoveryDays = recoveryGaps.length > 0 ? mean(recoveryGaps) : 2;
     traits.push({
       id: 'resilient-recoverer',
-      description: 'Your system shows a strong recovery pattern — even after difficult days, you tend to bounce back relatively quickly.',
-      strength: Math.min(Math.round((bounces / lows) * 100), 100),
+      description: generateResilientRecovererTrait(strength, bounceRate, avgRecoveryDays),
+      strength,
       domain: 'resilience',
       firstDetectedDays: days,
     });
@@ -673,7 +708,7 @@ function detectStrengths(profile: PatternProfile, traits: PersonalTrait[], recov
   if (checkInDensity > 0.6) {
     strengths.push({
       id: 'consistent-presence',
-      description: 'You keep showing up, even when things are hard. That consistency is its own form of strength.',
+      description: 'Your data shows that you keep returning, even through lower stretches. That pattern matters because harder moments are becoming visible instead of disappearing.',
       strength: Math.min(Math.round(checkInDensity * 100), 100),
     });
   }

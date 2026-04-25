@@ -771,10 +771,21 @@ export default function MoodCheckIn() {
       setRecentCheckIns(recent);
       setIsEditingExisting(true);
       setIsSaving(false);
+
+      const encouragement = [
+        "Beautiful insight. You're building a powerful map of your inner world.",
+        "Recorded. Every entry brings you closer to deep self-mastery.",
+        "Safely sealed. Your dedication to your own growth is inspiring.",
+        "Well done. You're showing up for yourself today.",
+        "Brilliant. Another piece of your cosmic puzzle is in place.",
+        "Your internal weather has been mapped. See how the storm clears."
+      ][Math.floor(Math.random() * 6)];
+      Alert.alert("Recorded", encouragement);
     } catch (e) {
       logger.error('[MoodCheckIn] Save failed:', e);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       setIsSaving(false);
+      Alert.alert('Error', 'Could not save check-in.');
     }
   }, []);
 
@@ -1342,7 +1353,7 @@ const CustomHapticSlider = ({
           <Animated.View style={[styles.trackGlow, glowStyle, { backgroundColor: color }]} />
           <Animated.View style={[styles.trackFill, fillStyle, { backgroundColor: color }]} />
           <Animated.View pointerEvents="none" style={[styles.thumbHalo, thumbHaloStyle, { backgroundColor: color }]} />
-          <Animated.View style={[styles.thumb, thumbStyle, { shadowColor: color, borderColor: `${color}55` }]}> 
+          <Animated.View style={[styles.thumb, thumbStyle, { shadowColor: color, borderColor: `${color}55` }]}>
             <View style={styles.thumbSheen} />
             <View style={[styles.thumbInner, { backgroundColor: color }]} />
             <View style={styles.thumbCoreHighlight} />
@@ -1662,7 +1673,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
       backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    
+
   },
   slotPillDone: {
     backgroundColor: 'rgba(212, 175, 55,0.10)',

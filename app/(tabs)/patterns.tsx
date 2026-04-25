@@ -41,7 +41,8 @@ import {
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 import { toLocalDateString } from '../../utils/dateUtils';
-import { getArchiveDepth, getPersonalizedPremiumTeaser, type ArchiveDepthCounts } from '../../utils/archiveDepth';
+import { normalizeDisplayText } from '../../utils/textLayout';
+import { getPersonalizedPremiumTeaser, type ArchiveDepthCounts } from '../../utils/archiveDepth';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 import { usePremium } from '../../context/PremiumContext';
 import { useRouter, Href } from 'expo-router';
@@ -201,8 +202,12 @@ export default function PatternsScreen() {
     () => (feedInsights.length > 0 ? refineCrossRefCopy(feedInsights[todayIndex]) : null),
     [feedInsights, todayIndex],
   );
+  const focusInsights = useMemo(() => {
+    if (feedInsights.length === 0) return [];
+    const rotated = [...feedInsights.slice(todayIndex), ...feedInsights.slice(0, todayIndex)];
+    return rotated.slice(0, 3).map(refineCrossRefCopy);
+  }, [feedInsights, todayIndex]);
   const patternRows = useMemo(() => (leadInsight ? [leadInsight] : []), [leadInsight]);
-  const archiveDepth = useMemo(() => getArchiveDepth(archiveDepthCounts), [archiveDepthCounts]);
   const premiumTeaser = useMemo(
     () => getPersonalizedPremiumTeaser(archiveDepthCounts, {
       detectedPatterns: feedInsights.length,
@@ -228,13 +233,13 @@ export default function PatternsScreen() {
               <VelvetGlassSurface style={styles.insightCard} intensity={25}>
                 <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.cardHeader}>
-                  <MetallicText style={styles.cardLabel} variant="gold">WHAT'S BECOMING CLEAR</MetallicText>
+                  <MetallicText style={styles.cardLabel} variant="gold">THIS WEEK'S PATTERN</MetallicText>
                   <View style={styles.confirmedBadge}>
                     <Text style={styles.confirmedText}>{item.isConfirmed ? 'SEEN REPEATEDLY' : 'EARLY SIGNAL'}</Text>
                   </View>
                 </View>
-                <Text style={styles.patternTitle}>{item.title}</Text>
-                <Text style={styles.insightBody}>{item.body}</Text>
+                <Text style={styles.patternTitle}>{normalizeDisplayText(item.title)}</Text>
+                <Text style={styles.insightBody}>{normalizeDisplayText(item.body)}</Text>
                 {item.heroMetrics && item.heroMetrics.length > 0 && (
                   <View style={styles.heroMetricsRow}>
                     {item.heroMetrics.map((m) => (
@@ -268,8 +273,8 @@ export default function PatternsScreen() {
                 >
                   <LinearGradient colors={['rgba(168,139,235,0.25)', 'rgba(168,139,235,0.08)']} style={StyleSheet.absoluteFill} />
                   <View style={{ alignItems: 'center', flex: 1 }}>
-                    <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">What Your Archive Is Learning</MetallicText>
-                    <Text style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>{feedInsights.length} patterns your history is beginning to name</Text>
+                    <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">Inside Your Pattern Archive</MetallicText>
+                    <Text style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>{normalizeDisplayText(`${focusInsights.length} deep reads currently in focus`)}</Text>
                   </View>
                 </Pressable>
               ) : (
@@ -283,7 +288,7 @@ export default function PatternsScreen() {
                   <MetallicIcon name="lock-closed-outline" size={16} variant="gold" />
                   <View style={{ flex: 1 }}>
                     <MetallicText style={styles.deepDiveButtonTitle} variant="gold">{premiumTeaser.cta}</MetallicText>
-                    <Text style={styles.deepDiveButtonSub}>{premiumTeaser.title}</Text>
+                    <Text style={styles.deepDiveButtonSub}>{normalizeDisplayText(premiumTeaser.title)}</Text>
                   </View>
                   <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
                 </Pressable>
@@ -294,7 +299,7 @@ export default function PatternsScreen() {
             <>
               <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
                 <Text style={styles.title}>Patterns</Text>
-                <GoldSubtitle style={styles.subtitle}>A mirror built from your entries</GoldSubtitle>
+                <GoldSubtitle style={styles.subtitle}>Recognition over time, grounded in your real archive</GoldSubtitle>
                 <Text style={styles.freshnessText}>
                   {lastUpdated
                     ? `Last updated ${new Date(lastUpdated).toLocaleDateString()} from your recent entries`
@@ -308,22 +313,6 @@ export default function PatternsScreen() {
                 <MetricCard label="Logged" value={snapshot.checkInCount.toString()} wash={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} />
               </View>
 
-              <VelvetGlassSurface style={styles.depthCard} intensity={25}>
-                <LinearGradient colors={['rgba(107, 144, 128, 0.16)', 'rgba(26,30,41,0.35)']} style={StyleSheet.absoluteFill} />
-                <View style={styles.cardHeader}>
-                  <MetallicText style={styles.cardLabel} variant="gold">{archiveDepth.label.toUpperCase()}</MetallicText>
-                  <Text style={styles.depthCount}>{archiveDepth.totalSignals} signals</Text>
-                </View>
-                <Text style={styles.patternTitle}>{archiveDepth.headline}</Text>
-                <Text style={styles.insightBody}>{archiveDepth.body}</Text>
-                <View style={styles.depthProgressTrack}>
-                  <View style={[styles.depthProgressFill, { width: `${Math.max(8, archiveDepth.progress * 100)}%` }]} />
-                </View>
-                {!!archiveDepth.nextMilestone && (
-                  <Text style={styles.depthMeta}>{archiveDepth.remaining} more to reach {archiveDepth.nextMilestone}</Text>
-                )}
-              </VelvetGlassSurface>
-
               <View style={[styles.orbitCard, theme.velvetBorder]}>
                 <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.orbitCardHeader}>
@@ -333,7 +322,7 @@ export default function PatternsScreen() {
                 {orbitLoading ? <ActivityIndicator size="large" color={PALETTE.gold} /> : <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />}
               </View>
 
-              <SectionHeader label="BECOMING CLEAR" icon="radio-outline" />
+              <SectionHeader label="THIS WEEK'S PATTERN" icon="radio-outline" />
               {!isPremium && !loading && snapshot.checkInCount >= 5 && (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                   <VelvetGlassSurface style={styles.insightCard} intensity={25}>
@@ -352,9 +341,9 @@ export default function PatternsScreen() {
                       <MetallicText style={styles.cardLabel} variant="gold">PATTERNS DETECTED</MetallicText>
                       <View style={styles.lockedBadge}><MetallicIcon name="lock-closed-outline" size={10} variant="gold" /><Text style={styles.lockedText}>PREMIUM</Text></View>
                     </View>
-                    <Text style={styles.patternTitle}>{premiumTeaser.title}</Text>
+                    <Text style={styles.patternTitle}>{normalizeDisplayText(premiumTeaser.title)}</Text>
                     <Text style={styles.insightBody}>
-                      {premiumTeaser.body}
+                      {normalizeDisplayText(premiumTeaser.body)}
                     </Text>
                   </VelvetGlassSurface>
                 </Pressable>
@@ -365,9 +354,9 @@ export default function PatternsScreen() {
                   <View style={styles.cardHeader}>
                     <MetallicText style={styles.cardLabel} variant="gold">BUILDING YOUR ARCHIVE</MetallicText>
                   </View>
-                  <Text style={styles.patternTitle}>{5 - snapshot.checkInCount} more check-ins until your first pattern insight</Text>
+                    <Text style={styles.patternTitle}>{normalizeDisplayText(`${5 - snapshot.checkInCount} more check-ins until your first pattern insight`)}</Text>
                   <Text style={styles.insightBody}>
-                    Keep logging — once you have 5 check-ins, Deeper Sky can start surfacing what your mood, stress, and energy levels are really telling you.
+                    Keep logging — once you have 5 check-ins, Deeper Sky can start naming what keeps repeating instead of stopping at a recap of the week.
                   </Text>
                 </VelvetGlassSurface>
               )}
@@ -380,14 +369,14 @@ export default function PatternsScreen() {
               ) : !loading && patternRows.length === 0 ? (
                 <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
                   <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
-                  <Text style={styles.emptyTitle}>Your patterns are forming</Text>
-                  <Text style={styles.emptyBody}>This space comes alive after a few days of data. Here's what feeds it:</Text>
+                  <Text style={styles.emptyTitle}>Your archive is not readable yet</Text>
+                  <Text style={styles.emptyBody}>MySky should not invent a pattern before it has earned one. This space gets stronger as these signals overlap:</Text>
                   <View style={{ marginTop: 16, gap: 10 }}>
                     <Text style={styles.emptyBody}>{'\u2022'} Check in with your mood, energy, and stress daily</Text>
                     <Text style={styles.emptyBody}>{'\u2022'} Log sleep duration and dream notes</Text>
                     <Text style={styles.emptyBody}>{'\u2022'} Write a journal entry when something feels important</Text>
                   </View>
-                  <Text style={[styles.emptyBody, { marginTop: 16, fontStyle: 'italic' }]}>3–5 days of check-ins typically surfaces your first insight.</Text>
+                  <Text style={[styles.emptyBody, { marginTop: 16, fontStyle: 'italic' }]}>3-5 days of check-ins usually gives MySky enough repetition to surface a first real read.</Text>
                 </VelvetGlassSurface>
               ) : null}
             </>
@@ -405,7 +394,7 @@ export default function PatternsScreen() {
             >
               <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
               <MetallicIcon name="library-outline" size={16} variant="gold" />
-              <MetallicText style={styles.libraryButtonText} variant="gold">Your Pattern Archive</MetallicText>
+              <MetallicText style={styles.libraryButtonText} variant="gold">Open Your Pattern Archive</MetallicText>
             </Pressable>
           )}
           showsVerticalScrollIndicator={false}
@@ -428,7 +417,7 @@ export default function PatternsScreen() {
           <VelvetGlassSurface style={[styles.deepDiveModalCard, styles.modalCard]} intensity={35}>
             <LinearGradient colors={['rgba(44, 54, 69, 0.92)', 'rgba(26, 30, 41, 0.72)']} style={StyleSheet.absoluteFill} />
             <View style={styles.modalHeader}>
-              <MetallicText style={styles.modalTitle} variant="gold">What Your Archive Is Learning</MetallicText>
+              <MetallicText style={styles.modalTitle} variant="gold">Archive Patterns in Focus</MetallicText>
               <Pressable
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
@@ -442,15 +431,15 @@ export default function PatternsScreen() {
               </Pressable>
             </View>
             <Text style={styles.modalIntro}>
-              These are not generic traits. They are patterns forming from what your history keeps repeating, reinforcing, and revealing over time.
+              Three deeper reads from your archive. These update as patterns intensify, soften, or gain stronger cross-source evidence.
             </Text>
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: '85%' }}>
               <View style={{ gap: 16, paddingBottom: 8 }}>
-                {feedInsights.map((insight, idx) => (
+                {focusInsights.map((insight, idx) => (
                   <View key={insight.id} style={styles.deepDiveInsightCard}>
                     <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.03)']} style={StyleSheet.absoluteFill} />
                     <Text style={styles.deepDiveInsightTitle}>{insight.title}</Text>
-                    <Text style={[styles.insightBody, { fontSize: 14 }]}>{insight.body}</Text>
+                    <Text style={[styles.insightBody, { fontSize: 14 }]}>{normalizeDisplayText(insight.body)}</Text>
                     {insight.heroMetrics && insight.heroMetrics.length > 0 && (
                       <View style={[styles.heroMetricsRow, { marginTop: 12 }]}>
                         {insight.heroMetrics.map((m) => (
@@ -467,7 +456,7 @@ export default function PatternsScreen() {
                         <Text style={styles.supportCalloutBody}>{insight.takeaway.body}</Text>
                       </View>
                     )}
-                    <Text style={[styles.rotationHint, { textAlign: 'left', marginTop: 8 }]}>Insight {idx + 1} of {feedInsights.length}</Text>
+                    <Text style={[styles.rotationHint, { textAlign: 'left', marginTop: 8 }]}>Insight {idx + 1} of {focusInsights.length}</Text>
                   </View>
                 ))}
               </View>
@@ -487,7 +476,7 @@ export default function PatternsScreen() {
           <VelvetGlassSurface style={styles.modalCard} intensity={35}>
             <LinearGradient colors={['rgba(44, 54, 69, 0.92)', 'rgba(26, 30, 41, 0.72)']} style={StyleSheet.absoluteFill} />
             <View style={styles.modalHeader}>
-              <MetallicText style={styles.modalTitle} variant="gold">Your Archive</MetallicText>
+              <MetallicText style={styles.modalTitle} variant="gold">Your Pattern Archive</MetallicText>
               <Pressable
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
@@ -501,10 +490,10 @@ export default function PatternsScreen() {
               </Pressable>
             </View>
             <Text style={styles.modalBody}>
-              As your history grows, this space surfaces what keeps repeating — across your mood, nervous system, energy, and the way you tend to move through hard things.
+              {normalizeDisplayText('A living profile of who you are becoming — expanding as MySky learns how you feel, recover, connect, and grow.')}
             </Text>
-            <Text style={styles.modalStatus}>{libraryState.statusLine}</Text>
-            <Text style={styles.modalBodyMuted}>{libraryState.helperText}</Text>
+            <Text style={styles.modalStatus}>{normalizeDisplayText(libraryState.statusLine)}</Text>
+            <Text style={styles.modalBodyMuted}>{normalizeDisplayText(libraryState.helperText)}</Text>
             {libraryState.sections.length > 0 ? (
               <View style={styles.libraryList}>
                 {libraryState.sections.map((section) => (
@@ -512,8 +501,8 @@ export default function PatternsScreen() {
                     <Text style={styles.librarySectionTitle}>{section.title}</Text>
                     {section.items.map((item) => (
                       <View key={`${section.title}-${item.title}`} style={styles.libraryItem}>
-                        <Text style={styles.libraryItemTitle}>{item.title}</Text>
-                        <Text style={styles.libraryItemBody}>{item.body}</Text>
+                        <Text style={styles.libraryItemTitle}>{normalizeDisplayText(item.title)}</Text>
+                        <Text style={styles.libraryItemBody}>{normalizeDisplayText(item.body)}</Text>
                       </View>
                     ))}
                   </View>
@@ -594,17 +583,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   sectionHeaderLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },
 
   insightCard: { padding: 32, borderRadius: 24, marginBottom: 24, overflow: 'hidden' },
-  depthCard: { padding: 28, borderRadius: 24, marginBottom: 24, overflow: 'hidden' },
-  depthCount: { fontSize: 11, fontWeight: '800', color: 'rgba(212,175,55,0.72)', textTransform: 'uppercase', letterSpacing: 1 },
-  depthProgressTrack: {
-    height: 5,
-    borderRadius: 999,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.10)',
-    marginTop: 18,
-  },
-  depthProgressFill: { height: '100%', borderRadius: 999, backgroundColor: PALETTE.gold },
-  depthMeta: { marginTop: 8, fontSize: 11, fontWeight: '700', color: 'rgba(212,175,55,0.68)', textTransform: 'uppercase', letterSpacing: 0.8 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   cardLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   confirmedBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(107,144,128,0.15)', borderWidth: 1, borderColor: 'rgba(107,144,128,0.3)' },

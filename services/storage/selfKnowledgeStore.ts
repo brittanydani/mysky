@@ -78,35 +78,8 @@ async function readLegacyEncryptedItem(key: string): Promise<string | null> {
   return EncryptedAsyncStorage.getItem(key);
 }
 
-/**
- * Pass-through: legacy _enc columns in Supabase may still hold ENC2: blobs
- * written by the old field-encryption layer. Decrypt them via the shim so
- * callers receive plain text. Once all rows are re-written without encryption
- * these columns will be empty and this path will never be hit.
- */
-async function decryptLegacyValue(value: string | null | undefined): Promise<string | undefined> {
-  if (!value) return undefined;
-  const { FieldEncryptionService } = await import('./fieldEncryption');
-  try {
-    return await FieldEncryptionService.decryptField(value);
-  } catch {
-    return value;
-  }
-}
-
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
-}
-
-async function preferPlainOrLegacy(
-  plainValue: unknown,
-  legacyEncryptedValue: string | null | undefined,
-): Promise<string | undefined> {
-  if (isNonEmptyString(plainValue)) {
-    return plainValue;
-  }
-
-  return decryptLegacyValue(legacyEncryptedValue);
 }
 
 function buildReflectionData(answers: ReflectionAnswer[]): DailyReflectionData {
@@ -193,14 +166,11 @@ export async function loadDailyReflectionData(): Promise<DailyReflectionData> {
         question_id,
         category,
         question_text,
-        question_text_enc,
         answer,
-        answer_enc,
         scale_value,
         date,
         sealed_at,
         notes,
-        notes_enc,
         is_deleted
       `)
       .eq('user_id', userId)
@@ -212,9 +182,9 @@ export async function loadDailyReflectionData(): Promise<DailyReflectionData> {
 
     const answers: ReflectionAnswer[] = [];
     for (const row of data ?? []) {
-      const questionText = await preferPlainOrLegacy(row.question_text, row.question_text_enc);
-      const answerText = await preferPlainOrLegacy(row.answer, row.answer_enc);
-      const notes = await preferPlainOrLegacy(row.notes, row.notes_enc);
+      const questionText = row.question_text;
+      const answerText = row.answer;
+      const notes = row.notes;
 
       if (!questionText || !answerText) continue;
 
@@ -297,7 +267,7 @@ export async function loadSomaticEntries(): Promise<SomaticEntryRecord[]> {
   try {
     const { data, error } = await supabase
       .from('somatic_entries')
-      .select('id,date,region,side,gender,emotion,emotion_enc,sensation,intensity,is_deleted')
+      .select('id,date,region,side,gender,emotion,sensation,intensity,is_deleted')
       .eq('user_id', userId)
       .eq('is_deleted', false)
       .order('date', { ascending: false })
@@ -307,7 +277,7 @@ export async function loadSomaticEntries(): Promise<SomaticEntryRecord[]> {
 
     const entries: SomaticEntryRecord[] = [];
     for (const row of data ?? []) {
-      const emotion = await preferPlainOrLegacy(row.emotion, row.emotion_enc);
+      const emotion = row.emotion;
       if (!emotion) continue;
 
       entries.push({
@@ -519,13 +489,10 @@ export async function loadTriggerEvents(): Promise<TriggerEvent[]> {
         timestamp,
         mode,
         event,
-        event_enc,
         ns_state,
         sensations,
-        sensations_enc,
         intensity,
         resolution,
-        resolution_enc,
         context_area,
         before_state,
         is_deleted
@@ -539,18 +506,17 @@ export async function loadTriggerEvents(): Promise<TriggerEvent[]> {
 
     const events: TriggerEvent[] = [];
     for (const row of data ?? []) {
-      const eventText = await preferPlainOrLegacy(row.event, row.event_enc);
+      const eventText = row.event;
       if (!eventText) continue;
 
-      const legacySensations = await decryptLegacyValue(row.sensations_enc);
-      const resolution = await preferPlainOrLegacy(row.resolution, row.resolution_enc);
+      const resolution = row.resolution;
       events.push({
         id: row.id,
         timestamp: row.timestamp,
         mode: row.mode,
         event: eventText,
         nsState: row.ns_state,
-        sensations: parseStringArray(row.sensations ?? legacySensations),
+        sensations: parseStringArray(row.sensations),
         ...(row.intensity != null ? { intensity: row.intensity } : {}),
         ...(resolution ? { resolution } : {}),
         ...(row.context_area ? { contextArea: row.context_area } : {}),
@@ -630,7 +596,7 @@ export async function loadRelationshipPatterns(): Promise<RelationshipPatternRec
   try {
     const { data, error } = await supabase
       .from('relationship_patterns')
-      .select('id,date,note,note_enc,tags,tags_enc,is_deleted')
+      .select('id,date,note,tags,is_deleted')
       .eq('user_id', userId)
       .eq('is_deleted', false)
       .order('date', { ascending: false })
@@ -640,15 +606,14 @@ export async function loadRelationshipPatterns(): Promise<RelationshipPatternRec
 
     const entries: RelationshipPatternRecord[] = [];
     for (const row of data ?? []) {
-      const note = await preferPlainOrLegacy(row.note, row.note_enc);
+      const note = row.note;
       if (!note) continue;
 
-      const legacyTags = await decryptLegacyValue(row.tags_enc);
       entries.push({
         id: row.id,
         date: row.date,
         note,
-        tags: parseStringArray(row.tags ?? legacyTags),
+        tags: parseStringArray(row.tags),
       });
     }
 

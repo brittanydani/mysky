@@ -1,7 +1,13 @@
-import { enqueue, enqueueJournalEntry, enqueueCheckIn } from '../syncService';
+import { enqueue, enqueueJournalEntry, enqueueCheckIn, invokeBirthProfileSync } from '../syncService';
 
 const mockRunAsync = jest.fn().mockResolvedValue(undefined);
 const mockGetDb = jest.fn().mockResolvedValue({ runAsync: mockRunAsync, getAllAsync: jest.fn().mockResolvedValue([]) });
+const mockGetSession = jest.fn().mockResolvedValue({ data: { session: null } });
+const mockInvoke = jest.fn();
+const mockFrom = jest.fn().mockReturnValue({
+  upsert: jest.fn().mockResolvedValue({ error: null }),
+  delete: jest.fn().mockReturnValue({ in: jest.fn().mockResolvedValue({ error: null }) }),
+});
 
 jest.mock('../localDb', () => ({
   localDb: {
@@ -18,12 +24,9 @@ jest.mock('../fieldEncryption', () => ({
 
 jest.mock('../../../lib/supabase', () => ({
   supabase: {
-    auth: { getSession: jest.fn().mockResolvedValue({ data: { session: null } }) },
-    from: jest.fn().mockReturnValue({
-      upsert: jest.fn().mockResolvedValue({ error: null }),
-      delete: jest.fn().mockReturnValue({ in: jest.fn().mockResolvedValue({ error: null }) }),
-    }),
-    functions: { invoke: jest.fn() },
+    auth: { getSession: () => mockGetSession() },
+    from: (...args: unknown[]) => mockFrom(...args),
+    functions: { invoke: (...args: unknown[]) => mockInvoke(...args) },
   },
 }));
 
@@ -35,7 +38,15 @@ jest.mock('../../../utils/logger', () => ({
 jest.useFakeTimers();
 
 describe('enqueue', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetSession.mockResolvedValue({ data: { session: null } });
+    mockInvoke.mockResolvedValue({ data: null, error: null });
+    mockFrom.mockReturnValue({
+      upsert: jest.fn().mockResolvedValue({ error: null }),
+      delete: jest.fn().mockReturnValue({ in: jest.fn().mockResolvedValue({ error: null }) }),
+    });
+  });
 
   it('inserts an item into the sync_queue with correct table and operation', async () => {
     await enqueue('journal_entries', 'entry-123', 'upsert', { mood: 'calm' });
@@ -98,5 +109,150 @@ describe('enqueueCheckIn', () => {
         updatedAt: new Date().toISOString(),
       }),
     ).not.toThrow();
+  });
+});
+
+describe('invokeBirthProfileSync', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetSession.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } } });
+  });
+
+  it('reads birth profiles directly from Supabase first', async () => {
+    const maybeSingle = jest.fn().mockResolvedValue({
+      data: {
+        id: 'user-1',
+        user_id: 'user-1',
+        chart_id: 'chart-1',
+        name: 'Brittany',
+        birth_date: '1990-01-01',
+        birth_time: '12:30:00',
+        has_unknown_time: false,
+        birth_place: 'Detroit, MI',
+        latitude: 42.3314,
+        longitude: -83.0458,
+        timezone: 'America/Detroit',
+        house_system: 'placidus',
+        created_at: '2026-04-01T00:00:00.000Z',
+        updated_at: '2026-04-02T00:00:00.000Z',
+        is_deleted: false,
+        deleted_at: null,
+      },
+      error: null,
+    });
+    const eq = jest.fn().mockReturnValue({ maybeSingle });
+    const select = jest.fn().mockReturnValue({ eq });
+    mockFrom.mockReturnValue({ select });
+
+    await expect(
+      invokeBirthProfileSync('getLatest', {}, { swallowUnavailableReadError: false }),
+    ).resolves.toEqual({
+      profile: {
+        id: 'user-1',
+        chartId: 'chart-1',
+        name: 'Brittany',
+        birthDate: '1990-01-01',
+        birthTime: '12:30:00',
+        hasUnknownTime: false,
+        birthPlace: 'Detroit, MI',
+        latitude: 42.3314,
+        longitude: -83.0458,
+        timezone: 'America/Detroit',
+        houseSystem: 'placidus',
+        createdAt: '2026-04-01T00:00:00.000Z',
+        updatedAt: '2026-04-02T00:00:00.000Z',
+        isDeleted: false,
+        deletedAt: undefined,
+      },
+    });
+
+    expect(mockFrom).toHaveBeenCalledWith('birth_profiles');
+    expect(select).toHaveBeenCalledWith('*');
+    expect(eq).toHaveBeenCalledWith('user_id', 'user-1');
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it('upserts birth profiles directly to Supabase first', async () => {
+    const maybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
+    const upsert = jest.fn().mockResolvedValue({ error: null });
+    mockFrom
+      .mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({ maybeSingle }),
+        }),
+      })
+      .mockReturnValueOnce({ upsert });
+
+    await expect(
+      invokeBirthProfileSync('upsert', {
+        profile: {
+          id: 'chart-1',
+          chartId: 'chart-1',
+          name: 'Brittany',
+          birthDate: '1990-01-01',
+          birthTime: '12:30',
+          hasUnknownTime: false,
+          birthPlace: 'Detroit, MI',
+          latitude: 42.3314,
+          longitude: -83.0458,
+          timezone: 'America/Detroit',
+          houseSystem: 'placidus',
+          createdAt: '2026-04-01T00:00:00.000Z',
+          updatedAt: '2026-04-02T00:00:00.000Z',
+          isDeleted: false,
+        },
+      }),
+    ).resolves.toEqual({
+      profile: expect.objectContaining({
+        chartId: 'chart-1',
+        createdAt: '2026-04-01T00:00:00.000Z',
+        isDeleted: false,
+      }),
+    });
+
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'user-1',
+        user_id: 'user-1',
+        chart_id: 'chart-1',
+        birth_time: '12:30:00',
+      }),
+      { onConflict: 'user_id' },
+    );
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it('uses the Edge Function only as a remote fallback when direct Supabase is unavailable', async () => {
+    const directError = { message: 'Network request failed' };
+    mockFrom.mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          maybeSingle: jest.fn().mockResolvedValue({ data: null, error: directError }),
+        }),
+      }),
+    });
+    mockInvoke.mockResolvedValue({
+      data: {
+        profile: {
+          chartId: 'chart-1',
+          birthDate: '1990-01-01',
+          hasUnknownTime: true,
+          birthPlace: 'Detroit, MI',
+          latitude: 42.3314,
+          longitude: -83.0458,
+          updatedAt: '2026-04-02T00:00:00.000Z',
+          isDeleted: false,
+        },
+      },
+      error: null,
+    });
+
+    await expect(invokeBirthProfileSync('getLatest')).resolves.toEqual({
+      profile: expect.objectContaining({ chartId: 'chart-1' }),
+    });
+
+    expect(mockInvoke).toHaveBeenCalledWith('birth-profile-sync', {
+      body: { action: 'getLatest' },
+    });
   });
 });

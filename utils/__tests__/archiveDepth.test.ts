@@ -16,6 +16,15 @@ describe('archiveDepth', () => {
     expect(depth.label).toBe('Weekly read unlocked');
     expect(depth.totalSignals).toBe(7);
     expect(depth.nextMilestone).toBe(15);
+    expect(depth.headline).toContain('connect the week into a real story');
+  });
+
+  it('counts sleep entries as archive signals', () => {
+    const depth = getArchiveDepth({ sleepEntries: 2, dreamEntries: 1 });
+
+    expect(depth.label).toBe('Patterns forming');
+    expect(depth.totalSignals).toBe(3);
+    expect(depth.body).toContain('2 sleep entries');
   });
 
   it('personalizes premium copy around detected patterns first', () => {
