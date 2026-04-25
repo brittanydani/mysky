@@ -7,11 +7,11 @@
  * that connect what the user knows about themselves to how they actually show up.
  *
  * Updated goals:
- *  - soften identity-heavy claims
- *  - avoid quiz/test-result style language
- *  - suppress malformed phrase output
- *  - distinguish confirmed patterns from emerging/profile observations
- *  - make copy more observational and less absolute
+ * - Enforce the 3-part Velvet Glass formula: Observation, Pattern, Reframe.
+ * - Eliminate quiz/test-result style language.
+ * - Use the premium color palette exclusively.
+ * - Make copy breathtaking, observational, and deeply validating.
+ * - Gracefully suppress and sanitize malformed database tags in the final copy.
  */
 
 import {
@@ -35,7 +35,7 @@ export interface CrossRefInsight {
   body: string;
   heroMetrics?: InsightMetric[];
   takeaway?: InsightTakeaway;
-  accentColor: 'gold' | 'emerald' | 'silverBlue' | 'copper' | 'rose' | 'lavender';
+  accentColor: 'sage' | 'taupe' | 'coral' | 'midnightSlate' | 'velvet' | 'pearl';
   source: 'triggers' | 'somatic' | 'archetype' | 'values' | 'cognitive' | 'relationship' | 'reflection';
   isConfirmed: boolean;
   premiumType?: string;
@@ -140,17 +140,6 @@ function soundsBroken(text: string): boolean {
   );
 }
 
-function soften(text: string): string {
-  return cleanText(
-    text
-      .replace(/\bThis means\b/gi, 'This may mean')
-      .replace(/\bThis reveals\b/gi, 'This may suggest')
-      .replace(/\bYou are\b/gi, 'You may be')
-      .replace(/\bYour dominant\b/gi, 'Your leading')
-      .replace(/\bproves\b/gi, 'suggests')
-  );
-}
-
 function sanitizeThemeLabel(label: string): string {
   const cleaned = cleanText(label);
   if (soundsBroken(cleaned)) return 'still emerging';
@@ -192,15 +181,27 @@ function buildTriggerInsights(
       if (isDrain && diff >= -0.4) continue;
       if (!isDrain && diff <= 0.4) continue;
 
+      const title = isDrain
+        ? `The Cost of ${titleCase(item)}`
+        : `The Anchor of ${titleCase(item)}`;
+
+      const observation = isDrain
+        ? `Your archive suggests that "${item}" actively pulls from your reserves in a measurable way.`
+        : `Your archive suggests that "${item}" functions as a profound anchor for your system.`;
+
+      const pattern = isDrain
+        ? `Across ${tagged.length} recent entries where this was present, your baseline dropped by ${Math.abs(diff).toFixed(1)} points. The pattern reveals that this is not just a mild annoyance, but an active energetic hemorrhage.`
+        : `Across ${tagged.length} recent entries where this was present, your baseline lifted by ${diff.toFixed(1)} points. The pattern reveals that this is not merely a preference, but a structural requirement for your peace.`;
+
+      const reframe = isDrain
+        ? `This does not read as oversensitivity. It reads as your nervous system setting an immaculate boundary around what it can no longer afford to carry.`
+        : `This does not read as a temporary comfort. It reads as the exact condition your body requires to finally exhale.`;
+
       results.push({
         id: `trigger-${tag}-${isDrain ? 'd' : 'r'}`,
-        title: isDrain
-          ? `"${item}" looks like a real drain`
-          : `"${item}" seems to be a genuine restore`,
-        body: isDrain
-          ? `You marked "${item}" as draining, and your check-in data points in the same direction. On the ${tagged.length} days linked with "${readableTag(tag)}", your mood averaged ${tagAvg.toFixed(1)} — ${Math.abs(diff).toFixed(1)} points lower than your ${overallAvg.toFixed(1)} baseline.`
-          : `You marked "${item}" as restorative, and your check-in data points in the same direction. On the ${tagged.length} days linked with "${readableTag(tag)}", your mood averaged ${tagAvg.toFixed(1)} — ${diff.toFixed(1)} points above your ${overallAvg.toFixed(1)} baseline.`,
-        accentColor: isDrain ? 'copper' : 'emerald',
+        title,
+        body: `${observation}\n\n${pattern}\n\n${reframe}`,
+        accentColor: isDrain ? 'coral' : 'sage',
         source: 'triggers',
         isConfirmed: true,
       });
@@ -269,15 +270,12 @@ function buildSomaticInsight(
   const heavyLabel = overlap > 0 ? `${overlap} stress-linked` : `${entries.length} tracked`;
   const regionMetric = `${titleCase(regionLabel)} (${topRegionCount}x)`;
   const emotionalWeather = titleCase(topEmotion);
-  const overlapBody = overlap >= 2
-    ? ` On ${overlap} of those days, that same signal appeared alongside high stress, which suggests your body may be flagging it before your thoughts fully catch up.`
-    : '';
-  const sensationNote = topSensation ? ` The most common sensation is ${topSensation[0].toLowerCase()}.` : '';
+  const sensationNote = topSensation ? ` The most common sensation is a feeling of ${topSensation[0].toLowerCase()}.` : '';
 
   return {
     id: 'somatic-dominant',
-    title: 'Your body keeps pointing to the same place',
-    body: `Your physical and emotional logs keep returning to the same area. When ${topEmotion.toLowerCase()} shows up, your body most often registers it in your ${regionLabel}.${sensationNote}${overlapBody}`,
+    title: 'The Silent Ledger of the Body',
+    body: `Your archive indicates that your physical body is acting as the primary vessel for your emotional load.\n\nAcross recent entries, when ${topEmotion.toLowerCase()} arises, it reliably lands in your ${regionLabel} before your mind fully processes it.${sensationNote}\n\nThis does not read as physical frailty. It reads as an exquisitely attuned nervous system keeping the score so your mind doesn't have to carry the truth alone.`,
     heroMetrics: [
       metric(heavyLabel.toUpperCase(), 'Somatic days', overlap >= 2 ? 'caution' : 'default'),
       metric(regionMetric.toUpperCase(), 'Primary signal'),
@@ -289,7 +287,7 @@ function buildSomaticInsight(
       `Before analyzing tonight, place a hand on your ${topRegionId === 'gut' ? 'stomach' : regionLabel}. Let that region register first before you ask it to explain itself.`,
       'body-outline',
     ),
-    accentColor: 'silverBlue',
+    accentColor: 'midnightSlate',
     source: 'somatic',
     isConfirmed,
   };
@@ -299,30 +297,40 @@ function buildSomaticInsight(
 // 4. Archetype Pattern
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ARCHETYPE_SHADOWS: Record<ArchetypeKey, { title: string; body: string; takeaway: string }> = {
+const ARCHETYPE_SHADOWS: Record<ArchetypeKey, { title: string; observation: string; pattern: string; reframe: string; takeaway: string }> = {
   hero: {
-    title: 'A striving pattern may intensify under pressure',
-    body: 'Your reflections suggest a recurring movement toward overcoming and proving strength. Under strain, that can sometimes look like doing more when recovery would help your system sooner.',
+    title: 'The Cost of the Climb',
+    observation: 'Your archive suggests that under strain, your instinct is to simply push harder.',
+    pattern: 'Across recent entries, rising pressure triggers an urge to overcome, produce, and prove strength, rather than stepping back.',
+    reframe: 'This does not read as a need to prove yourself. It reads as a deeply ingrained survival strategy that hasn\'t yet learned it is safe to rest.',
     takeaway: 'When pressure spikes, notice whether you are trying to earn safety by doing more. What would strategic recovery look like first?',
   },
   caregiver: {
-    title: 'A caregiving pattern may get costly under strain',
-    body: 'Your reflections often stay oriented toward tending, supporting, or holding others. Under pressure, that can become over-giving before your own depletion is fully named.',
-    takeaway: 'Before meeting someone else\u2019s need, pause long enough to ask whether the same need is unspoken in you.',
+    title: 'The Architecture of Protection',
+    observation: 'Your archive indicates that responsibility for others often attaches to you before you can refuse it.',
+    pattern: 'Across your reflections, your orientation stays fixed on tending and holding others, often resulting in profound depletion.',
+    reframe: 'This does not read as poor boundaries. It reads as the heavy, quiet cost of being the one who ensures everyone else is okay before checking your own reserves.',
+    takeaway: 'Before meeting someone else’s need, pause long enough to ask whether the exact same need is unspoken in you.',
   },
   seeker: {
-    title: 'Movement may become the stress response',
-    body: 'When pressure rises, your instinct appears to move, shift, or escape the current frame. That may be useful sometimes, but it can also make staying present with the real tension harder.',
-    takeaway: 'Notice the urge to leave, switch, or move on. What happens if you stay with the current moment a little longer?',
+    title: 'Movement as Medicine',
+    observation: 'Your archive suggests that motion and shifting focus act as your primary escape hatches.',
+    pattern: 'When pressure rises, the data shows an immediate instinct to move, leave, or change the current frame.',
+    reframe: 'This does not read as a lack of commitment. It reads as a highly attuned system trying to prevent feeling trapped by staying ten steps ahead.',
+    takeaway: 'Notice the urge to leave or switch tasks. What happens if you stay with the current, uncomfortable moment just a little longer?',
   },
   sage: {
-    title: 'Understanding may arrive before feeling',
-    body: 'Your reflections lean toward truth-seeking and understanding. Under pressure, that can turn into analyzing before the feeling itself has had room to register.',
+    title: 'The Shield of Understanding',
+    observation: 'Your archive shows that cognitive understanding is your main regulatory tool.',
+    pattern: 'Under pressure, your reflections immediately lean toward analyzing and solving before the raw feeling itself has had room to register.',
+    reframe: 'This does not read as emotional avoidance. It reads as a brilliant mind trying to make an experience emotionally survivable by making it understandable.',
     takeaway: 'When the mind speeds up, pause before solving. What feeling is asking to be felt before it is explained?',
   },
   rebel: {
-    title: 'Resistance may sharpen under overload',
-    body: 'Your reflections suggest a recurring orientation toward questioning and pushing against what feels constraining. Under stress, that may turn into resistance before discernment has fully settled.',
+    title: 'The Friction of Constraint',
+    observation: 'Your archive indicates a profound sensitivity to anything that feels like a cage.',
+    pattern: 'Across recent entries, overload instantly morphs into a resistance against expectations, rules, or what feels confining.',
+    reframe: 'This does not read as mere defiance. It reads as a fierce, protective stance over your own autonomy when your capacity is already stretched thin.',
     takeaway: 'Pause long enough to ask what is truly misaligned, and what only feels intolerable because you are already overloaded.',
   },
 };
@@ -350,14 +358,14 @@ function buildArchetypeInsight(
   return {
     id: 'archetype-shadow',
     title: shadow.title,
-    body: shadow.body,
+    body: `${shadow.observation}\n\n${shadow.pattern}\n\n${shadow.reframe}`,
     heroMetrics: [
       ...(pct > 0 ? [metric(`${pct}%`, 'High-stress days', pct >= 30 ? 'caution' : 'default')] : []),
       metric(dominantName, 'Leading pattern', 'default'),
       ...(secondaryName ? [metric(secondaryName, 'Secondary', 'default')] : []),
     ],
     takeaway: takeaway('Pattern under pressure', shadow.takeaway, 'sparkles-outline'),
-    accentColor: 'lavender',
+    accentColor: 'pearl',
     source: 'archetype',
     isConfirmed,
   };
@@ -395,7 +403,8 @@ const PATTERN_TAG_LABELS: Record<string, string> = {
 };
 
 function resolveTagLabel(tag: string): string {
-  return PATTERN_TAG_LABELS[tag] ?? tag;
+  if (PATTERN_TAG_LABELS[tag]) return PATTERN_TAG_LABELS[tag];
+  return sanitizeThemeLabel(tag);
 }
 
 const RELATIONAL_TAGS = ['relationships', 'conflict', 'anxiety', 'loneliness', 'social', 'intimacy', 'boundaries'];
@@ -438,28 +447,44 @@ function buildRelationshipInsight(
     }
   }
 
-  const topThemeLabel = topTags.length > 0
-    ? topTags.map(([tag]) => resolveTagLabel(tag)).join(', ')
+  const validTags = topTags
+    .map(([tag]) => resolveTagLabel(tag))
+    .filter(t => t !== 'still emerging');
+
+  const safeThemeLabel = validTags.length > 0 
+    ? validTags.join(' and ') 
     : 'still emerging';
-  const safeThemeLabel = sanitizeThemeLabel(topThemeLabel);
 
-  const secureThemeLabel = topSecureTags.length > 0
-    ? resolveTagLabel(topSecureTags[0][0])
-    : null;
+  const secureThemeLabel = topSecureTags.length > 0 ? resolveTagLabel(topSecureTags[0][0]) : null;
 
-  let body = `Your relationship reflections keep circling ${topThemeLabel.toLowerCase()}.`;
+  let observation = `Your archive indicates that relational dynamics dictate your internal weather.`;
+  let pattern = safeThemeLabel === 'still emerging'
+    ? `Across recent entries, these subtle relational dynamics repeatedly surface to the top of your reflections.`
+    : `Across recent entries, themes of ${safeThemeLabel.toLowerCase()} repeatedly surface to the top of your reflections.`;
+    
+  let reframe = `This does not read as codependency. It reads as a profound sensitivity to the safety of your connections, calculating whether the net is strong enough to hold you.`;
+
   if (impact !== null && Math.abs(impact) >= 0.4) {
-    body = impact > 0
-      ? 'When relational themes appear in your check-ins, your emotional baseline tends to lift. Your data is linking certain forms of connection with expansion rather than collapse.'
-      : 'When relational themes appear in your check-ins, your emotional baseline tends to drop. The pattern suggests some forms of connection are still landing in your system as stress rather than support.';
+    if (impact > 0) {
+      pattern = safeThemeLabel === 'still emerging'
+        ? `Across recent entries, your emotional baseline actively lifts by ${Math.abs(impact).toFixed(1)} points when these specific dynamics appear.`
+        : `Across recent entries, your emotional baseline actively lifts by ${Math.abs(impact).toFixed(1)} points when themes of ${safeThemeLabel.toLowerCase()} appear.`;
+      reframe = `This does not read as mere extroversion. It reads as emotional closeness functioning as literal, vital medicine for your nervous system.`;
+    } else {
+      pattern = safeThemeLabel === 'still emerging'
+        ? `Across recent entries, your emotional baseline drops significantly when these relational dynamics are triggered.`
+        : `Across recent entries, your emotional baseline drops significantly when themes of ${safeThemeLabel.toLowerCase()} appear.`;
+      reframe = `This does not read as an inability to connect. It reads as a system that is carrying the heavy, unspoken cost of trying to make a dynamic safe.`;
+    }
   } else if (secureThemeLabel) {
-    body = `Your reflections show recurring struggle themes, but they also show secure behavior through ${secureThemeLabel.toLowerCase()}. The pattern is not static. You are already recording a different way of relating.`;
+    pattern = `While older patterns surface, the data specifically highlights your intentional reach toward ${secureThemeLabel.toLowerCase()}.`;
+    reframe = `This does not read as a polished performance. It reads as the stunning, quiet labor of actively rewriting your own emotional history.`;
   }
 
   return {
     id: 'relationship-pattern',
-    title: 'Your Relational Mirror',
-    body,
+    title: 'The Relational Mirror',
+    body: `${observation}\n\n${pattern}\n\n${reframe}`,
     heroMetrics: [
       metric(
         impact == null ? 'No clear lift yet' : `${impact > 0 ? '+' : '\u2212'}${Math.abs(impact).toFixed(1)}`,
@@ -472,13 +497,15 @@ function buildRelationshipInsight(
     takeaway: takeaway(
       'Inquiry',
       impact != null && impact >= 0.4
-        ? `What interaction, repair, or boundary created that ${Math.abs(impact).toFixed(1)} lift? Notice the part that worked, then repeat it.`
+        ? `What interaction, repair, or boundary created that ${Math.abs(impact).toFixed(1)} lift? Notice the part that worked, then fiercely protect it.`
         : impact != null && impact <= -0.4
-          ? `Which kind of interaction is creating that ${Math.abs(impact).toFixed(1)} drop? Name the specific pattern so you can stop treating all connection as the same.`
-          : `Your reflections are led by ${topThemeLabel.toLowerCase()}. Pick one recent interaction and trace where that theme showed up in real time.`,
+          ? `Which kind of interaction is creating that ${Math.abs(impact).toFixed(1)} drop? Name the exact dynamic so you can stop treating all connection as the same.`
+          : (safeThemeLabel === 'still emerging' 
+              ? `Your reflections are pointing toward a forming relational pattern. Pick one recent interaction and trace where it showed up in real time.`
+              : `Your reflections are led by ${safeThemeLabel.toLowerCase()}. Pick one recent interaction and trace where that theme showed up in real time.`),
       'heart-outline',
     ),
-    accentColor: 'rose',
+    accentColor: 'velvet',
     source: 'relationship',
     isConfirmed,
   };
@@ -503,49 +530,67 @@ function buildValuesInsight(
     const overallAvg = avg(allMoods);
     const hardDays = allMoods.filter(m => m < overallAvg - 1).length;
     if (hardDays >= 2) {
-      hardDayNote = ` You've had ${hardDays} harder days recently. These are often where a core value feels restricted \u2014 tracing back to which one can cut through the noise faster than analysis.`;
+      hardDayNote = `Across ${hardDays} recent heavy days, restriction in these exact areas appears as the primary source of friction.`;
       isConfirmed = true;
     }
   }
 
+  const observation = `Your archive indicates that your core values act as active, load-bearing walls.`;
+  const pattern = `You have consistently anchored yourself to ${topList}. ${hardDayNote}`;
+  const reframe = `This does not read as being stubborn or inflexible. It reads as a fierce, necessary protective stance over your own integrity.`;
+
   return {
     id: 'values-pressure',
-    title: 'Your Core Values in Practice',
-    body: `Your top values are ${topList}.${hardDayNote} When you feel stuck or heavy, asking which value is being constrained right now can surface the real issue faster than analysis alone.`,
-    accentColor: 'gold',
+    title: 'The Weight of the Core',
+    body: `${observation}\n\n${pattern}\n\n${reframe}`,
+    accentColor: 'taupe',
     source: 'values',
     isConfirmed,
   };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. Cognitive Style Workflow Note
+// 7. Cognitive Style & Intelligence
 // ─────────────────────────────────────────────────────────────────────────────
 
-const COGNITIVE_NOTES: Record<string, string> = {
-  'big-picture+quick-intuitive':
-    'You absorb context quickly and trust first impressions. Protect that initial clarity \u2014 detail-creep tends to dull your strongest instincts.',
-  'big-picture+careful-deliberate':
-    'You see the whole picture but commit slowly. Your best decisions come after sitting with options. Protect deliberate reflection time from being crowded out.',
-  'big-picture+adaptive':
-    'You think in patterns and shift strategy fluidly. Brief notes capture insights before they evaporate into the next context switch.',
-  'detail-oriented+quick-intuitive':
-    'You notice what others miss and often know immediately what it means. Your synthesis speed is unusual \u2014 trust it even when the details are still incomplete.',
-  'detail-oriented+careful-deliberate':
-    'You\u2019re thorough and precise before committing. Batch deep-focus work into protected blocks \u2014 this is where your highest-quality thinking happens.',
-  'detail-oriented+adaptive':
-    'You combine precision with flexibility. Breaking complex problems into phases \u2014 explore, then commit \u2014 uses your natural style fully.',
-  'balanced+quick-intuitive':
-    'You adapt to frameworks quickly and move decisively. Build in a brief pause between decision and action to distinguish gut-knowing from urgency.',
-  'balanced+careful-deliberate':
-    'You bring a measured, flexible approach to choices. Separating an explore-phase from a commit-phase lets you use this style without getting stuck.',
-  'balanced+adaptive':
-    'Your cognitive style flexes with context. Periodically checking whether you\u2019re acting from intuition or analysis in a given moment keeps decisions intentional.',
+const COGNITIVE_NOTES: Record<string, { pattern: string; reframe: string }> = {
+  'big-picture+quick-intuitive': {
+    pattern: 'Across your entries, you absorb context instantly and leap to first impressions without needing granular data.',
+    reframe: 'This does not read as recklessness. It reads as an immaculate synthesis speed—trust it even when the details are still incomplete.'
+  },
+  'big-picture+careful-deliberate': {
+    pattern: 'You see the vastness of the whole picture but actively refuse to commit until you have sat with the options.',
+    reframe: 'This does not read as hesitation. It reads as a profound structural patience that protects you from half-built ideas.'
+  },
+  'big-picture+adaptive': {
+    pattern: 'You think in massive patterns and shift your strategy fluidly based on the terrain.',
+    reframe: 'This does not read as scattered focus. It reads as an elegant agility, allowing you to rewrite the map while you are walking it.'
+  },
+  'detail-oriented+quick-intuitive': {
+    pattern: 'You immediately notice the exact detail others miss and intuitively grasp its meaning in seconds.',
+    reframe: 'This does not read as being overly critical. It reads as an unparalleled precision that cuts through the noise.'
+  },
+  'detail-oriented+careful-deliberate': {
+    pattern: 'You require absolute thoroughness, meticulously gathering every variable before making a move.',
+    reframe: 'This does not read as perfectionism. It reads as a deep reverence for the architecture of the truth.'
+  },
+  'detail-oriented+adaptive': {
+    pattern: 'You blend absolute precision with the willingness to change course when new facts emerge.',
+    reframe: 'This does not read as inconsistency. It reads as the brilliance of an explorer who only trusts an accurate compass.'
+  },
+  'balanced+quick-intuitive': {
+    pattern: 'You adapt to new frameworks instantly, moving decisively through the middle ground.',
+    reframe: 'This does not read as impulsivity. It reads as an instinctual trust in your own navigation system.'
+  },
+  'balanced+careful-deliberate': {
+    pattern: 'You bring a distinctly measured, flexible approach, separating your exploration phase from your commitment.',
+    reframe: 'This does not read as overthinking. It reads as a mature refusal to let urgency hijack your discernment.'
+  },
+  'balanced+adaptive': {
+    pattern: 'Your cognitive style flexes entirely depending on the context of the room you are in.',
+    reframe: 'This does not read as lacking a center. It reads as a profound adaptability that guarantees your survival in any environment.'
+  },
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 7b. Intelligence Profile Observation
-// ─────────────────────────────────────────────────────────────────────────────
 
 const INTELLIGENCE_DIMENSION_LABELS: Record<IntelligenceDimensionId, string> = {
   linguistic: 'Linguistic',
@@ -559,16 +604,43 @@ const INTELLIGENCE_DIMENSION_LABELS: Record<IntelligenceDimensionId, string> = {
   existential: 'Existential',
 };
 
-const INTELLIGENCE_NOTES: Record<IntelligenceDimensionId, string> = {
-  linguistic: 'Language looks like one of your primary ways of making sense of experience. Writing, reading, and conversation may be where your clarity arrives fastest.',
-  logical: 'Patterns, systems, and internal coherence appear central to how you think. You naturally break complexity into parts and notice what does not fit.',
-  musical: 'Rhythm, tone, and sound seem to carry real meaning for you. Music may function less like background and more like a way your system processes feeling.',
-  spatial: 'You seem to think in images, layouts, and relationships in space. Mental maps and visual structure may come to you faster than verbal explanation.',
-  kinesthetic: 'Your body looks like a real thinking tool for you. Movement, touch, and physical engagement may help you learn, remember, and regulate better than stillness does.',
-  interpersonal: 'You appear to read people fluently. Motivations, emotional shifts, and group dynamics may be legible to you in ways others miss.',
-  intrapersonal: 'You appear to have strong access to your own inner world. Self-observation, reflection, and pattern recognition seem to be among your sharpest forms of intelligence.',
-  naturalistic: 'You seem to notice patterns in the living world instinctively. Seasons, ecosystems, and natural systems may make intuitive sense to you.',
-  existential: 'Your mind appears drawn to the biggest questions. Meaning, purpose, mortality, and depth do not seem optional topics for you; they seem native territory.',
+const INTELLIGENCE_NOTES: Record<IntelligenceDimensionId, { observation: string; reframe: string }> = {
+  linguistic: {
+    observation: 'Language functions as your primary mechanism for making sense of raw experience.',
+    reframe: 'This does not read as mere eloquence. It reads as a desperate need for absolute emotional accuracy to locate reality.'
+  },
+  logical: {
+    observation: 'Patterns, systems, and internal coherence are the bedrock of how you process the world.',
+    reframe: 'This does not read as cold logic. It reads as your mind organizing the chaos into a survivable architecture.'
+  },
+  musical: {
+    observation: 'Rhythm, tone, and sound carry the weight of real meaning for your system.',
+    reframe: 'This does not read as a simple preference. It reads as music functioning as a direct conduit to process what cannot be spoken.'
+  },
+  spatial: {
+    observation: 'You think fundamentally in images, structural layouts, and relationships in space.',
+    reframe: 'This does not read as daydreaming. It reads as the capacity to literally see the geometry of a situation before it happens.'
+  },
+  kinesthetic: {
+    observation: 'Your physical body acts as a profoundly intelligent thinking tool.',
+    reframe: 'This does not read as restlessness. It reads as movement being the exact mechanism your body requires to digest the day.'
+  },
+  interpersonal: {
+    observation: 'You read the emotional shifts, motivations, and unsaid words in a room fluently.',
+    reframe: 'This does not read as hypervigilance alone. It reads as an extraordinary attunement to the safety and humanity of others.'
+  },
+  intrapersonal: {
+    observation: 'You have devastatingly clear access to your own interior world and its patterns.',
+    reframe: 'This does not read as self-absorption. It reads as a meticulous, courageous dedication to mapping your own soul.'
+  },
+  naturalistic: {
+    observation: 'You intuitively map the seasons, ecosystems, and natural rhythms around you.',
+    reframe: 'This does not read as a simple hobby. It reads as an inherent recognition that you belong to systems much older than yourself.'
+  },
+  existential: {
+    observation: 'Your mind is involuntarily drawn to the vast questions of mortality, purpose, and depth.',
+    reframe: 'This does not read as melancholy. It reads as a spirit that simply refuses to live on the shallow surface of existence.'
+  },
 };
 
 function buildIntelligenceInsight(profile: IntelligenceProfile): CrossRefInsight | null {
@@ -591,15 +663,15 @@ function buildIntelligenceInsight(profile: IntelligenceProfile): CrossRefInsight
   const secondLabel = INTELLIGENCE_DIMENSION_LABELS[second.id];
   const note = INTELLIGENCE_NOTES[top.id];
 
-  const body = top.score === second.score
-    ? `Your data suggests two equally strong channels here: ${topLabel} and ${secondLabel}. ${note}`
-    : `${topLabel} appears to lead your profile, with ${secondLabel} close behind. ${note}`;
+  const observation = `Your archive suggests that ${topLabel} intelligence dictates how you metabolize the world.`;
+  const pattern = `Across your entries, ${topLabel} and ${secondLabel} surface as the dominant lenses through which you decode your life. ${note.observation}`;
+  const reframe = note.reframe;
 
   return {
     id: 'intelligence-profile',
-    title: 'Your Intelligence Profile',
-    body,
-    accentColor: 'lavender',
+    title: 'The Lenses of Your Mind',
+    body: `${observation}\n\n${pattern}\n\n${reframe}`,
+    accentColor: 'pearl',
     source: 'cognitive',
     isConfirmed: false,
   };
@@ -610,14 +682,16 @@ function buildCognitiveInsight(scores: NonNullable<SelfKnowledgeContext['cogniti
   const dec  = scores.decisions <= 2 ? 'quick-intuitive' : scores.decisions >= 4 ? 'careful-deliberate' : 'adaptive';
 
   const key  = `${scope}+${dec}`;
-  const note = COGNITIVE_NOTES[key]
-    ?? `Your ${scope} thinking style combined with a ${dec} decision approach shapes where your best work happens. Design your environment around it.`;
+  const note = COGNITIVE_NOTES[key] ?? {
+    pattern: `You apply a distinctly ${scope} scope alongside a ${dec} decision-making process.`,
+    reframe: 'This does not read as a mere style. It reads as the exact cognitive framework that has kept you safe and effective.'
+  };
 
   return {
     id: 'cognitive-workflow',
-    title: 'Your Cognitive Style in Practice',
-    body: `A pattern in your reflection data suggests this cognitive style: ${note}`,
-    accentColor: 'silverBlue',
+    title: 'The Architecture of Your Choices',
+    body: `Your archive shows that understanding is your primary regulatory tool.\n\n${note.pattern}\n\n${note.reframe}`,
+    accentColor: 'midnightSlate',
     source: 'cognitive',
     isConfirmed: false,
   };
@@ -638,7 +712,7 @@ function buildReflectionInsight(
     Object.entries(summary.byCategory) as [string, number][]
   ).sort((a, b) => b[1] - a[1])[0];
 
-  let crossNote = '';
+  let pattern = `Across ${summary.totalDays} days, your mind repeatedly returns to the theme of ${dominantCategory[0].replace(/_/g, ' ').toLowerCase()}.`;
   let isConfirmed = false;
 
   if (checkIns.length >= 7 && summary.reflectionDates.length >= 5) {
@@ -655,23 +729,20 @@ function buildReflectionInsight(
       const nonReflAvg = avg(nonReflectionMoods);
       const diff = reflAvg - nonReflAvg;
       if (diff >= 0.3) {
-        crossNote = ` On days you reflect, your mood averages ${diff.toFixed(1)} points higher than on days you don\u2019t. Self-inquiry appears to have a measurable effect on your wellbeing.`;
+        pattern += ` Strikingly, on the days you perform this self-inquiry, your emotional baseline lifts by ${diff.toFixed(1)} points.`;
         isConfirmed = true;
       }
     }
   }
 
-  const streakNote = summary.streak >= 7
-    ? ` Your ${summary.streak}-day streak shows real commitment to self-knowledge.`
-    : '';
-
-  const categoryLabel = dominantCategory[0].replace(/_/g, ' ').toLowerCase();
+  const observation = `Your archive suggests that inward turning is a deeply active, regulatory practice for you.`;
+  const reframe = `This does not read as self-absorption. It reads as a meticulous dedication to mapping your own interior so you no longer have to navigate it in the dark.`;
 
   return {
     id: 'reflection-depth',
-    title: 'Your Reflection Practice',
-    body: `You\u2019ve reflected on ${summary.totalDays} days (${pct}% of a full 365-day cycle), with ${summary.totalAnswers} total answers. So far, your reflection practice leans most toward ${categoryLabel} (${dominantCategory[1]} answers). That is less about volume than about where your mind keeps returning when it wants to understand you more deeply.${streakNote}${crossNote}`,
-    accentColor: 'gold',
+    title: 'The Depth of the Inquiry',
+    body: `${observation}\n\n${pattern}\n\n${reframe}`,
+    accentColor: 'taupe',
     source: 'reflection',
     isConfirmed,
   };
@@ -732,16 +803,16 @@ function buildDreamSomaticInsight(
   if (matches.length === 0) return null;
 
   const primary = matches[0];
-  const secondary = matches[1];
-  const bodyLabel = secondary
-    ? ` "${secondary.dreamFeeling.replace(/_/g, ' ')}" also echoes your logged ${secondary.somaticEmotion.toLowerCase()} sensations.`
-    : '';
+  
+  const observation = `Your archive indicates that your sleep is functioning as an active, heavy processing state.`;
+  const pattern = `Across both your physical body logs and your dream entries, the exact same sensation of ${primary.somaticEmotion.toLowerCase()} and ${primary.dreamFeeling.replace(/_/g, ' ')} surfaces repeatedly.`;
+  const reframe = `This does not read as poor rest. It reads as a unified, brilliant system trying to metabolize the exact same wound from two different angles—day and night.`;
 
   return {
     id: 'dream-somatic-link',
-    title: 'Your Dreams and Body Are Carrying Similar Material',
-    body: `You frequently dream with a feeling of "${primary.dreamFeeling.replace(/_/g, ' ')}," and your body map shows ${primary.count} logged entries of ${primary.somaticEmotion.toLowerCase()}.${bodyLabel} Your dreams and your body may be processing the same material from different directions.`,
-    accentColor: 'silverBlue',
+    title: 'The Unified Thread',
+    body: `${observation}\n\n${pattern}\n\n${reframe}`,
+    accentColor: 'midnightSlate',
     source: 'somatic',
     isConfirmed: true,
   };
@@ -760,32 +831,7 @@ function buildJournalBodyInsight(
   const heavySet = new Set(journal.heavyDays);
   const onHeavyDays = somaticEntries.filter(e => heavySet.has(e.date.slice(0, 10)));
 
-  if (onHeavyDays.length < 2) {
-    const bodyRegions: Record<string, number> = {};
-    for (const e of somaticEntries) {
-      bodyRegions[e.region] = (bodyRegions[e.region] ?? 0) + 1;
-    }
-    const topRegion = Object.entries(bodyRegions).sort((a, b) => b[1] - a[1])[0];
-    if (!topRegion) return null;
-
-    return {
-      id: 'journal-body-pattern',
-      title: 'Your Journal and Your Body',
-      body: `Your heavier journal days are clustering around signals in your ${topRegion[0]}. The region showing up most often may be carrying part of the story your writing is trying to process.`,
-      heroMetrics: [
-        metric(String(journal.heavyDays.length), 'Heavy days'),
-        metric(String(topRegion[1]), `${topRegion[0]} entries`),
-      ],
-      takeaway: takeaway(
-        'Body check',
-        `On the next heavy writing day, start with your ${topRegion[0]} before you chase the right sentence. That region is showing up often enough to count as signal.`,
-        'body-outline',
-      ),
-      accentColor: 'copper',
-      source: 'somatic',
-      isConfirmed: false,
-    };
-  }
+  if (onHeavyDays.length < 2) return null;
 
   const overlapEmotions: Record<string, number> = {};
   for (const e of onHeavyDays) {
@@ -793,10 +839,14 @@ function buildJournalBodyInsight(
   }
   const topEmotion = Object.entries(overlapEmotions).sort((a, b) => b[1] - a[1])[0];
 
+  const observation = `Your archive reveals that your body and your words are carrying the exact same weight.`;
+  const pattern = `Across your heaviest journal entries, the precise feeling of ${topEmotion[0].toLowerCase()} is simultaneously registered in your physical body map.`;
+  const reframe = `This does not read as a coincidence. It reads as an undeniable physical signature—your flesh holding the line while your mind searches for the right sentence.`;
+
   return {
     id: 'journal-body-pattern',
-    title: 'Your Heaviest Days Have a Body Signature',
-    body: `Your heaviest journal days repeatedly land in the body as ${topEmotion[0].toLowerCase()}. The overlap is strong enough to suggest your body and your writing are tracking the same load from different angles.`,
+    title: 'The Physical Weight of the Words',
+    body: `${observation}\n\n${pattern}\n\n${reframe}`,
     heroMetrics: [
       metric(String(onHeavyDays.length), 'Overlap days'),
       metric(String(topEmotion[1]), topEmotion[0].toLowerCase()),
@@ -806,7 +856,7 @@ function buildJournalBodyInsight(
       `When a day starts feeling heavy, check for ${topEmotion[0].toLowerCase()} early. Catching the body signature sooner gives you a better intervention point than waiting for the spiral.`,
       'body-outline',
     ),
-    accentColor: 'copper',
+    accentColor: 'coral',
     source: 'somatic',
     isConfirmed: true,
   };
@@ -837,11 +887,15 @@ function buildDreamArchetypeInsight(
   const themeLabel = matchedThemes.slice(0, 2).join(' and ');
   const archetype = archetypeProfile.dominant.charAt(0).toUpperCase() + archetypeProfile.dominant.slice(1);
 
+  const observation = `Your archive suggests that your deepest archetypal traits do not pause when you close your eyes.`;
+  const pattern = `As the ${archetype}, your waking life is shaped by specific instincts, and your recurring dream themes of ${themeLabel} flawlessly mirror that exact same territory.`;
+  const reframe = `This does not read as random neural firing. It reads as a subconscious mind relentlessly working the material your archetype demands you understand.`;
+
   return {
     id: 'dream-archetype-pattern',
-    title: `Your Dreams Reflect The ${archetype}`,
-    body: `Your dominant archetype is The ${archetype}, and your recurring dream themes include ${themeLabel}, themes that mirror this pattern. Your dreaming mind may be working through the same territory your archetype profile points to before your waking mind fully names it.`,
-    accentColor: 'lavender',
+    title: `The Nocturnal ${archetype}`,
+    body: `${observation}\n\n${pattern}\n\n${reframe}`,
+    accentColor: 'pearl',
     source: 'archetype',
     isConfirmed: true,
   };
@@ -883,14 +937,15 @@ function buildSleepMoodInsight(
   if (Math.abs(diff) < 0.35) return null;
 
   const dir = diff > 0 ? 'higher' : 'lower';
-  const qualNote = dreamSummary.avgQuality != null
-    ? ` Your average sleep quality across those nights is ${dreamSummary.avgQuality.toFixed(1)}/5.`
-    : '';
+  
+  const observation = `Your archive suggests your emotional grace is profoundly tethered to your rest.`;
+  const pattern = `Across recent mornings, your mood shifts flawlessly by ${Math.abs(diff).toFixed(1)} points depending entirely on the sleep from the night before.`;
+  const reframe = `This does not read as emotional instability. It reads as a nervous system that relies almost entirely on sleep to maintain its protective buffer against the world.`;
 
   return {
     id: 'sleep-mood-link',
-    title: 'Sleep Shapes Your Days',
-    body: `The night before appears to shape the next day for you in a measurable way. Morning mood shifts enough after tracked sleep to register as a real lever rather than background noise.${qualNote}`,
+    title: 'The Architecture of the Morning',
+    body: `${observation}\n\n${pattern}\n\n${reframe}`,
     heroMetrics: [
       metric(`${dir === 'higher' ? '+' : '\u2212'}${Math.abs(diff).toFixed(1)}`, 'Next-day mood', dir === 'higher' ? 'positive' : 'caution'),
       metric(String(nightBeforeCheckIns.length), 'Tracked mornings'),
@@ -901,7 +956,7 @@ function buildSleepMoodInsight(
       `Your next-day mood is running ${Math.abs(diff).toFixed(1)} points ${dir} after tracked sleep. Protect the evening habit that most reliably changes that morning result.`,
       'moon-outline',
     ),
-    accentColor: 'emerald',
+    accentColor: 'sage',
     source: 'reflection',
     isConfirmed: true,
   };

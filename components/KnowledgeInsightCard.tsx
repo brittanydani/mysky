@@ -12,6 +12,33 @@ interface KnowledgeInsightCardProps {
   insight: GeneratedInsight;
 }
 
+function ensureSentence(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
+function stripTerminalPunctuation(text: string): string {
+  return text.trim().replace(/[.!?]+$/, '');
+}
+
+export function buildReframeText(reframe: GeneratedInsight['reframe']): string {
+  const shameText = reframe.shame.trim();
+  const clarityText = reframe.clarity.trim();
+  const shameSentence = !shameText
+    ? ''
+    : /^this does not read as\b/i.test(shameText)
+      ? ensureSentence(shameText)
+      : `This does not read as ${stripTerminalPunctuation(shameText)}.`;
+  const claritySentence = !clarityText
+    ? ''
+    : /^it reads as\b/i.test(clarityText)
+      ? ensureSentence(clarityText)
+      : `It reads as ${stripTerminalPunctuation(clarityText)}.`;
+
+  return [shameSentence, claritySentence].filter(Boolean).join(' ');
+}
+
 export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insight }) => {
   useAppTheme();
 
@@ -50,7 +77,7 @@ export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insi
         <Text style={styles.body}>{`${insight.observation} ${insight.pattern}`}</Text>
 
         <View style={styles.reframeContainer}>
-          <Text style={styles.reframeText}>{`This does not read as ${insight.reframe.shame}. It reads as ${insight.reframe.clarity}.`}</Text>
+          <Text style={styles.reframeText}>{buildReframeText(insight.reframe)}</Text>
         </View>
 
         <View style={styles.promptContainer}>

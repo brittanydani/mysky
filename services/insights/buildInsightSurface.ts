@@ -27,6 +27,13 @@ import type { DailyCheckIn } from '../patterns/types';
 import type { JournalEntry, SleepEntry } from '../storage/models';
 import type { ArchiveDepthCounts } from '../../utils/archiveDepth';
 import { logger } from '../../utils/logger';
+import { ARCHIVE_PATTERNS } from './archivePatterns';
+import { scoreArchivePattern } from './engine/scoreArchivePatterns';
+import { normalizeDailyCheckIn } from './normalizers/normalizeDailyCheckIn';
+import { normalizeJournal } from './normalizers/normalizeJournal';
+import { normalizeSleep } from './normalizers/normalizeSleep';
+import { normalizeSomatic } from './normalizers/normalizeSomatic';
+import type { UserSignal } from './types/knowledgeEngine';
 
 export interface InsightSurfaceResult {
   chartId: string | null;
@@ -93,6 +100,20 @@ async function maybeBuildPremiumInsight(
     if (!accessToken) return null;
 
     const userId = sessionData.session?.user?.id ?? 'unknown';
+
+    // Compute archive patterns
+    const now = toLocalDateString();
+    const allSignals: UserSignal[] = [
+      ...checkIns.flatMap(normalizeDailyCheckIn),
+      ...recentJournalEntries.flatMap(normalizeJournal),
+      ...sleepEntries.flatMap(normalizeSleep),
+      ...(enrichedContext.somaticEntries ? normalizeSomatic(enrichedContext.somaticEntries) : []),
+    ];
+
+    const archiveScores = ARCHIVE_PATTERNS.map((pattern) =>
+      scoreArchivePattern(pattern, allSignals, now),
+    ).filter((score) => score.score >= 0.5); // Only include patterns with meaningful scores
+
     const portraitInput: PortraitBuilderInput = {
       user_id: userId,
       window: {
@@ -121,6 +142,7 @@ async function maybeBuildPremiumInsight(
         sleep_correlations: [],
         tone_shifts: [],
       },
+      archive_patterns: archiveScores,
     };
 
     const patternSelectorInput: Omit<PatternSelectorInput, 'portrait'> = {

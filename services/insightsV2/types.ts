@@ -349,6 +349,14 @@ export interface DailyAngle {
   cooldownDays?: number;
 }
 
+export interface DailyAngleArchetype {
+  key: string;
+  order: number;
+  title: string;
+  description: string;
+  formula: string;
+}
+
 export interface ArchivePatternScore {
   patternKey: string;
   title: string;

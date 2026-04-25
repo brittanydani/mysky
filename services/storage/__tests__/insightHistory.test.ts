@@ -1,4 +1,4 @@
-// Mock localDb so no SQLite is needed
+// Mock persistence so no Supabase or SQLite is needed
 const mockSaveInsight = jest.fn().mockResolvedValue(undefined);
 const mockGetInsightByDate = jest.fn().mockResolvedValue(null);
 const mockGetInsightById = jest.fn().mockResolvedValue(null);
@@ -6,8 +6,8 @@ const mockGetInsightHistory = jest.fn().mockResolvedValue([]);
 const mockUpdateInsightFavorite = jest.fn().mockResolvedValue(undefined);
 const mockUpdateInsightViewedAt = jest.fn().mockResolvedValue(undefined);
 
-jest.mock('../localDb', () => ({
-  localDb: {
+jest.mock('../supabaseDb', () => ({
+  supabaseDb: {
     saveInsight: mockSaveInsight,
     getInsightByDate: mockGetInsightByDate,
     getInsightById: mockGetInsightById,

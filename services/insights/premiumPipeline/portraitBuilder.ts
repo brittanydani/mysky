@@ -24,6 +24,7 @@ export interface PortraitBuilderInput {
     sleep_correlations: any[];
     tone_shifts: any[];
   };
+  archive_patterns?: any[];
 }
 
 export interface PortraitBuilderOutput {
@@ -109,6 +110,24 @@ Your job is to identify:
 - condition-based sequences, such as what tends to change after low sleep, hard mornings, specific triggers, or better days
 - differences between hardest days and best days
 - gaps between what the user reports directly and what body/journal/sleep patterns suggest indirectly
+- archive patterns that have been detected across longer time windows (30-90 days)
+
+ARCHIVE PATTERNS (CRITICAL):
+When archive_patterns are provided, these represent sustained patterns detected across the user's full data archive.
+These are high-confidence, long-term patterns that should be prioritized in your portrait.
+Archive patterns include:
+- relationship with care and boundaries
+- processing styles and meaning-making
+- rest resistance and recovery patterns
+- emotional precision and communication needs
+- support patterns and relational safety
+
+Use archive patterns as foundational truths when building the portrait.
+Cross-reference archive patterns with recent data to identify:
+- whether the pattern is still active
+- how it manifests in current behavior
+- what triggers or conditions activate it
+- whether the user is aware of it or if it operates beneath conscious awareness
 
 Use the user's actual wording whenever possible in recurring_phrases and tone summaries.
 Prefer repeated patterns over one-off events.
@@ -120,6 +139,7 @@ A pattern is stronger when it appears across multiple domains, such as:
 - sleep + check-ins + journal tone
 - somatic region + trigger events + relationship entries
 - reflections + glimmers + better-day tone
+- archive pattern + recent behavioral evidence + cross-domain signal
 
 Output only structured JSON matching the requested contract.`;
 

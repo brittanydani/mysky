@@ -1154,7 +1154,7 @@ export async function saveInsight(insight: SavedInsight): Promise<void> {
       created_at: insight.createdAt,
       updated_at: insight.updatedAt,
     },
-    { onConflict: 'id' },
+    { onConflict: 'user_id,date,chart_id' },
   );
 
   if (error) throw error;

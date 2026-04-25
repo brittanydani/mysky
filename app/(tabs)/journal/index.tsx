@@ -37,13 +37,12 @@ import ObsidianJournalEntry from '../../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../../services/journal/nlp';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
-import { DreamClusterMap } from '../../../components/ui/DreamClusterMap';
 import { PremiumSegmentedControl } from '../../../components/ui/PremiumSegmentedControl';
 import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
 import { buildDreamArchiveSummary, hasDreamContent } from '../../../utils/dreamArchiveSummary';
 import { loadSelfKnowledgeContext } from '../../../services/insights/selfKnowledgeContext';
 import { enhanceInsightCopy } from '../../../services/insights/geminiInsightsService';
-import { getArchiveDepth, getPersonalizedPremiumTeaser } from '../../../utils/archiveDepth';
+import { getPersonalizedPremiumTeaser } from '../../../utils/archiveDepth';
 
 const VALID_MOODS = ['calm', 'soft', 'okay', 'heavy', 'stormy'] as const;
 
@@ -77,6 +76,7 @@ function sanitizeJournalEntryForEdit(entry: JournalEntry): JournalEntry {
 }
 
 const PAGE_SIZE = 30;
+const DAY_MS = 86_400_000;
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -335,14 +335,10 @@ export default function JournalScreen() {
 
   const dreamArchiveSummary = useMemo(() => buildDreamArchiveSummary(sleepEntries), [sleepEntries]);
   const dreamArchiveKey = useMemo(() => buildDreamArchiveKey(dreamArchiveSummary), [dreamArchiveSummary]);
-  const displayedDreamArchiveSummary = aiDreamArchiveKey === dreamArchiveKey
-    ? (aiDreamArchiveSummary ?? dreamArchiveSummary)
-    : dreamArchiveSummary;
   const archiveDepthCounts = useMemo(() => ({
     journalEntries: totalCount,
     dreamEntries: sleepEntries.filter((entry) => !entry.isDeleted && hasDreamContent(entry)).length,
   }), [sleepEntries, totalCount]);
-  const archiveDepth = useMemo(() => getArchiveDepth(archiveDepthCounts), [archiveDepthCounts]);
   const aiPatternFreshness = useMemo(() => formatAiFreshness(aiPatternGeneratedAt), [aiPatternGeneratedAt]);
   const aiDreamFreshness = useMemo(
     () => (aiDreamArchiveKey === dreamArchiveKey ? formatAiFreshness(aiDreamGeneratedAt) : null),
@@ -364,6 +360,153 @@ export default function JournalScreen() {
     }),
     [archiveDepthCounts, visiblePatternInsights.length],
   );
+
+  const weeklyReflectionInsight = useMemo<DisplayPatternInsight>(() => {
+    const today = toLocalDateString();
+    const todayDate = new Date(`${today}T12:00:00`);
+    const currentStart = toLocalDateString(new Date(todayDate.getTime() - 6 * DAY_MS));
+    const previousStart = toLocalDateString(new Date(todayDate.getTime() - 13 * DAY_MS));
+    const previousEnd = toLocalDateString(new Date(todayDate.getTime() - 7 * DAY_MS));
+
+    const currentWeekEntries = entries.filter((entry) => entry.date >= currentStart && entry.date <= today);
+    const previousWeekEntries = entries.filter((entry) => entry.date >= previousStart && entry.date <= previousEnd);
+    const currentCount = currentWeekEntries.length;
+    const previousCount = previousWeekEntries.length;
+
+    const topMood = (list: JournalEntry[]): string | null => {
+      if (!list.length) return null;
+      const counts: Record<string, number> = {};
+      for (const entry of list) {
+        const key = (entry.mood ?? '').trim();
+        if (!key) continue;
+        counts[key] = (counts[key] ?? 0) + 1;
+      }
+      return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    };
+
+    const topTag = (list: JournalEntry[]): string | null => {
+      const counts: Record<string, number> = {};
+      for (const entry of list) {
+        for (const rawTag of entry.tags ?? []) {
+          const key = rawTag.trim().toLowerCase();
+          if (!key) continue;
+          counts[key] = (counts[key] ?? 0) + 1;
+        }
+      }
+      return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    };
+
+    const currentMood = topMood(currentWeekEntries);
+    const previousMood = topMood(previousWeekEntries);
+    const currentTag = topTag(currentWeekEntries);
+    const previousTag = topTag(previousWeekEntries);
+
+    const toneTagNote = (() => {
+      const notes: string[] = [];
+      if (currentMood && previousMood && currentMood !== previousMood) {
+        notes.push(`Tone shifted from ${previousMood} to ${currentMood}.`);
+      } else if (currentMood) {
+        notes.push(`Dominant tone this week: ${currentMood}.`);
+      }
+
+      if (currentTag && previousTag && currentTag !== previousTag) {
+        notes.push(`Tag focus shifted from ${previousTag} to ${currentTag}.`);
+      } else if (currentTag) {
+        notes.push(`Most recurring tag this week: ${currentTag}.`);
+      }
+
+      return notes.length ? notes.join(' ') : null;
+    })();
+
+    if (visiblePatternInsights.length > 0) {
+      const localEpochWeek = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60_000) / (7 * DAY_MS));
+      const selectedInsight = visiblePatternInsights[localEpochWeek % visiblePatternInsights.length] ?? visiblePatternInsights[0];
+      if (!toneTagNote) return selectedInsight;
+      return {
+        ...selectedInsight,
+        actionable: selectedInsight.actionable
+          ? `${selectedInsight.actionable} ${toneTagNote}`
+          : toneTagNote,
+      };
+    }
+
+    if (currentCount === 0 && previousCount === 0) {
+      return {
+        title: 'Weekly Reflection Insight',
+        description: 'No reflection entries are logged in the last two weeks yet. Add one short reflection to begin your weekly archive read.',
+        actionable: toneTagNote ?? 'One entry is enough to start a weekly pattern signal.',
+        confidence: 'suggested',
+        icon: 'book-outline',
+        aiEnhanced: false,
+        type: 'mood_pattern',
+      } as DisplayPatternInsight;
+    }
+
+    const majorShift = Math.abs(currentCount - previousCount) >= 3;
+    return {
+      title: majorShift ? 'Weekly Reflection Shift' : 'Weekly Reflection Insight',
+      description: majorShift
+        ? `Your journaling rhythm shifted this week (${currentCount} entries vs ${previousCount} last week).`
+        : `Your journaling rhythm is steady this week (${currentCount} entries logged).`,
+      actionable: `${majorShift
+        ? 'A shift in writing cadence often marks a meaningful internal transition.'
+        : 'Steady reflection supports continuity and clearer pattern recognition over time.'}${toneTagNote ? ` ${toneTagNote}` : ''}`,
+      confidence: majorShift ? 'strong' : 'suggested',
+      icon: 'book-outline',
+      aiEnhanced: false,
+      type: 'mood_pattern',
+    } as DisplayPatternInsight;
+  }, [entries, visiblePatternInsights]);
+
+  const weeklyDreamInsight = useMemo(() => {
+    const today = toLocalDateString();
+    const todayDate = new Date(`${today}T12:00:00`);
+    const currentStart = toLocalDateString(new Date(todayDate.getTime() - 6 * DAY_MS));
+    const previousStart = toLocalDateString(new Date(todayDate.getTime() - 13 * DAY_MS));
+    const previousEnd = toLocalDateString(new Date(todayDate.getTime() - 7 * DAY_MS));
+
+    const validDreamEntries = sleepEntries.filter((entry) => !entry.isDeleted && hasDreamContent(entry));
+    const currentDreams = validDreamEntries.filter((entry) => entry.date >= currentStart && entry.date <= today);
+    const previousDreams = validDreamEntries.filter((entry) => entry.date >= previousStart && entry.date <= previousEnd);
+
+    const currentCount = currentDreams.length;
+    const previousCount = previousDreams.length;
+    const currentAvgQuality = currentCount > 0
+      ? currentDreams.reduce((sum, entry) => sum + (entry.quality ?? 0), 0) / currentCount
+      : 0;
+    const previousAvgQuality = previousCount > 0
+      ? previousDreams.reduce((sum, entry) => sum + (entry.quality ?? 0), 0) / previousCount
+      : 0;
+    const majorShift =
+      Math.abs(currentCount - previousCount) >= 2 ||
+      Math.abs(currentAvgQuality - previousAvgQuality) >= 1.2 ||
+      (previousCount >= 2 && currentCount === 0);
+
+    if (currentCount === 0 && previousCount === 0) {
+      return {
+        title: 'Dream Pattern Insight',
+        description: 'No dream entries in the last two weeks yet.',
+        actionable: 'One short dream note is enough to start your dream pattern read.',
+        confidence: 'suggested' as const,
+      };
+    }
+
+    if (majorShift) {
+      return {
+        title: 'Dream Pattern Shift',
+        description: `Dream activity shifted this week (${currentCount} entries vs ${previousCount} last week).`,
+        actionable: 'This can signal a change in how your system is processing emotional load overnight.',
+        confidence: 'strong' as const,
+      };
+    }
+
+    return {
+      title: 'Dream Pattern Insight',
+      description: `Your dream rhythm is steady this week (${currentCount} logged).`,
+      actionable: 'Your nighttime processing appears consistent without abrupt swings.',
+      confidence: 'suggested' as const,
+    };
+  }, [sleepEntries]);
 
   const toggleBrowseSearch = useCallback(() => {
     Haptics.selectionAsync().catch(() => {});
@@ -811,68 +954,37 @@ export default function JournalScreen() {
         </Animated.View>
       )}
 
-      {(totalCount > 0 || sleepEntries.length > 0) && (
-        <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
-          <Pressable onPress={() => router.push('/(tabs)/patterns' as Href)}>
-            <LinearGradient colors={theme.isDark ? ['rgba(107, 144, 128, 0.16)', 'rgba(26,30,41,0.35)'] : ['rgba(240,245,252,0.7)', 'rgba(240,245,252,0.4)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
-              <View style={styles.insightHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1, marginRight: 8 }}>
-                  <MetallicIcon name="pulse-outline" size={18} color={PALETTE.gold} />
-                  <MetallicText color={PALETTE.gold} style={[styles.insightTitle, { marginLeft: 8 }]} numberOfLines={1}>{archiveDepth.label}</MetallicText>
-                </View>
-              </View>
-              <Text style={styles.insightDescription}>{archiveDepth.headline}</Text>
-              <Text style={styles.depthCount}>{archiveDepth.totalSignals} signals</Text>
-              <Text style={styles.depthBody}>{archiveDepth.body}</Text>
-              <View style={styles.depthProgressTrack}>
-                <View style={[styles.depthProgressFill, { width: `${Math.max(8, archiveDepth.progress * 100)}%` }]} />
-              </View>
-              {!!archiveDepth.nextMilestone ? (
-                <Text style={styles.depthMeta}>{archiveDepth.remaining} more to reach {archiveDepth.nextMilestone}</Text>
-              ) : (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                  <Text style={[styles.insightActionable, { marginTop: 0, color: PALETTE.gold }]} numberOfLines={1}>Read Patterns</Text>
-                  <MetallicIcon name="arrow-forward-outline" size={14} color={PALETTE.gold} />
-                </View>
-              )}
-            </LinearGradient>
-          </Pressable>
-        </Animated.View>
-      )}
-
       {/* ── Reflection Insights (journal-based only) ── */}
-      {activeTab === 'reflections' && visiblePatternInsights.length > 0 && (
+      {activeTab === 'reflections' && (
         <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.insightsSection}>
-          <SectionHeader title="What Your Reflections Are Showing" icon="analytics-outline" />
-          <Text style={styles.insightsSubtitle}>Insights grounded only in your journal entries, writing cadence, and repeated reflection themes.</Text>
+          <SectionHeader title="Reflection Patterns" icon="analytics-outline" />
+          <Text style={styles.insightsSubtitle}>One weekly read from your journal patterns.</Text>
 
-          {visiblePatternInsights.map((insight, idx) => (
-            <LinearGradient key={`${insight.title}-${idx}`} colors={theme.isDark ? ['rgba(107, 144, 128, 0.20)', 'rgba(162, 194, 225, 0.05)'] : ['rgba(236, 247, 241, 0.75)', 'rgba(240, 245, 252, 0.42)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
-              <View style={styles.insightHeader}>
-                <MetallicIcon
-                  name={(insight.icon ?? 'analytics-outline') as any}
-                  size={16}
-                  color={PALETTE.gold}
-                  style={{ marginRight: 8 }}
-                />
-                <View style={{ flex: 1, flexShrink: 1, overflow: 'hidden' }}>
-                  {theme.isDark ? (
-                    <MetallicText color={PALETTE.gold} style={styles.insightTitle}>{insight.title}</MetallicText>
-                  ) : (
-                    <Text style={styles.insightTitleLight}>{insight.title}</Text>
-                  )}
-                </View>
-                <View style={[styles.confidenceBadge, theme.isDark ? insight.confidence === 'strong' && styles.confidenceStrong : styles.confidenceLight, theme.isDark && insight.confidence !== 'strong' && styles.confidenceSuggested]}>
-                  <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && insight.confidence !== 'strong' && { color: PALETTE.gold }]}>{insight.confidence === 'strong' ? 'CONFIRMED' : 'EMERGING'}</Text>
-                </View>
+          <LinearGradient colors={theme.isDark ? ['rgba(107, 144, 128, 0.20)', 'rgba(162, 194, 225, 0.05)'] : ['rgba(236, 247, 241, 0.75)', 'rgba(240, 245, 252, 0.42)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
+            <View style={styles.insightHeader}>
+              <MetallicIcon
+                name={(weeklyReflectionInsight.icon ?? 'analytics-outline') as any}
+                size={16}
+                color={PALETTE.gold}
+                style={{ marginRight: 8 }}
+              />
+              <View style={{ flex: 1, flexShrink: 1, overflow: 'hidden' }}>
+                {theme.isDark ? (
+                  <MetallicText color={PALETTE.gold} style={styles.insightTitle}>{weeklyReflectionInsight.title}</MetallicText>
+                ) : (
+                  <Text style={styles.insightTitleLight}>{weeklyReflectionInsight.title}</Text>
+                )}
               </View>
-              {!!(insight.aiEnhanced && aiPatternFreshness) && <Text style={styles.aiFreshnessText}>{aiPatternFreshness}</Text>}
-              <Text style={styles.insightDescription}>{insight.description}</Text>
-              {!!insight.actionable && (
-                <Text style={[styles.insightActionable, { color: theme.textPrimary }]}>{insight.actionable}</Text>
-              )}
-            </LinearGradient>
-          ))}
+              <View style={[styles.confidenceBadge, theme.isDark ? weeklyReflectionInsight.confidence === 'strong' && styles.confidenceStrong : styles.confidenceLight, theme.isDark && weeklyReflectionInsight.confidence !== 'strong' && styles.confidenceSuggested]}>
+                <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && weeklyReflectionInsight.confidence !== 'strong' && { color: PALETTE.gold }]}>{weeklyReflectionInsight.confidence === 'strong' ? 'CONFIRMED' : 'EMERGING'}</Text>
+              </View>
+            </View>
+            {!!(weeklyReflectionInsight.aiEnhanced && aiPatternFreshness) && <Text style={styles.aiFreshnessText}>{aiPatternFreshness}</Text>}
+            <Text style={styles.insightDescription}>{weeklyReflectionInsight.description}</Text>
+            {!!weeklyReflectionInsight.actionable && (
+              <Text style={[styles.insightActionable, { color: theme.textPrimary }]}>{weeklyReflectionInsight.actionable}</Text>
+            )}
+          </LinearGradient>
         </Animated.View>
       )}
 
@@ -900,39 +1012,36 @@ export default function JournalScreen() {
         </Animated.View>
       )}
 
-      {/* ── Dream Cluster Map (Midnight Slate Anchor) ── */}
-      {activeTab === 'dreams' && isPremium && sleepEntries.some(e => e.dreamText) && (
+      {/* ── Dream Pattern Insight ── */}
+      {activeTab === 'dreams' && sleepEntries.some(e => !e.isDeleted) && (
         <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.insightsSection}>
-          {displayedDreamArchiveSummary && (
-            <LinearGradient colors={theme.isDark ? ['rgba(168, 139, 235, 0.16)', 'rgba(44, 54, 69, 0.30)'] : ['rgba(168, 139, 235, 0.12)', 'rgba(240, 245, 252, 0.55)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
-              <View style={styles.insightHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1, marginRight: 8 }}>
-                  <MetallicIcon name="pulse-outline" size={18} color={PALETTE.gold} />
-                  <MetallicText color={PALETTE.gold} style={[styles.insightTitle, { marginLeft: 8 }]} numberOfLines={1}>Dream Pattern Read</MetallicText>
-                </View>
+          <SectionHeader title="Dream Patterns" icon="moon-outline" />
+          <Text style={styles.insightsSubtitle}>One weekly read from your dream patterns.</Text>
+          <LinearGradient colors={theme.isDark ? ['rgba(168, 139, 235, 0.16)', 'rgba(44, 54, 69, 0.30)'] : ['rgba(168, 139, 235, 0.12)', 'rgba(240, 245, 252, 0.55)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
+            <View style={styles.insightHeader}>
+              <MetallicIcon
+                name="moon-outline"
+                size={16}
+                color={PALETTE.gold}
+                style={{ marginRight: 8 }}
+              />
+              <View style={{ flex: 1, flexShrink: 1, overflow: 'hidden' }}>
+                {theme.isDark ? (
+                  <MetallicText color={PALETTE.gold} style={styles.insightTitle}>{weeklyDreamInsight.title}</MetallicText>
+                ) : (
+                  <Text style={styles.insightTitleLight}>{weeklyDreamInsight.title}</Text>
+                )}
               </View>
-              {!!aiDreamFreshness && <Text style={styles.aiFreshnessText}>{aiDreamFreshness}</Text>}
-              <Text style={styles.insightDescription}>{displayedDreamArchiveSummary.summary}</Text>
-              <View style={styles.dreamPatternChipRow}>
-                {displayedDreamArchiveSummary.chips.map((chip) => (
-                  <View key={chip} style={styles.dreamPatternChip}>
-                    <Text style={styles.dreamPatternChipText}>{chip}</Text>
-                  </View>
-                ))}
+              <View style={[styles.confidenceBadge, theme.isDark ? weeklyDreamInsight.confidence === 'strong' && styles.confidenceStrong : styles.confidenceLight, theme.isDark && weeklyDreamInsight.confidence !== 'strong' && styles.confidenceSuggested]}>
+                <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && weeklyDreamInsight.confidence !== 'strong' && { color: PALETTE.gold }]}>{weeklyDreamInsight.confidence === 'strong' ? 'CONFIRMED' : 'EMERGING'}</Text>
               </View>
-              <Text style={styles.insightActionable}>{displayedDreamArchiveSummary.grounding}</Text>
-            </LinearGradient>
-          )}
-          <SectionHeader title="Dream Symbols" icon="planet-outline" />
-          <View style={[styles.clusterCard, theme.isDark && styles.velvetBorder]}>
-            <LinearGradient colors={theme.isDark ? ['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)'] : ['rgba(245, 247, 250, 0.9)', 'rgba(245, 247, 250, 0.9)']} style={StyleSheet.absoluteFill} />
-            <Pressable style={styles.clusterCardHeader} onPress={() => router.push('/(tabs)/sleep' as Href)}>
-              <MetallicIcon name="planet-outline" size={14} color={PALETTE.gold} />
-              <MetallicText color={PALETTE.gold} style={styles.clusterCardEyebrow}>RECURRING THEMES</MetallicText>
-              <Ionicons name="chevron-forward-outline" size={14} color={theme.isDark ? PALETTE.gold : LIGHT_MODE_META} style={styles.clusterChevron} />
-            </Pressable>
-            <DreamClusterMap height={280} />
-          </View>
+            </View>
+            {!!aiDreamFreshness && <Text style={styles.aiFreshnessText}>{aiDreamFreshness}</Text>}
+            <Text style={styles.insightDescription}>{weeklyDreamInsight.description}</Text>
+            {!!weeklyDreamInsight.actionable && (
+              <Text style={[styles.insightActionable, { color: theme.textPrimary }]}>{weeklyDreamInsight.actionable}</Text>
+            )}
+          </LinearGradient>
         </Animated.View>
       )}
 

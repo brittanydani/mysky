@@ -63,6 +63,12 @@ const PALETTE = {
   bg: '#0A0A0F',
 };
 
+const WRAP_AT_WORD_PROPS = {
+  android_hyphenationFrequency: 'none' as const,
+  lineBreakStrategyIOS: 'none' as const,
+  textBreakStrategy: 'simple' as const,
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function PatternsScreen() {
@@ -202,10 +208,13 @@ export default function PatternsScreen() {
     () => (feedInsights.length > 0 ? refineCrossRefCopy(feedInsights[todayIndex]) : null),
     [feedInsights, todayIndex],
   );
-  const focusInsights = useMemo(() => {
-    if (feedInsights.length === 0) return [];
+  const deepDiveInsights = useMemo(() => {
+    if (feedInsights.length <= 1) return [];
     const rotated = [...feedInsights.slice(todayIndex), ...feedInsights.slice(0, todayIndex)];
-    return rotated.slice(0, 3).map(refineCrossRefCopy);
+    return rotated
+      .slice(1)
+      .map(refineCrossRefCopy)
+      .slice(0, 2);
   }, [feedInsights, todayIndex]);
   const patternRows = useMemo(() => (leadInsight ? [leadInsight] : []), [leadInsight]);
   const premiumTeaser = useMemo(
@@ -235,17 +244,17 @@ export default function PatternsScreen() {
                 <View style={styles.cardHeader}>
                   <MetallicText style={styles.cardLabel} variant="gold">THIS WEEK'S PATTERN</MetallicText>
                   <View style={styles.confirmedBadge}>
-                    <Text style={styles.confirmedText}>{item.isConfirmed ? 'SEEN REPEATEDLY' : 'EARLY SIGNAL'}</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.confirmedText}>{item.isConfirmed ? 'SEEN REPEATEDLY' : 'EARLY SIGNAL'}</Text>
                   </View>
                 </View>
-                <Text style={styles.patternTitle}>{normalizeDisplayText(item.title)}</Text>
-                <Text style={styles.insightBody}>{normalizeDisplayText(item.body)}</Text>
+                <Text {...WRAP_AT_WORD_PROPS} style={styles.patternTitle}>{normalizeDisplayText(item.title)}</Text>
+                <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>{normalizeDisplayText(item.body)}</Text>
                 {item.heroMetrics && item.heroMetrics.length > 0 && (
                   <View style={styles.heroMetricsRow}>
                     {item.heroMetrics.map((m) => (
                       <View key={m.label} style={styles.heroMetricChip}>
-                        <Text style={styles.heroMetricValue}>{m.value}</Text>
-                        <Text style={styles.heroMetricLabel}>{m.label}</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.heroMetricValue}>{m.value}</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.heroMetricLabel}>{m.label}</Text>
                       </View>
                     ))}
                   </View>
@@ -273,8 +282,8 @@ export default function PatternsScreen() {
                 >
                   <LinearGradient colors={['rgba(168,139,235,0.25)', 'rgba(168,139,235,0.08)']} style={StyleSheet.absoluteFill} />
                   <View style={{ alignItems: 'center', flex: 1 }}>
-                    <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">Inside Your Pattern Archive</MetallicText>
-                    <Text style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>{normalizeDisplayText(`${focusInsights.length} deep reads currently in focus`)}</Text>
+                    <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">Open Weekly Deep Dive</MetallicText>
+                    <Text {...WRAP_AT_WORD_PROPS} style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>{normalizeDisplayText(`${deepDiveInsights.length} deep reads currently in focus`)}</Text>
                   </View>
                 </Pressable>
               ) : (
@@ -288,7 +297,7 @@ export default function PatternsScreen() {
                   <MetallicIcon name="lock-closed-outline" size={16} variant="gold" />
                   <View style={{ flex: 1 }}>
                     <MetallicText style={styles.deepDiveButtonTitle} variant="gold">{premiumTeaser.cta}</MetallicText>
-                    <Text style={styles.deepDiveButtonSub}>{normalizeDisplayText(premiumTeaser.title)}</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.deepDiveButtonSub}>{normalizeDisplayText(premiumTeaser.title)}</Text>
                   </View>
                   <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
                 </Pressable>
@@ -341,8 +350,8 @@ export default function PatternsScreen() {
                       <MetallicText style={styles.cardLabel} variant="gold">PATTERNS DETECTED</MetallicText>
                       <View style={styles.lockedBadge}><MetallicIcon name="lock-closed-outline" size={10} variant="gold" /><Text style={styles.lockedText}>PREMIUM</Text></View>
                     </View>
-                    <Text style={styles.patternTitle}>{normalizeDisplayText(premiumTeaser.title)}</Text>
-                    <Text style={styles.insightBody}>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.patternTitle}>{normalizeDisplayText(premiumTeaser.title)}</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>
                       {normalizeDisplayText(premiumTeaser.body)}
                     </Text>
                   </VelvetGlassSurface>
@@ -354,8 +363,8 @@ export default function PatternsScreen() {
                   <View style={styles.cardHeader}>
                     <MetallicText style={styles.cardLabel} variant="gold">BUILDING YOUR ARCHIVE</MetallicText>
                   </View>
-                    <Text style={styles.patternTitle}>{normalizeDisplayText(`${5 - snapshot.checkInCount} more check-ins until your first pattern insight`)}</Text>
-                  <Text style={styles.insightBody}>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.patternTitle}>{normalizeDisplayText(`${5 - snapshot.checkInCount} more check-ins until your first pattern insight`)}</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>
                     Keep logging — once you have 5 check-ins, Deeper Sky can start naming what keeps repeating instead of stopping at a recap of the week.
                   </Text>
                 </VelvetGlassSurface>
@@ -363,20 +372,20 @@ export default function PatternsScreen() {
               {!loading && loadError ? (
                 <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
                   <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
-                  <Text style={styles.emptyTitle}>Couldn't load patterns right now</Text>
-                  <Text style={styles.emptyBody}>Something went wrong while analyzing your data. Try again in a moment.</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyTitle}>Couldn't load patterns right now</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>Something went wrong while analyzing your data. Try again in a moment.</Text>
                 </VelvetGlassSurface>
               ) : !loading && patternRows.length === 0 ? (
                 <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
                   <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
-                  <Text style={styles.emptyTitle}>Your archive is not readable yet</Text>
-                  <Text style={styles.emptyBody}>MySky should not invent a pattern before it has earned one. This space gets stronger as these signals overlap:</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyTitle}>Your archive is not readable yet</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>MySky should not invent a pattern before it has earned one. This space gets stronger as these signals overlap:</Text>
                   <View style={{ marginTop: 16, gap: 10 }}>
-                    <Text style={styles.emptyBody}>{'\u2022'} Check in with your mood, energy, and stress daily</Text>
-                    <Text style={styles.emptyBody}>{'\u2022'} Log sleep duration and dream notes</Text>
-                    <Text style={styles.emptyBody}>{'\u2022'} Write a journal entry when something feels important</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>{'\u2022'} Check in with your mood, energy, and stress daily</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>{'\u2022'} Log sleep duration and dream notes</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>{'\u2022'} Write a journal entry when something feels important</Text>
                   </View>
-                  <Text style={[styles.emptyBody, { marginTop: 16, fontStyle: 'italic' }]}>3-5 days of check-ins usually gives MySky enough repetition to surface a first real read.</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={[styles.emptyBody, { marginTop: 16, fontStyle: 'italic' }]}>3-5 days of check-ins usually gives MySky enough repetition to surface a first real read.</Text>
                 </VelvetGlassSurface>
               ) : null}
             </>
@@ -394,7 +403,7 @@ export default function PatternsScreen() {
             >
               <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
               <MetallicIcon name="library-outline" size={16} variant="gold" />
-              <MetallicText style={styles.libraryButtonText} variant="gold">Open Your Pattern Archive</MetallicText>
+              <MetallicText style={styles.libraryButtonText} variant="gold">Open Pattern Library</MetallicText>
             </Pressable>
           )}
           showsVerticalScrollIndicator={false}
@@ -417,7 +426,7 @@ export default function PatternsScreen() {
           <VelvetGlassSurface style={[styles.deepDiveModalCard, styles.modalCard]} intensity={35}>
             <LinearGradient colors={['rgba(44, 54, 69, 0.92)', 'rgba(26, 30, 41, 0.72)']} style={StyleSheet.absoluteFill} />
             <View style={styles.modalHeader}>
-              <MetallicText style={styles.modalTitle} variant="gold">Archive Patterns in Focus</MetallicText>
+              <MetallicText style={styles.modalTitle} variant="gold">Weekly Deep Dive</MetallicText>
               <Pressable
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
@@ -430,33 +439,33 @@ export default function PatternsScreen() {
                 <MetallicIcon name="close-outline" size={18} variant="gold" />
               </Pressable>
             </View>
-            <Text style={styles.modalIntro}>
-              Three deeper reads from your archive. These update as patterns intensify, soften, or gain stronger cross-source evidence.
+            <Text {...WRAP_AT_WORD_PROPS} style={styles.modalIntro}>
+              Two deeper reads from your archive. These update as patterns intensify, soften, or gain stronger cross-source evidence.
             </Text>
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: '85%' }}>
               <View style={{ gap: 16, paddingBottom: 8 }}>
-                {focusInsights.map((insight, idx) => (
+                {deepDiveInsights.map((insight, idx) => (
                   <View key={insight.id} style={styles.deepDiveInsightCard}>
                     <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.03)']} style={StyleSheet.absoluteFill} />
-                    <Text style={styles.deepDiveInsightTitle}>{insight.title}</Text>
-                    <Text style={[styles.insightBody, { fontSize: 14 }]}>{normalizeDisplayText(insight.body)}</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.deepDiveInsightTitle}>{insight.title}</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={[styles.insightBody, { fontSize: 14 }]}>{normalizeDisplayText(insight.body)}</Text>
                     {insight.heroMetrics && insight.heroMetrics.length > 0 && (
                       <View style={[styles.heroMetricsRow, { marginTop: 12 }]}>
                         {insight.heroMetrics.map((m) => (
                           <View key={m.label} style={styles.heroMetricChip}>
-                            <Text style={styles.heroMetricValue}>{m.value}</Text>
-                            <Text style={styles.heroMetricLabel}>{m.label}</Text>
+                            <Text {...WRAP_AT_WORD_PROPS} style={styles.heroMetricValue}>{m.value}</Text>
+                            <Text {...WRAP_AT_WORD_PROPS} style={styles.heroMetricLabel}>{m.label}</Text>
                           </View>
                         ))}
                       </View>
                     )}
                     {insight.takeaway && (
                       <View style={[styles.supportCallout, { marginTop: 12 }]}>
-                        <Text style={styles.supportCalloutLabel}>{insight.takeaway.label}</Text>
-                        <Text style={styles.supportCalloutBody}>{insight.takeaway.body}</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>{insight.takeaway.label}</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{insight.takeaway.body}</Text>
                       </View>
                     )}
-                    <Text style={[styles.rotationHint, { textAlign: 'left', marginTop: 8 }]}>Insight {idx + 1} of {focusInsights.length}</Text>
+                    <Text style={[styles.rotationHint, { textAlign: 'left', marginTop: 8 }]}>Insight {idx + 1} of {deepDiveInsights.length}</Text>
                   </View>
                 ))}
               </View>
@@ -471,9 +480,15 @@ export default function PatternsScreen() {
         visible={showLibraryModal}
         onRequestClose={() => setShowLibraryModal(false)}
       >
-        <View style={styles.modalBackdrop}>
+        <View style={[styles.modalBackdrop, styles.libraryModalBackdrop]}>
+          <Pressable
+            onPress={() => setShowLibraryModal(false)}
+            style={StyleSheet.absoluteFill}
+            accessibilityRole="button"
+            accessibilityLabel="Close pattern library"
+          />
           <BlurView intensity={30} tint={theme.blurTint} style={StyleSheet.absoluteFill} />
-          <VelvetGlassSurface style={styles.modalCard} intensity={35}>
+          <VelvetGlassSurface style={[styles.modalCard, styles.libraryModalCard]} intensity={35}>
             <LinearGradient colors={['rgba(44, 54, 69, 0.92)', 'rgba(26, 30, 41, 0.72)']} style={StyleSheet.absoluteFill} />
             <View style={styles.modalHeader}>
               <MetallicText style={styles.modalTitle} variant="gold">Your Pattern Archive</MetallicText>
@@ -489,26 +504,45 @@ export default function PatternsScreen() {
                 <MetallicIcon name="close-outline" size={18} variant="gold" />
               </Pressable>
             </View>
-            <Text style={styles.modalBody}>
-              {normalizeDisplayText('A living profile of who you are becoming — expanding as MySky learns how you feel, recover, connect, and grow.')}
-            </Text>
-            <Text style={styles.modalStatus}>{normalizeDisplayText(libraryState.statusLine)}</Text>
-            <Text style={styles.modalBodyMuted}>{normalizeDisplayText(libraryState.helperText)}</Text>
-            {libraryState.sections.length > 0 ? (
-              <View style={styles.libraryList}>
-                {libraryState.sections.map((section) => (
-                  <View key={section.title} style={styles.librarySection}>
-                    <Text style={styles.librarySectionTitle}>{section.title}</Text>
-                    {section.items.map((item) => (
-                      <View key={`${section.title}-${item.title}`} style={styles.libraryItem}>
-                        <Text style={styles.libraryItemTitle}>{normalizeDisplayText(item.title)}</Text>
-                        <Text style={styles.libraryItemBody}>{normalizeDisplayText(item.body)}</Text>
-                      </View>
-                    ))}
-                  </View>
-                ))}
-              </View>
-            ) : null}
+            <ScrollView
+              style={styles.libraryModalScroll}
+              contentContainerStyle={styles.libraryModalScrollContent}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled
+            >
+              <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBody}>
+                {normalizeDisplayText('A living profile of who you are becoming — expanding as MySky learns how you feel, recover, connect, and grow.')}
+              </Text>
+              <Text {...WRAP_AT_WORD_PROPS} style={styles.modalStatus}>{normalizeDisplayText(libraryState.statusLine)}</Text>
+              <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBodyMuted}>{normalizeDisplayText(libraryState.helperText)}</Text>
+              {libraryState.sections.length > 0 ? (
+                <View style={styles.libraryList}>
+                  {libraryState.sections.map((section, sectionIndex) => (
+                    <View key={`${section.title}-${sectionIndex}`} style={styles.librarySection}>
+                      <Text {...WRAP_AT_WORD_PROPS} style={styles.librarySectionTitle}>{section.title}</Text>
+                      {section.items.map((item, itemIndex) => (
+                        <View key={`${section.title}-${item.title}-${itemIndex}`} style={styles.libraryItem}>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemTitle}>{normalizeDisplayText(item.title)}</Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemBody}>{normalizeDisplayText(item.body)}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+            </ScrollView>
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                setShowLibraryModal(false);
+              }}
+              style={styles.modalCloseButton}
+              accessibilityRole="button"
+              accessibilityLabel="Done with pattern library"
+            >
+              <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
+              <MetallicText style={styles.modalCloseButtonText} variant="gold">Done</MetallicText>
+            </Pressable>
           </VelvetGlassSurface>
         </View>
       </Modal>
@@ -548,9 +582,9 @@ const GlassTakeaway = ({ label, body, icon }: { label: string; body: string; ico
     <View style={styles.supportCallout}>
       <View style={styles.supportCalloutHeader}>
         <Ionicons name={icon} size={13} color={PALETTE.sage} />
-        <Text style={styles.supportCalloutLabel}>{label}</Text>
+        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>{label}</Text>
       </View>
-      <Text style={styles.supportCalloutBody}>{body}</Text>
+      <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{body}</Text>
     </View>
   );
 };
@@ -574,8 +608,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   orbitCard: { height: ORBIT_SIZE + 80, borderRadius: 24, marginBottom: 40, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   emptyCard: { borderRadius: 24, padding: 24, marginBottom: 24, overflow: 'hidden' },
-  emptyTitle: { color: theme.textPrimary, fontSize: 18, fontWeight: '700', marginBottom: 8 },
-  emptyBody: { color: theme.textSecondary, fontSize: 14, lineHeight: 20 },
+  emptyTitle: { width: '100%', flexShrink: 1, color: theme.textPrimary, fontSize: 18, fontWeight: '700', marginBottom: 8 },
+  emptyBody: { width: '100%', flexShrink: 1, color: theme.textSecondary, fontSize: 14, lineHeight: 20 },
   orbitCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, position: 'absolute', top: 24, left: 24 },
   orbitCardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
 
@@ -586,37 +620,52 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   cardLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   confirmedBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(107,144,128,0.15)', borderWidth: 1, borderColor: 'rgba(107,144,128,0.3)' },
-  confirmedText: { fontSize: 8, fontWeight: '800', color: '#6B9080' },
+  confirmedText: { flexShrink: 1, fontSize: 8, fontWeight: '800', color: '#6B9080' },
   lockedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(212,175,55,0.12)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.25)' },
   lockedText: { fontSize: 8, fontWeight: '800', color: '#D4AF37' },
-  patternTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary, marginBottom: 12 },
-  insightBody: { fontSize: 15, color: 'rgba(255,255,255,0.7)', lineHeight: 24 },
+  patternTitle: { width: '100%', flexShrink: 1, fontSize: 18, fontWeight: '700', color: theme.textPrimary, marginBottom: 12 },
+  insightBody: { width: '100%', flexShrink: 1, fontSize: 15, color: 'rgba(255,255,255,0.7)', lineHeight: 24 },
 
   blurredInsightPreview: { padding: 32, gap: 10 },
   blurredInsightLine: { height: 14, borderRadius: 7, width: '95%', backgroundColor: 'rgba(255,255,255,0.25)' },
 
   supportCallout: { marginTop: 24, padding: 16, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   supportCalloutHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  supportCalloutLabel: { fontSize: 11, fontWeight: '800', color: theme.textPrimary, textTransform: 'uppercase' },
-  supportCalloutBody: { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 20 },
+  supportCalloutLabel: { flexShrink: 1, fontSize: 11, fontWeight: '800', color: theme.textPrimary, textTransform: 'uppercase' },
+  supportCalloutBody: { width: '100%', flexShrink: 1, fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 20 },
 
   libraryButton: { height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   libraryButtonText: { fontSize: 15, fontWeight: '700' },
 
   modalBackdrop: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
+  libraryModalBackdrop: { justifyContent: 'flex-end', paddingBottom: 42 },
   modalCard: { borderRadius: 24, padding: 24, overflow: 'hidden' },
+  libraryModalCard: { maxHeight: '86%' },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   modalTitle: { fontSize: 20, fontWeight: '800' },
-  modalIntro: { fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.72)', marginBottom: 16 },
-  modalBody: { fontSize: 15, lineHeight: 24, color: theme.textPrimary, marginBottom: 12 },
-  modalStatus: { fontSize: 12, fontWeight: '700', color: 'rgba(212,175,55,0.9)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8 },
-  modalBodyMuted: { fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.62)' },
+  modalIntro: { width: '100%', flexShrink: 1, fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.72)', marginBottom: 16 },
+  modalBody: { width: '100%', flexShrink: 1, fontSize: 15, lineHeight: 24, color: theme.textPrimary, marginBottom: 12 },
+  modalStatus: { width: '100%', flexShrink: 1, fontSize: 12, fontWeight: '700', color: 'rgba(212,175,55,0.9)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8 },
+  modalBodyMuted: { width: '100%', flexShrink: 1, fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.62)' },
+  libraryModalScroll: { flexShrink: 1 },
+  libraryModalScrollContent: { paddingBottom: 2 },
   libraryList: { marginTop: 18, gap: 12 },
   librarySection: { gap: 10 },
-  librarySectionTitle: { fontSize: 12, fontWeight: '700', color: 'rgba(212,175,55,0.9)', textTransform: 'uppercase', letterSpacing: 1.1 },
+  librarySectionTitle: { width: '100%', flexShrink: 1, fontSize: 12, fontWeight: '700', color: 'rgba(212,175,55,0.9)', textTransform: 'uppercase', letterSpacing: 1.1 },
   libraryItem: { padding: 14, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  libraryItemTitle: { fontSize: 13, fontWeight: '700', color: theme.textPrimary, marginBottom: 6 },
-  libraryItemBody: { fontSize: 13, lineHeight: 20, color: 'rgba(255,255,255,0.66)' },
+  libraryItemTitle: { width: '100%', flexShrink: 1, fontSize: 13, fontWeight: '700', color: theme.textPrimary, marginBottom: 6 },
+  libraryItemBody: { width: '100%', flexShrink: 1, fontSize: 13, lineHeight: 20, color: 'rgba(255,255,255,0.66)' },
+  modalCloseButton: {
+    marginTop: 20,
+    height: 52,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  modalCloseButtonText: { fontSize: 14, fontWeight: '700' },
 
   glowOrb: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.6 },
 
@@ -628,7 +677,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
   deepDiveButtonTitle: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
-  deepDiveButtonSub: { fontSize: 12, color: 'rgba(255,255,255,0.56)', lineHeight: 18 },
+  deepDiveButtonSub: { width: '100%', flexShrink: 1, fontSize: 12, color: 'rgba(255,255,255,0.56)', lineHeight: 18 },
 
   heroMetricsRow: {
     flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8, marginTop: 20, paddingTop: 16,
@@ -669,5 +718,5 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   deepDiveModalCard: { maxHeight: '90%', paddingBottom: 24 },
   deepDiveInsightCard: { borderRadius: 20, padding: 24, overflow: 'hidden' },
-  deepDiveInsightTitle: { fontSize: 16, fontWeight: '700', color: theme.textPrimary, marginBottom: 10 },
+  deepDiveInsightTitle: { width: '100%', flexShrink: 1, fontSize: 16, fontWeight: '700', color: theme.textPrimary, marginBottom: 10 },
 });

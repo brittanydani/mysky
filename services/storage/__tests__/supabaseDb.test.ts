@@ -2,12 +2,14 @@ import {
   deleteChart,
   getCharts,
   getSettings,
+  saveInsight,
   saveChart,
   saveJournalEntry,
   saveRelationshipChart,
   updateSettings,
 } from '../supabaseDb';
 import type { AppSettings, JournalEntry, RelationshipChart, SavedChart } from '../models';
+import type { SavedInsight } from '../insightHistory';
 
 const mockGetSession = jest.fn();
 const mockFrom = jest.fn();
@@ -26,6 +28,7 @@ const mockLocalSaveChart = jest.fn().mockResolvedValue(undefined);
 const mockLocalSaveJournalEntry = jest.fn().mockResolvedValue(undefined);
 const mockLocalDeleteChart = jest.fn().mockResolvedValue(undefined);
 const mockLocalSaveRelationshipChart = jest.fn().mockResolvedValue(undefined);
+const mockLocalSaveInsight = jest.fn().mockResolvedValue(undefined);
 const mockSealIdentity = jest.fn().mockResolvedValue(undefined);
 const mockDestroyIdentity = jest.fn().mockResolvedValue(undefined);
 const mockAccountScopedGetItem = jest.fn().mockResolvedValue(null);
@@ -60,6 +63,7 @@ jest.mock('../localDb', () => ({
     saveJournalEntry: (...args: unknown[]) => mockLocalSaveJournalEntry(...args),
     deleteChart: (...args: unknown[]) => mockLocalDeleteChart(...args),
     saveRelationshipChart: (...args: unknown[]) => mockLocalSaveRelationshipChart(...args),
+    saveInsight: (...args: unknown[]) => mockLocalSaveInsight(...args),
   },
 }));
 
@@ -151,6 +155,27 @@ const appSettings: AppSettings = {
   lastBackupAt: undefined,
   userId: 'user-1',
   createdAt: '2026-04-01T00:00:00.000Z',
+  updatedAt: '2026-04-02T00:00:00.000Z',
+};
+
+const insight: SavedInsight = {
+  id: 'insight-1',
+  date: '2026-04-02',
+  chartId: 'chart-1',
+  greeting: 'Today opens gently.',
+  loveHeadline: 'Connection',
+  loveMessage: 'Let connection be simple.',
+  energyHeadline: 'Energy',
+  energyMessage: 'Move at the pace that is true.',
+  growthHeadline: 'Growth',
+  growthMessage: 'Notice what keeps repeating.',
+  gentleReminder: 'You do not have to force clarity.',
+  journalPrompt: 'What is asking for attention today?',
+  moonSign: 'Cancer',
+  moonPhase: 'waxing',
+  signals: JSON.stringify([{ description: 'Moon trine Venus', orb: '0.5' }]),
+  isFavorite: false,
+  createdAt: '2026-04-02T00:00:00.000Z',
   updatedAt: '2026-04-02T00:00:00.000Z',
 };
 
@@ -296,6 +321,25 @@ describe('supabaseDb birth profile cache', () => {
       { onConflict: 'id' },
     );
     expect(mockLocalSaveRelationshipChart).toHaveBeenCalledWith(relationshipChart);
+  });
+
+  it('upserts insight history by user date and chart to avoid duplicate insights at the same time', async () => {
+    const upsert = jest.fn().mockResolvedValue({ error: null });
+    mockFrom.mockReturnValue({ upsert });
+
+    await saveInsight(insight);
+
+    expect(mockFrom).toHaveBeenCalledWith('insight_history');
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: insight.id,
+        user_id: 'user-1',
+        date: insight.date,
+        chart_id: insight.chartId,
+      }),
+      { onConflict: 'user_id,date,chart_id' },
+    );
+    expect(mockLocalSaveInsight).toHaveBeenCalledWith(insight);
   });
 
   it('reads app settings from Supabase before refreshing the local cache', async () => {

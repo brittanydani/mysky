@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { type AppTheme } from '../../constants/theme';
 import { MetallicText } from './MetallicText';
+import { MetallicIcon } from './MetallicIcon';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 type ArchetoneTone = 'reflective' | 'energised' | 'heavy' | 'calm' | 'stormy' | 'neutral';
@@ -81,6 +82,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
   title,
   content,
   dateLabel,
+  timeLabel,
   mood,
   isExpanded = false,
   onToggleExpand,
@@ -97,7 +99,9 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
   // Atmosphere Wash for Journal entries
   const entryGradient: [string, string] = theme.isDark
     ? ['rgba(162, 194, 225, 0.12)', 'rgba(162, 194, 225, 0.03)']
-    : ['rgba(212, 175, 55,0.12)', theme.cardSurfaceStrong];
+    : ['rgba(236, 247, 241, 0.75)', 'rgba(240, 245, 252, 0.42)'];
+
+  const moodLabel = mood ? (MOOD_DISPLAY_LABELS[mood] ?? mood) : 'Reflective';
 
   return (
     <View style={styles.wrapper}>
@@ -105,19 +109,33 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
         colors={entryGradient}
         style={[styles.card, theme.isDark && styles.cardDark]}
       >
-        {/* Header row */}
+        {/* Insight-style header row */}
         <View style={styles.headerRow}>
-          <View style={styles.headerText}>
-            <Text style={styles.dateText}>{dateLabel}</Text>
+          <View style={styles.headerLeft}>
+            <MetallicIcon name="book-outline" size={16} variant="gold" />
+            <Text style={styles.headerTitle}>{dateLabel}</Text>
           </View>
-          <Pressable
-            onPress={onOpenActions}
-            hitSlop={14}
-            style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
-          >
-            <Ionicons name="ellipsis-horizontal" size={16} color="rgba(255,255,255,0.4)" />
-          </Pressable>
+
+          <View style={styles.headerRight}>
+            <View style={[styles.moodBadge, { borderColor: `${accent}40` }]}>
+              <MetallicText style={styles.moodBadgeText} color={accent}>
+                {moodLabel}
+              </MetallicText>
+            </View>
+
+            {!!onOpenActions && (
+              <Pressable
+                onPress={onOpenActions}
+                hitSlop={14}
+                style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
+              >
+                <Ionicons name="ellipsis-horizontal" size={16} color={theme.isDark ? 'rgba(255,255,255,0.45)' : 'rgba(22,32,51,0.45)'} />
+              </Pressable>
+            )}
+          </View>
         </View>
+
+        {!!timeLabel && <Text style={styles.timeText}>{timeLabel}</Text>}
 
         {/* Title */}
         {!!title && (
@@ -137,28 +155,22 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
             {wordCount != null && (
               <Text style={styles.footerMeta}>{wordCount} words</Text>
             )}
-            
-            <Pressable
-              onPress={onToggleExpand}
-              hitSlop={8}
-              style={({ pressed }) => [styles.expandButton, pressed && styles.expandButtonPressed]}
-            >
-              <MetallicText style={styles.expandHint} variant="gold">
-                {isExpanded ? 'Read less' : 'Read more'}
-              </MetallicText>
-              <Ionicons
-                name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                size={14}
-                color="#D4AF37"
-              />
-            </Pressable>
-          </View>
-          
-          <View style={[styles.toneBadge, { borderColor: `${accent}40` }]}>
-            <MetallicText style={styles.toneBadgeText} color={accent}>
-              {mood ? (MOOD_DISPLAY_LABELS[mood] ?? mood) : tone}
+
+          <Pressable
+            onPress={onToggleExpand}
+            hitSlop={8}
+            style={({ pressed }) => [styles.expandButton, pressed && styles.expandButtonPressed]}
+          >
+            <MetallicText style={styles.expandHint} variant="gold">
+              {isExpanded ? 'Read less' : 'Read more'}
             </MetallicText>
-          </View>
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={14}
+              color="#D4AF37"
+            />
+          </Pressable>
+        </View>
         </View>
       </LinearGradient>
     </View>
@@ -173,7 +185,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     padding: 28,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: theme.cardBorder,
+    marginBottom: 8,
   },
   cardDark: {
     borderTopColor: 'rgba(255,255,255,0.20)', // Velvet edge catch
@@ -181,19 +194,42 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRightColor: 'rgba(255,255,255,0.10)',
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  headerText: { flex: 1 },
-  iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  iconButtonPressed: { backgroundColor: 'rgba(255,255,255,0.06)' },
-  dateText: { color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
-  title: { fontSize: 21, fontWeight: '800', color: '#FFFFFF', marginBottom: 8, letterSpacing: -0.4 },
-  body: { color: 'rgba(255,255,255,0.65)', fontSize: 16, lineHeight: 26, marginBottom: 16 },
-  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerTitle: {
+    marginLeft: 8,
+    color: theme.isDark ? '#D4AF37' : '#1A1815',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    flexShrink: 1,
+  },
+  iconButton: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  iconButtonPressed: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' },
+  moodBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)',
+  },
+  moodBadgeText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1.1 },
+  timeText: {
+    color: theme.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(22,32,51,0.56)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: 10,
+  },
+  title: { fontSize: 21, fontWeight: '800', color: theme.textPrimary, marginBottom: 8, letterSpacing: -0.4 },
+  body: { color: theme.isDark ? 'rgba(255,255,255,0.68)' : theme.textSecondary, fontSize: 16, lineHeight: 26, marginBottom: 16 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(22,32,51,0.08)' },
   footerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  footerMeta: { color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: '700' },
+  footerMeta: { color: theme.isDark ? 'rgba(255,255,255,0.42)' : 'rgba(22,32,51,0.5)', fontSize: 12, fontWeight: '700' },
   expandButton: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   expandButtonPressed: { opacity: 0.7 },
   expandHint: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  toneBadge: { backgroundColor: 'rgba(0,0,0,0.2)', borderWidth: 1, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
-  toneBadgeText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1.5 },
 });

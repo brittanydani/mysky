@@ -26,7 +26,7 @@ export const REST_CAPACITY_PATTERNS: ArchivePattern[] = [
     conflictingSignals: ['restorative_moment', 'low_stress'],
     shameLabel: 'laziness',
     clarityReframe:
-      'a body asking for recovery before exhaustion becomes the only permission slip',
+      'a deeply ingrained resilience that hasn’t yet learned it is safe to put the armor down',
     lookbackDays: 90,
     minEvidenceCount: 4,
     minScore: 0.6,
@@ -64,10 +64,10 @@ export const REST_CAPACITY_PATTERNS: ArchivePattern[] = [
 
   {
     key: 'rest_capacity_003_exhaustion_permission_slip',
-    title: 'The Exhaustion Permission Slip',
+    title: 'Your Relationship with Rest',
     category: 'restCapacity',
     description:
-      'The user may only feel allowed to pause once exhaustion has made rest undeniable.',
+      'Exhaustion is often your permission slip to pause, moving at high velocity until depletion forces a full stop.',
     requiredSignals: ['rest_guilt'],
     supportingSignals: [
       'rest_resistance',
@@ -83,7 +83,7 @@ export const REST_CAPACITY_PATTERNS: ArchivePattern[] = [
     conflictingSignals: ['restorative_moment', 'receiving_openness'],
     shameLabel: 'not trying hard enough',
     clarityReframe:
-      'a learned rule that rest has to be proven before it can be received',
+      'a deeply ingrained resilience that hasn’t yet learned it is safe to put the armor down',
     lookbackDays: 90,
     minEvidenceCount: 4,
     minScore: 0.62,
