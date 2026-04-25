@@ -643,8 +643,15 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
-          {/* ── First Check-In Prompt (new users only) ── */}
-          {dailyLoop && dailyLoop.streak.totalCheckIns === 0 && (
+          {/* ── First Check-In Prompt (new users only, after 3 days) ── */}
+          {dailyLoop && dailyLoop.streak.totalCheckIns === 0 && (() => {
+            // Only show after 3 days since chart creation
+            if (!userChart?.createdAt) return false;
+            const daysSinceCreation = Math.floor(
+              (Date.now() - new Date(userChart.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+            );
+            return daysSinceCreation >= 3;
+          })() && (
             <Animated.View entering={FadeInDown.delay(300).duration(700)}>
               <Pressable
                 onPress={() => {
