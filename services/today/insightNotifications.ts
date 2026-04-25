@@ -199,11 +199,10 @@ async function scheduleStreakAndReengagementNotifications(
       tonight9pm.setHours(21, 0, 0, 0);
       // Only schedule if 9 PM is still in the future today
       if (tonight9pm > new Date()) {
-        const streakLabel = streakLen === 1 ? '1-day start' : `${streakLen}-day streak`;
         const id = await Notifications.scheduleNotificationAsync({
           content: {
-            title: `Don't lose your ${streakLabel} 🔥`,
-            body: "You haven't logged today yet. Check in before midnight to keep your streak alive.",
+            title: 'Keep your streak going',
+            body: '',
             data: { route: '/checkin', type: 'streak_at_risk' },
             color: '#D98C8C',
           },
@@ -284,7 +283,7 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
     const now = new Date();
     if (now.getHours() < 2) now.setDate(now.getDate() - 1);
     let currentStreak = 0;
-    for (let i = 0; i < 90; i++) {
+    for (let i = 0; i < 366; i++) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       if (dateSet.has(toLocalDateString(d))) currentStreak++;
@@ -337,7 +336,11 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
 
     if (!insight) return;
 
-    // Schedule for 10:00 AM tomorrow
+    // Schedule for 10:00 AM tomorrow (one-time notification, not recurring)
+    const tomorrow10am = new Date(now);
+    tomorrow10am.setDate(tomorrow10am.getDate() + 1);
+    tomorrow10am.setHours(10, 0, 0, 0);
+    
     const Notifications = await import('expo-notifications');
     await Notifications.scheduleNotificationAsync({
       content: {
@@ -347,9 +350,8 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
         color: '#D4AF37',
       },
       trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: 10,
-        minute: 0,
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: tomorrow10am,
       },
     });
 

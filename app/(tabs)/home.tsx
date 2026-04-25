@@ -585,21 +585,15 @@ export default function HomeScreen() {
                     dailyLoop.streak.totalCheckIns === 0
                       ? 'Start your archive'
                       : dailyLoop.streak.atRisk
-                        ? 'Leave one signal for future you'
+                        ? 'Keep your streak going'
                         : 'Archive momentum'
                   }
                   icon="bookmark-outline"
                 />
               </Animated.View>
 
-              {dailyLoop.streak.totalCheckIns > 0 && (dailyLoop.streak.atRisk || dailyLoop.streak.milestone || dailyLoop.streak.checkedInToday) && (
+              {dailyLoop.streak.totalCheckIns > 0 && (dailyLoop.streak.milestone || dailyLoop.streak.checkedInToday) && (
                 <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.streakRow}>
-                  {dailyLoop.streak.atRisk && (
-                    <View style={[styles.streakPill, { backgroundColor: 'rgba(217,140,140,0.10)' }]}>
-                      <MetallicIcon name="bookmark-outline" size={14} variant="gold" />
-                      <Text style={[styles.streakLabel, { color: '#D98C8C' }]}>One signal helps</Text>
-                    </View>
-                  )}
                   {dailyLoop.streak.milestone && (
                     <Animated.View
                       entering={ZoomIn.springify().damping(10).stiffness(120)}
@@ -637,7 +631,7 @@ export default function HomeScreen() {
             <Animated.View entering={FadeInDown.delay(240).duration(600)}>
               <View style={{ paddingHorizontal: 20, paddingBottom: 4 }}>
                 <Text style={{ color: 'rgba(212,175,55,0.45)', fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}>
-                  {dailyLoop.streak.totalCheckIns} SIGNALS SAVED
+                  {dailyLoop.streak.totalCheckIns} CHECK-INS SAVED
                 </Text>
               </View>
             </Animated.View>

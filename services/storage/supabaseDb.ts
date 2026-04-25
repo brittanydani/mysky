@@ -582,7 +582,15 @@ export async function getSettings(): Promise<AppSettings | null> {
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      // Handle table-not-found errors gracefully (e.g., PGRST205)
+      const errorCode = (error as any)?.code;
+      if (errorCode === 'PGRST205' || errorCode === 'PGRST204' || errorCode === 'PGRST116') {
+        logger.warn('[SupabaseDb] app_settings table not found or schema mismatch; using local cache fallback.', error);
+        return readCachedSettings();
+      }
+      throw error;
+    }
 
     if (data) {
       const settings = mapSettingsRow(data as Row);
@@ -610,7 +618,16 @@ export async function updateSettings(settings: AppSettings): Promise<void> {
       .from('app_settings')
       .upsert(settingsToRow(persisted, userId), { onConflict: 'user_id' });
 
-    if (error) throw error;
+    if (error) {
+      // Handle table-not-found errors gracefully (e.g., PGRST205)
+      const errorCode = (error as any)?.code;
+      if (errorCode === 'PGRST205' || errorCode === 'PGRST204' || errorCode === 'PGRST116') {
+        logger.warn('[SupabaseDb] app_settings table not found or schema mismatch; saving to local cache only.', error);
+        await writeCachedSettings(persisted);
+        return;
+      }
+      throw error;
+    }
 
     await refreshLocalCache('app settings', () => writeCachedSettings(persisted));
   } catch (error) {
