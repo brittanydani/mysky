@@ -92,6 +92,8 @@ describe('deepInsights', () => {
     expect(bundle.personalTruths[0]).toContain('Sleep');
     expect(bundle.whatToRemember.length).toBeGreaterThan(0);
     expect(bundle.memory.persistentTruths.length).toBeGreaterThan(0);
+    expect(bundle.insights.find((insight) => insight.id === 'identity-themes')?.title).toContain('Safety');
+    expect(bundle.insights.find((insight) => insight.id === 'identity-themes')?.body).toContain('safety');
   });
 
   it('applies restraint mode when the profile is low-capacity', () => {

@@ -4,7 +4,7 @@
  * Reads the self-knowledge profile stores plus the Supabase-backed
  * reflection/body/trigger/pattern datasets and returns a unified, typed
  * context object. Used by the cross-reference engine and daily loop to
- * personalise insights with the user's own profile data.
+ * personalize insights with the user's own profile data.
  *
  * All reads are fire-and-forget-safe: any parse error or missing key
  * returns null/[] rather than throwing.

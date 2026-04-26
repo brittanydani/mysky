@@ -308,7 +308,7 @@ describe('getDailyLoopData()', () => {
 
   it('uses trigger cross-reference insight before generic pattern insight when self-knowledge confirms it', async () => {
     const checkIns = [
-      ...makeCheckIns([0], 8).map((entry) => ({ ...entry, tags: ['nature'] })),
+      ...makeCheckIns([1], 8).map((entry) => ({ ...entry, tags: ['nature'] })),
       ...makeCheckIns([2], 8).map((entry) => ({ ...entry, tags: ['nature'] })),
       ...makeCheckIns([4], 8).map((entry) => ({ ...entry, tags: ['nature'] })),
       ...makeCheckIns([6], 5).map((entry) => ({ ...entry, tags: ['screens'] })),
@@ -331,6 +331,23 @@ describe('getDailyLoopData()', () => {
     expect(result.todayInsight.type).toBe('pattern');
     expect(result.todayInsight.text).toContain('data confirms it');
     expect(result.todayInsight.text).toContain('nature');
+  });
+
+  it('uses a fresh today check-in reflection after the user checks in', async () => {
+    const checkIns = makeCheckIns([0], 4).map((entry) => ({
+      ...entry,
+      energyLevel: 'low',
+      stressLevel: 'high',
+    }));
+    (supabaseDb.getCheckIns as jest.Mock).mockResolvedValue(checkIns);
+    (supabaseDb.getTotalCheckInCount as jest.Mock).mockResolvedValue(checkIns.length);
+    (supabaseDb.getSleepEntries as jest.Mock).mockResolvedValue([]);
+
+    const result = await getDailyLoopData('chart-1');
+
+    expect(result.todayInsight.type).toBe('check-in');
+    expect(result.todayInsight.text).toContain('lower fuel');
+    expect(result.returnNudge).toBeNull();
   });
 
   it('builds a motivating return nudge when a streak is at risk', async () => {

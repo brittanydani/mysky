@@ -78,6 +78,38 @@ function computeLeadInsight(feedInsights: CrossRefInsight[]): CrossRefInsight | 
   return refineCrossRefCopy(feedInsights[localEpochDay % feedInsights.length]);
 }
 
+function parseJsonObject<T>(value: unknown): T | null {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+function summarizeJournalForPremium(entry: JournalEntry): Record<string, unknown> {
+  const keywordSummary = parseJsonObject<{
+    keywords?: string[];
+    top?: Array<{ w: string; c: number }>;
+    relationshipContext?: { names?: string[]; roles?: string[]; anchors?: string[] };
+  }>(entry.contentKeywords);
+  const emotionSummary = parseJsonObject<{ counts?: Record<string, number>; rates?: Record<string, number> }>(entry.contentEmotions);
+  const sentimentSummary = parseJsonObject<{ sentiment?: number }>(entry.contentSentiment);
+
+  return {
+    id: entry.id,
+    date: entry.date,
+    mood: entry.mood,
+    tags: entry.tags ?? [],
+    wordCount: entry.contentWordCount,
+    keywords: keywordSummary?.keywords ?? [],
+    topKeywords: keywordSummary?.top ?? [],
+    relationshipContext: keywordSummary?.relationshipContext ?? { names: [], roles: [], anchors: [] },
+    emotionCounts: emotionSummary?.counts ?? {},
+    sentiment: sentimentSummary?.sentiment ?? null,
+  };
+}
+
 async function resolveChartId(inputChartId?: string | null): Promise<string | null> {
   if (inputChartId) return inputChartId;
   const charts = await supabaseDb.getCharts();
@@ -122,7 +154,7 @@ async function maybeBuildPremiumInsight(
         lifetime_days: 90,
       },
       check_ins: checkIns,
-      journal_entries: recentJournalEntries,
+      journal_entries: recentJournalEntries.map(summarizeJournalForPremium),
       sleep_entries: sleepEntries,
       somatic_entries: enrichedContext.somaticEntries,
       trigger_events: enrichedContext.triggers
@@ -225,7 +257,15 @@ export async function buildInsightSurface({
     ? stressValues.reduce((sum, value) => sum + value, 0) / stressValues.length
     : 0;
 
-  const refs = computeSelfKnowledgeCrossRef(enrichedContext, checkIns);
+  const pipelineResult = runPipeline({
+    checkIns,
+    journalEntries: recentJournalEntries,
+    sleepEntries,
+    chart: null,
+    todayContext: null,
+  });
+
+  const refs = computeSelfKnowledgeCrossRef(enrichedContext, checkIns, pipelineResult.dailyAggregates);
   const enhancedRefs = refs.length
     ? await enhancePatternInsights(refs, enrichedContext, checkIns, isPremium, { logErrors: false })
     : null;
@@ -239,13 +279,6 @@ export async function buildInsightSurface({
       : insight,
   );
 
-  const pipelineResult = runPipeline({
-    checkIns,
-    journalEntries: recentJournalEntries,
-    sleepEntries,
-    chart: null,
-    todayContext: null,
-  });
   const deepInsights = pipelineResult.dailyAggregates.length
     ? computeDeepInsights(buildPersonalProfile(pipelineResult.dailyAggregates))
     : null;

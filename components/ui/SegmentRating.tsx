@@ -3,7 +3,7 @@
 // Animated 5-segment fluid rating control.
 // Replaces the 1-5 numbered circles in the dream metadata section.
 //
-// Visual behaviour:
+// Visual behavior:
 //   • Tapping segment N fills segments 1–N with gold accent glow.
 //   • Each segment springs into its active/inactive state independently.
 //   • Active segments have a gradient-like glow achieved through nested

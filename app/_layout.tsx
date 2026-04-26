@@ -735,7 +735,7 @@ function AppShell() {
     };
   }, []);
 
-  // Configure notification display behaviour and deep-link routing from taps.
+  // Configure notification display behavior and deep-link routing from taps.
   // setNotificationHandler must be called before any notification is displayed
   // so that foreground notifications are shown (not silently dropped on iOS).
   useEffect(() => {

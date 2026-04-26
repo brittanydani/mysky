@@ -23,6 +23,17 @@ export interface KeywordResult {
   top: { w: string; c: number }[];
   /** Total token count after filtering */
   tokenCount: number;
+  /** Privacy-safe relationship/name hints derived on-device from the entry */
+  relationshipContext?: RelationshipContextResult;
+}
+
+export interface RelationshipContextResult {
+  /** First names explicitly written by the user; no inference about identity or relationship */
+  names: string[];
+  /** Relationship words the user actually used, e.g. "partner", "boss", "child" */
+  roles: string[];
+  /** Short, de-identified behavior/emotion fragments near relationship mentions */
+  anchors: string[];
 }
 
 export type EmotionCategory =
@@ -54,6 +65,7 @@ export interface JournalNLPResult {
   keywords: KeywordResult;
   emotions: EmotionResult;
   sentiment: SentimentResult;
+  relationships: RelationshipContextResult;
   wordCount: number;
   readingMinutes: number;
 }
@@ -172,6 +184,35 @@ const NEGATIVE_WORDS = new Set([
   'afraid', 'unsafe', 'hurt', 'grief', 'burnout', 'burnt', 'confused',
   'irritated', 'resentful', 'bitter', 'miserable', 'empty', 'lost',
   'panicked', 'terrified', 'furious', 'hostile', 'despairing', 'gloomy',
+]);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Relationship / named-entity extraction
+// ─────────────────────────────────────────────────────────────────────────────
+
+const RELATIONSHIP_ROLES = new Set([
+  'partner', 'husband', 'wife', 'boyfriend', 'girlfriend', 'spouse', 'ex',
+  'child', 'kid', 'kids', 'son', 'daughter', 'baby', 'toddler', 'teen',
+  'mom', 'mother', 'mama', 'dad', 'father', 'parent', 'parents',
+  'sister', 'brother', 'sibling', 'grandma', 'grandmother', 'grandpa', 'grandfather',
+  'friend', 'best friend', 'roommate', 'neighbor',
+  'boss', 'manager', 'coworker', 'colleague', 'client', 'teacher', 'therapist',
+]);
+
+const NAME_STOPWORDS = new Set([
+  'I', 'A', 'The', 'This', 'That', 'Today', 'Yesterday', 'Tomorrow', 'Monday',
+  'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'January',
+  'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September',
+  'October', 'November', 'December', 'MySky', 'God', 'Universe', 'Moon', 'Sun',
+]);
+
+const RELATIONSHIP_ANCHOR_WORDS = new Set([
+  'cleaned', 'held', 'carried', 'managed', 'fixed', 'helped', 'supported', 'comforted',
+  'listened', 'asked', 'needed', 'wanted', 'ignored', 'texted', 'called', 'argued',
+  'fought', 'repaired', 'apologized', 'explained', 'overexplained', 'avoided', 'withdrew',
+  'waited', 'worried', 'resented', 'protected', 'set', 'boundary', 'boundaries', 'care',
+  'caring', 'caretaking', 'exhausted', 'drained', 'depleted', 'overwhelmed', 'angry',
+  'sad', 'lonely', 'heavy', 'safe', 'loved', 'seen', 'unseen', 'responsible',
 ]);
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -338,6 +379,84 @@ export function computeSentiment(text: string): SentimentResult {
   return { sentiment, positiveCount, negativeCount };
 }
 
+function uniqueLimited(items: string[], limit: number): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of items) {
+    const cleaned = item.trim();
+    const key = cleaned.toLowerCase();
+    if (!cleaned || seen.has(key)) continue;
+    seen.add(key);
+    out.push(cleaned);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function normalizeRole(role: string): string {
+  return role.toLowerCase().replace(/^my\s+/, '').trim();
+}
+
+function extractAnchorFromSentence(sentence: string): string | null {
+  const words = sentence
+    .toLowerCase()
+    .replace(/[^a-z'\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean);
+
+  const pivot = words.findIndex((word) => RELATIONSHIP_ANCHOR_WORDS.has(word.replace(/'s$/, '')));
+  if (pivot < 0) return null;
+
+  const start = Math.max(0, pivot - 2);
+  const end = Math.min(words.length, pivot + 5);
+  const phrase = words.slice(start, end)
+    .filter((word) => !['the', 'a', 'an', 'and', 'but', 'so', 'then'].includes(word))
+    .join(' ')
+    .trim();
+
+  return phrase.length >= 6 ? phrase : null;
+}
+
+/**
+ * Extract explicit people/relationship context without inferring who someone is.
+ * Names are first-name-like capitalized tokens the user wrote; roles are direct
+ * relationship words. Anchors are short de-identified fragments, not full journal text.
+ */
+export function extractRelationshipContext(text: string): RelationshipContextResult {
+  const source = (text ?? '').trim();
+  if (!source) return { names: [], roles: [], anchors: [] };
+
+  const roleMatches: string[] = [];
+  const lower = source.toLowerCase();
+  for (const role of RELATIONSHIP_ROLES) {
+    const escaped = role.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const re = new RegExp(`\\b(?:my\\s+)?${escaped}\\b`, 'i');
+    if (re.test(lower)) roleMatches.push(normalizeRole(role));
+  }
+
+  const nameMatches = Array.from(source.matchAll(/\b[A-Z][a-z]{2,}\b/g))
+    .map(match => match[0])
+    .filter(name => !NAME_STOPWORDS.has(name));
+
+  const sentences = source.split(/[.!?\n]+/).map(s => s.trim()).filter(Boolean);
+  const anchors = sentences
+    .filter((sentence) => {
+      const sentenceLower = sentence.toLowerCase();
+      return roleMatches.some(role => sentenceLower.includes(role)) ||
+        nameMatches.some(name => sentence.includes(name));
+    })
+    .map(extractAnchorFromSentence)
+    .filter((anchor): anchor is string => Boolean(anchor));
+
+  return {
+    names: uniqueLimited(nameMatches, 6),
+    roles: uniqueLimited(roleMatches, 8),
+    anchors: uniqueLimited(anchors, 6),
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Combined Analysis
 // ─────────────────────────────────────────────────────────────────────────────
@@ -350,11 +469,14 @@ export function analyzeJournalContent(content: string): JournalNLPResult {
   const text = (content ?? '').trim();
   const rawWords = text.length > 0 ? text.split(/\s+/).length : 0;
   const readingMinutes = parseFloat((rawWords / 200).toFixed(1)); // ~200 WPM
+  const relationships = extractRelationshipContext(text);
+  const keywords = extractKeywords(text);
 
   return {
-    keywords: extractKeywords(text),
+    keywords: { ...keywords, relationshipContext: relationships },
     emotions: extractEmotions(text),
     sentiment: computeSentiment(text),
+    relationships,
     wordCount: rawWords,
     readingMinutes,
   };

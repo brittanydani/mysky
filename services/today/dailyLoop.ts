@@ -22,6 +22,7 @@ import { logger } from '../../utils/logger';
 import type { SelfKnowledgeContext } from '../insights/selfKnowledgeContext';
 import { DRAIN_TAG_MAP, RESTORE_TAG_MAP } from '../../utils/selfKnowledgeCrossRef';
 import { generateWeeklySynthesis, type WeeklySynthesisContext } from './weeklySynthesisLibrary';
+import type { DailyCheckIn } from '../patterns/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -65,7 +66,7 @@ export interface DailyInsight {
   /** The insight text — always human-readable */
   text: string;
   /** Category of the insight */
-  type: 'sleep-mood' | 'consistency' | 'pattern' | 'encouragement' | 'milestone';
+  type: 'sleep-mood' | 'consistency' | 'pattern' | 'encouragement' | 'milestone' | 'check-in';
   /** Accent color hint for the UI */
   accentColor: 'gold' | 'emerald' | 'silverBlue' | 'copper' | 'rose';
   /** Icon name (Ionicons) */
@@ -476,6 +477,107 @@ function getConsistencyInsight(streak: StreakStatus): DailyInsight | null {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Today's Check-In Reflection
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getLatestCheckInForDate(checkIns: DailyCheckIn[], date: string): DailyCheckIn | null {
+  const todays = checkIns.filter((c) => c.date === date);
+  if (todays.length === 0) return null;
+
+  return [...todays].sort((a, b) => {
+    const bTime = b.updatedAt ?? b.createdAt ?? '';
+    const aTime = a.updatedAt ?? a.createdAt ?? '';
+    return bTime.localeCompare(aTime);
+  })[0] ?? null;
+}
+
+function getTodayCheckInDateCandidates(): string[] {
+  const dates = [getCheckInDateString()];
+  const now = new Date();
+  if (now.getHours() < 6) {
+    const logicalYesterday = new Date(now);
+    logicalYesterday.setDate(logicalYesterday.getDate() - 1);
+    dates.push(toLocalDateString(logicalYesterday));
+  }
+  return Array.from(new Set(dates));
+}
+
+function labelForTag(tag?: string): string | null {
+  if (!tag) return null;
+  return tag
+    .replace(/^eq_/, '')
+    .replace(/_(pos|neg)$/, '')
+    .replace(/_/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase()) || null;
+}
+
+async function getTodayCheckInReflectionInsight(chartId: string): Promise<DailyInsight | null> {
+  try {
+    const checkIns = await supabaseDb.getCheckIns(chartId, 8);
+    const latest = getTodayCheckInDateCandidates()
+      .map((date) => getLatestCheckInForDate(checkIns, date))
+      .find((checkIn): checkIn is DailyCheckIn => checkIn != null) ?? null;
+    if (!latest) return null;
+
+    if (latest.moodScore <= 4 && latest.energyLevel === 'low') {
+      return {
+        text: 'Your check-in points to lower fuel and a heavier emotional load today. The useful move is not to force clarity; it is to lower the demand and choose one supportive next step.',
+        type: 'check-in',
+        accentColor: 'rose',
+        icon: 'pulse-outline',
+      };
+    }
+
+    if (latest.stressLevel === 'high') {
+      return {
+        text: 'You logged high stress today, which makes this a day for smaller decisions and earlier recovery cues. Notice what can be simplified before your system has to get louder.',
+        type: 'check-in',
+        accentColor: 'copper',
+        icon: 'leaf-outline',
+      };
+    }
+
+    if (latest.energyLevel === 'low') {
+      return {
+        text: 'Your energy is low today, so the clearest insight is about pacing. Choose the version of the day that leaves enough of you intact for tonight.',
+        type: 'check-in',
+        accentColor: 'silverBlue',
+        icon: 'battery-dead-outline',
+      };
+    }
+
+    if (latest.moodScore >= 8 && latest.stressLevel === 'low') {
+      return {
+        text: 'Your check-in shows a steadier, brighter baseline today. Study what is supporting that, because repeatable support is more useful than a lucky good mood.',
+        type: 'check-in',
+        accentColor: 'emerald',
+        icon: 'trending-up-outline',
+      };
+    }
+
+    const primaryTag = labelForTag(latest.tags?.[0]);
+    if (primaryTag) {
+      return {
+        text: `You named "${primaryTag}" in today's check-in. That signal is worth watching: repeated tags often reveal what shapes your baseline before the pattern is obvious.`,
+        type: 'check-in',
+        accentColor: 'gold',
+        icon: 'sparkles-outline',
+      };
+    }
+
+    return {
+      text: "Today's check-in gives MySky a fresh read on your inner weather. Things look workable, so the practice is to stay close to what keeps you steady.",
+      type: 'check-in',
+      accentColor: 'silverBlue',
+      icon: 'checkmark-circle-outline',
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Pattern-Based Insights (simple, emotional language)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -781,21 +883,26 @@ async function getTodayInsight(
   const milestoneInsight = getConsistencyInsight(streak);
   if (milestoneInsight) return milestoneInsight;
 
-  // 2. Sleep-mood correlation
+  // 2. Once the user checks in, today's self-report should replace the
+  // calendar-only fallback so the Home card visibly refreshes for the day.
+  const checkInInsight = await getTodayCheckInReflectionInsight(chartId);
+  if (checkInInsight) return checkInInsight;
+
+  // 3. Sleep-mood correlation
   const sleepInsight = await getSleepMoodInsight(chartId);
   if (sleepInsight) return sleepInsight;
 
-  // 3. Trigger cross-reference (self-knowledge confirmed by behavioral data)
+  // 4. Trigger cross-reference (self-knowledge confirmed by behavioral data)
   if (selfKnowledge?.triggers) {
     const triggerInsight = await getTriggerCrossRefInsight(chartId, selfKnowledge.triggers);
     if (triggerInsight) return triggerInsight;
   }
 
-  // 4. Pattern-based insight (tag lift, trend changes)
+  // 5. Pattern-based insight (tag lift, trend changes)
   const patternInsight = await getPatternInsight(chartId);
   if (patternInsight) return patternInsight;
 
-  // 5. Fallback: daily encouragement
+  // 6. Fallback: daily encouragement
   return getDailyEncouragement();
 }
 
@@ -958,7 +1065,7 @@ async function getWeeklySynthesis(chartId: string): Promise<WeeklySynthesis | nu
     if (weekJournals.length > 0) {
       signals.push({
         domain: 'journal',
-        label: `${weekJournals.length} journal entr${weekJournals.length !== 1 ? 'ies' : 'y'}`,
+        label: `${weekJournals.length} journal ${weekJournals.length === 1 ? 'entry' : 'entries'}`,
         detail: 'Written reflections',
       });
     }

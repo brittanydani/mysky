@@ -251,7 +251,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     isPremium: true,
     freeContent: {
       brief: 'Venus reveals your love style.',
-      teaser: 'This chapter explores how you give love, how you need to receive it, and the patterns that keep repeating in your closest relationships. You may recognise yourself in places you never expected.',
+      teaser: 'This chapter explores how you give love, how you need to receive it, and the patterns that keep repeating in your closest relationships. You may recognize yourself in places you never expected.',
     },
   },
   {

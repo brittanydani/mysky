@@ -1,5 +1,5 @@
 // app/core-values.tsx
-// MySky — ore Values Inventory
+// MySky — Core Values Inventory
 //
 // High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
 // 1. Purged legacy "Muddy Gold" tints and generic brownish fills.

@@ -92,6 +92,10 @@ export interface DailyAggregate {
   // ── Journal NLP aggregates (from v10 NLP summaries) ──────────────────────
   /** Union of keywords across all entries for this day (top N by freq) */
   keywordsUnion: string[];
+  /** Names/relationship roles explicitly extracted from journal NLP summaries */
+  relationshipKeywords?: string[];
+  /** Short behavior/emotion fragments near relationship mentions; de-identified where possible */
+  relationshipAnchors?: string[];
   /** Summed emotion counts across entries for this day */
   journalEmotionCountsTotal: Partial<Record<string, number>>;
   /** Average sentiment across entries for this day (if present) */

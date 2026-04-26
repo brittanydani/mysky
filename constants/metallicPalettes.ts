@@ -82,7 +82,7 @@ export const METALLIC_FEATURE_GOLD = METALLIC_GOLD;
 export const METALLIC_CHALLENGE = METALLIC_COPPER;
 export const METALLIC_WARNING = METALLIC_RED;
 
-// ── Lookup by hex-code — for dynamic/runtime colour matching ────────────
+// ── Lookup by hex-code — for dynamic/runtime color matching ────────────
 export type MetallicVariant =
   | 'gold' | 'purple' | 'blue' | 'green' | 'copper'
   | 'rose' | 'red' | 'lavender' | 'love' | 'yellow'
@@ -120,7 +120,7 @@ export const METALLIC_VARIANTS: Record<MetallicVariant, readonly string[]> = {
 };
 
 /**
- * Given a flat hex colour, return the closest metallic gradient stops.
+ * Given a flat hex color, return the closest metallic gradient stops.
  * Falls back to Lunar Gold if no match is found.
  */
 export function metallicForHex(hex: string): readonly string[] {

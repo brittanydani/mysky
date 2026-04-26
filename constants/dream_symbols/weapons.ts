@@ -2461,7 +2461,7 @@ export const weapons_symbols: SingleWordSymbol[] = [
   { symbol: 'rainshade', category: 'weapons' },
   { symbol: 'headpiece', category: 'weapons' },
   { symbol: 'shellfire', category: 'weapons' },
-  { symbol: 'defence', category: 'weapons' },
+  { symbol: 'defense', category: 'weapons' },
   { symbol: 'meet', category: 'weapons' },
   { symbol: 'cupid', category: 'weapons' },
   { symbol: 'kicks', category: 'weapons' },

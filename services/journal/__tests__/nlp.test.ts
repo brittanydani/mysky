@@ -13,6 +13,7 @@ import {
   extractKeywords,
   extractEmotions,
   computeSentiment,
+  extractRelationshipContext,
   analyzeJournalContent,
 } from '../nlp';
 
@@ -301,6 +302,13 @@ describe('analyzeJournalContent', () => {
     expect(typeof result.sentiment.sentiment).toBe('number');
   });
 
+  it('returns explicit relationship context without inferring roles', () => {
+    const result = analyzeJournalContent('I cleaned up after Lucas while exhausted. My partner needed support too.');
+    expect(result.relationships.names).toContain('Lucas');
+    expect(result.relationships.roles).toContain('partner');
+    expect(result.keywords.relationshipContext?.names).toContain('Lucas');
+  });
+
   it('handles null/undefined input gracefully (trims empty string)', () => {
     // The function calls (content ?? '').trim() — simulate undefined
     expect(() => analyzeJournalContent('')).not.toThrow();
@@ -310,5 +318,19 @@ describe('analyzeJournalContent', () => {
     const result = analyzeJournalContent('I am the and a');
     expect(result.keywords.keywords).toEqual([]);
     expect(result.wordCount).toBe(5);
+  });
+});
+
+describe('extractRelationshipContext', () => {
+  it('extracts names, roles, and short behavioral anchors', () => {
+    const result = extractRelationshipContext('Lucas asked again and I felt drained. My boss ignored the boundary.');
+    expect(result.names).toContain('Lucas');
+    expect(result.roles).toContain('boss');
+    expect(result.anchors.length).toBeGreaterThan(0);
+  });
+
+  it('does not treat calendar words as names', () => {
+    const result = extractRelationshipContext('Today I felt better than Monday.');
+    expect(result.names).toEqual([]);
   });
 });

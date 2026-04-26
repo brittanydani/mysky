@@ -23,6 +23,7 @@ import {
   IntelligenceProfile,
   IntelligenceDimensionId,
 } from '../services/insights/selfKnowledgeContext';
+import type { DailyAggregate } from '../services/insights/types';
 import { DailyCheckIn } from '../services/patterns/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -35,7 +36,19 @@ export interface CrossRefInsight {
   body: string;
   heroMetrics?: InsightMetric[];
   takeaway?: InsightTakeaway;
-  accentColor: 'sage' | 'taupe' | 'coral' | 'midnightSlate' | 'velvet' | 'pearl';
+  accentColor:
+    | 'sage'
+    | 'taupe'
+    | 'coral'
+    | 'midnightSlate'
+    | 'velvet'
+    | 'pearl'
+    | 'gold'
+    | 'silverBlue'
+    | 'copper'
+    | 'emerald'
+    | 'rose'
+    | 'lavender';
   source: 'triggers' | 'somatic' | 'archetype' | 'values' | 'cognitive' | 'relationship' | 'reflection';
   isConfirmed: boolean;
   premiumType?: string;
@@ -335,9 +348,63 @@ const ARCHETYPE_SHADOWS: Record<ArchetypeKey, { title: string; observation: stri
   },
 };
 
+const ARCHETYPE_BEHAVIOR_VOCAB: Record<ArchetypeKey, string[]> = {
+  hero: ['push', 'pushed', 'pushing', 'prove', 'produce', 'deadline', 'work', 'pressure', 'overcome', 'strong', 'strength', 'finish', 'carry', 'carried'],
+  caregiver: ['care', 'caring', 'caretaking', 'help', 'helped', 'hold', 'held', 'support', 'supported', 'cleaned', 'responsibility', 'responsible', 'kids', 'child', 'partner', 'family', 'needed'],
+  seeker: ['leave', 'left', 'move', 'moving', 'change', 'escape', 'travel', 'restless', 'stuck', 'freedom', 'new', 'shift'],
+  sage: ['understand', 'analyze', 'analyzing', 'explain', 'overexplained', 'solve', 'clarity', 'meaning', 'think', 'thinking', 'pattern'],
+  rebel: ['boundary', 'boundaries', 'no', 'constraint', 'rules', 'expectations', 'control', 'trapped', 'misaligned', 'resist', 'resistance'],
+};
+
+function collectAggregateSignals(aggregates: DailyAggregate[] = []): string[] {
+  const counts = new Map<string, number>();
+  for (const agg of aggregates.slice(-30)) {
+    const signals = [
+      ...agg.tagsUnion,
+      ...agg.keywordsUnion,
+      ...(agg.relationshipKeywords ?? []),
+      ...(agg.relationshipAnchors ?? []),
+    ];
+    for (const signal of signals) {
+      const normalized = cleanText(signal.toLowerCase().replace(/_/g, ' '));
+      if (!normalized) continue;
+      counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([signal]) => signal);
+}
+
+function buildArchetypeBehaviorNote(
+  archetype: ArchetypeKey,
+  aggregates: DailyAggregate[] = [],
+): string | null {
+  const vocab = ARCHETYPE_BEHAVIOR_VOCAB[archetype] ?? [];
+  const signals = collectAggregateSignals(aggregates);
+  const matches = signals.filter(signal => vocab.some(term => signal.includes(term))).slice(0, 3);
+  if (!matches.length) return null;
+
+  const relationshipSignal = signals.find(signal =>
+    (aggregates.some(agg => (agg.relationshipKeywords ?? []).map(s => s.toLowerCase()).includes(signal))) ||
+    ['partner', 'child', 'kids', 'family', 'boss', 'friend', 'mother', 'father', 'parent'].some(role => signal.includes(role))
+  );
+
+  const matchText = matches.length === 1
+    ? matches[0]
+    : matches.length === 2
+      ? `${matches[0]} and ${matches[1]}`
+      : `${matches[0]}, ${matches[1]}, and ${matches[2]}`;
+
+  return relationshipSignal && !matches.includes(relationshipSignal)
+    ? ` In your own recent signals, this shows up around ${matchText}, with ${relationshipSignal} also present in the relational field.`
+    : ` In your own recent signals, this shows up around ${matchText}.`;
+}
+
 function buildArchetypeInsight(
   profile: NonNullable<SelfKnowledgeContext['archetypeProfile']>,
   checkIns: DailyCheckIn[],
+  aggregates: DailyAggregate[] = [],
 ): CrossRefInsight {
   const shadow = ARCHETYPE_SHADOWS[profile.dominant];
   let isConfirmed = false;
@@ -354,11 +421,12 @@ function buildArchetypeInsight(
     .filter(([key]) => key !== profile.dominant)
     .sort((a, b) => b[1] - a[1])[0]?.[0];
   const secondaryName = secondary ? `The ${secondary.charAt(0).toUpperCase()}${secondary.slice(1)}` : null;
+  const behaviorNote = buildArchetypeBehaviorNote(profile.dominant, aggregates);
 
   return {
     id: 'archetype-shadow',
     title: shadow.title,
-    body: `${shadow.observation}\n\n${shadow.pattern}\n\n${shadow.reframe}`,
+    body: `${shadow.observation}\n\n${shadow.pattern}${behaviorNote ?? ''}\n\n${shadow.reframe}`,
     heroMetrics: [
       ...(pct > 0 ? [metric(`${pct}%`, 'High-stress days', pct >= 30 ? 'caution' : 'default')] : []),
       metric(dominantName, 'Leading pattern', 'default'),
@@ -969,6 +1037,7 @@ function buildSleepMoodInsight(
 export function computeSelfKnowledgeCrossRef(
   context: SelfKnowledgeContext,
   checkIns: DailyCheckIn[],
+  aggregates: DailyAggregate[] = [],
 ): CrossRefInsight[] {
   const all: CrossRefInsight[] = [];
 
@@ -982,7 +1051,7 @@ export function computeSelfKnowledgeCrossRef(
   }
 
   if (context.archetypeProfile) {
-    all.push(buildArchetypeInsight(context.archetypeProfile, checkIns));
+    all.push(buildArchetypeInsight(context.archetypeProfile, checkIns, aggregates));
   }
 
   if (context.relationshipPatterns.length >= 2) {

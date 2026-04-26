@@ -245,7 +245,7 @@ function NSConflictCard({ data }: { data: InnerTensionsData }) {
               : 'Low Internal Friction'}
           </MetallicText>
           <Text style={styles.conflictScoreHint}>
-            based on {dataQuality.totalEntries} entr{dataQuality.totalEntries !== 1 ? 'ies' : 'y'} across dreams, journals, and check-ins
+            based on {dataQuality.totalEntries} {dataQuality.totalEntries === 1 ? 'entry' : 'entries'} across dreams, journals, and check-ins
           </Text>
           <Text style={styles.conflictGaugeHint}>
             This ring measures overall push-pull load. The bar below shows which direction the tension is leaning.

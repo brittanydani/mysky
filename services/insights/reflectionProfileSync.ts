@@ -246,7 +246,7 @@ const COGNITIVE_SIGNAL_MAP: Record<number, DimensionSignal> = {
   64:  { dim: 'scope', dir: 1 },      // "I break large problems into smaller pieces"
   71:  { dim: 'scope', dir: -1 },     // "I approach top-down, starting with big picture"
   // Processing (Visual/Spatial ↔ Verbal/Analytical)
-  31:  { dim: 'processing', dir: -1 }, // "I organise information visually in my mind"
+  31:  { dim: 'processing', dir: -1 }, // "I organize information visually in my mind"
   37:  { dim: 'processing', dir: -1 }, // "I prefer narrative over structured data"
   42:  { dim: 'processing', dir: -1 }, // "I think primarily in images rather than words"
   44:  { dim: 'processing', dir: 1 },  // "I am comfortable with numbers and quantitative data"
@@ -301,7 +301,7 @@ export async function syncCognitiveStyleFromReflections(
     const suggested: Partial<Record<DimensionKey, number>> = {};
     for (const dim of ['scope', 'processing', 'decisions'] as DimensionKey[]) {
       if (dimCounts[dim] === 0) continue;
-      const avg = dimSums[dim] / (dimCounts[dim] * 3); // normalised to –1 … +1
+      const avg = dimSums[dim] / (dimCounts[dim] * 3); // normalized to –1 … +1
       suggested[dim] = Math.min(5, Math.max(1, Math.round(3 + avg * 2)));
     }
 

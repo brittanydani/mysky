@@ -5,13 +5,13 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 
 ### Day 1 (2026-01-22)
 - values:
-  - I recognise the early signs of burnout in myself.
+  - I recognize the early signs of burnout in myself.
   - My sense of identity has shifted meaningfully in the last year.
 - archetypes:
   - I convert fear into fuel and motivation.
   - A journey — internal or external — has significantly changed who I am.
 - cognitive:
-  - I organise my thoughts clearly before speaking about something complex.
+  - I organize my thoughts clearly before speaking about something complex.
   - I think primarily in images rather than words.
 - intelligence:
   - I feel uncomfortable when there is unresolved tension in a group.
@@ -61,7 +61,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - Unexpected inputs — walks, conversations, random articles — spark breakthroughs for me.
 - intelligence:
   - I tend to absorb new languages naturally and quickly.
-  - I hum, whistle, or tap rhythms without realising it.
+  - I hum, whistle, or tap rhythms without realizing it.
 
 ### Day 5 (2026-01-26)
 - values:
@@ -69,13 +69,13 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I actively honour the people who have shaped me.
 - archetypes:
   - Someone has truly taken care of me recently.
-  - I understand what fulfilment looks like for someone who is always seeking.
+  - I understand what fulfillment looks like for someone who is always seeking.
 - cognitive:
   - Small talk is valuable and enjoyable to me.
   - I take a completely different approach when my first method isn't working.
 - intelligence:
   - I process emotions partly by finding the exact words for them.
-  - I recognise complex time signatures or polyrhythms.
+  - I recognize complex time signatures or polyrhythms.
 
 ### Day 6 (2026-01-27)
 - values:
@@ -139,7 +139,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 - intelligence:
   - I have a strong sense of direction and rarely get lost.
   - I can easily rotate objects in my mind.
-  - I am energised by meaningful conversations.
+  - I am energized by meaningful conversations.
 
 ### Day 10 (2026-01-31)
 - values:
@@ -180,7 +180,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I am actively searching for something meaningful in my life.
 - cognitive:
   - I communicate complex ideas clearly, even when others don't immediately understand.
-  - Deep conversations energise my thinking.
+  - Deep conversations energize my thinking.
   - I gather sufficient information before committing to a choice.
 - intelligence:
   - I question assumptions before accepting them.
@@ -221,7 +221,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I reconcile compassion with accountability in a balanced way.
   - I stay motivated even when progress feels invisible.
 - archetypes:
-  - Radical self-honesty is something I could practise more of.
+  - Radical self-honesty is something I could practice more of.
   - I hold onto myself during major life transitions.
   - I am sitting with a book, talk, or idea that is actively changing me.
 - cognitive:
@@ -236,7 +236,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 ### Day 16 (2026-02-06)
 - values:
   - I stay compassionate without losing myself in the process.
-  - Social interaction drains me more than most people realise.
+  - Social interaction drains me more than most people realize.
 - archetypes:
   - I have faced something deeply difficult this year.
   - I stay curious even when I feel like an expert in something.
@@ -259,7 +259,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I interrupt unhelpful thought patterns before they take over.
 - intelligence:
   - I notice when sound design is used intentionally in films or media.
-  - I use visualisation as a planning or problem-solving tool.
+  - I use visualization as a planning or problem-solving tool.
 
 ### Day 18 (2026-02-08)
 - values:
@@ -271,7 +271,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - My identity would shift dramatically if I stopped taking care of everyone.
   - Going against the grain has often been the right choice for me.
 - cognitive:
-  - I rely on a mental model to understand human behaviour.
+  - I rely on a mental model to understand human behavior.
   - I approach problems from the top down, starting with the big picture.
   - I take feedback about how I think and communicate seriously.
 - intelligence:
@@ -295,7 +295,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 
 ### Day 20 (2026-02-10)
 - values:
-  - Unexpected things energise me in surprising ways.
+  - Unexpected things energize me in surprising ways.
   - I wear a mask more often than I would like.
 - archetypes:
   - I use my influence ethically and intentionally.
@@ -333,7 +333,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I struggle to recover after giving everything I have.
   - A role I was once forced into turned out to be one I secretly enjoy.
 - cognitive:
-  - I calibrate my confidence in my own judgement accurately.
+  - I calibrate my confidence in my own judgment accurately.
   - I know when to trust my analysis and when to trust my instincts.
 - intelligence:
   - I enjoy sequences, codes, or ciphers.
@@ -388,7 +388,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 ### Day 26 (2026-02-16)
 - values:
   - There are people in my life who love the real me without performance.
-  - I prioritise restoration over obligation when I need to.
+  - I prioritize restoration over obligation when I need to.
 - archetypes:
   - I remain humble even when I know I'm right.
   - I can tell when I'm code-switching versus losing myself.
@@ -396,7 +396,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - My most vivid memories are emotional rather than visual or factual.
   - I balance breadth and depth effectively when exploring a new topic.
 - intelligence:
-  - I classify and categorise natural phenomena instinctively.
+  - I classify and categorize natural phenomena instinctively.
   - I feel connected to something larger than myself.
 
 ### Day 27 (2026-02-17)
@@ -409,7 +409,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I empower others without depleting myself.
   - I let people in without feeling dangerously exposed.
 - cognitive:
-  - Complex, challenging problems energise me.
+  - Complex, challenging problems energize me.
   - I use constraints to boost my creativity.
   - I handle situations requiring pure logic with no room for feeling.
 - intelligence:
@@ -452,7 +452,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - There are things about me I wish people would ask about.
 - archetypes:
   - I am in a chrysalis stage of deep personal transformation.
-  - I am deeply attached to at least one defence mechanism.
+  - I am deeply attached to at least one defense mechanism.
   - There is a gap between who I am and who others need me to be.
 - cognitive:
   - My relationship with risk has matured and become healthier over time.
@@ -466,7 +466,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 ### Day 31 (2026-02-21)
 - values:
   - Time in nature restores me in a way nothing else does.
-  - I am spending my time on what I would prioritise if it were limited.
+  - I am spending my time on what I would prioritize if it were limited.
 - archetypes:
   - I react strongly when someone sees a part of me I try to hide.
   - My core wants something that the world doesn't make easy.
@@ -502,7 +502,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - Enchantment and wonder are alive in my adult life.
 - cognitive:
   - I handle disagreements about shared memories gracefully.
-  - I recognise and correct the cognitive biases that affect my risk assessment.
+  - I recognize and correct the cognitive biases that affect my risk assessment.
   - The same thinking habit loops back when I'm under stress.
 - intelligence:
   - I think of life events as having a soundtrack.
@@ -511,7 +511,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 
 ### Day 34 (2026-02-24)
 - values:
-  - I choose long-term fulfilment over short-term gratification.
+  - I choose long-term fulfillment over short-term gratification.
   - I balance personal freedom with responsibility to people I love.
 - archetypes:
   - Unknown territory excites me more than it scares me right now.
@@ -528,7 +528,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I know the line between disarming humor and avoidant humor.
   - My daydreams reveal something true about my desires.
 - archetypes:
-  - I play a specific, recognisable role in my friends' lives.
+  - I play a specific, recognizable role in my friends' lives.
   - My public identity has diverged from who I really am.
 - cognitive:
   - I apply lessons from my past daily without even thinking about it.
@@ -539,7 +539,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 
 ### Day 36 (2026-02-26)
 - values:
-  - Loyalty is important to me, but I recognise its limits.
+  - Loyalty is important to me, but I recognize its limits.
   - I balance planning with surrendering to what I cannot control.
   - My online presence reflects who I actually am.
 - archetypes:
@@ -593,7 +593,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I hold the tension between rational understanding and deeper knowing.
   - I show courage even when fear is overwhelming.
 - cognitive:
-  - I evaluate worst-case scenarios without catastrophising.
+  - I evaluate worst-case scenarios without catastrophizing.
   - I make important decisions with clarity and confidence.
   - Technology has fundamentally changed how I think and communicate.
 - intelligence:
@@ -626,7 +626,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I use my understanding of patterns to plan and prepare effectively.
   - I rely on feeling rather than analysis when encountering a stranger.
 - intelligence:
-  - I feel a strong pull to understand human behaviour.
+  - I feel a strong pull to understand human behavior.
   - I set boundaries based on deep self-knowledge.
 
 ### Day 42 (2026-03-04)
@@ -685,7 +685,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I find meaning in the search itself, not just the destination.
   - A paradox within me has become a source of creative energy.
 - cognitive:
-  - I sleep on important decisions before finalising them.
+  - I sleep on important decisions before finalizing them.
   - I make confident bets on myself and my abilities.
   - I recover my focus quickly after an interruption.
 - intelligence:
@@ -756,7 +756,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 ### Day 50 (2026-03-12)
 - values:
   - There is a person, place, or thing that represents home to me.
-  - There is an area of my life that feels destabilisingly uncertain.
+  - There is an area of my life that feels destabilizing and uncertain.
 - archetypes:
   - I can envision what the integration of my conflicting parts would look like.
   - I can sit comfortably with the discomfort of not knowing.
@@ -829,7 +829,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 - intelligence:
   - Physical touch is an important part of how I connect with people.
   - I express emotions through body language and gesture.
-  - I use music therapeutically — to regulate, energise, or ground myself.
+  - I use music therapeutically — to regulate, energize, or ground myself.
 
 ### Day 55 (2026-03-17)
 - values:
@@ -875,7 +875,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 - intelligence:
   - I prefer natural or earth-toned aesthetics in my surroundings.
   - I notice when my life feels meaningful and when it does not.
-  - Reading is one of my favourite ways to spend time.
+  - Reading is one of my favorite ways to spend time.
 
 ### Day 58 (2026-03-20)
 - values:
@@ -934,7 +934,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I direct attention to my inner life even during a busy day.
   - I store and retrieve memories of important conversations accurately.
 - intelligence:
-  - I experience music as colours, textures, or images.
+  - I experience music as colors, textures, or images.
   - I compose or improvise music in my head.
 
 ### Day 62 (2026-03-24)
@@ -977,8 +977,8 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - An inner contradiction is a defining part of who I am.
   - My inner fire is alive and burning.
 - cognitive:
-  - I handle choices with no clear right answer without becoming paralysed.
-  - I summarise complex information for myself effectively.
+  - I handle choices with no clear right answer without becoming paralyzed.
+  - I summarize complex information for myself effectively.
 - intelligence:
   - I enjoy the physicality of nature — climbing, swimming, hiking.
   - I am fascinated by the history and origin of words.
@@ -994,7 +994,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I do my deepest work during a specific, consistent time of day.
   - Nostalgia plays a meaningful role in my thinking.
 - intelligence:
-  - I can recognise the difference between what I feel and what I think.
+  - I can recognize the difference between what I feel and what I think.
   - I look for cause-and-effect relationships in what happens around me.
 
 ### Day 66 (2026-03-28)
@@ -1040,7 +1040,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I generate new ideas even when I feel stuck.
   - I approach new problems with a clear go-to method.
 - intelligence:
-  - I understand my own defence mechanisms.
+  - I understand my own defense mechanisms.
   - I feel responsible for the emotional well-being of those around me.
 
 ### Day 69 (2026-03-31)
@@ -1058,7 +1058,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I reframe uncertainty as possibility and openness.
 - intelligence:
   - I think about whether time is real or constructed.
-  - I am fascinated by animal behaviour and consciousness.
+  - I am fascinated by animal behavior and consciousness.
   - I am curious about the relationship between mind and brain.
 
 ### Day 70 (2026-04-01)
@@ -1066,7 +1066,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I handle creative blocks with patience and curiosity.
   - Other people's experiences move me deeply.
 - archetypes:
-  - I recognise when resistance is blocking my transformation.
+  - I recognize when resistance is blocking my transformation.
   - I have one persona that is closer to my core than any other.
 - cognitive:
   - I use analogies effectively to make sense of new situations.
@@ -1078,10 +1078,10 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
 ### Day 71 (2026-04-02)
 - values:
   - I stand up for my beliefs even when it comes at a cost.
-  - I practise small acts of justice and fairness daily.
+  - I practice small acts of justice and fairness daily.
 - archetypes:
   - I have finally understood a life pattern after years of living it.
-  - I have been the villain in someone else's story without realising it.
+  - I have been the villain in someone else's story without realizing it.
 - cognitive:
   - I use unconventional approaches to problem-solving effectively.
   - Deepening my self-knowledge has changed how I approach the world.
@@ -1103,7 +1103,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - Others count on me for a specific cognitive strength.
   - I work comfortably on problems whose end I cannot yet see.
 - intelligence:
-  - I organise my thoughts spatially — mind maps, diagrams, or layouts.
+  - I organize my thoughts spatially — mind maps, diagrams, or layouts.
   - I am good at packing, fitting objects into containers efficiently.
   - I am drawn to physical forms of art — pottery, sculpture, carpentry.
 
@@ -1172,7 +1172,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I am intentional about which causes deserve my energy.
   - I build stability without becoming rigid.
 - archetypes:
-  - A self-sabotaging behaviour keeps returning because it serves a hidden need.
+  - A self-sabotaging behavior keeps returning because it serves a hidden need.
   - I handle intellectual disagreements without making them personal.
 - cognitive:
   - I form opinions quickly when presented with new information.
@@ -1222,9 +1222,9 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I am deeply aware of what is most beautiful about being human.
 - cognitive:
   - I adapt my thinking style for different kinds of challenges.
-  - I balance structured learning with explorative discovery.
+  - I balance structured learning with exploratory discovery.
 - intelligence:
-  - I process information best when it is colour-coded or spatially arranged.
+  - I process information best when it is color-coded or spatially arranged.
   - I am physically expressive — people can read my body easily.
 
 ### Day 81 (2026-04-12)
@@ -1238,7 +1238,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I am living inside a myth of my own making.
 - cognitive:
   - I think most effectively in writing rather than speaking or drawing.
-  - I analyse complex issues thoroughly and effectively.
+  - I analyze complex issues thoroughly and effectively.
   - My inner monologue is structured and clear.
 - intelligence:
   - I prefer evidence-based decisions over intuition.
@@ -1254,7 +1254,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I respect both my extraverted and introverted needs.
 - cognitive:
   - I articulate what I think with precision and clarity.
-  - I recognise when I am reasoning well versus poorly.
+  - I recognize when I am reasoning well versus poorly.
 - intelligence:
   - I am deeply curious about what happens after death.
   - I prefer natural materials over synthetic ones.
@@ -1280,8 +1280,8 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I prepare for the unknown without living in anxiety.
 - archetypes:
   - My soul needs something that my ego keeps ignoring.
-  - Powerlessness has a specific, recognisable feeling in my body.
-  - I maintain dignity when life strips away my defences.
+  - Powerlessness has a specific, recognizable feeling in my body.
+  - I maintain dignity when life strips away my defenses.
 - cognitive:
   - I process disagreements in real-time conversation effectively.
   - I notice when my attention is being manipulated.
@@ -1362,7 +1362,7 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - I give my fullest attention to the activities that engage me.
   - I apply cognitive flexibility naturally in different situations.
 - intelligence:
-  - I like categorising and organising information.
+  - I like categorizing and organizing information.
   - I feel calmer near water — rivers, lakes, ocean.
 
 ### Day 90 (2026-04-21)
@@ -1379,6 +1379,6 @@ Tap scale for every statement: Not True / Somewhat / True / Very True
   - Self-reflection plays a central role in my intellectual growth.
   - I reframe problems effectively when the original framing leads nowhere.
 - intelligence:
-  - I rely on spreadsheets, charts, or structured tools to organise decisions.
+  - I rely on spreadsheets, charts, or structured tools to organize decisions.
   - I notice subtle shifts in someone's tone or energy.
   - I keep journals, notes, or letters regularly.

@@ -39,7 +39,7 @@ export function timestampToTimeOfDay(ts: number): string {
 /**
  * Compute a nervous-system pattern summary from an array of TriggerEvents.
  *
- * @param events  All events to analyse (typically already filtered to a window).
+ * @param events  All events to analyze (typically already filtered to a window).
  * @param minDrainsForTod  Minimum drain count required to report topDrainTimeOfDay.
  *                         Defaults to 4 — fewer events produce noisy time patterns.
  */

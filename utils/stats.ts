@@ -106,7 +106,7 @@ export function computeTrend(vals: number[]): TrendResult {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Cohen's d — standardised effect size between two independent groups.
+ * Cohen's d — standardized effect size between two independent groups.
  * Uses pooled standard deviation.  Returns 0 when either group has < 2 values.
  * |d| < 0.2 = negligible, 0.2–0.5 = small, 0.5–0.8 = medium, > 0.8 = large.
  */

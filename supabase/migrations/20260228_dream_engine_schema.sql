@@ -97,7 +97,7 @@ create table if not exists public.dream_rendered_cards (
 
   -- Evidence snippets are raw dream text — do NOT store server-side.
   -- Clients re-derive them from encrypted_dream_text locally.
-  -- evidence_snippets column removed for data minimisation.
+  -- evidence_snippets column removed for data minimization.
 
   -- Matched triggers used for this card
   matched_triggers jsonb not null default '[]'::jsonb, -- Array<{trigger, score}>

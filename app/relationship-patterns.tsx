@@ -212,7 +212,7 @@ export default function RelationshipPatternsScreen() {
                     <Text style={{ color: 'rgba(212,175,55,0.9)', fontSize: 11, fontWeight: '700', letterSpacing: 1.5 }}>DEEPER SKY</Text>
                   </View>
                   <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
-                    Unlock a personalised read of what your relational gravity pattern actually means for how you connect.
+                    Unlock a personalized read of what your relational gravity pattern actually means for how you connect.
                   </Text>
                   <Text style={{ color: 'rgba(212,175,55,0.8)', fontSize: 12, fontWeight: '600', marginTop: 4 }}>Reveal Your Interpretation →</Text>
                 </Pressable>

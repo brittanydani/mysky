@@ -9,7 +9,7 @@
  *   Restless nights → diffused, low-opacity Indigo
  *
  * Each night is rendered as a vertical "horizon band" whose
- * height = quality, glow intensity = mood, and colour shifts
+ * height = quality, glow intensity = mood, and color shifts
  * from indigo (low) through amethyst (mid) to silver-blue (high).
  *
  * Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
@@ -37,7 +37,7 @@ const GRAPH_TOP = 20;
 const GRAPH_SIDE_PAD = 18;
 const BAR_GAP = 14;
 
-// ── Colour stops ────────────────────────────────────────────────────────────
+// ── Color stops ────────────────────────────────────────────────────────────
 
 function barColors(quality: number, isDark: boolean): [string, string] {
   if (isDark) {

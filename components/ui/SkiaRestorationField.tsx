@@ -12,7 +12,7 @@
  *   - Animated concentric rings simulate a "restoration field" radiating
  *     from the screen centre.
  *   - A slow breathing animation modulates ring radii for organic life.
- *   - Quality-dependent colour interpolation gives instant visual feedback.
+ *   - Quality-dependent color interpolation gives instant visual feedback.
  *
  * Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
  */

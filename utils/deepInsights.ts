@@ -251,11 +251,17 @@ function formatNaturalList(items: string[]): string {
   return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
 }
 
+function titleCasePhrase(value: string): string {
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Personalized reflection prompt helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** GenerLetate a personalized reflection prompt using the user's actual data */
+/** Generate a personalized reflection prompt using the user's actual data */
 function personalizedPrompt(basePrompt: string, p: PersonalProfile, context?: {
   useRecoveryIngredients?: boolean;
   useBestDayIngredients?: boolean;
@@ -1150,11 +1156,13 @@ function buildIdentityInsights(p: PersonalProfile): DeepInsight[] {
   if (deepThemes.length >= 2) {
     const themes = deepThemes.slice(0, 3);
     const dominantDomain = themes[0].domain;
+    const themeText = formatNaturalList(themes.map(t => t.theme.replace(/_/g, ' ')));
+    const titleThemeText = formatNaturalList(themes.slice(0, 2).map(t => titleCasePhrase(t.theme)));
     const domainReflection: Record<InnerTheme['domain'], string> = {
-      emotional: 'Your inner world keeps returning to emotional themes. You appear to be someone for whom feelings are primary — not secondary to logic, not decoration, but the actual fabric of how you navigate life.',
-      relational: 'The themes your reflections keep returning to are relational. How you connect, who understands you, where belonging lives — these appear to be central concerns of your inner life, not peripheral ones.',
-      existential: 'Questions of meaning and purpose weave through your reflections consistently. You seem to be someone who doesn\'t just live but wonders about the living. This depth of questioning may be both a gift and a weight.',
-      somatic: 'Your body appears consistently in your reflections — tension, exhaustion, restlessness. You seem to be someone whose body speaks loudly, carrying emotional truths that may not always make it into words.',
+      emotional: `Your inner world keeps returning to ${themeText}. You appear to be someone for whom feelings are primary: not secondary to logic, not decoration, but part of how you navigate life.`,
+      relational: `Your reflections keep returning to ${themeText}. How you connect, who understands you, and where belonging feels possible appear to be central concerns of your inner life, not peripheral ones.`,
+      existential: `The recurring themes of ${themeText} weave through your reflections consistently. You seem to be someone who doesn't just live but wonders about the living. This depth of questioning may be both a gift and a weight.`,
+      somatic: `The recurring body themes of ${themeText} appear consistently in your reflections. Your body seems to speak loudly, carrying emotional truths that may not always make it into words first.`,
     };
     insights.push({
       job: 'integrate',
@@ -1162,7 +1170,7 @@ function buildIdentityInsights(p: PersonalProfile): DeepInsight[] {
       level: 'identity',
       category: dominantDomain === 'relational' ? 'attachment-and-closeness' : dominantDomain === 'somatic' ? 'nervous-system' : 'who-you-are-underneath',
       scope: 'truth',
-      title: 'The Landscape Your Inner World Returns To',
+      title: `Recurring Themes: ${titleThemeText}`,
       body: domainReflection[dominantDomain],
       confidence: 'strong',
       accent: 'lavender',
@@ -1479,7 +1487,7 @@ function buildNarrativeMemory(p: PersonalProfile): NarrativeMemory {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STRENGTH_TITLES: Record<string, string> = {
-  'consistent-presence': 'You Keep Showing Up',
+  'consistent-presence': 'What Repeats on Harder Days',
   'emotional-honesty': 'Emotional Honesty',
   'resilience': 'You Find Your Way Back',
   'inner-perceptiveness': 'Inner Perceptiveness',
@@ -1487,7 +1495,7 @@ const STRENGTH_TITLES: Record<string, string> = {
 };
 
 const STRENGTH_PROMPTS: Record<string, string> = {
-  'consistent-presence': 'What keeps you showing up even when it would be easier not to?',
+  'consistent-presence': 'When these same themes show up again, what usually helps them settle?',
   'emotional-honesty': 'Is it easy for you to track what you really feel, or does it take effort?',
   'resilience': 'Do you notice your own resilience, or does it only become visible looking back?',
   'inner-perceptiveness': 'When do you find your inner perceptiveness most useful?',
@@ -1503,7 +1511,7 @@ function buildStrengthInsights(p: PersonalProfile): DeepInsight[] {
       job: 'integrate',
       id: `strength-${s.id}`,
       level: 'identity',
-      category: 'who-you-are-underneath',
+      category: s.id === 'consistent-presence' ? 'quiet-strengths' : 'who-you-are-underneath',
       scope: 'truth',
       title,
       body: s.description,

@@ -186,11 +186,15 @@ export default function HomeScreen() {
   // Weekly check-ins — used by 7-day Stability Map
   const [weeklyCheckIns, setWeeklyCheckIns] = useState<DailyCheckIn[]>([]);
 
-  // True only when a check-in exists for today's date
-  const hasDataToday = useMemo(() => {
+  // Today's check-ins drive the post-check-in content variant.
+  const todayCheckIns = useMemo(() => {
     const today = getLogicalToday();
-    return weeklyCheckIns.some(c => c.date === today);
+    return weeklyCheckIns.filter(c => c.date === today);
   }, [weeklyCheckIns]);
+  const todayCheckInCount = todayCheckIns.length;
+
+  // True only when a check-in exists for today's date
+  const hasDataToday = todayCheckInCount > 0;
 
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
@@ -283,12 +287,13 @@ export default function HomeScreen() {
             setIfActive(setSurfaceInsightCount, surface.feedInsights.length);
 
             // Knowledge Engine Integration
+            const todayKey = getLogicalToday();
             const kInsight = runKnowledgeEngine(
               checkins,
               allJournals,
               sleepEntries,
               surface.selfKnowledgeContext,
-              new Date().toISOString(),
+              `${todayKey}T12:00:00`,
               { recentlyShownPatternKeys: [], recentlyShownCopyHashes: [] }
             );
             setIfActive(setKnowledgeInsight, kInsight);
@@ -482,9 +487,10 @@ export default function HomeScreen() {
       drains: selfKnowledge?.triggers?.drains,
       relationshipTags,
       topReflectionCategory,
+      dailySignalSeed: todayCheckInCount,
     };
     return getDailyAffirmation(ctx);
-  }, [userChart, mood, energy, latestSleep, selfKnowledge, dailyLoop]);
+  }, [userChart, mood, energy, latestSleep, selfKnowledge, dailyLoop, todayCheckInCount]);
 
   // ── Balance Score + Stability Map ──
 
@@ -494,11 +500,11 @@ export default function HomeScreen() {
 
   const insightMeta = useMemo(() => {
     return {
-      icon: dailyLoop?.todayInsight?.icon ?? 'analytics',
-      label: dailyLoop?.todayInsight?.type?.toUpperCase() || 'REFLECTION',
-      text: dailyLoop?.todayInsight?.text ?? (hasDataToday
-        ? generateInsight(Math.round(balanceScore * 10), mood, energy, latestSleep)
-        : 'Log a check-in today to see your personalised daily reflection.'),
+      icon: hasDataToday ? dailyLoop?.todayInsight?.icon ?? 'analytics' : 'create-outline',
+      label: hasDataToday ? dailyLoop?.todayInsight?.type?.toUpperCase() || 'REFLECTION' : 'REFLECTION',
+      text: hasDataToday
+        ? dailyLoop?.todayInsight?.text ?? generateInsight(Math.round(balanceScore * 10), mood, energy, latestSleep)
+        : 'Log a check-in today to see your personalized daily reflection.',
     };
   }, [dailyLoop, hasDataToday, balanceScore, mood, energy, latestSleep]);
 
@@ -723,7 +729,7 @@ export default function HomeScreen() {
           {/* ── Daily Insight ── */}
           <SectionHeader title="Daily Insight" icon="sparkles-outline" />
           <Animated.View entering={FadeInDown.delay(700).duration(600)}>
-            {knowledgeInsight ? (
+            {hasDataToday && knowledgeInsight ? (
               <KnowledgeInsightCard insight={knowledgeInsight} />
             ) : (
               <VelvetGlassSurface style={styles.insightCard} intensity={20}>

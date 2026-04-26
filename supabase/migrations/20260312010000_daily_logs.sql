@@ -50,7 +50,7 @@ BEGIN
         RAISE EXCEPTION 'Not authenticated';
     END IF;
 
-    -- ── Nodes: aggregate symbol stats and derive colour from emotional data ──
+    -- ── Nodes: aggregate symbol stats and derive color from emotional data ──
     WITH unnested AS (
         SELECT id, stress, anxiety, UNNEST(dream_symbols) AS symbol
         FROM public.daily_logs
@@ -74,7 +74,7 @@ BEGIN
             -- Size capped at 2.0 to keep spheres within camera frustum
             'size',           LEAST(0.5 + (recurrence_count * 0.1), 2.0),
             'recurrenceCount', recurrence_count,
-            -- Hex colour derived from emotional signal rather than stored
+            -- Hex color derived from emotional signal rather than stored
             'color', CASE
                 WHEN avg_anxiety > 7  THEN '#ff003c'  -- High anxiety → red
                 WHEN avg_stress  > 6  THEN '#ffcc00'  -- High stress  → gold

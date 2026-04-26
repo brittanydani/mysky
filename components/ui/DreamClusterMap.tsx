@@ -52,7 +52,7 @@ const TONE_COLOR: Record<DreamTone, string> = {
 };
 
 // ─── Internal render model ────────────────────────────────────────────────────
-// Both static DreamNode[] and live DreamNodeData[] are normalised into this
+// Both static DreamNode[] and live DreamNodeData[] are normalized into this
 // before being passed to the 3D components.
 
 interface RenderNode {

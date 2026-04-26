@@ -1,6 +1,6 @@
 /**
  * store/resonanceStore.ts
- * Zustand store for relationship resonance data (helix visualisation).
+ * Zustand store for relationship resonance data (helix visualization).
  *
  * Data lives in-memory for the session.
  * `hydrateFromCache` is a no-op — ready for MMKV when added.

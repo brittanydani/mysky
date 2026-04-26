@@ -1,6 +1,6 @@
 // insightsPdfExport.test.ts
 // Tests the pure helper functions within insightsPdfExport via the exported
-// main function's behaviour, and directly where possible.
+// main function's behavior, and directly where possible.
 // The heavy HTML/PDF generation is covered via a smoke test that verifies
 // no exception is thrown and that expo-print is called.
 

@@ -772,7 +772,7 @@ export default function ChartScreen() {
       }
     }
 
-    // Processing destinal angles
+    // Processing destiny-related angles
     if (Array.isArray(activeChart.angles)) {
       for (const angle of activeChart.angles) {
         if (angle.name === 'Vertex') {
@@ -1581,7 +1581,7 @@ export default function ChartScreen() {
                 </VelvetGlassSurface>
               )}
               {isPremium && extendedPatterns?.aspectPatterns?.map((pattern, idx) => (
-                <VelvetGlassSurface key={`aspat-${idx}`} style={styles.patternCard} intensity={45}>
+                <VelvetGlassSurface key={`aspect-${idx}`} style={styles.patternCard} intensity={45}>
                 <LinearGradient colors={chartSurfaceGradients.goldPanel} style={StyleSheet.absoluteFill} />
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>{pattern.name === 'Grand Trine' ? '△' : pattern.name === 'T-Square' ? '⊤' : pattern.name === 'Grand Cross' ? '✚' : pattern.name === 'Yod' ? '☞' : pattern.name === 'Kite' ? '◇' : pattern.name === 'Mystic Rectangle' ? '▭' : '⬡'}</Text>

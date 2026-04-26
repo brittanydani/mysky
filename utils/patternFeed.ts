@@ -4,7 +4,7 @@ import { CrossRefInsight, InsightMetric, InsightTakeaway } from './selfKnowledge
 const CATEGORY_LABELS: Record<DeepInsight['category'], string> = {
   'what-keeps-happening': 'What Keeps Happening',
   'how-your-mind-works': 'How Your Mind Works',
-  'who-you-are-underneath': 'Who You Are Underneath',
+  'who-you-are-underneath': 'Identity Pattern',
   'what-activates-you': 'What Activates You',
   'how-you-protect-yourself': 'How You Protect Yourself',
   'attachment-and-closeness': 'Attachment & Closeness',

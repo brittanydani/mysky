@@ -101,4 +101,29 @@ describe('patternsHelpers', () => {
     expect(refined.title).toBe('The values underneath your decisions are getting harder to miss');
     expect(refined.body).toContain('Across your recent reflections, the same values keep sitting underneath the story');
   });
+
+  it('preserves deep insight titles instead of replacing them with generic reflection copy', () => {
+    const refined = refineCrossRefCopy({
+      id: 'deep-strength-consistent-presence',
+      source: 'reflection',
+      title: 'What Repeats on Harder Days',
+      body: 'Across 9 lower-stability days, your archive keeps naming overwhelm and boundaries.',
+      isConfirmed: true,
+    } as any);
+
+    expect(refined.title).toBe('What Repeats on Harder Days');
+    expect(refined.body).toContain('overwhelm and boundaries');
+  });
+
+  it('names the repeated reflection theme when reflection copy provides one', () => {
+    const refined = refineCrossRefCopy({
+      id: 'reflection-depth',
+      source: 'reflection',
+      title: 'The Depth of the Inquiry',
+      body: 'Across 8 days, your mind repeatedly returns to the theme of boundaries.',
+      isConfirmed: true,
+    } as any);
+
+    expect(refined.title).toBe('Recurring Reflection Theme: Boundaries');
+  });
 });

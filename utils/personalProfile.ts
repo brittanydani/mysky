@@ -694,6 +694,120 @@ function detectLowCapacity(profile: PatternProfile): boolean {
   return (avgStrain > 60 && avgStab < 40) || (avgRest < 25 && avgStab < 35);
 }
 
+function readableSignalLabel(value: string): string {
+  return value
+    .replace(/^eq_/, '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatSignalList(items: string[]): string {
+  if (items.length === 0) return '';
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
+}
+
+
+
+function concreteDayExample(day: ScoredDay | undefined): string {
+  if (!day) return '';
+  const signals = [
+    ...(day.aggregate.relationshipAnchors ?? []),
+    ...day.aggregate.tagsUnion.map((tag) => tag.replace(/_/g, ' ')),
+    ...day.aggregate.keywordsUnion,
+    ...(day.aggregate.relationshipKeywords ?? []),
+  ]
+    .map((signal) => signal.toLowerCase().trim())
+    .filter(Boolean);
+
+  const unique = [...new Set(signals)].slice(0, 3);
+  if (!unique.length) return '';
+  return ` A concrete day-level clue: ${formatSignalList(unique)} was present when this pattern was strongest.`;
+}
+
+function enrichTraitsWithConcreteExamples(profile: PatternProfile, traits: PersonalTrait[]): PersonalTrait[] {
+  return traits.map((trait) => {
+    let exampleDay: ScoredDay | undefined;
+
+    if (trait.id === 'sleep-sensitive') {
+      exampleDay = [...profile.scoredDays]
+        .filter(day => day.aggregate.sleepQuality != null && day.aggregate.sleepQuality <= 2)
+        .sort((a, b) => a.scores.stability - b.scores.stability)[0];
+    } else if (trait.id === 'connection-sensitive') {
+      exampleDay = [...profile.scoredDays]
+        .filter(day => day.scores.connection !== 50)
+        .sort((a, b) => a.scores.stability - b.scores.stability)[0];
+    } else if (trait.id === 'gradual-accumulator') {
+      exampleDay = [...profile.scoredDays].sort((a, b) => b.scores.strain - a.scores.strain)[0];
+    } else if (trait.id === 'crowding-sensitive') {
+      exampleDay = [...profile.scoredDays].sort((a, b) => b.scores.emotionalIntensity - a.scores.emotionalIntensity)[0];
+    }
+
+    const example = concreteDayExample(exampleDay);
+    if (!example || trait.description.includes('A concrete day-level clue:')) return trait;
+    return { ...trait, description: `${trait.description}${example}` };
+  });
+}
+
+function mostRepeatedSignals(days: ScoredDay[], limit = 3): string[] {
+  const counts = new Map<string, number>();
+
+  for (const day of days) {
+    const signals = new Set<string>();
+    for (const tag of day.aggregate.tagsUnion) signals.add(tag);
+    for (const keyword of day.aggregate.keywordsUnion) signals.add(keyword);
+    for (const emotion of Object.keys(day.aggregate.journalEmotionCountsTotal)) signals.add(emotion);
+
+    for (const signal of signals) {
+      const normalized = signal.toLowerCase().trim();
+      if (!normalized) continue;
+      counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .filter(([, count]) => count >= 2)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, limit)
+    .map(([signal]) => readableSignalLabel(signal).toLowerCase());
+}
+
+function describeConsistentPresence(profile: PatternProfile): string {
+  const days = profile.scoredDays;
+  const lowerStabilityDays = days.filter(
+    (day) =>
+      day.scores.stability < profile.overallAvg.stability - 8 ||
+      day.scores.strain > profile.overallAvg.strain + 8,
+  );
+  const signalDays = lowerStabilityDays.length >= 2 ? lowerStabilityDays : days;
+  const repeatedSignals = mostRepeatedSignals(signalDays);
+  const repeatedSignalText = repeatedSignals.length
+    ? formatSignalList(repeatedSignals)
+    : 'the same harder-day material';
+
+  const checkIns = days.reduce((sum, day) => sum + day.aggregate.checkInCount, 0);
+  const journalDays = days.filter((day) => day.aggregate.hasJournalText).length;
+  const dreamDays = days.filter((day) => day.aggregate.hasDream).length;
+  const sleepDays = days.filter((day) => day.aggregate.sleepQuality != null || day.aggregate.sleepDurationHours != null).length;
+  const sourceParts = [
+    checkIns > 0 ? `${checkIns} check-ins` : null,
+    journalDays > 0 ? `${journalDays} journal days` : null,
+    dreamDays > 0 ? `${dreamDays} dream logs` : null,
+    sleepDays > 0 ? `${sleepDays} sleep records` : null,
+  ].filter((part): part is string => Boolean(part));
+
+  const sourceLine = sourceParts.length
+    ? ` The read combines ${formatSignalList(sourceParts)}, so the pattern has context beyond mood averages.`
+    : '';
+
+  if (lowerStabilityDays.length >= 2) {
+    return `Across ${lowerStabilityDays.length} lower-stability days, your archive keeps naming ${repeatedSignalText}.${sourceLine} The important part is the recurrence: these are the themes that stay visible when capacity drops, which makes the insight about your pattern rather than your logging habit.`;
+  }
+
+  return `Across ${days.length} tracked days, your archive keeps naming ${repeatedSignalText}.${sourceLine} The useful signal is the recurring material that stays visible long enough to understand.`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Strength detection — real strengths, not flattery
 // ─────────────────────────────────────────────────────────────────────────────
@@ -708,7 +822,7 @@ function detectStrengths(profile: PatternProfile, traits: PersonalTrait[], recov
   if (checkInDensity > 0.6) {
     strengths.push({
       id: 'consistent-presence',
-      description: 'Your data shows that you keep returning, even through lower stretches. That pattern matters because harder moments are becoming visible instead of disappearing.',
+      description: describeConsistentPresence(profile),
       strength: Math.min(Math.round(checkInDensity * 100), 100),
     });
   }
@@ -946,7 +1060,7 @@ function detectProgressMarkers(profile: PatternProfile, traits: PersonalTrait[])
 export function buildPersonalProfile(aggregates: DailyAggregate[]): PersonalProfile {
   const profile = buildPatternProfile(aggregates);
   const maturity = detectMaturity(profile.windowDays);
-  const traits = detectTraits(profile);
+  const traits = enrichTraitsWithConcreteExamples(profile, detectTraits(profile));
   const recoveryStyle = detectRecoveryStyle(profile);
   const stressPattern = detectStressPattern(profile);
   const innerThemes = detectInnerThemes(profile);

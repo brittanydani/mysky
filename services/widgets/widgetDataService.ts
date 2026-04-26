@@ -2,8 +2,8 @@ import { NativeModules, Platform } from 'react-native';
 
 const APP_GROUP = 'group.com.brittany.mysky';
 
-// Orb colour channels are 0.0–1.0 linear-light values matching SwiftUI's Color(red:green:blue:).
-// Map your chakra colours from the app theme to these values before calling update.
+// Orb color channels are 0.0–1.0 linear-light values matching SwiftUI's Color(red:green:blue:).
+// Map your chakra colors from the app theme to these values before calling update.
 export interface WidgetData {
   energyLevel: number; // 0.0–1.0  (drives the lock-screen energy ring)
   focusTitle: string;  // dominant chakra name, e.g. "Solar Plexus"

@@ -298,7 +298,7 @@ export default function InnerWorldScreen() {
               </View>
               <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: '700', textAlign: 'center', marginTop: 2 }}>Unlock Your Healing Space</Text>
               <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
-                Premium synthesises your archetype, somatic patterns, and relational tendencies into personalised shadow work, rituals, and integration prompts.
+                Premium synthesizes your archetype, somatic patterns, and relational tendencies into personalized shadow work, rituals, and integration prompts.
               </Text>
               <Text style={{ color: 'rgba(212,175,55,0.8)', fontSize: 12, fontWeight: '600', marginTop: 4 }}>Unlock the Full Portrait →</Text>
             </Pressable>

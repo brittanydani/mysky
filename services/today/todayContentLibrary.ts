@@ -112,6 +112,13 @@ export interface PersonalAffirmationContext {
    * (key from dailyReflections.byCategory, e.g. 'self', 'relationships', 'growth').
    */
   topReflectionCategory?: string | null;
+
+  /**
+   * Optional same-day content variant. The Home screen passes today's check-in
+   * count so the affirmation can move from the pre-check-in selection to a
+   * fresh post-check-in selection while staying deterministic for the day.
+   */
+  dailySignalSeed?: string | number;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2832,6 +2839,24 @@ function buildAttunedAffirmationPool(context: PersonalAffirmationContext): strin
  * Scoring: each affirmation earns +1 per matching active tag. Entries with
  * the highest match count form the candidate pool; day-of-year picks from it.
  */
+function getVariantOffset(seed: PersonalAffirmationContext['dailySignalSeed']): number {
+  if (seed == null) return 0;
+  if (typeof seed === 'number') {
+    return Number.isFinite(seed) ? Math.abs(Math.trunc(seed)) : 0;
+  }
+
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+function getDailyPoolIndex(poolLength: number, dayOfYear: number, seed: PersonalAffirmationContext['dailySignalSeed']): number {
+  if (poolLength <= 0) return 0;
+  return (dayOfYear + getVariantOffset(seed)) % poolLength;
+}
+
 export function getDailyAffirmation(context: PersonalAffirmationContext = {}): TaggedContent {
   const now = new Date();
   const startOfYear = new Date(now.getFullYear(), 0, 0);
@@ -2839,9 +2864,10 @@ export function getDailyAffirmation(context: PersonalAffirmationContext = {}): T
 
   const attunedPool = buildAttunedAffirmationPool(context);
   if (attunedPool.length > 0) {
+    const index = getDailyPoolIndex(attunedPool.length, dayOfYear, context.dailySignalSeed);
     return {
-      id: -1000 - (dayOfYear % attunedPool.length),
-      text: attunedPool[dayOfYear % attunedPool.length],
+      id: -1000 - index,
+      text: attunedPool[index],
       tags: ['universal'],
     };
   }
@@ -3009,5 +3035,7 @@ export function getDailyAffirmation(context: PersonalAffirmationContext = {}): T
   const threshold = Math.max(1, maxScore - 1);
   const candidates = scored.filter(s => s.score >= threshold).map(s => s.entry);
 
-  return candidates[dayOfYear % candidates.length] ?? AFFIRMATION_LIBRARY[dayOfYear % AFFIRMATION_LIBRARY.length];
+  const fallbackIndex = getDailyPoolIndex(AFFIRMATION_LIBRARY.length, dayOfYear, context.dailySignalSeed);
+  return candidates[getDailyPoolIndex(candidates.length, dayOfYear, context.dailySignalSeed)]
+    ?? AFFIRMATION_LIBRARY[fallbackIndex];
 }

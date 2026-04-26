@@ -12,7 +12,7 @@ import { JournalEntry, SleepEntry } from '../storage/models';
 import { DailyAggregate, PipelineInput, PipelineResult } from './types';
 import { todayDayKey, daysBetweenKeys } from './dayKey';
 import { deriveChartProfile } from './chartProfile';
-import type { KeywordResult, EmotionResult, SentimentResult } from '../journal/nlp';
+import type { KeywordResult, EmotionResult, SentimentResult, RelationshipContextResult } from '../journal/nlp';
 import { mean } from '../../utils/stats';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -74,7 +74,11 @@ interface NormalizedJournal {
   emotionCounts: Partial<Record<string, number>>;
   /** Parsed sentiment (from encrypted NLP summary) */
   sentiment: number | null;
+  /** Parsed relationship context (from keyword summary when available) */
+  relationshipContext: RelationshipContextResult;
 }
+
+const EMPTY_RELATIONSHIP_CONTEXT: RelationshipContextResult = { names: [], roles: [], anchors: [] };
 
 function normalizeJournal(je: JournalEntry): NormalizedJournal {
   const text = (je.content ?? '').trim();
@@ -84,11 +88,13 @@ function normalizeJournal(je: JournalEntry): NormalizedJournal {
   let keywords: string[] = [];
   let emotionCounts: Partial<Record<string, number>> = {};
   let sentiment: number | null = null;
+  let relationshipContext: RelationshipContextResult = EMPTY_RELATIONSHIP_CONTEXT;
 
   try {
     if (je.contentKeywords) {
       const parsed = JSON.parse(je.contentKeywords) as KeywordResult;
       keywords = parsed.keywords ?? [];
+      relationshipContext = parsed.relationshipContext ?? EMPTY_RELATIONSHIP_CONTEXT;
     }
   } catch { /* ignore parse errors */ }
 
@@ -113,6 +119,7 @@ function normalizeJournal(je: JournalEntry): NormalizedJournal {
     keywords,
     emotionCounts,
     sentiment,
+    relationshipContext,
   };
 }
 
@@ -196,6 +203,8 @@ function aggregateByDay(
 
     // Journal NLP aggregates
     const keywordFreq: Record<string, number> = {};
+    const relationshipFreq: Record<string, number> = {};
+    const relationshipAnchorFreq: Record<string, number> = {};
     const emotionCountsSum: Record<string, number> = {};
     const sentiments: number[] = [];
 
@@ -203,6 +212,12 @@ function aggregateByDay(
       // Keyword union with frequency
       for (const kw of j.keywords) {
         keywordFreq[kw] = (keywordFreq[kw] ?? 0) + 1;
+      }
+      for (const rel of [...j.relationshipContext.names, ...j.relationshipContext.roles]) {
+        relationshipFreq[rel] = (relationshipFreq[rel] ?? 0) + 1;
+      }
+      for (const anchor of j.relationshipContext.anchors) {
+        relationshipAnchorFreq[anchor] = (relationshipAnchorFreq[anchor] ?? 0) + 1;
       }
       // Sum emotion counts
       for (const [cat, count] of Object.entries(j.emotionCounts)) {
@@ -219,6 +234,16 @@ function aggregateByDay(
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .slice(0, 12)
       .map(([word]) => word);
+
+    const relationshipKeywords = Object.entries(relationshipFreq)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 10)
+      .map(([word]) => word);
+
+    const relationshipAnchors = Object.entries(relationshipAnchorFreq)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 8)
+      .map(([anchor]) => anchor);
 
     const sentimentAvg = sentiments.length > 0
       ? parseFloat(mean(sentiments).toFixed(3))
@@ -242,6 +267,8 @@ function aggregateByDay(
       journalCount: dayJournals.length,
       journalWordCount: dayJournals.reduce((sum, j) => sum + j.wordCount, 0),
       keywordsUnion,
+      relationshipKeywords,
+      relationshipAnchors,
       journalEmotionCountsTotal: Object.keys(emotionCountsSum).length > 0 ? emotionCountsSum : {},
       sentimentAvg,
       checkInTimestamps: dayCheckIns.map(c => c.createdAt),

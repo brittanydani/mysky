@@ -295,7 +295,7 @@ export interface TagPairResult {
   labelA: string;
   labelB: string;
   /** Number of days both tags appear */
-  coOccurrDays: number;
+  coOccurDays: number;
   /** Average mood on co-occurrence days */
   moodAvg: number;
   /** Average energy on co-occurrence days */
@@ -377,7 +377,7 @@ export function computeTagPairs(aggregates: DailyAggregate[]): TagPairCard {
 
       results.push({
         tagA, tagB, labelA, labelB,
-        coOccurrDays: pairDays.length,
+        coOccurDays: pairDays.length,
         moodAvg: parseFloat(pairMood.toFixed(1)),
         energyAvg: parseFloat(pairEnergy.toFixed(1)),
         stressAvg: parseFloat(pairStress.toFixed(1)),

@@ -2,7 +2,7 @@
 //
 // Animated toggle pill for multi-select or single-select tag grids.
 //
-// Visual behaviour:
+// Visual behavior:
 //   • Press-in  → spring scale to 0.92 (feels like a physical button depression).
 //   • Press-out → spring returns to 1.0.
 //   • Toggle    → 200ms color interpolation from ghost styles to a 13%-opacity
@@ -32,7 +32,7 @@ export interface PremiumPillProps {
   onToggle: () => void;
   /** Optional long-press handler — used for removing custom tags. */
   onLongPress?: () => void;
-  /** Hex accent colour that drives the selected bg/border. Default: gold. */
+  /** Hex accent color that drives the selected bg/border. Default: gold. */
   accentColor?: string;
   /** When true the pill is visually dimmed and tap is ignored. */
   disabled?: boolean;

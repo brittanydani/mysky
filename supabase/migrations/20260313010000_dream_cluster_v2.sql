@@ -3,7 +3,7 @@
 --
 -- Changes from v1:
 --   • Adds `lastSynced` to the returned payload (aligns with ResonanceStore pattern).
---   • Normalises symbols (lower + trim) before aggregation to prevent duplicates.
+--   • Normalizes symbols (lower + trim) before aggregation to prevent duplicates.
 --   • Uses DISTINCT per log before pairing so repeated symbols in the same entry
 --     do not artificially inflate co-occurrence counts.
 --   • Bounds node size to 0.55–1.8 and link strength to 0.45–3.0 for
@@ -30,10 +30,10 @@ BEGIN
         RAISE EXCEPTION 'Not authenticated';
     END IF;
 
-    -- ── Nodes: one row per normalised symbol ─────────────────────────────────
+    -- ── Nodes: one row per normalized symbol ─────────────────────────────────
     --
-    -- We unnest each day's dream_symbols array, normalise (lower + trim),
-    -- then aggregate stress/anxiety across all appearances to derive colour
+    -- We unnest each day's dream_symbols array, normalize (lower + trim),
+    -- then aggregate stress/anxiety across all appearances to derive color
     -- and build a detail sentence.
 
     WITH filtered_logs AS (
@@ -108,7 +108,7 @@ BEGIN
     --
     -- We use DISTINCT per log before self-joining so each (log, symbol) pair
     -- is counted once even if a symbol appears multiple times in one entry's
-    -- dream_symbols array (defensive normalisation).
+    -- dream_symbols array (defensive normalization).
 
     WITH filtered_logs AS (
         SELECT id, dream_symbols
@@ -117,7 +117,7 @@ BEGIN
           AND log_date >= current_date - GREATEST(days_back - 1, 0)
           AND COALESCE(array_length(dream_symbols, 1), 0) > 0
     ),
-    normalised AS (
+    normalized AS (
         SELECT
             fl.id,
             LOWER(TRIM(sym)) AS symbol
@@ -127,7 +127,7 @@ BEGIN
     ),
     distinct_per_log AS (
         SELECT DISTINCT id, symbol
-        FROM normalised
+        FROM normalized
     ),
     pair_counts AS (
         SELECT

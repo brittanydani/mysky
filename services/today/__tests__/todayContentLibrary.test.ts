@@ -1,4 +1,4 @@
-import { AFFIRMATION_LIBRARY } from '../todayContentLibrary';
+import { AFFIRMATION_LIBRARY, getDailyAffirmation } from '../todayContentLibrary';
 
 describe('todayContentLibrary', () => {
   describe('AFFIRMATION_LIBRARY', () => {
@@ -24,6 +24,13 @@ describe('todayContentLibrary', () => {
     it('contains variety of tag types', () => {
       const allTags = new Set(AFFIRMATION_LIBRARY.flatMap((a) => a.tags));
       expect(allTags.size).toBeGreaterThan(10);
+    });
+
+    it('uses the daily signal seed to select a fresh post-check-in affirmation', () => {
+      const beforeCheckIn = getDailyAffirmation({ mood: 8 });
+      const afterCheckIn = getDailyAffirmation({ mood: 8, dailySignalSeed: 1 });
+
+      expect(afterCheckIn.text).not.toBe(beforeCheckIn.text);
     });
   });
 });

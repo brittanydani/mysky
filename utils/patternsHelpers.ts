@@ -49,6 +49,17 @@ function cleanText(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+function isDeepInsight(insight: CrossRefInsight): boolean {
+  return insight.id.startsWith('deep-');
+}
+
+function reflectionThemeTitle(insight: CrossRefInsight, fallbackTitle: string): string {
+  const themeMatch = cleanText(insight.body).match(/\btheme of ([^.]+)\./i);
+  if (!themeMatch) return fallbackTitle;
+
+  return `Recurring Reflection Theme: ${readableLabel(themeMatch[1].trim())}`;
+}
+
 function composeVariant(groups: string[][], seedSource: string): string {
   const seed = stableVariantSeed(seedSource);
   return cleanText(
@@ -98,7 +109,7 @@ function rewriteSourceTitle(insight: CrossRefInsight): string {
     case 'relationship':
       return 'The same relationship pressure points keep returning';
     case 'reflection':
-      return 'Your reflections keep circling the same emotional territory';
+      return reflectionThemeTitle(insight, 'A reflection theme is repeating');
     case 'archetype':
       return 'The way you protect yourself under strain is getting clearer';
     case 'cognitive':
@@ -558,6 +569,14 @@ export function readableLabel(value: string) {
 }
 
 export function refineCrossRefCopy(insight: CrossRefInsight): CrossRefInsight {
+  if (isDeepInsight(insight)) {
+    return {
+      ...insight,
+      title: cleanText(insight.title),
+      body: cleanText(insight.body),
+    };
+  }
+
   if (insight.source === 'values') {
     return {
       ...insight,
@@ -588,7 +607,7 @@ export function refineCrossRefCopy(insight: CrossRefInsight): CrossRefInsight {
   if (insight.source === 'reflection') {
     return {
       ...insight,
-      title: 'Your reflections keep circling the same emotional territory',
+      title: reflectionThemeTitle(insight, cleanText(insight.title)),
       body: cleanText(insight.body),
     };
   }

@@ -20,7 +20,7 @@ import { MetallicText } from './MetallicText';
 import { MetallicIcon } from './MetallicIcon';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
-type ArchetoneTone = 'reflective' | 'energised' | 'heavy' | 'calm' | 'stormy' | 'neutral';
+type ArchetoneTone = 'reflective' | 'energized' | 'heavy' | 'calm' | 'stormy' | 'neutral';
 
 function toneFromMood(mood?: string): ArchetoneTone {
   if (!mood) return 'neutral';
@@ -45,7 +45,7 @@ const MOOD_DISPLAY_LABELS: Record<string, string> = {
 function toneColor(tone: ArchetoneTone): string {
   const map: Record<ArchetoneTone, string> = {
     reflective: '#A2C2E1', // Atmosphere
-    energised: '#D4AF37',  // Gold
+    energized: '#D4AF37',  // Gold
     heavy: '#CD7F5D',      // Copper
     calm: '#6B9080',       // Sage
     stormy: '#DC5050',     // Ember

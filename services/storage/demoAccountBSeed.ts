@@ -244,7 +244,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         date: '2026-01-22',
         values: [
           {
-            statement: 'I recognise the early signs of burnout in myself.',
+            statement: 'I recognize the early signs of burnout in myself.',
             answer: 'Very True'
           },
           {
@@ -264,7 +264,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         cognitive: [
           {
-            statement: 'I organise my thoughts clearly before speaking about something complex.',
+            statement: 'I organize my thoughts clearly before speaking about something complex.',
             answer: 'True'
           },
           {
@@ -612,7 +612,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I hum, whistle, or tap rhythms without realising it.',
+            statement: 'I hum, whistle, or tap rhythms without realizing it.',
             answer: 'True'
           }
         ]
@@ -698,7 +698,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I understand what fulfilment looks like for someone who is always seeking.',
+            statement: 'I understand what fulfillment looks like for someone who is always seeking.',
             answer: 'True'
           }
         ],
@@ -718,7 +718,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I recognise complex time signatures or polyrhythms.',
+            statement: 'I recognize complex time signatures or polyrhythms.',
             answer: 'True'
           }
         ]
@@ -1174,7 +1174,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I am energised by meaningful conversations.',
+            statement: 'I am energized by meaningful conversations.',
             answer: 'True'
           }
         ]
@@ -1490,7 +1490,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'Deep conversations energise my thinking.',
+            statement: 'Deep conversations energize my thinking.',
             answer: 'True'
           },
           {
@@ -1806,7 +1806,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         archetypes: [
           {
-            statement: 'Radical self-honesty is something I could practise more of.',
+            statement: 'Radical self-honesty is something I could practice more of.',
             answer: 'True'
           },
           {
@@ -1918,7 +1918,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'Social interaction drains me more than most people realise.',
+            statement: 'Social interaction drains me more than most people realize.',
             answer: 'Very True'
           }
         ],
@@ -2054,7 +2054,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I use visualisation as a planning or problem-solving tool.',
+            statement: 'I use visualization as a planning or problem-solving tool.',
             answer: 'True'
           }
         ]
@@ -2154,7 +2154,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         cognitive: [
           {
-            statement: 'I rely on a mental model to understand human behaviour.',
+            statement: 'I rely on a mental model to understand human behavior.',
             answer: 'True'
           },
           {
@@ -2354,7 +2354,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         date: '2026-02-10',
         values: [
           {
-            statement: 'Unexpected things energise me in surprising ways.',
+            statement: 'Unexpected things energize me in surprising ways.',
             answer: 'True'
           },
           {
@@ -2602,7 +2602,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         cognitive: [
           {
-            statement: 'I calibrate my confidence in my own judgement accurately.',
+            statement: 'I calibrate my confidence in my own judgment accurately.',
             answer: 'True'
           },
           {
@@ -3026,7 +3026,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I prioritise restoration over obligation when I need to.',
+            statement: 'I prioritize restoration over obligation when I need to.',
             answer: 'True'
           }
         ],
@@ -3052,7 +3052,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         intelligence: [
           {
-            statement: 'I classify and categorise natural phenomena instinctively.',
+            statement: 'I classify and categorize natural phenomena instinctively.',
             answer: 'True'
           },
           {
@@ -3156,7 +3156,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         cognitive: [
           {
-            statement: 'Complex, challenging problems energise me.',
+            statement: 'Complex, challenging problems energize me.',
             answer: 'True'
           },
           {
@@ -3480,7 +3480,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I am deeply attached to at least one defence mechanism.',
+            statement: 'I am deeply attached to at least one defense mechanism.',
             answer: 'True'
           },
           {
@@ -3588,7 +3588,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I am spending my time on what I would prioritise if it were limited.',
+            statement: 'I am spending my time on what I would prioritize if it were limited.',
             answer: 'True'
           }
         ],
@@ -3828,7 +3828,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I recognise and correct the cognitive biases that affect my risk assessment.',
+            statement: 'I recognize and correct the cognitive biases that affect my risk assessment.',
             answer: 'True'
           },
           {
@@ -3918,7 +3918,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         date: '2026-02-24',
         values: [
           {
-            statement: 'I choose long-term fulfilment over short-term gratification.',
+            statement: 'I choose long-term fulfillment over short-term gratification.',
             answer: 'True'
           },
           {
@@ -4034,7 +4034,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         archetypes: [
           {
-            statement: 'I play a specific, recognisable role in my friends\' lives.',
+            statement: 'I play a specific, recognizable role in my friends\' lives.',
             answer: 'True'
           },
           {
@@ -4130,7 +4130,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         date: '2026-02-26',
         values: [
           {
-            statement: 'Loyalty is important to me, but I recognise its limits.',
+            statement: 'Loyalty is important to me, but I recognize its limits.',
             answer: 'True'
           },
           {
@@ -4492,7 +4492,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         cognitive: [
           {
-            statement: 'I evaluate worst-case scenarios without catastrophising.',
+            statement: 'I evaluate worst-case scenarios without catastrophizing.',
             answer: 'True'
           },
           {
@@ -4722,7 +4722,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         intelligence: [
           {
-            statement: 'I feel a strong pull to understand human behaviour.',
+            statement: 'I feel a strong pull to understand human behavior.',
             answer: 'True'
           },
           {
@@ -5160,7 +5160,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         cognitive: [
           {
-            statement: 'I sleep on important decisions before finalising them.',
+            statement: 'I sleep on important decisions before finalizing them.',
             answer: 'True'
           },
           {
@@ -5698,7 +5698,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'There is an area of my life that feels destabilisingly uncertain.',
+            statement: 'There is an area of my life that feels destabilizing and uncertain.',
             answer: 'True'
           }
         ],
@@ -6184,7 +6184,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I use music therapeutically — to regulate, energise, or ground myself.',
+            statement: 'I use music therapeutically — to regulate, energize, or ground myself.',
             answer: 'True'
           }
         ]
@@ -6518,7 +6518,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'Reading is one of my favourite ways to spend time.',
+            statement: 'Reading is one of my favorite ways to spend time.',
             answer: 'True'
           }
         ]
@@ -6954,7 +6954,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         intelligence: [
           {
-            statement: 'I experience music as colours, textures, or images.',
+            statement: 'I experience music as colors, textures, or images.',
             answer: 'True'
           },
           {
@@ -7278,11 +7278,11 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         cognitive: [
           {
-            statement: 'I handle choices with no clear right answer without becoming paralysed.',
+            statement: 'I handle choices with no clear right answer without becoming paralyzed.',
             answer: 'True'
           },
           {
-            statement: 'I summarise complex information for myself effectively.',
+            statement: 'I summarize complex information for myself effectively.',
             answer: 'True'
           }
         ],
@@ -7394,7 +7394,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         intelligence: [
           {
-            statement: 'I can recognise the difference between what I feel and what I think.',
+            statement: 'I can recognize the difference between what I feel and what I think.',
             answer: 'True'
           },
           {
@@ -7728,7 +7728,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         intelligence: [
           {
-            statement: 'I understand my own defence mechanisms.',
+            statement: 'I understand my own defense mechanisms.',
             answer: 'True'
           },
           {
@@ -7850,7 +7850,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I am fascinated by animal behaviour and consciousness.',
+            statement: 'I am fascinated by animal behavior and consciousness.',
             answer: 'True'
           },
           {
@@ -7936,7 +7936,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         archetypes: [
           {
-            statement: 'I recognise when resistance is blocking my transformation.',
+            statement: 'I recognize when resistance is blocking my transformation.',
             answer: 'True'
           },
           {
@@ -8036,7 +8036,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I practise small acts of justice and fairness daily.',
+            statement: 'I practice small acts of justice and fairness daily.',
             answer: 'True'
           }
         ],
@@ -8046,7 +8046,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I have been the villain in someone else\'s story without realising it.',
+            statement: 'I have been the villain in someone else\'s story without realizing it.',
             answer: 'True'
           }
         ],
@@ -8180,7 +8180,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         intelligence: [
           {
-            statement: 'I organise my thoughts spatially — mind maps, diagrams, or layouts.',
+            statement: 'I organize my thoughts spatially — mind maps, diagrams, or layouts.',
             answer: 'Somewhat'
           },
           {
@@ -8710,7 +8710,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         archetypes: [
           {
-            statement: 'A self-sabotaging behaviour keeps returning because it serves a hidden need.',
+            statement: 'A self-sabotaging behavior keeps returning because it serves a hidden need.',
             answer: 'True'
           },
           {
@@ -9058,13 +9058,13 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I balance structured learning with explorative discovery.',
+            statement: 'I balance structured learning with exploratory discovery.',
             answer: 'True'
           }
         ],
         intelligence: [
           {
-            statement: 'I process information best when it is colour-coded or spatially arranged.',
+            statement: 'I process information best when it is color-coded or spatially arranged.',
             answer: 'True'
           },
           {
@@ -9172,7 +9172,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I analyse complex issues thoroughly and effectively.',
+            statement: 'I analyze complex issues thoroughly and effectively.',
             answer: 'True'
           },
           {
@@ -9286,7 +9286,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I recognise when I am reasoning well versus poorly.',
+            statement: 'I recognize when I am reasoning well versus poorly.',
             answer: 'True'
           }
         ],
@@ -9492,11 +9492,11 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'Powerlessness has a specific, recognisable feeling in my body.',
+            statement: 'Powerlessness has a specific, recognizable feeling in my body.',
             answer: 'True'
           },
           {
-            statement: 'I maintain dignity when life strips away my defences.',
+            statement: 'I maintain dignity when life strips away my defenses.',
             answer: 'True'
           }
         ],
@@ -10066,7 +10066,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         intelligence: [
           {
-            statement: 'I like categorising and organising information.',
+            statement: 'I like categorizing and organizing information.',
             answer: 'True'
           },
           {
@@ -10184,7 +10184,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         intelligence: [
           {
-            statement: 'I rely on spreadsheets, charts, or structured tools to organise decisions.',
+            statement: 'I rely on spreadsheets, charts, or structured tools to organize decisions.',
             answer: 'True'
           },
           {
@@ -10252,7 +10252,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-01-22',
       category: 'values',
       answer: 'Very True',
-      questionText: 'I recognise the early signs of burnout in myself.'
+      questionText: 'I recognize the early signs of burnout in myself.'
     },
     {
       date: '2026-01-22',
@@ -10276,7 +10276,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-01-22',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I organise my thoughts clearly before speaking about something complex.'
+      questionText: 'I organize my thoughts clearly before speaking about something complex.'
     },
     {
       date: '2026-01-22',
@@ -10462,7 +10462,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-01-25',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I hum, whistle, or tap rhythms without realising it.'
+      questionText: 'I hum, whistle, or tap rhythms without realizing it.'
     },
     {
       date: '2026-01-26',
@@ -10486,7 +10486,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-01-26',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'I understand what fulfilment looks like for someone who is always seeking.'
+      questionText: 'I understand what fulfillment looks like for someone who is always seeking.'
     },
     {
       date: '2026-01-26',
@@ -10510,7 +10510,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-01-26',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I recognise complex time signatures or polyrhythms.'
+      questionText: 'I recognize complex time signatures or polyrhythms.'
     },
     {
       date: '2026-01-27',
@@ -10750,7 +10750,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-01-30',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I am energised by meaningful conversations.'
+      questionText: 'I am energized by meaningful conversations.'
     },
     {
       date: '2026-01-31',
@@ -10894,7 +10894,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-02',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'Deep conversations energise my thinking.'
+      questionText: 'Deep conversations energize my thinking.'
     },
     {
       date: '2026-02-02',
@@ -11038,7 +11038,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-05',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'Radical self-honesty is something I could practise more of.'
+      questionText: 'Radical self-honesty is something I could practice more of.'
     },
     {
       date: '2026-02-05',
@@ -11098,7 +11098,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-06',
       category: 'values',
       answer: 'Very True',
-      questionText: 'Social interaction drains me more than most people realise.'
+      questionText: 'Social interaction drains me more than most people realize.'
     },
     {
       date: '2026-02-06',
@@ -11182,7 +11182,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-07',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I use visualisation as a planning or problem-solving tool.'
+      questionText: 'I use visualization as a planning or problem-solving tool.'
     },
     {
       date: '2026-02-08',
@@ -11224,7 +11224,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-08',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I rely on a mental model to understand human behaviour.'
+      questionText: 'I rely on a mental model to understand human behavior.'
     },
     {
       date: '2026-02-08',
@@ -11308,7 +11308,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-10',
       category: 'values',
       answer: 'True',
-      questionText: 'Unexpected things energise me in surprising ways.'
+      questionText: 'Unexpected things energize me in surprising ways.'
     },
     {
       date: '2026-02-10',
@@ -11452,7 +11452,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-12',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I calibrate my confidence in my own judgement accurately.'
+      questionText: 'I calibrate my confidence in my own judgment accurately.'
     },
     {
       date: '2026-02-12',
@@ -11650,7 +11650,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-16',
       category: 'values',
       answer: 'True',
-      questionText: 'I prioritise restoration over obligation when I need to.'
+      questionText: 'I prioritize restoration over obligation when I need to.'
     },
     {
       date: '2026-02-16',
@@ -11680,7 +11680,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-16',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I classify and categorise natural phenomena instinctively.'
+      questionText: 'I classify and categorize natural phenomena instinctively.'
     },
     {
       date: '2026-02-16',
@@ -11728,7 +11728,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-17',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'Complex, challenging problems energise me.'
+      questionText: 'Complex, challenging problems energize me.'
     },
     {
       date: '2026-02-17',
@@ -11884,7 +11884,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-20',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'I am deeply attached to at least one defence mechanism.'
+      questionText: 'I am deeply attached to at least one defense mechanism.'
     },
     {
       date: '2026-02-20',
@@ -11938,7 +11938,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-21',
       category: 'values',
       answer: 'True',
-      questionText: 'I am spending my time on what I would prioritise if it were limited.'
+      questionText: 'I am spending my time on what I would prioritize if it were limited.'
     },
     {
       date: '2026-02-21',
@@ -12070,7 +12070,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-23',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I recognise and correct the cognitive biases that affect my risk assessment.'
+      questionText: 'I recognize and correct the cognitive biases that affect my risk assessment.'
     },
     {
       date: '2026-02-23',
@@ -12100,7 +12100,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-24',
       category: 'values',
       answer: 'True',
-      questionText: 'I choose long-term fulfilment over short-term gratification.'
+      questionText: 'I choose long-term fulfillment over short-term gratification.'
     },
     {
       date: '2026-02-24',
@@ -12160,7 +12160,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-25',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'I play a specific, recognisable role in my friends\' lives.'
+      questionText: 'I play a specific, recognizable role in my friends\' lives.'
     },
     {
       date: '2026-02-25',
@@ -12196,7 +12196,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-02-26',
       category: 'values',
       answer: 'True',
-      questionText: 'Loyalty is important to me, but I recognise its limits.'
+      questionText: 'Loyalty is important to me, but I recognize its limits.'
     },
     {
       date: '2026-02-26',
@@ -12400,7 +12400,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-01',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I evaluate worst-case scenarios without catastrophising.'
+      questionText: 'I evaluate worst-case scenarios without catastrophizing.'
     },
     {
       date: '2026-03-01',
@@ -12520,7 +12520,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-03',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I feel a strong pull to understand human behaviour.'
+      questionText: 'I feel a strong pull to understand human behavior.'
     },
     {
       date: '2026-03-03',
@@ -12736,7 +12736,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-07',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I sleep on important decisions before finalising them.'
+      questionText: 'I sleep on important decisions before finalizing them.'
     },
     {
       date: '2026-03-07',
@@ -12994,7 +12994,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-12',
       category: 'values',
       answer: 'True',
-      questionText: 'There is an area of my life that feels destabilisingly uncertain.'
+      questionText: 'There is an area of my life that feels destabilizing and uncertain.'
     },
     {
       date: '2026-03-12',
@@ -13270,7 +13270,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-16',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I use music therapeutically — to regulate, energise, or ground myself.'
+      questionText: 'I use music therapeutically — to regulate, energize, or ground myself.'
     },
     {
       date: '2026-03-17',
@@ -13438,7 +13438,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-19',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'Reading is one of my favourite ways to spend time.'
+      questionText: 'Reading is one of my favorite ways to spend time.'
     },
     {
       date: '2026-03-20',
@@ -13648,7 +13648,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-23',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I experience music as colours, textures, or images.'
+      questionText: 'I experience music as colors, textures, or images.'
     },
     {
       date: '2026-03-23',
@@ -13804,13 +13804,13 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-26',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I handle choices with no clear right answer without becoming paralysed.'
+      questionText: 'I handle choices with no clear right answer without becoming paralyzed.'
     },
     {
       date: '2026-03-26',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I summarise complex information for myself effectively.'
+      questionText: 'I summarize complex information for myself effectively.'
     },
     {
       date: '2026-03-26',
@@ -13864,7 +13864,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-27',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I can recognise the difference between what I feel and what I think.'
+      questionText: 'I can recognize the difference between what I feel and what I think.'
     },
     {
       date: '2026-03-27',
@@ -14032,7 +14032,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-30',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I understand my own defence mechanisms.'
+      questionText: 'I understand my own defense mechanisms.'
     },
     {
       date: '2026-03-30',
@@ -14104,7 +14104,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-31',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I am fascinated by animal behaviour and consciousness.'
+      questionText: 'I am fascinated by animal behavior and consciousness.'
     },
     {
       date: '2026-03-31',
@@ -14128,7 +14128,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-01',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'I recognise when resistance is blocking my transformation.'
+      questionText: 'I recognize when resistance is blocking my transformation.'
     },
     {
       date: '2026-04-01',
@@ -14170,7 +14170,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-02',
       category: 'values',
       answer: 'True',
-      questionText: 'I practise small acts of justice and fairness daily.'
+      questionText: 'I practice small acts of justice and fairness daily.'
     },
     {
       date: '2026-04-02',
@@ -14182,7 +14182,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-02',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'I have been the villain in someone else\'s story without realising it.'
+      questionText: 'I have been the villain in someone else\'s story without realizing it.'
     },
     {
       date: '2026-04-02',
@@ -14266,7 +14266,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-03',
       category: 'intelligence',
       answer: 'Somewhat',
-      questionText: 'I organise my thoughts spatially — mind maps, diagrams, or layouts.'
+      questionText: 'I organize my thoughts spatially — mind maps, diagrams, or layouts.'
     },
     {
       date: '2026-04-03',
@@ -14512,7 +14512,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-08',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'A self-sabotaging behaviour keeps returning because it serves a hidden need.'
+      questionText: 'A self-sabotaging behavior keeps returning because it serves a hidden need.'
     },
     {
       date: '2026-04-08',
@@ -14698,13 +14698,13 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-11',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I balance structured learning with explorative discovery.'
+      questionText: 'I balance structured learning with exploratory discovery.'
     },
     {
       date: '2026-04-11',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I process information best when it is colour-coded or spatially arranged.'
+      questionText: 'I process information best when it is color-coded or spatially arranged.'
     },
     {
       date: '2026-04-11',
@@ -14758,7 +14758,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-12',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I analyse complex issues thoroughly and effectively.'
+      questionText: 'I analyze complex issues thoroughly and effectively.'
     },
     {
       date: '2026-04-12',
@@ -14818,7 +14818,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-13',
       category: 'cognitive',
       answer: 'True',
-      questionText: 'I recognise when I am reasoning well versus poorly.'
+      questionText: 'I recognize when I am reasoning well versus poorly.'
     },
     {
       date: '2026-04-13',
@@ -14908,13 +14908,13 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-15',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'Powerlessness has a specific, recognisable feeling in my body.'
+      questionText: 'Powerlessness has a specific, recognizable feeling in my body.'
     },
     {
       date: '2026-04-15',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'I maintain dignity when life strips away my defences.'
+      questionText: 'I maintain dignity when life strips away my defenses.'
     },
     {
       date: '2026-04-15',
@@ -15208,7 +15208,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-20',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I like categorising and organising information.'
+      questionText: 'I like categorizing and organizing information.'
     },
     {
       date: '2026-04-20',
@@ -15274,7 +15274,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-21',
       category: 'intelligence',
       answer: 'True',
-      questionText: 'I rely on spreadsheets, charts, or structured tools to organise decisions.'
+      questionText: 'I rely on spreadsheets, charts, or structured tools to organize decisions.'
     },
     {
       date: '2026-04-21',
@@ -17190,7 +17190,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'annie',
         'anxious-attachment',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17199,7 +17199,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'lucas',
         'protective-overfunctioning',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17235,7 +17235,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'nellie',
         'grief-after-closeness',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17244,7 +17244,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'sarah',
         'the-fear-of-being-replaceable',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17280,7 +17280,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'groups',
         'belonging-feeling-conditional',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17289,7 +17289,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'authority-figures',
         'self-abandonment-in-pursuit-of-harmony',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17325,16 +17325,16 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'jamie',
         'hypervigilance-about-tone',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
       date: '2026-02-07',
-      note: 'Thinking about Naomi brought up comparison turning inward; the bond still lives in me even when the role ended, and I sense distance before anyone names it made that obvious again. The way it showed up alongside \'i miss being met quickly\' told me I still need more room for honesty than performance.',
+      note: 'Thinking about Naomi brought up comparison turning inward; the bond still lives in me even when the role ended, and sensing distance before anyone names it made that obvious again. The way it showed up alongside \'i miss being met quickly\' told me I still need more room for honesty than performance.',
       tags: [
         'naomi',
         'comparison-turning-inward',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17370,7 +17370,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'patti',
         'bracing-before-trust',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17379,7 +17379,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'chuck',
         'love-carrying-exhaustion',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17415,7 +17415,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'family-system',
         'protective-overfunctioning',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17424,7 +17424,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'annie',
         'the-ache-of-wanting-repair',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17460,7 +17460,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'angela',
         'the-fear-of-being-replaceable',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17469,7 +17469,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'nellie',
         'overexplaining-to-stay-connected',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17505,7 +17505,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'women-i-compare-myself-to',
         'self-abandonment-in-pursuit-of-harmony',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17514,7 +17514,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'groups',
         'anxious-attachment',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17550,7 +17550,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'lucas',
         'comparison-turning-inward',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17559,7 +17559,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'jamie',
         'grief-after-closeness',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17595,7 +17595,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'sarah',
         'love-carrying-exhaustion',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17604,7 +17604,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'patti',
         'belonging-feeling-conditional',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17640,7 +17640,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'authority-figures',
         'the-ache-of-wanting-repair',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17649,7 +17649,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'family-system',
         'hypervigilance-about-tone',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17685,7 +17685,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'naomi',
         'overexplaining-to-stay-connected',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17694,7 +17694,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'angela',
         'bracing-before-trust',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17730,7 +17730,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'chuck',
         'anxious-attachment',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17739,7 +17739,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'women-i-compare-myself-to',
         'protective-overfunctioning',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17775,7 +17775,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'annie',
         'grief-after-closeness',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17784,7 +17784,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'lucas',
         'the-fear-of-being-replaceable',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17820,7 +17820,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'nellie',
         'belonging-feeling-conditional',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17829,7 +17829,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'sarah',
         'self-abandonment-in-pursuit-of-harmony',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17865,7 +17865,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'groups',
         'hypervigilance-about-tone',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17874,7 +17874,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'authority-figures',
         'comparison-turning-inward',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17910,16 +17910,16 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'jamie',
         'bracing-before-trust',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
       date: '2026-04-13',
-      note: 'Thinking about Naomi brought up love carrying exhaustion; the bond still lives in me even when the role ended, and I sense distance before anyone names it made that obvious again. The way it showed up alongside \'wanting annie to choose me\' told me I still need more room for honesty than performance.',
+      note: 'Thinking about Naomi brought up love carrying exhaustion; the bond still lives in me even when the role ended, and sensing distance before anyone names it made that obvious again. The way it showed up alongside \'wanting annie to choose me\' told me I still need more room for honesty than performance.',
       tags: [
         'naomi',
         'love-carrying-exhaustion',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {
@@ -17955,7 +17955,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'patti',
         'protective-overfunctioning',
-        'someone-feels-even-slightly-'
+        'someone-feels-even-slightly-unavailable'
       ]
     },
     {
@@ -17964,7 +17964,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       tags: [
         'chuck',
         'the-ache-of-wanting-repair',
-        'i-sense-distance-before-anyo'
+        'i-sense-distance-before-anyone'
       ]
     },
     {

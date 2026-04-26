@@ -31,7 +31,7 @@ import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
-import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
+import { enrichSelfKnowledgeContext, loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { enhancePatternInsights } from '../../services/insights/geminiInsightsService';
 import { buildPatternLibraryState, refineCrossRefCopy } from '../../utils/patternsHelpers';
 import {
@@ -68,6 +68,17 @@ const WRAP_AT_WORD_PROPS = {
   lineBreakStrategyIOS: 'none' as const,
   textBreakStrategy: 'simple' as const,
 };
+
+const FIT_TEXT_PROPS = {
+  ...WRAP_AT_WORD_PROPS,
+  adjustsFontSizeToFit: true,
+  minimumFontScale: 0.68,
+};
+
+function shouldUseWideMetric(value: string): boolean {
+  const normalized = normalizeDisplayText(value);
+  return normalized.length > 20 || normalized.split(/\s+/).some((word) => word.length >= 11);
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -149,7 +160,11 @@ export default function PatternsScreen() {
           setLastUpdated(new Date().toISOString());
           setOrbitLoading(false);
 
-          const skContext = await loadSelfKnowledgeContext();
+          const skContext = enrichSelfKnowledgeContext(
+            await loadSelfKnowledgeContext(),
+            recentJournalEntries,
+            sleepEntries,
+          );
           if (!active) return;
           const refs = computeSelfKnowledgeCrossRef(skContext, checkIns);
           const enhancedRefs = await enhancePatternInsights(refs, skContext, checkIns, isPremium);
@@ -192,7 +207,7 @@ export default function PatternsScreen() {
   const libraryState = useMemo(() => buildPatternLibraryState(dailyAggregates, crossRefs), [crossRefs, dailyAggregates]);
   const feedInsights = useMemo(() => {
     const profileInsights = buildPatternFeedInsights(deepInsights);
-    return [...profileInsights, ...crossRefs];
+    return [...crossRefs, ...profileInsights];
   }, [crossRefs, deepInsights]);
 
   // Rotate through all surfaced insights daily so the feed keeps evolving with the archive.
@@ -252,9 +267,9 @@ export default function PatternsScreen() {
                 {item.heroMetrics && item.heroMetrics.length > 0 && (
                   <View style={styles.heroMetricsRow}>
                     {item.heroMetrics.map((m) => (
-                      <View key={m.label} style={styles.heroMetricChip}>
-                        <Text {...WRAP_AT_WORD_PROPS} style={styles.heroMetricValue}>{m.value}</Text>
-                        <Text {...WRAP_AT_WORD_PROPS} style={styles.heroMetricLabel}>{m.label}</Text>
+                      <View key={m.label} style={[styles.heroMetricChip, shouldUseWideMetric(m.value) && styles.heroMetricChipWide]}>
+                        <Text {...FIT_TEXT_PROPS} numberOfLines={3} style={styles.heroMetricValue}>{m.value}</Text>
+                        <Text {...FIT_TEXT_PROPS} numberOfLines={2} style={styles.heroMetricLabel}>{m.label}</Text>
                       </View>
                     ))}
                   </View>
@@ -452,9 +467,9 @@ export default function PatternsScreen() {
                     {insight.heroMetrics && insight.heroMetrics.length > 0 && (
                       <View style={[styles.heroMetricsRow, { marginTop: 12 }]}>
                         {insight.heroMetrics.map((m) => (
-                          <View key={m.label} style={styles.heroMetricChip}>
-                            <Text {...WRAP_AT_WORD_PROPS} style={styles.heroMetricValue}>{m.value}</Text>
-                            <Text {...WRAP_AT_WORD_PROPS} style={styles.heroMetricLabel}>{m.label}</Text>
+                          <View key={m.label} style={[styles.heroMetricChip, shouldUseWideMetric(m.value) && styles.heroMetricChipWide]}>
+                            <Text {...FIT_TEXT_PROPS} numberOfLines={3} style={styles.heroMetricValue}>{m.value}</Text>
+                            <Text {...FIT_TEXT_PROPS} numberOfLines={2} style={styles.heroMetricLabel}>{m.label}</Text>
                           </View>
                         ))}
                       </View>
@@ -695,6 +710,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.045)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
+  },
+  heroMetricChipWide: {
+    width: '100%',
+    maxWidth: '100%',
   },
   heroMetricValue: {
     width: '100%',

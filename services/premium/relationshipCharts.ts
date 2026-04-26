@@ -174,7 +174,7 @@ export class PremiumRelationshipService {
   /**
    * Generate full relationship comparison (premium only)
    * When a SynastryReport is provided, real cross-chart aspects are woven
-   * into the element-level base to give much richer, personalised output.
+   * into the element-level base to give much richer, personalized output.
    */
   static generateComparison(
     userChart: NatalChart,
@@ -242,7 +242,7 @@ export class PremiumRelationshipService {
 
   /**
    * Augment element-level connection strengths with real cross-chart aspects
-   * categorised as "connection" or "chemistry" by the synastry engine.
+   * categorized as "connection" or "chemistry" by the synastry engine.
    */
   private static enrichConnectionsFromSynastry(
     base: ConnectionStrength[],

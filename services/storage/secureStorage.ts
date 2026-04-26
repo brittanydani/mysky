@@ -237,7 +237,7 @@ class SecureStorageService {
   // Recent security events — a rolling window of the last 20 key operations.
   // This is NOT a full audit log. It is a user-transparency feature showing
   // recent activity (consent changes, exports, key rotation, deletions).
-  // Scope is intentionally limited for data-minimisation (SecureStore ≤ 2 KB).
+  // Scope is intentionally limited for data-minimization (SecureStore ≤ 2 KB).
   async auditDataAccess(operation: string, metadata?: Record<string, any>): Promise<void> {
     try {
       // Omit id UUID to reduce per-entry byte cost; timestamp provides ordering.
@@ -383,17 +383,17 @@ class SecureStorageService {
   private async setEncryptedItem(key: string, value: any): Promise<void> {
     const payload = await EncryptionManager.signSensitiveData(value);
     const envelope: EncryptedEnvelope = { encrypted: true, payload };
-    let serialised = JSON.stringify(envelope);
+    let serialized = JSON.stringify(envelope);
 
-    // If the serialised blob exceeds the soft limit and the value is an array,
+    // If the serialized blob exceeds the soft limit and the value is an array,
     // progressively trim oldest entries until it fits (or the array is empty).
-    if (serialised.length > SECURE_STORE_SOFT_LIMIT && Array.isArray(value)) {
+    if (serialized.length > SECURE_STORE_SOFT_LIMIT && Array.isArray(value)) {
       const originalLength = value.length;
       let trimmed = value;
-      while (trimmed.length > 0 && serialised.length > SECURE_STORE_SOFT_LIMIT) {
+      while (trimmed.length > 0 && serialized.length > SECURE_STORE_SOFT_LIMIT) {
         trimmed = trimmed.slice(-Math.max(1, Math.floor(trimmed.length * 0.75)));
         const p = await EncryptionManager.signSensitiveData(trimmed);
-        serialised = JSON.stringify({ encrypted: true, payload: p });
+        serialized = JSON.stringify({ encrypted: true, payload: p });
       }
       const dropped = originalLength - trimmed.length;
       if (dropped > 0) {
@@ -410,13 +410,13 @@ class SecureStorageService {
           );
         } catch {}
       }
-    } else if (serialised.length > SECURE_STORE_SOFT_LIMIT) {
+    } else if (serialized.length > SECURE_STORE_SOFT_LIMIT) {
       logger.warn(
-        `[SecureStorage] Value for key "${key}" is ${serialised.length} bytes (limit ${SECURE_STORE_SOFT_LIMIT}). Write may fail on some devices.`,
+        `[SecureStorage] Value for key "${key}" is ${serialized.length} bytes (limit ${SECURE_STORE_SOFT_LIMIT}). Write may fail on some devices.`,
       );
     }
 
-    await getSecureStore().setItemAsync(key, serialised);
+    await getSecureStore().setItemAsync(key, serialized);
   }
 
   private async getEncryptedItem<T>(key: string): Promise<T | null> {
