@@ -101,6 +101,10 @@ async function writeState(state: GrowthAnalyticsState): Promise<void> {
   try {
     await saveUserPreference(ANALYTICS_KEY, JSON.stringify(state));
   } catch (error) {
+    if (error instanceof Error && error.message === 'Not authenticated') {
+      return;
+    }
+
     logger.error('[GrowthAnalytics] Failed to persist state:', error);
   }
 }

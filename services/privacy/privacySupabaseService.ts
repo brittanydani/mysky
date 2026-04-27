@@ -12,8 +12,18 @@ async function getUserId(): Promise<string> {
   return uid;
 }
 
+function isNotAuthenticated(error: unknown): boolean {
+  return error instanceof Error && error.message === 'Not authenticated';
+}
+
 export async function getPrivacyPolicyVersion(): Promise<string | null> {
-  const userId = await getUserId();
+  let userId: string;
+  try {
+    userId = await getUserId();
+  } catch (error) {
+    if (isNotAuthenticated(error)) return null;
+    throw error;
+  }
 
   const { data, error } = await supabase
     .from('privacy_policy_versions')
@@ -49,7 +59,13 @@ export async function setPrivacyPolicyVersion(version: string): Promise<void> {
 }
 
 export async function getConsentRecord(): Promise<{ granted: boolean; timestamp?: string; version?: string } | null> {
-  const userId = await getUserId();
+  let userId: string;
+  try {
+    userId = await getUserId();
+  } catch (error) {
+    if (isNotAuthenticated(error)) return null;
+    throw error;
+  }
 
   const { data, error } = await supabase
     .from('privacy_consent_records')
@@ -101,7 +117,13 @@ export async function setPrivacyConsent(
 }
 
 export async function getLawfulBasisRecords(): Promise<LawfulBasisRecord[]> {
-  const userId = await getUserId();
+  let userId: string;
+  try {
+    userId = await getUserId();
+  } catch (error) {
+    if (isNotAuthenticated(error)) return [];
+    throw error;
+  }
 
   const { data, error } = await supabase
     .from('lawful_basis_records')

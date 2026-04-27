@@ -576,7 +576,7 @@ export async function deleteSleepEntry(id: string): Promise<void> {
 async function mapCheckInRow(row: Row): Promise<DailyCheckIn> {
   return {
     id: asRequiredString(row.id),
-    date: asRequiredString(row.date),
+    date: asRequiredString(row.log_date),
     chartId: asRequiredString(row.chart_id),
     timeOfDay: asRequiredString(row.time_of_day, 'morning') as DailyCheckIn['timeOfDay'],
     moodScore: coerceNumber(row.mood_score),
@@ -608,7 +608,7 @@ export async function getCheckIns(
     .select('*')
     .eq('user_id', userId)
     .eq('chart_id', chartId)
-    .order('date', { ascending: false })
+    .order('log_date', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -632,7 +632,7 @@ export async function getCheckInByDate(
     .select('*')
     .eq('user_id', userId)
     .eq('chart_id', chartId)
-    .eq('date', date)
+    .eq('log_date', date)
     .maybeSingle();
 
   if (error) {
@@ -654,7 +654,7 @@ export async function getCheckInsByDate(
     .select('*')
     .eq('user_id', userId)
     .eq('chart_id', chartId)
-    .eq('date', date)
+    .eq('log_date', date)
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -678,7 +678,7 @@ export async function getCheckInByDateAndTime(
     .select('*')
     .eq('user_id', userId)
     .eq('chart_id', chartId)
-    .eq('date', date)
+    .eq('log_date', date)
     .eq('time_of_day', timeOfDay)
     .maybeSingle();
 
@@ -702,9 +702,9 @@ export async function getCheckInsInRange(
     .select('*')
     .eq('user_id', userId)
     .eq('chart_id', chartId)
-    .gte('date', startDate)
-    .lte('date', endDate)
-    .order('date', { ascending: false })
+    .gte('log_date', startDate)
+    .lte('log_date', endDate)
+    .order('log_date', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -757,14 +757,14 @@ export async function saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
       id: checkIn.id,
       user_id: userId,
       chart_id: checkIn.chartId,
-      date: checkIn.date,
+      log_date: checkIn.date,
       time_of_day: checkIn.timeOfDay,
       mood_score: checkIn.moodScore,
+      mood_value: Math.max(0, Math.min(10, Math.round(Number(checkIn.moodScore ?? 0)))),
       energy_level: checkIn.energyLevel,
       stress_level: checkIn.stressLevel,
       tags: JSON.stringify(checkIn.tags),
       note: checkIn.note ?? null,
-      notes: checkIn.note ?? null,
       wins: checkIn.wins ?? null,
       challenges: checkIn.challenges ?? null,
       moon_sign: checkIn.moonSign,
