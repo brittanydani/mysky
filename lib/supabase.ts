@@ -12,6 +12,7 @@
  * Reads project URL + anon key from EXPO_PUBLIC_ env vars.
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '../utils/logger';
 
@@ -38,8 +39,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    storage: AsyncStorage,
     autoRefreshToken: true,
-    persistSession: false,
+    persistSession: true,
     detectSessionInUrl: false, // not needed in React Native
   },
 });
