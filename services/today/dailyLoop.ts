@@ -537,7 +537,8 @@ async function getTodayCheckInReflectionInsight(chartId: string): Promise<DailyI
     const dayOfYear = Math.floor(
       (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000,
     );
-    const pick = <T>(arr: T[]): T => arr[dayOfYear % arr.length];
+    // Use a prime multiplier to spread consecutive days across small content pools
+    const pick = <T>(arr: T[]): T => arr[((dayOfYear * 37) >>> 0) % arr.length];
 
     if (latest.moodScore >= 7 && latest.stressLevel === 'high') {
       return {

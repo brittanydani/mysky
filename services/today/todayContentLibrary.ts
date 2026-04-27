@@ -2861,7 +2861,10 @@ function getVariantOffset(seed: PersonalAffirmationContext['dailySignalSeed']): 
 
 function getDailyPoolIndex(poolLength: number, dayOfYear: number, seed: PersonalAffirmationContext['dailySignalSeed']): number {
   if (poolLength <= 0) return 0;
-  return (dayOfYear + getVariantOffset(seed)) % poolLength;
+  // Use a prime multiplier (37) to spread consecutive days across the pool
+  // This reduces predictable ordering when content pools are small
+  const spreadDayOfYear = (dayOfYear * 37) >>> 0;
+  return (spreadDayOfYear + getVariantOffset(seed)) % poolLength;
 }
 
 export function getDailyAffirmation(context: PersonalAffirmationContext = {}): TaggedContent {
