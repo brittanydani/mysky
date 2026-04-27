@@ -1,12 +1,12 @@
 // File: app/settings/notifications.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { getUserPreference, saveUserPreference } from '../../services/storage/userProfileService';
 import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import * as Haptics from '../../utils/haptics';
-import * as SecureStore from 'expo-secure-store';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { NotificationEngine } from '../../utils/NotificationEngine';
 import { MetallicText } from '../../components/ui/MetallicText';
@@ -66,20 +66,20 @@ export default function NotificationSettings() {
     const load = async () => {
       try {
       const [en, mh, mm, eh, em, mu, eu] = await Promise.all([
-        SecureStore.getItemAsync(KEYS.enabled),
-        SecureStore.getItemAsync(KEYS.morningHour),
-        SecureStore.getItemAsync(KEYS.morningMinute),
-        SecureStore.getItemAsync(KEYS.eveningHour),
-        SecureStore.getItemAsync(KEYS.eveningMinute),
-        SecureStore.getItemAsync(KEYS.morningUnknown),
-        SecureStore.getItemAsync(KEYS.eveningUnknown),
+        getUserPreference<string | null>(KEYS.enabled, null),
+        getUserPreference<string | null>(KEYS.morningHour, null),
+        getUserPreference<string | null>(KEYS.morningMinute, null),
+        getUserPreference<string | null>(KEYS.eveningHour, null),
+        getUserPreference<string | null>(KEYS.eveningMinute, null),
+        getUserPreference<string | null>(KEYS.morningUnknown, null),
+        getUserPreference<string | null>(KEYS.eveningUnknown, null),
       ]);
       setIsRhythmEnabled(en === 'true');
       if (mh !== null && mm !== null) setMorningTime(makeTime(Number(mh), Number(mm)));
       if (eh !== null && em !== null) setEveningTime(makeTime(Number(eh), Number(em)));
       if (mu !== null) setMorningUnknown(mu === 'true');
       if (eu !== null) setEveningUnknown(eu === 'true');
-      } catch { /* retain defaults on SecureStore failure */ }
+      } catch { /* retain defaults on preference load failure */ }
     };
     load().catch(() => {});
   }, []);
@@ -89,12 +89,12 @@ export default function NotificationSettings() {
     mt: Date, et: Date, mu: boolean, eu: boolean,
   ) => {
     await Promise.all([
-      SecureStore.setItemAsync(KEYS.morningHour,    String(mt.getHours())),
-      SecureStore.setItemAsync(KEYS.morningMinute,  String(mt.getMinutes())),
-      SecureStore.setItemAsync(KEYS.eveningHour,    String(et.getHours())),
-      SecureStore.setItemAsync(KEYS.eveningMinute,  String(et.getMinutes())),
-      SecureStore.setItemAsync(KEYS.morningUnknown, String(mu)),
-      SecureStore.setItemAsync(KEYS.eveningUnknown, String(eu)),
+      saveUserPreference(KEYS.morningHour,    String(mt.getHours())),
+      saveUserPreference(KEYS.morningMinute,  String(mt.getMinutes())),
+      saveUserPreference(KEYS.eveningHour,    String(et.getHours())),
+      saveUserPreference(KEYS.eveningMinute,  String(et.getMinutes())),
+      saveUserPreference(KEYS.morningUnknown, String(mu)),
+      saveUserPreference(KEYS.eveningUnknown, String(eu)),
     ]);
   }, []);
 
@@ -106,17 +106,17 @@ export default function NotificationSettings() {
     if (!mu) await NotificationEngine.scheduleMorningRhythm(mt.getHours(), mt.getMinutes());
     if (!eu) await NotificationEngine.scheduleEveningRhythm(et.getHours(), et.getMinutes());
     // Re-apply reflection reminder if it was enabled
-    const reflEnabled = await SecureStore.getItemAsync(KEYS.reflectionEnabled);
+    const reflEnabled = await getUserPreference<string | null>(KEYS.reflectionEnabled, null);
     if (reflEnabled === 'true') {
-      const rh = await SecureStore.getItemAsync(KEYS.reflectionHour);
-      const rm = await SecureStore.getItemAsync(KEYS.reflectionMinute);
+      const rh = await getUserPreference<string | null>(KEYS.reflectionHour, null);
+      const rm = await getUserPreference<string | null>(KEYS.reflectionMinute, null);
       const h = rh !== null ? Number(rh) : 19;
       const m = rm !== null ? Number(rm) : 0;
       await NotificationEngine.scheduleReflectionReminder(h, m);
     }
     await Promise.all([
       savePrefs(mt, et, mu, eu),
-      SecureStore.setItemAsync(KEYS.enabled, 'true'),
+      saveUserPreference(KEYS.enabled, 'true'),
     ]);
   }, [savePrefs]);
 
@@ -136,7 +136,7 @@ export default function NotificationSettings() {
     } else {
       await Promise.all([
         NotificationEngine.clearAllSchedules(),
-        SecureStore.setItemAsync(KEYS.enabled, 'false'),
+        saveUserPreference(KEYS.enabled, 'false'),
       ]);
     }
   };
@@ -191,22 +191,22 @@ export default function NotificationSettings() {
       }
       await NotificationEngine.scheduleReflectionReminder(reflectionTime.getHours(), reflectionTime.getMinutes());
       await Promise.all([
-        SecureStore.setItemAsync(KEYS.reflectionEnabled, 'true'),
-        SecureStore.setItemAsync(KEYS.reflectionHour, String(reflectionTime.getHours())),
-        SecureStore.setItemAsync(KEYS.reflectionMinute, String(reflectionTime.getMinutes())),
+        saveUserPreference(KEYS.reflectionEnabled, 'true'),
+        saveUserPreference(KEYS.reflectionHour, String(reflectionTime.getHours())),
+        saveUserPreference(KEYS.reflectionMinute, String(reflectionTime.getMinutes())),
       ]);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       await NotificationEngine.cancelReflectionReminder();
-      await SecureStore.setItemAsync(KEYS.reflectionEnabled, 'false');
+      await saveUserPreference(KEYS.reflectionEnabled, 'false');
     }
   };
 
   const applyReflectionTime = async (time: Date) => {
     setReflectionTime(time);
     await Promise.all([
-      SecureStore.setItemAsync(KEYS.reflectionHour, String(time.getHours())),
-      SecureStore.setItemAsync(KEYS.reflectionMinute, String(time.getMinutes())),
+      saveUserPreference(KEYS.reflectionHour, String(time.getHours())),
+      saveUserPreference(KEYS.reflectionMinute, String(time.getMinutes())),
     ]);
     if (isReflectionEnabled) {
       await NotificationEngine.scheduleReflectionReminder(time.getHours(), time.getMinutes());

@@ -30,7 +30,7 @@ import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 
 import { supabaseDb } from '../../../services/storage/supabaseDb';
 import { SleepEntry } from '../../../services/storage/models';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserPreference, saveUserPreference } from '../../../services/storage/userProfileService';
 import { usePremium } from '../../../context/PremiumContext';
 import { useAuth } from '../../../context/AuthContext';
 import { getDreamReinterpretPerDreamLimit } from '../../../constants/config';
@@ -123,7 +123,7 @@ export default function SleepDetailScreen() {
         const savedText = found.dreamText?.trim() || found.notes?.trim() || '';
         setDreamText(savedText);
         const dreamKey = getDreamReinterpretKey(found.id, user?.id);
-        const used = await AsyncStorage.getItem(dreamKey);
+        const used = await getUserPreference<string | null>(dreamKey, null);
         const parsedUsed = Number.parseInt(used ?? '0', 10);
         setDreamReinterpretUsedCount(Number.isFinite(parsedUsed) ? parsedUsed : 0);
         // Auto-generate interpretation if entry already has dream text
@@ -321,7 +321,7 @@ export default function SleepDetailScreen() {
                     setAiError(null);
                     const nextUsedCount = dreamReinterpretUsedCount + 1;
                     setDreamReinterpretUsedCount(nextUsedCount);
-                    void AsyncStorage.setItem(getDreamReinterpretKey(entry.id, user?.id), String(nextUsedCount));
+                    void saveUserPreference(getDreamReinterpretKey(entry.id, user?.id), String(nextUsedCount));
                     setReinterpretCount(c => c + 1);
                   }
                 }}

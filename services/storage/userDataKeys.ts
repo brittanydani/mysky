@@ -1,8 +1,8 @@
 /**
- * AsyncStorage key registries.
+ * Legacy local key registries.
  *
  * All user-scoped keys are stored as plain JSON in account-scoped
- * AsyncStorage. Security is provided by Supabase Auth + RLS + TLS.
+ * Legacy local storage. Security is provided by Supabase Auth + RLS + TLS.
  */
 
 export const PLAIN_ASYNC_USER_DATA_KEYS = [

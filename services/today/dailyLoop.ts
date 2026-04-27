@@ -5,7 +5,7 @@
  * Computes streak status, weekly summaries, human-readable insights,
  * sleep-mood correlations, and return-motivation nudges.
  *
- * All functions are pure or async (reading from localDb only).
+ * All functions are pure or async (reading from Supabase-backed storage only).
  * No side effects — just data for the Home dashboard.
  *
  * Design philosophy:

@@ -24,7 +24,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { getSelfKnowledgeProfile, saveSelfKnowledgeProfile } from '../services/storage/userProfileService';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Defs, Line, LinearGradient as SvgLinearGradient, Stop, Text as SvgText } from 'react-native-svg';
@@ -191,11 +191,14 @@ export default function CoreValuesScreen() {
   useFocusEffect(
     useCallback(() => {
       syncCoreValuesFromReflections({ includeDrafts: true })
-        .then(() => EncryptedAsyncStorage.getItem(STORAGE_KEY))
-        .then((raw) => {
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            setState({ selected: parsed.selected || [], topFive: (parsed.topFive || []).slice(0, MAX_TOP), customValues: parsed.customValues || [] });
+        .then(() => getSelfKnowledgeProfile<State>('core_values', { selected: [], topFive: [] }))
+        .then((parsed) => {
+          setState({
+            selected: parsed.selected || [],
+            topFive: (parsed.topFive || []).slice(0, MAX_TOP),
+            customValues: parsed.customValues || [],
+          });
+          if ((parsed.selected?.length ?? 0) > 0 || (parsed.topFive?.length ?? 0) > 0) {
             setSaved(true);
           }
         }).catch((e) => logger.warn('[CoreValues] Sync/load failed:', e));
@@ -207,7 +210,7 @@ export default function CoreValuesScreen() {
 
   const handleSave = async () => {
     try {
-      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      await saveSelfKnowledgeProfile('core_values', state);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setSaved(true);
     } catch { Alert.alert('Error', 'Could not save.'); }

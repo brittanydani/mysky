@@ -29,7 +29,7 @@ import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaRestorationField from '../../components/ui/SkiaRestorationField';
 import SkiaRestorationInsight from '../../components/ui/SkiaRestorationInsight';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserPreference } from '../../services/storage/userProfileService';
 import { supabaseDb } from '../../services/storage/supabaseDb';
 import { SleepEntry, generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
@@ -564,7 +564,7 @@ export default function SleepScreen() {
       (async () => {
         try {
           setLoading(true);
-          const dreamPref = await AsyncStorage.getItem('pref_dream_logging');
+          const dreamPref = await getUserPreference<string | null>('pref_dream_logging', null);
           setDreamLoggingEnabled(dreamPref === null || dreamPref === '1');
           const charts = await supabaseDb.getCharts();
           if (charts.length === 0) return;

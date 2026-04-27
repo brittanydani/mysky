@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserPreference, saveUserPreference } from '../storage/userProfileService';
 
 import { logger } from '../../utils/logger';
 
@@ -79,7 +79,7 @@ function buildCountKeys(name: GrowthEventName, metadata?: Record<string, Primiti
 
 async function readState(): Promise<GrowthAnalyticsState> {
   try {
-    const raw = await AsyncStorage.getItem(ANALYTICS_KEY);
+    const raw = await getUserPreference<string | null>(ANALYTICS_KEY, null);
     if (!raw) return createDefaultState();
 
     const parsed = JSON.parse(raw) as Partial<GrowthAnalyticsState>;
@@ -99,7 +99,7 @@ async function readState(): Promise<GrowthAnalyticsState> {
 
 async function writeState(state: GrowthAnalyticsState): Promise<void> {
   try {
-    await AsyncStorage.setItem(ANALYTICS_KEY, JSON.stringify(state));
+    await saveUserPreference(ANALYTICS_KEY, JSON.stringify(state));
   } catch (error) {
     logger.error('[GrowthAnalytics] Failed to persist state:', error);
   }

@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserPreference, saveUserPreference } from '../services/storage/userProfileService';
 import React, { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import { useColorScheme, type StyleSheet } from 'react-native';
 import { darkTheme, lightTheme, type AppTheme } from '../constants/theme';
@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     let active = true;
 
-    AsyncStorage.getItem(THEME_PREFERENCE_KEY)
+    getUserPreference<string | null>(THEME_PREFERENCE_KEY, null)
       .then((stored) => {
         if (!active) return;
         if (stored === 'light' || stored === 'dark' || stored === 'system') {
@@ -52,7 +52,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
       theme: resolvedMode === 'light' ? lightTheme : darkTheme,
       setPreference: async (nextPreference: ThemePreference) => {
         setPreferenceState(nextPreference);
-        await AsyncStorage.setItem(THEME_PREFERENCE_KEY, nextPreference);
+        await saveUserPreference(THEME_PREFERENCE_KEY, nextPreference);
       },
     };
   }, [preference, systemScheme]);

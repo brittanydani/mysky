@@ -5,7 +5,6 @@
  */
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Alert,
   InteractionManager,
@@ -43,7 +42,7 @@ import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { JournalEntry } from '../services/storage/models';
 import { usePremium } from '../context/PremiumContext';
 import { supabaseDb } from '../services/storage/supabaseDb';
-import { AccountScopedAsyncStorage } from '../services/storage/accountScopedStorage';
+import { getUserPreference, saveUserPreference } from '../services/storage/userProfileService';
 import { AstrologyCalculator } from '../services/astrology/calculator';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import { NatalChart } from '../services/astrology/types';
@@ -464,8 +463,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
   const loadCustomTags = useCallback(async () => {
     try {
-      const raw = await AccountScopedAsyncStorage.getItem(CUSTOM_TAGS_KEY);
-      if (raw) setCustomTags(JSON.parse(raw));
+      const savedTags = await getUserPreference<CustomTag[]>(CUSTOM_TAGS_KEY, []);
+      setCustomTags(savedTags);
     } catch {}
   }, []);
 
@@ -492,7 +491,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       const next = editingId
         ? prev.map((tag) => (tag.id === editingId ? { ...tag, label: trimmed, categoryId } : tag))
         : [...prev, { id, label: trimmed, categoryId }];
-      AccountScopedAsyncStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(next)).catch((e) => {
+      saveUserPreference(CUSTOM_TAGS_KEY, next).catch((e) => {
         logger.warn('[JournalEntryModal] Failed to save custom tag:', e);
       });
       return next;
@@ -504,7 +503,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const deleteCustomTag = useCallback((id: string) => {
     setCustomTags((prev) => {
       const next = prev.filter((t) => t.id !== id);
-      AccountScopedAsyncStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(next)).catch((e) => {
+      saveUserPreference(CUSTOM_TAGS_KEY, next).catch((e) => {
         logger.warn('[JournalEntryModal] Failed to save custom tags after delete:', e);
       });
       return next;

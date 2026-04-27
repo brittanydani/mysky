@@ -2,7 +2,7 @@
  * Offline Queue for Gemini Requests
  *
  * When Gemini API calls fail due to network issues (status 0, timeout,
- * fetch errors), the request payload is persisted to AsyncStorage.
+ * fetch errors), the request payload is persisted to Supabase preferences.
  * On next app focus or connectivity restoration, queued items are retried.
  *
  * Scope: dream-insights and pattern-insights only.
@@ -10,7 +10,7 @@
  * TTL: 24 hours per item.
  */
 
-import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
+import { getUserPreference, saveUserPreference, deleteUserPreference } from '../storage/userProfileService';
 import { logger } from '../../utils/logger';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,9 +36,7 @@ const MAX_ATTEMPTS = 3;
 
 async function loadQueue(): Promise<QueuedGeminiRequest[]> {
   try {
-    const raw = await AccountScopedAsyncStorage.getItem(QUEUE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
+    const parsed = await getUserPreference<QueuedGeminiRequest[]>(QUEUE_KEY, []);
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
@@ -47,7 +45,7 @@ async function loadQueue(): Promise<QueuedGeminiRequest[]> {
 
 async function saveQueue(queue: QueuedGeminiRequest[]): Promise<void> {
   try {
-    await AccountScopedAsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    await saveUserPreference(QUEUE_KEY, queue);
   } catch (e) {
     logger.error('[GeminiQueue] Failed to persist queue:', e);
   }
@@ -145,5 +143,5 @@ export function isNetworkError(error: unknown): boolean {
  * Clear the entire queue (e.g., on logout).
  */
 export async function clearQueue(): Promise<void> {
-  await AccountScopedAsyncStorage.removeItem(QUEUE_KEY);
+  await deleteUserPreference(QUEUE_KEY);
 }

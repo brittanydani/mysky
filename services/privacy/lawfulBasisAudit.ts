@@ -1,4 +1,4 @@
-import { secureStorage } from '../storage/secureStorage';
+import { auditPrivacyEvent, getLawfulBasisRecords, getPrivacyPolicyVersion, saveLawfulBasisRecord } from './privacySupabaseService';
 import { generateId } from '../storage/models';
 import { LawfulBasis, LawfulBasisRecord } from './types';
 
@@ -14,7 +14,7 @@ export interface ProcessingOperationInput {
 
 export class LawfulBasisAuditService {
   async recordProcessingOperation(input: ProcessingOperationInput): Promise<LawfulBasisRecord> {
-    const policyVersion = input.policyVersion ?? (await secureStorage.getPrivacyPolicyVersion()) ?? '1.0';
+    const policyVersion = input.policyVersion ?? (await getPrivacyPolicyVersion()) ?? '1.0';
     const record: LawfulBasisRecord = {
       id: generateId(),
       timestamp: input.timestamp ?? new Date().toISOString(),
@@ -26,9 +26,8 @@ export class LawfulBasisAuditService {
       retentionPeriod: input.retentionPeriod,
     };
 
-    const existing = await secureStorage.getLawfulBasisRecords();
-    await secureStorage.saveLawfulBasisRecords([record, ...existing]);
-    await secureStorage.auditDataAccess('lawful_basis_record', {
+    await saveLawfulBasisRecord(record);
+    await auditPrivacyEvent('lawful_basis_record', {
       recordId: record.id,
       lawfulBasis: record.lawfulBasis,
       purpose: record.purpose,
@@ -42,7 +41,7 @@ export class LawfulBasisAuditService {
     byLawfulBasis: Record<string, number>;
     lastUpdated?: string;
   }> {
-    const records = await secureStorage.getLawfulBasisRecords();
+    const records = await getLawfulBasisRecords();
     const byLawfulBasis: Record<string, number> = {};
     records.forEach((record: LawfulBasisRecord) => {
       byLawfulBasis[record.lawfulBasis] = (byLawfulBasis[record.lawfulBasis] || 0) + 1;
@@ -63,7 +62,7 @@ export class LawfulBasisAuditService {
     lastUpdated?: string;
     records: LawfulBasisRecord[];
   }> {
-    const records = await secureStorage.getLawfulBasisRecords();
+    const records = await getLawfulBasisRecords();
     const byLawfulBasis: Record<string, number> = {};
     records.forEach((record: LawfulBasisRecord) => {
       byLawfulBasis[record.lawfulBasis] = (byLawfulBasis[record.lawfulBasis] || 0) + 1;

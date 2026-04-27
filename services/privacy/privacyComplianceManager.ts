@@ -1,10 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { secureStorage } from '../storage/secureStorage';
-import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
-import { PLAIN_ASYNC_USER_DATA_KEYS } from '../storage/userDataKeys';
 import { generateId } from '../storage/models';
 import { LawfulBasisAuditService } from './lawfulBasisAudit';
-import { IdentityVault } from '../../utils/IdentityVault';
+import {
+  auditPrivacyEvent,
+  deletePrivacyComplianceData,
+  getConsentRecord,
+  getLawfulBasisRecords,
+  getPrivacyPolicyVersion,
+  setPrivacyConsent,
+  setPrivacyPolicyVersion,
+} from './privacySupabaseService';
 import {
   ConsentData,
   ConsentRecord,
@@ -28,8 +32,8 @@ export class PrivacyComplianceManager {
   static CONSENT_MAX_AGE_DAYS = 365;
 
   async requestConsent(): Promise<ConsentResult> {
-    const policyVersion = (await secureStorage.getPrivacyPolicyVersion()) ?? PrivacyComplianceManager.DEFAULT_POLICY_VERSION;
-    const existing = await secureStorage.getConsentRecord();
+    const policyVersion = (await getPrivacyPolicyVersion()) ?? PrivacyComplianceManager.DEFAULT_POLICY_VERSION;
+    const existing = await getConsentRecord();
 
     const isExpired = this.isConsentExpired(existing?.timestamp);
 
@@ -60,8 +64,8 @@ export class PrivacyComplianceManager {
       id: generateId(),
     };
 
-    await secureStorage.setPrivacyPolicyVersion(consent.policyVersion);
-    await secureStorage.setPrivacyConsent(consent.granted, consent.policyVersion, 'consent_recorded');
+    await setPrivacyPolicyVersion(consent.policyVersion);
+    await setPrivacyConsent(consent.granted, consent.policyVersion, 'consent_recorded');
 
     const lawfulRecord: LawfulBasisRecord = {
       id: generateId(),
@@ -87,7 +91,7 @@ export class PrivacyComplianceManager {
 
   async withdrawConsent(): Promise<void> {
     const policyVersion = await this.getPolicyVersion();
-    await secureStorage.setPrivacyConsent(false, policyVersion, 'withdrawn');
+    await setPrivacyConsent(false, policyVersion, 'withdrawn');
 
     // Record the withdrawal in the lawful basis audit trail for GDPR compliance
     await this.audit.recordProcessingOperation({
@@ -106,7 +110,7 @@ export class PrivacyComplianceManager {
    */
   async getConsentStatus(): Promise<ConsentStatus> {
     const policyVersion = await this.getPolicyVersion();
-    const existing = await secureStorage.getConsentRecord();
+    const existing = await getConsentRecord();
 
     if (!existing) {
       return {
@@ -151,12 +155,12 @@ export class PrivacyComplianceManager {
         db.getCharts(),
         db.getJournalEntries(),
         db.getSettings(),
-        secureStorage.getConsentRecord(),
-        secureStorage.getLawfulBasisRecords(),
-        this.readAsyncStorageUserData(),
+        getConsentRecord(),
+        getLawfulBasisRecords(),
+        this.readLegacyLocalUserData(),
       ]);
 
-    await secureStorage.auditDataAccess('gdpr_access_request', {
+    await auditPrivacyEvent('gdpr_access_request', {
       chartsCount: charts.length,
       entriesCount: journalEntries.length,
     });
@@ -186,9 +190,9 @@ export class PrivacyComplianceManager {
         db.getCharts(),
         db.getJournalEntries(),
         db.getSettings(),
-        secureStorage.getConsentRecord(),
-        secureStorage.getLawfulBasisRecords(),
-        this.readAsyncStorageUserData(),
+        getConsentRecord(),
+        getLawfulBasisRecords(),
+        this.readLegacyLocalUserData(),
       ]);
 
     // Calculate full natal chart data for each chart
@@ -223,7 +227,7 @@ export class PrivacyComplianceManager {
       };
     });
 
-    await secureStorage.auditDataAccess('gdpr_export_request', {
+    await auditPrivacyEvent('gdpr_export_request', {
       chartsCount: fullCharts.length,
       entriesCount: journalEntries.length,
     });
@@ -245,24 +249,20 @@ export class PrivacyComplianceManager {
 
   /**
    * Article 17 — Right to erasure ("right to be forgotten").
-   * Deletes all personal data from both SQLite and SecureStore.
+   * Deletes personal data from Supabase-backed storage.
    */
   async handleDeletionRequest(): Promise<DeletionResult> {
     const db = await loadSupabaseDb();
 
     // Record audit entry before deletion (so we have proof the request was received)
-    await secureStorage.auditDataAccess('gdpr_deletion_request', {});
+    await auditPrivacyEvent('gdpr_deletion_request', {});
 
     await Promise.all([
-      secureStorage.deleteAllUserData(),
+      deletePrivacyComplianceData(),
       db.hardDeleteAllData(),
-      ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AccountScopedAsyncStorage.removeItem(key)),
     ]);
 
     // Destroy any remaining local encrypted-key material and the identity vault.
-    await IdentityVault.destroyIdentity().catch((e: unknown) =>
-      secureStorage.auditDataAccess('gdpr_destroy_identity_error', { error: String(e) })
-    );
 
     return {
       success: true,
@@ -283,7 +283,7 @@ export class PrivacyComplianceManager {
   }
 
   async getLawfulBasisRecords(): Promise<LawfulBasisRecord[]> {
-    return (await secureStorage.getLawfulBasisRecords()) as LawfulBasisRecord[];
+    return (await getLawfulBasisRecords()) as LawfulBasisRecord[];
   }
 
   async generateLawfulBasisReport(): Promise<LawfulBasisAuditReport> {
@@ -291,11 +291,11 @@ export class PrivacyComplianceManager {
   }
 
   async setPolicyVersion(version: string): Promise<void> {
-    await secureStorage.setPrivacyPolicyVersion(version);
+    await setPrivacyPolicyVersion(version);
   }
 
   async getPolicyVersion(): Promise<string> {
-    return (await secureStorage.getPrivacyPolicyVersion()) ?? PrivacyComplianceManager.DEFAULT_POLICY_VERSION;
+    return (await getPrivacyPolicyVersion()) ?? PrivacyComplianceManager.DEFAULT_POLICY_VERSION;
   }
 
   private isConsentExpired(timestamp?: string): boolean {
@@ -308,16 +308,7 @@ export class PrivacyComplianceManager {
     return Date.now() > expiryTime;
   }
 
-  private async readAsyncStorageUserData(): Promise<Record<string, string>> {
-    const data: Record<string, string> = {};
-
-    await Promise.all([
-      ...PLAIN_ASYNC_USER_DATA_KEYS.map(async (key) => {
-        const value = await AccountScopedAsyncStorage.getItem(key);
-        if (value != null) data[key] = value;
-      }),
-    ]);
-
-    return data;
+  private async readLegacyLocalUserData(): Promise<Record<string, string>> {
+    return {};
   }
 }

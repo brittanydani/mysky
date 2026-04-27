@@ -21,7 +21,6 @@ import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, Layout, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from '../../../utils/haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { type AppTheme } from '../../../constants/theme';
 

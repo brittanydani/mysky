@@ -1,6 +1,6 @@
 // File: utils/NotificationEngine.ts
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserPreference, saveUserPreference, deleteUserPreference } from '../services/storage/userProfileService';
 
 const CHECK_IN_ID_KEY = 'notif_checkin_reminder_id';
 const REFLECTION_ID_KEY = 'notif_reflection_reminder_id';
@@ -125,7 +125,7 @@ export class NotificationEngine {
         },
       });
 
-      await AsyncStorage.setItem(CHECK_IN_ID_KEY, id);
+      await saveUserPreference(CHECK_IN_ID_KEY, id);
     } catch {
       // Notifications native module unavailable — skip
     }
@@ -136,11 +136,11 @@ export class NotificationEngine {
    */
   static async cancelCheckInReminder(): Promise<void> {
     try {
-      const id = await AsyncStorage.getItem(CHECK_IN_ID_KEY);
+      const id = await getUserPreference<string | null>(CHECK_IN_ID_KEY, null);
       if (id) {
         const Notifications = await import('expo-notifications');
         await Notifications.cancelScheduledNotificationAsync(id);
-        await AsyncStorage.removeItem(CHECK_IN_ID_KEY);
+        await deleteUserPreference(CHECK_IN_ID_KEY);
       }
     } catch {
       // Notifications native module unavailable — skip
@@ -170,7 +170,7 @@ export class NotificationEngine {
         },
       });
 
-      await AsyncStorage.setItem(REFLECTION_ID_KEY, id);
+      await saveUserPreference(REFLECTION_ID_KEY, id);
     } catch {
       // Notifications native module unavailable — skip
     }
@@ -181,11 +181,11 @@ export class NotificationEngine {
    */
   static async cancelReflectionReminder(): Promise<void> {
     try {
-      const id = await AsyncStorage.getItem(REFLECTION_ID_KEY);
+      const id = await getUserPreference<string | null>(REFLECTION_ID_KEY, null);
       if (id) {
         const Notifications = await import('expo-notifications');
         await Notifications.cancelScheduledNotificationAsync(id);
-        await AsyncStorage.removeItem(REFLECTION_ID_KEY);
+        await deleteUserPreference(REFLECTION_ID_KEY);
       }
     } catch {
       // Notifications native module unavailable — skip

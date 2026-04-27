@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, View, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
-import { AccountScopedAsyncStorage } from '../../services/storage/accountScopedStorage';
+import { getDisplayName } from '../../services/storage/userProfileService';
 
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import BirthDataModal from '../../components/BirthDataModal';
@@ -18,7 +18,6 @@ import { BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { supabaseDb } from '../../services/storage/supabaseDb';
 import { logger } from '../../utils/logger';
-import { IdentityVault, CosmicIdentity } from '../../utils/IdentityVault';
 import { type AppTheme } from '../../constants/theme';
 import { useThemedStyles } from '../../context/ThemeContext';
 
@@ -69,7 +68,7 @@ export default function OnboardingBirthScreen() {
 
   useEffect(() => {
     setVisible(true);
-    AccountScopedAsyncStorage.getItem('msky_user_name')
+    getDisplayName()
       .then((v) => { if (v) setSavedName(v); })
       .catch(() => {});
   }, []);
@@ -95,25 +94,6 @@ export default function OnboardingBirthScreen() {
       };
 
       await supabaseDb.saveChart(savedChart);
-
-      // Seal the sensitive birth data in the hardware keychain / keystore.
-      // This runs in parallel with navigation — failure is non-blocking since
-      // the chart is already persisted in supabaseDb.
-      const identity: CosmicIdentity = {
-        name: extra?.chartName ?? 'My Chart',
-        birthDate: birthData.date,
-        birthTime: birthData.time,
-        hasUnknownTime: birthData.hasUnknownTime,
-        locationCity: birthData.place,
-        locationLat: birthData.latitude,
-        locationLng: birthData.longitude,
-        timezone: birthData.timezone,
-      };
-      void IdentityVault.sealIdentity(identity).then((sealed) => {
-        if (!sealed) {
-          logger.error('[OnboardingBirth] IdentityVault seal failed');
-        }
-      });
 
       import('../../services/growth/localAnalytics')
         .then(({ trackGrowthEvent }) => trackGrowthEvent('onboarding_completed'))

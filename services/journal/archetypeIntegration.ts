@@ -5,7 +5,7 @@
  * reflection prompt used inside the Journal Entry modal.
  */
 
-import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import { getSelfKnowledgeProfile } from '../storage/userProfileService';
 
 const ARCHETYPE_STORAGE_KEY = '@mysky:archetype_profile';
 
@@ -206,9 +206,9 @@ const PROMPTS: Record<ArchetypeKey, Record<MoodKey, ArchetypeJournalPrompt>> = {
 /** Load the saved archetype profile from local storage. Returns null if none. */
 export async function getArchetypeProfile(): Promise<ArchetypeProfile | null> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(ARCHETYPE_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as ArchetypeProfile;
+    const profile = await getSelfKnowledgeProfile<Record<string, unknown> | null>('archetype_profile', null);
+    if (!profile) return null;
+    return profile as unknown as ArchetypeProfile;
   } catch {
     return null;
   }

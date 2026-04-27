@@ -19,6 +19,7 @@
  *   But it reads like a simple sentence.
  */
 
+import { getUserPreference, saveUserPreference } from '../storage/userProfileService';
 import { NatalChart, SimpleAspect } from './types';
 import { TransitSignal } from './dailyInsightEngine';
 import { detectChartPatterns } from './chartPatterns';
@@ -412,7 +413,7 @@ const SHADOW_JOURNAL_PROMPTS: Record<ShadowTone, string[]> = {
 // ════════════════════════════════════════════════════════════════════════════
 
 /**
- * 14-day anti-repetition key for AsyncStorage / SQLite
+ * 14-day anti-repetition key for Supabase preferences
  */
 const ANTI_REPEAT_DAYS = 14;
 
@@ -577,15 +578,14 @@ function scoreQuote(quote: ShadowQuote, ctx: DayActivationContext): number {
 
 
 // ════════════════════════════════════════════════════════════════════════════
-// ANTI-REPETITION (AsyncStorage-backed)
+// ANTI-REPETITION (Supabase preference-backed)
 // ════════════════════════════════════════════════════════════════════════════
 
 const SHOWN_IDS_KEY = '@mysky:shadow_quotes_shown';
 
 async function getRecentlyShownIds(): Promise<Set<string>> {
   try {
-    const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
-    const raw = await AsyncStorage.getItem(SHOWN_IDS_KEY);
+    const raw = await getUserPreference<string | null>(SHOWN_IDS_KEY, null);
     if (!raw) return new Set();
     const entries: Array<{ id: string; shownAt: string }> = JSON.parse(raw);
     const cutoff = new Date();
@@ -599,9 +599,8 @@ async function getRecentlyShownIds(): Promise<Set<string>> {
 
 async function markQuoteShown(quoteId: string): Promise<void> {
   try {
-    const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
     const today = toLocalDateString(new Date());
-    const raw = await AsyncStorage.getItem(SHOWN_IDS_KEY);
+    const raw = await getUserPreference<string | null>(SHOWN_IDS_KEY, null);
     const existing: Array<{ id: string; shownAt: string }> = raw ? JSON.parse(raw) : [];
 
     // Upsert + cleanup old entries (> 30 days)
@@ -610,7 +609,7 @@ async function markQuoteShown(quoteId: string): Promise<void> {
     const cutoffStr = toLocalDateString(cutoff);
     const updated = existing.filter((e) => e.shownAt >= cutoffStr && e.id !== quoteId);
     updated.push({ id: quoteId, shownAt: today });
-    await AsyncStorage.setItem(SHOWN_IDS_KEY, JSON.stringify(updated));
+    await saveUserPreference(SHOWN_IDS_KEY, JSON.stringify(updated));
   } catch (e) {
     logger.error('[ShadowQuotes] Failed to mark quote shown:', e);
   }

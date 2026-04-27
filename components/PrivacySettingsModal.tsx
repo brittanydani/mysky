@@ -75,7 +75,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
     try {
       setIsLoading(true);
       Haptics.selectionAsync().catch(() => {});
-      // Export from both SQLite (where real data lives) and SecureStore
+      // Export from Supabase-backed storage
       const result = await compliance.handleExportRequest();
       if (!result.success || !result.package) {
         Alert.alert('Export Failed', 'Unable to gather your data for export.');

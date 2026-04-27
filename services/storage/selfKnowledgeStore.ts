@@ -1,7 +1,7 @@
 import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 import type { TriggerEvent } from '../../utils/triggerEventTypes';
-import { AccountScopedAsyncStorage } from './accountScopedStorage';
+import { getUserPreference, saveUserPreference } from './userProfileService';
 import type { DailyReflectionData, ReflectionAnswer } from '../insights/dailyReflectionService';
 
 export interface SomaticEntryRecord {
@@ -61,22 +61,7 @@ function safeJsonParse<T>(raw: string | null, fallback: T): T {
   }
 }
 
-function buildLegacyScopedKey(key: string, userId: string): string {
-  return `${key}::user::${userId}`;
-}
 
-/**
- * Read a legacy key from AccountScopedAsyncStorage (or its un-scoped fallback).
- * The EncryptedAsyncStorage shim already handles transparent decryption of any
- * old ENC2: blobs on first read, so we just delegate to AccountScopedAsyncStorage.
- */
-async function readLegacyEncryptedItem(key: string): Promise<string | null> {
-  // AccountScopedAsyncStorage handles user-scoping and legacy key migration.
-  // The EncryptedAsyncStorage shim (which wraps AccountScopedAsyncStorage) will
-  // transparently decrypt any old ENC2: values on first access.
-  const { EncryptedAsyncStorage } = await import('./encryptedAsyncStorage');
-  return EncryptedAsyncStorage.getItem(key);
-}
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
@@ -99,24 +84,13 @@ function buildReflectionData(answers: ReflectionAnswer[]): DailyReflectionData {
 export async function loadPlainAccountScopedJson<T>(
   key: string,
   fallback: T,
-  legacyEncryptedKey?: string,
+  _legacyEncryptedKey?: string,
 ): Promise<T> {
-  const cachedRaw = await AccountScopedAsyncStorage.getItem(key);
-  if (cachedRaw !== null) {
-    return safeJsonParse<T>(cachedRaw, fallback);
-  }
-
-  if (!legacyEncryptedKey) return fallback;
-
-  const legacyRaw = await readLegacyEncryptedItem(legacyEncryptedKey);
-  if (legacyRaw === null) return fallback;
-
-  await AccountScopedAsyncStorage.setItem(key, legacyRaw);
-  return safeJsonParse<T>(legacyRaw, fallback);
+  return getUserPreference<T>(key, fallback);
 }
 
 export async function savePlainAccountScopedJson<T>(key: string, value: T): Promise<void> {
-  await AccountScopedAsyncStorage.setItem(key, JSON.stringify(value));
+  await saveUserPreference(key, value);
 }
 
 async function upsertReflectionRows(answers: ReflectionAnswer[]): Promise<void> {

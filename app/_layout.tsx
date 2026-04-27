@@ -24,15 +24,14 @@ import { View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 're
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { StarNotificationProvider } from '../context/StarNotificationContext';
-import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
+import { getUserPreference, saveUserPreference } from '../services/storage/userProfileService';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import { initHapticPreference } from '../utils/haptics';
 import { generateId } from '../services/storage/models';
 import { logger } from '../utils/logger';
 import { supabase } from '../lib/supabase';
 import { darkTheme, type AppTheme } from '../constants/theme';
-import { IdentityVault } from '../utils/IdentityVault';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import { ThemeProvider, useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
@@ -185,8 +184,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
 async function getTermsConsent(): Promise<boolean> {
   try {
-    const SecureStore = await loadSecureStore();
-    const value = await SecureStore.getItemAsync('terms_consent');
+    const value = await getUserPreference<string | null>('terms_consent', null);
     return value === 'true';
   } catch {
     return false;
@@ -195,8 +193,7 @@ async function getTermsConsent(): Promise<boolean> {
 
 async function setTermsConsent(granted: boolean) {
   try {
-    const SecureStore = await loadSecureStore();
-    await SecureStore.setItemAsync('terms_consent', granted ? 'true' : 'false');
+    await saveUserPreference('terms_consent', granted ? 'true' : 'false');
   } catch (e) {
     logger.error('[setTermsConsent] Failed to persist terms consent:', e);
   }
@@ -221,10 +218,6 @@ function RootLayout() {
 // Architecture because the native Sentry TurboModule isn't available yet.
 export default RootLayout;
 
-function loadSecureStore() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return Promise.resolve().then(() => require('expo-secure-store'));
-}
 
 function loadWebCrypto() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -339,47 +332,6 @@ function AppShell() {
     });
   };
 
-  const restoreChartFromIdentityVault = async () => {
-    try {
-      const { saveChart } = await import('../services/storage/supabaseDb');
-      const sealedIdentity = await IdentityVault.openVault();
-      if (!sealedIdentity?.birthDate || !sealedIdentity.locationCity.trim()) {
-        return false;
-      }
-
-      const hasValidCoordinates =
-        Number.isFinite(sealedIdentity.locationLat) &&
-        Number.isFinite(sealedIdentity.locationLng);
-      if (!hasValidCoordinates) {
-        logger.warn('[onboarding] Sealed identity missing valid coordinates');
-        return false;
-      }
-
-      const astroSettings = await AstrologySettingsService.getSettings();
-      const now = new Date().toISOString();
-      await saveChart({
-        id: generateId(),
-        name: sealedIdentity.name.trim() || 'My Chart',
-        birthDate: sealedIdentity.birthDate,
-        birthTime: sealedIdentity.hasUnknownTime ? undefined : sealedIdentity.birthTime,
-        hasUnknownTime: sealedIdentity.hasUnknownTime,
-        birthPlace: sealedIdentity.locationCity.trim(),
-        latitude: sealedIdentity.locationLat,
-        longitude: sealedIdentity.locationLng,
-        timezone: sealedIdentity.timezone,
-        houseSystem: astroSettings.houseSystem,
-        createdAt: now,
-        updatedAt: now,
-        isDeleted: false,
-      });
-
-      logger.info('[onboarding] Restored chart from sealed identity');
-      return true;
-    } catch (error) {
-      logger.error('[onboarding] Failed to restore chart from sealed identity:', error);
-      return false;
-    }
-  };
 
   const checkIfOnboardingCanBeSkipped = async () => {
     try {
@@ -405,16 +357,11 @@ function AppShell() {
         }
         return true;
       }
-
-      // If no chart on server but the device keychain has the sealed birth
-      // profile, restore it to Supabase and keep the user out of onboarding.
-      const restoredFromVault = await restoreChartFromIdentityVault();
-      const canSkip = restoredFromVault;
-      setOnboardingComplete(canSkip);
+      setOnboardingComplete(false);
       if (rootInitSnapshot) {
-        rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: canSkip };
+        rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: false };
       }
-      return canSkip;
+      return false;
     } catch (e) {
       logger.error('Failed to check existing charts:', e);
       setOnboardingComplete(false);
@@ -435,7 +382,6 @@ function AppShell() {
     try {
       // DB migration + settings should only happen once consent is granted
       logger.info('[post-consent] step: migration');
-      await MigrationService.performMigrationIfNeeded();
       logger.info('[post-consent] step: astrology settings');
       await AstrologySettingsService.getSettings();
       logger.info('[post-consent] step: haptic preference');
@@ -518,7 +464,7 @@ function AppShell() {
             logger.error('[init] webCrypto polyfill failed:', e);
           }
 
-          // Wait for AuthContext to finish its own SecureStore/Keychain reads
+          // Wait for AuthContext to finish its own Supabase reads
           // (session restore) before we start our own. Concurrent Keychain
           // access on iOS 26 was causing TurboModule queue crashes at launch.
           // authLoadingRef is a ref so the closure always reads the latest value.
@@ -544,7 +490,7 @@ function AppShell() {
           logger.info('[init] step: terms consent');
           let termsAccepted = await getTermsConsent();
           // If the user already has a valid session they previously accepted the
-          // terms — re-hydrate the SecureStore key so future cold starts skip the
+          // terms — re-hydrate the Supabase preference so future cold starts skip the
           // consent prompt (fresh installs wipe Keychain, but session survives).
           // Read the live session directly — `session` state is null at closure
           // capture time since this effect runs once with [] deps.
@@ -631,7 +577,7 @@ function AppShell() {
       }
     };
 
-    // Show retry UI if initialization takes too long (e.g. stuck SecureStore)
+    // Show retry UI if initialization takes too long (e.g. stuck preference load)
     initTimeoutRef.current = setTimeout(() => {
       if (checkingConsent || !dbReady) {
         setInitTimedOut(true);

@@ -6,12 +6,12 @@ import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter, Href } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 
 import { type AppTheme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { PrivacyComplianceManager } from '../../services/privacy/privacyComplianceManager';
+import { saveUserPreference } from '../../services/storage/userProfileService';
 import { logger } from '../../utils/logger';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
@@ -42,9 +42,9 @@ export default function OnboardingConsentScreen() {
     setSaving(true);
     Haptics.selectionAsync().catch(() => {});
     try {
-      await SecureStore.setItemAsync('terms_consent', 'true');
+      await saveUserPreference('terms_consent', 'true');
 
-      // Record consent through the privacy compliance system so SecureStore,
+      // Record consent through the privacy compliance system so Supabase,
       // the lawful-basis audit trail, and consent history all stay in sync.
       try {
         const compliance = new PrivacyComplianceManager();

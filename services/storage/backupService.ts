@@ -5,7 +5,6 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 
 import { supabaseDb } from './supabaseDb';
-import { AccountScopedAsyncStorage } from './accountScopedStorage';
 import { PLAIN_ASYNC_USER_DATA_KEYS } from './userDataKeys';
 import type { AppSettings, SavedChart, JournalEntry, RelationshipChart, SleepEntry } from './models';
 import type { SavedInsight } from './insightHistory';
@@ -53,16 +52,6 @@ export class BackupService {
     }));
 
     const asyncStorageData: Record<string, string> = {};
-    await Promise.all(
-      PLAIN_ASYNC_USER_DATA_KEYS.map(async (key) => {
-        try {
-          const value = await AccountScopedAsyncStorage.getItem(key);
-          if (value) asyncStorageData[key] = value;
-        } catch (error) {
-          logger.error(`[Backup] Failed to read key ${key}:`, error);
-        }
-      }),
-    );
 
     const payload: BackupPayload = {
       schemaVersion: 2,
@@ -134,7 +123,6 @@ export class BackupService {
 
     await supabaseDb.clearAccountScopedData();
     await Promise.all([
-      ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AccountScopedAsyncStorage.removeItem(key)),
     ]);
 
     for (const chart of payload.charts ?? []) {
@@ -157,18 +145,6 @@ export class BackupService {
     }
     if (payload.settings) {
       await supabaseDb.saveSettings(payload.settings);
-    }
-
-    if (payload.asyncStorageData) {
-      const allowedKeys = new Set<string>([...(PLAIN_ASYNC_USER_DATA_KEYS as readonly string[])]);
-      for (const [key, value] of Object.entries(payload.asyncStorageData)) {
-        if (!allowedKeys.has(key)) continue;
-        try {
-          await AccountScopedAsyncStorage.setItem(key, value);
-        } catch (error) {
-          logger.error(`[Restore] Failed to restore AsyncStorage key ${key}:`, error);
-        }
-      }
     }
   }
 

@@ -11,8 +11,8 @@ import { useRouter, useFocusEffect, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { EncryptedAsyncStorage } from '../../../services/storage/encryptedAsyncStorage';
+import { getUserPreference, saveUserPreference } from '../../../services/storage/userProfileService';
+import { getDisplayName } from '../../../services/storage/userProfileService';
 
 import { type AppTheme } from '../../../constants/theme';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
@@ -29,7 +29,6 @@ import { FullNatalStoryGenerator } from '../../../services/premium/fullNatalStor
 import { BirthData } from '../../../services/astrology/types';
 import { AstrologyCalculator } from '../../../services/astrology/calculator';
 import Constants from 'expo-constants';
-import { IdentityVault } from '../../../utils/IdentityVault';
 import { logger } from '../../../utils/logger';
 import { SUPPORT_EMAIL } from '../../../constants/config';
 import { NotificationEngine } from '../../../utils/NotificationEngine';
@@ -145,7 +144,7 @@ export default function SettingsScreen() {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [showFaq, setShowFaq] = useState(false);
-  // ── Calibration preferences (persisted via AsyncStorage) ──
+  // ── Calibration preferences (persisted via Supabase preferences) ──
   const [hapticEnabled, setHapticEnabled] = useState(true);
   const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
@@ -181,10 +180,10 @@ export default function SettingsScreen() {
 
       // Calibration preferences
       const [haptic, reminder, mood, dream] = await Promise.all([
-        AsyncStorage.getItem('pref_haptic'),
-        AsyncStorage.getItem('pref_daily_reminder'),
-        AsyncStorage.getItem('pref_mood_insights'),
-        AsyncStorage.getItem('pref_dream_logging'),
+        getUserPreference<string | null>('pref_haptic', null),
+        getUserPreference<string | null>('pref_daily_reminder', null),
+        getUserPreference<string | null>('pref_mood_insights', null),
+        getUserPreference<string | null>('pref_dream_logging', null),
       ]);
       if (haptic !== null) setHapticEnabled(haptic === '1');
       if (reminder !== null) setDailyReminderEnabled(reminder === '1');
@@ -215,7 +214,7 @@ export default function SettingsScreen() {
             houseSystem: chart.houseSystem as import('../../../services/astrology/types').HouseSystem,
           });
         }
-        const storedName = await EncryptedAsyncStorage.getItem('msky_user_name');
+        const storedName = await getDisplayName();
         if (storedName) setIdentityName(prev => prev || storedName);
       } catch (innerErr) {
         logger.warn('Failed to load identity chart data:', innerErr);
@@ -235,7 +234,7 @@ export default function SettingsScreen() {
   const togglePref = useCallback(async (key: string, value: boolean, setter: (v: boolean) => void) => {
     setter(value);
     try {
-      await AsyncStorage.setItem(key, value ? '1' : '0');
+      await saveUserPreference(key, value ? '1' : '0');
       if (key === 'pref_haptic') setHapticsEnabled(value);
     } catch {}
   }, []);
@@ -243,19 +242,19 @@ export default function SettingsScreen() {
   const toggleDailyReminder = useCallback(async (value: boolean) => {
     setDailyReminderEnabled(value);
     try {
-      await AsyncStorage.setItem('pref_daily_reminder', value ? '1' : '0');
+      await saveUserPreference('pref_daily_reminder', value ? '1' : '0');
       if (value) {
         const hasPermission = await NotificationEngine.requestPermissions();
         if (!hasPermission) {
           setDailyReminderEnabled(false);
-          await AsyncStorage.setItem('pref_daily_reminder', '0');
+          await saveUserPreference('pref_daily_reminder', '0');
           return;
         }
-        // Read saved evening time from SecureStore or use default 20:00
-        const SecureStore = await import('expo-secure-store');
+        // Read saved evening time from Supabase preferences or use default 20:00
+        
         const [eh, em] = await Promise.all([
-          SecureStore.getItemAsync('notif_evening_hour'),
-          SecureStore.getItemAsync('notif_evening_minute'),
+          getUserPreference<string | null>('notif_evening_hour', null),
+          getUserPreference<string | null>('notif_evening_minute', null),
         ]);
         const hour = eh !== null ? Number(eh) : 20;
         const minute = em !== null ? Number(em) : 0;
@@ -343,25 +342,6 @@ export default function SettingsScreen() {
     try {
       setRestoreInProgress(true);
       await BackupService.restoreFromBackupFile(restoreUri);
-
-      // Re-seal identity from restored chart data
-      try {
-        const charts = await supabaseDb.getCharts();
-        if (charts.length > 0) {
-          await IdentityVault.sealIdentity({
-            name: charts[0].name ?? 'My Chart',
-            birthDate: charts[0].birthDate,
-            birthTime: charts[0].birthTime,
-            hasUnknownTime: charts[0].hasUnknownTime,
-            locationCity: charts[0].birthPlace,
-            locationLat: charts[0].latitude,
-            locationLng: charts[0].longitude,
-            timezone: charts[0].timezone,
-          });
-        }
-      } catch (sealErr) {
-        logger.error('[Settings] IdentityVault seal after restore failed:', sealErr);
-      }
 
       try {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});

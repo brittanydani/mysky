@@ -7,23 +7,13 @@
  * - Orb presets (tight, normal, wide)
  * - Asteroid display (Chiron, Juno, Pallas, Vesta, Ceres)
  * 
- * Persists to SecureStore for privacy compliance.
+ * Persists to Supabase preferences.
  */
 
 import { HouseSystem, ZodiacSystem, Ayanamsa } from './types';
 import { logger } from '../../utils/logger';
+import { getUserPreference, saveUserPreference, deleteUserPreference } from '../storage/userProfileService';
 
-type SecureStoreModule = typeof import('expo-secure-store');
-
-let secureStoreModule: SecureStoreModule | null = null;
-
-function getSecureStore(): SecureStoreModule {
-  if (!secureStoreModule) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    secureStoreModule = require('expo-secure-store') as SecureStoreModule;
-  }
-  return secureStoreModule;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -206,7 +196,7 @@ class AstrologySettingsServiceClass {
     }
 
     try {
-      const stored = await getSecureStore().getItemAsync(SETTINGS_KEY);
+      const stored = await getUserPreference<string | null>(SETTINGS_KEY, null);
       
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<AstrologySettings>;
@@ -236,7 +226,7 @@ class AstrologySettingsServiceClass {
         updatedAt: new Date().toISOString(),
       };
 
-      await getSecureStore().setItemAsync(SETTINGS_KEY, JSON.stringify(updated));
+      await saveUserPreference(SETTINGS_KEY, JSON.stringify(updated));
       this.cachedSettings = updated;
       this.notifyListeners(updated);
       
@@ -338,7 +328,7 @@ class AstrologySettingsServiceClass {
    * Reset to default settings
    */
   async resetToDefaults(): Promise<AstrologySettings> {
-    await getSecureStore().deleteItemAsync(SETTINGS_KEY);
+    await deleteUserPreference(SETTINGS_KEY);
     this.cachedSettings = null;
     const defaults = await this.getSettings();
     this.notifyListeners(defaults);

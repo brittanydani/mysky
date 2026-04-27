@@ -57,7 +57,7 @@ import { normalizeDisplayText } from '../../utils/textLayout';
 import { getDailyAffirmation, PersonalAffirmationContext } from '../../services/today/todayContentLibrary';
 import { SelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { logger } from '../../utils/logger';
-import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
+import { getDisplayName } from '../../services/storage/userProfileService';
 import { getArchiveDepth, getPersonalizedPremiumTeaser } from '../../utils/archiveDepth';
 import { hasDreamContent } from '../../utils/dreamArchiveSummary';
 import { usePremium } from '../../context/PremiumContext';
@@ -259,7 +259,7 @@ export default function HomeScreen() {
           chart.createdAt = savedChart.createdAt;
 
           // Prefer the user's actual name over the chart name (which defaults to birth place)
-          const storedName = await EncryptedAsyncStorage.getItem('msky_user_name');
+          const storedName = await getDisplayName();
           if (storedName) chart.name = storedName;
           chart.updatedAt = savedChart.updatedAt;
 

@@ -22,7 +22,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { AccountScopedAsyncStorage } from '../services/storage/accountScopedStorage';
+import { getSelfKnowledgeProfile, saveSelfKnowledgeProfile } from '../services/storage/userProfileService';
 import * as Haptics from 'expo-haptics';
 import {
   BlurMask,
@@ -172,11 +172,14 @@ export default function CognitiveStyleScreen() {
   useFocusEffect(
     useCallback(() => {
       syncCognitiveStyleFromReflections({ includeDrafts: true })
-        .then(() => AccountScopedAsyncStorage.getItem(STORAGE_KEY))
-        .then((raw) => {
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            setScores({ scope: parsed.scope, processing: parsed.processing, decisions: parsed.decisions });
+        .then(() => getSelfKnowledgeProfile<Partial<Scores> & { manualScores?: Partial<Scores> }>('cognitive_style', {}))
+        .then((parsed) => {
+          setScores({
+            scope: parsed.scope,
+            processing: parsed.processing,
+            decisions: parsed.decisions,
+          });
+          if (parsed.scope || parsed.processing || parsed.decisions) {
             setSaved(true);
           }
         }).catch((e) => logger.warn('[CognitiveStyle] Sync/load failed:', e));
@@ -185,9 +188,8 @@ export default function CognitiveStyleScreen() {
 
   const handleSave = async () => {
     try {
-      const raw = await AccountScopedAsyncStorage.getItem(STORAGE_KEY);
-      const existing = raw ? JSON.parse(raw) : {};
-      await AccountScopedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...scores, manualScores: scores }));
+      const existing = await getSelfKnowledgeProfile<Record<string, unknown>>('cognitive_style', {});
+      await saveSelfKnowledgeProfile('cognitive_style', { ...existing, ...scores, manualScores: scores });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setSaved(true);
     } catch {

@@ -11,7 +11,7 @@
  *   3. A meaningful transit aspect is found
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserPreference, saveUserPreference, deleteUserPreference } from '../storage/userProfileService';
 import { getTransitInfo, computeTransitAspectsToNatal } from '../astrology/transits';
 import { NatalChart } from '../astrology/types';
 import { toLocalDateString } from '../../utils/dateUtils';
@@ -70,7 +70,7 @@ export async function scheduleTransitNotification(
 ): Promise<void> {
   try {
     const today = toLocalDateString(new Date());
-    const lastDate = await AsyncStorage.getItem(LAST_TRANSIT_NOTIF_KEY);
+    const lastDate = await getUserPreference<string | null>(LAST_TRANSIT_NOTIF_KEY, null);
     if (lastDate === today) return; // Already checked today
 
     // Compute tomorrow's transits
@@ -92,7 +92,7 @@ export async function scheduleTransitNotification(
     );
 
     if (!message) {
-      await AsyncStorage.setItem(LAST_TRANSIT_NOTIF_KEY, today);
+      await saveUserPreference(LAST_TRANSIT_NOTIF_KEY, today);
       return;
     }
 
@@ -120,7 +120,7 @@ export async function scheduleTransitNotification(
       },
     });
 
-    await AsyncStorage.setItem(LAST_TRANSIT_NOTIF_KEY, today);
+    await saveUserPreference(LAST_TRANSIT_NOTIF_KEY, today);
     logger.info(`[TransitNotif] Scheduled: ${message.body}`);
   } catch (e) {
     logger.warn('[TransitNotif] Failed to schedule transit notification:', e);

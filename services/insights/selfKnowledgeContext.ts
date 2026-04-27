@@ -10,7 +10,7 @@
  * returns null/[] rather than throwing.
  */
 
-import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
+import { getSelfKnowledgeProfile, type SelfKnowledgeProfileType } from '../storage/userProfileService';
 import {
   loadRelationshipPatterns,
   loadSomaticEntries,
@@ -100,12 +100,12 @@ export interface DailyReflectionSummary {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SQLite-derived summaries (optional — populated by enrichSelfKnowledgeContext)
+// Supabase-derived summaries (optional — populated by enrichSelfKnowledgeContext)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Lightweight summary of journal entry history.
- * Derived from SQLite journal_entries so screens that already load those
+ * Derived from Supabase-backed journal entries so screens that already load those
  * can call enrichSelfKnowledgeContext() without a second DB round-trip.
  */
 export interface JournalSummary {
@@ -142,9 +142,9 @@ export interface SelfKnowledgeContext {
   relationshipPatterns: RelationshipPatternEntry[];
   dailyReflections: DailyReflectionSummary | null;
   intelligenceProfile: IntelligenceProfile | null;
-  /** Set by enrichSelfKnowledgeContext() after SQLite data is loaded */
+  /** Set by enrichSelfKnowledgeContext() after Supabase-backed data is loaded */
   journalSummary?: JournalSummary | null;
-  /** Set by enrichSelfKnowledgeContext() after SQLite data is loaded */
+  /** Set by enrichSelfKnowledgeContext() after Supabase-backed data is loaded */
   dreamSummary?: DreamSummary | null;
 }
 
@@ -152,18 +152,17 @@ export interface SelfKnowledgeContext {
 // Storage keys  (must match the keys used in each screen)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const STORAGE_KEYS = {
-  coreValues:           '@mysky:core_values',
-  archetypeProfile:     '@mysky:archetype_profile',
-  cognitiveStyle:       '@mysky:cognitive_style',
-  intelligenceProfile:  '@mysky:intelligence_profile',
-} as const;
+const STORAGE_KEYS: Record<string, SelfKnowledgeProfileType> = {
+  coreValues: 'core_values',
+  archetypeProfile: 'archetype_profile',
+  cognitiveStyle: 'cognitive_style',
+  intelligenceProfile: 'intelligence_profile',
+};
 
-/** Reads JSON from encrypted storage for the profile stores that remain local. */
-async function readEncryptedJson<T>(key: string): Promise<T | null> {
+/** Reads JSON profile data from Supabase self_knowledge_profiles. */
+async function readEncryptedJson<T>(key: SelfKnowledgeProfileType): Promise<T | null> {
   try {
-    const raw = await AccountScopedAsyncStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : null;
+    return await getSelfKnowledgeProfile<T | null>(key, null);
   } catch {
     return null;
   }
@@ -249,7 +248,7 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SQLite enrichment (call after loading journal + sleep entries from localDb)
+// Supabase enrichment (call after loading journal + sleep entries)
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface RawJournalEntry {
@@ -267,7 +266,7 @@ interface RawSleepEntry {
 }
 
 /**
- * Derives JournalSummary and DreamSummary from pre-loaded SQLite rows and
+ * Derives JournalSummary and DreamSummary from pre-loaded Supabase-backed rows and
  * merges them into the context. Safe to call with empty arrays.
  *
  * Use this in screens that already load journal/sleep entries to avoid a

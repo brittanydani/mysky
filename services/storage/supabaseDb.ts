@@ -19,24 +19,20 @@ import {
   RelationshipChart,
   SleepEntry,
 } from './models';
-import { IdentityVault } from '../../utils/IdentityVault';
 import { logger } from '../../utils/logger';
 import type { HouseSystem } from '../astrology/types';
 import type { SavedInsight } from './insightHistory';
 import type { DailyCheckIn } from '../patterns/types';
-import { AccountScopedAsyncStorage } from './accountScopedStorage';
 import {
   type BirthProfileSync,
   invokeBirthProfileSync,
   isBirthProfileSyncUnavailableError,
   warnBirthProfileSyncUnavailable,
-} from './syncService';
+} from './birthProfileService';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 type Row = Record<string, unknown>;
-
-const SETTINGS_KEY = '@mysky:app_settings';
 
 async function getUserId(): Promise<string> {
   const { data, error } = await supabase.auth.getSession();
@@ -130,83 +126,10 @@ function chartFromBirthProfile(profile: BirthProfileSync): SavedChart {
   };
 }
 
-async function sealIdentityFromChart(chart: SavedChart): Promise<void> {
-  await IdentityVault.sealIdentity({
-    name: chart.name ?? 'My Chart',
-    birthDate: chart.birthDate,
-    birthTime: chart.birthTime,
-    hasUnknownTime: chart.hasUnknownTime,
-    locationCity: chart.birthPlace,
-    locationLat: chart.latitude,
-    locationLng: chart.longitude,
-    timezone: chart.timezone,
-  });
-}
-
-async function replaceCachedBirthCharts(charts: SavedChart[], deletedAt?: string): Promise<void> {
-  try {
-    const { localDb } = await import('./localDb');
-    const existingCharts = await localDb.getCharts().catch(() => [] as SavedChart[]);
-    const nextIds = new Set(charts.map((chart) => chart.id));
-    const cacheDeletedAt = deletedAt ?? new Date().toISOString();
-
-    const results = await Promise.allSettled([
-      ...existingCharts
-        .filter((chart) => !nextIds.has(chart.id))
-        .map((chart) => localDb.deleteChartFromSync(chart.id, cacheDeletedAt)),
-      ...charts.map((chart) => localDb.upsertChartFromSync(chart)),
-    ]);
-
-    const rejected = results.find((result) => result.status === 'rejected');
-    if (rejected?.status === 'rejected') throw rejected.reason;
-  } catch (error) {
-    logger.warn('[SupabaseDb] Failed to refresh local birth chart cache:', error);
-  }
-}
-
 function isRemoteUnavailableError(error: unknown): boolean {
   return isBirthProfileSyncUnavailableError(error);
 }
 
-async function getLocalCache() {
-  const { localDb } = await import('./localDb');
-  return localDb;
-}
-
-async function refreshLocalCache(label: string, operation: () => Promise<void>): Promise<void> {
-  try {
-    await operation();
-  } catch (error) {
-    logger.warn(`[SupabaseDb] Failed to refresh ${label} cache:`, error);
-  }
-}
-
-async function useLocalCacheFallback<T>(
-  label: string,
-  error: unknown,
-  operation: () => Promise<T>,
-): Promise<T> {
-  if (!isRemoteUnavailableError(error)) throw error;
-  logger.warn(`[SupabaseDb] Remote ${label} unavailable; using local cache fallback.`, error);
-  return operation();
-}
-
-async function markLocalRowDeleted(
-  table: string,
-  id: string,
-  updatedAt: string,
-  deletedAt?: string,
-): Promise<void> {
-  const localDb = await getLocalCache();
-  const db = await localDb.getDb();
-  const deletedAtClause = deletedAt ? ', deleted_at = ?' : '';
-  const params = deletedAt ? [updatedAt, deletedAt, id] : [updatedAt, id];
-
-  await db.runAsync(
-    `UPDATE ${table} SET is_deleted = 1, updated_at = ?${deletedAtClause} WHERE id = ?`,
-    params,
-  );
-}
 
 function mapSettingsRow(row: Row): AppSettings {
   return {
@@ -232,96 +155,49 @@ function settingsToRow(settings: AppSettings, userId: string): Row {
   };
 }
 
-async function readCachedSettings(): Promise<AppSettings | null> {
-  try {
-    const raw = await AccountScopedAsyncStorage.getItem(SETTINGS_KEY);
-    return raw ? (JSON.parse(raw) as AppSettings) : null;
-  } catch {
-    return null;
-  }
-}
-
-async function writeCachedSettings(settings: AppSettings): Promise<void> {
-  await AccountScopedAsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-}
-
 // ─── Charts ──────────────────────────────────────────────────────────────────
 
 export async function getCharts(): Promise<SavedChart[]> {
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData.session) return [];
 
-  let data: { profile?: unknown } | null = null;
-
-  try {
-    data = await invokeBirthProfileSync('getLatest', {}, { swallowUnavailableReadError: false });
-  } catch (error) {
-    if (!isBirthProfileSyncUnavailableError(error)) throw error;
-    warnBirthProfileSyncUnavailable(error);
-    const { localDb } = await import('./localDb');
-    return localDb.getCharts();
-  }
-
+  const data = await invokeBirthProfileSync('getLatest', {});
   const profile = data?.profile as BirthProfileSync | null;
 
-  if (!profile || profile.isDeleted) {
-    await replaceCachedBirthCharts([], profile?.updatedAt);
-    return [];
-  }
+  if (!profile || profile.isDeleted) return [];
 
   const chart = chartFromBirthProfile(profile);
-
-  if (!isValidChart(chart)) return [];
-  await replaceCachedBirthCharts([chart]);
-  return [chart];
+  return isValidChart(chart) ? [chart] : [];
 }
 
 export async function saveChart(chart: SavedChart): Promise<void> {
-  let persistedChart = chart;
+  const { profile } = await invokeBirthProfileSync('upsert', {
+    profile: {
+      chartId: chart.id,
+      name: chart.name ?? null,
+      birthDate: chart.birthDate,
+      birthTime: chart.birthTime ?? null,
+      hasUnknownTime: chart.hasUnknownTime,
+      birthPlace: chart.birthPlace,
+      latitude: chart.latitude,
+      longitude: chart.longitude,
+      timezone: chart.timezone ?? null,
+      houseSystem: chart.houseSystem ?? null,
+      createdAt: chart.createdAt,
+      updatedAt: chart.updatedAt,
+      isDeleted: chart.isDeleted,
+      deletedAt: chart.deletedAt ?? null,
+    },
+  });
 
-  try {
-    const { profile } = await invokeBirthProfileSync('upsert', {
-      profile: {
-        chartId: chart.id,
-        name: chart.name ?? null,
-        birthDate: chart.birthDate,
-        birthTime: chart.birthTime ?? null,
-        hasUnknownTime: chart.hasUnknownTime,
-        birthPlace: chart.birthPlace,
-        latitude: chart.latitude,
-        longitude: chart.longitude,
-        timezone: chart.timezone ?? null,
-        houseSystem: chart.houseSystem ?? null,
-        createdAt: chart.createdAt,
-        updatedAt: chart.updatedAt,
-        isDeleted: chart.isDeleted,
-        deletedAt: chart.deletedAt ?? null,
-      },
-    });
+  if (profile?.isDeleted) return;
 
-    if (profile) {
-      if (profile.isDeleted) {
-        await replaceCachedBirthCharts([], profile.updatedAt);
-        await IdentityVault.destroyIdentity().catch(() => {});
-        return;
-      }
-
-      persistedChart = chartFromBirthProfile(profile);
+  if (profile) {
+    const persistedChart = chartFromBirthProfile(profile);
+    if (!isValidChart(persistedChart)) {
+      logger.warn('[SupabaseDb] Birth profile upsert returned an invalid chart.');
     }
-  } catch (error) {
-    if (!isBirthProfileSyncUnavailableError(error)) throw error;
-    logger.warn(
-      '[SupabaseDb] Birth profile sync unavailable during save; writing chart locally and queueing retry.',
-      error,
-    );
-    const { localDb } = await import('./localDb');
-    await localDb.saveChart(chart);
-    return;
   }
-
-  if (!isValidChart(persistedChart)) return;
-  await replaceCachedBirthCharts([persistedChart]);
-  await sealIdentityFromChart(persistedChart);
 }
 
 export async function upsertChart(chart: SavedChart): Promise<void> {
@@ -331,37 +207,11 @@ export async function upsertChart(chart: SavedChart): Promise<void> {
 export async function deleteChart(id: string): Promise<void> {
   const now = new Date().toISOString();
 
-  let profile: BirthProfileSync | null = null;
-
-  try {
-    const response = await invokeBirthProfileSync('delete', {
-      chartId: id,
-      updatedAt: now,
-      deletedAt: now,
-    });
-    profile = response.profile;
-  } catch (error) {
-    if (!isBirthProfileSyncUnavailableError(error)) throw error;
-    logger.warn(
-      '[SupabaseDb] Birth profile sync unavailable during delete; deleting local chart and queueing retry.',
-      error,
-    );
-    const { localDb } = await import('./localDb');
-    await localDb.deleteChart(id);
-    return;
-  }
-
-  if (profile && !profile.isDeleted) {
-    const chart = chartFromBirthProfile(profile);
-    if (isValidChart(chart)) {
-      await replaceCachedBirthCharts([chart]);
-      await sealIdentityFromChart(chart);
-    }
-    return;
-  }
-
-  await replaceCachedBirthCharts([], profile?.updatedAt ?? now);
-  await IdentityVault.destroyIdentity().catch(() => {});
+  await invokeBirthProfileSync('delete', {
+    chartId: id,
+    updatedAt: now,
+    deletedAt: now,
+  });
 }
 
 export async function updateAllChartsHouseSystem(houseSystem: HouseSystem): Promise<void> {
@@ -407,32 +257,23 @@ async function mapJournalRow(row: Row): Promise<JournalEntry> {
 }
 
 export async function getJournalEntries(): Promise<JournalEntry[]> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('journal_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_deleted', false)
-      .order('date', { ascending: false })
-      .order('created_at', { ascending: false });
+  const { data, error } = await supabase
+    .from('journal_entries')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_deleted', false)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    if (!data?.length) return [];
-
-    const entries = await Promise.all((data as Row[]).map(mapJournalRow));
-    await refreshLocalCache('journal entries', async () => {
-      const localDb = await getLocalCache();
-      await Promise.all(entries.map((entry) => localDb.upsertJournalEntryRaw(entry)));
-    });
-    return entries;
-  } catch (error) {
-    return useLocalCacheFallback('journal entries', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getJournalEntries();
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load journal entries from Supabase.', error);
+    return [];
   }
+
+  if (!data?.length) return [];
+  return Promise.all((data as Row[]).map(mapJournalRow));
 }
 
 export async function getJournalEntriesPaginated(
@@ -440,102 +281,82 @@ export async function getJournalEntriesPaginated(
   afterDate?: string,
   afterCreatedAt?: string,
 ): Promise<JournalEntry[]> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    let query = supabase
-      .from('journal_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_deleted', false)
-      .order('date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(pageSize);
+  let query = supabase
+    .from('journal_entries')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_deleted', false)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(pageSize);
 
-    if (afterDate && afterCreatedAt) {
-      query = query.or(
-        `date.lt.${afterDate},and(date.eq.${afterDate},created_at.lt.${afterCreatedAt})`,
-      );
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
-    if (!data?.length) return [];
-
-    const entries = await Promise.all((data as Row[]).map(mapJournalRow));
-    await refreshLocalCache('journal entries', async () => {
-      const localDb = await getLocalCache();
-      await Promise.all(entries.map((entry) => localDb.upsertJournalEntryRaw(entry)));
-    });
-    return entries;
-  } catch (error) {
-    return useLocalCacheFallback('journal entries page', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getJournalEntriesPaginated(pageSize, afterDate, afterCreatedAt);
-    });
+  if (afterDate && afterCreatedAt) {
+    query = query.or(
+      `date.lt.${afterDate},and(date.eq.${afterDate},created_at.lt.${afterCreatedAt})`,
+    );
   }
+
+  const { data, error } = await query;
+
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load paginated journal entries from Supabase.', error);
+    return [];
+  }
+
+  if (!data?.length) return [];
+  return Promise.all((data as Row[]).map(mapJournalRow));
 }
 
 export async function getJournalEntryCount(): Promise<number> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { count, error } = await supabase
-      .from('journal_entries')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('is_deleted', false);
+  const { count, error } = await supabase
+    .from('journal_entries')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_deleted', false);
 
-    if (error) throw error;
-    return count ?? 0;
-  } catch (error) {
-    return useLocalCacheFallback('journal entry count', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getJournalEntryCount();
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to count journal entries from Supabase.', error);
+    return 0;
   }
+
+  return count ?? 0;
 }
 
 export async function saveJournalEntry(entry: JournalEntry): Promise<void> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { error } = await supabase.from('journal_entries').upsert(
-      {
-        id: entry.id,
-        user_id: userId,
-        date: entry.date,
-        mood: entry.mood,
-        moon_phase: entry.moonPhase,
-        title: entry.title ?? null,
-        content: entry.content,
-        content_keywords: entry.contentKeywords ?? null,
-        content_emotions: entry.contentEmotions ?? null,
-        content_sentiment: entry.contentSentiment ?? null,
-        tags: entry.tags ? JSON.stringify(entry.tags) : null,
-        content_word_count: entry.contentWordCount ?? null,
-        content_reading_minutes: entry.contentReadingMinutes ?? null,
-        chart_id: entry.chartId ?? null,
-        transit_snapshot: entry.transitSnapshot ?? null,
-        is_deleted: entry.isDeleted,
-        deleted_at: entry.deletedAt ?? null,
-        created_at: entry.createdAt,
-        updated_at: entry.updatedAt,
-      },
-      { onConflict: 'id' },
-    );
+  const { error } = await supabase.from('journal_entries').upsert(
+    {
+      id: entry.id,
+      user_id: userId,
+      date: entry.date,
+      mood: entry.mood,
+      moon_phase: entry.moonPhase,
+      title: entry.title ?? null,
+      content: entry.content,
+      content_keywords: entry.contentKeywords ?? null,
+      content_emotions: entry.contentEmotions ?? null,
+      content_sentiment: entry.contentSentiment ?? null,
+      tags: entry.tags ? JSON.stringify(entry.tags) : null,
+      content_word_count: entry.contentWordCount ?? null,
+      content_reading_minutes: entry.contentReadingMinutes ?? null,
+      chart_id: entry.chartId ?? null,
+      transit_snapshot: entry.transitSnapshot ?? null,
+      is_deleted: entry.isDeleted,
+      deleted_at: entry.deletedAt ?? null,
+      created_at: entry.createdAt,
+      updated_at: entry.updatedAt,
+    },
+    { onConflict: 'id' },
+  );
 
-    if (error) throw error;
-
-    await refreshLocalCache('journal entries', async () => {
-      const localDb = await getLocalCache();
-      await localDb.upsertJournalEntryRaw(entry);
-    });
-  } catch (error) {
-    if (!isRemoteUnavailableError(error)) throw error;
-    logger.warn('[SupabaseDb] Remote journal save unavailable; writing local cache and queueing retry.', error);
-    const localDb = await getLocalCache();
-    await localDb.saveJournalEntry(entry);
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to save journal entry to Supabase.', error);
+    throw error;
   }
 }
 
@@ -548,147 +369,110 @@ export async function updateJournalEntry(entry: JournalEntry): Promise<void> {
 }
 
 export async function deleteJournalEntry(id: string): Promise<void> {
+  const userId = await getUserId();
   const now = new Date().toISOString();
-  try {
-    const userId = await getUserId();
 
-    const { error } = await supabase
-      .from('journal_entries')
-      .update({ is_deleted: true, deleted_at: now, updated_at: now })
-      .eq('id', id)
-      .eq('user_id', userId);
+  const { error } = await supabase
+    .from('journal_entries')
+    .update({ is_deleted: true, deleted_at: now, updated_at: now })
+    .eq('id', id)
+    .eq('user_id', userId);
 
-    if (error) throw error;
-
-    await refreshLocalCache('journal entries', () =>
-      markLocalRowDeleted('journal_entries', id, now, now),
-    );
-  } catch (error) {
-    if (!isRemoteUnavailableError(error)) throw error;
-    logger.warn('[SupabaseDb] Remote journal delete unavailable; deleting local cache and queueing retry.', error);
-    const localDb = await getLocalCache();
-    await localDb.deleteJournalEntry(id);
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to delete journal entry from Supabase.', error);
+    throw error;
   }
 }
 
 // ─── Settings ────────────────────────────────────────────────────────────────
 
 export async function getSettings(): Promise<AppSettings | null> {
-  try {
-    const userId = await getUserId();
-    const { data, error } = await supabase
-      .from('app_settings')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+  const userId = await getUserId();
 
-    if (error) {
-      // Handle table-not-found errors gracefully (e.g., PGRST205)
-      const errorCode = (error as any)?.code;
-      if (errorCode === 'PGRST205' || errorCode === 'PGRST204' || errorCode === 'PGRST116') {
-        logger.warn('[SupabaseDb] app_settings table not found or schema mismatch; using local cache fallback.', error);
-        return readCachedSettings();
-      }
-      throw error;
-    }
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
 
-    if (data) {
-      const settings = mapSettingsRow(data as Row);
-      await refreshLocalCache('app settings', () => writeCachedSettings(settings));
-      return settings;
-    }
-
-    const cached = await readCachedSettings();
-    if (cached) {
-      await updateSettings({ ...cached, userId });
-      return { ...cached, userId };
-    }
-
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load app settings from Supabase.', error);
     return null;
-  } catch (error) {
-    return useLocalCacheFallback('app settings', error, readCachedSettings);
   }
+
+  return data ? mapSettingsRow(data as Row) : null;
 }
 
 export async function updateSettings(settings: AppSettings): Promise<void> {
-  try {
-    const userId = await getUserId();
-    const persisted = { ...settings, userId };
-    const { error } = await supabase
-      .from('app_settings')
-      .upsert(settingsToRow(persisted, userId), { onConflict: 'user_id' });
+  const userId = await getUserId();
+  const now = new Date().toISOString();
 
-    if (error) {
-      // Handle table-not-found errors gracefully (e.g., PGRST205)
-      const errorCode = (error as any)?.code;
-      if (errorCode === 'PGRST205' || errorCode === 'PGRST204' || errorCode === 'PGRST116') {
-        logger.warn('[SupabaseDb] app_settings table not found or schema mismatch; saving to local cache only.', error);
-        await writeCachedSettings(persisted);
-        return;
-      }
-      throw error;
-    }
+  const persisted: AppSettings = {
+    ...settings,
+    id: settings.id || userId,
+    userId,
+    createdAt: settings.createdAt || now,
+    updatedAt: now,
+  };
 
-    await refreshLocalCache('app settings', () => writeCachedSettings(persisted));
-  } catch (error) {
-    if (!isRemoteUnavailableError(error)) throw error;
-    logger.warn('[SupabaseDb] Remote app settings save unavailable; keeping existing cache unchanged.', error);
+  const { error } = await supabase
+    .from('app_settings')
+    .upsert(settingsToRow(persisted, userId), { onConflict: 'user_id' });
+
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to save app settings to Supabase.', error);
+    throw error;
   }
 }
 
 export const saveSettings = updateSettings;
 
-// ─── Sleep Entries ────────────────────────────────────────────────────────────
+
+
+// ─── Sleep Entries ───────────────────────────────────────────────────────────
 
 async function mapSleepRow(row: Row): Promise<SleepEntry> {
   return {
     id: asRequiredString(row.id),
     chartId: asRequiredString(row.chart_id),
     date: asRequiredString(row.date),
-    durationHours:
-      typeof row.duration_hours === 'number' ? row.duration_hours : undefined,
+    durationHours: typeof row.duration_hours === 'number'
+      ? row.duration_hours
+      : coerceNumber(row.hours_slept, undefined as unknown as number),
     quality: typeof row.quality === 'number' ? row.quality : undefined,
-    dreamText: asOptionalString(row.dream_text),
+    dreamText: asOptionalString(row.dream_text) ?? asOptionalString(row.dream),
     dreamMood: asOptionalString(row.dream_mood),
     dreamFeelings: asOptionalString(row.dream_feelings),
     dreamMetadata: asOptionalString(row.dream_metadata),
     notes: asOptionalString(row.notes),
-    isDeleted: Boolean(row.is_deleted),
     createdAt: asRequiredString(row.created_at),
     updatedAt: asRequiredString(row.updated_at),
+    isDeleted: Boolean(row.is_deleted),
   };
 }
 
 export async function getSleepEntries(
   chartId: string,
-  limit = 30,
+  limit = 10000,
 ): Promise<SleepEntry[]> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('sleep_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_deleted', false)
-      .order('date', { ascending: false })
-      .limit(limit);
+  const { data, error } = await supabase
+    .from('sleep_entries')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .eq('is_deleted', false)
+    .order('date', { ascending: false })
+    .limit(limit);
 
-    if (error) throw error;
-    if (!data?.length) return [];
-
-    const entries = await Promise.all((data as Row[]).map(mapSleepRow));
-    await refreshLocalCache('sleep entries', async () => {
-      const localDb = await getLocalCache();
-      await Promise.all(entries.map((entry) => localDb.upsertSleepEntryRaw(entry)));
-    });
-    return entries;
-  } catch (error) {
-    return useLocalCacheFallback('sleep entries', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getSleepEntries(chartId, limit);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load sleep entries from Supabase.', error);
+    return [];
   }
+
+  if (!data?.length) return [];
+  return Promise.all((data as Row[]).map(mapSleepRow));
 }
 
 export async function getSleepEntriesInRange(
@@ -696,164 +480,118 @@ export async function getSleepEntriesInRange(
   startDate: string,
   endDate: string,
 ): Promise<SleepEntry[]> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('sleep_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_deleted', false)
-      .gte('date', startDate)
-      .lte('date', endDate)
-      .order('date', { ascending: false });
+  const { data, error } = await supabase
+    .from('sleep_entries')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .eq('is_deleted', false)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: false });
 
-    if (error) throw error;
-    if (!data?.length) return [];
-
-    const entries = await Promise.all((data as Row[]).map(mapSleepRow));
-    await refreshLocalCache('sleep entries', async () => {
-      const localDb = await getLocalCache();
-      await Promise.all(entries.map((entry) => localDb.upsertSleepEntryRaw(entry)));
-    });
-    return entries;
-  } catch (error) {
-    return useLocalCacheFallback('sleep entries', error, async () => {
-      const localDb = await getLocalCache();
-      const cached = await localDb.getSleepEntries(chartId, 10000);
-      return cached.filter((entry) => entry.date >= startDate && entry.date <= endDate);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load sleep entries range from Supabase.', error);
+    return [];
   }
+
+  if (!data?.length) return [];
+  return Promise.all((data as Row[]).map(mapSleepRow));
 }
 
 export async function getSleepEntryByDate(
   chartId: string,
   date: string,
 ): Promise<SleepEntry | null> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('sleep_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', date)
-      .eq('is_deleted', false)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from('sleep_entries')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .eq('date', date)
+    .eq('is_deleted', false)
+    .maybeSingle();
 
-    if (error) throw error;
-    if (!data) return null;
-
-    const entry = await mapSleepRow(data as Row);
-    await refreshLocalCache('sleep entries', async () => {
-      const localDb = await getLocalCache();
-      await localDb.upsertSleepEntryRaw(entry);
-    });
-    return entry;
-  } catch (error) {
-    return useLocalCacheFallback('sleep entry', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getSleepEntryByDate(chartId, date);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load sleep entry from Supabase.', error);
+    return null;
   }
+
+  return data ? mapSleepRow(data as Row) : null;
 }
 
 export async function saveSleepEntry(entry: SleepEntry): Promise<void> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { error } = await supabase.from('sleep_entries').upsert(
-      {
-        id: entry.id,
-        user_id: userId,
-        chart_id: entry.chartId,
-        date: entry.date,
-        duration_hours: entry.durationHours ?? null,
-        quality: entry.quality ?? null,
-        dream_text: entry.dreamText ?? null,
-        dream_mood: entry.dreamMood ?? null,
-        dream_feelings: entry.dreamFeelings ?? null,
-        dream_metadata: entry.dreamMetadata ?? null,
-        notes: entry.notes ?? null,
-        is_deleted: entry.isDeleted ?? false,
-        created_at: entry.createdAt,
-        updated_at: entry.updatedAt,
-      },
-      { onConflict: 'id' },
-    );
+  const { error } = await supabase.from('sleep_entries').upsert(
+    {
+      id: entry.id,
+      user_id: userId,
+      chart_id: entry.chartId,
+      date: entry.date,
+      duration_hours: entry.durationHours ?? null,
+      hours_slept: entry.durationHours ?? null,
+      quality: entry.quality ?? null,
+      dream_text: entry.dreamText ?? null,
+      dream: entry.dreamText ?? null,
+      dream_mood: entry.dreamMood ?? null,
+      dream_feelings: entry.dreamFeelings ?? null,
+      dream_metadata: entry.dreamMetadata ?? null,
+      notes: entry.notes ?? null,
+      is_deleted: entry.isDeleted,
+      created_at: entry.createdAt,
+      updated_at: entry.updatedAt,
+    },
+    { onConflict: 'id' },
+  );
 
-    if (error) throw error;
-
-    await refreshLocalCache('sleep entries', async () => {
-      const localDb = await getLocalCache();
-      await localDb.upsertSleepEntryRaw(entry);
-    });
-  } catch (error) {
-    if (!isRemoteUnavailableError(error)) throw error;
-    logger.warn('[SupabaseDb] Remote sleep save unavailable; writing local cache and queueing retry.', error);
-    const localDb = await getLocalCache();
-    await localDb.saveSleepEntry(entry);
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to save sleep entry to Supabase.', error);
+    throw error;
   }
 }
 
 export async function deleteSleepEntry(id: string): Promise<void> {
+  const userId = await getUserId();
   const now = new Date().toISOString();
-  try {
-    const userId = await getUserId();
 
-    const { error } = await supabase
-      .from('sleep_entries')
-      .update({ is_deleted: true, updated_at: now })
-      .eq('id', id)
-      .eq('user_id', userId);
+  const { error } = await supabase
+    .from('sleep_entries')
+    .update({ is_deleted: true, updated_at: now })
+    .eq('id', id)
+    .eq('user_id', userId);
 
-    if (error) throw error;
-
-    await refreshLocalCache('sleep entries', () =>
-      markLocalRowDeleted('sleep_entries', id, now),
-    );
-  } catch (error) {
-    if (!isRemoteUnavailableError(error)) throw error;
-    logger.warn('[SupabaseDb] Remote sleep delete unavailable; deleting local cache and queueing retry.', error);
-    const localDb = await getLocalCache();
-    await localDb.deleteSleepEntry(id);
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to delete sleep entry from Supabase.', error);
+    throw error;
   }
 }
 
-// ─── Daily Check-Ins ──────────────────────────────────────────────────────────
+// ─── Daily Check-Ins ─────────────────────────────────────────────────────────
 
 async function mapCheckInRow(row: Row): Promise<DailyCheckIn> {
-  const moodNum = coerceNumber(
-    row.mood_score != null ? row.mood_score : row.mood_value,
-    0,
-  );
-  const tags = row.tags != null
-    ? (typeof row.tags === 'string' ? row.tags : JSON.stringify(row.tags))
-    : undefined;
-
   return {
     id: asRequiredString(row.id),
-    date: asRequiredString(row.log_date ?? row.date),
-    chartId: asOptionalString(row.chart_id) ?? '',
-    moodScore: moodNum,
-    energyLevel: ((asOptionalString(row.energy_level) ?? 'medium') as DailyCheckIn['energyLevel']),
-    stressLevel: ((asOptionalString(row.stress_level) ?? 'medium') as DailyCheckIn['stressLevel']),
-    tags: safeJsonParse<string[]>(tags, []),
-    note: asOptionalString(row.note),
+    date: asRequiredString(row.date),
+    chartId: asRequiredString(row.chart_id),
+    timeOfDay: asRequiredString(row.time_of_day, 'morning') as DailyCheckIn['timeOfDay'],
+    moodScore: coerceNumber(row.mood_score),
+    energyLevel: asRequiredString(row.energy_level, 'medium') as DailyCheckIn['energyLevel'],
+    stressLevel: asRequiredString(row.stress_level, 'medium') as DailyCheckIn['stressLevel'],
+    tags: parseJsonValue<DailyCheckIn['tags']>(row.tags, []),
+    note: asOptionalString(row.note) ?? asOptionalString(row.notes),
     wins: asOptionalString(row.wins),
     challenges: asOptionalString(row.challenges),
-    moonSign: asOptionalString(row.moon_sign) ?? 'unknown',
-    moonHouse: typeof row.moon_house === 'number' ? row.moon_house : 0,
-    sunHouse: typeof row.sun_house === 'number' ? row.sun_house : 0,
-    transitEvents: parseJsonValue<DailyCheckIn['transitEvents']>(
-      row.transit_events,
-      [],
-    ),
-    lunarPhase:
-      ((asOptionalString(row.lunar_phase) ?? 'unknown') as DailyCheckIn['lunarPhase']),
+    moonSign: asRequiredString(row.moon_sign, 'unknown'),
+    moonHouse: coerceNumber(row.moon_house),
+    sunHouse: coerceNumber(row.sun_house),
+    transitEvents: parseJsonValue<DailyCheckIn['transitEvents']>(row.transit_events, []),
+    lunarPhase: asRequiredString(row.lunar_phase, 'unknown') as DailyCheckIn['lunarPhase'],
     retrogrades: parseJsonValue<string[]>(row.retrogrades, []),
-    timeOfDay:
-      ((asOptionalString(row.time_of_day) ?? 'morning') as DailyCheckIn['timeOfDay']),
     createdAt: asRequiredString(row.created_at),
     updatedAt: asRequiredString(row.updated_at),
   };
@@ -861,102 +599,71 @@ async function mapCheckInRow(row: Row): Promise<DailyCheckIn> {
 
 export async function getCheckIns(
   chartId: string,
-  limit?: number,
+  limit = 10000,
 ): Promise<DailyCheckIn[]> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    let query = supabase
-      .from('daily_check_ins')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_deleted', false)
-      .order('log_date', { ascending: false });
+  const { data, error } = await supabase
+    .from('daily_check_ins')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(limit);
 
-    if (limit) query = query.limit(limit);
-
-    const { data, error } = await query;
-    if (error) throw error;
-    if (!data?.length) return [];
-
-    const checkIns = await Promise.all((data as Row[]).map(mapCheckInRow));
-    await refreshLocalCache('daily check-ins', async () => {
-      const localDb = await getLocalCache();
-      await Promise.all(checkIns.map((checkIn) => localDb.upsertCheckInRaw(checkIn)));
-    });
-    return checkIns;
-  } catch (error) {
-    return useLocalCacheFallback('daily check-ins', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getCheckIns(chartId, limit);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load daily check-ins from Supabase.', error);
+    return [];
   }
+
+  if (!data?.length) return [];
+  return Promise.all((data as Row[]).map(mapCheckInRow));
 }
 
 export async function getCheckInByDate(
   date: string,
   chartId: string,
 ): Promise<DailyCheckIn | null> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('daily_check_ins')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('log_date', date)
-      .eq('is_deleted', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from('daily_check_ins')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .eq('date', date)
+    .maybeSingle();
 
-    if (error) throw error;
-    if (!data) return null;
-
-    const checkIn = await mapCheckInRow(data as Row);
-    await refreshLocalCache('daily check-ins', async () => {
-      const localDb = await getLocalCache();
-      await localDb.upsertCheckInRaw(checkIn);
-    });
-    return checkIn;
-  } catch (error) {
-    return useLocalCacheFallback('daily check-in', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getCheckInByDate(date, chartId);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load daily check-in from Supabase.', error);
+    return null;
   }
+
+  return data ? mapCheckInRow(data as Row) : null;
 }
 
 export async function getCheckInsByDate(
   date: string,
   chartId: string,
 ): Promise<DailyCheckIn[]> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('daily_check_ins')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('log_date', date)
-      .eq('is_deleted', false)
-      .order('created_at', { ascending: true });
+  const { data, error } = await supabase
+    .from('daily_check_ins')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .eq('date', date)
+    .order('created_at', { ascending: true });
 
-    if (error) throw error;
-    if (!data?.length) return [];
-
-    const checkIns = await Promise.all((data as Row[]).map(mapCheckInRow));
-    await refreshLocalCache('daily check-ins', async () => {
-      const localDb = await getLocalCache();
-      await Promise.all(checkIns.map((checkIn) => localDb.upsertCheckInRaw(checkIn)));
-    });
-    return checkIns;
-  } catch (error) {
-    return useLocalCacheFallback('daily check-ins by date', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getCheckInsByDate(date, chartId);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load daily check-ins by date from Supabase.', error);
+    return [];
   }
+
+  if (!data?.length) return [];
+  return Promise.all((data as Row[]).map(mapCheckInRow));
 }
 
 export async function getCheckInByDateAndTime(
@@ -964,33 +671,23 @@ export async function getCheckInByDateAndTime(
   chartId: string,
   timeOfDay: string,
 ): Promise<DailyCheckIn | null> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('daily_check_ins')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('log_date', date)
-      .eq('time_of_day', timeOfDay)
-      .eq('is_deleted', false)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from('daily_check_ins')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .eq('date', date)
+    .eq('time_of_day', timeOfDay)
+    .maybeSingle();
 
-    if (error) throw error;
-    if (!data) return null;
-
-    const checkIn = await mapCheckInRow(data as Row);
-    await refreshLocalCache('daily check-ins', async () => {
-      const localDb = await getLocalCache();
-      await localDb.upsertCheckInRaw(checkIn);
-    });
-    return checkIn;
-  } catch (error) {
-    return useLocalCacheFallback('daily check-in slot', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getCheckInByDateAndTime(date, chartId, timeOfDay);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load daily check-in slot from Supabase.', error);
+    return null;
   }
+
+  return data ? mapCheckInRow(data as Row) : null;
 }
 
 export async function getCheckInsInRange(
@@ -998,145 +695,115 @@ export async function getCheckInsInRange(
   startDate: string,
   endDate: string,
 ): Promise<DailyCheckIn[]> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('daily_check_ins')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_deleted', false)
-      .gte('log_date', startDate)
-      .lte('log_date', endDate)
-      .order('log_date', { ascending: false });
+  const { data, error } = await supabase
+    .from('daily_check_ins')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    if (!data?.length) return [];
-
-    const checkIns = await Promise.all((data as Row[]).map(mapCheckInRow));
-    await refreshLocalCache('daily check-ins', async () => {
-      const localDb = await getLocalCache();
-      await Promise.all(checkIns.map((checkIn) => localDb.upsertCheckInRaw(checkIn)));
-    });
-    return checkIns;
-  } catch (error) {
-    return useLocalCacheFallback('daily check-ins range', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getCheckInsInRange(chartId, startDate, endDate);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load daily check-ins range from Supabase.', error);
+    return [];
   }
+
+  if (!data?.length) return [];
+  return Promise.all((data as Row[]).map(mapCheckInRow));
 }
 
 export async function getCheckInCount(chartId: string): Promise<number> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { count, error } = await supabase
-      .from('daily_check_ins')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('is_deleted', false);
+  const { count, error } = await supabase
+    .from('daily_check_ins')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('chart_id', chartId);
 
-    if (error) throw error;
-    return count ?? 0;
-  } catch (error) {
-    return useLocalCacheFallback('daily check-in count', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getCheckInCount(chartId);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to count daily check-ins from Supabase.', error);
+    return 0;
   }
+
+  return count ?? 0;
 }
 
 export async function getTotalCheckInCount(): Promise<number> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { count, error } = await supabase
-      .from('daily_check_ins')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId);
+  const { count, error } = await supabase
+    .from('daily_check_ins')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId);
 
-    if (error) throw error;
-    return count ?? 0;
-  } catch (error) {
-    return useLocalCacheFallback('total daily check-in count', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getCheckInCount('');
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to count all daily check-ins from Supabase.', error);
+    return 0;
   }
+
+  return count ?? 0;
 }
 
 export async function saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const moodNum = Math.max(0, Math.min(10, Math.round(checkIn.moodScore)));
+  const { error } = await supabase.from('daily_check_ins').upsert(
+    {
+      id: checkIn.id,
+      user_id: userId,
+      chart_id: checkIn.chartId,
+      date: checkIn.date,
+      time_of_day: checkIn.timeOfDay,
+      mood_score: checkIn.moodScore,
+      energy_level: checkIn.energyLevel,
+      stress_level: checkIn.stressLevel,
+      tags: JSON.stringify(checkIn.tags),
+      note: checkIn.note ?? null,
+      notes: checkIn.note ?? null,
+      wins: checkIn.wins ?? null,
+      challenges: checkIn.challenges ?? null,
+      moon_sign: checkIn.moonSign,
+      moon_house: checkIn.moonHouse,
+      sun_house: checkIn.sunHouse,
+      transit_events: JSON.stringify(checkIn.transitEvents),
+      lunar_phase: checkIn.lunarPhase,
+      retrogrades: JSON.stringify(checkIn.retrogrades),
+      created_at: checkIn.createdAt,
+      updated_at: checkIn.updatedAt,
+    },
+    { onConflict: 'id' },
+  );
 
-    const { error } = await supabase.from('daily_check_ins').upsert(
-      {
-        id: checkIn.id,
-        user_id: userId,
-        log_date: checkIn.date,
-        chart_id: checkIn.chartId,
-        mood_value: moodNum,
-        mood_score: moodNum,
-        energy_level: checkIn.energyLevel,
-        stress_level: checkIn.stressLevel,
-        tags: checkIn.tags ?? [],
-        note: checkIn.note ?? null,
-        wins: checkIn.wins ?? null,
-        challenges: checkIn.challenges ?? null,
-        moon_sign: checkIn.moonSign ?? null,
-        moon_house: checkIn.moonHouse ?? null,
-        sun_house: checkIn.sunHouse ?? null,
-        transit_events: checkIn.transitEvents ?? null,
-        lunar_phase: checkIn.lunarPhase ?? null,
-        retrogrades: checkIn.retrogrades ?? null,
-        time_of_day: checkIn.timeOfDay ?? null,
-        created_at: checkIn.createdAt,
-        updated_at: checkIn.updatedAt,
-      },
-      { onConflict: 'user_id,log_date,time_of_day' },
-    );
-
-    if (error) throw error;
-
-    await refreshLocalCache('daily check-ins', async () => {
-      const localDb = await getLocalCache();
-      await localDb.upsertCheckInRaw({ ...checkIn, moodScore: moodNum });
-    });
-  } catch (error) {
-    if (!isRemoteUnavailableError(error)) throw error;
-    logger.warn('[SupabaseDb] Remote check-in save unavailable; writing local cache and queueing retry.', error);
-    const localDb = await getLocalCache();
-    await localDb.saveCheckIn(checkIn);
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to save daily check-in to Supabase.', error);
+    throw error;
   }
 }
 
-// ─── Insight History ──────────────────────────────────────────────────────────
+// ─── Insight History ─────────────────────────────────────────────────────────
 
 async function mapInsightRow(row: Row): Promise<SavedInsight> {
-  const clean = (v?: string) => v ?? '';
-  const signals = row.signals != null
-    ? (typeof row.signals === 'string' ? row.signals : JSON.stringify(row.signals))
-    : undefined;
-
   return {
     id: asRequiredString(row.id),
     date: asRequiredString(row.date),
     chartId: asRequiredString(row.chart_id),
-    greeting: clean(asOptionalString(row.greeting)),
-    loveHeadline: clean(asOptionalString(row.love_headline)),
-    loveMessage: clean(asOptionalString(row.love_message)),
-    energyHeadline: clean(asOptionalString(row.energy_headline)),
-    energyMessage: clean(asOptionalString(row.energy_message)),
-    growthHeadline: clean(asOptionalString(row.growth_headline)),
-    growthMessage: clean(asOptionalString(row.growth_message)),
-    gentleReminder: clean(asOptionalString(row.gentle_reminder)),
-    journalPrompt: clean(asOptionalString(row.journal_prompt)),
+    greeting: asRequiredString(row.greeting),
+    loveHeadline: asRequiredString(row.love_headline),
+    loveMessage: asRequiredString(row.love_message),
+    energyHeadline: asRequiredString(row.energy_headline),
+    energyMessage: asRequiredString(row.energy_message),
+    growthHeadline: asRequiredString(row.growth_headline),
+    growthMessage: asRequiredString(row.growth_message),
+    gentleReminder: asRequiredString(row.gentle_reminder),
+    journalPrompt: asRequiredString(row.journal_prompt),
     moonSign: asOptionalString(row.moon_sign),
     moonPhase: asOptionalString(row.moon_phase),
-    signals,
+    signals: asOptionalString(row.signals),
     isFavorite: Boolean(row.is_favorite),
     viewedAt: asOptionalString(row.viewed_at),
     createdAt: asRequiredString(row.created_at),
@@ -1164,119 +831,87 @@ export async function saveInsight(insight: SavedInsight): Promise<void> {
       journal_prompt: insight.journalPrompt,
       moon_sign: insight.moonSign ?? null,
       moon_phase: insight.moonPhase ?? null,
-      signals: insight.signals ? safeJsonParse<unknown>(insight.signals, insight.signals) : null,
+      signals: insight.signals ?? null,
       is_favorite: insight.isFavorite,
       viewed_at: insight.viewedAt ?? null,
-      is_deleted: false,
       created_at: insight.createdAt,
       updated_at: insight.updatedAt,
     },
-    { onConflict: 'user_id,date,chart_id' },
+    { onConflict: 'id' },
   );
 
-  if (error) throw error;
-
-  await refreshLocalCache('insight history', async () => {
-    const localDb = await getLocalCache();
-    await localDb.saveInsight(insight);
-  });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to save insight to Supabase.', error);
+    throw error;
+  }
 }
 
 export async function getInsightByDate(
   date: string,
   chartId: string,
 ): Promise<SavedInsight | null> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('insight_history')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('chart_id', chartId)
-      .eq('date', date)
-      .eq('is_deleted', false)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from('insight_history')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .eq('date', date)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-    if (error) throw error;
-    if (!data) return null;
-
-    const insight = await mapInsightRow(data as Row);
-    await refreshLocalCache('insight history', async () => {
-      const localDb = await getLocalCache();
-      await localDb.saveInsight(insight);
-    });
-    return insight;
-  } catch (error) {
-    return useLocalCacheFallback('insight history', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getInsightByDate(date, chartId);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load insight by date from Supabase.', error);
+    return null;
   }
+
+  return data ? mapInsightRow(data as Row) : null;
 }
 
 export async function getInsightById(id: string): Promise<SavedInsight | null> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('insight_history')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', userId)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from('insight_history')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('id', id)
+    .maybeSingle();
 
-    if (error) throw error;
-    if (!data) return null;
-
-    const insight = await mapInsightRow(data as Row);
-    await refreshLocalCache('insight history', async () => {
-      const localDb = await getLocalCache();
-      await localDb.saveInsight(insight);
-    });
-    return insight;
-  } catch (error) {
-    return useLocalCacheFallback('insight history', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getInsightById(id);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load insight by id from Supabase.', error);
+    return null;
   }
+
+  return data ? mapInsightRow(data as Row) : null;
 }
 
 export async function getInsightHistory(
   chartId: string,
-  options?: { limit?: number; favoritesOnly?: boolean },
+  options: { limit?: number; offset?: number } = {},
 ): Promise<SavedInsight[]> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
+  const limit = options.limit ?? 50;
+  const offset = options.offset ?? 0;
 
-    let query = supabase
-      .from('insight_history')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('chart_id', chartId)
-      .eq('is_deleted', false)
-      .order('date', { ascending: false });
+  const { data, error } = await supabase
+    .from('insight_history')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
 
-    if (options?.favoritesOnly) query = query.eq('is_favorite', true);
-    if (options?.limit) query = query.limit(options.limit);
-
-    const { data, error } = await query;
-    if (error) throw error;
-    if (!data?.length) return [];
-
-    const insights = await Promise.all((data as Row[]).map(mapInsightRow));
-    await refreshLocalCache('insight history', async () => {
-      const localDb = await getLocalCache();
-      await Promise.all(insights.map((insight) => localDb.saveInsight(insight)));
-    });
-    return insights;
-  } catch (error) {
-    return useLocalCacheFallback('insight history', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getInsightHistory(chartId, options);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load insight history from Supabase.', error);
+    return [];
   }
+
+  if (!data?.length) return [];
+  return Promise.all((data as Row[]).map(mapInsightRow));
 }
 
 export async function updateInsightFavorite(
@@ -1292,12 +927,10 @@ export async function updateInsightFavorite(
     .eq('id', id)
     .eq('user_id', userId);
 
-  if (error) throw error;
-
-  await refreshLocalCache('insight history', async () => {
-    const localDb = await getLocalCache();
-    await localDb.updateInsightFavorite(id, isFavorite);
-  });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to update insight favorite in Supabase.', error);
+    throw error;
+  }
 }
 
 export async function updateInsightViewedAt(
@@ -1313,39 +946,25 @@ export async function updateInsightViewedAt(
     .eq('id', id)
     .eq('user_id', userId);
 
-  if (error) throw error;
-
-  await refreshLocalCache('insight history', async () => {
-    const localDb = await getLocalCache();
-    await localDb.updateInsightViewedAt(id, viewedAt);
-  });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to update insight viewed state in Supabase.', error);
+    throw error;
+  }
 }
 
-// ─── Relationship Charts ──────────────────────────────────────────────────────
+// ─── Relationship Charts ─────────────────────────────────────────────────────
 
 async function mapRelationshipRow(row: Row): Promise<RelationshipChart> {
-  const rowId = asRequiredString(row.id);
-  const name = asOptionalString(row.name);
-  const birthDate = asOptionalString(row.birth_date);
-  const birthTime = asOptionalString(row.birth_time);
-  const birthPlace = asOptionalString(row.birth_place);
-  const latStr = row.latitude != null ? String(row.latitude) : undefined;
-  const lngStr = row.longitude != null ? String(row.longitude) : undefined;
-
-  if (!name || !birthDate || !birthPlace) {
-    logger.error(`[SupabaseDb] relationship row ${rowId} is missing required plaintext fields`);
-  }
-
   return {
-    id: rowId,
-    name: name ?? '',
-    relationship: row.relationship as RelationshipChart['relationship'],
-    birthDate: birthDate ?? '',
-    birthTime,
+    id: asRequiredString(row.id),
+    name: asRequiredString(row.name) || asRequiredString(row.partner_name),
+    relationship: asRequiredString(row.relationship, 'partner') as RelationshipChart['relationship'],
+    birthDate: asRequiredString(row.birth_date),
+    birthTime: asOptionalString(row.birth_time),
     hasUnknownTime: Boolean(row.has_unknown_time),
-    birthPlace: birthPlace ?? '',
-    latitude: parseCoord(latStr, 'latitude', rowId) ?? 0,
-    longitude: parseCoord(lngStr, 'longitude', rowId) ?? 0,
+    birthPlace: asRequiredString(row.birth_place),
+    latitude: coerceNumber(row.latitude),
+    longitude: coerceNumber(row.longitude),
     timezone: asOptionalString(row.timezone),
     userChartId: asRequiredString(row.user_chart_id),
     createdAt: asRequiredString(row.created_at),
@@ -1356,66 +975,46 @@ async function mapRelationshipRow(row: Row): Promise<RelationshipChart> {
 }
 
 export async function getRelationshipCharts(
-  userChartId?: string,
+  userChartId: string,
 ): Promise<RelationshipChart[]> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    let query = supabase
-      .from('relationship_charts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_deleted', false)
-      .order('updated_at', { ascending: false });
+  const { data, error } = await supabase
+    .from('relationship_charts')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('user_chart_id', userChartId)
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false });
 
-    if (userChartId) query = query.eq('user_chart_id', userChartId);
-
-    const { data, error } = await query;
-    if (error) throw error;
-    if (!data?.length) return [];
-
-    const charts = await Promise.all((data as Row[]).map(mapRelationshipRow));
-    await refreshLocalCache('relationship charts', async () => {
-      const localDb = await getLocalCache();
-      await Promise.all(charts.map((chart) => localDb.saveRelationshipChart(chart)));
-    });
-    return charts;
-  } catch (error) {
-    return useLocalCacheFallback('relationship charts', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getRelationshipCharts(userChartId);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load relationship charts from Supabase.', error);
+    return [];
   }
+
+  if (!data?.length) return [];
+  return Promise.all((data as Row[]).map(mapRelationshipRow));
 }
 
 export async function getRelationshipChartById(
   id: string,
 ): Promise<RelationshipChart | null> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('relationship_charts')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', userId)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from('relationship_charts')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('id', id)
+    .eq('is_deleted', false)
+    .maybeSingle();
 
-    if (error) throw error;
-    if (!data) return null;
-
-    const chart = await mapRelationshipRow(data as Row);
-    await refreshLocalCache('relationship charts', async () => {
-      const localDb = await getLocalCache();
-      await localDb.saveRelationshipChart(chart);
-    });
-    return chart;
-  } catch (error) {
-    return useLocalCacheFallback('relationship chart', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getRelationshipChartById(id);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load relationship chart from Supabase.', error);
+    return null;
   }
+
+  return data ? mapRelationshipRow(data as Row) : null;
 }
 
 export async function saveRelationshipChart(
@@ -1427,7 +1026,9 @@ export async function saveRelationshipChart(
     {
       id: chart.id,
       user_id: userId,
+      user_chart_id: chart.userChartId,
       name: chart.name,
+      partner_name: chart.name,
       relationship: chart.relationship,
       birth_date: chart.birthDate,
       birth_time: chart.birthTime ?? null,
@@ -1436,8 +1037,7 @@ export async function saveRelationshipChart(
       latitude: chart.latitude,
       longitude: chart.longitude,
       timezone: chart.timezone ?? null,
-      user_chart_id: chart.userChartId,
-      is_deleted: chart.isDeleted ?? false,
+      is_deleted: chart.isDeleted,
       deleted_at: chart.deletedAt ?? null,
       created_at: chart.createdAt,
       updated_at: chart.updatedAt,
@@ -1445,12 +1045,10 @@ export async function saveRelationshipChart(
     { onConflict: 'id' },
   );
 
-  if (error) throw error;
-
-  await refreshLocalCache('relationship charts', async () => {
-    const localDb = await getLocalCache();
-    await localDb.saveRelationshipChart(chart);
-  });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to save relationship chart to Supabase.', error);
+    throw error;
+  }
 }
 
 export async function deleteRelationshipChart(id: string): Promise<void> {
@@ -1463,48 +1061,34 @@ export async function deleteRelationshipChart(id: string): Promise<void> {
     .eq('id', id)
     .eq('user_id', userId);
 
-  if (error) throw error;
-
-  await refreshLocalCache('relationship charts', async () => {
-    const localDb = await getLocalCache();
-    await localDb.deleteRelationshipChart(id);
-  });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to delete relationship chart from Supabase.', error);
+    throw error;
+  }
 }
 
 export async function getRelationshipChartCount(
-  userChartId?: string,
+  userChartId: string,
 ): Promise<number> {
-  try {
-    const userId = await getUserId();
+  const userId = await getUserId();
 
-    let query = supabase
-      .from('relationship_charts')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('is_deleted', false);
+  const { count, error } = await supabase
+    .from('relationship_charts')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('user_chart_id', userChartId)
+    .eq('is_deleted', false);
 
-    if (userChartId) query = query.eq('user_chart_id', userChartId);
-
-    const { count, error } = await query;
-    if (error) throw error;
-
-    return count ?? 0;
-  } catch (error) {
-    return useLocalCacheFallback('relationship chart count', error, async () => {
-      const localDb = await getLocalCache();
-      return localDb.getRelationshipChartCount(userChartId);
-    });
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to count relationship charts from Supabase.', error);
+    return 0;
   }
+
+  return count ?? 0;
 }
 
-// ─── Account cleanup ──────────────────────────────────────────────────────────
-
 export async function clearAccountScopedData(): Promise<void> {
-  try {
-    await AccountScopedAsyncStorage.removeItem(SETTINGS_KEY);
-  } catch {
-    // ignore
-  }
+  // Supabase is the source of truth. No account-scoped local settings cache is used.
 }
 
 // ─── No-op stubs kept for call-site compatibility ─────────────────────────────

@@ -1,5 +1,5 @@
 import { GeneratedInsight, InsightHistoryEntry } from './types/knowledgeEngine';
-import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
+import { getUserPreference, saveUserPreference } from '../storage/userProfileService';
 
 const HISTORY_KEY = 'msky_knowledge_engine_history';
 const MAX_HISTORY = 50;
@@ -9,8 +9,7 @@ const MAX_HISTORY = 50;
  */
 export async function getInsightHistory(): Promise<InsightHistoryEntry[]> {
   try {
-    const raw = await AccountScopedAsyncStorage.getItem(HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
+    return getUserPreference(HISTORY_KEY, []);
   } catch {
     return [];
   }
@@ -30,7 +29,7 @@ export async function recordInsight(insight: GeneratedInsight): Promise<void> {
     };
 
     const newHistory = [entry, ...history].slice(0, MAX_HISTORY);
-    await AccountScopedAsyncStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
+    await saveUserPreference(HISTORY_KEY, newHistory);
   } catch (err) {
     console.error('Failed to record insight history:', err);
   }

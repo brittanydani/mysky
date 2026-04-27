@@ -4,7 +4,7 @@
 // Gentle interventions: rest day prompts, low-mood support,
 // dream sensitivity, and glimmer (positive noticing) prompts.
 
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { getUserPreference, saveUserPreference } from '../services/storage/userProfileService';
 import { logger } from './logger';
 import { toLocalDateString } from './dateUtils';
 
@@ -17,12 +17,12 @@ const REST_PROMPT_KEY = '@mysky:last_rest_prompt';
 /** Check whether the user should see a "rest day" suggestion. */
 export async function shouldSuggestRestDay(): Promise<boolean> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(CONSECUTIVE_DAYS_KEY);
+    const raw = await getUserPreference<string | null>(CONSECUTIVE_DAYS_KEY, null);
     const days = raw ? parseInt(raw, 10) : 0;
     if (days < 7) return false;
 
     // Don't show again if prompted within the last 3 days
-    const lastPrompt = await EncryptedAsyncStorage.getItem(REST_PROMPT_KEY);
+    const lastPrompt = await getUserPreference<string | null>(REST_PROMPT_KEY, null);
     if (lastPrompt) {
       const daysSincePrompt = (Date.now() - new Date(lastPrompt).getTime()) / (1000 * 60 * 60 * 24);
       if (daysSincePrompt < 3) return false;
@@ -37,9 +37,9 @@ export async function shouldSuggestRestDay(): Promise<boolean> {
 /** Record that the rest day prompt was shown/dismissed. */
 export async function recordRestDayPrompt(): Promise<void> {
   try {
-    await EncryptedAsyncStorage.setItem(REST_PROMPT_KEY, new Date().toISOString());
+    await saveUserPreference(REST_PROMPT_KEY, new Date().toISOString());
     // Reset consecutive days counter
-    await EncryptedAsyncStorage.setItem(CONSECUTIVE_DAYS_KEY, '0');
+    await saveUserPreference(CONSECUTIVE_DAYS_KEY, '0');
   } catch (err) {
     logger.error('emotionalSafety: failed to record rest day prompt', err);
   }
@@ -49,11 +49,11 @@ export async function recordRestDayPrompt(): Promise<void> {
 export async function updateConsecutiveLogDays(didLogToday: boolean): Promise<void> {
   try {
     if (didLogToday) {
-      const raw = await EncryptedAsyncStorage.getItem(CONSECUTIVE_DAYS_KEY);
+      const raw = await getUserPreference<string | null>(CONSECUTIVE_DAYS_KEY, null);
       const current = raw ? parseInt(raw, 10) : 0;
-      await EncryptedAsyncStorage.setItem(CONSECUTIVE_DAYS_KEY, String(current + 1));
+      await saveUserPreference(CONSECUTIVE_DAYS_KEY, String(current + 1));
     } else {
-      await EncryptedAsyncStorage.setItem(CONSECUTIVE_DAYS_KEY, '0');
+      await saveUserPreference(CONSECUTIVE_DAYS_KEY, '0');
     }
   } catch (err) {
     logger.error('emotionalSafety: failed to update consecutive log days', err);

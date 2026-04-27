@@ -39,7 +39,7 @@ import { MetallicText } from '../../../components/ui/MetallicText';
 import { MetallicIcon } from '../../../components/ui/MetallicIcon';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserPreference, saveUserPreference, deleteUserPreference } from '../../../services/storage/userProfileService';
 import { type AppTheme } from '../../../constants/theme';
 import { useThemedStyles } from '../../../context/ThemeContext';
 
@@ -215,21 +215,21 @@ export default function VisualCalibration() {
   useEffect(() => {
     (async () => {
       try {
-        let raw = await AsyncStorage.getItem(STORAGE_KEY);
+        let raw = await getUserPreference<string | null>(STORAGE_KEY, null);
 
         // Migrate from old single-profile keys
         if (!raw) {
-          let legacyRaw = await AsyncStorage.getItem(LEGACY_STORAGE_KEY);
+          let legacyRaw = await getUserPreference<string | null>(LEGACY_STORAGE_KEY, null);
           if (!legacyRaw) {
-            legacyRaw = await AsyncStorage.getItem(LEGACY_SOMATIC_KEY);
+            legacyRaw = await getUserPreference<string | null>(LEGACY_SOMATIC_KEY, null);
           }
           if (legacyRaw) {
             const oldProfile: CalibrationProfile = JSON.parse(legacyRaw);
             const migrated = getDefaultProfiles();
             migrated.steady_flow = oldProfile; // map old single profile to Steady Flow
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-            await AsyncStorage.removeItem(LEGACY_STORAGE_KEY);
-            await AsyncStorage.removeItem(LEGACY_SOMATIC_KEY);
+            await saveUserPreference(STORAGE_KEY, JSON.stringify(migrated));
+            await deleteUserPreference(LEGACY_STORAGE_KEY);
+            await deleteUserPreference(LEGACY_SOMATIC_KEY);
             raw = JSON.stringify(migrated);
           }
         }
@@ -308,7 +308,7 @@ export default function VisualCalibration() {
   // ── Save button handler ──
   const handleSave = useCallback(async () => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(allProfiles));
+      await saveUserPreference(STORAGE_KEY, JSON.stringify(allProfiles));
       setHasUnsavedChanges(false);
       setShowSavedBanner(true);
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}

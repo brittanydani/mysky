@@ -24,7 +24,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { getSelfKnowledgeProfile } from '../services/storage/userProfileService';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -154,10 +154,10 @@ export default function InnerWorldScreen() {
           const refDate = getReflectionDate();
           const [valuesRaw, archetypesRaw, cognitiveRaw, intelligenceRaw, sealStatus, reflData, currentStreak] =
             await Promise.all([
-              EncryptedAsyncStorage.getItem('@mysky:core_values'),
-              EncryptedAsyncStorage.getItem('@mysky:archetype_profile'),
-              EncryptedAsyncStorage.getItem('@mysky:cognitive_style'),
-              EncryptedAsyncStorage.getItem('@mysky:intelligence_profile'),
+              getSelfKnowledgeProfile('core_values', null),
+              getSelfKnowledgeProfile('archetype_profile', null),
+              getSelfKnowledgeProfile('cognitive_style', null),
+              getSelfKnowledgeProfile('intelligence_profile', null),
               getCategorySealStatus(refDate),
               loadReflections(),
               getCurrentStreak(),
@@ -172,7 +172,7 @@ export default function InnerWorldScreen() {
 
           setCategorySealed(sealStatus);
           setStreak(currentStreak);
-          setTotalDays(new Set(reflData.answers.map(a => a.date)).size);
+          setTotalDays(new Set(reflData.answers.map((a: { date: string }) => a.date)).size);
 
           getSomaticReflectionCorrelations().then(setSomaticCorrelations).catch((e) => logger.warn('[InnerWorld] Somatic correlations failed:', e));
         } catch (e) { logger.warn('[InnerWorld] Failed to load progress', e); }

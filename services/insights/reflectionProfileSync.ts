@@ -10,7 +10,7 @@
  * daily questions meaningfully influence the profile screens over time.
  */
 
-import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
+import { getSelfKnowledgeProfile, saveSelfKnowledgeProfile } from '../storage/userProfileService';
 import { loadSomaticEntries } from '../storage/selfKnowledgeStore';
 import { logger } from '../../utils/logger';
 import {
@@ -120,8 +120,7 @@ export async function syncArchetypeProfileFromReflections(
     const answers = await getCombinedReflectionAnswers('archetypes', options.includeDrafts);
     if (answers.length === 0) return;
 
-    const raw = await AccountScopedAsyncStorage.getItem('@mysky:archetype_profile');
-    const existing = raw ? JSON.parse(raw) : null;
+    const existing = await getSelfKnowledgeProfile<any | null>('archetype_profile', null);
     const quizScores = extractQuizScores(existing);
     const totalQuizVotes = Object.values(quizScores).reduce((a, b) => a + b, 0);
     const fallbackArchetype: ArchetypeKey = existing?.dominant ?? (totalQuizVotes > 0 ? getDominantArchetype(quizScores) : 'hero');
@@ -167,7 +166,7 @@ export async function syncArchetypeProfileFromReflections(
       completedAt: existing?.completedAt ?? new Date().toISOString(),
     };
 
-    await AccountScopedAsyncStorage.setItem('@mysky:archetype_profile', JSON.stringify(updated));
+    await saveSelfKnowledgeProfile('archetype_profile', updated);
   } catch (e) {
     logger.warn('[ReflectionSync] syncArchetypeProfile failed:', e);
   }
@@ -270,11 +269,10 @@ export async function syncCognitiveStyleFromReflections(
     const answers = await getCombinedReflectionAnswers('cognitive', options.includeDrafts);
     if (answers.length === 0) return;
 
-    const raw = await AccountScopedAsyncStorage.getItem('@mysky:cognitive_style');
-    const existing: Partial<Record<DimensionKey, number>> & {
+    const existing = await getSelfKnowledgeProfile<Partial<Record<DimensionKey, number>> & {
       manualScores?: Partial<Record<DimensionKey, number>>;
       reflectionScores?: Partial<Record<DimensionKey, number>>;
-    } = raw ? JSON.parse(raw) : {};
+    }>('cognitive_style', {});
 
     const manualScores: Partial<Record<DimensionKey, number>> = existing.manualScores ?? {
       scope: existing.scope,
@@ -322,12 +320,12 @@ export async function syncCognitiveStyleFromReflections(
       }
     }
 
-    await AccountScopedAsyncStorage.setItem('@mysky:cognitive_style', JSON.stringify({
+    await saveSelfKnowledgeProfile('cognitive_style', {
       ...existing,
       ...merged,
       manualScores,
       reflectionScores: suggested,
-    }));
+    });
   } catch (e) {
     logger.warn('[ReflectionSync] syncCognitiveStyle failed:', e);
   }
@@ -421,10 +419,10 @@ export async function syncCoreValuesFromReflections(
     if (indicatedValues.size === 0) return;
 
     // Load existing selections
-    const raw = await AccountScopedAsyncStorage.getItem('@mysky:core_values');
-    const existing: { selected: string[]; topFive: string[] } = raw
-      ? JSON.parse(raw)
-      : { selected: [], topFive: [] };
+    const existing = await getSelfKnowledgeProfile<{ selected: string[]; topFive: string[] }>(
+      'core_values',
+      { selected: [], topFive: [] },
+    );
 
     const newSelected = [...existing.selected];
     let changed = false;
@@ -437,10 +435,10 @@ export async function syncCoreValuesFromReflections(
 
     if (!changed) return;
 
-    await AccountScopedAsyncStorage.setItem(
-      '@mysky:core_values',
-      JSON.stringify({ selected: newSelected, topFive: existing.topFive }),
-    );
+    await saveSelfKnowledgeProfile('core_values', {
+      selected: newSelected,
+      topFive: existing.topFive,
+    });
   } catch (e) {
     logger.warn('[ReflectionSync] syncCoreValues failed:', e);
   }
@@ -580,8 +578,7 @@ export async function syncIntelligenceFromReflections(
     const answers = await getCombinedReflectionAnswers('intelligence', options.includeDrafts);
     if (answers.length === 0) return;
 
-    const raw = await AccountScopedAsyncStorage.getItem('@mysky:intelligence_profile');
-    const existing: IntelligenceProfile = raw ? JSON.parse(raw) : {};
+    const existing = await getSelfKnowledgeProfile<IntelligenceProfile>('intelligence_profile', {});
 
     const manualScores: Partial<Record<IntelligenceDimension, number>> =
       existing.manualScores ?? {};
@@ -626,12 +623,12 @@ export async function syncIntelligenceFromReflections(
       }
     }
 
-    await AccountScopedAsyncStorage.setItem('@mysky:intelligence_profile', JSON.stringify({
+    await saveSelfKnowledgeProfile('intelligence_profile', {
       ...existing,
       ...merged,
       manualScores,
       reflectionScores: suggested,
-    }));
+    });
   } catch (e) {
     logger.warn('[ReflectionSync] syncIntelligenceProfile failed:', e);
   }

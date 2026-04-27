@@ -22,7 +22,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { AccountScopedAsyncStorage } from '../services/storage/accountScopedStorage';
+import { getSelfKnowledgeProfile, saveSelfKnowledgeProfile, deleteSelfKnowledgeProfile } from '../services/storage/userProfileService';
 import * as Haptics from 'expo-haptics';
 import { syncArchetypeProfileFromReflections } from '../services/insights/reflectionProfileSync';
 
@@ -184,14 +184,11 @@ export default function ArchetypesScreen() {
     useCallback(() => {
       syncArchetypeProfileFromReflections({ includeDrafts: true })
         .catch((e) => logger.warn('[Archetypes] Sync failed:', e))
-        .then(() => AccountScopedAsyncStorage.getItem(STORAGE_KEY))
-        .then((raw) => {
-          if (raw) {
-            try {
-              const profile: SavedProfile = JSON.parse(raw);
-              setSavedProfile(profile);
-              setShowResult(true);
-            } catch {}
+        .then(() => getSelfKnowledgeProfile<SavedProfile | null>('archetype_profile', null))
+        .then((profile) => {
+          if (profile) {
+            setSavedProfile(profile);
+            setShowResult(true);
           }
         });
     }, []),
@@ -208,7 +205,7 @@ export default function ArchetypesScreen() {
     const dominant = (Object.keys(scores) as ArchetypeKey[]).reduce((a, b) => (scores[a] >= scores[b] ? a : b));
     const profile: SavedProfile = { dominant, scores, quizScores: scores, completedAt: new Date().toISOString() };
     try {
-      await AccountScopedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      await saveSelfKnowledgeProfile('archetype_profile', profile);
       setSavedProfile(profile);
       setShowResult(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -221,7 +218,7 @@ export default function ArchetypesScreen() {
     setAnswers({});
     setShowResult(false);
     setSavedProfile(null);
-    AccountScopedAsyncStorage.removeItem(STORAGE_KEY);
+    deleteSelfKnowledgeProfile('archetype_profile').catch((e) => logger.warn('[Archetypes] Delete failed:', e));
   };
 
   const dominant = savedProfile ? ARCHETYPES[savedProfile.dominant] : null;

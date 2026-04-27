@@ -15,7 +15,7 @@
  *   - Lapse re-engagement after 7+ days absence
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserPreference, saveUserPreference, deleteUserPreference } from '../storage/userProfileService';
 import { supabaseDb } from '../storage/supabaseDb';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { logger } from '../../utils/logger';
@@ -114,11 +114,11 @@ const STREAK_MILESTONES = [7, 14, 30, 60, 90, 180, 365];
  */
 export async function cancelStreakAtRiskNotification(): Promise<void> {
   try {
-    const id = await AsyncStorage.getItem(STREAK_AT_RISK_NOTIF_ID_KEY);
+    const id = await getUserPreference<string | null>(STREAK_AT_RISK_NOTIF_ID_KEY, null);
     if (id) {
       const Notifications = await import('expo-notifications');
       await Notifications.cancelScheduledNotificationAsync(id);
-      await AsyncStorage.removeItem(STREAK_AT_RISK_NOTIF_ID_KEY);
+      await deleteUserPreference(STREAK_AT_RISK_NOTIF_ID_KEY);
     }
   } catch {
     // ignore
@@ -130,11 +130,11 @@ export async function cancelStreakAtRiskNotification(): Promise<void> {
  */
 export async function cancelReengagementNotification(): Promise<void> {
   try {
-    const id = await AsyncStorage.getItem(REENGAGEMENT_NOTIF_ID_KEY);
+    const id = await getUserPreference<string | null>(REENGAGEMENT_NOTIF_ID_KEY, null);
     if (id) {
       const Notifications = await import('expo-notifications');
       await Notifications.cancelScheduledNotificationAsync(id);
-      await AsyncStorage.removeItem(REENGAGEMENT_NOTIF_ID_KEY);
+      await deleteUserPreference(REENGAGEMENT_NOTIF_ID_KEY);
     }
   } catch {
     // ignore
@@ -211,7 +211,7 @@ async function scheduleStreakAndReengagementNotifications(
             date: tonight9pm,
           },
         });
-        await AsyncStorage.setItem(STREAK_AT_RISK_NOTIF_ID_KEY, id);
+        await saveUserPreference(STREAK_AT_RISK_NOTIF_ID_KEY, id);
         logger.info('[InsightNotif] Streak-at-risk notification scheduled for 9 PM');
       }
       return;
@@ -231,7 +231,7 @@ async function scheduleStreakAndReengagementNotifications(
         },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: tomorrow10am },
       });
-      await AsyncStorage.setItem(REENGAGEMENT_NOTIF_ID_KEY, id);
+      await saveUserPreference(REENGAGEMENT_NOTIF_ID_KEY, id);
       logger.info('[InsightNotif] Short re-engagement notification scheduled');
       return;
     }
@@ -250,7 +250,7 @@ async function scheduleStreakAndReengagementNotifications(
         },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: tomorrow10am },
       });
-      await AsyncStorage.setItem(REENGAGEMENT_NOTIF_ID_KEY, id);
+      await saveUserPreference(REENGAGEMENT_NOTIF_ID_KEY, id);
       logger.info('[InsightNotif] Long re-engagement notification scheduled');
     }
   } catch (err) {
@@ -269,7 +269,7 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
 
   try {
     const today = toLocalDateString(new Date());
-    const lastDate = await AsyncStorage.getItem(LAST_INSIGHT_NOTIF_KEY);
+    const lastDate = await getUserPreference<string | null>(LAST_INSIGHT_NOTIF_KEY, null);
     if (lastDate === today) return; // Already scheduled today
 
     const [checkIns, sleepEntries] = await Promise.all([
@@ -290,10 +290,10 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
       else break;
     }
     if (STREAK_MILESTONES.includes(currentStreak)) {
-      const lastMilestoneRaw = await AsyncStorage.getItem(LAST_STREAK_MILESTONE_KEY);
+      const lastMilestoneRaw = await getUserPreference<string | null>(LAST_STREAK_MILESTONE_KEY, null);
       const lastMilestone = lastMilestoneRaw ? Number(lastMilestoneRaw) : 0;
       if (lastMilestone !== currentStreak) {
-        await AsyncStorage.setItem(LAST_STREAK_MILESTONE_KEY, String(currentStreak));
+        await saveUserPreference(LAST_STREAK_MILESTONE_KEY, String(currentStreak));
         const Notifications = await import('expo-notifications');
         await Notifications.scheduleNotificationAsync({
           content: {
@@ -304,7 +304,7 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
           },
           trigger: { seconds: 10, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
         });
-        await AsyncStorage.setItem(LAST_INSIGHT_NOTIF_KEY, today);
+        await saveUserPreference(LAST_INSIGHT_NOTIF_KEY, today);
         logger.info('[InsightNotif] Streak milestone notification scheduled:', currentStreak);
         return;
       }
@@ -312,9 +312,9 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
 
     // One-time "first pattern found" notification after 7+ unique check-in days
     const uniqueDays = new Set(checkIns.map((c) => c.date)).size;
-    const alreadySentFirstPattern = await AsyncStorage.getItem(FIRST_PATTERN_NOTIF_KEY);
+    const alreadySentFirstPattern = await getUserPreference<string | null>(FIRST_PATTERN_NOTIF_KEY, null);
     if (!alreadySentFirstPattern && uniqueDays >= 7) {
-      await AsyncStorage.setItem(FIRST_PATTERN_NOTIF_KEY, 'true');
+      await saveUserPreference(FIRST_PATTERN_NOTIF_KEY, 'true');
       const Notifications = await import('expo-notifications');
       await Notifications.scheduleNotificationAsync({
         content: {
@@ -325,7 +325,7 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
         },
         trigger: { seconds: 30, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
       });
-      await AsyncStorage.setItem(LAST_INSIGHT_NOTIF_KEY, today);
+      await saveUserPreference(LAST_INSIGHT_NOTIF_KEY, today);
       return;
     }
 
@@ -355,7 +355,7 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
       },
     });
 
-    await AsyncStorage.setItem(LAST_INSIGHT_NOTIF_KEY, today);
+    await saveUserPreference(LAST_INSIGHT_NOTIF_KEY, today);
     logger.info('[InsightNotif] Scheduled:', insight.title);
   } catch (err) {
     logger.error('[InsightNotif] scheduleInsightNotification failed:', err);

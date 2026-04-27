@@ -8,7 +8,7 @@
 // 3. Implemented "Tactile Hardware" logic for selection pills (Recessed vs. Raised).
 // 4. Anchored profile synthesis in Midnight Slate for physical presence.
 // 5. Integrated "Velvet Glass" 1px directional light-catch borders globally.
-// unique intelligence fingerprint. Results stored locally via AccountScopedAsyncStorage.
+// unique intelligence fingerprint. Results are stored in Supabase.
 
 import React, { useCallback, useState } from 'react';
 import {
@@ -24,7 +24,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { AccountScopedAsyncStorage } from '../services/storage/accountScopedStorage';
+import { getSelfKnowledgeProfile, saveSelfKnowledgeProfile } from '../services/storage/userProfileService';
 import * as Haptics from 'expo-haptics';
 import { Canvas, Circle, Group, Path, Skia, BlurMask, Shadow } from '@shopify/react-native-skia';
 
@@ -346,19 +346,16 @@ export default function IntelligenceProfileScreen() {
     useCallback(() => {
       syncIntelligenceFromReflections({ includeDrafts: true })
         .catch((e) => logger.warn('[IntelligenceProfile] Sync failed:', e))
-        .then(() => AccountScopedAsyncStorage.getItem(STORAGE_KEY))
-        .then((raw) => {
-          if (raw) {
-            try {
-              const parsed = JSON.parse(raw) as Record<string, unknown>;
-              const loadedScores: Scores = {};
-              for (const dim of DIMENSIONS) {
-                const val = parsed[dim.id];
-                if (typeof val === 'number') loadedScores[dim.id] = val;
-              }
-              setScores(loadedScores);
-              setSaved(true);
-            } catch { /* ignore */ }
+        .then(() => getSelfKnowledgeProfile<Record<string, unknown>>('intelligence_profile', {}))
+        .then((parsed) => {
+          const loadedScores: Scores = {};
+          for (const dim of DIMENSIONS) {
+            const val = parsed[dim.id];
+            if (typeof val === 'number') loadedScores[dim.id] = val;
+          }
+          setScores(loadedScores);
+          if (Object.keys(loadedScores).length > 0) {
+            setSaved(true);
           }
         })
         .catch((e) => logger.warn('[IntelligenceProfile] Load failed:', e));
@@ -379,13 +376,12 @@ export default function IntelligenceProfileScreen() {
 
   const handleSave = async () => {
     try {
-      const raw = await AccountScopedAsyncStorage.getItem(STORAGE_KEY);
-      const existing: Record<string, unknown> = raw ? JSON.parse(raw) : {};
-      await AccountScopedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
+      const existing = await getSelfKnowledgeProfile<Record<string, unknown>>('intelligence_profile', {});
+      await saveSelfKnowledgeProfile('intelligence_profile', {
         ...existing,
         ...scores,
         manualScores: scores,
-      }));
+      });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setSaved(true);
     } catch {

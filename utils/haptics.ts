@@ -5,7 +5,7 @@
  * silent error suppression — haptics failing should never crash the app
  * or produce unhandled promise rejections in production.
  *
- * Haptics respect the user's `pref_haptic` AsyncStorage preference.
+ * Haptics respect the user's `pref_haptic` Supabase preference.
  * Call `initHapticPreference()` once on app startup to seed the cache,
  * and `setHapticsEnabled()` whenever the user changes the setting.
  *
@@ -14,7 +14,7 @@
  */
 
 import type * as ExpoHaptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserPreference } from '../services/storage/userProfileService';
 
 // ── In-memory cache — defaults to enabled until loaded ───────────────────────
 let _hapticsEnabled = true;
@@ -55,7 +55,7 @@ function getHapticsModule(): typeof ExpoHaptics | null {
 /** Load the persisted preference from storage. Call once at app startup. */
 export async function initHapticPreference(): Promise<void> {
   try {
-    const stored = await AsyncStorage.getItem('pref_haptic');
+    const stored = await getUserPreference<string | null>('pref_haptic', null);
     if (stored !== null) _hapticsEnabled = stored === '1';
   } catch {
     // Retain default (true) on failure

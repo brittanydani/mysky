@@ -38,7 +38,7 @@ import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { MetallicIcon } from './ui/MetallicIcon';
 import { MetallicText } from './ui/MetallicText';
-import { AccountScopedAsyncStorage } from '../services/storage/accountScopedStorage';
+import { saveDisplayName } from '../services/storage/userProfileService';
 import { LegalOverlay } from './LegalOverlay';
 
 import { BirthData, HouseSystem, NatalChart } from '../services/astrology/types';
@@ -46,7 +46,6 @@ import { AstrologyCalculator } from '../services/astrology/calculator';
 import { InputValidator } from '../services/astrology/inputValidator';
 import { supabaseDb } from '../services/storage/supabaseDb';
 import { BackupService } from '../services/storage/backupService';
-import { IdentityVault } from '../utils/IdentityVault';
 import { toLocalDateString } from '../utils/dateUtils';
 import { useAuth } from '../context/AuthContext';
 import { logger } from     '../utils/logger';
@@ -505,7 +504,7 @@ export default function OnboardingModal({
 
     try {
       if (userName.trim()) {
-        await AccountScopedAsyncStorage.setItem('msky_user_name', userName.trim());
+        await saveDisplayName(userName.trim());
       }
 
       const birthData: BirthData = {
@@ -545,22 +544,6 @@ export default function OnboardingModal({
       };
 
       await supabaseDb.saveChart(savedChart);
-
-      // Seal the sensitive birth data into the hardware keychain — mirrors app/onboarding/birth.tsx
-      IdentityVault.sealIdentity({
-        name: userName.trim() || 'My Chart',
-        birthDate: birthData.date,
-        birthTime: birthData.time,
-        hasUnknownTime: birthData.hasUnknownTime,
-        locationCity: birthData.place,
-        locationLat: birthData.latitude,
-        locationLng: birthData.longitude,
-        timezone: chart.birthData.timezone,
-      }).then((sealed) => {
-        if (!sealed) {
-          logger.error('[OnboardingModal] IdentityVault seal failed');
-        }
-      });
 
         timeoutRef.current = setTimeout(async () => {
           await completeChart(chart);
@@ -650,21 +633,6 @@ export default function OnboardingModal({
           timezone: charts[0].timezone,
         };
         const chart = AstrologyCalculator.generateNatalChart(birthDataFromChart);
-
-        IdentityVault.sealIdentity({
-          name: charts[0].name ?? 'My Chart',
-          birthDate: charts[0].birthDate,
-          birthTime: charts[0].birthTime,
-          hasUnknownTime: charts[0].hasUnknownTime,
-          locationCity: charts[0].birthPlace,
-          locationLat: charts[0].latitude,
-          locationLng: charts[0].longitude,
-          timezone: charts[0].timezone,
-        }).then((sealed) => {
-          if (!sealed) {
-            logger.error('[OnboardingModal] IdentityVault seal failed');
-          }
-        });
 
         timeoutRef.current = setTimeout(async () => {
           await completeChart(chart);

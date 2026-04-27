@@ -4,7 +4,7 @@
 // Controls which features are visible in v1 and manages
 // time-based unlocking of deeper tools.
 
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { getUserPreference, saveUserPreference } from '../services/storage/userProfileService';
 import { logger } from './logger';
 
 // ── V1 Hidden Features ──────────────────────────────────────────────────────
@@ -39,9 +39,9 @@ const FIRST_USE_KEY = '@mysky:first_use_date';
 /** Record the date the user first opened the app (idempotent). */
 export async function recordFirstUseDate(): Promise<void> {
   try {
-    const existing = await EncryptedAsyncStorage.getItem(FIRST_USE_KEY);
+    const existing = await getUserPreference<string | null>(FIRST_USE_KEY, null);
     if (!existing) {
-      await EncryptedAsyncStorage.setItem(FIRST_USE_KEY, new Date().toISOString());
+      await saveUserPreference(FIRST_USE_KEY, new Date().toISOString());
     }
   } catch (err) {
     logger.error('progressiveDisclosure: failed to record first use date', err);
@@ -51,7 +51,7 @@ export async function recordFirstUseDate(): Promise<void> {
 /** Returns the number of days since the user first opened the app. */
 export async function getDaysSinceFirstUse(): Promise<number> {
   try {
-    const stored = await EncryptedAsyncStorage.getItem(FIRST_USE_KEY);
+    const stored = await getUserPreference<string | null>(FIRST_USE_KEY, null);
     if (!stored) return 0;
     const firstUse = new Date(stored);
     const now = new Date();
@@ -85,7 +85,7 @@ const PREFS_KEY = '@mysky:feature_preferences';
 
 export async function saveFeaturePreferences(selectedIds: string[]): Promise<void> {
   try {
-    await EncryptedAsyncStorage.setItem(PREFS_KEY, JSON.stringify(selectedIds));
+    await saveUserPreference(PREFS_KEY, selectedIds);
   } catch (err) {
     logger.error('progressiveDisclosure: failed to save preferences', err);
   }
@@ -93,9 +93,9 @@ export async function saveFeaturePreferences(selectedIds: string[]): Promise<voi
 
 export async function loadFeaturePreferences(): Promise<string[]> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(PREFS_KEY);
+    const raw = await getUserPreference<string[] | null>(PREFS_KEY, null);
     if (!raw) return [];
-    return JSON.parse(raw) as string[];
+    return raw ?? [];
   } catch {
     return [];
   }

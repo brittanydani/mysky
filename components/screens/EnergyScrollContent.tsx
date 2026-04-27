@@ -27,7 +27,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import { type AppTheme } from '../../constants/theme';
 import SkiaMetallicPill from '../ui/SkiaMetallicPill';
 import { supabaseDb } from '../../services/storage/supabaseDb';
-import { AccountScopedAsyncStorage } from '../../services/storage/accountScopedStorage';
+import { getDisplayName } from '../../services/storage/userProfileService';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { usePremium } from '../../context/PremiumContext';
@@ -133,7 +133,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
           }
           setHasChart(true);
           const saved = charts[0];
-          const storedName = await AccountScopedAsyncStorage.getItem('msky_user_name').catch(() => null);
+          const storedName = await getDisplayName().catch(() => null);
           setUserName(storedName?.trim() || saved?.name?.split(' ')[0] || '');
           const birthData = {
             date: saved.birthDate,

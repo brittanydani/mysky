@@ -8,13 +8,12 @@
  * - Demo data is seeded once and then read from Supabase
  * - No repeated "restore local demo content" loop
  * - No encrypted-field repair path
- * - AsyncStorage only used for small control flags, not canonical demo data
+ * - Supabase preferences are used for small control flags, not canonical demo data
  */
 
 import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
 import * as Crypto from 'expo-crypto';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AccountScopedAsyncStorage } from './accountScopedStorage';
+import { deleteUserPreference, getUserPreference, saveSelfKnowledgeProfile, saveUserPreference } from './userProfileService';
 import {
   addRelationshipPattern,
   addSomaticEntry,
@@ -306,9 +305,9 @@ export const DemoAccountBSeedService = {
       throw new Error(dailyLogError.message || 'Failed to upload demo daily logs.');
     }
 
-    await AsyncStorage.setItem(SEED_FLAG_KEY, 'true');
-    await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
-    await AsyncStorage.removeItem(REPAIR_ATTEMPT_KEY);
+    await saveUserPreference(SEED_FLAG_KEY, 'true');
+    await saveUserPreference(DAILY_SEED_KEY, isoDate(new Date()));
+    await deleteUserPreference(REPAIR_ATTEMPT_KEY);
 
     logger.info(
       `[DemoSeed] Uploaded full demo dataset: chart, journals, sleep, check-ins, settings, and ${dailyLogRows.length} daily logs.`,
@@ -319,14 +318,14 @@ export const DemoAccountBSeedService = {
     if (!DemoAccountBSeedService.isDemoAccount(email)) return;
 
     try {
-      const alreadySeeded = await AsyncStorage.getItem(SEED_FLAG_KEY);
+      const alreadySeeded = await getUserPreference<string | null>(SEED_FLAG_KEY, null);
 
       if (alreadySeeded !== 'true') {
         logger.info('[DemoSeed] Seeding Account B demo data…');
         await DemoAccountBSeedService._seed();
-        await AsyncStorage.setItem(SEED_FLAG_KEY, 'true');
-        await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
-        await AsyncStorage.removeItem(REPAIR_ATTEMPT_KEY);
+        await saveUserPreference(SEED_FLAG_KEY, 'true');
+        await saveUserPreference(DAILY_SEED_KEY, isoDate(new Date()));
+        await deleteUserPreference(REPAIR_ATTEMPT_KEY);
         logger.info('[DemoSeed] Account B demo seed complete.');
         return;
       }
@@ -357,8 +356,8 @@ export const DemoAccountBSeedService = {
     await DemoAccountBSeedService._seedHistoricalEntries();
     await DemoAccountBSeedService._seedSettings();
     await DemoAccountBSeedService._seedSelfKnowledgeAndSync();
-    await AsyncStorage.setItem(SEED_FLAG_KEY, 'true');
-    await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
+    await saveUserPreference(SEED_FLAG_KEY, 'true');
+    await saveUserPreference(DAILY_SEED_KEY, isoDate(new Date()));
   },
 
   async _ensureChart(): Promise<void> {
@@ -546,25 +545,13 @@ export const DemoAccountBSeedService = {
       await addRelationshipPattern(entry);
     }
 
-    await AccountScopedAsyncStorage.setItem(
-      '@mysky:core_values',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.coreValues),
-    );
+    await saveSelfKnowledgeProfile('core_values', ACCOUNT_B_DEMO_SEED.coreValues);
 
-    await AccountScopedAsyncStorage.setItem(
-      'mysky_custom_journal_tags',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.customJournalTags),
-    );
+    await saveUserPreference('mysky_custom_journal_tags', ACCOUNT_B_DEMO_SEED.customJournalTags);
 
-    await AccountScopedAsyncStorage.setItem(
-      '@mysky:archetype_profile',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.archetypeProfile),
-    );
+    await saveSelfKnowledgeProfile('archetype_profile', ACCOUNT_B_DEMO_SEED.archetypeProfile);
 
-    await AccountScopedAsyncStorage.setItem(
-      '@mysky:cognitive_style',
-      JSON.stringify(ACCOUNT_B_DEMO_SEED.cognitiveStyle),
-    );
+    await saveSelfKnowledgeProfile('cognitive_style', ACCOUNT_B_DEMO_SEED.cognitiveStyle);
     for (const rel of ACCOUNT_B_DEMO_SEED.relationshipCharts) {
       await supabaseDb.saveRelationshipChart({
         id: stableUuidFromString(
@@ -603,11 +590,11 @@ export const DemoAccountBSeedService = {
     const existingCharts = (await supabaseDb.getCharts()) as ExistingChart[];
 
     if (existingCharts.length > 0) {
-      await AsyncStorage.removeItem(REPAIR_ATTEMPT_KEY);
+      await deleteUserPreference(REPAIR_ATTEMPT_KEY);
       return;
     }
 
-    const alreadyTriedRepair = await AsyncStorage.getItem(REPAIR_ATTEMPT_KEY);
+    const alreadyTriedRepair = await getUserPreference<string | null>(REPAIR_ATTEMPT_KEY, null);
     if (alreadyTriedRepair === 'true') {
       logger.warn(
         '[DemoSeed] Demo chart still missing after one repair attempt; skipping reseed to avoid loop.',
@@ -616,7 +603,7 @@ export const DemoAccountBSeedService = {
     }
 
     logger.warn('[DemoSeed] Demo chart missing. Attempting one repair reseed.');
-    await AsyncStorage.setItem(REPAIR_ATTEMPT_KEY, 'true');
+    await saveUserPreference(REPAIR_ATTEMPT_KEY, 'true');
     await DemoAccountBSeedService._seed();
   },
 
@@ -625,7 +612,7 @@ export const DemoAccountBSeedService = {
     if (!charts.length) return;
 
     const chartId = charts[0].id;
-    const lastStr = await AsyncStorage.getItem(DAILY_SEED_KEY);
+    const lastStr = await getUserPreference<string | null>(DAILY_SEED_KEY, null);
     const today = isoDate(new Date());
 
     if (lastStr === today) return;
@@ -693,7 +680,7 @@ export const DemoAccountBSeedService = {
       updatedAt: new Date(`${today}T19:00:00.000Z`).toISOString(),
     });
 
-    await AsyncStorage.setItem(DAILY_SEED_KEY, today);
+    await saveUserPreference(DAILY_SEED_KEY, today);
   },
 
   _journalMoodFromScore(score: number): 'calm' | 'soft' | 'okay' | 'heavy' | 'stormy' {

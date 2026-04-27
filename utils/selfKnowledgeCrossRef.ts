@@ -2,7 +2,7 @@
  * Self-Knowledge Cross-Reference Engine
  *
  * Pure functions — no I/O, no side effects.
- * Takes a SelfKnowledgeContext (AsyncStorage profile data) + raw check-ins
+ * Takes a SelfKnowledgeContext (Supabase profile data) + raw check-ins
  * (behavioral data) and returns CrossRefInsight[] — personalized observations
  * that connect what the user knows about themselves to how they actually show up.
  *

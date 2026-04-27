@@ -9,7 +9,7 @@ import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-na
 import Constants from 'expo-constants';
 
 import { revenueCatService } from '../services/premium/revenuecat';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { getUserPreference } from '../services/storage/userProfileService';
 import { DemoSeedService } from '../services/storage/demoAccountBSeedService';
 import { logger } from '../utils/logger';
 import { useAuth } from './AuthContext';
@@ -57,7 +57,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      return (await EncryptedAsyncStorage.getItem(DEMO_PREMIUM_KEY)) === 'true';
+      return await getUserPreference<boolean>(DEMO_PREMIUM_KEY, false);
     } catch (e) {
       logger.error('[PremiumContext] demo premium override lookup failed:', e);
       return false;

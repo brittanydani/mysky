@@ -28,7 +28,6 @@ import { useCircadianStore } from '../store/circadianStore';
 import { useCorrelationStore } from '../store/correlationStore';
 import { useCheckInStore } from '../store/checkInStore';
 import * as Haptics from '../utils/haptics';
-import { IdentityVault } from '../utils/IdentityVault';
 
 interface AuthContextValue {
   session: Session | null;
@@ -43,10 +42,6 @@ const demoLastSyncByKey = new Map<string, number>();
 let demoSyncInFlight: Promise<void> | null = null;
 let demoSyncedForKey: string | null = null;
 
-async function loadLocalDb() {
-  const mod = await import('../services/storage/localDb');
-  return mod.localDb;
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -259,18 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useCorrelationStore.getState().clearCache();
     useCheckInStore.getState().resetStatus();
 
-    try {
-      const localDb = await loadLocalDb();
-      await localDb.clearSyncQueue();
-    } catch (e) {
-      logger.error('[AuthContext] Failed to clear sync queue during sign-out:', e);
-    }
 
-    try {
-      await IdentityVault.destroyIdentity();
-    } catch (e) {
-      logger.error('[AuthContext] Failed to destroy IdentityVault during sign-out:', e);
-    }
 
     demoSyncedForKey = null;
     demoLastSyncByKey.clear();
