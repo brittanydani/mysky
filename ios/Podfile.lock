@@ -264,13 +264,9 @@ PODS:
     - Yoga
   - ExpoPrint (15.0.8):
     - ExpoModulesCore
-  - ExpoSecureStore (15.0.8):
-    - ExpoModulesCore
   - ExpoSharing (14.0.8):
     - ExpoModulesCore
   - ExpoSplashScreen (31.0.13):
-    - ExpoModulesCore
-  - ExpoSQLite (16.0.10):
     - ExpoModulesCore
   - ExpoStoreReview (9.0.9):
     - ExpoModulesCore
@@ -2540,10 +2536,8 @@ DEPENDENCIES:
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoPrint (from `../node_modules/expo-print/ios`)
-  - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - ExpoSharing (from `../node_modules/expo-sharing/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
-  - ExpoSQLite (from `../node_modules/expo-sqlite/ios`)
   - ExpoStoreReview (from `../node_modules/expo-store-review/ios`)
   - ExpoSystemUI (from `../node_modules/expo-system-ui/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
@@ -2702,14 +2696,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoPrint:
     :path: "../node_modules/expo-print/ios"
-  ExpoSecureStore:
-    :path: "../node_modules/expo-secure-store/ios"
   ExpoSharing:
     :path: "../node_modules/expo-sharing/ios"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
-  ExpoSQLite:
-    :path: "../node_modules/expo-sqlite/ios"
   ExpoStoreReview:
     :path: "../node_modules/expo-store-review/ios"
   ExpoSystemUI:
@@ -2915,10 +2905,8 @@ SPEC CHECKSUMS:
   ExpoLinking: 8f0aaf69aa56f832913030503b6263dc6f647f37
   ExpoModulesCore: f3da4f1ab5a8375d0beafab763739dbee8446583
   ExpoPrint: 813bfa965eda2ecc4b1cdc61612c820e239c382a
-  ExpoSecureStore: d32f751874a2ceb5aaeebeb3578e165c1ba2b24a
   ExpoSharing: 0d983394ed4a80334bab5a0d5384f75710feb7e8
   ExpoSplashScreen: bc3cffefca2716e5f22350ca109badd7e50ec14d
-  ExpoSQLite: 7eedbe476870a5f18d6b89c817c4ac6f299830ad
   ExpoStoreReview: 32bb43b6fae9c8db3e33cad69996dff3785eef5f
   ExpoSystemUI: 2ad325f361a2fcd96a464e8574e19935c461c9cc
   ExpoWebBrowser: 17b064c621789e41d4816c95c93f429b84971f52
