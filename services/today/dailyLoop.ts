@@ -23,6 +23,7 @@ import type { SelfKnowledgeContext } from '../insights/selfKnowledgeContext';
 import { DRAIN_TAG_MAP, RESTORE_TAG_MAP } from '../../utils/selfKnowledgeCrossRef';
 import { generateWeeklySynthesis, type WeeklySynthesisContext } from './weeklySynthesisLibrary';
 import type { DailyCheckIn } from '../patterns/types';
+import { selectPremiumInsightDraft } from '../insightsV2/selectPremiumInsightDraft';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -1067,6 +1068,177 @@ async function getTriggerCrossRefInsight(
   }
 }
 
+
+function getPremiumInsightCategoryFromCheckIn(checkIn: DailyCheckIn | any):
+  | 'restCapacity'
+  | 'supportBelonging'
+  | 'cognitiveStyle'
+  | 'bodySignals'
+  | 'boundariesSelfTrust'
+  | 'relationships'
+  | 'dreamsSymbols'
+  | 'glimmersRegulation' {
+  const moodScore = Number(checkIn?.moodScore ?? checkIn?.mood ?? 0);
+  const energyScore = Number(checkIn?.energyScore ?? checkIn?.energy ?? checkIn?.energyLevel ?? 0);
+  const stressLevel = String(checkIn?.stressLevel ?? checkIn?.stress ?? '').toLowerCase();
+  const tags = Array.isArray(checkIn?.tags) ? checkIn.tags.map((tag: unknown) => String(tag).toLowerCase()) : [];
+
+  if (
+    tags.some((tag: string) =>
+      tag.includes('body') ||
+      tag.includes('chest') ||
+      tag.includes('shoulder') ||
+      tag.includes('jaw') ||
+      tag.includes('tension') ||
+      tag.includes('somatic'),
+    )
+  ) {
+    return 'bodySignals';
+  }
+
+  if (
+    tags.some((tag: string) =>
+      tag.includes('support') ||
+      tag.includes('lonely') ||
+      tag.includes('belong') ||
+      tag.includes('connection'),
+    )
+  ) {
+    return 'supportBelonging';
+  }
+
+  if (
+    tags.some((tag: string) =>
+      tag.includes('boundary') ||
+      tag.includes('limit') ||
+      tag.includes('peace') ||
+      tag.includes('no'),
+    )
+  ) {
+    return 'boundariesSelfTrust';
+  }
+
+  if (
+    tags.some((tag: string) =>
+      tag.includes('relationship') ||
+      tag.includes('repair') ||
+      tag.includes('trust') ||
+      tag.includes('safe'),
+    )
+  ) {
+    return 'relationships';
+  }
+
+  if (energyScore > 0 && energyScore <= 4) {
+    return 'restCapacity';
+  }
+
+  if (moodScore > 0 && moodScore <= 4) {
+    return 'cognitiveStyle';
+  }
+
+  if (stressLevel === 'high' || stressLevel === 'very_high') {
+    return 'restCapacity';
+  }
+
+  return 'glimmersRegulation';
+}
+
+function getPremiumInsightTheme(category: ReturnType<typeof getPremiumInsightCategoryFromCheckIn>): DailyInsight['theme'] {
+  switch (category) {
+    case 'restCapacity':
+    case 'bodySignals':
+    case 'glimmersRegulation':
+      return 'calm';
+    case 'boundariesSelfTrust':
+    case 'relationships':
+    case 'supportBelonging':
+      return 'growth';
+    case 'cognitiveStyle':
+    case 'dreamsSymbols':
+      return 'reflect';
+    default:
+      return 'reflect';
+  }
+}
+
+function getPremiumInsightAccent(category: ReturnType<typeof getPremiumInsightCategoryFromCheckIn>): DailyInsight['accentColor'] {
+  switch (category) {
+    case 'glimmersRegulation':
+      return 'emerald';
+    case 'supportBelonging':
+    case 'relationships':
+      return 'rose';
+    case 'boundariesSelfTrust':
+      return 'copper';
+    case 'restCapacity':
+    case 'bodySignals':
+      return 'silverBlue';
+    case 'cognitiveStyle':
+    case 'dreamsSymbols':
+    default:
+      return 'gold';
+  }
+}
+
+function getPremiumInsightIcon(category: ReturnType<typeof getPremiumInsightCategoryFromCheckIn>): string {
+  switch (category) {
+    case 'restCapacity':
+      return 'moon-outline';
+    case 'supportBelonging':
+      return 'people-outline';
+    case 'bodySignals':
+      return 'body-outline';
+    case 'boundariesSelfTrust':
+      return 'shield-outline';
+    case 'relationships':
+      return 'heart-outline';
+    case 'dreamsSymbols':
+      return 'cloudy-night-outline';
+    case 'glimmersRegulation':
+      return 'sparkles-outline';
+    case 'cognitiveStyle':
+    default:
+      return 'analytics-outline';
+  }
+}
+
+async function getPremiumDraftInsight(chartId: string): Promise<DailyInsight | null> {
+  try {
+    const checkIns = await supabaseDb.getCheckIns(chartId, 1);
+    const latest = checkIns[0];
+
+    if (!latest) return null;
+
+    const today = toLocalDateString(new Date());
+    const latestDate =
+      typeof latest.date === 'string'
+        ? latest.date.slice(0, 10)
+        : toLocalDateString(new Date(latest.createdAt ?? latest.updatedAt ?? Date.now()));
+
+    if (latestDate !== today) return null;
+
+    const category = getPremiumInsightCategoryFromCheckIn(latest);
+    const selected = selectPremiumInsightDraft({
+      date: today,
+      category,
+      seed: `${chartId}:${today}:${latest.moodScore ?? ''}:${(latest as any).energyScore ?? ''}:${latest.stressLevel ?? ''}`,
+    });
+
+    return {
+      text: `${selected.body}\n\nQuestion to keep: ${selected.reflectionPrompt}`,
+      type: 'check-in',
+      accentColor: getPremiumInsightAccent(category),
+      icon: getPremiumInsightIcon(category),
+      theme: getPremiumInsightTheme(category),
+    };
+  } catch (error) {
+    logger.warn('[DailyLoop] Failed to build premium draft insight', error);
+    return null;
+  }
+}
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Today's Best Insight (priority cascade)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1080,26 +1252,30 @@ async function getTodayInsight(
   const milestoneInsight = getConsistencyInsight(streak);
   if (milestoneInsight) return milestoneInsight;
 
-  // 2. Once the user checks in, today's self-report should replace the
+  // 2. Premium daily insight generated from the curated MySky insight library.
+  const premiumDraftInsight = await getPremiumDraftInsight(chartId);
+  if (premiumDraftInsight) return premiumDraftInsight;
+
+  // 3. Once the user checks in, today's self-report should replace the
   // calendar-only fallback so the Home card visibly refreshes for the day.
   const checkInInsight = await getTodayCheckInReflectionInsight(chartId);
   if (checkInInsight) return checkInInsight;
 
-  // 3. Sleep-mood correlation
+  // 4. Sleep-mood correlation
   const sleepInsight = await getSleepMoodInsight(chartId);
   if (sleepInsight) return sleepInsight;
 
-  // 4. Trigger cross-reference (self-knowledge confirmed by behavioral data)
+  // 5. Trigger cross-reference (self-knowledge confirmed by behavioral data)
   if (selfKnowledge?.triggers) {
     const triggerInsight = await getTriggerCrossRefInsight(chartId, selfKnowledge.triggers);
     if (triggerInsight) return triggerInsight;
   }
 
-  // 5. Pattern-based insight (tag lift, trend changes)
+  // 6. Pattern-based insight (tag lift, trend changes)
   const patternInsight = await getPatternInsight(chartId);
   if (patternInsight) return patternInsight;
 
-  // 6. Fallback: daily encouragement
+  // 7. Fallback: daily encouragement
   return getDailyEncouragement();
 }
 
