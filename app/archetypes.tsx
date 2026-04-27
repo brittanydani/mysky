@@ -22,7 +22,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../services/storage/accountScopedStorage';
 import * as Haptics from 'expo-haptics';
 import { syncArchetypeProfileFromReflections } from '../services/insights/reflectionProfileSync';
 
@@ -184,7 +184,7 @@ export default function ArchetypesScreen() {
     useCallback(() => {
       syncArchetypeProfileFromReflections({ includeDrafts: true })
         .catch((e) => logger.warn('[Archetypes] Sync failed:', e))
-        .then(() => EncryptedAsyncStorage.getItem(STORAGE_KEY))
+        .then(() => AccountScopedAsyncStorage.getItem(STORAGE_KEY))
         .then((raw) => {
           if (raw) {
             try {
@@ -208,7 +208,7 @@ export default function ArchetypesScreen() {
     const dominant = (Object.keys(scores) as ArchetypeKey[]).reduce((a, b) => (scores[a] >= scores[b] ? a : b));
     const profile: SavedProfile = { dominant, scores, quizScores: scores, completedAt: new Date().toISOString() };
     try {
-      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      await AccountScopedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
       setSavedProfile(profile);
       setShowResult(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -221,7 +221,7 @@ export default function ArchetypesScreen() {
     setAnswers({});
     setShowResult(false);
     setSavedProfile(null);
-    EncryptedAsyncStorage.removeItem(STORAGE_KEY);
+    AccountScopedAsyncStorage.removeItem(STORAGE_KEY);
   };
 
   const dominant = savedProfile ? ARCHETYPES[savedProfile.dominant] : null;

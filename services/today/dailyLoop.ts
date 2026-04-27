@@ -71,6 +71,12 @@ export interface DailyInsight {
   accentColor: 'gold' | 'emerald' | 'silverBlue' | 'copper' | 'rose';
   /** Icon name (Ionicons) */
   icon: string;
+  /**
+   * Affirmation pairing theme — used by todayContentLibrary to bias the
+   * daily affirmation toward a complementary tone.
+   * calm | energy | growth | focus | reflect | milestone
+   */
+  theme?: 'calm' | 'energy' | 'growth' | 'focus' | 'reflect' | 'milestone';
 }
 
 export interface ReturnNudge {
@@ -352,15 +358,15 @@ function buildWeeklySummary(data: {
 
   let meaning: string;
   if (lowerBaseline && (highObservation || deepReflection)) {
-    meaning = 'MySky reads this as emotional effort while your baseline was low, not as a failure week.';
+    meaning = `Tracking through a low week is harder than tracking through a good one. The archive you built this week will matter more than an archive built only when things were easy.`;
   } else if (data.moodDirection === 'up') {
-    meaning = 'MySky reads this as a recovery week that became visible because you kept leaving signals behind.';
+    meaning = `Something shifted this week in a positive direction. The data does not explain the cause, but the pattern is real — and patterns that are real once tend to be reproducible.`;
   } else if (data.moodDirection === 'stable' && (highObservation || deepReflection)) {
-    meaning = 'MySky reads this as a self-awareness week: steady enough to track, and observed closely enough to understand.';
+    meaning = `Stability is its own signal. A steady week with consistent observation means your baseline is holding — and that is the foundation everything else is built on.`;
   } else if (data.avgSleep > 0 && data.avgSleep < 6.8) {
-    meaning = 'MySky reads the body as part of the story here. When sleep stays short, emotional strain usually has less room to soften.';
+    meaning = `Sleep averaged ${data.avgSleep.toFixed(1)} hours this week, which is below the threshold where most people maintain emotional resilience. That is likely part of the story here.`;
   } else {
-    meaning = 'MySky reads this as an emerging pattern, not a finished conclusion.';
+    meaning = `This week's data is one chapter, not a conclusion. The pattern becomes readable when enough chapters accumulate — and this one is now part of the record.`;
   }
 
   return [lead, interpretation, meaning].join(' ');
@@ -378,10 +384,13 @@ async function getSleepMoodInsight(chartId: string): Promise<DailyInsight | null
     if (checkIns.length < 7 || sleepEntries.length < 5) return null;
 
     // Build date-indexed maps
+    // Build mood map — most recent check-in per date wins.
+    // checkIns are returned newest-first, so iterate in reverse so the last
+    // write for any date is the most-recent entry (not the earliest).
     const moodByDate: Record<string, number> = {};
-    for (const c of checkIns) {
+    for (let i = checkIns.length - 1; i >= 0; i--) {
+      const c = checkIns[i];
       if (c.moodScore != null) {
-        // Use the latest check-in per date
         moodByDate[c.date] = c.moodScore;
       }
     }
@@ -426,6 +435,7 @@ async function getSleepMoodInsight(chartId: string): Promise<DailyInsight | null
         type: 'sleep-mood',
         accentColor: 'silverBlue',
         icon: 'moon-outline',
+        theme: 'calm',
       };
     } else {
       return {
@@ -433,6 +443,7 @@ async function getSleepMoodInsight(chartId: string): Promise<DailyInsight | null
         type: 'sleep-mood',
         accentColor: 'silverBlue',
         icon: 'moon-outline',
+        theme: 'focus',
       };
     }
   } catch {
@@ -447,13 +458,13 @@ async function getSleepMoodInsight(chartId: string): Promise<DailyInsight | null
 function getConsistencyInsight(streak: StreakStatus): DailyInsight | null {
   if (streak.milestone != null) {
     const milestoneMessages: Record<number, string> = {
-      7: 'One week of consistent reflection. The patterns you\'re building now create the foundation for real self-understanding.',
-      14: 'Two weeks of daily awareness. Research suggests this is when habit formation becomes natural.',
-      30: 'A full month of reflection. You\'ve built something rare — a genuine practice of self-awareness.',
-      60: 'Sixty days of tracking your inner world. The insights you\'re gathering now are truly personal.',
-      90: 'Three months of consistent reflection. This kind of dedication creates deep self-knowledge.',
-      180: 'Six months of daily awareness. You know yourself better than most people ever will.',
-      365: 'One year of reflection. What started as a habit has become a profound practice of self-understanding.',
+      7: `Seven consecutive days. That is enough data for MySky to start detecting real patterns in your mood and energy — not just individual moments.`,
+      14: `Two weeks of daily tracking. The gap between who you think you are and what your data actually shows is starting to narrow.`,
+      30: `Thirty days logged. A full month of behavioral data means your patterns are no longer theoretical — they are visible and specific to you.`,
+      60: `Sixty check-ins. You have now built an archive detailed enough that MySky can detect subtle shifts most people would never notice about themselves.`,
+      90: `Ninety days. At this depth, your data reveals not just what you feel but what reliably causes it — and that is a different kind of knowledge.`,
+      180: `Six months of consistent tracking. Your archive now spans multiple seasons, stress cycles, and life contexts. That longitudinal depth is genuinely rare.`,
+      365: `One year. Your data now covers enough variation — highs, lows, seasons, hard weeks and strong ones — that the patterns inside it are no longer guesses. They are yours.`,
     };
 
     return {
@@ -461,15 +472,17 @@ function getConsistencyInsight(streak: StreakStatus): DailyInsight | null {
       type: 'milestone',
       accentColor: 'gold',
       icon: 'trophy-outline',
+      theme: 'milestone',
     };
   }
 
   if (streak.current >= 5 && streak.current < 7) {
     return {
-      text: `You're on a ${streak.current}-day streak — almost a full week of consistent reflection.`,
+      text: `Five days logged this week. You are close enough to a full week of data that MySky can start detecting whether your mood follows a weekly rhythm — most people's does.`,
       type: 'consistency',
       accentColor: 'emerald',
       icon: 'flame-outline',
+      theme: 'milestone',
     };
   }
 
@@ -520,57 +533,114 @@ async function getTodayCheckInReflectionInsight(chartId: string): Promise<DailyI
       .find((checkIn): checkIn is DailyCheckIn => checkIn != null) ?? null;
     if (!latest) return null;
 
+    // Day-of-year seed so text rotates daily even when conditions are identical
+    const dayOfYear = Math.floor(
+      (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000,
+    );
+    const pick = <T>(arr: T[]): T => arr[dayOfYear % arr.length];
+
+    if (latest.moodScore >= 7 && latest.stressLevel === 'high') {
+      return {
+        text: pick([
+          'High mood alongside high stress is a specific state — activated and stretched at the same time. Your capacity is real today, but it has a cost attached. Use it deliberately, not continuously.',
+          'Your check-in shows energy up but stress also elevated. That combination can feel productive while quietly depleting reserves. Build a deliberate stop point into the day before you hit the wall.',
+          'You are in an interesting spot today — mood is solid but stress is running high. That usually means you are carrying more than the surface shows. Front-load the important things while the capacity is there, but do not confuse stretched for sustainable.',
+          'High mood and high stress is not contradiction — it is high engagement with elevated cost. The practice today is to notice when the engagement tips into depletion, not wait until after it does.',
+        ]),
+        type: 'check-in',
+        accentColor: 'copper',
+        icon: 'flash-outline',
+        theme: 'focus',
+      };
+    }
+
     if (latest.moodScore <= 4 && latest.energyLevel === 'low') {
       return {
-        text: 'Your check-in points to lower fuel and a heavier emotional load today. The useful move is not to force clarity; it is to lower the demand and choose one supportive next step.',
+        text: pick([
+          'Your check-in points to lower fuel and a heavier emotional load today. The useful move is not to force clarity — it is to lower the demand and choose one supportive next step.',
+          'Low mood and low energy together signal that your system is in conservation mode. Today is not a day to push through. Protect your baseline and keep the agenda minimal.',
+          'Today\'s data shows both mood and energy contracted. The most productive thing you can do right now is reduce what you are asking of yourself, not increase effort.',
+          'Your check-in reads as a depleted day. That is information, not a verdict. One small act of recovery now is worth more than forcing your way through everything on the list.',
+        ]),
         type: 'check-in',
         accentColor: 'rose',
         icon: 'pulse-outline',
+        theme: 'calm',
       };
     }
 
     if (latest.stressLevel === 'high') {
       return {
-        text: 'You logged high stress today, which makes this a day for smaller decisions and earlier recovery cues. Notice what can be simplified before your system has to get louder.',
+        text: pick([
+          'You logged high stress today, which makes this a day for smaller decisions and earlier recovery cues. Notice what can be simplified before your system has to get louder.',
+          'High stress means your cognitive load is already elevated. Add as few new decisions as possible and move recovery activities earlier in the day rather than saving them for tonight.',
+          'Today\'s check-in flags high stress. The most useful practice is to narrow your focus to one or two non-negotiables and let everything else wait. Stress amplifies urgency — not everything that feels urgent is.',
+          'Your stress signal is high. That tends to compress your ability to assess risk accurately. Defer any decision that can wait 24 hours and build in a deliberate reset before the day ends.',
+        ]),
         type: 'check-in',
         accentColor: 'copper',
         icon: 'leaf-outline',
+        theme: 'calm',
       };
     }
 
     if (latest.energyLevel === 'low') {
       return {
-        text: 'Your energy is low today, so the clearest insight is about pacing. Choose the version of the day that leaves enough of you intact for tonight.',
+        text: pick([
+          'Your energy is low today, so the clearest insight is about pacing. Choose the version of the day that leaves enough of you intact for tonight.',
+          'Low energy on today\'s check-in suggests your body needs more from you than your task list does. Sequence the most important thing first while you still have reserves, then give yourself permission to coast.',
+          'Today calls for strategic conserving. Low energy is not an excuse — it is a constraint. Work with it by front-loading what matters and protecting your recovery window.',
+          'Your energy reading is low. That usually means something upstream — sleep, food, emotional load, or all three. Name which one is most likely the source, and address that rather than pushing past the symptom.',
+        ]),
         type: 'check-in',
         accentColor: 'silverBlue',
         icon: 'battery-dead-outline',
+        theme: 'calm',
       };
     }
 
     if (latest.moodScore >= 8 && latest.stressLevel === 'low') {
       return {
-        text: 'Your check-in shows a steadier, brighter baseline today. Study what is supporting that, because repeatable support is more useful than a lucky good mood.',
+        text: pick([
+          'Your check-in shows a steadier, brighter baseline today. Study what is supporting that, because repeatable support is more useful than a lucky good mood.',
+          'High mood and low stress is not just a good day — it is a data point worth analyzing. What did yesterday and this morning look like? The conditions driving this are worth knowing.',
+          'Today\'s check-in reads as a genuinely strong day. That makes it a good time to handle the harder conversations or decisions you have been deferring. You have more capacity than usual right now.',
+          'A clean check-in like today\'s is worth pausing on. What was different? Sleep, connection, reduced demands? Identifying the input helps you reproduce the output.',
+        ]),
         type: 'check-in',
         accentColor: 'emerald',
         icon: 'trending-up-outline',
+        theme: 'energy',
       };
     }
 
     const primaryTag = labelForTag(latest.tags?.[0]);
     if (primaryTag) {
       return {
-        text: `You named "${primaryTag}" in today's check-in. That signal is worth watching: repeated tags often reveal what shapes your baseline before the pattern is obvious.`,
+        text: pick([
+          `You named "${primaryTag}" in today's check-in. That signal is worth watching — repeated tags often reveal what shapes your baseline before the pattern is obvious.`,
+          `"${primaryTag}" showed up in your check-in today. MySky will track whether it keeps appearing. Tags that recur across different mood days tell a different story than ones that cluster at the extremes.`,
+          `Today you tagged "${primaryTag}". The most useful thing to notice is whether this tag tends to appear when mood is higher, lower, or does not seem to matter. That correlation takes a few more data points to confirm.`,
+          `You logged "${primaryTag}" as part of today's picture. Consistent tagging is how MySky eventually shows you which situations reliably move your needle — in either direction.`,
+        ]),
         type: 'check-in',
         accentColor: 'gold',
         icon: 'sparkles-outline',
+        theme: 'focus',
       };
     }
 
     return {
-      text: "Today's check-in gives MySky a fresh read on your inner weather. Things look workable, so the practice is to stay close to what keeps you steady.",
+      text: pick([
+        "Today's check-in gives MySky a fresh read on your inner weather. Things look workable — the practice is to stay close to what keeps you steady.",
+        "Check-in logged. Your baseline looks stable today. Stable is worth noting — it means what you are doing right now is working well enough to sustain.",
+        "Today\'s entry is captured. A mid-range day is not a wasted one — it is the reference point that makes your highs and lows more legible over time.",
+        "MySky has your check-in for today. Consistent logging on ordinary days is what makes pattern recognition possible on the interesting ones.",
+      ]),
       type: 'check-in',
       accentColor: 'silverBlue',
       icon: 'checkmark-circle-outline',
+      theme: 'reflect',
     };
   } catch {
     return null;
@@ -615,6 +685,7 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
         type: 'pattern',
         accentColor: 'emerald',
         icon: 'trending-up-outline',
+        theme: 'energy',
       };
     }
 
@@ -624,6 +695,7 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
         type: 'pattern',
         accentColor: 'copper',
         icon: 'leaf-outline',
+        theme: 'reflect',
       };
     }
 
@@ -663,10 +735,36 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
     if (bestTag) {
       const tagLabel = bestTag.charAt(0).toUpperCase() + bestTag.slice(1).replace(/_/g, ' ');
       return {
-        text: `Days you tagged "${tagLabel}" tend to have higher mood scores — it seems to be a positive influence.`,
+        text: `Days you tagged "${tagLabel}" correlate with higher mood — an average lift of ${bestLift.toFixed(1)} points above your baseline. That is a pattern worth protecting.`,
         type: 'pattern',
         accentColor: 'gold',
         icon: 'sparkles-outline',
+        theme: 'growth',
+      };
+    }
+
+    // Find the tag most correlated with lower mood (negative lift)
+    let worstTag: string | null = null;
+    let worstDrop = 0;
+    for (const [tag, data] of Object.entries(tagCounts)) {
+      if (data.total >= 3) {
+        const tagAvg = data.moodSum / data.total;
+        const drop = overallAvg - tagAvg;
+        if (drop > worstDrop && drop > 0.7) {
+          worstDrop = drop;
+          worstTag = tag;
+        }
+      }
+    }
+
+    if (worstTag) {
+      const tagLabel = worstTag.charAt(0).toUpperCase() + worstTag.slice(1).replace(/_/g, ' ');
+      return {
+        text: `Days tagged "${tagLabel}" tend to run ${worstDrop.toFixed(1)} points below your mood baseline. That is a consistent enough signal to take seriously, not explain away.`,
+        type: 'pattern',
+        accentColor: 'copper',
+        icon: 'trending-down-outline',
+        theme: 'reflect',
       };
     }
 
@@ -682,76 +780,172 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
 
 const ENCOURAGEMENTS: DailyInsight[] = [
   {
-    text: 'Tracking how you feel each day builds a picture only you can see. Every entry matters.',
+    text: 'A check-in today gives MySky a real data point instead of a guess. The picture it builds is one only you can see.',
     type: 'encouragement',
     accentColor: 'gold',
     icon: 'sunny-outline',
+    theme: 'reflect',
   },
   {
-    text: 'Reflection doesn\'t require perfection. A single honest check-in is more valuable than a detailed analysis.',
-    type: 'encouragement',
-    accentColor: 'emerald',
-    icon: 'leaf-outline',
-  },
-  {
-    text: 'The patterns that matter most often appear quietly over time. Consistency reveals what urgency hides.',
+    text: 'The patterns that matter most accumulate quietly over time. Consistency surfaces what urgency buries.',
     type: 'encouragement',
     accentColor: 'silverBlue',
     icon: 'water-outline',
+    theme: 'focus',
   },
   {
-    text: 'Your emotional landscape is unique. The more you observe it, the better you understand what supports you.',
+    text: 'Your emotional baseline is specific to you. The more you observe it, the harder it is for your patterns to stay invisible.',
     type: 'encouragement',
     accentColor: 'rose',
     icon: 'heart-outline',
+    theme: 'reflect',
   },
   {
-    text: 'Rest is just as important as action. Noticing how you recover is part of understanding yourself.',
+    text: 'Recovery is data too. Noticing what restores you is as informative as noticing what drains you.',
     type: 'encouragement',
     accentColor: 'silverBlue',
     icon: 'moon-outline',
+    theme: 'calm',
   },
   {
-    text: 'Small moments of honesty with yourself accumulate into real self-knowledge. Keep going.',
+    text: 'A single honest entry is worth more than a detailed analysis you never write. Log what is true right now.',
     type: 'encouragement',
-    accentColor: 'gold',
-    icon: 'sparkles-outline',
+    accentColor: 'emerald',
+    icon: 'leaf-outline',
+    theme: 'reflect',
   },
   {
-    text: 'Your body keeps score even when your mind moves on. Checking in bridges that gap.',
+    text: 'Your body often registers a shift before your thoughts name it. A check-in lets you capture that early signal.',
     type: 'encouragement',
     accentColor: 'rose',
     icon: 'body-outline',
+    theme: 'calm',
   },
   {
-    text: 'There is no wrong way to feel. What matters is that you noticed.',
-    type: 'encouragement',
-    accentColor: 'emerald',
-    icon: 'eye-outline',
-  },
-  {
-    text: 'Even one data point is the beginning of a pattern. You are already building your own map.',
+    text: 'Even one entry today is the start of a pattern. You are building your personal map in real time.',
     type: 'encouragement',
     accentColor: 'gold',
     icon: 'map-outline',
+    theme: 'growth',
   },
   {
-    text: 'Self-awareness is not about fixing — it is about seeing clearly. You are doing that now.',
+    text: 'Self-knowledge is not about fixing — it is about seeing clearly. The act of checking in is already the practice.',
     type: 'encouragement',
     accentColor: 'silverBlue',
     icon: 'compass-outline',
+    theme: 'focus',
   },
   {
-    text: 'Difficult feelings are not failures. They are information. Let them teach you something.',
-    type: 'encouragement',
-    accentColor: 'rose',
-    icon: 'cloudy-outline',
-  },
-  {
-    text: 'What you track consistently becomes something you can actually understand and change.',
+    text: 'What you log consistently becomes something you can actually understand and act on. Inconsistency makes that impossible.',
     type: 'encouragement',
     accentColor: 'emerald',
     icon: 'analytics-outline',
+    theme: 'growth',
+  },
+  {
+    text: 'Difficult feelings are not problems to solve before you check in. They are exactly what is worth capturing.',
+    type: 'encouragement',
+    accentColor: 'rose',
+    icon: 'cloudy-outline',
+    theme: 'reflect',
+  },
+  {
+    text: 'Mood and energy are two different signals. They do not always move together, and that difference tells you something.',
+    type: 'encouragement',
+    accentColor: 'gold',
+    icon: 'pulse-outline',
+    theme: 'focus',
+  },
+  {
+    text: 'The version of you that skipped check-ins last week left no trace. The version that showed up did.',
+    type: 'encouragement',
+    accentColor: 'copper',
+    icon: 'footsteps-outline',
+    theme: 'growth',
+  },
+  {
+    text: 'You do not need to explain your feelings before you log them. Observation comes before interpretation.',
+    type: 'encouragement',
+    accentColor: 'silverBlue',
+    icon: 'eye-outline',
+    theme: 'calm',
+  },
+  {
+    text: 'A low score logged honestly is more useful than a high score logged to feel better. MySky needs the truth to help.',
+    type: 'encouragement',
+    accentColor: 'emerald',
+    icon: 'shield-checkmark-outline',
+    theme: 'reflect',
+  },
+  {
+    text: 'What you notice today might not make sense until you look back at a week or a month. The value is in the archive.',
+    type: 'encouragement',
+    accentColor: 'gold',
+    icon: 'library-outline',
+    theme: 'growth',
+  },
+  {
+    text: 'Your nervous system adapts to what you regularly pay attention to. Consistent reflection trains it toward clarity.',
+    type: 'encouragement',
+    accentColor: 'silverBlue',
+    icon: 'flash-outline',
+    theme: 'calm',
+  },
+  {
+    text: 'Some days the most useful insight is simply: I showed up and noticed. That is not nothing — it is the whole practice.',
+    type: 'encouragement',
+    accentColor: 'rose',
+    icon: 'checkmark-circle-outline',
+    theme: 'reflect',
+  },
+  {
+    text: 'The gaps in your log have meaning too. What was happening when you stopped tracking?',
+    type: 'encouragement',
+    accentColor: 'copper',
+    icon: 'git-branch-outline',
+    theme: 'focus',
+  },
+  {
+    text: 'Energy tells you what your body is doing. Mood tells you what your mind is making of it. Both are worth knowing.',
+    type: 'encouragement',
+    accentColor: 'gold',
+    icon: 'battery-charging-outline',
+    theme: 'energy',
+  },
+  {
+    text: 'Tracking stress alongside mood gives you context the score alone cannot. Log what shaped the number.',
+    type: 'encouragement',
+    accentColor: 'copper',
+    icon: 'layers-outline',
+    theme: 'reflect',
+  },
+  {
+    text: 'Your patterns are personal. What drains one person restores another. MySky is learning your specific version.',
+    type: 'encouragement',
+    accentColor: 'silverBlue',
+    icon: 'person-outline',
+    theme: 'focus',
+  },
+  {
+    text: 'Good days are worth logging as carefully as hard ones. Understanding what drives a high is just as useful.',
+    type: 'encouragement',
+    accentColor: 'emerald',
+    icon: 'trending-up-outline',
+    theme: 'energy',
+  },
+  {
+    text: 'Sleep is the variable most likely to explain your mood before you realize it is the cause. Log it consistently.',
+    type: 'encouragement',
+    accentColor: 'silverBlue',
+    icon: 'moon-outline',
+    theme: 'calm',
+  },
+  {
+    text: 'Reflection is not rumination. The goal is a brief, honest read — not a full analysis. A minute is enough.',
+    type: 'encouragement',
+    accentColor: 'rose',
+    icon: 'timer-outline',
+    theme: 'calm',
   },
 ];
 
@@ -845,6 +1039,7 @@ async function getTriggerCrossRefInsight(
         type: 'pattern',
         accentColor: 'emerald',
         icon: 'sparkles-outline',
+        theme: 'growth',
       };
     }
 
@@ -861,6 +1056,7 @@ async function getTriggerCrossRefInsight(
         type: 'pattern',
         accentColor: 'copper',
         icon: 'leaf-outline',
+        theme: 'focus',
       };
     }
 

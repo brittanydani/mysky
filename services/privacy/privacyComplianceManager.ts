@@ -1,8 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { secureStorage } from '../storage/secureStorage';
-import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
 import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
-import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from '../storage/userDataKeys';
+import { PLAIN_ASYNC_USER_DATA_KEYS } from '../storage/userDataKeys';
 import { generateId } from '../storage/models';
 import { LawfulBasisAuditService } from './lawfulBasisAudit';
 import { IdentityVault } from '../../utils/IdentityVault';
@@ -18,7 +17,7 @@ import {
   AccessResult,
 } from './types';
 
-async function loadLocalDb() {
+async function loadSupabaseDb() {
   const mod = await import('../storage/supabaseDb');
   return mod.supabaseDb;
 }
@@ -146,7 +145,7 @@ export class PrivacyComplianceManager {
    * Returns an inventory of all personal data held.
    */
   async handleAccessRequest(): Promise<AccessResult> {
-    const db = await loadLocalDb();
+    const db = await loadSupabaseDb();
     const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords, asyncStorageData] =
       await Promise.all([
         db.getCharts(),
@@ -181,7 +180,7 @@ export class PrivacyComplianceManager {
    * Exports all personal data in a structured, machine-readable format.
    */
   async handleExportRequest(): Promise<ExportResult> {
-    const db = await loadLocalDb();
+    const db = await loadSupabaseDb();
     const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords, asyncStorageData] =
       await Promise.all([
         db.getCharts(),
@@ -249,7 +248,7 @@ export class PrivacyComplianceManager {
    * Deletes all personal data from both SQLite and SecureStore.
    */
   async handleDeletionRequest(): Promise<DeletionResult> {
-    const db = await loadLocalDb();
+    const db = await loadSupabaseDb();
 
     // Record audit entry before deletion (so we have proof the request was received)
     await secureStorage.auditDataAccess('gdpr_deletion_request', {});
@@ -257,7 +256,6 @@ export class PrivacyComplianceManager {
     await Promise.all([
       secureStorage.deleteAllUserData(),
       db.hardDeleteAllData(),
-      ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map((key) => EncryptedAsyncStorage.removeItem(key)),
       ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AccountScopedAsyncStorage.removeItem(key)),
     ]);
 
@@ -314,10 +312,6 @@ export class PrivacyComplianceManager {
     const data: Record<string, string> = {};
 
     await Promise.all([
-      ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map(async (key) => {
-        const value = await EncryptedAsyncStorage.getItem(key);
-        if (value != null) data[key] = value;
-      }),
       ...PLAIN_ASYNC_USER_DATA_KEYS.map(async (key) => {
         const value = await AccountScopedAsyncStorage.getItem(key);
         if (value != null) data[key] = value;

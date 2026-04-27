@@ -10,8 +10,9 @@
  * daily questions meaningfully influence the profile screens over time.
  */
 
-import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
 import { loadSomaticEntries } from '../storage/selfKnowledgeStore';
+import { logger } from '../../utils/logger';
 import {
   getAnswersByCategory,
   getDraftAnswersByCategory,
@@ -119,7 +120,7 @@ export async function syncArchetypeProfileFromReflections(
     const answers = await getCombinedReflectionAnswers('archetypes', options.includeDrafts);
     if (answers.length === 0) return;
 
-    const raw = await EncryptedAsyncStorage.getItem('@mysky:archetype_profile');
+    const raw = await AccountScopedAsyncStorage.getItem('@mysky:archetype_profile');
     const existing = raw ? JSON.parse(raw) : null;
     const quizScores = extractQuizScores(existing);
     const totalQuizVotes = Object.values(quizScores).reduce((a, b) => a + b, 0);
@@ -166,9 +167,9 @@ export async function syncArchetypeProfileFromReflections(
       completedAt: existing?.completedAt ?? new Date().toISOString(),
     };
 
-    await EncryptedAsyncStorage.setItem('@mysky:archetype_profile', JSON.stringify(updated));
-  } catch {
-    // Graceful fallback — never crash the seal flow
+    await AccountScopedAsyncStorage.setItem('@mysky:archetype_profile', JSON.stringify(updated));
+  } catch (e) {
+    logger.warn('[ReflectionSync] syncArchetypeProfile failed:', e);
   }
 }
 
@@ -269,7 +270,7 @@ export async function syncCognitiveStyleFromReflections(
     const answers = await getCombinedReflectionAnswers('cognitive', options.includeDrafts);
     if (answers.length === 0) return;
 
-    const raw = await EncryptedAsyncStorage.getItem('@mysky:cognitive_style');
+    const raw = await AccountScopedAsyncStorage.getItem('@mysky:cognitive_style');
     const existing: Partial<Record<DimensionKey, number>> & {
       manualScores?: Partial<Record<DimensionKey, number>>;
       reflectionScores?: Partial<Record<DimensionKey, number>>;
@@ -321,14 +322,14 @@ export async function syncCognitiveStyleFromReflections(
       }
     }
 
-    await EncryptedAsyncStorage.setItem('@mysky:cognitive_style', JSON.stringify({
+    await AccountScopedAsyncStorage.setItem('@mysky:cognitive_style', JSON.stringify({
       ...existing,
       ...merged,
       manualScores,
       reflectionScores: suggested,
     }));
-  } catch {
-    // Graceful fallback
+  } catch (e) {
+    logger.warn('[ReflectionSync] syncCognitiveStyle failed:', e);
   }
 }
 
@@ -420,7 +421,7 @@ export async function syncCoreValuesFromReflections(
     if (indicatedValues.size === 0) return;
 
     // Load existing selections
-    const raw = await EncryptedAsyncStorage.getItem('@mysky:core_values');
+    const raw = await AccountScopedAsyncStorage.getItem('@mysky:core_values');
     const existing: { selected: string[]; topFive: string[] } = raw
       ? JSON.parse(raw)
       : { selected: [], topFive: [] };
@@ -436,12 +437,12 @@ export async function syncCoreValuesFromReflections(
 
     if (!changed) return;
 
-    await EncryptedAsyncStorage.setItem(
+    await AccountScopedAsyncStorage.setItem(
       '@mysky:core_values',
       JSON.stringify({ selected: newSelected, topFive: existing.topFive }),
     );
-  } catch {
-    // Graceful fallback
+  } catch (e) {
+    logger.warn('[ReflectionSync] syncCoreValues failed:', e);
   }
 }
 
@@ -579,7 +580,7 @@ export async function syncIntelligenceFromReflections(
     const answers = await getCombinedReflectionAnswers('intelligence', options.includeDrafts);
     if (answers.length === 0) return;
 
-    const raw = await EncryptedAsyncStorage.getItem('@mysky:intelligence_profile');
+    const raw = await AccountScopedAsyncStorage.getItem('@mysky:intelligence_profile');
     const existing: IntelligenceProfile = raw ? JSON.parse(raw) : {};
 
     const manualScores: Partial<Record<IntelligenceDimension, number>> =
@@ -625,14 +626,14 @@ export async function syncIntelligenceFromReflections(
       }
     }
 
-    await EncryptedAsyncStorage.setItem('@mysky:intelligence_profile', JSON.stringify({
+    await AccountScopedAsyncStorage.setItem('@mysky:intelligence_profile', JSON.stringify({
       ...existing,
       ...merged,
       manualScores,
       reflectionScores: suggested,
     }));
-  } catch {
-    // Graceful fallback
+  } catch (e) {
+    logger.warn('[ReflectionSync] syncIntelligenceProfile failed:', e);
   }
 }
 
@@ -722,7 +723,8 @@ export async function getSomaticReflectionCorrelations(): Promise<SomaticCorrela
 
     const overall = getOverallSomaticCorrelation(reflectionDates, somaticByDate);
     return overall ? [overall] : [];
-  } catch {
+  } catch (e) {
+    logger.warn('[ReflectionSync] somaticCrossReference failed:', e);
     return [];
   }
 }

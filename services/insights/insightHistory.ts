@@ -1,5 +1,5 @@
 import { GeneratedInsight, InsightHistoryEntry } from './types/knowledgeEngine';
-import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
 
 const HISTORY_KEY = 'msky_knowledge_engine_history';
 const MAX_HISTORY = 50;
@@ -9,7 +9,7 @@ const MAX_HISTORY = 50;
  */
 export async function getInsightHistory(): Promise<InsightHistoryEntry[]> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(HISTORY_KEY);
+    const raw = await AccountScopedAsyncStorage.getItem(HISTORY_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -30,7 +30,7 @@ export async function recordInsight(insight: GeneratedInsight): Promise<void> {
     };
 
     const newHistory = [entry, ...history].slice(0, MAX_HISTORY);
-    await EncryptedAsyncStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
+    await AccountScopedAsyncStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
   } catch (err) {
     console.error('Failed to record insight history:', err);
   }

@@ -488,6 +488,7 @@ export default function HomeScreen() {
       relationshipTags,
       topReflectionCategory,
       dailySignalSeed: todayCheckInCount,
+      insightTheme: dailyLoop?.todayInsight?.theme,
     };
     return getDailyAffirmation(ctx);
   }, [userChart, mood, energy, latestSleep, selfKnowledge, dailyLoop, todayCheckInCount]);

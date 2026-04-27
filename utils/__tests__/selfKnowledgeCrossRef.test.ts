@@ -131,9 +131,9 @@ describe('selfKnowledgeCrossRef', () => {
       const archetypeInsight = result.find((insight) => insight.id === 'archetype-shadow');
       const somaticInsight = result.find((insight) => insight.id === 'somatic-dominant');
 
-      expect(archetypeInsight?.heroMetrics?.[0]?.label).toMatch(/HIGH-STRESS DAYS/);
-      expect(archetypeInsight?.heroMetrics?.[1]?.value).toBe('THE SEEKER');
-      expect(archetypeInsight?.takeaway?.label).toBe('Shadow work');
+      expect(archetypeInsight?.heroMetrics?.[0]?.label).toMatch(/High-stress days/);
+      expect(archetypeInsight?.heroMetrics?.[1]?.value).toMatch(/The Seeker/);
+      expect(archetypeInsight?.takeaway?.label).toBe('Pattern under pressure');
 
       expect(somaticInsight?.heroMetrics?.[0]?.value).toMatch(/STRESS-LINKED|TRACKED/);
       expect(somaticInsight?.heroMetrics?.[1]?.value).toBe('GUT & BELLY (3X)');
@@ -174,7 +174,7 @@ describe('selfKnowledgeCrossRef', () => {
 
       expect(reflectionInsight).toBeDefined();
       expect(reflectionInsight?.isConfirmed).toBe(true);
-      expect(reflectionInsight?.body).toContain('Self-inquiry appears to have a measurable effect');
+      expect(reflectionInsight?.body).toContain('emotional baseline lifts');
     });
 
     it('includes dream, archetype, and next-day sleep insights when dream history is rich enough', () => {

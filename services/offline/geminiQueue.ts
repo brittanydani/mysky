@@ -10,7 +10,7 @@
  * TTL: 24 hours per item.
  */
 
-import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
 import { logger } from '../../utils/logger';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ const MAX_ATTEMPTS = 3;
 
 async function loadQueue(): Promise<QueuedGeminiRequest[]> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(QUEUE_KEY);
+    const raw = await AccountScopedAsyncStorage.getItem(QUEUE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -47,7 +47,7 @@ async function loadQueue(): Promise<QueuedGeminiRequest[]> {
 
 async function saveQueue(queue: QueuedGeminiRequest[]): Promise<void> {
   try {
-    await EncryptedAsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    await AccountScopedAsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
   } catch (e) {
     logger.error('[GeminiQueue] Failed to persist queue:', e);
   }
@@ -145,5 +145,5 @@ export function isNetworkError(error: unknown): boolean {
  * Clear the entire queue (e.g., on logout).
  */
 export async function clearQueue(): Promise<void> {
-  await EncryptedAsyncStorage.removeItem(QUEUE_KEY);
+  await AccountScopedAsyncStorage.removeItem(QUEUE_KEY);
 }

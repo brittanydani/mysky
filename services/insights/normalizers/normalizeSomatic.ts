@@ -1,10 +1,11 @@
 import { UserSignal } from '../types/knowledgeEngine';
 import { SIGNALS } from '../signalDefinitions';
+import { SomaticEntryRecord } from '../../storage/selfKnowledgeStore';
 
 /**
  * Normalizes somatic entries from the reflection bank into UserSignals.
  */
-export function normalizeSomatic(entries: any[]): UserSignal[] {
+export function normalizeSomatic(entries: SomaticEntryRecord[]): UserSignal[] {
   const signals: UserSignal[] = [];
 
   const regionToSignal: Record<string, string> = {

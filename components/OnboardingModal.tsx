@@ -38,7 +38,7 @@ import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { MetallicIcon } from './ui/MetallicIcon';
 import { MetallicText } from './ui/MetallicText';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../services/storage/accountScopedStorage';
 import { LegalOverlay } from './LegalOverlay';
 
 import { BirthData, HouseSystem, NatalChart } from '../services/astrology/types';
@@ -505,7 +505,7 @@ export default function OnboardingModal({
 
     try {
       if (userName.trim()) {
-        await EncryptedAsyncStorage.setItem('msky_user_name', userName.trim());
+        await AccountScopedAsyncStorage.setItem('msky_user_name', userName.trim());
       }
 
       const birthData: BirthData = {

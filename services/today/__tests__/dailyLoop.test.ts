@@ -302,7 +302,7 @@ describe('getDailyLoopData()', () => {
     const result = await getDailyLoopData('chart-1');
 
     expect(result.todayInsight.type).toBe('milestone');
-    expect(result.todayInsight.text).toContain('One week');
+    expect(result.todayInsight.text).toContain('Seven consecutive days');
     expect(result.returnNudge).toBeNull();
   });
 

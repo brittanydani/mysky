@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform } fro
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../../services/storage/accountScopedStorage';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
@@ -23,7 +23,7 @@ export default function OnboardingIndex() {
     if (!trimmedName) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      await EncryptedAsyncStorage.setItem('msky_user_name', trimmedName);
+      await AccountScopedAsyncStorage.setItem('msky_user_name', trimmedName);
     } catch {
       // Non-blocking — name can be recovered from chart data if storage fails
     }

@@ -8,7 +8,7 @@
 // 3. Implemented "Tactile Hardware" logic for selection pills (Recessed vs. Raised).
 // 4. Anchored profile synthesis in Midnight Slate for physical presence.
 // 5. Integrated "Velvet Glass" 1px directional light-catch borders globally.
-// unique intelligence fingerprint. Results stored locally via EncryptedAsyncStorage.
+// unique intelligence fingerprint. Results stored locally via AccountScopedAsyncStorage.
 
 import React, { useCallback, useState } from 'react';
 import {
@@ -24,7 +24,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../services/storage/accountScopedStorage';
 import * as Haptics from 'expo-haptics';
 import { Canvas, Circle, Group, Path, Skia, BlurMask, Shadow } from '@shopify/react-native-skia';
 
@@ -346,7 +346,7 @@ export default function IntelligenceProfileScreen() {
     useCallback(() => {
       syncIntelligenceFromReflections({ includeDrafts: true })
         .catch((e) => logger.warn('[IntelligenceProfile] Sync failed:', e))
-        .then(() => EncryptedAsyncStorage.getItem(STORAGE_KEY))
+        .then(() => AccountScopedAsyncStorage.getItem(STORAGE_KEY))
         .then((raw) => {
           if (raw) {
             try {
@@ -379,9 +379,9 @@ export default function IntelligenceProfileScreen() {
 
   const handleSave = async () => {
     try {
-      const raw = await EncryptedAsyncStorage.getItem(STORAGE_KEY);
+      const raw = await AccountScopedAsyncStorage.getItem(STORAGE_KEY);
       const existing: Record<string, unknown> = raw ? JSON.parse(raw) : {};
-      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
+      await AccountScopedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
         ...existing,
         ...scores,
         manualScores: scores,

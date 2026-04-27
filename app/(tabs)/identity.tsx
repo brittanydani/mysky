@@ -28,7 +28,7 @@ import * as Haptics from 'expo-haptics';
 // ── Service & UI Layer ──
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { supabaseDb } from '../../services/storage/supabaseDb';
-import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../../services/storage/accountScopedStorage';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
@@ -119,7 +119,7 @@ export default function BlueprintScreen() {
     useCallback(() => {
       (async () => {
         try {
-          const storedName = await EncryptedAsyncStorage.getItem('msky_user_name');
+          const storedName = await AccountScopedAsyncStorage.getItem('msky_user_name');
           if (storedName) { setChartName(storedName); }
           else {
             const charts = await supabaseDb.getCharts();

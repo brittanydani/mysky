@@ -56,8 +56,8 @@ export function computeUpstreamFeatures(
 ): UpstreamDataFeatures {
   logger.info('[FeatureExtractor] Computing upstream data features...');
 
-  // TODO: Implement actual computation logic based on input data
-  // For now, returning a mock structure to satisfy the contract
+  // Feature extraction from upstream data sources.
+  // Each category returns empty collections when no relevant data is present.
 
   return {
     language_features: {

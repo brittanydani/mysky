@@ -10,8 +10,8 @@ import {
 const mockGetItem = jest.fn();
 const mockSetItem = jest.fn();
 
-jest.mock('../../storage/encryptedAsyncStorage', () => ({
-  EncryptedAsyncStorage: {
+jest.mock('../../storage/accountScopedStorage', () => ({
+  AccountScopedAsyncStorage: {
     getItem: (...args: unknown[]) => mockGetItem(...args),
     setItem: (...args: unknown[]) => mockSetItem(...args),
   },
@@ -143,9 +143,7 @@ describe('markAttempted', () => {
 
     await markAttempted('not-exists');
 
-    // saveQueue still called but attempts unchanged
-    const saved = JSON.parse(mockSetItem.mock.calls[0][1]) as QueuedGeminiRequest[];
-    expect(saved[0].attempts).toBe(0);
+    expect(mockSetItem).not.toHaveBeenCalled();
   });
 });
 

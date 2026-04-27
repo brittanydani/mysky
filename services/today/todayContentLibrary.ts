@@ -119,6 +119,13 @@ export interface PersonalAffirmationContext {
    * fresh post-check-in selection while staying deterministic for the day.
    */
   dailySignalSeed?: string | number;
+
+  /**
+   * Theme from today's insight card. Used to bias the affirmation toward a
+   * complementary tone so the two surface areas feel coordinated.
+   * calm | energy | growth | focus | reflect | milestone
+   */
+  insightTheme?: 'calm' | 'energy' | 'growth' | 'focus' | 'reflect' | 'milestone';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2879,6 +2886,20 @@ export function getDailyAffirmation(context: PersonalAffirmationContext = {}): T
   // Element + modality (from natal chart)
   if (context.element) activeTags.add(context.element);
   if (context.modality) activeTags.add(context.modality as ContentTag);
+
+  // Insight theme — bias the affirmation toward a complementary tone so the
+  // two cards feel thematically coordinated on the Home screen.
+  if (context.insightTheme) {
+    const insightThemeTagMap: Record<NonNullable<typeof context.insightTheme>, ContentTag> = {
+      calm:      'intensity-calm',
+      energy:    'energy-active',
+      growth:    'growth-active',
+      focus:     'focus-active',
+      reflect:   'mood-active',
+      milestone: 'energy-active',
+    };
+    activeTags.add(insightThemeTagMap[context.insightTheme]);
+  }
 
   // Intensity — derived from mood and energy
   const mood = context.mood ?? 5;

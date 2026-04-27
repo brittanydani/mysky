@@ -5,9 +5,8 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 
 import { supabaseDb } from './supabaseDb';
-import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
 import { AccountScopedAsyncStorage } from './accountScopedStorage';
-import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from './userDataKeys';
+import { PLAIN_ASYNC_USER_DATA_KEYS } from './userDataKeys';
 import type { AppSettings, SavedChart, JournalEntry, RelationshipChart, SleepEntry } from './models';
 import type { SavedInsight } from './insightHistory';
 import { logger } from '../../utils/logger';
@@ -54,24 +53,16 @@ export class BackupService {
     }));
 
     const asyncStorageData: Record<string, string> = {};
-    await Promise.all([
-      ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map(async (key) => {
-        try {
-          const value = await EncryptedAsyncStorage.getItem(key);
-          if (value) asyncStorageData[key] = value;
-        } catch (error) {
-          logger.error(`[Backup] Failed to read encrypted key ${key}:`, error);
-        }
-      }),
-      ...PLAIN_ASYNC_USER_DATA_KEYS.map(async (key) => {
+    await Promise.all(
+      PLAIN_ASYNC_USER_DATA_KEYS.map(async (key) => {
         try {
           const value = await AccountScopedAsyncStorage.getItem(key);
           if (value) asyncStorageData[key] = value;
         } catch (error) {
-          logger.error(`[Backup] Failed to read plain key ${key}:`, error);
+          logger.error(`[Backup] Failed to read key ${key}:`, error);
         }
       }),
-    ]);
+    );
 
     const payload: BackupPayload = {
       schemaVersion: 2,
@@ -143,7 +134,6 @@ export class BackupService {
 
     await supabaseDb.clearAccountScopedData();
     await Promise.all([
-      ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map((key) => EncryptedAsyncStorage.removeItem(key)),
       ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AccountScopedAsyncStorage.removeItem(key)),
     ]);
 
@@ -170,18 +160,11 @@ export class BackupService {
     }
 
     if (payload.asyncStorageData) {
-      const allowedKeys = new Set<string>([
-        ...(ENCRYPTED_ASYNC_USER_DATA_KEYS as readonly string[]),
-        ...(PLAIN_ASYNC_USER_DATA_KEYS as readonly string[]),
-      ]);
+      const allowedKeys = new Set<string>([...(PLAIN_ASYNC_USER_DATA_KEYS as readonly string[])]);
       for (const [key, value] of Object.entries(payload.asyncStorageData)) {
         if (!allowedKeys.has(key)) continue;
         try {
-          if ((ENCRYPTED_ASYNC_USER_DATA_KEYS as readonly string[]).includes(key)) {
-            await EncryptedAsyncStorage.setItem(key, value);
-          } else {
-            await AccountScopedAsyncStorage.setItem(key, value);
-          }
+          await AccountScopedAsyncStorage.setItem(key, value);
         } catch (error) {
           logger.error(`[Restore] Failed to restore AsyncStorage key ${key}:`, error);
         }

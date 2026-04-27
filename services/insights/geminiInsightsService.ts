@@ -18,7 +18,7 @@
  *     no natal chart coordinates, no user identifiers.
  */
 
-import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
 import { supabase } from '../../lib/supabase';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { logger } from '../../utils/logger';
@@ -95,7 +95,7 @@ function simpleHash(str: string): number {
 
 async function getCachedResult(cacheKey: string): Promise<GeminiPatternResult | null> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(CACHE_KEY);
+    const raw = await AccountScopedAsyncStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const cached: CachedResult = JSON.parse(raw);
     if (cached.cacheKey === cacheKey) return cached.result;
@@ -105,7 +105,7 @@ async function getCachedResult(cacheKey: string): Promise<GeminiPatternResult | 
 
 async function setCachedResult(cacheKey: string, result: GeminiPatternResult): Promise<void> {
   try {
-    await EncryptedAsyncStorage.setItem(CACHE_KEY, JSON.stringify({ cacheKey, result }));
+    await AccountScopedAsyncStorage.setItem(CACHE_KEY, JSON.stringify({ cacheKey, result }));
   } catch { /* ignore */ }
 }
 

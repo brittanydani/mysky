@@ -10,7 +10,7 @@
  * returns null/[] rather than throwing.
  */
 
-import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../storage/accountScopedStorage';
 import {
   loadRelationshipPatterns,
   loadSomaticEntries,
@@ -162,7 +162,7 @@ const STORAGE_KEYS = {
 /** Reads JSON from encrypted storage for the profile stores that remain local. */
 async function readEncryptedJson<T>(key: string): Promise<T | null> {
   try {
-    const raw = await EncryptedAsyncStorage.getItem(key);
+    const raw = await AccountScopedAsyncStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : null;
   } catch {
     return null;

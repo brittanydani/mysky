@@ -29,8 +29,20 @@ jest.mock('../../storage/localDb', () => ({
   localDb: mockLocalDb,
 }));
 
-jest.mock('../../storage/encryptedAsyncStorage', () => ({
-  EncryptedAsyncStorage: {
+const mockSupabaseDb = {
+  getCharts: jest.fn().mockResolvedValue([]),
+  getJournalEntries: jest.fn().mockResolvedValue([]),
+  getJournalEntryCount: jest.fn().mockResolvedValue(0),
+  getSettings: jest.fn().mockResolvedValue(null),
+  hardDeleteAllData: jest.fn().mockResolvedValue(undefined),
+};
+
+jest.mock('../../storage/supabaseDb', () => ({
+  supabaseDb: mockSupabaseDb,
+}));
+
+jest.mock('../../storage/accountScopedStorage', () => ({
+  AccountScopedAsyncStorage: {
     getItem: jest.fn().mockResolvedValue(null),
     deleteAllUserData: jest.fn().mockResolvedValue(undefined),
     removeItem: jest.fn().mockResolvedValue(undefined),
@@ -143,8 +155,8 @@ describe('PrivacyComplianceManager', () => {
 
   describe('handleExportRequest (GDPR Art. 20)', () => {
     it('includes encrypted async storage user data in the export package', async () => {
-      const { EncryptedAsyncStorage } = require('../../storage/encryptedAsyncStorage');
-      EncryptedAsyncStorage.getItem.mockResolvedValueOnce('{"hero":"sage"}');
+      const { AccountScopedAsyncStorage } = require('../../storage/accountScopedStorage');
+      AccountScopedAsyncStorage.getItem.mockResolvedValueOnce('{"hero":"sage"}');
 
       const result = await manager.handleExportRequest();
 
@@ -158,7 +170,7 @@ describe('PrivacyComplianceManager', () => {
       const result = await manager.handleDeletionRequest();
 
       expect(result).toBeDefined();
-      expect(mockLocalDb.hardDeleteAllData).toHaveBeenCalled();
+      expect(mockSupabaseDb.hardDeleteAllData).toHaveBeenCalled();
     });
   });
 

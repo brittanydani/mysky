@@ -32,7 +32,6 @@ import {
   generateStressPatternDescription,
   generateStrengthDescription,
   generateAnticipationBody,
-  generateProgressMarkerDescription,
 } from './personalProfileLibrary';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -709,47 +708,6 @@ function formatSignalList(items: string[]): string {
 }
 
 
-
-function concreteDayExample(day: ScoredDay | undefined): string {
-  if (!day) return '';
-  const signals = [
-    ...(day.aggregate.relationshipAnchors ?? []),
-    ...day.aggregate.tagsUnion.map((tag) => tag.replace(/_/g, ' ')),
-    ...day.aggregate.keywordsUnion,
-    ...(day.aggregate.relationshipKeywords ?? []),
-  ]
-    .map((signal) => signal.toLowerCase().trim())
-    .filter(Boolean);
-
-  const unique = [...new Set(signals)].slice(0, 3);
-  if (!unique.length) return '';
-  return ` A concrete day-level clue: ${formatSignalList(unique)} was present when this pattern was strongest.`;
-}
-
-function enrichTraitsWithConcreteExamples(profile: PatternProfile, traits: PersonalTrait[]): PersonalTrait[] {
-  return traits.map((trait) => {
-    let exampleDay: ScoredDay | undefined;
-
-    if (trait.id === 'sleep-sensitive') {
-      exampleDay = [...profile.scoredDays]
-        .filter(day => day.aggregate.sleepQuality != null && day.aggregate.sleepQuality <= 2)
-        .sort((a, b) => a.scores.stability - b.scores.stability)[0];
-    } else if (trait.id === 'connection-sensitive') {
-      exampleDay = [...profile.scoredDays]
-        .filter(day => day.scores.connection !== 50)
-        .sort((a, b) => a.scores.stability - b.scores.stability)[0];
-    } else if (trait.id === 'gradual-accumulator') {
-      exampleDay = [...profile.scoredDays].sort((a, b) => b.scores.strain - a.scores.strain)[0];
-    } else if (trait.id === 'crowding-sensitive') {
-      exampleDay = [...profile.scoredDays].sort((a, b) => b.scores.emotionalIntensity - a.scores.emotionalIntensity)[0];
-    }
-
-    const example = concreteDayExample(exampleDay);
-    if (!example || trait.description.includes('A concrete day-level clue:')) return trait;
-    return { ...trait, description: `${trait.description}${example}` };
-  });
-}
-
 function mostRepeatedSignals(days: ScoredDay[], limit = 3): string[] {
   const counts = new Map<string, number>();
 
@@ -1060,7 +1018,7 @@ function detectProgressMarkers(profile: PatternProfile, traits: PersonalTrait[])
 export function buildPersonalProfile(aggregates: DailyAggregate[]): PersonalProfile {
   const profile = buildPatternProfile(aggregates);
   const maturity = detectMaturity(profile.windowDays);
-  const traits = enrichTraitsWithConcreteExamples(profile, detectTraits(profile));
+  const traits = detectTraits(profile);
   const recoveryStyle = detectRecoveryStyle(profile);
   const stressPattern = detectStressPattern(profile);
   const innerThemes = detectInnerThemes(profile);
@@ -1074,7 +1032,7 @@ export function buildPersonalProfile(aggregates: DailyAggregate[]): PersonalProf
     const poor = withSleep.filter(d => (d.aggregate.sleepQuality ?? 0) <= 2);
     if (good.length >= 2 && poor.length >= 2) {
       const diff = mean(good.map(d => d.scores.stability)) - mean(poor.map(d => d.scores.stability));
-      sleepSensitivity = Math.min(Math.round(diff * 2.5), 100);
+      sleepSensitivity = Math.max(0, Math.min(Math.round(diff * 2.5), 100));
     }
   }
 
@@ -1083,7 +1041,7 @@ export function buildPersonalProfile(aggregates: DailyAggregate[]): PersonalProf
   let connectionSensitivity = 50;
   if (connected.length >= 2 && disconnected.length >= 2) {
     const spread = mean(connected.map(d => d.scores.stability)) - mean(disconnected.map(d => d.scores.stability));
-    connectionSensitivity = Math.min(Math.round(spread * 2.5), 100);
+    connectionSensitivity = Math.max(0, Math.min(Math.round(spread * 2.5), 100));
   }
 
   const emotionalRange = stdDev(profile.scoredDays.map(d => d.scores.emotionalIntensity));

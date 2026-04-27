@@ -22,7 +22,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../services/storage/accountScopedStorage';
 import * as Haptics from 'expo-haptics';
 import {
   BlurMask,
@@ -172,7 +172,7 @@ export default function CognitiveStyleScreen() {
   useFocusEffect(
     useCallback(() => {
       syncCognitiveStyleFromReflections({ includeDrafts: true })
-        .then(() => EncryptedAsyncStorage.getItem(STORAGE_KEY))
+        .then(() => AccountScopedAsyncStorage.getItem(STORAGE_KEY))
         .then((raw) => {
           if (raw) {
             const parsed = JSON.parse(raw);
@@ -185,9 +185,9 @@ export default function CognitiveStyleScreen() {
 
   const handleSave = async () => {
     try {
-      const raw = await EncryptedAsyncStorage.getItem(STORAGE_KEY);
+      const raw = await AccountScopedAsyncStorage.getItem(STORAGE_KEY);
       const existing = raw ? JSON.parse(raw) : {};
-      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...scores, manualScores: scores }));
+      await AccountScopedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...scores, manualScores: scores }));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setSaved(true);
     } catch {

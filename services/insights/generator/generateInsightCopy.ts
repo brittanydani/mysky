@@ -2,7 +2,9 @@ import {
   ArchivePattern,
   DailyInsightAngle,
   DailyInsightContext,
+  EvidenceAnchor,
   GeneratedInsight,
+  PatternMovement,
 } from '../types/knowledgeEngine';
 import { generateId } from '../../storage/models';
 
@@ -21,9 +23,9 @@ export function generateInsightCopy(
   const patternBody = angle.patternOverride || pattern.copyFrame.pattern;
 
   // Build movement/cross-source indicator
-  let movementLabel = 'repeating';
+  let movementLabel: PatternMovement = 'repeating';
   if (context.movement.includes('cross_source_match')) {
-    movementLabel = 'cross_source_match';
+    movementLabel = 'new';
   } else if (context.movement.includes('new_signal')) {
     movementLabel = 'new';
   }
@@ -41,8 +43,8 @@ export function generateInsightCopy(
     prompt: angle.prompt,
     patternKey: pattern.key,
     confidence: 'moderate', // Placeholder
-    movement: movementLabel as any,
-    evidence: context.todaySignals.map((s) => s.evidence).filter((e): e is any => !!e),
+    movement: movementLabel,
+    evidence: context.todaySignals.map((s) => s.evidence).filter((e): e is EvidenceAnchor => !!e),
     createdAt: date,
   };
 }

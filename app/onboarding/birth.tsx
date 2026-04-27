@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, View, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
-import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../../services/storage/accountScopedStorage';
 
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import BirthDataModal from '../../components/BirthDataModal';
@@ -69,7 +69,7 @@ export default function OnboardingBirthScreen() {
 
   useEffect(() => {
     setVisible(true);
-    EncryptedAsyncStorage.getItem('msky_user_name')
+    AccountScopedAsyncStorage.getItem('msky_user_name')
       .then((v) => { if (v) setSavedName(v); })
       .catch(() => {});
   }, []);

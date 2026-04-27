@@ -85,8 +85,8 @@ jest.mock('../../utils/IdentityVault', () => ({
   },
 }));
 
-jest.mock('../../services/storage/encryptedAsyncStorage', () => ({
-  EncryptedAsyncStorage: {
+jest.mock('../../services/storage/accountScopedStorage', () => ({
+  AccountScopedAsyncStorage: {
     setItem: jest.fn().mockResolvedValue(undefined),
     getItem: jest.fn().mockResolvedValue(null),
   },
