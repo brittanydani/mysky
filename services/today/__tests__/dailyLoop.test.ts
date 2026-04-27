@@ -346,7 +346,7 @@ describe('getDailyLoopData()', () => {
     const result = await getDailyLoopData('chart-1');
 
     expect(result.todayInsight.type).toBe('check-in');
-    expect(result.todayInsight.text).toContain('lower fuel');
+    expect(result.todayInsight.text).toContain('conservation mode');
     expect(result.returnNudge).toBeNull();
   });
 

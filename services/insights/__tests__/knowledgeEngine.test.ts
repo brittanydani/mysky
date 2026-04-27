@@ -80,7 +80,7 @@ describe('Knowledge Engine', () => {
     }
   });
 
-  it('detects cross-source matches', () => {
+  it('marks the first matching multi-source pattern as new when there is no recent baseline', () => {
     const insight = runKnowledgeEngine(mockCheckIns, mockJournals, mockSleep, null, now, {
       recentlyShownPatternKeys: [],
       recentlyShownCopyHashes: [],
@@ -88,7 +88,7 @@ describe('Knowledge Engine', () => {
 
     expect(insight).not.toBeNull();
     if (insight) {
-      expect(insight.movement).toBe('cross_source_match');
+      expect(insight.movement).toBe('new');
     }
   });
 });

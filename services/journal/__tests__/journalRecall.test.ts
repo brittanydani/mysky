@@ -3,8 +3,10 @@ import type { JournalEntry } from '../../storage/models';
 
 const mockGetJournalEntries = jest.fn();
 
-jest.mock('../../storage/localDb', () => ({
-  localDb: { getJournalEntries: () => mockGetJournalEntries() },
+jest.mock('../../storage/supabaseDb', () => ({
+  supabaseDb: {
+    getJournalEntries: (...args: unknown[]) => mockGetJournalEntries(...args),
+  },
 }));
 
 jest.mock('../../../utils/logger', () => ({
@@ -93,7 +95,7 @@ describe('findMoodRecall', () => {
     expect(result).toBeNull();
   });
 
-  it('returns null and does not throw when localDb rejects', async () => {
+  it('returns null and does not throw when supabaseDb rejects', async () => {
     mockGetJournalEntries.mockRejectedValue(new Error('DB error'));
 
     const result = await findMoodRecall('calm');

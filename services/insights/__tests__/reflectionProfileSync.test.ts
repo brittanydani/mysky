@@ -1,4 +1,4 @@
-import { EncryptedAsyncStorage } from '../../storage/encryptedAsyncStorage';
+import { AccountScopedAsyncStorage } from '../../storage/accountScopedStorage';
 import { getAnswersByCategory, getDraftAnswersByCategory, loadReflections } from '../dailyReflectionService';
 import { loadSomaticEntries } from '../../storage/selfKnowledgeStore';
 import {
@@ -8,8 +8,8 @@ import {
   syncCoreValuesFromReflections,
 } from '../reflectionProfileSync';
 
-jest.mock('../../storage/encryptedAsyncStorage', () => ({
-  EncryptedAsyncStorage: {
+jest.mock('../../storage/accountScopedStorage', () => ({
+  AccountScopedAsyncStorage: {
     getItem: jest.fn(),
     setItem: jest.fn(),
   },
@@ -25,7 +25,7 @@ jest.mock('../../storage/selfKnowledgeStore', () => ({
   loadSomaticEntries: jest.fn(),
 }));
 
-const mockedStorage = EncryptedAsyncStorage as jest.Mocked<typeof EncryptedAsyncStorage>;
+const mockedStorage = AccountScopedAsyncStorage as jest.Mocked<typeof AccountScopedAsyncStorage>;
 const mockedGetAnswersByCategory = getAnswersByCategory as jest.MockedFunction<typeof getAnswersByCategory>;
 const mockedGetDraftAnswersByCategory = getDraftAnswersByCategory as jest.MockedFunction<typeof getDraftAnswersByCategory>;
 const mockedLoadReflections = loadReflections as jest.MockedFunction<typeof loadReflections>;

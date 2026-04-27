@@ -4,17 +4,17 @@
  * Tests the pure-logic layer of CheckInService:
  *   - detectTimeOfDay (via getCurrentTimeSlot) — hour boundary conditions
  *   - getLogicalToday — pre-6am rolls back to yesterday
- *   - CheckInService.getCurrentStreak — streak counting with mocked DB
- *   - CheckInService.getCheckInCount — delegates to localDb correctly
+ *   - CheckInService.getCurrentStreak — streak counting with mocked Supabase DB
+ *   - CheckInService.getCheckInCount — delegates to supabaseDb correctly
  */
 
 import { getLogicalToday, CheckInService, TIME_OF_DAY_LABELS, TIME_OF_DAY_ORDER } from '../checkInService';
 import type { DailyCheckIn } from '../types';
 
-// ─── Mock localDb so no SQLite / expo-sqlite is loaded ────────────────────────
+// ─── Mock supabaseDb so no real Supabase client is loaded ─────────────────────
 
-jest.mock('../../storage/localDb', () => ({
-  localDb: {
+jest.mock('../../storage/supabaseDb', () => ({
+  supabaseDb: {
     getCheckIns: jest.fn(),
     getCheckInCount: jest.fn(),
     getCheckInsByDate: jest.fn(),
@@ -25,9 +25,9 @@ jest.mock('../../storage/localDb', () => ({
   },
 }));
 
-import { localDb } from '../../storage/localDb';
+import { supabaseDb } from '../../storage/supabaseDb';
 
-const mockDb = localDb as jest.Mocked<typeof localDb>;
+const mockDb = supabaseDb as jest.Mocked<typeof supabaseDb>;
 
 // ─── Minimal fixture ──────────────────────────────────────────────────────────
 
@@ -216,7 +216,7 @@ describe('CheckInService.getCurrentStreak', () => {
 describe('CheckInService.getCheckInCount', () => {
   beforeEach(() => { mockDb.getCheckInCount.mockReset(); });
 
-  it('delegates to localDb.getCheckInCount with the chartId', async () => {
+  it('delegates to supabaseDb.getCheckInCount with the chartId', async () => {
     mockDb.getCheckInCount.mockResolvedValue(42);
     const result = await CheckInService.getCheckInCount('chart-1');
     expect(mockDb.getCheckInCount).toHaveBeenCalledWith('chart-1');

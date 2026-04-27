@@ -3,7 +3,7 @@ import type { RelationshipPatternRecord, SomaticEntryRecord } from '../../storag
 import type { TriggerEvent } from '../../../utils/triggerEventTypes';
 
 const plainStore = new Map<string, string>();
-const encryptedStore = new Map<string, string>();
+const accountScopedStore = new Map<string, string>();
 const mockLoadSomaticEntries = jest.fn<Promise<SomaticEntryRecord[]>, []>(async () => []);
 const mockLoadTriggerEvents = jest.fn<Promise<TriggerEvent[]>, []>(async () => []);
 const mockLoadRelationshipPatterns = jest.fn<Promise<RelationshipPatternRecord[]>, []>(async () => []);
@@ -14,11 +14,11 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(async (key: string) => { plainStore.delete(key); }),
 }));
 
-jest.mock('../../storage/encryptedAsyncStorage', () => ({
-  EncryptedAsyncStorage: {
-    getItem: jest.fn(async (key: string) => encryptedStore.get(key) ?? null),
-    setItem: jest.fn(async (key: string, v: string) => { encryptedStore.set(key, v); }),
-    removeItem: jest.fn(async (key: string) => { encryptedStore.delete(key); }),
+jest.mock('../../storage/accountScopedStorage', () => ({
+  AccountScopedAsyncStorage: {
+    getItem: jest.fn(async (key: string) => accountScopedStore.get(key) ?? null),
+    setItem: jest.fn(async (key: string, v: string) => { accountScopedStore.set(key, v); }),
+    removeItem: jest.fn(async (key: string) => { accountScopedStore.delete(key); }),
   },
 }));
 
@@ -48,7 +48,7 @@ const KEYS = {
 describe('selfKnowledgeContext – loadSelfKnowledgeContext()', () => {
   beforeEach(() => {
     plainStore.clear();
-    encryptedStore.clear();
+    accountScopedStore.clear();
     jest.clearAllMocks();
     mockGetReflectionSummary.mockResolvedValue(null);
     mockLoadSomaticEntries.mockResolvedValue([]);
@@ -67,27 +67,27 @@ describe('selfKnowledgeContext – loadSelfKnowledgeContext()', () => {
     expect(ctx.dailyReflections).toBeNull();
   });
 
-  it('loads coreValues from encrypted AsyncStorage', async () => {
+  it('loads coreValues from account-scoped AsyncStorage', async () => {
     const cv = { selected: ['courage', 'love'], topFive: ['courage'] };
-    encryptedStore.set(KEYS.coreValues, JSON.stringify(cv));
+    accountScopedStore.set(KEYS.coreValues, JSON.stringify(cv));
     const ctx = await loadSelfKnowledgeContext();
     expect(ctx.coreValues).toEqual(cv);
   });
 
-  it('loads archetypeProfile from encrypted AsyncStorage', async () => {
+  it('loads archetypeProfile from account-scoped AsyncStorage', async () => {
     const profile = {
       dominant: 'sage' as const,
       scores: { hero: 1, caregiver: 0, seeker: 2, sage: 3, rebel: 0 },
       completedAt: '2026-01-01T10:00:00.000Z',
     };
-    encryptedStore.set(KEYS.archetypeProfile, JSON.stringify(profile));
+    accountScopedStore.set(KEYS.archetypeProfile, JSON.stringify(profile));
     const ctx = await loadSelfKnowledgeContext();
     expect(ctx.archetypeProfile).toEqual(profile);
   });
 
-  it('loads cognitiveStyle from encrypted AsyncStorage', async () => {
+  it('loads cognitiveStyle from account-scoped AsyncStorage', async () => {
     const style = { scope: 3, processing: 2, decisions: 4 };
-    encryptedStore.set(KEYS.cognitiveStyle, JSON.stringify(style));
+    accountScopedStore.set(KEYS.cognitiveStyle, JSON.stringify(style));
     const ctx = await loadSelfKnowledgeContext();
     expect(ctx.cognitiveStyle).toEqual(style);
   });
@@ -172,8 +172,8 @@ describe('selfKnowledgeContext – loadSelfKnowledgeContext()', () => {
     expect(ctx.coreValues).toBeNull();
   });
 
-  it('does not throw when encrypted AsyncStorage value is malformed JSON', async () => {
-    encryptedStore.set(KEYS.archetypeProfile, '<<<not json>>>');
+  it('does not throw when account-scoped AsyncStorage value is malformed JSON', async () => {
+    accountScopedStore.set(KEYS.archetypeProfile, '<<<not json>>>');
     await expect(loadSelfKnowledgeContext()).resolves.not.toThrow();
     const ctx = await loadSelfKnowledgeContext();
     expect(ctx.archetypeProfile).toBeNull();

@@ -99,9 +99,9 @@ describe('archive pattern catalog chunk 2', () => {
 
   it('preserves representative user-facing titles from the supplied list', () => {
     expect(BOUNDARY_SELF_TRUST_PATTERNS[0].title).toBe('Where You Draw the Line');
-    expect(COGNITIVE_STYLE_PATTERNS[0].title).toBe('How You Process Pain');
+    expect(COGNITIVE_STYLE_PATTERNS[0].title).toBe('How You Process Information');
     expect(VALUES_INTEGRITY_PATTERNS[0].title).toBe('The Value Beneath Your Anger');
-    expect(CREATIVITY_EXPRESSION_PATTERNS[0].title).toBe('Creative Alchemy');
+    expect(CREATIVITY_EXPRESSION_PATTERNS[0].title).toBe('How You Turn Feeling into Form');
     expect(IDENTITY_GROWTH_PATTERNS[19].title).toBe('The Wholeness Pattern');
   });
 });

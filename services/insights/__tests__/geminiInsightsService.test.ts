@@ -1,4 +1,4 @@
-const encryptedStore = new Map<string, string>();
+const accountScopedStore = new Map<string, string>();
 
 const mockInvoke = jest.fn();
 const mockGetSession = jest.fn();
@@ -9,11 +9,11 @@ const mockLogger = {
   error: jest.fn(),
 };
 
-jest.mock('../../storage/encryptedAsyncStorage', () => ({
-  EncryptedAsyncStorage: {
-    getItem: jest.fn(async (key: string) => encryptedStore.get(key) ?? null),
-    setItem: jest.fn(async (key: string, value: string) => { encryptedStore.set(key, value); }),
-    removeItem: jest.fn(async (key: string) => { encryptedStore.delete(key); }),
+jest.mock('../../storage/accountScopedStorage', () => ({
+  AccountScopedAsyncStorage: {
+    getItem: jest.fn(async (key: string) => accountScopedStore.get(key) ?? null),
+    setItem: jest.fn(async (key: string, value: string) => { accountScopedStore.set(key, value); }),
+    removeItem: jest.fn(async (key: string) => { accountScopedStore.delete(key); }),
   },
 }));
 
@@ -58,7 +58,7 @@ describe('geminiInsightsService', () => {
   ];
 
   beforeEach(() => {
-    encryptedStore.clear();
+    accountScopedStore.clear();
     jest.clearAllMocks();
     mockNow += 20_000;
     jest.spyOn(Date, 'now').mockReturnValue(mockNow);

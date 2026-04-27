@@ -1,6 +1,11 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production';
+function isDevMode(): boolean {
+  const globalDev = (globalThis as { __DEV__?: boolean }).__DEV__;
+  if (typeof globalDev !== 'undefined') return globalDev;
+  if (typeof __DEV__ !== 'undefined') return __DEV__;
+  return process.env.NODE_ENV !== 'production';
+}
 
 function redact(value: unknown): unknown {
   // Prevent accidental logging of sensitive fields.
@@ -68,7 +73,7 @@ function emit(level: LogLevel, ...args: unknown[]) {
   const safeArgs = args.map(redact);
 
   // In production, only warn/error.
-  if (!isDev && (level === 'debug' || level === 'info')) return;
+  if (!isDevMode() && (level === 'debug' || level === 'info')) return;
 
   (console[level] ?? console.log)(...safeArgs);
 }
