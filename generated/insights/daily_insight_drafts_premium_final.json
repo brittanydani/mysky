@@ -2412,18 +2412,6 @@
     "tone": "clear"
   },
   {
-    "key": "relationships_003_tone_sensitivity__support_version",
-    "pattern_key": "relationships_003_tone_sensitivity",
-    "angle_key": "support_version",
-    "title": "Where Support Would Change the Shape",
-    "observation": "Your archive suggests that tone sensitivity in connection may be easier to carry with more support around it.",
-    "pattern": "Recent signals point toward the difference between handling something alone and being held while you handle it. The need may not be for someone to fix everything, but for the weight to stop being entirely yours.",
-    "reframe": "This does not read as reading into things. It reads as attention to emotional weather in connection.",
-    "question": "What did the tone shift seem to change inside you?",
-    "category": "relationships",
-    "tone": "soft"
-  },
-  {
     "key": "relationships_003_tone_sensitivity__cross_source_match",
     "pattern_key": "relationships_003_tone_sensitivity",
     "angle_key": "cross_source_match",
@@ -2542,18 +2530,6 @@
     "question": "What visual softness changed the day, even slightly?",
     "category": "glimmersRegulation",
     "tone": "encouraging"
-  },
-  {
-    "key": "glimmers_002_beauty_regulation__cross_source_match",
-    "pattern_key": "glimmers_002_beauty_regulation",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that beauty helping your system settle becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as being superficial. It reads as beauty becoming a real pathway back to steadiness.",
-    "question": "What atmosphere helps you breathe more easily?",
-    "category": "glimmersRegulation",
-    "tone": "clear"
   },
   {
     "key": "glimmers_002_beauty_regulation__gentler_interpretation",
@@ -2988,30 +2964,6 @@
     "tone": "soft"
   },
   {
-    "key": "emotional_weather_003_lonely_in_a_room__cross_source_match",
-    "pattern_key": "emotional_weather_003_lonely_in_a_room",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that feeling lonely even around people becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as being impossible to satisfy. It reads as the difference between being around people and feeling emotionally held.",
-    "question": "Where does the loneliness need a more accurate name?",
-    "category": "supportBelonging",
-    "tone": "clear"
-  },
-  {
-    "key": "emotional_weather_003_lonely_in_a_room__smallest_next_step",
-    "pattern_key": "emotional_weather_003_lonely_in_a_room",
-    "angle_key": "smallest_next_step",
-    "title": "The Smallest Honest Step",
-    "observation": "Your archive suggests that feeling lonely even around people may not need a dramatic response today.",
-    "pattern": "Sometimes the most useful movement is small: one clearer sentence, one softer expectation, one earlier pause, one honest boundary, or one moment of support before everything becomes too heavy.",
-    "reframe": "This does not read as being impossible to satisfy. It reads as the difference between being around people and feeling emotionally held.",
-    "question": "What would help you feel emotionally seen, not just physically near someone?",
-    "category": "supportBelonging",
-    "tone": "grounding"
-  },
-  {
     "key": "emotional_weather_003_lonely_in_a_room__gentler_interpretation",
     "pattern_key": "emotional_weather_003_lonely_in_a_room",
     "angle_key": "gentler_interpretation",
@@ -3132,30 +3084,6 @@
     "tone": "soft"
   },
   {
-    "key": "support_belonging_005_need_for_specific_care__cross_source_match",
-    "pattern_key": "support_belonging_005_need_for_specific_care",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that the need for specific care becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as being hard to comfort. It reads as needing care accurate enough to find the real wound.",
-    "question": "Where do you need accuracy more than quick comfort?",
-    "category": "supportBelonging",
-    "tone": "clear"
-  },
-  {
-    "key": "support_belonging_005_need_for_specific_care__smallest_next_step",
-    "pattern_key": "support_belonging_005_need_for_specific_care",
-    "angle_key": "smallest_next_step",
-    "title": "The Smallest Honest Step",
-    "observation": "Your archive suggests that the need for specific care may not need a dramatic response today.",
-    "pattern": "Sometimes the most useful movement is small: one clearer sentence, one softer expectation, one earlier pause, one honest boundary, or one moment of support before everything becomes too heavy.",
-    "reframe": "This does not read as being hard to comfort. It reads as needing care accurate enough to find the real wound.",
-    "question": "What would support sound like if it reached the real place?",
-    "category": "supportBelonging",
-    "tone": "grounding"
-  },
-  {
     "key": "support_belonging_005_need_for_specific_care__gentler_interpretation",
     "pattern_key": "support_belonging_005_need_for_specific_care",
     "angle_key": "gentler_interpretation",
@@ -3274,30 +3202,6 @@
     "question": "What would help you feel held when you are offstage?",
     "category": "supportBelonging",
     "tone": "soft"
-  },
-  {
-    "key": "support_belonging_006_remembered_without_asking__cross_source_match",
-    "pattern_key": "support_belonging_006_remembered_without_asking",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that wanting to be remembered without asking becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as attention-seeking. It reads as the longing to matter when you are not actively asking.",
-    "question": "What would help you feel held when you are offstage?",
-    "category": "supportBelonging",
-    "tone": "clear"
-  },
-  {
-    "key": "support_belonging_006_remembered_without_asking__smallest_next_step",
-    "pattern_key": "support_belonging_006_remembered_without_asking",
-    "angle_key": "smallest_next_step",
-    "title": "The Smallest Honest Step",
-    "observation": "Your archive suggests that wanting to be remembered without asking may not need a dramatic response today.",
-    "pattern": "Sometimes the most useful movement is small: one clearer sentence, one softer expectation, one earlier pause, one honest boundary, or one moment of support before everything becomes too heavy.",
-    "reframe": "This does not read as attention-seeking. It reads as the longing to matter when you are not actively asking.",
-    "question": "Where does being remembered matter more than you want to admit?",
-    "category": "supportBelonging",
-    "tone": "grounding"
   },
   {
     "key": "support_belonging_006_remembered_without_asking__gentler_interpretation",
@@ -3444,18 +3348,6 @@
     "tone": "soft"
   },
   {
-    "key": "body_signals_003_overstimulation__part_that_makes_sense",
-    "pattern_key": "body_signals_003_overstimulation",
-    "angle_key": "part_that_makes_sense",
-    "title": "The Part That Makes Sense",
-    "observation": "Your archive suggests that overstimulation asking for less input has a logic to it, even if it is no longer the only option.",
-    "pattern": "A pattern can make sense without needing to run your life forever. Seeing the logic can soften shame and create more room for choice.",
-    "reframe": "This does not read as being too sensitive. It reads as a system asking for less input so it can come back to itself.",
-    "question": "What input could be lowered today?",
-    "category": "bodySignals",
-    "tone": "grounding"
-  },
-  {
     "key": "body_signals_003_overstimulation__signal_beneath_emotion",
     "pattern_key": "body_signals_003_overstimulation",
     "angle_key": "signal_beneath_emotion",
@@ -3574,18 +3466,6 @@
     "question": "Where does expression need more safety before it can move?",
     "category": "bodySignals",
     "tone": "soft"
-  },
-  {
-    "key": "body_signals_004_jaw_restraint__part_that_makes_sense",
-    "pattern_key": "body_signals_004_jaw_restraint",
-    "angle_key": "part_that_makes_sense",
-    "title": "The Part That Makes Sense",
-    "observation": "Your archive suggests that the jaw holding back words has a logic to it, even if it is no longer the only option.",
-    "pattern": "A pattern can make sense without needing to run your life forever. Seeing the logic can soften shame and create more room for choice.",
-    "reframe": "This does not read as being angry. It reads as contained energy looking for a safe way to be expressed.",
-    "question": "What would be easier to say if it did not have to come out perfectly?",
-    "category": "bodySignals",
-    "tone": "grounding"
   },
   {
     "key": "body_signals_004_jaw_restraint__signal_beneath_emotion",
@@ -3778,18 +3658,6 @@
     "question": "Where is the outside form still catching up to the inner vision?",
     "category": "cognitiveStyle",
     "tone": "grounding"
-  },
-  {
-    "key": "cognitive_style_004_perfectionism_as_vision_gap__cross_source_match",
-    "pattern_key": "cognitive_style_004_perfectionism_as_vision_gap",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that the gap between vision and reality becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as perfectionism. It reads as the ache of wanting the outside form to match the depth of the inner vision.",
-    "question": "What part of the standard comes from care rather than criticism?",
-    "category": "cognitiveStyle",
-    "tone": "clear"
   },
   {
     "key": "cognitive_style_004_perfectionism_as_vision_gap__smallest_next_step",
@@ -4068,18 +3936,6 @@
     "tone": "clear"
   },
   {
-    "key": "boundaries_004_no_after_repetition__cross_source_match",
-    "pattern_key": "boundaries_004_no_after_repetition",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that a boundary becoming clear after repetition becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as being impatient. It reads as a limit becoming clearer after the same cost has appeared too many times.",
-    "question": "What would you know if you trusted the repetition?",
-    "category": "boundariesSelfTrust",
-    "tone": "clear"
-  },
-  {
     "key": "boundaries_004_no_after_repetition__smallest_next_step",
     "pattern_key": "boundaries_004_no_after_repetition",
     "angle_key": "smallest_next_step",
@@ -4212,42 +4068,6 @@
     "tone": "clear"
   },
   {
-    "key": "relationships_004_conflict_aftercare__support_version",
-    "pattern_key": "relationships_004_conflict_aftercare",
-    "angle_key": "support_version",
-    "title": "Where Support Would Change the Shape",
-    "observation": "Your archive suggests that needing aftercare after conflict or closeness may be easier to carry with more support around it.",
-    "pattern": "Recent signals point toward the difference between handling something alone and being held while you handle it. The need may not be for someone to fix everything, but for the weight to stop being entirely yours.",
-    "reframe": "This does not read as not letting things go. It reads as connection taking time to settle back into safety.",
-    "question": "What would help your body believe the rupture is repaired?",
-    "category": "relationships",
-    "tone": "soft"
-  },
-  {
-    "key": "relationships_004_conflict_aftercare__cross_source_match",
-    "pattern_key": "relationships_004_conflict_aftercare",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that needing aftercare after conflict or closeness becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as not letting things go. It reads as connection taking time to settle back into safety.",
-    "question": "What would help your body believe the rupture is repaired?",
-    "category": "relationships",
-    "tone": "clear"
-  },
-  {
-    "key": "relationships_004_conflict_aftercare__smallest_next_step",
-    "pattern_key": "relationships_004_conflict_aftercare",
-    "angle_key": "smallest_next_step",
-    "title": "The Smallest Honest Step",
-    "observation": "Your archive suggests that needing aftercare after conflict or closeness may not need a dramatic response today.",
-    "pattern": "Sometimes the most useful movement is small: one clearer sentence, one softer expectation, one earlier pause, one honest boundary, or one moment of support before everything becomes too heavy.",
-    "reframe": "This does not read as not letting things go. It reads as connection taking time to settle back into safety.",
-    "question": "What lingered after the conversation ended?",
-    "category": "relationships",
-    "tone": "grounding"
-  },
-  {
     "key": "relationships_004_conflict_aftercare__gentler_interpretation",
     "pattern_key": "relationships_004_conflict_aftercare",
     "angle_key": "gentler_interpretation",
@@ -4366,42 +4186,6 @@
     "question": "What does safety need beyond someone being kind?",
     "category": "relationships",
     "tone": "clear"
-  },
-  {
-    "key": "relationships_005_kindness_safety_gap__support_version",
-    "pattern_key": "relationships_005_kindness_safety_gap",
-    "angle_key": "support_version",
-    "title": "Where Support Would Change the Shape",
-    "observation": "Your archive suggests that the gap between kindness and safety may be easier to carry with more support around it.",
-    "pattern": "Recent signals point toward the difference between handling something alone and being held while you handle it. The need may not be for someone to fix everything, but for the weight to stop being entirely yours.",
-    "reframe": "This does not read as being unfair. It reads as knowing that kindness and emotional safety are not always the same thing.",
-    "question": "What makes care feel emotionally safe, not just pleasant?",
-    "category": "relationships",
-    "tone": "soft"
-  },
-  {
-    "key": "relationships_005_kindness_safety_gap__cross_source_match",
-    "pattern_key": "relationships_005_kindness_safety_gap",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that the gap between kindness and safety becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as being unfair. It reads as knowing that kindness and emotional safety are not always the same thing.",
-    "question": "What makes care feel emotionally safe, not just pleasant?",
-    "category": "relationships",
-    "tone": "clear"
-  },
-  {
-    "key": "relationships_005_kindness_safety_gap__smallest_next_step",
-    "pattern_key": "relationships_005_kindness_safety_gap",
-    "angle_key": "smallest_next_step",
-    "title": "The Smallest Honest Step",
-    "observation": "Your archive suggests that the gap between kindness and safety may not need a dramatic response today.",
-    "pattern": "Sometimes the most useful movement is small: one clearer sentence, one softer expectation, one earlier pause, one honest boundary, or one moment of support before everything becomes too heavy.",
-    "reframe": "This does not read as being unfair. It reads as knowing that kindness and emotional safety are not always the same thing.",
-    "question": "Where are you allowed to need more than niceness?",
-    "category": "relationships",
-    "tone": "grounding"
   },
   {
     "key": "relationships_005_kindness_safety_gap__gentler_interpretation",
@@ -4524,42 +4308,6 @@
     "tone": "clear"
   },
   {
-    "key": "relationships_006_selective_vulnerability__support_version",
-    "pattern_key": "relationships_006_selective_vulnerability",
-    "angle_key": "support_version",
-    "title": "Where Support Would Change the Shape",
-    "observation": "Your archive suggests that selective vulnerability may be easier to carry with more support around it.",
-    "pattern": "Recent signals point toward the difference between handling something alone and being held while you handle it. The need may not be for someone to fix everything, but for the weight to stop being entirely yours.",
-    "reframe": "This does not read as being inconsistent. It reads as discernment about where softness has been earned.",
-    "question": "Where has softness been earned?",
-    "category": "relationships",
-    "tone": "soft"
-  },
-  {
-    "key": "relationships_006_selective_vulnerability__cross_source_match",
-    "pattern_key": "relationships_006_selective_vulnerability",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that selective vulnerability becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as being inconsistent. It reads as discernment about where softness has been earned.",
-    "question": "Where has softness been earned?",
-    "category": "relationships",
-    "tone": "clear"
-  },
-  {
-    "key": "relationships_006_selective_vulnerability__smallest_next_step",
-    "pattern_key": "relationships_006_selective_vulnerability",
-    "angle_key": "smallest_next_step",
-    "title": "The Smallest Honest Step",
-    "observation": "Your archive suggests that selective vulnerability may not need a dramatic response today.",
-    "pattern": "Sometimes the most useful movement is small: one clearer sentence, one softer expectation, one earlier pause, one honest boundary, or one moment of support before everything becomes too heavy.",
-    "reframe": "This does not read as being inconsistent. It reads as discernment about where softness has been earned.",
-    "question": "Where are you protecting softness wisely?",
-    "category": "relationships",
-    "tone": "grounding"
-  },
-  {
     "key": "relationships_006_selective_vulnerability__gentler_interpretation",
     "pattern_key": "relationships_006_selective_vulnerability",
     "angle_key": "gentler_interpretation",
@@ -4656,18 +4404,6 @@
     "tone": "encouraging"
   },
   {
-    "key": "glimmers_003_play_glimmer__cross_source_match",
-    "pattern_key": "glimmers_003_play_glimmer",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that play helping your system breathe becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as being childish. It reads as delight giving the inner world a low-stakes place to breathe.",
-    "question": "Where can the day hold something low-stakes?",
-    "category": "glimmersRegulation",
-    "tone": "clear"
-  },
-  {
     "key": "glimmers_003_play_glimmer__gentler_interpretation",
     "pattern_key": "glimmers_003_play_glimmer",
     "angle_key": "gentler_interpretation",
@@ -4726,18 +4462,6 @@
     "question": "What would make ease feel less risky?",
     "category": "glimmersRegulation",
     "tone": "encouraging"
-  },
-  {
-    "key": "glimmers_004_joy_bracing__cross_source_match",
-    "pattern_key": "glimmers_004_joy_bracing",
-    "angle_key": "cross_source_match",
-    "title": "When the Signals Agree",
-    "observation": "Your archive suggests that joy followed by bracing becomes more important when more than one part of your data points toward it.",
-    "pattern": "When your check-ins, writing, body cues, sleep, dreams, or relationship signals agree, MySky treats the pattern as stronger. It means this may not be only a passing mood. It may be a theme showing up through multiple doors.",
-    "reframe": "This does not read as ruining good moments. It reads as joy learning how to stay without needing to prepare for loss.",
-    "question": "Where do you brace after something good?",
-    "category": "glimmersRegulation",
-    "tone": "clear"
   },
   {
     "key": "glimmers_004_joy_bracing__gentler_interpretation",
