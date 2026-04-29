@@ -13,6 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 // File: app/_layout.tsx
 
 import React, { Component, type ReactNode, useEffect, useRef, useState } from 'react';
+import { ConfigValidator } from '../services/config/configValidator';
+import { ConfigErrorScreen } from '../components/ConfigErrorScreen';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -200,6 +202,23 @@ async function setTermsConsent(granted: boolean) {
 }
 
 function RootLayout() {
+  const configValidation = React.useMemo(() => ConfigValidator.validateStartup(), []);
+
+  React.useEffect(() => {
+    if (!configValidation.valid) {
+      console.error('[Config] Startup validation failed:', configValidation.errors);
+      return;
+    }
+
+    if (configValidation.warnings.length > 0) {
+      console.warn('[Config] Startup validation warnings:', configValidation.warnings);
+    }
+  }, [configValidation]);
+
+  if (!configValidation.valid) {
+    return <ConfigErrorScreen message={configValidation.errors.join('\n')} />;
+  }
+
   return (
     <ErrorBoundary>
       <ThemeProvider>
