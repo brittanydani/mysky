@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
+import { RETRY_PRESETS, withRetry } from '../../utils/withRetry';
 
 export type SelfKnowledgeProfileType =
   | 'core_values'
@@ -20,39 +21,51 @@ async function getUserId(): Promise<string> {
 export async function getDisplayName(): Promise<string | null> {
   const userId = await getUserId();
 
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .select('display_name')
-    .eq('user_id', userId)
-    .maybeSingle();
+  return withRetry(
+    async () => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('display_name')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-  if (error) {
-    logger.warn('[UserProfileService] Failed to load display name from Supabase.', error);
-    return null;
-  }
+      if (error) {
+        logger.warn('[UserProfileService] Failed to load display name from Supabase.', error);
+        return null;
+      }
 
-  return typeof data?.display_name === 'string' ? data.display_name : null;
+      return typeof data?.display_name === 'string' ? data.display_name : null;
+    },
+    'getDisplayName',
+    RETRY_PRESETS.standard,
+  );
 }
 
 export async function saveDisplayName(displayName: string): Promise<void> {
   const userId = await getUserId();
   const trimmed = displayName.trim();
 
-  const { error } = await supabase
-    .from('user_profiles')
-    .upsert(
-      {
-        user_id: userId,
-        display_name: trimmed.length > 0 ? trimmed : null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id' },
-    );
+  return withRetry(
+    async () => {
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert(
+          {
+            user_id: userId,
+            display_name: trimmed.length > 0 ? trimmed : null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' },
+        );
 
-  if (error) {
-    logger.warn('[UserProfileService] Failed to save display name to Supabase.', error);
-    throw error;
-  }
+      if (error) {
+        logger.warn('[UserProfileService] Failed to save display name to Supabase.', error);
+        throw error;
+      }
+    },
+    'saveDisplayName',
+    RETRY_PRESETS.standard,
+  );
 }
 
 export async function getSelfKnowledgeProfile<T>(
@@ -61,19 +74,25 @@ export async function getSelfKnowledgeProfile<T>(
 ): Promise<T> {
   const userId = await getUserId();
 
-  const { data, error } = await supabase
-    .from('self_knowledge_profiles')
-    .select('payload')
-    .eq('user_id', userId)
-    .eq('profile_type', profileType)
-    .maybeSingle();
+  return withRetry(
+    async () => {
+      const { data, error } = await supabase
+        .from('self_knowledge_profiles')
+        .select('payload')
+        .eq('user_id', userId)
+        .eq('profile_type', profileType)
+        .maybeSingle();
 
-  if (error) {
-    logger.warn(`[UserProfileService] Failed to load ${profileType} from Supabase.`, error);
-    return fallback;
-  }
+      if (error) {
+        logger.warn(`[UserProfileService] Failed to load ${profileType} from Supabase.`, error);
+        return fallback;
+      }
 
-  return (data?.payload ?? fallback) as T;
+      return (data?.payload ?? fallback) as T;
+    },
+    'getSelfKnowledgeProfile',
+    RETRY_PRESETS.standard,
+  );
 }
 
 export async function saveSelfKnowledgeProfile<T>(
@@ -82,22 +101,28 @@ export async function saveSelfKnowledgeProfile<T>(
 ): Promise<void> {
   const userId = await getUserId();
 
-  const { error } = await supabase
-    .from('self_knowledge_profiles')
-    .upsert(
-      {
-        user_id: userId,
-        profile_type: profileType,
-        payload,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,profile_type' },
-    );
+  return withRetry(
+    async () => {
+      const { error } = await supabase
+        .from('self_knowledge_profiles')
+        .upsert(
+          {
+            user_id: userId,
+            profile_type: profileType,
+            payload,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,profile_type' },
+        );
 
-  if (error) {
-    logger.warn(`[UserProfileService] Failed to save ${profileType} to Supabase.`, error);
-    throw error;
-  }
+      if (error) {
+        logger.warn(`[UserProfileService] Failed to save ${profileType} to Supabase.`, error);
+        throw error;
+      }
+    },
+    'saveSelfKnowledgeProfile',
+    RETRY_PRESETS.standard,
+  );
 }
 
 export async function deleteSelfKnowledgeProfile(
@@ -105,16 +130,22 @@ export async function deleteSelfKnowledgeProfile(
 ): Promise<void> {
   const userId = await getUserId();
 
-  const { error } = await supabase
-    .from('self_knowledge_profiles')
-    .delete()
-    .eq('user_id', userId)
-    .eq('profile_type', profileType);
+  return withRetry(
+    async () => {
+      const { error } = await supabase
+        .from('self_knowledge_profiles')
+        .delete()
+        .eq('user_id', userId)
+        .eq('profile_type', profileType);
 
-  if (error) {
-    logger.warn(`[UserProfileService] Failed to delete ${profileType} from Supabase.`, error);
-    throw error;
-  }
+      if (error) {
+        logger.warn(`[UserProfileService] Failed to delete ${profileType} from Supabase.`, error);
+        throw error;
+      }
+    },
+    'deleteSelfKnowledgeProfile',
+    RETRY_PRESETS.standard,
+  );
 }
 
 export async function getUserPreference<T>(
@@ -123,19 +154,25 @@ export async function getUserPreference<T>(
 ): Promise<T> {
   const userId = await getUserId();
 
-  const { data, error } = await supabase
-    .from('user_preferences')
-    .select('payload')
-    .eq('user_id', userId)
-    .eq('preference_key', preferenceKey)
-    .maybeSingle();
+  return withRetry(
+    async () => {
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('payload')
+        .eq('user_id', userId)
+        .eq('preference_key', preferenceKey)
+        .maybeSingle();
 
-  if (error) {
-    logger.warn(`[UserProfileService] Failed to load ${preferenceKey} from Supabase.`, error);
-    return fallback;
-  }
+      if (error) {
+        logger.warn(`[UserProfileService] Failed to load ${preferenceKey} from Supabase.`, error);
+        return fallback;
+      }
 
-  return (data?.payload ?? fallback) as T;
+      return (data?.payload ?? fallback) as T;
+    },
+    'getUserPreference',
+    RETRY_PRESETS.standard,
+  );
 }
 
 export async function saveUserPreference<T>(
@@ -144,36 +181,48 @@ export async function saveUserPreference<T>(
 ): Promise<void> {
   const userId = await getUserId();
 
-  const { error } = await supabase
-    .from('user_preferences')
-    .upsert(
-      {
-        user_id: userId,
-        preference_key: preferenceKey,
-        payload,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,preference_key' },
-    );
+  return withRetry(
+    async () => {
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert(
+          {
+            user_id: userId,
+            preference_key: preferenceKey,
+            payload,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,preference_key' },
+        );
 
-  if (error) {
-    logger.warn(`[UserProfileService] Failed to save ${preferenceKey} to Supabase.`, error);
-    throw error;
-  }
+      if (error) {
+        logger.warn(`[UserProfileService] Failed to save ${preferenceKey} to Supabase.`, error);
+        throw error;
+      }
+    },
+    'saveUserPreference',
+    RETRY_PRESETS.standard,
+  );
 }
 
 
 export async function deleteUserPreference(preferenceKey: string): Promise<void> {
   const userId = await getUserId();
 
-  const { error } = await supabase
-    .from('user_preferences')
-    .delete()
-    .eq('user_id', userId)
-    .eq('preference_key', preferenceKey);
+  return withRetry(
+    async () => {
+      const { error } = await supabase
+        .from('user_preferences')
+        .delete()
+        .eq('user_id', userId)
+        .eq('preference_key', preferenceKey);
 
-  if (error) {
-    logger.warn(`[UserProfileService] Failed to delete ${preferenceKey} from Supabase.`, error);
-    throw error;
-  }
+      if (error) {
+        logger.warn(`[UserProfileService] Failed to delete ${preferenceKey} from Supabase.`, error);
+        throw error;
+      }
+    },
+    'deleteUserPreference',
+    RETRY_PRESETS.standard,
+  );
 }
