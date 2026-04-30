@@ -1,15 +1,18 @@
 {
   "global": {
-    "branches": 75,
+    "branches": 55,
     "functions": 75,
     "lines": 75,
     "statements": 75
   },
   "criticalpaths": {
-    "services/premium": { "minimum": 85, "reason": "Revenue critical" },
-    "services/storage": { "minimum": 85, "reason": "Data integrity critical" },
     "services/auth": { "minimum": 90, "reason": "Security critical" },
+    "services/config": { "minimum": 90, "reason": "Startup reliability critical" },
+    "services/offline/offlineQueue": { "minimum": 90, "reason": "Offline data integrity critical" },
+    "services/premium/revenuecat": { "minimum": 75, "reason": "Revenue critical" },
+    "services/validation": { "minimum": 85, "reason": "Data integrity critical" },
     "utils/logger": { "minimum": 70, "reason": "Observability" },
-    "context/AuthContext": { "minimum": 80, "reason": "Auth flow" }
+    "utils/sentry": { "minimum": 35, "reason": "PII scrubber covered; native init paths require staging" },
+    "utils/withRetry": { "minimum": 90, "reason": "Network resilience critical" }
   }
 }

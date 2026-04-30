@@ -23,7 +23,7 @@
     "test:components": "jest --config jest.component.config.js",
     "test:all": "npm test && npm run test:components",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test:coverage": "jest --coverage --config jest.coverage.config.js --runInBand",
     "typecheck": "tsc --noEmit",
     "postinstall": "patch-package",
     "android": "expo run:android"

@@ -128,6 +128,13 @@ export function getPremiumInsightDraftCount(): number {
   return ALL_DRAFTS.length;
 }
 
+export function getPremiumInsightDraftByKey(
+  key: string,
+): SelectedPremiumInsightDraft | null {
+  const draft = ALL_DRAFTS.find(item => item.key === key);
+  return draft ? toSelectedDraft(draft) : null;
+}
+
 export function getPremiumInsightDraftsByCategory(
   category: PremiumInsightDraft['category'],
 ): PremiumInsightDraft[] {

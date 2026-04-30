@@ -23,7 +23,12 @@ import type { SelfKnowledgeContext } from '../insights/selfKnowledgeContext';
 import { DRAIN_TAG_MAP, RESTORE_TAG_MAP } from '../../utils/selfKnowledgeCrossRef';
 import { generateWeeklySynthesis, type WeeklySynthesisContext } from './weeklySynthesisLibrary';
 import type { DailyCheckIn } from '../patterns/types';
-import { selectPremiumInsightDraft } from '../insightsV2/selectPremiumInsightDraft';
+import {
+  getPremiumInsightDraftByKey,
+  selectPremiumInsightDraft,
+  type SelectedPremiumInsightDraft,
+} from '../insightsV2/selectPremiumInsightDraft';
+import { getUserPreference, saveUserPreference } from '../storage/userProfileService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -112,6 +117,20 @@ export interface SynthesisSignal {
   domain: 'mood' | 'sleep' | 'journal' | 'dream';
   label: string;
   detail: string;
+}
+
+type PremiumDraftInsightHistoryItem = {
+  date: string;
+  draftKey: string;
+  patternKey: string;
+  angleKey: string;
+  category: SelectedPremiumInsightDraft['category'];
+};
+
+const PREMIUM_DRAFT_HISTORY_LIMIT = 21;
+
+function premiumDraftHistoryKey(chartId: string): string {
+  return `@mysky:today_premium_draft_history:${chartId}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1203,6 +1222,54 @@ function getPremiumInsightIcon(category: ReturnType<typeof getPremiumInsightCate
   }
 }
 
+function buildPremiumDraftDailyInsight(
+  selected: SelectedPremiumInsightDraft,
+  category: ReturnType<typeof getPremiumInsightCategoryFromCheckIn>,
+): DailyInsight {
+  return {
+    text: `${selected.title}\n\n${selected.body}\n\nQuestion to keep: ${selected.reflectionPrompt}`,
+    type: 'check-in',
+    accentColor: getPremiumInsightAccent(category),
+    icon: getPremiumInsightIcon(category),
+    theme: getPremiumInsightTheme(category),
+  };
+}
+
+async function getPremiumDraftHistory(
+  chartId: string,
+): Promise<PremiumDraftInsightHistoryItem[]> {
+  try {
+    const history = await getUserPreference<PremiumDraftInsightHistoryItem[]>(
+      premiumDraftHistoryKey(chartId),
+      [],
+    );
+    return Array.isArray(history)
+      ? history.filter(item =>
+        typeof item?.date === 'string' &&
+        typeof item?.draftKey === 'string' &&
+        typeof item?.patternKey === 'string' &&
+        typeof item?.angleKey === 'string'
+      )
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+async function savePremiumDraftHistory(
+  chartId: string,
+  history: PremiumDraftInsightHistoryItem[],
+): Promise<void> {
+  try {
+    await saveUserPreference(
+      premiumDraftHistoryKey(chartId),
+      history.slice(0, PREMIUM_DRAFT_HISTORY_LIMIT),
+    );
+  } catch (error) {
+    logger.warn('[DailyLoop] Failed to save premium draft insight history', error);
+  }
+}
+
 async function getPremiumDraftInsight(chartId: string): Promise<DailyInsight | null> {
   try {
     const checkIns = await supabaseDb.getCheckIns(chartId, 1);
@@ -1210,7 +1277,7 @@ async function getPremiumDraftInsight(chartId: string): Promise<DailyInsight | n
 
     if (!latest) return null;
 
-    const today = toLocalDateString(new Date());
+    const today = getCheckInDateString();
     const latestDate =
       typeof latest.date === 'string'
         ? latest.date.slice(0, 10)
@@ -1219,19 +1286,38 @@ async function getPremiumDraftInsight(chartId: string): Promise<DailyInsight | n
     if (latestDate !== today) return null;
 
     const category = getPremiumInsightCategoryFromCheckIn(latest);
+    const history = await getPremiumDraftHistory(chartId);
+    const existingToday = history.find(item => item.date === today);
+    const existingDraft = existingToday
+      ? getPremiumInsightDraftByKey(existingToday.draftKey)
+      : null;
+
+    if (existingDraft && existingDraft.category === category) {
+      return buildPremiumDraftDailyInsight(existingDraft, category);
+    }
+
+    const recentHistory = history.filter(item => item.date !== today);
     const selected = selectPremiumInsightDraft({
       date: today,
       category,
+      avoidDraftKeys: recentHistory.slice(0, 14).map(item => item.draftKey),
+      avoidPatternKeys: recentHistory.slice(0, 3).map(item => item.patternKey),
+      avoidAngleKeys: recentHistory.slice(0, 2).map(item => item.angleKey),
       seed: `${chartId}:${today}:${latest.moodScore ?? ''}:${(latest as any).energyScore ?? ''}:${latest.stressLevel ?? ''}`,
     });
 
-    return {
-      text: `${selected.body}\n\nQuestion to keep: ${selected.reflectionPrompt}`,
-      type: 'check-in',
-      accentColor: getPremiumInsightAccent(category),
-      icon: getPremiumInsightIcon(category),
-      theme: getPremiumInsightTheme(category),
-    };
+    await savePremiumDraftHistory(chartId, [
+      {
+        date: today,
+        draftKey: selected.id,
+        patternKey: selected.patternKey,
+        angleKey: selected.angleKey,
+        category: selected.category,
+      },
+      ...recentHistory,
+    ]);
+
+    return buildPremiumDraftDailyInsight(selected, category);
   } catch (error) {
     logger.warn('[DailyLoop] Failed to build premium draft insight', error);
     return null;
