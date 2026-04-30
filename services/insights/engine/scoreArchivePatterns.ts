@@ -34,6 +34,7 @@ export function scoreArchivePattern(
   );
 
   const sourceCount = new Set(relevantSignals.map((signal) => signal.source)).size;
+  const hasDailyQuestionEvidence = relevantSignals.some((signal) => signal.source === 'reflectionBank');
 
   const frequencyScore = Math.min(relevantSignals.length / pattern.minEvidenceCount, 1);
   const requiredScore = requiredMatches.length > 0 ? 1 : 0;
@@ -42,11 +43,14 @@ export function scoreArchivePattern(
     relevantSignals.reduce((sum, signal) => sum + signal.strength, 0) /
     Math.max(relevantSignals.length, 1);
 
-  const score =
+  const score = Math.min(
+    1,
     requiredScore * 0.35 +
-    frequencyScore * 0.25 +
-    sourceScore * 0.2 +
-    strengthScore * 0.2;
+      frequencyScore * 0.25 +
+      sourceScore * 0.2 +
+      strengthScore * 0.2 +
+      (hasDailyQuestionEvidence ? 0.05 : 0),
+  );
 
   let confidence: ConfidenceLevel = 'emerging';
   if (score > 0.85) confidence = 'veryStrong';

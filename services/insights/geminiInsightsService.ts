@@ -66,6 +66,7 @@ interface PatternInsightRequestPayload {
     topRelationshipPatterns?: string[];
     secureGrowthPatterns?: string[];
     reflectionPractice?: string;
+    dailyQuestionThemes?: string[];
   };
   behavioral: {
     checkInCount: number;
@@ -207,6 +208,10 @@ function buildPatternInsightPayload(
   if (context.dailyReflections) {
     const r = context.dailyReflections;
     profile.reflectionPractice = `${r.totalDays} days, ${r.totalAnswers} answers, ${r.streak}-day streak`;
+    profile.dailyQuestionThemes = r.recentAnswers
+      .slice(0, 8)
+      .map((answer) => `${answer.category}: ${answer.questionText} -> ${answer.answer}`)
+      .filter((line) => line.length > 0);
   }
 
   if (checkIns.length > 0) {

@@ -136,6 +136,7 @@ Prefer emotionally meaningful patterns over trivial ones.
 Do not treat generic labels like "stress", "mood", "sleep", "trigger", or "journal" as personalized language by themselves.
 
 A pattern is stronger when it appears across multiple domains, such as:
+- daily question answers + check-ins + journal language
 - sleep + check-ins + journal tone
 - somatic region + trigger events + relationship entries
 - reflections + glimmers + better-day tone

@@ -29,10 +29,7 @@ import type { ArchiveDepthCounts } from '../../utils/archiveDepth';
 import { logger } from '../../utils/logger';
 import { ARCHIVE_PATTERNS } from './archivePatterns';
 import { scoreArchivePattern } from './engine/scoreArchivePatterns';
-import { normalizeDailyCheckIn } from './normalizers/normalizeDailyCheckIn';
-import { normalizeJournal } from './normalizers/normalizeJournal';
-import { normalizeSleep } from './normalizers/normalizeSleep';
-import { normalizeSomatic } from './normalizers/normalizeSomatic';
+import { buildUserSignals } from './normalizers/buildUserSignals';
 import type { UserSignal } from './types/knowledgeEngine';
 
 export interface InsightSurfaceResult {
@@ -135,12 +132,12 @@ async function maybeBuildPremiumInsight(
 
     // Compute archive patterns
     const now = toLocalDateString();
-    const allSignals: UserSignal[] = [
-      ...checkIns.flatMap(normalizeDailyCheckIn),
-      ...recentJournalEntries.flatMap(normalizeJournal),
-      ...sleepEntries.flatMap(normalizeSleep),
-      ...(enrichedContext.somaticEntries ? normalizeSomatic(enrichedContext.somaticEntries) : []),
-    ];
+    const allSignals: UserSignal[] = buildUserSignals({
+      checkIns,
+      journalEntries: recentJournalEntries,
+      sleepEntries,
+      selfKnowledgeContext: enrichedContext,
+    });
 
     const archiveScores = ARCHIVE_PATTERNS.map((pattern) =>
       scoreArchivePattern(pattern, allSignals, now),
@@ -157,12 +154,7 @@ async function maybeBuildPremiumInsight(
       journal_entries: recentJournalEntries.map(summarizeJournalForPremium),
       sleep_entries: sleepEntries,
       somatic_entries: enrichedContext.somaticEntries,
-      trigger_events: enrichedContext.triggers
-        ? [
-            ...enrichedContext.triggers.drains.map((d) => ({ mode: 'drain' as const, event: d })),
-            ...enrichedContext.triggers.restores.map((r) => ({ mode: 'nourish' as const, event: r })),
-          ]
-        : [],
+      trigger_events: enrichedContext.triggerEvents,
       relationship_patterns: enrichedContext.relationshipPatterns,
       reflection_answers: enrichedContext.dailyReflections?.recentAnswers ?? [],
       relationship_charts: [],
@@ -170,7 +162,10 @@ async function maybeBuildPremiumInsight(
         best_days: [],
         hard_days: [],
         cross_domain_patterns: [],
-        glimmer_patterns: [],
+        glimmer_patterns: enrichedContext.triggerEvents
+          .filter((event) => event.mode === 'nourish')
+          .map((event) => event.event)
+          .slice(0, 12),
         sleep_correlations: [],
         tone_shifts: [],
       },
@@ -293,6 +288,12 @@ export async function buildInsightSurface({
     tier,
   );
 
+  const selfKnowledgeSignalCount =
+    (enrichedContext.dailyReflections?.totalAnswers ?? 0)
+    + enrichedContext.somaticEntries.length
+    + enrichedContext.triggerEvents.length
+    + enrichedContext.relationshipPatterns.length;
+
   return {
     chartId,
     checkIns,
@@ -310,8 +311,16 @@ export async function buildInsightSurface({
       journalEntries: recentJournalEntries.length,
       sleepEntries: sleepEntries.filter((entry) => entry.quality != null || entry.durationHours != null).length,
       dreamEntries: sleepEntries.filter((entry) => !!entry.dreamText?.trim()).length,
+      dailyReflections: enrichedContext.dailyReflections?.totalAnswers ?? 0,
+      somaticEntries: enrichedContext.somaticEntries.length,
+      triggerEvents: enrichedContext.triggerEvents.filter((event) => event.mode === 'drain').length,
+      glimmerEvents: enrichedContext.triggerEvents.filter((event) => event.mode === 'nourish').length,
+      relationshipPatterns: enrichedContext.relationshipPatterns.length,
+      astrologyCheckIns: checkIns.filter((entry) =>
+        entry.moonSign || entry.lunarPhase !== 'unknown' || (entry.transitEvents?.length ?? 0) > 0,
+      ).length,
     },
-    lastUpdated: checkIns.length || recentJournalEntries.length || sleepEntries.length
+    lastUpdated: checkIns.length || recentJournalEntries.length || sleepEntries.length || selfKnowledgeSignalCount
       ? new Date().toISOString()
       : null,
     crossRefs,

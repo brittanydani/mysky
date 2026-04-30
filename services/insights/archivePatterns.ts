@@ -66,7 +66,16 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
         clarity: 'It reads as your mind trying to make something emotionally safe enough to feel.',
       },
     },
-    dailyAngles: [],
+    dailyAngles: [
+      {
+        key: 'daily_questions_as_depth',
+        triggerSignals: [SIGNALS.DEEP_PROCESSING.key, SIGNALS.PATTERN_RECOGNITION.key],
+        title: 'The Question Underneath the Question',
+        shameFrame: 'This does not read as spiraling.',
+        clarityFrame: 'It reads as your daily questions giving shape to something your system has been trying to understand for a while.',
+        prompt: 'Which answer from your daily questions feels most alive in the rest of your archive right now?',
+      },
+    ],
   },
   {
     key: 'boundary_rebuilder',
@@ -85,7 +94,16 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
         clarity: 'It reads as self-trust beginning to stand without needing everyone’s permission.',
       },
     },
-    dailyAngles: [],
+    dailyAngles: [
+      {
+        key: 'boundary_across_sources',
+        triggerSignals: [SIGNALS.BOUNDARY_GROWTH.key],
+        title: 'A Boundary Appearing in More Than One Place',
+        shameFrame: 'This does not read as distance.',
+        clarityFrame: 'It reads as the same self-protective truth showing up through your answers, logs, body, and relationships.',
+        prompt: 'Where is the archive asking you to believe your no the first time?',
+      },
+    ],
   },
   {
     key: 'support_starved_achiever',
@@ -123,7 +141,16 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
         clarity: 'It reads as your refusal to let hard things have the final word.',
       },
     },
-    dailyAngles: [],
+    dailyAngles: [
+      {
+        key: 'meaning_from_daily_questions',
+        triggerSignals: [SIGNALS.MEANING_MAKING.key, SIGNALS.TRANSFORMATION.key],
+        title: 'Meaning Is Starting to Repeat',
+        shameFrame: 'This does not read as needing an answer immediately.',
+        clarityFrame: 'It reads as your daily questions and lived entries circling the same truth from different angles.',
+        prompt: 'What meaning keeps returning even when the details change?',
+      },
+    ],
   },
   {
     key: 'rest_resistance',
@@ -212,7 +239,16 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
         clarity: 'It reads as discernment formed around the need for care to be real, not just spoken.',
       },
     },
-    dailyAngles: [],
+    dailyAngles: [
+      {
+        key: 'attachment_pattern_active',
+        triggerSignals: [SIGNALS.MUTUALITY_NEED.key, SIGNALS.REASSURANCE_NEED.key],
+        title: 'Attachment Data Is Active Today',
+        shameFrame: 'This does not read as being too much.',
+        clarityFrame: 'It reads as your system checking whether connection is steady enough to relax into.',
+        prompt: 'What did your relationship data ask for today: reassurance, space, repair, or reciprocity?',
+      },
+    ],
   },
   {
     key: 'support_scarcity',
@@ -292,7 +328,16 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
         clarity: 'It reads as protection learning how to recognize safety without scanning for danger.',
       },
     },
-    dailyAngles: [],
+    dailyAngles: [
+      {
+        key: 'body_bracing_today',
+        triggerSignals: [SIGNALS.CALM_BRACING.key, SIGNALS.STOMACH_UNEASE.key, SIGNALS.JAW_TENSION.key],
+        title: 'The Body Is Bracing Before the Story Is Clear',
+        shameFrame: 'This does not read as irrational.',
+        clarityFrame: 'It reads as body data arriving before the mind has found words for it.',
+        prompt: 'What would your body need before your mind tries to explain the feeling?',
+      },
+    ],
   },
   {
     key: 'dream_processor',
@@ -311,6 +356,15 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
         clarity: 'It reads as your inner world trying another language.',
       },
     },
-    dailyAngles: [],
+    dailyAngles: [
+      {
+        key: 'dream_journal_thread',
+        triggerSignals: [SIGNALS.DREAM_UNFINISHED_PROCESSING.key],
+        title: 'The Dream Journal Is Continuing the Thread',
+        shameFrame: 'This does not read as noise.',
+        clarityFrame: 'It reads as the night archive carrying material that the day archive has not fully metabolized.',
+        prompt: 'What theme from the dream also appears in a check-in, question answer, body map, or journal entry?',
+      },
+    ],
   },
 ];

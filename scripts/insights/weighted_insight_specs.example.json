@@ -1,0 +1,191 @@
+[
+  {
+    "id": "pattern-cognitive-processing-favorite-tone",
+    "category": "cognitiveStyle",
+    "mode": "standard",
+    "title": "How You Process Pain",
+    "pattern_name": "understanding is one of the ways you regulate",
+    "signal_phrase": "analysis, meaning-making, and trying to locate the deeper thread beneath what happened",
+    "interpretation": "you may not fully move through an experience until it has a shape: what happened, what it touched, and why it stayed with you",
+    "shame_label": "overthinking",
+    "clarity_reframe": "your mind trying to make something emotionally survivable by making it understandable",
+    "question": "What part of this becomes easier to hold once you can name it accurately?",
+    "evidence": [
+      { "source": "daily_questions", "label": "meaning-making answer", "count": 4 },
+      { "source": "journal_entries", "label": "analysis and deeper thread language", "count": 3 },
+      { "source": "check_ins", "label": "processing tag", "count": 2 }
+    ]
+  },
+  {
+    "id": "identity-different-truths-coexist",
+    "category": "identity",
+    "mode": "standard",
+    "title": "When Different Truths Coexist",
+    "pattern_name": "multiple emotional truths often exist at the same time",
+    "signal_phrase": "gratitude beside envy, protection beside exhaustion, love beside resentment, and strength beside need",
+    "interpretation": "your inner world does not move in one clean line; it carries several ages, needs, and perspectives at once",
+    "shame_label": "contradiction",
+    "clarity_reframe": "a complex system trying to give every part of the truth a place to land",
+    "question": "Which two truths are asking to exist together instead of competing today?",
+    "evidence": [
+      { "source": "daily_questions", "label": "both/and answer", "count": 5 },
+      { "source": "parts_work", "label": "younger parts reflections", "count": 3 },
+      { "source": "journal_entries", "label": "mixed emotional language", "count": 4 }
+    ]
+  },
+  {
+    "id": "relationships-measure-safety",
+    "category": "relationships",
+    "mode": "standard",
+    "title": "How You Measure Safety",
+    "pattern_name": "safety is something you assess through consistency",
+    "signal_phrase": "follow-through, remembered details, repair, care, and whether people disappear when need becomes inconvenient",
+    "interpretation": "trust is built through evidence, not promises",
+    "shame_label": "suspicion",
+    "clarity_reframe": "wisdom from a life where inconsistency had real consequences",
+    "question": "What repeated behavior helps your system believe care is real?",
+    "evidence": [
+      { "source": "relationship_patterns", "label": "consistency and repair", "count": 4 },
+      { "source": "daily_questions", "label": "trust answer", "count": 3 },
+      { "source": "trigger_log", "label": "inconsistency activation", "count": 2 }
+    ]
+  },
+  {
+    "id": "creation-premium-standard",
+    "category": "creation",
+    "mode": "standard",
+    "title": "The Premium Standard Pattern",
+    "pattern_name": "good enough rarely feels satisfying when the thing matters to you",
+    "signal_phrase": "flat copy, generic design, unfinished emotional intelligence, and the gap between usable and meaningful",
+    "interpretation": "you are not only trying to make something work; you are trying to make it feel alive",
+    "shame_label": "being picky",
+    "clarity_reframe": "creative discernment from someone who can sense the gap between usable and meaningful",
+    "question": "Where is the work asking to become more alive, not just more complete?",
+    "evidence": [
+      { "source": "app_building", "label": "premium standard notes", "count": 5 },
+      { "source": "journal_entries", "label": "not good enough language", "count": 3 },
+      { "source": "daily_questions", "label": "meaning in work", "count": 2 }
+    ]
+  },
+  {
+    "id": "dreams-continue-conversation",
+    "category": "dreamsSymbols",
+    "mode": "standard",
+    "title": "When Dreams Continue the Conversation",
+    "pattern_name": "dreams often appear when waking life has not fully processed something",
+    "signal_phrase": "emotional intensity, low sleep, unresolved questions, and dream activity that keeps returning after the day is over",
+    "interpretation": "your mind may continue working symbolically when the waking version of the feeling is too complicated to fully name",
+    "shame_label": "random",
+    "clarity_reframe": "your inner world trying another language",
+    "question": "What feeling from the dream seems most connected to your waking life right now?",
+    "evidence": [
+      { "source": "dream_journal", "label": "active dreams", "count": 4 },
+      { "source": "daily_questions", "label": "unresolved questions", "count": 2 },
+      { "source": "check_ins", "label": "low sleep and emotional intensity", "count": 3 }
+    ]
+  },
+  {
+    "id": "progress-self-blame-to-interpretation",
+    "category": "progress",
+    "mode": "standard",
+    "title": "Where You Are Changing",
+    "pattern_name": "there is a shift from self-blame toward self-interpretation",
+    "signal_phrase": "questions about what pain is trying to tell you, what need is underneath it, and what pattern is being touched",
+    "interpretation": "you are becoming less willing to mistake pain for personal failure",
+    "shame_label": "perfect healing",
+    "clarity_reframe": "becoming less willing to mistake pain for personal failure",
+    "question": "Where did you interpret pain more gently than you would have before?",
+    "evidence": [
+      { "source": "daily_questions", "label": "self-interpretation answers", "count": 6 },
+      { "source": "journal_entries", "label": "less self-blame language", "count": 3 },
+      { "source": "glimmer_log", "label": "repair moments", "count": 2 }
+    ]
+  },
+  {
+    "id": "shadow-high-cost-not-believed",
+    "category": "shadow",
+    "mode": "standard",
+    "title": "The High Cost of Not Being Believed",
+    "pattern_name": "disbelief is one of your strongest emotional activators",
+    "signal_phrase": "minimizing, dismissal, delays, and moments where your concern gets reframed as overreaction",
+    "interpretation": "disbelief touches an old wound where your truth had to fight for recognition",
+    "shame_label": "sensitivity in the dismissive sense",
+    "clarity_reframe": "a nervous system that remembers the danger of being unheard",
+    "question": "Where is your system asking to be believed without another round of proof?",
+    "evidence": [
+      { "source": "trigger_log", "label": "dismissal triggers", "count": 4 },
+      { "source": "journal_entries", "label": "not believed language", "count": 4 },
+      { "source": "daily_questions", "label": "truth and recognition answers", "count": 3 }
+    ]
+  },
+  {
+    "id": "today-support-before-crisis",
+    "category": "today",
+    "mode": "standard",
+    "title": "Today's Signal",
+    "pattern_name": "today's strongest signal is the need to be caught without having to prove the fall",
+    "signal_phrase": "support feeling tender when you are not sure whether you can ask for it directly",
+    "interpretation": "care may need to arrive before crisis, not only after you have made the pain understandable",
+    "shame_label": "neediness",
+    "clarity_reframe": "a nervous system asking for dependable backup",
+    "question": "What support would help before you have to prove how heavy this feels?",
+    "evidence": [
+      { "source": "daily_questions", "label": "support answer", "count": 2 },
+      { "source": "check_ins", "label": "low support day", "count": 1 },
+      { "source": "journal_entries", "label": "need to be caught language", "count": 1 }
+    ]
+  },
+  {
+    "id": "monthly-carrying-without-being-carried",
+    "category": "monthlyReport",
+    "mode": "monthly_report",
+    "report_period": "month",
+    "title": "Your Monthly Pattern: Carrying Without Being Carried",
+    "pattern_name": "a central tension: being deeply capable, but tired of capability being mistaken for not needing support",
+    "signal_phrase": "caregiving, app-building, emotional processing, relational stress, and being the one holding the map",
+    "interpretation": "the ache of wanting someone else to notice when you are carrying too much before your body has to collapse to make it obvious",
+    "shame_label": "weakness",
+    "clarity_reframe": "the honest grief of someone who became strong early and is now asking whether strength can finally coexist with being held",
+    "question": "Where did capability hide the need for support this month?",
+    "evidence": [
+      { "source": "monthly_review", "label": "monthly pattern", "count": 1, "weight": 3 },
+      { "source": "daily_questions", "label": "support and capacity answers", "count": 8 },
+      { "source": "journal_entries", "label": "carrying language", "count": 6 },
+      { "source": "app_building", "label": "builder pressure", "count": 4 }
+    ]
+  },
+  {
+    "id": "affirmation-support-before-breaking",
+    "category": "affirmation",
+    "mode": "affirmation",
+    "title": "Today's Affirmation",
+    "pattern_name": "support before the breaking point",
+    "signal_phrase": "",
+    "interpretation": "",
+    "shame_label": "",
+    "clarity_reframe": "",
+    "question": "",
+    "affirmation": "I am allowed to need support before I reach my breaking point.",
+    "evidence": [
+      { "source": "daily_questions", "label": "support answer", "count": 2 },
+      { "source": "journal_entries", "label": "breaking point language", "count": 1 }
+    ]
+  },
+  {
+    "id": "affirmation-gratitude-and-grief",
+    "category": "affirmation",
+    "mode": "affirmation",
+    "title": "Today's Affirmation",
+    "pattern_name": "gratitude and grief can coexist",
+    "signal_phrase": "",
+    "interpretation": "",
+    "shame_label": "",
+    "clarity_reframe": "",
+    "question": "",
+    "affirmation": "I can be grateful for what I have and still grieve what I needed.",
+    "evidence": [
+      { "source": "daily_questions", "label": "both/and answer", "count": 2 },
+      { "source": "journal_entries", "label": "gratitude and grief language", "count": 2 }
+    ]
+  }
+]

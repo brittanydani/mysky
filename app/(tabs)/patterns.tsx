@@ -155,6 +155,7 @@ export default function PatternsScreen() {
           setArchiveDepthCounts({
             checkIns: checkIns.length,
             journalEntries: recentJournalEntries.length,
+            sleepEntries: sleepEntries.filter((entry) => entry.quality != null || entry.durationHours != null).length,
             dreamEntries: sleepEntries.filter((entry) => !!entry.dreamText?.trim()).length,
           });
           setLastUpdated(new Date().toISOString());
@@ -166,20 +167,20 @@ export default function PatternsScreen() {
             sleepEntries,
           );
           if (!active) return;
-          const refs = computeSelfKnowledgeCrossRef(skContext, checkIns);
-          const enhancedRefs = await enhancePatternInsights(refs, skContext, checkIns, isPremium);
-          if (!active) return;
-          const aiBodies = new Map(enhancedRefs?.insights.map((insight) => [insight.id, insight.body]) ?? []);
-          setCrossRefs(
-            refs.map((insight) =>
-              aiBodies.has(insight.id)
-                ? {
-                    ...insight,
-                    body: aiBodies.get(insight.id) ?? insight.body,
-                  }
-                : insight,
-            ),
-          );
+          setArchiveDepthCounts({
+            checkIns: checkIns.length,
+            journalEntries: recentJournalEntries.length,
+            sleepEntries: sleepEntries.filter((entry) => entry.quality != null || entry.durationHours != null).length,
+            dreamEntries: sleepEntries.filter((entry) => !!entry.dreamText?.trim()).length,
+            dailyReflections: skContext.dailyReflections?.totalAnswers ?? 0,
+            somaticEntries: skContext.somaticEntries.length,
+            triggerEvents: skContext.triggerEvents.filter((event) => event.mode === 'drain').length,
+            glimmerEvents: skContext.triggerEvents.filter((event) => event.mode === 'nourish').length,
+            relationshipPatterns: skContext.relationshipPatterns.length,
+            astrologyCheckIns: checkIns.filter((entry) =>
+              entry.moonSign || entry.lunarPhase !== 'unknown' || (entry.transitEvents?.length ?? 0) > 0,
+            ).length,
+          });
 
           const pipelineResult = runPipeline({
             checkIns,
@@ -192,6 +193,21 @@ export default function PatternsScreen() {
           setDailyAggregates(pipelineResult.dailyAggregates);
           setNarrative(computeNarrativeInsights(pipelineResult.dailyAggregates));
           setDeepInsights(computeDeepInsights(buildPersonalProfile(pipelineResult.dailyAggregates)));
+
+          const refs = computeSelfKnowledgeCrossRef(skContext, checkIns, pipelineResult.dailyAggregates);
+          const enhancedRefs = await enhancePatternInsights(refs, skContext, checkIns, isPremium);
+          if (!active) return;
+          const aiBodies = new Map(enhancedRefs?.insights.map((insight) => [insight.id, insight.body]) ?? []);
+          setCrossRefs(
+            refs.map((insight) =>
+              aiBodies.has(insight.id)
+                ? {
+                    ...insight,
+                    body: aiBodies.get(insight.id) ?? insight.body,
+                  }
+              : insight,
+            ),
+          );
 
         } catch (e) {
           logger.error('[Patterns] Pipeline error:', e);

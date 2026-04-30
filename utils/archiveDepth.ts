@@ -3,6 +3,12 @@ export interface ArchiveDepthCounts {
   journalEntries?: number;
   sleepEntries?: number;
   dreamEntries?: number;
+  dailyReflections?: number;
+  somaticEntries?: number;
+  triggerEvents?: number;
+  glimmerEvents?: number;
+  relationshipPatterns?: number;
+  astrologyCheckIns?: number;
 }
 
 export interface ArchiveDepth {
@@ -32,7 +38,12 @@ export function getArchiveSignalCount(counts: ArchiveDepthCounts): number {
   return safeCount(counts.checkIns)
     + safeCount(counts.journalEntries)
     + safeCount(counts.sleepEntries)
-    + safeCount(counts.dreamEntries);
+    + safeCount(counts.dreamEntries)
+    + safeCount(counts.dailyReflections)
+    + safeCount(counts.somaticEntries)
+    + safeCount(counts.triggerEvents)
+    + safeCount(counts.glimmerEvents)
+    + safeCount(counts.relationshipPatterns);
 }
 
 function describeSignals(counts: ArchiveDepthCounts): string {
@@ -41,6 +52,11 @@ function describeSignals(counts: ArchiveDepthCounts): string {
     [safeCount(counts.journalEntries), 'journal entry', 'journal entries'],
     [safeCount(counts.sleepEntries), 'sleep entry', 'sleep entries'],
     [safeCount(counts.dreamEntries), 'dream entry', 'dream entries'],
+    [safeCount(counts.dailyReflections), 'daily question answer', 'daily question answers'],
+    [safeCount(counts.somaticEntries), 'somatic map entry', 'somatic map entries'],
+    [safeCount(counts.triggerEvents), 'trigger log', 'trigger logs'],
+    [safeCount(counts.glimmerEvents), 'glimmer log', 'glimmer logs'],
+    [safeCount(counts.relationshipPatterns), 'relationship pattern', 'relationship patterns'],
   ]
     .filter(([count]) => Number(count) > 0)
     .map(([count, singular, plural]) => `${count} ${count === 1 ? singular : plural}`);
@@ -55,6 +71,31 @@ function signalMixLine(counts: ArchiveDepthCounts): string {
   const hasJournals = safeCount(counts.journalEntries) > 0;
   const hasSleep = safeCount(counts.sleepEntries) > 0;
   const hasDreams = safeCount(counts.dreamEntries) > 0;
+  const hasDailyReflections = safeCount(counts.dailyReflections) > 0;
+  const hasSomatic = safeCount(counts.somaticEntries) > 0;
+  const hasTriggers = safeCount(counts.triggerEvents) > 0 || safeCount(counts.glimmerEvents) > 0;
+  const hasRelationships = safeCount(counts.relationshipPatterns) > 0;
+  const hasAstrology = safeCount(counts.astrologyCheckIns) > 0;
+  const sourceTypes = [
+    hasCheckIns,
+    hasJournals,
+    hasSleep || hasDreams,
+    hasDailyReflections,
+    hasSomatic,
+    hasTriggers,
+    hasRelationships,
+    hasAstrology,
+  ].filter(Boolean).length;
+
+  if (sourceTypes >= 5) {
+    return 'That collective mix lets MySky compare what you report, what you write, what your body logs, what relationships activate, and what the sky snapshot was marking at the same time.';
+  }
+  if (hasDailyReflections && sourceTypes >= 3) {
+    return 'Daily question answers give the archive a clear self-knowledge thread, while the other logs show whether that thread repeats in daily life.';
+  }
+  if (hasRelationships && (hasTriggers || hasSomatic)) {
+    return 'That overlap helps MySky separate a relationship story from the body cues and trigger/glimmer conditions around it.';
+  }
 
   if (hasCheckIns && hasJournals && (hasSleep || hasDreams)) {
     return 'That mix gives MySky enough contrast to compare how your body, mood, and inner language move together.';
@@ -67,6 +108,15 @@ function signalMixLine(counts: ArchiveDepthCounts): string {
   }
   if (hasJournals && hasDreams) {
     return 'That combination gives MySky access to both your waking language and what keeps returning after dark.';
+  }
+  if (hasDailyReflections) {
+    return 'Daily question answers add depth because they show the themes you are consciously naming, not just the moods you are tracking.';
+  }
+  if (hasSomatic) {
+    return 'Somatic map entries add depth because they show where your body registers the pattern before the story is fully clear.';
+  }
+  if (hasTriggers) {
+    return 'Trigger and glimmer logs add depth because they separate what drains your system from what helps it return.';
   }
   if (hasDreams) {
     return 'Dream material adds depth because it shows what your inner world keeps processing after the day ends.';
@@ -128,7 +178,7 @@ export function getArchiveDepth(counts: ArchiveDepthCounts): ArchiveDepth {
     label: 'Starting signal',
     headline: totalSignals === 0 ? 'Start building the archive MySky will read from' : 'Your first signals are saved',
     body: totalSignals === 0
-      ? 'Log a check-in, journal entry, sleep entry, or dream to begin building the history MySky uses to notice what repeats in your emotional life.'
+      ? 'Log a check-in, daily question answer, journal entry, sleep entry, dream, somatic map entry, trigger, glimmer, relationship pattern, or astrology-backed check-in to begin building the history MySky reads from.'
       : `${describeSignals(counts)} saved. A few more signals will let MySky stop describing isolated moments and start noticing your actual patterns.`,
     nextMilestone,
     remaining: Math.max(0, (nextMilestone ?? 3) - totalSignals),
@@ -175,7 +225,7 @@ export function getPersonalizedPremiumTeaser(
   return {
     eyebrow: 'Deeper Insight',
     title: 'Build the archive that makes MySky specific',
-    body: 'Deeper Sky gets better as mood, sleep, dreams, and reflections begin overlapping enough for MySky to stop guessing and start recognizing you.',
+    body: 'Deeper Sky gets better as daily questions, mood, sleep, dreams, journals, body maps, glimmers, triggers, relationship patterns, and astrology snapshots begin overlapping enough for MySky to stop guessing and start recognizing you.',
     cta: 'Explore Deeper Sky',
   };
 }

@@ -213,7 +213,25 @@ export default function HomeScreen() {
     journalEntries: dailyLoop?.weeklyReflection.journalCount ?? 0,
     sleepEntries: sleepSignalCount,
     dreamEntries: dreamSignalCount,
-  }), [dailyLoop?.streak.totalCheckIns, dailyLoop?.weeklyReflection.journalCount, dreamSignalCount, sleepSignalCount, weeklyCheckIns.length]);
+    dailyReflections: selfKnowledge?.dailyReflections?.totalAnswers ?? 0,
+    somaticEntries: selfKnowledge?.somaticEntries.length ?? 0,
+    triggerEvents: selfKnowledge?.triggerEvents.filter((event) => event.mode === 'drain').length ?? 0,
+    glimmerEvents: selfKnowledge?.triggerEvents.filter((event) => event.mode === 'nourish').length ?? 0,
+    relationshipPatterns: selfKnowledge?.relationshipPatterns.length ?? 0,
+    astrologyCheckIns: weeklyCheckIns.filter((entry) =>
+      entry.moonSign || entry.lunarPhase !== 'unknown' || (entry.transitEvents?.length ?? 0) > 0,
+    ).length,
+  }), [
+    dailyLoop?.streak.totalCheckIns,
+    dailyLoop?.weeklyReflection.journalCount,
+    dreamSignalCount,
+    selfKnowledge?.dailyReflections?.totalAnswers,
+    selfKnowledge?.relationshipPatterns.length,
+    selfKnowledge?.somaticEntries.length,
+    selfKnowledge?.triggerEvents,
+    sleepSignalCount,
+    weeklyCheckIns,
+  ]);
   const archiveDepth = useMemo(() => getArchiveDepth(archiveDepthCounts), [archiveDepthCounts]);
   const premiumTeaser = useMemo(
     () => getPersonalizedPremiumTeaser(archiveDepthCounts, { surface: 'today' }),

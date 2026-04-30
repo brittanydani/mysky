@@ -73,7 +73,7 @@ Personalization Standard (CRITICAL):
 - The selected pattern should include at least three user-specific anchors:
   1. a temporal anchor (for example, "last 10 days", "this week", "after lower-sleep nights")
   2. a behavioral or emotional pattern signal (not just "stress was high")
-  3. a supporting second-domain signal (sleep, somatic region, trigger/glimmer context, reflection answer, relationship pattern, or check-in shift)
+    3. a supporting second-domain signal (daily question answer, sleep, somatic region, trigger/glimmer context, relationship pattern, astrology snapshot, or check-in shift)
 - Use userLanguageAnchors/extractedPhrases for the user's repeated vocabulary or semantically similar wording. Do not fill these with generic labels like "stress", "mood", "sleep", "trigger", or "journal" unless there is also more textured language nearby.
 - primarySignals should name the concrete condition or sequence ("when sleep drops below X, morning stress rises", "hardest evenings follow guarded morning language").
 - crossDomainLinks should explain the combination that makes the pattern belong to this user.
@@ -84,7 +84,7 @@ Card Taxonomy & Eligibility Gates:
    - Requirements: confidence >= 0.80, domainsUsed.length >= 2, repeatCount >= 5, stability >= 0.65, emotionalWeight >= 0.55, phraseHealth !== 'broken', isIdentityClaim === false, userLanguageAnchors has at least one specific recurring phrase, and crossDomainLinks has at least one real intersection.
 2. "emerging_pattern"
    - Use for promising but not fully stable signals.
-   - Requirements: confidence >= 0.55, domainsUsed.length >= 1, repeatCount >= 3, phraseHealth !== 'broken', and evidence is more specific than a generic category label.
+   - Requirements: confidence >= 0.55, domainsUsed.length >= 1, repeatCount >= 3, phraseHealth !== 'broken', and evidence is more specific than a generic category label. Daily question answers should be treated as high-value direct self-knowledge evidence when they connect to at least one lived-data source.
 3. "profile_inference" (e.g. Archetypes, Cognitive Style)
    - Use for higher-risk abstractions.
    - Requirements: confidence >= 0.88, domainsUsed.length >= 2, repeatCount >= 8, stability >= 0.75, phraseHealth === 'clean', and the final claim is translated into observed behavior rather than a label.

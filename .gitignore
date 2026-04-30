@@ -69,3 +69,14 @@ node_modules
 dist/
 
 .env.local
+
+# Reusable insight generation tooling
+!scripts/
+scripts/*
+!scripts/insights/
+scripts/insights/*
+!scripts/insights/generate_weighted_insights.py
+!scripts/insights/favorite_tone_examples.json
+!scripts/insights/profile_lens_examples.json
+!scripts/insights/profile_lenses.json
+!scripts/insights/weighted_insight_specs.example.json

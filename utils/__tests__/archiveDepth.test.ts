@@ -27,6 +27,21 @@ describe('archiveDepth', () => {
     expect(depth.body).toContain('2 sleep entries');
   });
 
+  it('counts daily questions and self-knowledge logs as archive signals', () => {
+    const depth = getArchiveDepth({
+      checkIns: 1,
+      dailyReflections: 3,
+      somaticEntries: 1,
+      triggerEvents: 1,
+      glimmerEvents: 1,
+      relationshipPatterns: 1,
+    });
+
+    expect(depth.totalSignals).toBe(8);
+    expect(depth.body).toContain('daily question answers');
+    expect(depth.body).toContain('collective mix');
+  });
+
   it('personalizes premium copy around detected patterns first', () => {
     const teaser = getPersonalizedPremiumTeaser(
       { checkIns: 5, journalEntries: 2, dreamEntries: 1 },

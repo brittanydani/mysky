@@ -16,6 +16,7 @@ import {
   loadSomaticEntries,
   loadTriggerEvents,
 } from '../storage/selfKnowledgeStore';
+import type { TriggerEvent } from '../../utils/triggerEventTypes';
 import {
   getReflectionSummary,
   ReflectionAnswer,
@@ -139,6 +140,7 @@ export interface SelfKnowledgeContext {
   cognitiveStyle: CognitiveScores | null;
   somaticEntries: SomaticEntry[];
   triggers: TriggerData | null;
+  triggerEvents: TriggerEvent[];
   relationshipPatterns: RelationshipPatternEntry[];
   dailyReflections: DailyReflectionSummary | null;
   intelligenceProfile: IntelligenceProfile | null;
@@ -174,8 +176,7 @@ async function readEncryptedJson<T>(key: SelfKnowledgeProfileType): Promise<T | 
  * insights engine.  Deduplicates event descriptions so each unique label
  * appears only once.
  */
-async function loadTriggerData(): Promise<TriggerData | null> {
-  const events = await loadTriggerEvents().catch(() => []);
+function summarizeTriggerEvents(events: TriggerEvent[]): TriggerData | null {
   if (!events || !Array.isArray(events) || events.length === 0) return null;
 
   const drains = [
@@ -197,6 +198,14 @@ async function loadTriggerData(): Promise<TriggerData | null> {
   return { drains, restores };
 }
 
+async function loadTriggerPayload(): Promise<{ events: TriggerEvent[]; summary: TriggerData | null }> {
+  const events = await loadTriggerEvents().catch(() => []);
+  return {
+    events,
+    summary: summarizeTriggerEvents(events),
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Public loader
 // ─────────────────────────────────────────────────────────────────────────────
@@ -212,7 +221,7 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     cognitiveStyle,
     intelligenceProfile,
     somaticEntries,
-    triggers,
+    triggerPayload,
     relationshipPatterns,
     reflectionSummary,
   ] = await Promise.all([
@@ -221,7 +230,7 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     readEncryptedJson<CognitiveScores>(STORAGE_KEYS.cognitiveStyle),
     readEncryptedJson<IntelligenceProfile>(STORAGE_KEYS.intelligenceProfile),
     loadSomaticEntries(),
-    loadTriggerData(),
+    loadTriggerPayload(),
     loadRelationshipPatterns(),
     getReflectionSummary().catch(() => null),
   ]);
@@ -241,7 +250,8 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     cognitiveStyle,
     intelligenceProfile,
     somaticEntries: normalizedSomaticEntries,
-    triggers,
+    triggers: triggerPayload.summary,
+    triggerEvents: triggerPayload.events,
     relationshipPatterns: relationshipPatterns ?? [],
     dailyReflections: reflectionSummary,
   };

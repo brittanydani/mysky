@@ -13,6 +13,7 @@ export type DataSource =
   | 'glimmerLog'
   | 'bodyMap'
   | 'relationshipMirror'
+  | 'astrology'
   | 'natalChart'
   | 'reflectionBank';
 

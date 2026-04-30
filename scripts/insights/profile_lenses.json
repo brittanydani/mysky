@@ -1,0 +1,802 @@
+[
+  {
+    "id": "overextended-caregiver",
+    "name": "The Overextended Caregiver",
+    "summary": "Gives deeply, notices everyone's needs, and often realizes too late that they are empty.",
+    "insight_angle": "care, depletion, resentment, receiving support",
+    "sources": ["daily_questions", "journal_entries", "check_ins", "somatic_map"],
+    "keywords": ["care", "needs", "empty", "depletion", "resentment", "support", "give", "giving", "carrying", "caregiving", "responsibility"]
+  },
+  {
+    "id": "quiet-hero",
+    "name": "The Quiet Hero",
+    "summary": "Steps up when no one else does, but does not always feel seen for what it costs.",
+    "insight_angle": "responsibility, strength, unseen sacrifice",
+    "sources": ["daily_questions", "journal_entries", "monthly_review"],
+    "keywords": ["steps up", "responsibility", "strength", "unseen", "sacrifice", "cost", "reliable", "carrying"]
+  },
+  {
+    "id": "deep-processor",
+    "name": "The Deep Processor",
+    "summary": "Needs language, context, and meaning before emotion can fully move through.",
+    "insight_angle": "analysis as regulation",
+    "sources": ["daily_questions", "journal_entries", "dream_journal", "check_ins"],
+    "keywords": ["language", "context", "meaning", "analysis", "understanding", "regulate", "process", "processing", "emotional processing", "deeper thread"]
+  },
+  {
+    "id": "boundary-rebuilder",
+    "name": "The Boundary Rebuilder",
+    "summary": "Learning to stop over-explaining and trust that no is enough.",
+    "insight_angle": "self-trust, limits, relational safety",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns", "trigger_log"],
+    "keywords": ["boundary", "boundaries", "no", "over-explaining", "self-trust", "limits", "permission", "relational safety"]
+  },
+  {
+    "id": "support-starved-achiever",
+    "name": "The Support-Starved Achiever",
+    "summary": "Looks capable from the outside but privately longs to be caught.",
+    "insight_angle": "competence versus needing care",
+    "sources": ["daily_questions", "journal_entries", "check_ins", "monthly_review"],
+    "keywords": ["capable", "caught", "support", "achiever", "competence", "backup", "help", "carried"]
+  },
+  {
+    "id": "hypervigilant-protector",
+    "name": "The Hypervigilant Protector",
+    "summary": "Scans for danger, inconsistency, tone shifts, and what could go wrong.",
+    "insight_angle": "nervous system vigilance",
+    "sources": ["trigger_log", "somatic_map", "check_ins", "relationship_patterns"],
+    "keywords": ["danger", "inconsistency", "tone", "scan", "vigilance", "what could go wrong", "bracing", "unsafe"]
+  },
+  {
+    "id": "meaning-maker",
+    "name": "The Meaning Maker",
+    "summary": "Turns suffering into insight, advocacy, creativity, or purpose.",
+    "insight_angle": "transformation, depth, legacy",
+    "sources": ["daily_questions", "journal_entries", "app_building", "monthly_review"],
+    "keywords": ["meaning", "suffering", "insight", "advocacy", "purpose", "transform", "legacy", "depth"]
+  },
+  {
+    "id": "rest-resistant-survivor",
+    "name": "The Rest-Resistant Survivor",
+    "summary": "Does not pause until exhaustion becomes undeniable.",
+    "insight_angle": "rest as permission, depletion patterns",
+    "sources": ["check_ins", "somatic_map", "daily_questions", "journal_entries"],
+    "keywords": ["rest", "pause", "exhaustion", "depletion", "tired", "collapse", "permission", "empty"]
+  },
+  {
+    "id": "emotionally-precise-communicator",
+    "name": "The Emotionally Precise Communicator",
+    "summary": "Needs the exact words because vague comfort does not land.",
+    "insight_angle": "language, accuracy, feeling understood",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns"],
+    "keywords": ["exact words", "specific", "vague", "comfort", "accurate", "understood", "language", "precision"]
+  },
+  {
+    "id": "relational-scanner",
+    "name": "The Relational Scanner",
+    "summary": "Tracks follow-through, consistency, tone, and emotional availability.",
+    "insight_angle": "trust through evidence",
+    "sources": ["relationship_patterns", "trigger_log", "daily_questions", "journal_entries"],
+    "keywords": ["follow-through", "consistency", "tone", "availability", "trust", "evidence", "repair", "respond"]
+  },
+  {
+    "id": "anxious-attacher-in-repair",
+    "name": "The Reassurance-Seeking Pattern",
+    "summary": "Wants closeness, reassurance, and proof that care will stay.",
+    "insight_angle": "support, abandonment fear, reassurance",
+    "sources": ["relationship_patterns", "daily_questions", "trigger_log", "journal_entries"],
+    "keywords": ["closeness", "reassurance", "abandonment", "stay", "proof", "attachment", "care", "left"]
+  },
+  {
+    "id": "avoidant-protector-in-softening",
+    "name": "The Distance-for-Safety Pattern",
+    "summary": "Pulls away to stay safe but is learning that closeness does not always mean danger.",
+    "insight_angle": "distance, control, vulnerability",
+    "sources": ["relationship_patterns", "daily_questions", "trigger_log"],
+    "keywords": ["pulls away", "distance", "control", "vulnerability", "closeness", "danger", "avoid", "space"]
+  },
+  {
+    "id": "secure-when-steady-user",
+    "name": "The Secure-When-Steady User",
+    "summary": "Can open deeply when care is consistent and emotionally safe.",
+    "insight_angle": "conditions for trust",
+    "sources": ["relationship_patterns", "daily_questions", "glimmer_log", "journal_entries"],
+    "keywords": ["steady", "consistent", "safe", "trust", "open", "care", "emotionally safe", "stable"]
+  },
+  {
+    "id": "creative-alchemist",
+    "name": "The Creative Alchemist",
+    "summary": "Processes life through making, writing, designing, building, or imagining.",
+    "insight_angle": "creativity as emotional metabolism",
+    "sources": ["app_building", "journal_entries", "daily_questions", "dream_journal"],
+    "keywords": ["making", "writing", "design", "building", "imagining", "creative", "create", "metabolism"]
+  },
+  {
+    "id": "justice-oriented-advocate",
+    "name": "The Justice-Oriented Advocate",
+    "summary": "Gets activated when harm is minimized, dismissed, or ignored.",
+    "insight_angle": "fairness, protection, moral clarity",
+    "sources": ["trigger_log", "journal_entries", "daily_questions", "parenting"],
+    "keywords": ["harm", "minimized", "dismissed", "ignored", "justice", "fairness", "moral clarity", "advocacy"]
+  },
+  {
+    "id": "inner-child-carrier",
+    "name": "The Younger Need Pattern",
+    "summary": "Adult situations often touch younger needs for safety, attention, and belonging.",
+    "insight_angle": "younger emotional needs",
+    "sources": ["parts_work", "journal_entries", "daily_questions", "relationship_patterns"],
+    "keywords": ["younger", "inner child", "safety", "attention", "belonging", "little", "old wound", "parts"]
+  },
+  {
+    "id": "transformation-seeker",
+    "name": "The Transformation-Seeker",
+    "summary": "Feels between identities, life chapters, or versions of self.",
+    "insight_angle": "becoming, shedding, rebuilding",
+    "sources": ["daily_questions", "journal_entries", "monthly_review", "astrology"],
+    "keywords": ["between", "identity", "chapter", "becoming", "shedding", "rebuilding", "version", "change"]
+  },
+  {
+    "id": "masked-functional-one",
+    "name": "The Masked Functional One",
+    "summary": "Performs okayness while privately carrying more than people realize.",
+    "insight_angle": "masks, competence, hidden pain",
+    "sources": ["check_ins", "journal_entries", "daily_questions"],
+    "keywords": ["okay", "mask", "functional", "privately", "hidden", "carrying", "competence", "fine"]
+  },
+  {
+    "id": "calm-bracer",
+    "name": "The Calm-Bracer",
+    "summary": "Feels uneasy when things are peaceful and waits for the next disruption.",
+    "insight_angle": "calm as unfamiliar safety",
+    "sources": ["check_ins", "somatic_map", "trigger_log", "daily_questions"],
+    "keywords": ["calm", "peaceful", "bracing", "disruption", "other shoe", "waits", "uneasy", "safe"]
+  },
+  {
+    "id": "dream-processor",
+    "name": "The Dream Processor",
+    "summary": "Dreams continue emotional conversations that waking life did not finish.",
+    "insight_angle": "dreams as symbolic processing",
+    "sources": ["dream_journal", "check_ins", "daily_questions", "journal_entries"],
+    "keywords": ["dream", "symbol", "waking", "unresolved", "sleep", "night", "subconscious", "conversation"]
+  },
+  {
+    "id": "somatic-feeler",
+    "name": "The Somatic Feeler",
+    "summary": "The body notices stress before the mind has words.",
+    "insight_angle": "body map, physical signals, nervous system truth",
+    "sources": ["somatic_map", "check_ins", "trigger_log", "daily_questions"],
+    "keywords": ["body", "stress", "physical", "signal", "somatic", "nervous system", "sensation", "truth"]
+  },
+  {
+    "id": "low-energy-reflector",
+    "name": "The Low-Energy Reflector",
+    "summary": "Mood, sleep, and thought quality are tightly linked.",
+    "insight_angle": "capacity, fatigue, emotional interpretation",
+    "sources": ["check_ins", "daily_questions", "journal_entries", "somatic_map"],
+    "keywords": ["low energy", "sleep", "mood", "fatigue", "capacity", "tired", "thought", "interpretation"]
+  },
+  {
+    "id": "freedom-seeker",
+    "name": "The Freedom-Seeker",
+    "summary": "Needs autonomy, space, choice, and room to become.",
+    "insight_angle": "independence, confinement, self-direction",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns", "astrology"],
+    "keywords": ["freedom", "autonomy", "space", "choice", "independence", "confinement", "self-direction", "room"]
+  },
+  {
+    "id": "stability-seeker",
+    "name": "The Stability-Seeker",
+    "summary": "Needs grounding, predictability, home, and emotional security.",
+    "insight_angle": "safety, roots, steadiness",
+    "sources": ["check_ins", "daily_questions", "journal_entries", "astrology"],
+    "keywords": ["stability", "grounding", "predictability", "home", "security", "safety", "roots", "steady"]
+  },
+  {
+    "id": "belonging-seeker",
+    "name": "The Belonging-Seeker",
+    "summary": "Longs for chosen family, community, and being fully included.",
+    "insight_angle": "connection, exclusion, home",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns", "glimmer_log"],
+    "keywords": ["belonging", "chosen family", "community", "included", "connection", "exclusion", "home", "place"]
+  },
+  {
+    "id": "faith-and-meaning-user",
+    "name": "The Faith-and-Meaning User",
+    "summary": "Interprets life through spirituality, sacredness, philosophy, or purpose.",
+    "insight_angle": "meaning, faith, trust, sacred ordinary moments",
+    "sources": ["daily_questions", "journal_entries", "astrology", "glimmer_log"],
+    "keywords": ["faith", "meaning", "spirituality", "sacred", "purpose", "trust", "ordinary", "philosophy"]
+  },
+  {
+    "id": "excellence-driven-builder",
+    "name": "The Excellence-Driven Builder",
+    "summary": "Wants depth, polish, beauty, usefulness, and integrity in what they create.",
+    "insight_angle": "standards, perfectionism, creative pressure",
+    "sources": ["app_building", "daily_questions", "journal_entries"],
+    "keywords": ["excellence", "polish", "beauty", "usefulness", "integrity", "standards", "perfectionism", "premium"]
+  },
+  {
+    "id": "gentle-strength-user",
+    "name": "The Gentle Strength User",
+    "summary": "Soft-hearted but resilient; compassionate but easily overburdened.",
+    "insight_angle": "tenderness, strength, emotional load",
+    "sources": ["daily_questions", "journal_entries", "check_ins"],
+    "keywords": ["gentle", "soft", "resilient", "compassionate", "overburdened", "tenderness", "strength", "load"]
+  },
+  {
+    "id": "shadow-integrator",
+    "name": "The Shadow Integrator",
+    "summary": "Looks at jealousy, anger, shame, and resentment as signals instead of flaws.",
+    "insight_angle": "shadow work, hidden needs",
+    "sources": ["daily_questions", "journal_entries", "trigger_log", "parts_work"],
+    "keywords": ["shadow", "jealousy", "anger", "shame", "resentment", "signals", "flaw", "hidden need"]
+  },
+  {
+    "id": "self-trust-learner",
+    "name": "The Self-Trust Learner",
+    "summary": "Is learning that their own knowing counts even without outside validation.",
+    "insight_angle": "inner authority",
+    "sources": ["daily_questions", "journal_entries", "glimmer_log"],
+    "keywords": ["self-trust", "knowing", "validation", "authority", "permission", "counts", "trust myself", "inner"]
+  },
+  {
+    "id": "people-pleasing-peacemaker",
+    "name": "The People-Pleasing Peacemaker",
+    "summary": "Keeps harmony by shrinking, softening, or delaying their truth.",
+    "insight_angle": "peacekeeping versus self-abandonment",
+    "sources": ["relationship_patterns", "daily_questions", "journal_entries", "trigger_log"],
+    "keywords": ["harmony", "shrinking", "softening", "delaying", "truth", "people-pleasing", "peacekeeping", "self-abandonment"]
+  },
+  {
+    "id": "guilt-driven-giver",
+    "name": "The Guilt-Driven Giver",
+    "summary": "Gives because stopping feels selfish, even when they are depleted.",
+    "insight_angle": "guilt, obligation, care",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns", "check_ins"],
+    "keywords": ["guilt", "obligation", "selfish", "depleted", "giving", "care", "stopping", "owe"]
+  },
+  {
+    "id": "emotional-archaeologist",
+    "name": "The Emotional Archaeologist",
+    "summary": "Digs beneath the first feeling to find the older wound underneath.",
+    "insight_angle": "layered emotions, historical echoes",
+    "sources": ["daily_questions", "journal_entries", "parts_work", "dream_journal"],
+    "keywords": ["beneath", "older wound", "underneath", "first feeling", "layered", "history", "echo", "archaeology"]
+  },
+  {
+    "id": "pattern-hunter",
+    "name": "The Pattern Hunter",
+    "summary": "Naturally detects repetition across moods, relationships, dreams, and choices.",
+    "insight_angle": "pattern recognition",
+    "sources": ["daily_questions", "journal_entries", "dream_journal", "relationship_patterns", "check_ins"],
+    "keywords": ["pattern", "repetition", "moods", "relationships", "dreams", "choices", "detects", "recurring"]
+  },
+  {
+    "id": "crisis-competent-one",
+    "name": "The Crisis-Competent One",
+    "summary": "Functions extremely well under pressure but struggles once the crisis passes.",
+    "insight_angle": "adrenaline, aftermath, collapse",
+    "sources": ["check_ins", "journal_entries", "somatic_map", "trigger_log"],
+    "keywords": ["crisis", "pressure", "functions", "aftermath", "collapse", "adrenaline", "holds it together", "stress"]
+  },
+  {
+    "id": "post-crisis-crasher",
+    "name": "The Post-Crisis Crasher",
+    "summary": "Holds it together during stress, then falls apart when it is finally safe.",
+    "insight_angle": "delayed processing",
+    "sources": ["check_ins", "journal_entries", "somatic_map", "trigger_log"],
+    "keywords": ["post-crisis", "falls apart", "finally safe", "delayed", "processing", "after", "stress", "collapse"]
+  },
+  {
+    "id": "invisible-labor-holder",
+    "name": "The Invisible Labor Holder",
+    "summary": "Carries mental, emotional, logistical, and relational work others do not see.",
+    "insight_angle": "unseen load",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns", "parenting"],
+    "keywords": ["invisible labor", "mental load", "emotional labor", "logistical", "relational work", "unseen", "carries", "load"]
+  },
+  {
+    "id": "responsible-oldest-energy-user",
+    "name": "The Responsible Oldest-Energy User",
+    "summary": "Feels like they must be mature, prepared, and accountable even when they need help.",
+    "insight_angle": "role burden, responsibility",
+    "sources": ["daily_questions", "journal_entries", "parenting", "monthly_review"],
+    "keywords": ["oldest", "mature", "prepared", "accountable", "help", "role", "responsibility", "burden"]
+  },
+  {
+    "id": "high-standards-soft-heart",
+    "name": "The High-Standards Soft Heart",
+    "summary": "Holds strong standards but is motivated by care, not superiority.",
+    "insight_angle": "excellence plus compassion",
+    "sources": ["app_building", "journal_entries", "daily_questions"],
+    "keywords": ["standards", "care", "superiority", "excellence", "compassion", "quality", "high standards", "soft heart"]
+  },
+  {
+    "id": "misunderstood-intense-one",
+    "name": "The Misunderstood Intense One",
+    "summary": "Feels deeply and worries others will label that depth as too much.",
+    "insight_angle": "intensity, shame, accuracy",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns", "trigger_log"],
+    "keywords": ["intense", "too much", "deeply", "misunderstood", "label", "shame", "accuracy", "depth"]
+  },
+  {
+    "id": "emotional-minimalist",
+    "name": "The Emotional Minimalist",
+    "summary": "Feels a lot but shares very little until trust is proven.",
+    "insight_angle": "guarded vulnerability",
+    "sources": ["relationship_patterns", "daily_questions", "journal_entries"],
+    "keywords": ["shares little", "guarded", "vulnerability", "trust", "proven", "private", "withhold", "minimal"]
+  },
+  {
+    "id": "tender-overthinker",
+    "name": "The Tender Overthinker",
+    "summary": "Analyzes because the feeling matters, not because they want to spiral.",
+    "insight_angle": "analysis as care",
+    "sources": ["daily_questions", "journal_entries", "check_ins"],
+    "keywords": ["overthink", "analysis", "feeling matters", "spiral", "care", "tender", "understand", "meaning"]
+  },
+  {
+    "id": "safety-tester",
+    "name": "The Safety Tester",
+    "summary": "Quietly tests whether people will stay, remember, repair, and respond.",
+    "insight_angle": "trust testing",
+    "sources": ["relationship_patterns", "trigger_log", "daily_questions", "journal_entries"],
+    "keywords": ["test", "stay", "remember", "repair", "respond", "trust", "safety", "proof"]
+  },
+  {
+    "id": "repair-seeker",
+    "name": "The Repair-Seeker",
+    "summary": "Needs rupture to be addressed, not swept away.",
+    "insight_angle": "repair, apology, accountability",
+    "sources": ["relationship_patterns", "trigger_log", "daily_questions"],
+    "keywords": ["repair", "rupture", "addressed", "swept away", "apology", "accountability", "conflict", "talk about"]
+  },
+  {
+    "id": "rupture-triggered-user",
+    "name": "The Rupture-Triggered User",
+    "summary": "Gets deeply activated when connection suddenly feels unstable.",
+    "insight_angle": "attachment threat",
+    "sources": ["relationship_patterns", "trigger_log", "check_ins", "somatic_map"],
+    "keywords": ["rupture", "activated", "connection", "unstable", "attachment", "threat", "suddenly", "distance"]
+  },
+  {
+    "id": "emotional-translator",
+    "name": "The Emotional Translator",
+    "summary": "Turns raw feelings into acceptable language before sharing them.",
+    "insight_angle": "self-editing, fear of being misread",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns"],
+    "keywords": ["translate", "raw feelings", "acceptable", "language", "self-editing", "misread", "wording", "safe enough"]
+  },
+  {
+    "id": "too-much-worrier",
+    "name": "The Too-Much Worrier",
+    "summary": "Often filters needs through the fear of overwhelming others.",
+    "insight_angle": "need shame",
+    "sources": ["relationship_patterns", "daily_questions", "journal_entries", "trigger_log"],
+    "keywords": ["too much", "needs", "overwhelm", "fear", "need shame", "filter", "ask", "burden"]
+  },
+  {
+    "id": "selective-vulnerability-user",
+    "name": "The Selective Vulnerability User",
+    "summary": "Can be open in some places but extremely guarded in others.",
+    "insight_angle": "contextual safety",
+    "sources": ["relationship_patterns", "daily_questions", "journal_entries"],
+    "keywords": ["selective", "vulnerability", "open", "guarded", "context", "safety", "some places", "trust"]
+  },
+  {
+    "id": "loyalty-torn-user",
+    "name": "The Loyalty-Torn User",
+    "summary": "Struggles when loyalty and honesty pull in opposite directions.",
+    "insight_angle": "values conflict",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns"],
+    "keywords": ["loyalty", "honesty", "opposite", "conflict", "values", "truth", "torn", "both"]
+  },
+  {
+    "id": "truth-teller",
+    "name": "The Truth-Teller",
+    "summary": "Needs honesty more than surface harmony.",
+    "insight_angle": "authenticity, conflict, integrity",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns", "trigger_log"],
+    "keywords": ["truth", "honesty", "surface harmony", "integrity", "authenticity", "conflict", "say it", "real"]
+  },
+  {
+    "id": "moral-weight-carrier",
+    "name": "The Moral Weight Carrier",
+    "summary": "Feels responsible for doing the right thing, even when it is exhausting.",
+    "insight_angle": "ethics, accountability, guilt",
+    "sources": ["daily_questions", "journal_entries", "trigger_log", "parenting"],
+    "keywords": ["right thing", "moral", "ethics", "accountability", "guilt", "responsible", "exhausting", "should"]
+  },
+  {
+    "id": "injustice-alarm",
+    "name": "The Injustice Alarm",
+    "summary": "Cannot easily ignore unfairness, especially when vulnerable people are affected.",
+    "insight_angle": "justice activation",
+    "sources": ["trigger_log", "journal_entries", "daily_questions", "parenting"],
+    "keywords": ["injustice", "unfairness", "vulnerable", "affected", "justice", "activation", "harm", "ignored"]
+  },
+  {
+    "id": "protector-of-the-vulnerable",
+    "name": "The Protector of the Vulnerable",
+    "summary": "Moves quickly when children, marginalized people, or wounded parts are at risk.",
+    "insight_angle": "protection, advocacy",
+    "sources": ["parenting", "trigger_log", "journal_entries", "daily_questions", "parts_work"],
+    "keywords": ["protect", "children", "marginalized", "wounded parts", "risk", "advocacy", "vulnerable", "safety"]
+  },
+  {
+    "id": "systems-wounded-user",
+    "name": "The Systems-Wounded User",
+    "summary": "Gets activated by institutions, bureaucracy, dismissal, or people in power not listening.",
+    "insight_angle": "authority, documentation, disbelief",
+    "sources": ["trigger_log", "journal_entries", "daily_questions"],
+    "keywords": ["systems", "institution", "bureaucracy", "dismissal", "power", "not listening", "authority", "documentation"]
+  },
+  {
+    "id": "evidence-gatherer",
+    "name": "The Evidence Gatherer",
+    "summary": "Collects receipts, timelines, context, and details because being believed has not felt guaranteed.",
+    "insight_angle": "proof as safety",
+    "sources": ["journal_entries", "daily_questions", "trigger_log", "relationship_patterns"],
+    "keywords": ["evidence", "receipts", "timeline", "context", "details", "believed", "proof", "documentation"]
+  },
+  {
+    "id": "control-through-preparation-user",
+    "name": "The Control-Through-Preparation User",
+    "summary": "Prepares intensely because uncertainty feels dangerous.",
+    "insight_angle": "planning, control, safety",
+    "sources": ["daily_questions", "journal_entries", "trigger_log", "check_ins"],
+    "keywords": ["prepare", "planning", "control", "uncertainty", "dangerous", "safe", "plan", "contingency"]
+  },
+  {
+    "id": "uncertainty-sensitive-user",
+    "name": "The Uncertainty-Sensitive User",
+    "summary": "Struggles most when outcomes are unknown or people are unclear.",
+    "insight_angle": "ambiguity, nervous system threat",
+    "sources": ["trigger_log", "check_ins", "daily_questions", "relationship_patterns"],
+    "keywords": ["uncertainty", "unknown", "unclear", "ambiguity", "threat", "outcome", "not knowing", "nervous system"]
+  },
+  {
+    "id": "waiting-for-impact-user",
+    "name": "The Waiting-for-Impact User",
+    "summary": "Braces before anything bad has actually happened.",
+    "insight_angle": "anticipatory anxiety",
+    "sources": ["check_ins", "trigger_log", "somatic_map", "daily_questions"],
+    "keywords": ["impact", "braces", "before", "anticipatory", "anxiety", "what if", "bad", "waiting"]
+  },
+  {
+    "id": "stability-builder",
+    "name": "The Stability Builder",
+    "summary": "Creates routines, systems, rituals, and structure to feel grounded.",
+    "insight_angle": "stability as care",
+    "sources": ["daily_questions", "journal_entries", "glimmer_log", "check_ins"],
+    "keywords": ["routine", "systems", "ritual", "structure", "grounded", "stability", "care", "anchor"]
+  },
+  {
+    "id": "home-maker",
+    "name": "The Home-Maker",
+    "summary": "Needs spaces to feel emotionally safe, beautiful, personal, and containing.",
+    "insight_angle": "environment, belonging, sensory safety",
+    "sources": ["daily_questions", "journal_entries", "glimmer_log", "astrology"],
+    "keywords": ["home", "space", "safe", "beautiful", "personal", "contained", "environment", "belonging"]
+  },
+  {
+    "id": "beauty-regulated-user",
+    "name": "The Beauty-Regulated User",
+    "summary": "Feels genuinely steadier when surrounded by beauty, softness, color, or atmosphere.",
+    "insight_angle": "aesthetics as regulation",
+    "sources": ["glimmer_log", "daily_questions", "journal_entries", "check_ins"],
+    "keywords": ["beauty", "softness", "color", "atmosphere", "steady", "aesthetic", "regulated", "beautiful"]
+  },
+  {
+    "id": "sensory-sensitive-user",
+    "name": "The Sensory-Sensitive User",
+    "summary": "Mood shifts strongly with sound, light, clutter, texture, temperature, or stimulation.",
+    "insight_angle": "sensory body map",
+    "sources": ["somatic_map", "check_ins", "trigger_log", "daily_questions"],
+    "keywords": ["sensory", "sound", "light", "clutter", "texture", "temperature", "stimulation", "mood"]
+  },
+  {
+    "id": "body-alarm-user",
+    "name": "The Body-Alarm User",
+    "summary": "Physical sensations escalate before emotional awareness catches up.",
+    "insight_angle": "somatic early warning",
+    "sources": ["somatic_map", "trigger_log", "check_ins"],
+    "keywords": ["body alarm", "physical", "sensations", "escalate", "awareness", "early warning", "body", "before"]
+  },
+  {
+    "id": "chest-pressure-carrier",
+    "name": "The Chest-Pressure Carrier",
+    "summary": "Often experiences emotional load through chest tightness, heaviness, or breath changes.",
+    "insight_angle": "grief, anxiety, holding",
+    "sources": ["somatic_map", "check_ins", "trigger_log"],
+    "keywords": ["chest", "tightness", "heaviness", "breath", "grief", "anxiety", "holding", "pressure"]
+  },
+  {
+    "id": "shoulder-burden-carrier",
+    "name": "The Shoulder-Burden Carrier",
+    "summary": "Carries responsibility physically through shoulder, neck, or back tension.",
+    "insight_angle": "burden, overfunctioning",
+    "sources": ["somatic_map", "check_ins", "journal_entries"],
+    "keywords": ["shoulder", "neck", "back", "tension", "responsibility", "burden", "overfunctioning", "carry"]
+  },
+  {
+    "id": "stomach-knows-first-user",
+    "name": "The Stomach-Knows-First User",
+    "summary": "Gut sensations often reveal discomfort before thoughts do.",
+    "insight_angle": "intuition, threat, uncertainty",
+    "sources": ["somatic_map", "trigger_log", "check_ins", "daily_questions"],
+    "keywords": ["stomach", "gut", "discomfort", "intuition", "threat", "uncertainty", "knows", "sensation"]
+  },
+  {
+    "id": "jaw-clench-user",
+    "name": "The Jaw-Clench User",
+    "summary": "Holds anger, restraint, effort, or unsaid words in the jaw.",
+    "insight_angle": "suppression, control",
+    "sources": ["somatic_map", "trigger_log", "journal_entries"],
+    "keywords": ["jaw", "clench", "anger", "restraint", "unsaid", "suppression", "control", "effort"]
+  },
+  {
+    "id": "freeze-first-user",
+    "name": "The Freeze-First User",
+    "summary": "Shuts down, goes blank, or feels heavy when overwhelmed.",
+    "insight_angle": "freeze response",
+    "sources": ["somatic_map", "trigger_log", "check_ins", "journal_entries"],
+    "keywords": ["freeze", "shut down", "blank", "heavy", "overwhelmed", "numb", "stuck", "collapse"]
+  },
+  {
+    "id": "fight-first-user",
+    "name": "The Fight-First User",
+    "summary": "Feels urgency, heat, anger, or moral intensity when activated.",
+    "insight_angle": "fight response",
+    "sources": ["trigger_log", "somatic_map", "journal_entries", "daily_questions"],
+    "keywords": ["fight", "urgency", "heat", "anger", "moral intensity", "activated", "defend", "push"]
+  },
+  {
+    "id": "fawn-first-user",
+    "name": "The Soften-to-Stay-Connected User",
+    "summary": "Appeases, explains, softens, or over-accommodates when connection feels threatened.",
+    "insight_angle": "fawn response",
+    "sources": ["relationship_patterns", "trigger_log", "daily_questions", "journal_entries"],
+    "keywords": ["fawn", "appease", "explains", "softens", "over-accommodates", "connection", "threatened", "please"]
+  },
+  {
+    "id": "flight-first-user",
+    "name": "The Task-Escape User",
+    "summary": "Escapes into tasks, research, planning, movement, or distraction when overwhelmed.",
+    "insight_angle": "flight response",
+    "sources": ["check_ins", "trigger_log", "journal_entries", "daily_questions"],
+    "keywords": ["flight", "tasks", "research", "planning", "movement", "distraction", "escape", "overwhelmed"]
+  },
+  {
+    "id": "glimmer-collector",
+    "name": "The Glimmer Collector",
+    "summary": "Finds healing in tiny moments of beauty, relief, softness, or connection.",
+    "insight_angle": "positive nervous system cues",
+    "sources": ["glimmer_log", "daily_questions", "journal_entries", "check_ins"],
+    "keywords": ["glimmer", "beauty", "relief", "softness", "connection", "healing", "tiny", "positive"]
+  },
+  {
+    "id": "joy-suspicious-user",
+    "name": "The Joy-Suspicious User",
+    "summary": "Feels happy moments, then quickly braces for loss or disappointment.",
+    "insight_angle": "joy tolerance",
+    "sources": ["glimmer_log", "trigger_log", "check_ins", "daily_questions"],
+    "keywords": ["joy", "happy", "braces", "loss", "disappointment", "suspicious", "good moment", "tolerance"]
+  },
+  {
+    "id": "calm-is-new-user",
+    "name": "The Calm-Is-New User",
+    "summary": "Does not yet know how to relax into peace without scanning.",
+    "insight_angle": "unfamiliar safety",
+    "sources": ["check_ins", "somatic_map", "glimmer_log", "daily_questions"],
+    "keywords": ["calm", "peace", "scanning", "relax", "unfamiliar", "safety", "new", "quiet"]
+  },
+  {
+    "id": "numbness-interpreter",
+    "name": "The Numbness-Interpreter",
+    "summary": "Struggles to tell whether they are calm, disconnected, or shut down.",
+    "insight_angle": "calm versus numb",
+    "sources": ["check_ins", "somatic_map", "daily_questions", "journal_entries"],
+    "keywords": ["numb", "calm", "disconnected", "shut down", "tell whether", "blank", "interpret", "quiet"]
+  },
+  {
+    "id": "grief-carrier",
+    "name": "The Grief-Carrier",
+    "summary": "Carries losses that still shape present reactions.",
+    "insight_angle": "grief, memory, longing",
+    "sources": ["journal_entries", "daily_questions", "dream_journal", "somatic_map"],
+    "keywords": ["grief", "loss", "memory", "longing", "present", "reaction", "miss", "ache"]
+  },
+  {
+    "id": "ambiguous-loss-user",
+    "name": "The Unfinished-Story User",
+    "summary": "Grieves things that were never fully named, finished, repaired, or acknowledged.",
+    "insight_angle": "unresolved grief",
+    "sources": ["journal_entries", "daily_questions", "relationship_patterns", "dream_journal"],
+    "keywords": ["ambiguous loss", "unnamed", "unfinished", "unrepaired", "acknowledged", "grief", "unresolved", "closure"]
+  },
+  {
+    "id": "future-self-builder",
+    "name": "The Future-Self Builder",
+    "summary": "Makes choices based on who they are becoming.",
+    "insight_angle": "growth, vision, identity",
+    "sources": ["daily_questions", "journal_entries", "monthly_review", "astrology"],
+    "keywords": ["future self", "becoming", "growth", "vision", "identity", "choice", "building", "next version"]
+  },
+  {
+    "id": "past-self-protector",
+    "name": "The Past-Self Protector",
+    "summary": "Feels protective of the younger version of themselves who did not get enough.",
+    "insight_angle": "inner child, compassion",
+    "sources": ["parts_work", "journal_entries", "daily_questions", "trigger_log"],
+    "keywords": ["past self", "younger", "protective", "enough", "inner child", "compassion", "did not get", "little"]
+  },
+  {
+    "id": "identity-rewriter",
+    "name": "The Identity-Rewriter",
+    "summary": "Is actively replacing old labels, old shame, or old roles with truer ones.",
+    "insight_angle": "transformation",
+    "sources": ["daily_questions", "journal_entries", "monthly_review", "parts_work"],
+    "keywords": ["identity", "old labels", "shame", "roles", "truer", "rewrite", "replace", "transformation"]
+  },
+  {
+    "id": "late-bloomer-truth-finder",
+    "name": "The Late-Bloomer Truth Finder",
+    "summary": "Discovers important truths later and feels both grief and relief.",
+    "insight_angle": "identity awakening",
+    "sources": ["daily_questions", "journal_entries", "monthly_review", "astrology"],
+    "keywords": ["late", "truth", "grief", "relief", "awakening", "realized", "identity", "discover"]
+  },
+  {
+    "id": "chapter-aware-user",
+    "name": "The Chapter-Aware User",
+    "summary": "Thinks of life in chapters, seasons, arcs, and themes.",
+    "insight_angle": "life narrative",
+    "sources": ["daily_questions", "journal_entries", "monthly_review", "astrology"],
+    "keywords": ["chapter", "season", "arc", "theme", "life narrative", "story", "phase", "period"]
+  },
+  {
+    "id": "legacy-builder",
+    "name": "The Legacy Builder",
+    "summary": "Wants what they make, teach, heal, or protect to outlast them.",
+    "insight_angle": "meaning, impact",
+    "sources": ["daily_questions", "journal_entries", "app_building", "parenting"],
+    "keywords": ["legacy", "make", "teach", "heal", "protect", "outlast", "impact", "meaning"]
+  },
+  {
+    "id": "wisdom-carrier",
+    "name": "The Wisdom Carrier",
+    "summary": "Has lived through things that gave them hard-earned insight.",
+    "insight_angle": "lived wisdom",
+    "sources": ["journal_entries", "daily_questions", "monthly_review"],
+    "keywords": ["wisdom", "lived", "hard-earned", "insight", "learned", "experience", "survived", "clarity"]
+  },
+  {
+    "id": "mentor-seeker",
+    "name": "The Mentor-Seeker",
+    "summary": "Longs for guidance, older wisdom, or someone trustworthy to help them sort life.",
+    "insight_angle": "guidance, support, wisdom",
+    "sources": ["daily_questions", "journal_entries", "relationship_patterns"],
+    "keywords": ["mentor", "guidance", "older wisdom", "trustworthy", "sort life", "support", "wise", "help"]
+  },
+  {
+    "id": "self-forgiveness-learner",
+    "name": "The Self-Forgiveness Learner",
+    "summary": "Is learning to hold accountability without turning every mistake into shame.",
+    "insight_angle": "repair, guilt, compassion",
+    "sources": ["daily_questions", "journal_entries", "glimmer_log"],
+    "keywords": ["forgiveness", "accountability", "mistake", "shame", "repair", "guilt", "compassion", "learning"]
+  },
+  {
+    "id": "inner-critic-negotiator",
+    "name": "The Inner-Critic Negotiator",
+    "summary": "Has a strong internal critic but is beginning to question its authority.",
+    "insight_angle": "shame, self-talk",
+    "sources": ["daily_questions", "journal_entries", "parts_work"],
+    "keywords": ["inner critic", "critic", "authority", "self-talk", "shame", "question", "harsh", "voice"]
+  },
+  {
+    "id": "compassion-fatigued-user",
+    "name": "The Compassion-Fatigued User",
+    "summary": "Still cares, but their capacity for care needs replenishing.",
+    "insight_angle": "empathy depletion",
+    "sources": ["check_ins", "daily_questions", "journal_entries", "somatic_map"],
+    "keywords": ["compassion fatigue", "cares", "capacity", "replenish", "empathy", "depletion", "tired", "care", "caregiving", "emotional processing", "carrying"]
+  },
+  {
+    "id": "mutuality-seeker",
+    "name": "The Mutuality-Seeker",
+    "summary": "Wants relationships where care moves both ways.",
+    "insight_angle": "reciprocity",
+    "sources": ["relationship_patterns", "daily_questions", "journal_entries"],
+    "keywords": ["mutuality", "reciprocity", "both ways", "care", "relationship", "give back", "same", "receive"]
+  },
+  {
+    "id": "chosen-family-builder",
+    "name": "The Chosen-Family Builder",
+    "summary": "Creates belonging outside traditional family structures.",
+    "insight_angle": "belonging, loyalty, chosen connection",
+    "sources": ["relationship_patterns", "daily_questions", "journal_entries", "glimmer_log"],
+    "keywords": ["chosen family", "belonging", "traditional family", "loyalty", "chosen", "connection", "community", "home"]
+  },
+  {
+    "id": "family-pattern-breaker",
+    "name": "The Family-Pattern Breaker",
+    "summary": "Consciously refuses to repeat inherited emotional patterns.",
+    "insight_angle": "generational healing",
+    "sources": ["journal_entries", "daily_questions", "parts_work", "parenting"],
+    "keywords": ["family pattern", "inherited", "repeat", "generational", "healing", "break", "refuse", "cycle"]
+  },
+  {
+    "id": "attachment-to-home-user",
+    "name": "The Attachment-to-Home User",
+    "summary": "Feels deeply affected by the presence or absence of a safe home base.",
+    "insight_angle": "home, security, roots",
+    "sources": ["daily_questions", "journal_entries", "check_ins", "astrology"],
+    "keywords": ["home base", "home", "security", "roots", "safe", "absence", "presence", "base"]
+  },
+  {
+    "id": "ritual-regulated-user",
+    "name": "The Ritual-Regulated User",
+    "summary": "Feels grounded through repeated routines, traditions, or daily anchors.",
+    "insight_angle": "rituals, stability",
+    "sources": ["daily_questions", "glimmer_log", "check_ins", "journal_entries"],
+    "keywords": ["ritual", "routine", "tradition", "daily anchor", "grounded", "repeated", "stability", "anchor"]
+  },
+  {
+    "id": "nature-regulated-user",
+    "name": "The Nature-Regulated User",
+    "summary": "Feels restored by seasons, trees, water, sky, or outdoor space.",
+    "insight_angle": "nature as nervous system support",
+    "sources": ["glimmer_log", "daily_questions", "journal_entries", "check_ins"],
+    "keywords": ["nature", "season", "tree", "water", "sky", "outdoor", "restored", "nervous system"]
+  },
+  {
+    "id": "humor-as-survival-user",
+    "name": "The Humor-as-Survival User",
+    "summary": "Uses humor to survive, connect, soften, or deflect.",
+    "insight_angle": "humor, protection, connection",
+    "sources": ["journal_entries", "daily_questions", "relationship_patterns", "glimmer_log"],
+    "keywords": ["humor", "survive", "connect", "soften", "deflect", "protection", "joke", "laugh"]
+  },
+  {
+    "id": "play-starved-adult",
+    "name": "The Play-Starved Adult",
+    "summary": "Needs more play, delight, silliness, or low-stakes joy.",
+    "insight_angle": "play, inner child, vitality",
+    "sources": ["daily_questions", "glimmer_log", "journal_entries", "parts_work"],
+    "keywords": ["play", "delight", "low-stakes", "joy", "inner child", "vitality", "fun", "silly"]
+  },
+  {
+    "id": "abundance-healing-user",
+    "name": "The Abundance-Healing User",
+    "summary": "Is learning to believe love, time, support, and opportunity do not always have to be scarce.",
+    "insight_angle": "scarcity versus enoughness",
+    "sources": ["daily_questions", "journal_entries", "glimmer_log", "monthly_review"],
+    "keywords": ["abundance", "scarce", "enough", "love", "time", "support", "opportunity", "healing"]
+  },
+  {
+    "id": "scarcity-scanner",
+    "name": "The Scarcity-Scanner",
+    "summary": "Tracks what might disappear: support, money, energy, time, closeness, or safety.",
+    "insight_angle": "scarcity, fear of loss",
+    "sources": ["daily_questions", "journal_entries", "trigger_log", "check_ins"],
+    "keywords": ["scarcity", "disappear", "support", "money", "energy", "time", "closeness", "loss"]
+  },
+  {
+    "id": "desire-reclaimer",
+    "name": "The Desire-Reclaimer",
+    "summary": "Is learning that wanting more does not make them selfish.",
+    "insight_angle": "desire, guilt, permission",
+    "sources": ["daily_questions", "journal_entries", "glimmer_log", "relationship_patterns"],
+    "keywords": ["desire", "wanting more", "selfish", "permission", "guilt", "more", "want", "allowed"]
+  },
+  {
+    "id": "whole-self-integrator",
+    "name": "The Whole-Self Integrator",
+    "summary": "Wants every part of themselves to belong: strong, young, angry, tender, creative, tired, and hopeful.",
+    "insight_angle": "integration, wholeness, self-acceptance",
+    "sources": ["parts_work", "daily_questions", "journal_entries", "monthly_review"],
+    "keywords": ["whole self", "integration", "wholeness", "self-acceptance", "parts", "belong", "tender", "hopeful", "multiple emotional truths", "several ages", "perspectives", "every part", "contradiction"]
+  }
+]

@@ -1,0 +1,642 @@
+[
+  {
+    "id": "profile-example-overextended-caregiver-001",
+    "lens_id": "overextended-caregiver",
+    "title": "Your Relationship with Care",
+    "observation": "Your archive suggests that care often leaves your system before it returns to you.",
+    "pattern": "Across recent entries, you seem quick to notice what others need, what might help, and what could fall apart if you do not step in. The pattern suggests that giving has become natural, but receiving may still feel less practiced.",
+    "reframe": "This does not read as poor boundaries alone. It reads as a generous system that has not yet learned to count itself as someone worth protecting too."
+  },
+  {
+    "id": "profile-example-quiet-hero-001",
+    "lens_id": "quiet-hero",
+    "title": "The Cost of Quiet Strength",
+    "observation": "Your archive suggests that your strength often works silently in the background.",
+    "pattern": "Across recent patterns, you appear to keep going, solving, protecting, or enduring without always naming how much it costs. The pattern suggests that your courage may be more visible in what you carry than in what you announce.",
+    "reframe": "This does not read as needing attention. It reads as a quiet strength that deserves to be witnessed before it becomes exhaustion."
+  },
+  {
+    "id": "profile-example-deep-processor-001",
+    "lens_id": "deep-processor",
+    "title": "How You Process Pain",
+    "observation": "Your archive suggests that understanding is one of the ways you regulate.",
+    "pattern": "Across recent entries, you return often to meaning, context, cause, and the deeper thread beneath what happened. The pattern suggests that an experience may not fully move through you until it has language.",
+    "reframe": "This does not read as overthinking. It reads as your mind trying to make something emotionally safe enough to feel."
+  },
+  {
+    "id": "profile-example-boundary-rebuilder-001",
+    "lens_id": "boundary-rebuilder",
+    "title": "Where You Draw the Line",
+    "observation": "Your archive shows a growing shift in how you hold your limits.",
+    "pattern": "Across recent entries, there is less energy spent asking whether your boundary is acceptable and more attention given to whether it is true. The pattern suggests that your inner no is becoming easier to hear.",
+    "reframe": "This does not read as becoming cold. It reads as self-trust beginning to stand without needing everyone's permission."
+  },
+  {
+    "id": "profile-example-support-starved-achiever-001",
+    "lens_id": "support-starved-achiever",
+    "title": "When Capability Hides Need",
+    "observation": "Your archive suggests that your competence can make your need for support harder to see.",
+    "pattern": "Across recent patterns, you keep functioning, planning, producing, or showing up even when your emotional reserves are thin. The pattern suggests that people may see what you can handle before they notice what you should not have to handle alone.",
+    "reframe": "This does not read as weakness. It reads as the exhaustion of being capable in places where you still deserve care."
+  },
+  {
+    "id": "profile-example-hypervigilant-protector-001",
+    "lens_id": "hypervigilant-protector",
+    "title": "The System That Scans Ahead",
+    "observation": "Your archive suggests that you often notice risk before it becomes obvious.",
+    "pattern": "Across recent entries, your attention moves quickly toward what could go wrong, what might be missed, and where someone may need protection. The pattern suggests that your mind has learned to prepare early because waiting has not always felt safe.",
+    "reframe": "This does not read as negativity. It reads as a protective intelligence that is still learning when it can stand down."
+  },
+  {
+    "id": "profile-example-meaning-maker-001",
+    "lens_id": "meaning-maker",
+    "title": "The Pattern Beneath the Pain",
+    "observation": "Your archive suggests that you rarely leave pain as only pain.",
+    "pattern": "Across recent entries, difficult experiences often become questions about meaning, growth, truth, and what can be carried forward. The pattern suggests that making meaning helps you reclaim something from moments that felt chaotic.",
+    "reframe": "This does not read as forcing positivity. It reads as your refusal to let hard things have the final word."
+  },
+  {
+    "id": "profile-example-rest-resistant-survivor-001",
+    "lens_id": "rest-resistant-survivor",
+    "title": "Your Relationship with Rest",
+    "observation": "Your archive suggests that exhaustion often becomes your permission slip to pause.",
+    "pattern": "Across recent entries, there is a pattern of moving quickly until your body forces a full stop. Rest does not yet appear to function as a baseline. The pattern suggests that rest may still feel most allowed when your reserves are nearly gone.",
+    "reframe": "This does not read as a lack of self-care. It reads as resilience that has not yet learned it is safe to put the armor down."
+  },
+  {
+    "id": "profile-example-emotionally-precise-communicator-001",
+    "lens_id": "emotionally-precise-communicator",
+    "title": "The Need for Exact Words",
+    "observation": "Your archive suggests that vague language rarely feels like enough.",
+    "pattern": "Across recent entries, you seem to search for the sentence that finally lands: not too soft, not too harsh, not too exposed, not too small. The pattern suggests that words are not decoration for you. They are how reality becomes clear.",
+    "reframe": "This does not read as perfectionism alone. It reads as a need to be emotionally accurate after too many experiences were flattened or misunderstood."
+  },
+  {
+    "id": "profile-example-relational-scanner-001",
+    "lens_id": "relational-scanner",
+    "title": "How You Measure Safety",
+    "observation": "Your archive suggests that safety is something you read through patterns, not promises.",
+    "pattern": "Across recent relational entries, you seem to notice consistency, tone, follow-through, repair, and whether care remains steady when you have needs. The pattern suggests that trust builds through repeated evidence.",
+    "reframe": "This does not read as suspicion. It reads as discernment formed around the need for care to be real, not just spoken."
+  },
+  {
+    "id": "profile-example-anxious-attacher-in-repair-001",
+    "lens_id": "anxious-attacher-in-repair",
+    "title": "The Need to Know Care Will Stay",
+    "observation": "Your archive suggests that closeness feels safer when care is clear and repeatable.",
+    "pattern": "Across recent entries, uncertainty in connection seems to create more emotional charge than distance alone. The pattern suggests that reassurance matters because it helps your system stop guessing whether you still have a place.",
+    "reframe": "This does not read as neediness. It reads as a longing for connection that does not disappear when you reach for it."
+  },
+  {
+    "id": "profile-example-avoidant-protector-in-softening-001",
+    "lens_id": "avoidant-protector-in-softening",
+    "title": "When Space Feels Protective",
+    "observation": "Your archive suggests that pulling back can become a way to feel steady.",
+    "pattern": "Across recent entries, distance appears when closeness feels demanding, unclear, or emotionally crowded. The pattern suggests that space helps your system regain control when connection starts to feel like too much.",
+    "reframe": "This does not read as indifference. It reads as a protective rhythm that may be learning how to make room without fully disappearing."
+  },
+  {
+    "id": "profile-example-secure-when-steady-user-001",
+    "lens_id": "secure-when-steady-user",
+    "title": "The Conditions That Help You Open",
+    "observation": "Your archive suggests that openness comes more easily when care is consistent.",
+    "pattern": "Across recent patterns, your system seems to soften when people are clear, steady, and not easily overwhelmed by your needs. The pattern suggests that security is not abstract for you. It is built through repeated moments of safe contact.",
+    "reframe": "This does not read as being hard to reach. It reads as a self that opens beautifully when steadiness has been proven."
+  },
+  {
+    "id": "profile-example-creative-alchemist-001",
+    "lens_id": "creative-alchemist",
+    "title": "How You Turn Feeling into Form",
+    "observation": "Your archive suggests that creation is one of the ways your inner world becomes visible.",
+    "pattern": "Across recent entries, emotion seems to move through writing, design, making, imagining, or shaping something meaningful. The pattern suggests that creativity is not separate from your processing. It is part of how you metabolize life.",
+    "reframe": "This does not read as distraction. It reads as transformation through expression."
+  },
+  {
+    "id": "profile-example-justice-oriented-advocate-001",
+    "lens_id": "justice-oriented-advocate",
+    "title": "The Value Beneath Your Anger",
+    "observation": "Your archive suggests that anger often rises when something violates a core value.",
+    "pattern": "Across recent entries, your strongest emotional charge appears near unfairness, dismissal, harm, or people not being protected. The pattern suggests that your anger may be pointing toward what you believe should never be ignored.",
+    "reframe": "This does not read as being reactive. It reads as your ethics becoming impossible to silence."
+  },
+  {
+    "id": "profile-example-inner-child-carrier-001",
+    "lens_id": "inner-child-carrier",
+    "title": "The Older Ache Beneath Today",
+    "observation": "Your archive suggests that some present moments touch older needs for safety, comfort, attention, or belonging.",
+    "pattern": "Across recent entries, certain situations seem to carry more emotional weight than the event alone explains. The pattern suggests that the current moment may be brushing against a need that has been waiting a long time to be met.",
+    "reframe": "This does not read as immaturity. It reads as an older ache asking to be treated with care instead of shame."
+  },
+  {
+    "id": "profile-example-transformation-seeker-001",
+    "lens_id": "transformation-seeker",
+    "title": "The Person You Are Becoming",
+    "observation": "Your archive suggests that you are living between versions of yourself.",
+    "pattern": "Across recent entries, there are signs of old roles loosening while new truths become harder to ignore. The pattern suggests that you are not simply changing habits. You are reorganizing your sense of self.",
+    "reframe": "This does not read as instability. It reads as becoming before the new shape has fully settled."
+  },
+  {
+    "id": "profile-example-masked-functional-one-001",
+    "lens_id": "masked-functional-one",
+    "title": "The Performance of Being Fine",
+    "observation": "Your archive suggests that functioning can sometimes hide how much you are carrying.",
+    "pattern": "Across recent entries, you appear able to keep moving while still feeling unseen, strained, or emotionally full underneath. The pattern suggests that \"I handled it\" does not always mean \"I was okay.\"",
+    "reframe": "This does not read as dishonesty. It reads as a survival-level skill that may need more room to tell the truth."
+  },
+  {
+    "id": "profile-example-calm-bracer-001",
+    "lens_id": "calm-bracer",
+    "title": "How You Hold Stillness",
+    "observation": "Your archive shows a complex relationship with calm.",
+    "pattern": "When things become easier, quieter, or more stable, there may still be a quiet bracing for the next interruption. The pattern suggests that your system is practiced at preparing for impact, which can make peace feel unfamiliar at first.",
+    "reframe": "This does not read as pessimism. It reads as protection learning how to recognize safety without scanning for danger."
+  },
+  {
+    "id": "profile-example-dream-processor-001",
+    "lens_id": "dream-processor",
+    "title": "When Dreams Continue the Conversation",
+    "observation": "Your archive suggests that dreams often pick up what the day could not finish.",
+    "pattern": "Across recent entries, dream activity appears near emotional pressure, unresolved questions, or lower-capacity weeks. The pattern suggests that your mind may use symbols when waking language has not fully caught up.",
+    "reframe": "This does not read as random. It reads as your inner world trying another language."
+  },
+  {
+    "id": "profile-example-somatic-feeler-001",
+    "lens_id": "somatic-feeler",
+    "title": "The Body Knows First",
+    "observation": "Your archive suggests that your body often notices pressure before your thoughts have words.",
+    "pattern": "Across recent entries, physical cues appear near emotional shifts, relationship stress, or lower-capacity days. The pattern suggests that your body may be one of the first places your truth becomes visible.",
+    "reframe": "This does not read as weakness. It reads as body intelligence speaking before the story is fully formed."
+  },
+  {
+    "id": "profile-example-low-energy-reflector-001",
+    "lens_id": "low-energy-reflector",
+    "title": "When Capacity Shapes Emotion",
+    "observation": "Your archive suggests that feelings become harder to hold when your energy is low.",
+    "pattern": "Across recent check-ins, lower energy often appears near heavier thoughts, sharper self-judgment, or a reduced ability to feel steady. The pattern suggests that some emotional intensity may be capacity-related, not character-related.",
+    "reframe": "This does not read as instability. It reads as your system needing more support when its reserves are already thin."
+  },
+  {
+    "id": "profile-example-freedom-seeker-001",
+    "lens_id": "freedom-seeker",
+    "title": "Your Need for Room",
+    "observation": "Your archive suggests that freedom is not just about doing whatever you want. It is about having enough room to stay connected to yourself.",
+    "pattern": "Across recent entries, pressure, obligation, or expectation seem to feel heavier when they limit your ability to choose honestly. The pattern suggests that autonomy may be one of the conditions that helps you feel alive and clear.",
+    "reframe": "This does not read as selfishness. It reads as a need for a life that leaves space for your own becoming."
+  },
+  {
+    "id": "profile-example-stability-seeker-001",
+    "lens_id": "stability-seeker",
+    "title": "What Helps You Feel Grounded",
+    "observation": "Your archive suggests that steadiness matters deeply to your inner world.",
+    "pattern": "Across recent entries, uncertainty, sudden change, or unclear outcomes seem to carry more emotional weight than they might from the outside. The pattern suggests that stability is not about avoiding life. It is about having enough ground beneath you to meet life without bracing.",
+    "reframe": "This does not read as rigidity. It reads as a real need for safety, rhythm, and something dependable to return to."
+  },
+  {
+    "id": "profile-example-belonging-seeker-001",
+    "lens_id": "belonging-seeker",
+    "title": "The Need to Have a Place",
+    "observation": "Your archive suggests that belonging is one of the deeper threads beneath your emotional life.",
+    "pattern": "Across recent entries, moments of disconnection, exclusion, or not being fully understood seem to land with particular weight. The pattern suggests that you are not only looking for company. You are looking for places where your full self does not have to shrink to fit.",
+    "reframe": "This does not read as neediness. It reads as the human need to be known, included, and welcomed without performance."
+  },
+  {
+    "id": "profile-example-faith-and-meaning-user-001",
+    "lens_id": "faith-and-meaning-user",
+    "title": "The Thread of Meaning",
+    "observation": "Your archive suggests that meaning helps you stay oriented when life feels uncertain.",
+    "pattern": "Across recent reflections, you seem to return to questions about purpose, trust, sacredness, or what a difficult season is asking of you. The pattern suggests that you do not only want to get through things. You want to understand how they fit into the larger story of your life.",
+    "reframe": "This does not read as avoiding reality. It reads as a search for something steady enough to carry you through it."
+  },
+  {
+    "id": "profile-example-excellence-driven-builder-001",
+    "lens_id": "excellence-driven-builder",
+    "title": "The Standard Beneath the Work",
+    "observation": "Your archive suggests that good enough does not always feel honest when something matters deeply to you.",
+    "pattern": "Across recent entries, you notice when something feels flat, unfinished, generic, or misaligned with the quality you imagined. The pattern suggests that your standards are not only about achievement. They are about integrity: wanting the final form to match the depth of the vision.",
+    "reframe": "This does not read as perfectionism alone. It reads as devotion to making something worthy of the care behind it."
+  },
+  {
+    "id": "profile-example-gentle-strength-user-001",
+    "lens_id": "gentle-strength-user",
+    "title": "Softness That Still Stands",
+    "observation": "Your archive suggests that tenderness and strength often move together in you.",
+    "pattern": "Across recent entries, you show care, sensitivity, and deep feeling without losing the ability to keep showing up. The pattern suggests that your softness is not the opposite of resilience. It may be one of the reasons your resilience has depth.",
+    "reframe": "This does not read as fragility. It reads as a kind of strength that refuses to become hard in order to survive."
+  },
+  {
+    "id": "profile-example-shadow-integrator-001",
+    "lens_id": "shadow-integrator",
+    "title": "What the Uncomfortable Feeling Is Telling You",
+    "observation": "Your archive suggests that difficult emotions often carry information you are learning not to dismiss.",
+    "pattern": "Across recent entries, feelings like jealousy, anger, resentment, or shame seem to point toward something underneath: a need, a limit, a longing, or a truth that wants room. The pattern suggests that your inner life becomes clearer when you stop treating uncomfortable feelings as evidence against yourself.",
+    "reframe": "This does not read as darkness taking over. It reads as self-honesty becoming brave enough to include the feelings that are harder to like."
+  },
+  {
+    "id": "profile-example-self-trust-learner-001",
+    "lens_id": "self-trust-learner",
+    "title": "When Your Own Knowing Gets Louder",
+    "observation": "Your archive suggests that you are learning to trust your own read of reality.",
+    "pattern": "Across recent entries, there are signs of moving from \"Am I allowed to feel this?\" toward \"This is what I know.\" The pattern suggests that your inner authority is becoming less dependent on whether someone else validates it immediately.",
+    "reframe": "This does not read as stubbornness. It reads as self-trust beginning to stand without needing to be defended every time."
+  },
+  {
+    "id": "profile-example-people-pleasing-peacemaker-001",
+    "lens_id": "people-pleasing-peacemaker",
+    "title": "The Cost of Keeping Peace",
+    "observation": "Your archive suggests that harmony sometimes costs more than it gives back.",
+    "pattern": "Across recent entries, you may soften your words, delay your truth, or make room for someone else's comfort before your own clarity has had a chance to speak. The pattern suggests that peace can start to become expensive when it requires you to disappear.",
+    "reframe": "This does not read as weakness. It reads as a long-practiced skill for staying connected that may now be asking to evolve."
+  },
+  {
+    "id": "profile-example-guilt-driven-giver-001",
+    "lens_id": "guilt-driven-giver",
+    "title": "When Giving Becomes Proof",
+    "observation": "Your archive suggests that giving sometimes becomes a way to reassure yourself that you are good, loyal, or enough.",
+    "pattern": "Across recent entries, saying no, needing rest, or choosing yourself may bring up guilt faster than relief. The pattern suggests that care has become tangled with responsibility in a way that can make receiving feel less natural than giving.",
+    "reframe": "This does not read as selfishness hiding underneath. It reads as a generous heart learning that love does not have to be proven through depletion."
+  },
+  {
+    "id": "profile-example-emotional-archaeologist-001",
+    "lens_id": "emotional-archaeologist",
+    "title": "The Feeling Beneath the Feeling",
+    "observation": "Your archive suggests that the first emotion is rarely the whole story.",
+    "pattern": "Across recent entries, you often move beneath the surface feeling to find what is older, quieter, or more vulnerable underneath. The pattern suggests that your emotional world has layers, and you are learning to read them with more accuracy.",
+    "reframe": "This does not read as making things complicated. It reads as depth recognizing that pain often wears more than one name."
+  },
+  {
+    "id": "profile-example-pattern-hunter-001",
+    "lens_id": "pattern-hunter",
+    "title": "What Keeps Repeating",
+    "observation": "Your archive suggests that repetition matters to you.",
+    "pattern": "Across recent entries, you seem drawn to the connections between moments: what keeps happening, what shows up before a hard day, what follows a certain kind of interaction, and what changes when rest or support appears. The pattern suggests that you do not only live your experiences. You study their shape.",
+    "reframe": "This does not read as obsessing. It reads as a mind that looks for the map because the map helps life feel less random."
+  },
+  {
+    "id": "profile-example-crisis-competent-one-001",
+    "lens_id": "crisis-competent-one",
+    "title": "How You Show Up Under Pressure",
+    "observation": "Your archive suggests that pressure can bring out a highly capable version of you.",
+    "pattern": "Across recent patterns, when something urgent or demanding appears, you may become focused, practical, clear, and unusually functional. The pattern suggests that crisis can organize your energy in a way ordinary life does not always do.",
+    "reframe": "This does not read as being built for chaos. It reads as a strength that deserves recovery after the moment has passed."
+  },
+  {
+    "id": "profile-example-post-crisis-crasher-001",
+    "lens_id": "post-crisis-crasher",
+    "title": "The Aftermath Your Body Holds",
+    "observation": "Your archive suggests that the hardest part may arrive after the urgent moment ends.",
+    "pattern": "Across recent entries, you may hold things together while something is happening, then feel the weight later when there is finally room to notice it. The pattern suggests that your system can postpone impact, but it does not erase it.",
+    "reframe": "This does not read as falling apart for no reason. It reads as delayed honesty from a body that waited until it was safer to feel."
+  },
+  {
+    "id": "profile-example-invisible-labor-holder-001",
+    "lens_id": "invisible-labor-holder",
+    "title": "The Work No One Sees",
+    "observation": "Your archive suggests that much of what drains you is not always visible from the outside.",
+    "pattern": "Across recent entries, there are signs of tracking details, anticipating needs, managing emotions, remembering what matters, and holding context that others may not even realize exists. The pattern suggests that the weight is not only in what you do. It is in what you constantly carry in mind.",
+    "reframe": "This does not read as exaggeration. It reads as invisible labor finally becoming visible in your own archive."
+  },
+  {
+    "id": "profile-example-responsible-oldest-energy-user-001",
+    "lens_id": "responsible-oldest-energy-user",
+    "title": "The Role of Being Prepared",
+    "observation": "Your archive suggests that responsibility often arrives before rest has a chance to.",
+    "pattern": "Across recent entries, you may feel pulled to be mature, prepared, useful, or steady even when you are the one who needs support. The pattern suggests that your system learned to take life seriously because dropping the ball never felt like a safe option.",
+    "reframe": "This does not read as control. It reads as a role that became familiar before it became fair."
+  },
+  {
+    "id": "profile-example-high-standards-soft-heart-001",
+    "lens_id": "high-standards-soft-heart",
+    "title": "When Care Raises the Standard",
+    "observation": "Your archive suggests that your standards often come from care, not criticism.",
+    "pattern": "Across recent entries, you may notice what could be better, safer, kinder, more honest, or more aligned. The pattern suggests that you do not hold high standards because you want to judge everything. You hold them because the outcome matters to you.",
+    "reframe": "This does not read as being impossible to please. It reads as a soft heart that wants the world around it to be worthy of trust."
+  },
+  {
+    "id": "profile-example-misunderstood-intense-one-001",
+    "lens_id": "misunderstood-intense-one",
+    "title": "The Fear of Being Too Much",
+    "observation": "Your archive suggests that emotional intensity can feel risky when you are not sure it will be understood.",
+    "pattern": "Across recent entries, you may filter your words, explain extra context, or worry that your depth will be mistaken for drama. The pattern suggests that being misread may hurt almost as much as the original feeling.",
+    "reframe": "This does not read as being too much. It reads as a deep-feeling person trying to make sure the truth of the feeling survives translation."
+  },
+  {
+    "id": "profile-example-emotional-minimalist-001",
+    "lens_id": "emotional-minimalist",
+    "title": "The Quietness Around What You Feel",
+    "observation": "Your archive suggests that you may feel more than you reveal.",
+    "pattern": "Across recent entries, emotion seems present, but carefully measured before it is shared. The pattern suggests that your inner world may be rich and active even when your outer expression stays brief, controlled, or contained.",
+    "reframe": "This does not read as emotional distance. It reads as a careful way of protecting what feels too personal to hand over without trust."
+  },
+  {
+    "id": "profile-example-tender-overthinker-001",
+    "lens_id": "tender-overthinker",
+    "title": "When Thinking Is a Form of Care",
+    "observation": "Your archive suggests that your thoughts circle because the feeling matters.",
+    "pattern": "Across recent entries, you may return to the same situation from several angles, trying to understand what was said, what was meant, what you needed, and what still feels unresolved. The pattern suggests that thinking is not only analysis for you. It is an attempt to hold something tender without dropping it.",
+    "reframe": "This does not read as spiraling. It reads as care searching for a place to land."
+  },
+  {
+    "id": "profile-example-safety-tester-001",
+    "lens_id": "safety-tester",
+    "title": "How Trust Proves Itself",
+    "observation": "Your archive suggests that trust becomes real through repetition.",
+    "pattern": "Across recent relationship patterns, you may notice whether people remember, follow through, respond gently, repair after tension, or stay present when things become less convenient. The pattern suggests that your system is not looking for perfection. It is looking for consistency that survives ordinary strain.",
+    "reframe": "This does not read as testing people unfairly. It reads as a wise need to know whether care is still there after the easy moment passes."
+  },
+  {
+    "id": "profile-example-repair-seeker-001",
+    "lens_id": "repair-seeker",
+    "title": "Why Repair Matters So Much",
+    "observation": "Your archive suggests that rupture does not feel complete until it has been named.",
+    "pattern": "Across recent entries, conflict seems hardest when it is ignored, minimized, or treated like it should simply disappear with time. The pattern suggests that repair matters because it restores the bridge, not because you want to keep reliving the hurt.",
+    "reframe": "This does not read as holding a grudge. It reads as a need for connection to become trustworthy again after something shook it."
+  },
+  {
+    "id": "profile-example-rupture-triggered-user-001",
+    "lens_id": "rupture-triggered-user",
+    "title": "When Connection Feels Suddenly Unsteady",
+    "observation": "Your archive suggests that sudden relational shifts can carry a strong emotional charge.",
+    "pattern": "Across recent entries, unclear tone, distance, conflict, delayed responses, or a change in warmth may feel bigger than the moment itself. The pattern suggests that when connection becomes uncertain, your system may start searching quickly for what changed and what it means.",
+    "reframe": "This does not read as being dramatic. It reads as a sensitivity to instability in places where connection matters."
+  },
+  {
+    "id": "profile-example-emotional-translator-001",
+    "lens_id": "emotional-translator",
+    "title": "The Work of Making Feelings Understandable",
+    "observation": "Your archive suggests that you often translate emotion before letting it be seen.",
+    "pattern": "Across recent entries, raw feelings seem to become carefully chosen words, softened explanations, or detailed context. The pattern suggests that you may be trying to make your experience easier for others to receive without losing the truth of it.",
+    "reframe": "This does not read as over-explaining. It reads as a practiced effort to be understood without being dismissed."
+  },
+  {
+    "id": "profile-example-too-much-worrier-001",
+    "lens_id": "too-much-worrier",
+    "title": "The Fear of Needing Too Loudly",
+    "observation": "Your archive suggests that some needs arrive with an immediate fear of being too much.",
+    "pattern": "Across recent entries, wanting reassurance, support, space, or care may quickly turn into self-questioning. The pattern suggests that the need itself is not the only hard part. The fear of how the need will be received may be carrying its own weight.",
+    "reframe": "This does not read as neediness. It reads as a heart trying to ask for care without risking rejection."
+  },
+  {
+    "id": "profile-example-selective-vulnerability-user-001",
+    "lens_id": "selective-vulnerability-user",
+    "title": "Where You Let Yourself Be Seen",
+    "observation": "Your archive suggests that vulnerability depends heavily on the room.",
+    "pattern": "Across recent patterns, you may be open, honest, and emotionally direct in some spaces while staying guarded in others. The pattern suggests that your openness is not random. It responds to whether the environment feels steady, respectful, and safe enough for truth.",
+    "reframe": "This does not read as inconsistency. It reads as discernment about who has earned access to the softer parts of you."
+  },
+  {
+    "id": "profile-example-loyalty-torn-user-001",
+    "lens_id": "loyalty-torn-user",
+    "title": "When Loyalty and Honesty Pull Apart",
+    "observation": "Your archive suggests that some of your hardest moments happen when loyalty and truth do not point in the same direction.",
+    "pattern": "Across recent entries, you may feel pressure to protect a relationship, history, family tie, or commitment while also knowing something needs to be named. The pattern suggests that conflict becomes heavier when being honest feels like betrayal.",
+    "reframe": "This does not read as disloyalty. It reads as integrity trying to find a way to love without abandoning the truth."
+  },
+  {
+    "id": "profile-example-truth-teller-001",
+    "lens_id": "truth-teller",
+    "title": "The Need for What Is Real",
+    "observation": "Your archive suggests that honesty matters more to you than surface-level peace.",
+    "pattern": "Across recent entries, you seem more unsettled by avoidance, vagueness, or pretending than by the discomfort of a difficult truth. The pattern suggests that truth helps you feel oriented, even when it is not easy to hear or say.",
+    "reframe": "This does not read as harshness. It reads as a deep need for reality to be clear enough to stand on."
+  },
+  {
+    "id": "profile-example-moral-weight-carrier-001",
+    "lens_id": "moral-weight-carrier",
+    "title": "The Responsibility of Doing Right",
+    "observation": "Your archive suggests that doing the right thing can feel emotionally heavy.",
+    "pattern": "Across recent entries, you may spend significant energy weighing fairness, accountability, compassion, impact, and what your choices mean for others. The pattern suggests that your conscience is active, but sometimes costly.",
+    "reframe": "This does not read as overcomplicating. It reads as a serious relationship with integrity."
+  },
+  {
+    "id": "profile-example-injustice-alarm-001",
+    "lens_id": "injustice-alarm",
+    "title": "When Unfairness Gets Loud",
+    "observation": "Your archive suggests that unfairness activates something immediate in you.",
+    "pattern": "Across recent entries, your strongest emotional charge often appears where someone is dismissed, harmed, misrepresented, or not protected. The pattern suggests that injustice does not stay abstract for you. Your system feels it as something that needs a response.",
+    "reframe": "This does not read as anger for anger's sake. It reads as a value system that refuses to normalize harm."
+  },
+  {
+    "id": "profile-example-protector-of-the-vulnerable-001",
+    "lens_id": "protector-of-the-vulnerable",
+    "title": "What You Cannot Look Away From",
+    "observation": "Your archive suggests that vulnerability calls something forward in you.",
+    "pattern": "Across recent entries, you seem especially alert when someone has less power, less voice, less safety, or fewer choices. The pattern suggests that your protective instinct is not just emotional. It is part of how you understand responsibility.",
+    "reframe": "This does not read as controlling. It reads as care that becomes active when someone could be overlooked."
+  },
+  {
+    "id": "profile-example-systems-wounded-user-001",
+    "lens_id": "systems-wounded-user",
+    "title": "When Systems Do Not Listen",
+    "observation": "Your archive suggests that institutions, authority, or formal processes can carry a particular emotional weight.",
+    "pattern": "Across recent entries, frustration rises when a system is slow, dismissive, unclear, or fails to account for the human impact behind the paperwork. The pattern suggests that bureaucracy becomes harder to tolerate when it seems to erase what is actually at stake.",
+    "reframe": "This does not read as impatience. It reads as a need for systems to remember that real people live inside their decisions."
+  },
+  {
+    "id": "profile-example-evidence-gatherer-001",
+    "lens_id": "evidence-gatherer",
+    "title": "Why Proof Feels Protective",
+    "observation": "Your archive suggests that details help you feel safer when your reality could be questioned.",
+    "pattern": "Across recent entries, you may collect timelines, exact wording, screenshots, patterns, or context to make sure the truth cannot be easily dismissed. The pattern suggests that evidence becomes a way of protecting what you know happened.",
+    "reframe": "This does not read as obsessing. It reads as a learned strategy for staying grounded when being believed does not feel guaranteed."
+  },
+  {
+    "id": "profile-example-control-through-preparation-user-001",
+    "lens_id": "control-through-preparation-user",
+    "title": "The Safety of Being Ready",
+    "observation": "Your archive suggests that preparation helps quiet uncertainty.",
+    "pattern": "Across recent entries, you may plan, research, organize, rehearse, or think several steps ahead when something feels unpredictable. The pattern suggests that preparation gives your system a sense of ground when the outcome is not fully in your hands.",
+    "reframe": "This does not read as needing to control everything. It reads as a way of creating steadiness when uncertainty feels too open-ended."
+  },
+  {
+    "id": "profile-example-uncertainty-sensitive-user-001",
+    "lens_id": "uncertainty-sensitive-user",
+    "title": "When Not Knowing Feels Heavy",
+    "observation": "Your archive suggests that unclear outcomes take a real toll on your system.",
+    "pattern": "Across recent entries, waiting, ambiguity, mixed signals, or unanswered questions seem to create more emotional pressure than a clear answer would, even if the answer were difficult. The pattern suggests that your mind can handle hard truths better than prolonged uncertainty.",
+    "reframe": "This does not read as impatience. It reads as a need for enough clarity to stop living in every possible outcome at once."
+  },
+  {
+    "id": "profile-example-waiting-for-impact-user-001",
+    "lens_id": "waiting-for-impact-user",
+    "title": "The Quiet Brace Before Anything Happens",
+    "observation": "Your archive suggests that you sometimes prepare for impact before there is visible proof that it is coming.",
+    "pattern": "Across recent entries, your attention may move toward what could go wrong, what might shift, or what you need to be ready for. The pattern suggests that anticipation can become a kind of emotional posture.",
+    "reframe": "This does not read as pessimism. It reads as protection trying to prevent surprise from becoming shock."
+  },
+  {
+    "id": "profile-example-stability-builder-001",
+    "lens_id": "stability-builder",
+    "title": "The Ground You Create",
+    "observation": "Your archive suggests that steadiness is something you actively build.",
+    "pattern": "Across recent entries, routines, plans, familiar rhythms, or clear structures seem to help your system feel more settled. The pattern suggests that stability is not boring to you. It may be one of the ways you create room for everything else to grow.",
+    "reframe": "This does not read as rigidity. It reads as care expressed through structure."
+  },
+  {
+    "id": "profile-example-home-maker-001",
+    "lens_id": "home-maker",
+    "title": "The Space That Holds You",
+    "observation": "Your archive suggests that environment has a meaningful effect on your inner world.",
+    "pattern": "Across recent entries, the feeling of a space, including its beauty, softness, order, privacy, or warmth, seems connected to how safe or settled you feel inside it. The pattern suggests that home is not only a location for you. It is a nervous system container.",
+    "reframe": "This does not read as being particular. It reads as knowing that the spaces around you shape what becomes possible inside you."
+  },
+  {
+    "id": "profile-example-beauty-regulated-user-001",
+    "lens_id": "beauty-regulated-user",
+    "title": "When Beauty Helps You Settle",
+    "observation": "Your archive suggests that beauty is not extra for you. It is regulating.",
+    "pattern": "Across recent entries, your inner state seems affected by atmosphere, color, softness, light, order, or the feeling of a space. The pattern suggests that beauty helps your system feel more oriented, more held, and more able to breathe.",
+    "reframe": "This does not read as being superficial. It reads as your senses needing an environment that helps your inner world feel safe enough to open."
+  },
+  {
+    "id": "profile-example-sensory-sensitive-user-001",
+    "lens_id": "sensory-sensitive-user",
+    "title": "The World Gets In Through Your Senses",
+    "observation": "Your archive suggests that your surroundings may affect you more than you always realize.",
+    "pattern": "Across recent entries, sound, light, clutter, texture, temperature, or stimulation seem connected to shifts in mood, energy, or patience. The pattern suggests that your body may be responding to the environment before your mind names why you feel different.",
+    "reframe": "This does not read as being too sensitive. It reads as a system that notices the world in high resolution."
+  },
+  {
+    "id": "profile-example-body-alarm-user-001",
+    "lens_id": "body-alarm-user",
+    "title": "The First Signal",
+    "observation": "Your archive suggests that your body may raise the flag before the rest of you catches up.",
+    "pattern": "Across recent logs, physical cues appear before the full emotional story is clear. The pattern suggests that your body may be telling you that something needs attention before your thoughts have organized the reason.",
+    "reframe": "This does not read as your body working against you. It reads as an early-warning system trying to keep you connected to what matters."
+  },
+  {
+    "id": "profile-example-chest-pressure-carrier-001",
+    "lens_id": "chest-pressure-carrier",
+    "title": "When the Chest Holds the Story",
+    "observation": "Your archive suggests that emotional weight often gathers around the chest.",
+    "pattern": "Across recent body-map entries, heaviness, tightness, pressure, or breath changes may appear near moments of sadness, longing, fear, or overwhelm. The pattern suggests that some feelings may be arriving first as a physical sense of holding.",
+    "reframe": "This does not read as random discomfort. It reads as your body giving shape to what your heart is carrying."
+  },
+  {
+    "id": "profile-example-shoulder-burden-carrier-001",
+    "lens_id": "shoulder-burden-carrier",
+    "title": "Where Responsibility Lands",
+    "observation": "Your archive suggests that responsibility may have a physical address.",
+    "pattern": "Across recent body-map entries, shoulder, neck, or upper-back tension may appear near days with high obligation, caretaking, pressure, or too much to track. The pattern suggests that the feeling of carrying it all may be showing up literally in the places meant to bear weight.",
+    "reframe": "This does not read as weakness. It reads as your body making the invisible load visible."
+  },
+  {
+    "id": "profile-example-stomach-knows-first-user-001",
+    "lens_id": "stomach-knows-first-user",
+    "title": "The Gut Signal",
+    "observation": "Your archive suggests that your stomach may notice discomfort before your mind has a full explanation.",
+    "pattern": "Across recent entries, gut sensations may appear near uncertainty, pressure, relational unease, or decisions that do not feel fully settled. The pattern suggests that your body may be registering a mismatch before the words arrive.",
+    "reframe": "This does not read as overreacting. It reads as intuition speaking through sensation."
+  },
+  {
+    "id": "profile-example-jaw-clench-user-001",
+    "lens_id": "jaw-clench-user",
+    "title": "The Words Held Back",
+    "observation": "Your archive suggests that restraint may gather in your jaw.",
+    "pattern": "Across recent body cues, jaw tension or clenching may appear near anger, effort, unsaid words, or moments where you are trying to stay composed. The pattern suggests that your body may be holding the sentence your mouth has not said yet.",
+    "reframe": "This does not read as aggression. It reads as contained energy looking for a safe way to be expressed."
+  },
+  {
+    "id": "profile-example-freeze-first-user-001",
+    "lens_id": "freeze-first-user",
+    "title": "When Everything Gets Heavy",
+    "observation": "Your archive suggests that overwhelm may first show up as stillness, heaviness, or blankness.",
+    "pattern": "Across recent entries, intense moments may lead less to action and more to pausing, shutting down, losing words, or feeling unable to move forward. The pattern suggests that your system may slow everything down when the emotional load becomes too much to process at once.",
+    "reframe": "This does not read as laziness. It reads as a protective pause when your system needs less input, not more pressure."
+  },
+  {
+    "id": "profile-example-fight-first-user-001",
+    "lens_id": "fight-first-user",
+    "title": "When the Heat Rises",
+    "observation": "Your archive suggests that activation may show up quickly as heat, urgency, anger, or a strong need to respond.",
+    "pattern": "Across recent entries, you may become most energized when something feels unfair, unsafe, disrespectful, or wrong. The pattern suggests that your system moves toward action when a line feels crossed.",
+    "reframe": "This does not read as being difficult. It reads as protective energy trying to defend what matters."
+  },
+  {
+    "id": "profile-example-fawn-first-user-001",
+    "lens_id": "fawn-first-user",
+    "title": "When You Soften Yourself to Keep Connection",
+    "observation": "Your archive suggests that you may soften your words, needs, or boundaries when connection feels at risk.",
+    "pattern": "Across recent entries, you may explain more, accommodate more, or make yourself easier to receive when someone's response feels uncertain. The pattern suggests that staying connected can sometimes feel safer than staying fully clear.",
+    "reframe": "This does not read as weakness. It reads as a connection-preserving strategy that may be ready to share space with your own truth."
+  },
+  {
+    "id": "profile-example-flight-first-user-001",
+    "lens_id": "flight-first-user",
+    "title": "When Motion Becomes Relief",
+    "observation": "Your archive suggests that doing can become a way to escape feeling.",
+    "pattern": "Across recent entries, pressure may send you into tasks, research, planning, cleaning, scrolling, movement, or fixing what can be fixed. The pattern suggests that action gives your system somewhere to put energy when stillness would make the feeling louder.",
+    "reframe": "This does not read as avoidance alone. It reads as your system trying to create relief through motion."
+  },
+  {
+    "id": "profile-example-glimmer-collector-001",
+    "lens_id": "glimmer-collector",
+    "title": "Where Ease Finds You",
+    "observation": "Your archive suggests that small moments of relief matter more than they may look from the outside.",
+    "pattern": "Across recent glimmer logs, softness, beauty, laughter, nature, warmth, quiet, or being understood may create a noticeable shift in your system. The pattern suggests that your wellbeing is not only rebuilt through big changes. Sometimes it returns through tiny signals of safety.",
+    "reframe": "This does not read as fragile happiness. It reads as your system recognizing where life becomes easier to hold."
+  },
+  {
+    "id": "profile-example-joy-suspicious-user-001",
+    "lens_id": "joy-suspicious-user",
+    "title": "When Joy Comes with a Brace",
+    "observation": "Your archive suggests that good moments can sometimes arrive with an aftertaste of caution.",
+    "pattern": "Across recent entries, ease, excitement, or happiness may be followed by scanning, worry, or a quiet expectation that something could interrupt it. The pattern suggests that joy may still be learning how to stay without needing to prepare for loss.",
+    "reframe": "This does not read as pessimism. It reads as a protective habit that is slowly learning good things can be real without disappearing immediately."
+  },
+  {
+    "id": "profile-example-calm-is-new-user-001",
+    "lens_id": "calm-is-new-user",
+    "title": "Learning the Shape of Peace",
+    "observation": "Your archive suggests that calm may feel unfamiliar before it feels safe.",
+    "pattern": "Across recent entries, quiet moments may bring relief, but also uncertainty about what to do without pressure, urgency, or a problem to solve. The pattern suggests that peace is not always instantly comfortable when your system is used to being on.",
+    "reframe": "This does not read as rejecting happiness. It reads as your body learning a newer language: nothing is required right now."
+  },
+  {
+    "id": "profile-example-numbness-interpreter-001",
+    "lens_id": "numbness-interpreter",
+    "title": "Calm or Disconnection",
+    "observation": "Your archive suggests that stillness can sometimes be hard to read.",
+    "pattern": "Across recent entries, low intensity may not always feel peaceful. Sometimes it may feel flat, far away, muted, or hard to name. The pattern suggests that your system may be learning to distinguish true calm from emotional distance.",
+    "reframe": "This does not read as brokenness. It reads as careful self-attunement: learning the difference between being settled and being gone from yourself."
+  },
+  {
+    "id": "profile-example-grief-carrier-001",
+    "lens_id": "grief-carrier",
+    "title": "What Still Has Weight",
+    "observation": "Your archive suggests that some losses continue to shape the present.",
+    "pattern": "Across recent entries, certain memories, absences, endings, or unmet hopes may return with a familiar heaviness. The pattern suggests that grief is not only about what happened once. It can also live in the way today brushes against what is missing.",
+    "reframe": "This does not read as being stuck in the past. It reads as love, longing, and meaning still looking for somewhere gentle to land."
+  },
+  {
+    "id": "profile-example-ambiguous-loss-user-001",
+    "lens_id": "ambiguous-loss-user",
+    "title": "The Grief Without a Clean Ending",
+    "observation": "Your archive suggests that some things are hard to release because they never fully completed.",
+    "pattern": "Across recent entries, certain situations may feel unresolved: no clear goodbye, no repair, no accountability, no full explanation, or no moment where your experience was truly acknowledged. The pattern suggests that your system may keep returning because the story never received an ending it could trust.",
+    "reframe": "This does not read as refusing to move on. It reads as the ache of carrying something that was never properly named."
+  },
+  {
+    "id": "profile-example-future-self-builder-001",
+    "lens_id": "future-self-builder",
+    "title": "Living Toward Who You Are Becoming",
+    "observation": "Your archive suggests that your choices are increasingly shaped by the person you are trying to become.",
+    "pattern": "Across recent entries, you may notice what aligns with your future self, what no longer fits, and what would make you proud later. The pattern suggests that growth is not only something you hope for. It is becoming a filter for daily decisions.",
+    "reframe": "This does not read as pressure to constantly improve. It reads as devotion to building a life your future self can breathe inside."
+  },
+  {
+    "id": "profile-example-past-self-protector-001",
+    "lens_id": "past-self-protector",
+    "title": "The Tenderness You Owed Yourself",
+    "observation": "Your archive suggests that you carry compassion for earlier versions of yourself.",
+    "pattern": "Across recent entries, present-day reactions may connect back to what you once needed, did not receive, or had to survive without. The pattern suggests that part of your healing comes from becoming someone your past self could have trusted.",
+    "reframe": "This does not read as dwelling. It reads as protection finally moving backward through the story."
+  },
+  {
+    "id": "profile-example-identity-rewriter-001",
+    "lens_id": "identity-rewriter",
+    "title": "The Old Story Is Loosening",
+    "observation": "Your archive suggests that an old identity is beginning to lose its authority.",
+    "pattern": "Across recent entries, you may question labels, roles, beliefs, or shame-based stories that once felt fixed. The pattern suggests that you are not simply changing your mind. You are revising the story of who you are allowed to be.",
+    "reframe": "This does not read as confusion. It reads as self-definition becoming more honest than inheritance."
+  }
+]

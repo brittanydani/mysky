@@ -5,10 +5,7 @@ import {
   UserSignal,
   ArchivePattern,
 } from './types/knowledgeEngine';
-import { normalizeDailyCheckIn } from './normalizers/normalizeDailyCheckIn';
-import { normalizeJournal } from './normalizers/normalizeJournal';
-import { normalizeSleep } from './normalizers/normalizeSleep';
-import { normalizeSomatic } from './normalizers/normalizeSomatic';
+import { buildUserSignals } from './normalizers/buildUserSignals';
 import { ARCHIVE_PATTERNS } from './archivePatterns';
 import { scoreArchivePattern } from './engine/scoreArchivePatterns';
 import { buildDailyInsightContext } from './engine/detectMovement';
@@ -31,12 +28,12 @@ export function runKnowledgeEngine(
   history: { recentlyShownPatternKeys: string[]; recentlyShownCopyHashes: string[] },
 ): GeneratedInsight | null {
   // 1. Normalize all signals
-  const allSignals: UserSignal[] = [
-    ...checkIns.flatMap(normalizeDailyCheckIn),
-    ...journals.flatMap(normalizeJournal),
-    ...sleep.flatMap(normalizeSleep),
-    ...(skContext?.somaticEntries ? normalizeSomatic(skContext.somaticEntries) : []),
-  ];
+  const allSignals: UserSignal[] = buildUserSignals({
+    checkIns,
+    journalEntries: journals,
+    sleepEntries: sleep,
+    selfKnowledgeContext: skContext,
+  });
 
   // 2. Score Archive Patterns (last 90 days)
   const archiveScores: ArchivePatternScore[] = ARCHIVE_PATTERNS.map((p: ArchivePattern) =>

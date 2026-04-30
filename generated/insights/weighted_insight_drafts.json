@@ -1,0 +1,721 @@
+[
+  {
+    "id": "pattern-cognitive-processing-favorite-tone",
+    "category": "cognitiveStyle",
+    "mode": "standard",
+    "title": "How You Process Pain",
+    "body": "",
+    "observation": "Your archive shows that understanding is one of the ways you regulate.",
+    "pattern": "Across recent entries, you return often to analysis, meaning-making, and trying to locate the deeper thread beneath what happened. The pattern suggests that you may not fully move through an experience until it has a shape: what happened, what it touched, and why it stayed with you.",
+    "reframe": "This does not read as overthinking. It reads as your mind trying to make something emotionally survivable by making it understandable.",
+    "question": "What part of this becomes easier to hold once you can name it accurately?",
+    "source_score": 10.85,
+    "primary_sources": [
+      "daily_questions",
+      "journal_entries",
+      "check_ins"
+    ],
+    "internal_lenses": [
+      {
+        "id": "deep-processor",
+        "name": "The Deep Processor",
+        "score": 10.868,
+        "insight_angle": "analysis as regulation"
+      },
+      {
+        "id": "tender-overthinker",
+        "name": "The Tender Overthinker",
+        "score": 4.868,
+        "insight_angle": "analysis as care"
+      },
+      {
+        "id": "legacy-builder",
+        "name": "The Legacy Builder",
+        "score": 4.708,
+        "insight_angle": "meaning, impact"
+      },
+      {
+        "id": "pattern-hunter",
+        "name": "The Pattern Hunter",
+        "score": 2.868,
+        "insight_angle": "pattern recognition"
+      },
+      {
+        "id": "creative-alchemist",
+        "name": "The Creative Alchemist",
+        "score": 2.708,
+        "insight_angle": "creativity as emotional metabolism"
+      }
+    ],
+    "lens_blend": [
+      "analysis as regulation",
+      "analysis as care",
+      "meaning, impact",
+      "pattern recognition",
+      "creativity as emotional metabolism"
+    ],
+    "lens_example_ids": [
+      "profile-example-deep-processor-001",
+      "profile-example-tender-overthinker-001",
+      "profile-example-pattern-hunter-001",
+      "profile-example-creative-alchemist-001"
+    ],
+    "tone_reference_ids": [
+      "cognitive_processing_favorite_001"
+    ]
+  },
+  {
+    "id": "identity-different-truths-coexist",
+    "category": "identity",
+    "mode": "standard",
+    "title": "When Different Truths Coexist",
+    "body": "",
+    "observation": "One of the deeper threads in the archive is this: multiple emotional truths often exist at the same time.",
+    "pattern": "Across your daily questions and recent entries, the same inner material keeps showing up around gratitude beside envy, protection beside exhaustion, love beside resentment, and strength beside need. What keeps surfacing is that your inner world does not move in one clean line; it carries several ages, needs, and perspectives at once.",
+    "reframe": "This does not read as contradiction. It reads as a complex system trying to give every part of the truth a place to land.",
+    "question": "Which two truths are asking to exist together instead of competing today?",
+    "source_score": 14.95,
+    "primary_sources": [
+      "daily_questions",
+      "journal_entries",
+      "parts_work"
+    ],
+    "internal_lenses": [
+      {
+        "id": "whole-self-integrator",
+        "name": "The Whole-Self Integrator",
+        "score": 12.528,
+        "insight_angle": "integration, wholeness, self-acceptance"
+      },
+      {
+        "id": "overextended-caregiver",
+        "name": "The Overextended Caregiver",
+        "score": 6.908,
+        "insight_angle": "care, depletion, resentment, receiving support"
+      },
+      {
+        "id": "inner-child-carrier",
+        "name": "The Younger Need Pattern",
+        "score": 6.528,
+        "insight_angle": "younger emotional needs"
+      },
+      {
+        "id": "abundance-healing-user",
+        "name": "The Abundance-Healing User",
+        "score": 4.908,
+        "insight_angle": "scarcity versus enoughness"
+      },
+      {
+        "id": "late-bloomer-truth-finder",
+        "name": "The Late-Bloomer Truth Finder",
+        "score": 4.908,
+        "insight_angle": "identity awakening"
+      }
+    ],
+    "lens_blend": [
+      "integration, wholeness, self-acceptance",
+      "care, depletion, resentment, receiving support",
+      "younger emotional needs",
+      "scarcity versus enoughness",
+      "identity awakening"
+    ],
+    "lens_example_ids": [
+      "profile-example-overextended-caregiver-001",
+      "profile-example-inner-child-carrier-001"
+    ],
+    "tone_reference_ids": [
+      "identity_truths_coexist_001",
+      "identity_place_001"
+    ]
+  },
+  {
+    "id": "relationships-measure-safety",
+    "category": "relationships",
+    "mode": "standard",
+    "title": "How You Measure Safety",
+    "body": "",
+    "observation": "Closeness seems to bring this forward: safety is something you assess through consistency.",
+    "pattern": "Across your relationship patterns and daily questions, the important signal is not one conversation; it is the repetition around follow-through, remembered details, repair, care, and whether people disappear when need becomes inconvenient. The signal underneath is that trust is built through evidence, not promises.",
+    "reframe": "This does not read as suspicion. It reads as wisdom from a life where inconsistency had real consequences.",
+    "question": "What repeated behavior helps your system believe care is real?",
+    "source_score": 10.45,
+    "primary_sources": [
+      "relationship_patterns",
+      "daily_questions",
+      "trigger_log"
+    ],
+    "internal_lenses": [
+      {
+        "id": "relational-scanner",
+        "name": "The Relational Scanner",
+        "score": 13.204,
+        "insight_angle": "trust through evidence"
+      },
+      {
+        "id": "safety-tester",
+        "name": "The Safety Tester",
+        "score": 9.204,
+        "insight_angle": "trust testing"
+      },
+      {
+        "id": "evidence-gatherer",
+        "name": "The Evidence Gatherer",
+        "score": 7.204,
+        "insight_angle": "proof as safety"
+      },
+      {
+        "id": "secure-when-steady-user",
+        "name": "The Secure-When-Steady User",
+        "score": 6.304,
+        "insight_angle": "conditions for trust"
+      },
+      {
+        "id": "selective-vulnerability-user",
+        "name": "The Selective Vulnerability User",
+        "score": 6.304,
+        "insight_angle": "contextual safety"
+      }
+    ],
+    "lens_blend": [
+      "trust through evidence",
+      "trust testing",
+      "proof as safety",
+      "conditions for trust",
+      "contextual safety"
+    ],
+    "lens_example_ids": [
+      "profile-example-relational-scanner-001",
+      "profile-example-safety-tester-001",
+      "profile-example-evidence-gatherer-001",
+      "profile-example-secure-when-steady-user-001",
+      "profile-example-selective-vulnerability-user-001"
+    ],
+    "tone_reference_ids": [
+      "relationships_safety_001",
+      "relationships_kindness_safety_001",
+      "relationships_mutuality_001"
+    ]
+  },
+  {
+    "id": "creation-premium-standard",
+    "category": "creation",
+    "mode": "standard",
+    "title": "The Premium Standard Pattern",
+    "body": "",
+    "observation": "When the work matters, this pattern gets louder: good enough rarely feels satisfying when the thing matters to you.",
+    "pattern": "Again and again, the work gets evaluated through flat copy, generic design, unfinished emotional intelligence, and the gap between usable and meaningful. What keeps surfacing is that you are not only trying to make something work; you are trying to make it feel alive.",
+    "reframe": "This does not read as being picky. It reads as creative discernment from someone who can sense the gap between usable and meaningful.",
+    "question": "Where is the work asking to become more alive, not just more complete?",
+    "source_score": 11.65,
+    "primary_sources": [
+      "app_building",
+      "journal_entries",
+      "daily_questions"
+    ],
+    "internal_lenses": [
+      {
+        "id": "creative-alchemist",
+        "name": "The Creative Alchemist",
+        "score": 6.967,
+        "insight_angle": "creativity as emotional metabolism"
+      },
+      {
+        "id": "legacy-builder",
+        "name": "The Legacy Builder",
+        "score": 6.967,
+        "insight_angle": "meaning, impact"
+      },
+      {
+        "id": "excellence-driven-builder",
+        "name": "The Excellence-Driven Builder",
+        "score": 4.967,
+        "insight_angle": "standards, perfectionism, creative pressure"
+      },
+      {
+        "id": "meaning-maker",
+        "name": "The Meaning Maker",
+        "score": 4.967,
+        "insight_angle": "transformation, depth, legacy"
+      },
+      {
+        "id": "deep-processor",
+        "name": "The Deep Processor",
+        "score": 4.492,
+        "insight_angle": "analysis as regulation"
+      }
+    ],
+    "lens_blend": [
+      "creativity as emotional metabolism",
+      "meaning, impact",
+      "standards, perfectionism, creative pressure",
+      "transformation, depth, legacy",
+      "analysis as regulation"
+    ],
+    "lens_example_ids": [
+      "profile-example-creative-alchemist-001",
+      "profile-example-excellence-driven-builder-001",
+      "profile-example-meaning-maker-001",
+      "profile-example-deep-processor-001"
+    ],
+    "tone_reference_ids": [
+      "creation_how_you_build_001",
+      "creation_premium_standard_001"
+    ]
+  },
+  {
+    "id": "dreams-continue-conversation",
+    "category": "dreamsSymbols",
+    "mode": "standard",
+    "title": "When Dreams Continue the Conversation",
+    "body": "",
+    "observation": "At night, the same material shifts into another form: dreams often appear when waking life has not fully processed something.",
+    "pattern": "Across your dream journal and check-ins, the plot changes, but the emotional material keeps returning through emotional intensity, low sleep, unresolved questions, and dream activity that keeps returning after the day is over. What this keeps showing is that your mind may continue working symbolically when the waking version of the feeling is too complicated to fully name.",
+    "reframe": "This does not read as random. It reads as your inner world trying another language.",
+    "question": "What feeling from the dream seems most connected to your waking life right now?",
+    "source_score": 10.1,
+    "primary_sources": [
+      "dream_journal",
+      "check_ins",
+      "daily_questions"
+    ],
+    "internal_lenses": [
+      {
+        "id": "dream-processor",
+        "name": "The Dream Processor",
+        "score": 12.436,
+        "insight_angle": "dreams as symbolic processing"
+      },
+      {
+        "id": "deep-processor",
+        "name": "The Deep Processor",
+        "score": 4.436,
+        "insight_angle": "analysis as regulation"
+      },
+      {
+        "id": "pattern-hunter",
+        "name": "The Pattern Hunter",
+        "score": 4.436,
+        "insight_angle": "pattern recognition"
+      },
+      {
+        "id": "ambiguous-loss-user",
+        "name": "The Unfinished-Story User",
+        "score": 4.196,
+        "insight_angle": "unresolved grief"
+      },
+      {
+        "id": "low-energy-reflector",
+        "name": "The Low-Energy Reflector",
+        "score": 2.456,
+        "insight_angle": "capacity, fatigue, emotional interpretation"
+      }
+    ],
+    "lens_blend": [
+      "dreams as symbolic processing",
+      "analysis as regulation",
+      "pattern recognition",
+      "unresolved grief",
+      "capacity, fatigue, emotional interpretation"
+    ],
+    "lens_example_ids": [
+      "profile-example-dream-processor-001",
+      "profile-example-deep-processor-001",
+      "profile-example-pattern-hunter-001",
+      "profile-example-ambiguous-loss-user-001",
+      "profile-example-low-energy-reflector-001"
+    ],
+    "tone_reference_ids": [
+      "dreams_continue_001"
+    ]
+  },
+  {
+    "id": "progress-self-blame-to-interpretation",
+    "category": "progress",
+    "mode": "standard",
+    "title": "Where You Are Changing",
+    "body": "",
+    "observation": "A real change is starting to show: a shift from self-blame toward self-interpretation.",
+    "pattern": "What has changed is not the absence of pain; it is the way the archive now makes room for questions about what pain is trying to tell you, what need is underneath it, and what pattern is being touched. The signal underneath is that you are becoming less willing to mistake pain for personal failure.",
+    "reframe": "This does not read as perfect healing. It reads as becoming less willing to mistake pain for personal failure.",
+    "question": "Where did you interpret pain more gently than you would have before?",
+    "source_score": 13.55,
+    "primary_sources": [
+      "daily_questions",
+      "journal_entries",
+      "glimmer_log"
+    ],
+    "internal_lenses": [
+      {
+        "id": "self-forgiveness-learner",
+        "name": "The Self-Forgiveness Learner",
+        "score": 5.824,
+        "insight_angle": "repair, guilt, compassion"
+      },
+      {
+        "id": "abundance-healing-user",
+        "name": "The Abundance-Healing User",
+        "score": 3.824,
+        "insight_angle": "scarcity versus enoughness"
+      },
+      {
+        "id": "desire-reclaimer",
+        "name": "The Desire-Reclaimer",
+        "score": 3.824,
+        "insight_angle": "desire, guilt, permission"
+      },
+      {
+        "id": "glimmer-collector",
+        "name": "The Glimmer Collector",
+        "score": 3.824,
+        "insight_angle": "positive nervous system cues"
+      },
+      {
+        "id": "home-maker",
+        "name": "The Home-Maker",
+        "score": 3.824,
+        "insight_angle": "environment, belonging, sensory safety"
+      }
+    ],
+    "lens_blend": [
+      "repair, guilt, compassion",
+      "scarcity versus enoughness",
+      "desire, guilt, permission",
+      "positive nervous system cues",
+      "environment, belonging, sensory safety"
+    ],
+    "lens_example_ids": [
+      "profile-example-glimmer-collector-001",
+      "profile-example-home-maker-001"
+    ],
+    "tone_reference_ids": [
+      "progress_self_blame_to_interpretation_001"
+    ]
+  },
+  {
+    "id": "shadow-high-cost-not-believed",
+    "category": "shadow",
+    "mode": "standard",
+    "title": "The High Cost of Not Being Believed",
+    "body": "",
+    "observation": "The archive does not treat this as a small signal: disbelief is one of your strongest emotional activators.",
+    "pattern": "Across your journal entries and daily questions, the charge is strongest near minimizing, dismissal, delays, and moments where your concern gets reframed as overreaction. The deeper read is that disbelief touches an old wound where your truth had to fight for recognition.",
+    "reframe": "This does not read as sensitivity in the dismissive sense. It reads as a nervous system that remembers the danger of being unheard.",
+    "question": "Where is your system asking to be believed without another round of proof?",
+    "source_score": 12.65,
+    "primary_sources": [
+      "journal_entries",
+      "daily_questions",
+      "trigger_log"
+    ],
+    "internal_lenses": [
+      {
+        "id": "evidence-gatherer",
+        "name": "The Evidence Gatherer",
+        "score": 6.492,
+        "insight_angle": "proof as safety"
+      },
+      {
+        "id": "somatic-feeler",
+        "name": "The Somatic Feeler",
+        "score": 6.124,
+        "insight_angle": "body map, physical signals, nervous system truth"
+      },
+      {
+        "id": "anxious-attacher-in-repair",
+        "name": "The Reassurance-Seeking Pattern",
+        "score": 4.492,
+        "insight_angle": "support, abandonment fear, reassurance"
+      },
+      {
+        "id": "fight-first-user",
+        "name": "The Fight-First User",
+        "score": 4.492,
+        "insight_angle": "fight response"
+      },
+      {
+        "id": "people-pleasing-peacemaker",
+        "name": "The People-Pleasing Peacemaker",
+        "score": 4.492,
+        "insight_angle": "peacekeeping versus self-abandonment"
+      }
+    ],
+    "lens_blend": [
+      "proof as safety",
+      "body map, physical signals, nervous system truth",
+      "support, abandonment fear, reassurance",
+      "fight response",
+      "peacekeeping versus self-abandonment"
+    ],
+    "lens_example_ids": [
+      "profile-example-evidence-gatherer-001",
+      "profile-example-somatic-feeler-001",
+      "profile-example-anxious-attacher-in-repair-001",
+      "profile-example-fight-first-user-001",
+      "profile-example-people-pleasing-peacemaker-001"
+    ],
+    "tone_reference_ids": [
+      "shadow_noticing_001",
+      "shadow_disbelief_001"
+    ]
+  },
+  {
+    "id": "today-support-before-crisis",
+    "category": "today",
+    "mode": "standard",
+    "title": "Today's Signal",
+    "body": "",
+    "observation": "Today's signal is quiet but specific: the need to be caught without having to prove the fall.",
+    "pattern": "The signal is not dramatic. It is the repetition of support feeling tender when you are not sure whether you can ask for it directly, suggesting that care may need to arrive before crisis, not only after you have made the pain understandable.",
+    "reframe": "This does not read as neediness. It reads as a nervous system asking for dependable backup.",
+    "question": "What support would help before you have to prove how heavy this feels?",
+    "source_score": 4.85,
+    "primary_sources": [
+      "daily_questions",
+      "journal_entries",
+      "check_ins"
+    ],
+    "internal_lenses": [
+      {
+        "id": "support-starved-achiever",
+        "name": "The Support-Starved Achiever",
+        "score": 8.388,
+        "insight_angle": "competence versus needing care"
+      },
+      {
+        "id": "overextended-caregiver",
+        "name": "The Overextended Caregiver",
+        "score": 4.388,
+        "insight_angle": "care, depletion, resentment, receiving support"
+      },
+      {
+        "id": "tender-overthinker",
+        "name": "The Tender Overthinker",
+        "score": 4.388,
+        "insight_angle": "analysis as care"
+      },
+      {
+        "id": "mentor-seeker",
+        "name": "The Mentor-Seeker",
+        "score": 4.308,
+        "insight_angle": "guidance, support, wisdom"
+      },
+      {
+        "id": "somatic-feeler",
+        "name": "The Somatic Feeler",
+        "score": 4.296,
+        "insight_angle": "body map, physical signals, nervous system truth"
+      }
+    ],
+    "lens_blend": [
+      "competence versus needing care",
+      "care, depletion, resentment, receiving support",
+      "analysis as care",
+      "guidance, support, wisdom",
+      "body map, physical signals, nervous system truth"
+    ],
+    "lens_example_ids": [
+      "profile-example-support-starved-achiever-001",
+      "profile-example-overextended-caregiver-001",
+      "profile-example-tender-overthinker-001",
+      "profile-example-somatic-feeler-001"
+    ],
+    "tone_reference_ids": [
+      "today_emotional_weather_001"
+    ]
+  },
+  {
+    "id": "monthly-carrying-without-being-carried",
+    "category": "monthlyReport",
+    "mode": "monthly_report",
+    "title": "Your Monthly Pattern: Carrying Without Being Carried",
+    "body": "",
+    "observation": "Across the month, the pattern keeps coming back to this: being deeply capable, but tired of capability being mistaken for not needing support.",
+    "pattern": "The month does not point to one isolated moment. It keeps returning to caregiving, app-building, emotional processing, relational stress, and being the one holding the map. The deeper pattern is this: the ache of wanting someone else to notice when you are carrying too much before your body has to collapse to make it obvious.",
+    "reframe": "This does not read as weakness. It reads as the honest grief of someone who became strong early and is now asking whether strength can finally coexist with being held.",
+    "question": "Where did capability hide the need for support this month?",
+    "source_score": 25.7,
+    "primary_sources": [
+      "daily_questions",
+      "journal_entries",
+      "app_building"
+    ],
+    "internal_lenses": [
+      {
+        "id": "compassion-fatigued-user",
+        "name": "The Compassion-Fatigued User",
+        "score": 11.416,
+        "insight_angle": "empathy depletion"
+      },
+      {
+        "id": "support-starved-achiever",
+        "name": "The Support-Starved Achiever",
+        "score": 9.036,
+        "insight_angle": "competence versus needing care"
+      },
+      {
+        "id": "deep-processor",
+        "name": "The Deep Processor",
+        "score": 7.416,
+        "insight_angle": "analysis as regulation"
+      },
+      {
+        "id": "overextended-caregiver",
+        "name": "The Overextended Caregiver",
+        "score": 7.416,
+        "insight_angle": "care, depletion, resentment, receiving support"
+      },
+      {
+        "id": "quiet-hero",
+        "name": "The Quiet Hero",
+        "score": 7.036,
+        "insight_angle": "responsibility, strength, unseen sacrifice"
+      }
+    ],
+    "lens_blend": [
+      "empathy depletion",
+      "competence versus needing care",
+      "analysis as regulation",
+      "care, depletion, resentment, receiving support",
+      "responsibility, strength, unseen sacrifice"
+    ],
+    "lens_example_ids": [
+      "profile-example-support-starved-achiever-001",
+      "profile-example-deep-processor-001",
+      "profile-example-overextended-caregiver-001",
+      "profile-example-quiet-hero-001"
+    ],
+    "tone_reference_ids": [
+      "monthly_carrying_001"
+    ]
+  },
+  {
+    "id": "affirmation-support-before-breaking",
+    "category": "affirmation",
+    "mode": "affirmation",
+    "title": "Today's Affirmation",
+    "body": "I am allowed to need support before I reach my breaking point.",
+    "observation": "",
+    "pattern": "",
+    "reframe": "",
+    "question": "",
+    "source_score": 3.85,
+    "primary_sources": [
+      "daily_questions",
+      "journal_entries"
+    ],
+    "internal_lenses": [
+      {
+        "id": "abundance-healing-user",
+        "name": "The Abundance-Healing User",
+        "score": 2.308,
+        "insight_angle": "scarcity versus enoughness"
+      },
+      {
+        "id": "deep-processor",
+        "name": "The Deep Processor",
+        "score": 2.308,
+        "insight_angle": "analysis as regulation"
+      },
+      {
+        "id": "emotional-translator",
+        "name": "The Emotional Translator",
+        "score": 2.308,
+        "insight_angle": "self-editing, fear of being misread"
+      },
+      {
+        "id": "emotionally-precise-communicator",
+        "name": "The Emotionally Precise Communicator",
+        "score": 2.308,
+        "insight_angle": "language, accuracy, feeling understood"
+      },
+      {
+        "id": "mentor-seeker",
+        "name": "The Mentor-Seeker",
+        "score": 2.308,
+        "insight_angle": "guidance, support, wisdom"
+      }
+    ],
+    "lens_blend": [
+      "scarcity versus enoughness",
+      "analysis as regulation",
+      "self-editing, fear of being misread",
+      "language, accuracy, feeling understood",
+      "guidance, support, wisdom"
+    ],
+    "lens_example_ids": [
+      "profile-example-deep-processor-001",
+      "profile-example-emotional-translator-001",
+      "profile-example-emotionally-precise-communicator-001"
+    ],
+    "tone_reference_ids": [
+      "affirmation_support_before_breaking_001",
+      "affirmation_gratitude_and_grief_001"
+    ]
+  },
+  {
+    "id": "affirmation-gratitude-and-grief",
+    "category": "affirmation",
+    "mode": "affirmation",
+    "title": "Today's Affirmation",
+    "body": "I can be grateful for what I have and still grieve what I needed.",
+    "observation": "",
+    "pattern": "",
+    "reframe": "",
+    "question": "",
+    "source_score": 5.0,
+    "primary_sources": [
+      "daily_questions",
+      "journal_entries"
+    ],
+    "internal_lenses": [
+      {
+        "id": "ambiguous-loss-user",
+        "name": "The Unfinished-Story User",
+        "score": 2.4,
+        "insight_angle": "unresolved grief"
+      },
+      {
+        "id": "deep-processor",
+        "name": "The Deep Processor",
+        "score": 2.4,
+        "insight_angle": "analysis as regulation"
+      },
+      {
+        "id": "emotional-translator",
+        "name": "The Emotional Translator",
+        "score": 2.4,
+        "insight_angle": "self-editing, fear of being misread"
+      },
+      {
+        "id": "emotionally-precise-communicator",
+        "name": "The Emotionally Precise Communicator",
+        "score": 2.4,
+        "insight_angle": "language, accuracy, feeling understood"
+      },
+      {
+        "id": "grief-carrier",
+        "name": "The Grief-Carrier",
+        "score": 2.4,
+        "insight_angle": "grief, memory, longing"
+      }
+    ],
+    "lens_blend": [
+      "unresolved grief",
+      "analysis as regulation",
+      "self-editing, fear of being misread",
+      "language, accuracy, feeling understood",
+      "grief, memory, longing"
+    ],
+    "lens_example_ids": [
+      "profile-example-ambiguous-loss-user-001",
+      "profile-example-deep-processor-001",
+      "profile-example-emotional-translator-001",
+      "profile-example-emotionally-precise-communicator-001",
+      "profile-example-grief-carrier-001"
+    ],
+    "tone_reference_ids": [
+      "affirmation_support_before_breaking_001",
+      "affirmation_gratitude_and_grief_001"
+    ]
+  }
+]
