@@ -1,0 +1,66 @@
+# MySky - Onboarding Flow
+# Handles first-time user setup with birth data entry
+
+appId: com.brittany.mysky
+---
+
+# Wait for onboarding screen to load
+- extendedWaitUntil:
+    visible: "Birth|Welcome|Get Started"
+    timeout: 10000
+
+- takeScreenshot: onboarding_01_welcome
+
+# If there's a consent/welcome screen, proceed
+- tapOn:
+    text: "Continue|Get Started|Begin"
+    optional: true
+
+# Birth data entry screen
+- extendedWaitUntil:
+    visible: "Birth|Date|Location"
+    timeout: 5000
+    optional: true
+
+- takeScreenshot: onboarding_02_birth_entry
+
+# Enter birth date (tap on date picker)
+- tapOn:
+    text: "Date|Birthday"
+    optional: true
+
+# Set a sample date if date picker appears
+- tapOn:
+    text: "Done|Confirm|Set"
+    optional: true
+
+# Enter birth location
+- tapOn:
+    text: "Location|Place|City"
+    optional: true
+
+- inputText: "Los Angeles"
+
+# Select from suggestions
+- tapOn:
+    text: "Los Angeles"
+    optional: true
+
+# Continue/Submit birth data
+- tapOn:
+    text: "Continue|Next|Submit|Save"
+    optional: true
+
+- extendedWaitUntil:
+    visible: "Chart|Reveal|Welcome"
+    timeout: 10000
+    optional: true
+
+- takeScreenshot: onboarding_03_chart_reveal
+
+# Complete onboarding
+- tapOn:
+    text: "Continue|Done|Explore|Start"
+    optional: true
+
+- takeScreenshot: onboarding_04_complete

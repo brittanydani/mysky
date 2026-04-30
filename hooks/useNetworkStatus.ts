@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
+import { processQueuedOperations } from '../services/offline/networkSync';
+import { logger } from '../utils/logger';
 
 const PROBE_URL = 'https://www.google.com/generate_204';
 const PROBE_TIMEOUT_MS = 5000;
@@ -66,4 +68,28 @@ export function useNetworkStatus(): boolean | null {
   }, []);
 
   return online;
+}
+
+export function useNetworkRecoverySync() {
+  const isConnected = useNetworkStatus();
+  const wasOfflineRef = useRef(false);
+
+  useEffect(() => {
+    if (isConnected === false) {
+      wasOfflineRef.current = true;
+      return;
+    }
+
+    if (isConnected === true && wasOfflineRef.current) {
+      wasOfflineRef.current = false;
+      logger.info('[Network] Connection restored, syncing offline queue');
+      processQueuedOperations().catch((error) => {
+        logger.warn('[Network] Offline queue sync failed', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+    }
+  }, [isConnected]);
+
+  return { isConnected };
 }

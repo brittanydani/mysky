@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { Component, type ReactNode, useEffect, useRef, useState } from 'react';
 import { ConfigValidator } from '../services/config/configValidator';
 import { ConfigErrorScreen } from '../components/ConfigErrorScreen';
+import { NetworkErrorOverlay } from '../components/NetworkErrorOverlay';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -36,6 +37,9 @@ import { supabase } from '../lib/supabase';
 import { darkTheme, type AppTheme } from '../constants/theme';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import { ThemeProvider, useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { RLSVerificationService } from '../services/security/rlsVerification';
+import { setupNetworkSyncHandler } from '../services/offline/networkSync';
+import { useNetworkRecoverySync } from '../hooks/useNetworkStatus';
 
 // Keep splash visible until the app finishes initializing
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -152,7 +156,10 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
-    logger.error('Unhandled render error:', error, info.componentStack);
+    logger.error('Unhandled render error:', {
+      message: error.message,
+      componentStack: info.componentStack,
+    });
     loadSentry()
       .then(({ Sentry }) => {
         Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack } } });
@@ -286,6 +293,7 @@ function AppShell() {
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { session, loading: authLoading } = useAuth();
+  useNetworkRecoverySync();
 
   // Ref so the initializeApp closure always reads the current authLoading value
   // without needing authLoading in the effect dependency array.
@@ -296,6 +304,40 @@ function AppShell() {
       DeviceEventEmitter.emit('AUTH_LOADING_COMPLETE');
     }
   }, [authLoading]);
+
+  useEffect(() => {
+    RLSVerificationService.verifyConfiguration().catch((error) => {
+      logger.warn('[Startup] RLS verification failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
+
+    setupNetworkSyncHandler().catch((error) => {
+      logger.warn('[Startup] Offline queue setup failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    const unhandledRejectionHandler = (reason: unknown) => {
+      logger.error('[Unhandled] Promise rejection', {
+        error: reason instanceof Error ? reason.message : String(reason),
+      });
+    };
+
+    const processLike = globalThis.process as
+      | {
+          on?: (event: 'unhandledRejection', handler: (reason: unknown) => void) => void;
+          off?: (event: 'unhandledRejection', handler: (reason: unknown) => void) => void;
+        }
+      | undefined;
+
+    processLike?.on?.('unhandledRejection', unhandledRejectionHandler);
+    return () => {
+      processLike?.off?.('unhandledRejection', unhandledRejectionHandler);
+    };
+  }, []);
 
   const [checkingConsent, setCheckingConsent] = useState(() => readRootInitSnapshot() === null);
   const [dbReady, setDbReady] = useState(() => readRootInitSnapshot()?.dbReady ?? false);
@@ -1000,6 +1042,7 @@ function AppShell() {
                 />
               </React.Suspense>
             </SafeAreaProvider>
+            <NetworkErrorOverlay />
           </View>
         </KeyboardProvider>
       </GestureHandlerRootView>

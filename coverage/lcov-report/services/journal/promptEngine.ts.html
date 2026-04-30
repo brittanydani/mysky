@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">16.58% </span>
+                <span class="strong">16.17% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>32/193</span>
+                <span class='fraction'>33/204</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.93% </span>
+                <span class="strong">4.44% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>5/127</span>
+                <span class='fraction'>6/135</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">35% </span>
+                <span class="strong">31.81% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>7/20</span>
+                <span class='fraction'>7/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">19.1% </span>
+                <span class="strong">18.9% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>30/157</span>
+                <span class='fraction'>31/164</span>
             </div>
         
             
@@ -543,7 +543,19 @@
 <a name='L478'></a><a href='#L478'>478</a>
 <a name='L479'></a><a href='#L479'>479</a>
 <a name='L480'></a><a href='#L480'>480</a>
-<a name='L481'></a><a href='#L481'>481</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L481'></a><a href='#L481'>481</a>
+<a name='L482'></a><a href='#L482'>482</a>
+<a name='L483'></a><a href='#L483'>483</a>
+<a name='L484'></a><a href='#L484'>484</a>
+<a name='L485'></a><a href='#L485'>485</a>
+<a name='L486'></a><a href='#L486'>486</a>
+<a name='L487'></a><a href='#L487'>487</a>
+<a name='L488'></a><a href='#L488'>488</a>
+<a name='L489'></a><a href='#L489'>489</a>
+<a name='L490'></a><a href='#L490'>490</a>
+<a name='L491'></a><a href='#L491'>491</a>
+<a name='L492'></a><a href='#L492'>492</a>
+<a name='L493'></a><a href='#L493'>493</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -990,6 +1002,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">978x</span>
 <span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
@@ -1450,7 +1474,7 @@ export function <span class="fstat-no" title="function not covered" >generateJou
  * Pass `userSeed` (e.g. a profile hash or startedAt timestamp) to
  * differentiate prompt selection across users on the same day.
  */
-export function getFreePrompt(date: Date = <span class="branch-0 cbranch-no" title="branch not covered" >new Date(),</span> userSeed?: string): GeneratedPrompt {
+export function getFreePrompt(date: Date = <span class="branch-0 cbranch-no" title="branch not covered" >new Date(),</span> userSeed?: string, recentMood?: number): GeneratedPrompt {
   const dayOfYear = getDayOfYear(date);
 &nbsp;
   // Per-user offset so different free-tier users don't all see the same prompt
@@ -1469,7 +1493,19 @@ export function getFreePrompt(date: Date = <span class="branch-0 cbranch-no" tit
     p =&gt; p.tags.moonPhases?.includes(moonPhase)
   );
   const fallbacks = PROMPT_LIBRARY.filter(p =&gt; p.id.startsWith('fb-'));
-  const pool = moonPrompts.length &gt; 0 ? moonPrompts : <span class="branch-1 cbranch-no" title="branch not covered" >fallbacks;</span>
+  let pool = moonPrompts.length &gt; 0 ? moonPrompts : <span class="branch-1 cbranch-no" title="branch not covered" >fallbacks;</span>
+&nbsp;
+  // Mood-aware filtering: prefer gentler prompts on low-mood days, activating ones on high-mood days
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (recentMood != null &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >pool.length &gt; 3)</span> {
+<span class="cstat-no" title="statement not covered" >    if (recentMood &lt;= 4) {</span>
+      const gentle = <span class="cstat-no" title="statement not covered" >pool.filter(<span class="fstat-no" title="function not covered" >p </span>=&gt; <span class="cstat-no" title="statement not covered" >p.tags.intensity === 'gentle')</span>;</span>
+<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (gentle.length &gt;= 2) <span class="cstat-no" title="statement not covered" >pool = gentle;</span></span>
+    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (recentMood &gt;= 8) {</span>
+      const deeper = <span class="cstat-no" title="statement not covered" >pool.filter(<span class="fstat-no" title="function not covered" >p </span>=&gt; <span class="cstat-no" title="statement not covered" >p.tags.intensity === 'deep')</span>;</span>
+<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (deeper.length &gt;= 2) <span class="cstat-no" title="statement not covered" >pool = deeper;</span></span>
+    }
+  }
+&nbsp;
   const entry = pool[(dayOfYear + userOffset) % pool.length];
 &nbsp;
   return {
@@ -1510,7 +1546,7 @@ function formatMoonPhase(tag: MoonPhaseTag): string {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-15T03:50:56.521Z
+                at 2026-04-30T03:55:01.390Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

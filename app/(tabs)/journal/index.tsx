@@ -42,6 +42,7 @@ import { buildDreamArchiveSummary, hasDreamContent } from '../../../utils/dreamA
 import { loadSelfKnowledgeContext } from '../../../services/insights/selfKnowledgeContext';
 import { enhanceInsightCopy } from '../../../services/insights/geminiInsightsService';
 import { getPersonalizedPremiumTeaser } from '../../../utils/archiveDepth';
+import { ErrorBoundary } from '../../../components/ErrorBoundary';
 
 const VALID_MOODS = ['calm', 'soft', 'okay', 'heavy', 'stormy'] as const;
 
@@ -274,7 +275,7 @@ const EntryCard = memo(function EntryCard({
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
-export default function JournalScreen() {
+function JournalContent() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
@@ -1332,6 +1333,14 @@ export default function JournalScreen() {
         </Modal>
       </SafeAreaView>
     </View>
+  );
+}
+
+export default function JournalScreen() {
+  return (
+    <ErrorBoundary screenName="journal">
+      <JournalContent />
+    </ErrorBoundary>
   );
 }
 

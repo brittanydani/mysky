@@ -1,0 +1,15 @@
+{
+  "global": {
+    "branches": 75,
+    "functions": 75,
+    "lines": 75,
+    "statements": 75
+  },
+  "criticalpaths": {
+    "services/premium": { "minimum": 85, "reason": "Revenue critical" },
+    "services/storage": { "minimum": 85, "reason": "Data integrity critical" },
+    "services/auth": { "minimum": 90, "reason": "Security critical" },
+    "utils/logger": { "minimum": 70, "reason": "Observability" },
+    "context/AuthContext": { "minimum": 80, "reason": "Auth flow" }
+  }
+}

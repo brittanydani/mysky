@@ -1,0 +1,192 @@
+appId: com.brittany.mysky
+---
+# MySky - Full App Test Suite
+# Comprehensive E2E test covering all major screens and flows
+# 
+# NOTE: This test assumes the app is already running (not in Expo dev launcher).
+# Run 'npm run ios' first to launch the app, then run this test.
+
+- launchApp
+
+# Wait for app to fully load (give it time to hydrate data)
+- extendedWaitUntil:
+    visible: "Today|Patterns|Archive|Identity|Settings"
+    timeout: 20000
+
+- takeScreenshot: 01_app_loaded
+
+# ══════════════════════════════════════════════════════════════════════════════
+# HOME TAB - "Today" Screen
+# ══════════════════════════════════════════════════════════════════════════════
+
+- tapOn:
+    text: "Today"
+    optional: true
+
+- takeScreenshot: 02_home_screen
+
+# Scroll to see all home content
+- scroll
+- takeScreenshot: 02_home_scrolled
+
+# Scroll back up
+- scrollUntilVisible:
+    element: "Today's Balance"
+    direction: UP
+    timeout: 5000
+    optional: true
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CHECK-IN FLOW (FAB button)
+# ══════════════════════════════════════════════════════════════════════════════
+
+- tapOn:
+    text: "Log check-in"
+    optional: true
+
+- extendedWaitUntil:
+    visible: "Log Entry"
+    timeout: 5000
+    optional: true
+
+- takeScreenshot: 03_checkin_hub
+
+# Test Today's Questions
+- tapOn:
+    text: "Today's Questions"
+    optional: true
+
+- takeScreenshot: 03_daily_reflection
+- back
+
+# Test Mood & Energy
+- tapOn:
+    text: "Mood"
+    optional: true
+
+- takeScreenshot: 03_mood_energy
+- back
+
+# Test Sleep
+- tapOn:
+    text: "Sleep"
+    optional: true
+
+- takeScreenshot: 03_sleep_dreams
+- back
+
+# Close check-in hub
+- tapOn:
+    text: "Close"
+    optional: true
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PATTERNS TAB
+# ══════════════════════════════════════════════════════════════════════════════
+
+- tapOn: "Patterns"
+
+- extendedWaitUntil:
+    visible: "Patterns"
+    timeout: 10000
+
+- takeScreenshot: 04_patterns_screen
+
+- scroll
+- takeScreenshot: 04_patterns_scrolled
+
+# Pattern Library modal
+- tapOn:
+    text: "Open Pattern Library"
+    optional: true
+
+- takeScreenshot: 04_pattern_library
+
+- tapOn:
+    text: "Done"
+    optional: true
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ARCHIVE TAB
+# ══════════════════════════════════════════════════════════════════════════════
+
+- tapOn: "Archive"
+
+- extendedWaitUntil:
+    visible: "Archive"
+    timeout: 10000
+
+- takeScreenshot: 05_archive_screen
+
+- scroll
+- takeScreenshot: 05_archive_scrolled
+
+# ══════════════════════════════════════════════════════════════════════════════
+# IDENTITY TAB
+# ══════════════════════════════════════════════════════════════════════════════
+
+- tapOn: "Identity"
+
+- extendedWaitUntil:
+    visible: "Identity"
+    timeout: 10000
+
+- takeScreenshot: 06_identity_screen
+
+# Inner World card
+- tapOn:
+    text: "Inner World"
+    optional: true
+
+- takeScreenshot: 06_inner_world
+- back
+
+# Body & Somatics card
+- tapOn:
+    text: "Body"
+    optional: true
+
+- takeScreenshot: 06_body_somatics  
+- back
+
+# Cosmic Blueprint card
+- scroll
+- tapOn:
+    text: "Cosmic Blueprint"
+    optional: true
+
+- takeScreenshot: 06_cosmic_blueprint
+- back
+
+# Energy tab toggle
+- tapOn:
+    text: "ENERGY"
+    optional: true
+
+- takeScreenshot: 06_energy_tab
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SETTINGS TAB
+# ══════════════════════════════════════════════════════════════════════════════
+
+- tapOn: "Settings"
+
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 10000
+
+- takeScreenshot: 07_settings_screen
+
+- scroll
+- takeScreenshot: 07_settings_scrolled
+
+# ══════════════════════════════════════════════════════════════════════════════
+# RETURN TO HOME
+# ══════════════════════════════════════════════════════════════════════════════
+
+- tapOn: "Today"
+- takeScreenshot: 08_final_home
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TEST COMPLETE
+# ══════════════════════════════════════════════════════════════════════════════

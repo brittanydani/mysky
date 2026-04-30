@@ -689,7 +689,7 @@
  */
 &nbsp;
 import { DailyCheckIn, TransitEvent, TimeOfDay, CheckInInput, SkySnapshot } from './types';
-import { localDb } from '../storage/localDb';
+import { supabaseDb } from '../storage/supabaseDb';
 import { NatalChart } from '../astrology/types';
 import { getTransitInfo, getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
 import { generateId } from '../storage/models';
@@ -876,7 +876,7 @@ export class CheckInService {
       updatedAt: now.toISOString(),
     };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    await localDb.saveCheckIn(checkIn);</span>
+<span class="cstat-no" title="statement not covered" >    await supabaseDb.saveCheckIn(checkIn);</span>
 <span class="cstat-no" title="statement not covered" >    logger.info(`[CheckIn] Saved check-in for ${date} (${timeOfDay})`);</span>
 <span class="cstat-no" title="statement not covered" >    return checkIn;</span>
   }
@@ -886,21 +886,21 @@ export class CheckInService {
    */
 <span class="fstat-no" title="function not covered" >  static </span>async getTodayCheckInForSlot(chartId: string, timeOfDay: TimeOfDay): Promise&lt;DailyCheckIn | null&gt; {
     const today = <span class="cstat-no" title="statement not covered" >getCheckInDateString();</span>
-<span class="cstat-no" title="statement not covered" >    return localDb.getCheckInByDateAndTime(today, chartId, timeOfDay);</span>
+<span class="cstat-no" title="statement not covered" >    return supabaseDb.getCheckInByDateAndTime(today, chartId, timeOfDay);</span>
   }
 &nbsp;
   /**
    * Get the check-in for any specific date + time slot
    */
 <span class="fstat-no" title="function not covered" >  static </span>async getCheckInForDateAndSlot(chartId: string, date: string, timeOfDay: TimeOfDay): Promise&lt;DailyCheckIn | null&gt; {
-<span class="cstat-no" title="statement not covered" >    return localDb.getCheckInByDateAndTime(date, chartId, timeOfDay);</span>
+<span class="cstat-no" title="statement not covered" >    return supabaseDb.getCheckInByDateAndTime(date, chartId, timeOfDay);</span>
   }
 &nbsp;
   /**
    * Get which time slots have been filled for any given date
    */
 <span class="fstat-no" title="function not covered" >  static </span>async getCompletedTimeSlotsForDate(chartId: string, date: string): Promise&lt;TimeOfDay[]&gt; {
-    const checkIns = <span class="cstat-no" title="statement not covered" >await localDb.getCheckInsByDate(date, chartId);</span>
+    const checkIns = <span class="cstat-no" title="statement not covered" >await supabaseDb.getCheckInsByDate(date, chartId);</span>
 <span class="cstat-no" title="statement not covered" >    return checkIns.map(<span class="fstat-no" title="function not covered" >c </span>=&gt; <span class="cstat-no" title="statement not covered" >c.timeOfDay)</span>;</span>
   }
 &nbsp;
@@ -909,7 +909,7 @@ export class CheckInService {
    */
 <span class="fstat-no" title="function not covered" >  static </span>async getTodayCheckIn(chartId: string): Promise&lt;DailyCheckIn | null&gt; {
     const today = <span class="cstat-no" title="statement not covered" >getCheckInDateString();</span>
-<span class="cstat-no" title="statement not covered" >    return localDb.getCheckInByDate(today, chartId);</span>
+<span class="cstat-no" title="statement not covered" >    return supabaseDb.getCheckInByDate(today, chartId);</span>
   }
 &nbsp;
   /**
@@ -917,7 +917,7 @@ export class CheckInService {
    */
 <span class="fstat-no" title="function not covered" >  static </span>async getTodayCheckIns(chartId: string): Promise&lt;DailyCheckIn[]&gt; {
     const today = <span class="cstat-no" title="statement not covered" >getCheckInDateString();</span>
-<span class="cstat-no" title="statement not covered" >    return localDb.getCheckInsByDate(today, chartId);</span>
+<span class="cstat-no" title="statement not covered" >    return supabaseDb.getCheckInsByDate(today, chartId);</span>
   }
 &nbsp;
   /**
@@ -939,7 +939,7 @@ export class CheckInService {
    * Get all check-ins for a chart (for pattern analysis)
    */
 <span class="fstat-no" title="function not covered" >  static </span>async getAllCheckIns(chartId: string, limit?: number): Promise&lt;DailyCheckIn[]&gt; {
-<span class="cstat-no" title="statement not covered" >    return localDb.getCheckIns(chartId, limit);</span>
+<span class="cstat-no" title="statement not covered" >    return supabaseDb.getCheckIns(chartId, limit);</span>
   }
 &nbsp;
   /**
@@ -947,7 +947,7 @@ export class CheckInService {
    * Uses COUNT(*) query — does NOT decrypt any rows.
    */
   static async getCheckInCount(chartId: string): Promise&lt;number&gt; {
-    return localDb.getCheckInCount(chartId);
+    return supabaseDb.getCheckInCount(chartId);
   }
 &nbsp;
   /**
@@ -955,7 +955,7 @@ export class CheckInService {
    * O(n) via Set lookup instead of O(n²) via Array.find().
    */
   static async getCurrentStreak(chartId: string): Promise&lt;number&gt; {
-    const all = await localDb.getCheckIns(chartId, 90); // last 90 days max
+    const all = await supabaseDb.getCheckIns(chartId, 90); // last 90 days max
     if (all.length === 0) return 0;
 &nbsp;
     // Build a Set of unique dates for O(1) lookups
@@ -987,7 +987,7 @@ export class CheckInService {
     startDate: string,
     endDate: string,
   ): Promise&lt;DailyCheckIn[]&gt; {
-<span class="cstat-no" title="statement not covered" >    return localDb.getCheckInsInRange(chartId, startDate, endDate);</span>
+<span class="cstat-no" title="statement not covered" >    return supabaseDb.getCheckInsInRange(chartId, startDate, endDate);</span>
   }
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -997,7 +997,7 @@ export class CheckInService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-15T03:50:56.521Z
+                at 2026-04-30T03:55:01.390Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

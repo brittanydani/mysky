@@ -14,7 +14,6 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
-import { logger } from '../utils/logger';
 
 // ─── Supabase session storage adapter ─────────────────────────────────────────
 // Local persistent auth storage has been removed.
@@ -23,25 +22,39 @@ import { logger } from '../utils/logger';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  const missing = [
-    !supabaseUrl && 'EXPO_PUBLIC_SUPABASE_URL',
-    !supabaseAnonKey && 'EXPO_PUBLIC_SUPABASE_ANON_KEY',
-  ]
-    .filter(Boolean)
-    .join(', ');
-  throw new Error(
-    `[supabase] Missing required environment variable(s): ${missing}. ` +
-      'For local dev: copy .env.example to .env and fill in your Supabase credentials. ' +
-      'For EAS builds: run `eas secret:create` to add them as EAS secrets.',
-  );
-}
+const FALLBACK_SUPABASE_URL = 'http://localhost:54321';
+const FALLBACK_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder.placeholder';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false, // not needed in React Native
+const fetchWithTimeout: typeof fetch = (url, options = {}) => {
+  const timeoutMs = 30_000;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  return Promise.race([
+    fetch(url, options),
+    new Promise<Response>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Fetch timeout')), timeoutMs);
+    }),
+  ]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  }) as ReturnType<typeof fetch>;
+};
+
+export const supabase = createClient(
+  supabaseUrl || FALLBACK_SUPABASE_URL,
+  supabaseAnonKey || FALLBACK_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false, // not needed in React Native
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'supabase-js-react-native',
+      },
+      fetch: fetchWithTimeout,
+    },
   },
-});
+);

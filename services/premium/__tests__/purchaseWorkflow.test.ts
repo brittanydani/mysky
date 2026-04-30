@@ -238,7 +238,9 @@ describe('RevenueCat Service', () => {
       await revenueCatService.logIn('user-123');
       // Should not throw — error is caught
       const { logger } = require('../../../utils/logger');
-      expect(logger.error).toHaveBeenCalledWith('[RevenueCat] logIn failed:', expect.any(Error));
+      expect(logger.error).toHaveBeenCalledWith('[RevenueCat] logIn failed', {
+        error: 'Network',
+      });
     });
   });
 

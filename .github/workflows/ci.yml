@@ -35,3 +35,6 @@ jobs:
 
       - name: Test
         run: npx jest --ci --maxWorkers=2
+
+      - name: Coverage
+        run: npx jest --coverage --ci --maxWorkers=2

@@ -20,6 +20,13 @@ import {
   SleepEntry,
 } from './models';
 import { logger } from '../../utils/logger';
+import { withRetry, RETRY_PRESETS } from '../../utils/withRetry';
+import {
+  CheckInSchema,
+  JournalEntrySchema,
+  ValidationError,
+} from '../validation/schemas';
+import { offlineQueue } from '../offline/offlineQueue';
 import type { HouseSystem } from '../astrology/types';
 import type { SavedInsight } from './insightHistory';
 import type { DailyCheckIn } from '../patterns/types';
@@ -93,6 +100,11 @@ function parseCoord(value: string | undefined, field: string, id: string): numbe
   }
 
   return n;
+}
+
+function isLikelyNetworkError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /network request failed|failed to fetch|fetch timeout|request timeout|load failed/i.test(message);
 }
 
 function isValidChart(
@@ -256,6 +268,30 @@ async function mapJournalRow(row: Row): Promise<JournalEntry> {
   };
 }
 
+function journalEntryToRow(entry: JournalEntry, userId: string): Row {
+  return {
+    id: entry.id,
+    user_id: userId,
+    date: entry.date,
+    mood: entry.mood,
+    moon_phase: entry.moonPhase,
+    title: entry.title ?? null,
+    content: entry.content,
+    content_keywords: entry.contentKeywords ?? null,
+    content_emotions: entry.contentEmotions ?? null,
+    content_sentiment: entry.contentSentiment ?? null,
+    tags: entry.tags ? JSON.stringify(entry.tags) : null,
+    content_word_count: entry.contentWordCount ?? null,
+    content_reading_minutes: entry.contentReadingMinutes ?? null,
+    chart_id: entry.chartId ?? null,
+    transit_snapshot: entry.transitSnapshot ?? null,
+    is_deleted: entry.isDeleted,
+    deleted_at: entry.deletedAt ?? null,
+    created_at: entry.createdAt,
+    updated_at: entry.updatedAt,
+  };
+}
+
 export async function getJournalEntries(): Promise<JournalEntry[]> {
   const userId = await getUserId();
 
@@ -327,35 +363,40 @@ export async function getJournalEntryCount(): Promise<number> {
 }
 
 export async function saveJournalEntry(entry: JournalEntry): Promise<void> {
+  const validation = JournalEntrySchema.validate(entry);
+  if (!validation.valid) {
+    throw new ValidationError('Invalid journal entry', validation.errors);
+  }
+
   const userId = await getUserId();
+  const row = journalEntryToRow(entry, userId);
 
-  const { error } = await supabase.from('journal_entries').upsert(
-    {
+  try {
+    await withRetry(
+      async () => {
+        const { error } = await supabase
+          .from('journal_entries')
+          .upsert(row, { onConflict: 'id' });
+
+        if (error) throw error;
+      },
+      'saveJournalEntry',
+      RETRY_PRESETS.standard,
+    );
+  } catch (error) {
+    if (isLikelyNetworkError(error)) {
+      await offlineQueue.enqueue({
+        type: 'journal_entry',
+        payload: { userId, entry: row },
+      });
+      logger.warn('[SupabaseDb] Journal entry queued for offline sync', { id: entry.id });
+      return;
+    }
+
+    logger.warn('[SupabaseDb] Failed to save journal entry to Supabase.', {
       id: entry.id,
-      user_id: userId,
-      date: entry.date,
-      mood: entry.mood,
-      moon_phase: entry.moonPhase,
-      title: entry.title ?? null,
-      content: entry.content,
-      content_keywords: entry.contentKeywords ?? null,
-      content_emotions: entry.contentEmotions ?? null,
-      content_sentiment: entry.contentSentiment ?? null,
-      tags: entry.tags ? JSON.stringify(entry.tags) : null,
-      content_word_count: entry.contentWordCount ?? null,
-      content_reading_minutes: entry.contentReadingMinutes ?? null,
-      chart_id: entry.chartId ?? null,
-      transit_snapshot: entry.transitSnapshot ?? null,
-      is_deleted: entry.isDeleted,
-      deleted_at: entry.deletedAt ?? null,
-      created_at: entry.createdAt,
-      updated_at: entry.updatedAt,
-    },
-    { onConflict: 'id' },
-  );
-
-  if (error) {
-    logger.warn('[SupabaseDb] Failed to save journal entry to Supabase.', error);
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw error;
   }
 }
@@ -597,6 +638,32 @@ async function mapCheckInRow(row: Row): Promise<DailyCheckIn> {
   };
 }
 
+function checkInToRow(checkIn: DailyCheckIn, userId: string): Row {
+  return {
+    id: checkIn.id,
+    user_id: userId,
+    chart_id: checkIn.chartId,
+    log_date: checkIn.date,
+    time_of_day: checkIn.timeOfDay,
+    mood_score: checkIn.moodScore,
+    mood_value: Math.max(0, Math.min(10, Math.round(Number(checkIn.moodScore ?? 0)))),
+    energy_level: checkIn.energyLevel,
+    stress_level: checkIn.stressLevel,
+    tags: JSON.stringify(checkIn.tags),
+    note: checkIn.note ?? null,
+    wins: checkIn.wins ?? null,
+    challenges: checkIn.challenges ?? null,
+    moon_sign: checkIn.moonSign,
+    moon_house: checkIn.moonHouse,
+    sun_house: checkIn.sunHouse,
+    transit_events: JSON.stringify(checkIn.transitEvents),
+    lunar_phase: checkIn.lunarPhase,
+    retrogrades: JSON.stringify(checkIn.retrogrades),
+    created_at: checkIn.createdAt,
+    updated_at: checkIn.updatedAt,
+  };
+}
+
 export async function getCheckIns(
   chartId: string,
   limit = 10000,
@@ -750,37 +817,40 @@ export async function getTotalCheckInCount(): Promise<number> {
 }
 
 export async function saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
+  const validation = CheckInSchema.validate(checkIn);
+  if (!validation.valid) {
+    throw new ValidationError('Invalid check-in data', validation.errors);
+  }
+
   const userId = await getUserId();
+  const row = checkInToRow(checkIn, userId);
 
-  const { error } = await supabase.from('daily_check_ins').upsert(
-    {
+  try {
+    await withRetry(
+      async () => {
+        const { error } = await supabase
+          .from('daily_check_ins')
+          .upsert(row, { onConflict: 'id' });
+
+        if (error) throw error;
+      },
+      'saveCheckIn',
+      RETRY_PRESETS.standard,
+    );
+  } catch (error) {
+    if (isLikelyNetworkError(error)) {
+      await offlineQueue.enqueue({
+        type: 'checkin',
+        payload: { userId, checkIn: row },
+      });
+      logger.warn('[SupabaseDb] Daily check-in queued for offline sync', { id: checkIn.id });
+      return;
+    }
+
+    logger.warn('[SupabaseDb] Failed to save daily check-in to Supabase.', {
       id: checkIn.id,
-      user_id: userId,
-      chart_id: checkIn.chartId,
-      log_date: checkIn.date,
-      time_of_day: checkIn.timeOfDay,
-      mood_score: checkIn.moodScore,
-      mood_value: Math.max(0, Math.min(10, Math.round(Number(checkIn.moodScore ?? 0)))),
-      energy_level: checkIn.energyLevel,
-      stress_level: checkIn.stressLevel,
-      tags: JSON.stringify(checkIn.tags),
-      note: checkIn.note ?? null,
-      wins: checkIn.wins ?? null,
-      challenges: checkIn.challenges ?? null,
-      moon_sign: checkIn.moonSign,
-      moon_house: checkIn.moonHouse,
-      sun_house: checkIn.sunHouse,
-      transit_events: JSON.stringify(checkIn.transitEvents),
-      lunar_phase: checkIn.lunarPhase,
-      retrogrades: JSON.stringify(checkIn.retrogrades),
-      created_at: checkIn.createdAt,
-      updated_at: checkIn.updatedAt,
-    },
-    { onConflict: 'id' },
-  );
-
-  if (error) {
-    logger.warn('[SupabaseDb] Failed to save daily check-in to Supabase.', error);
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw error;
   }
 }

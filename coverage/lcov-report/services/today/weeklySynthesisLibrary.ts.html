@@ -1,0 +1,1714 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for services/today/weeklySynthesisLibrary.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">services/today</a> weeklySynthesisLibrary.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/70</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/278</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/4</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/67</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a>
+<a name='L188'></a><a href='#L188'>188</a>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a>
+<a name='L196'></a><a href='#L196'>196</a>
+<a name='L197'></a><a href='#L197'>197</a>
+<a name='L198'></a><a href='#L198'>198</a>
+<a name='L199'></a><a href='#L199'>199</a>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a>
+<a name='L207'></a><a href='#L207'>207</a>
+<a name='L208'></a><a href='#L208'>208</a>
+<a name='L209'></a><a href='#L209'>209</a>
+<a name='L210'></a><a href='#L210'>210</a>
+<a name='L211'></a><a href='#L211'>211</a>
+<a name='L212'></a><a href='#L212'>212</a>
+<a name='L213'></a><a href='#L213'>213</a>
+<a name='L214'></a><a href='#L214'>214</a>
+<a name='L215'></a><a href='#L215'>215</a>
+<a name='L216'></a><a href='#L216'>216</a>
+<a name='L217'></a><a href='#L217'>217</a>
+<a name='L218'></a><a href='#L218'>218</a>
+<a name='L219'></a><a href='#L219'>219</a>
+<a name='L220'></a><a href='#L220'>220</a>
+<a name='L221'></a><a href='#L221'>221</a>
+<a name='L222'></a><a href='#L222'>222</a>
+<a name='L223'></a><a href='#L223'>223</a>
+<a name='L224'></a><a href='#L224'>224</a>
+<a name='L225'></a><a href='#L225'>225</a>
+<a name='L226'></a><a href='#L226'>226</a>
+<a name='L227'></a><a href='#L227'>227</a>
+<a name='L228'></a><a href='#L228'>228</a>
+<a name='L229'></a><a href='#L229'>229</a>
+<a name='L230'></a><a href='#L230'>230</a>
+<a name='L231'></a><a href='#L231'>231</a>
+<a name='L232'></a><a href='#L232'>232</a>
+<a name='L233'></a><a href='#L233'>233</a>
+<a name='L234'></a><a href='#L234'>234</a>
+<a name='L235'></a><a href='#L235'>235</a>
+<a name='L236'></a><a href='#L236'>236</a>
+<a name='L237'></a><a href='#L237'>237</a>
+<a name='L238'></a><a href='#L238'>238</a>
+<a name='L239'></a><a href='#L239'>239</a>
+<a name='L240'></a><a href='#L240'>240</a>
+<a name='L241'></a><a href='#L241'>241</a>
+<a name='L242'></a><a href='#L242'>242</a>
+<a name='L243'></a><a href='#L243'>243</a>
+<a name='L244'></a><a href='#L244'>244</a>
+<a name='L245'></a><a href='#L245'>245</a>
+<a name='L246'></a><a href='#L246'>246</a>
+<a name='L247'></a><a href='#L247'>247</a>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a>
+<a name='L251'></a><a href='#L251'>251</a>
+<a name='L252'></a><a href='#L252'>252</a>
+<a name='L253'></a><a href='#L253'>253</a>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a>
+<a name='L259'></a><a href='#L259'>259</a>
+<a name='L260'></a><a href='#L260'>260</a>
+<a name='L261'></a><a href='#L261'>261</a>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a>
+<a name='L277'></a><a href='#L277'>277</a>
+<a name='L278'></a><a href='#L278'>278</a>
+<a name='L279'></a><a href='#L279'>279</a>
+<a name='L280'></a><a href='#L280'>280</a>
+<a name='L281'></a><a href='#L281'>281</a>
+<a name='L282'></a><a href='#L282'>282</a>
+<a name='L283'></a><a href='#L283'>283</a>
+<a name='L284'></a><a href='#L284'>284</a>
+<a name='L285'></a><a href='#L285'>285</a>
+<a name='L286'></a><a href='#L286'>286</a>
+<a name='L287'></a><a href='#L287'>287</a>
+<a name='L288'></a><a href='#L288'>288</a>
+<a name='L289'></a><a href='#L289'>289</a>
+<a name='L290'></a><a href='#L290'>290</a>
+<a name='L291'></a><a href='#L291'>291</a>
+<a name='L292'></a><a href='#L292'>292</a>
+<a name='L293'></a><a href='#L293'>293</a>
+<a name='L294'></a><a href='#L294'>294</a>
+<a name='L295'></a><a href='#L295'>295</a>
+<a name='L296'></a><a href='#L296'>296</a>
+<a name='L297'></a><a href='#L297'>297</a>
+<a name='L298'></a><a href='#L298'>298</a>
+<a name='L299'></a><a href='#L299'>299</a>
+<a name='L300'></a><a href='#L300'>300</a>
+<a name='L301'></a><a href='#L301'>301</a>
+<a name='L302'></a><a href='#L302'>302</a>
+<a name='L303'></a><a href='#L303'>303</a>
+<a name='L304'></a><a href='#L304'>304</a>
+<a name='L305'></a><a href='#L305'>305</a>
+<a name='L306'></a><a href='#L306'>306</a>
+<a name='L307'></a><a href='#L307'>307</a>
+<a name='L308'></a><a href='#L308'>308</a>
+<a name='L309'></a><a href='#L309'>309</a>
+<a name='L310'></a><a href='#L310'>310</a>
+<a name='L311'></a><a href='#L311'>311</a>
+<a name='L312'></a><a href='#L312'>312</a>
+<a name='L313'></a><a href='#L313'>313</a>
+<a name='L314'></a><a href='#L314'>314</a>
+<a name='L315'></a><a href='#L315'>315</a>
+<a name='L316'></a><a href='#L316'>316</a>
+<a name='L317'></a><a href='#L317'>317</a>
+<a name='L318'></a><a href='#L318'>318</a>
+<a name='L319'></a><a href='#L319'>319</a>
+<a name='L320'></a><a href='#L320'>320</a>
+<a name='L321'></a><a href='#L321'>321</a>
+<a name='L322'></a><a href='#L322'>322</a>
+<a name='L323'></a><a href='#L323'>323</a>
+<a name='L324'></a><a href='#L324'>324</a>
+<a name='L325'></a><a href='#L325'>325</a>
+<a name='L326'></a><a href='#L326'>326</a>
+<a name='L327'></a><a href='#L327'>327</a>
+<a name='L328'></a><a href='#L328'>328</a>
+<a name='L329'></a><a href='#L329'>329</a>
+<a name='L330'></a><a href='#L330'>330</a>
+<a name='L331'></a><a href='#L331'>331</a>
+<a name='L332'></a><a href='#L332'>332</a>
+<a name='L333'></a><a href='#L333'>333</a>
+<a name='L334'></a><a href='#L334'>334</a>
+<a name='L335'></a><a href='#L335'>335</a>
+<a name='L336'></a><a href='#L336'>336</a>
+<a name='L337'></a><a href='#L337'>337</a>
+<a name='L338'></a><a href='#L338'>338</a>
+<a name='L339'></a><a href='#L339'>339</a>
+<a name='L340'></a><a href='#L340'>340</a>
+<a name='L341'></a><a href='#L341'>341</a>
+<a name='L342'></a><a href='#L342'>342</a>
+<a name='L343'></a><a href='#L343'>343</a>
+<a name='L344'></a><a href='#L344'>344</a>
+<a name='L345'></a><a href='#L345'>345</a>
+<a name='L346'></a><a href='#L346'>346</a>
+<a name='L347'></a><a href='#L347'>347</a>
+<a name='L348'></a><a href='#L348'>348</a>
+<a name='L349'></a><a href='#L349'>349</a>
+<a name='L350'></a><a href='#L350'>350</a>
+<a name='L351'></a><a href='#L351'>351</a>
+<a name='L352'></a><a href='#L352'>352</a>
+<a name='L353'></a><a href='#L353'>353</a>
+<a name='L354'></a><a href='#L354'>354</a>
+<a name='L355'></a><a href='#L355'>355</a>
+<a name='L356'></a><a href='#L356'>356</a>
+<a name='L357'></a><a href='#L357'>357</a>
+<a name='L358'></a><a href='#L358'>358</a>
+<a name='L359'></a><a href='#L359'>359</a>
+<a name='L360'></a><a href='#L360'>360</a>
+<a name='L361'></a><a href='#L361'>361</a>
+<a name='L362'></a><a href='#L362'>362</a>
+<a name='L363'></a><a href='#L363'>363</a>
+<a name='L364'></a><a href='#L364'>364</a>
+<a name='L365'></a><a href='#L365'>365</a>
+<a name='L366'></a><a href='#L366'>366</a>
+<a name='L367'></a><a href='#L367'>367</a>
+<a name='L368'></a><a href='#L368'>368</a>
+<a name='L369'></a><a href='#L369'>369</a>
+<a name='L370'></a><a href='#L370'>370</a>
+<a name='L371'></a><a href='#L371'>371</a>
+<a name='L372'></a><a href='#L372'>372</a>
+<a name='L373'></a><a href='#L373'>373</a>
+<a name='L374'></a><a href='#L374'>374</a>
+<a name='L375'></a><a href='#L375'>375</a>
+<a name='L376'></a><a href='#L376'>376</a>
+<a name='L377'></a><a href='#L377'>377</a>
+<a name='L378'></a><a href='#L378'>378</a>
+<a name='L379'></a><a href='#L379'>379</a>
+<a name='L380'></a><a href='#L380'>380</a>
+<a name='L381'></a><a href='#L381'>381</a>
+<a name='L382'></a><a href='#L382'>382</a>
+<a name='L383'></a><a href='#L383'>383</a>
+<a name='L384'></a><a href='#L384'>384</a>
+<a name='L385'></a><a href='#L385'>385</a>
+<a name='L386'></a><a href='#L386'>386</a>
+<a name='L387'></a><a href='#L387'>387</a>
+<a name='L388'></a><a href='#L388'>388</a>
+<a name='L389'></a><a href='#L389'>389</a>
+<a name='L390'></a><a href='#L390'>390</a>
+<a name='L391'></a><a href='#L391'>391</a>
+<a name='L392'></a><a href='#L392'>392</a>
+<a name='L393'></a><a href='#L393'>393</a>
+<a name='L394'></a><a href='#L394'>394</a>
+<a name='L395'></a><a href='#L395'>395</a>
+<a name='L396'></a><a href='#L396'>396</a>
+<a name='L397'></a><a href='#L397'>397</a>
+<a name='L398'></a><a href='#L398'>398</a>
+<a name='L399'></a><a href='#L399'>399</a>
+<a name='L400'></a><a href='#L400'>400</a>
+<a name='L401'></a><a href='#L401'>401</a>
+<a name='L402'></a><a href='#L402'>402</a>
+<a name='L403'></a><a href='#L403'>403</a>
+<a name='L404'></a><a href='#L404'>404</a>
+<a name='L405'></a><a href='#L405'>405</a>
+<a name='L406'></a><a href='#L406'>406</a>
+<a name='L407'></a><a href='#L407'>407</a>
+<a name='L408'></a><a href='#L408'>408</a>
+<a name='L409'></a><a href='#L409'>409</a>
+<a name='L410'></a><a href='#L410'>410</a>
+<a name='L411'></a><a href='#L411'>411</a>
+<a name='L412'></a><a href='#L412'>412</a>
+<a name='L413'></a><a href='#L413'>413</a>
+<a name='L414'></a><a href='#L414'>414</a>
+<a name='L415'></a><a href='#L415'>415</a>
+<a name='L416'></a><a href='#L416'>416</a>
+<a name='L417'></a><a href='#L417'>417</a>
+<a name='L418'></a><a href='#L418'>418</a>
+<a name='L419'></a><a href='#L419'>419</a>
+<a name='L420'></a><a href='#L420'>420</a>
+<a name='L421'></a><a href='#L421'>421</a>
+<a name='L422'></a><a href='#L422'>422</a>
+<a name='L423'></a><a href='#L423'>423</a>
+<a name='L424'></a><a href='#L424'>424</a>
+<a name='L425'></a><a href='#L425'>425</a>
+<a name='L426'></a><a href='#L426'>426</a>
+<a name='L427'></a><a href='#L427'>427</a>
+<a name='L428'></a><a href='#L428'>428</a>
+<a name='L429'></a><a href='#L429'>429</a>
+<a name='L430'></a><a href='#L430'>430</a>
+<a name='L431'></a><a href='#L431'>431</a>
+<a name='L432'></a><a href='#L432'>432</a>
+<a name='L433'></a><a href='#L433'>433</a>
+<a name='L434'></a><a href='#L434'>434</a>
+<a name='L435'></a><a href='#L435'>435</a>
+<a name='L436'></a><a href='#L436'>436</a>
+<a name='L437'></a><a href='#L437'>437</a>
+<a name='L438'></a><a href='#L438'>438</a>
+<a name='L439'></a><a href='#L439'>439</a>
+<a name='L440'></a><a href='#L440'>440</a>
+<a name='L441'></a><a href='#L441'>441</a>
+<a name='L442'></a><a href='#L442'>442</a>
+<a name='L443'></a><a href='#L443'>443</a>
+<a name='L444'></a><a href='#L444'>444</a>
+<a name='L445'></a><a href='#L445'>445</a>
+<a name='L446'></a><a href='#L446'>446</a>
+<a name='L447'></a><a href='#L447'>447</a>
+<a name='L448'></a><a href='#L448'>448</a>
+<a name='L449'></a><a href='#L449'>449</a>
+<a name='L450'></a><a href='#L450'>450</a>
+<a name='L451'></a><a href='#L451'>451</a>
+<a name='L452'></a><a href='#L452'>452</a>
+<a name='L453'></a><a href='#L453'>453</a>
+<a name='L454'></a><a href='#L454'>454</a>
+<a name='L455'></a><a href='#L455'>455</a>
+<a name='L456'></a><a href='#L456'>456</a>
+<a name='L457'></a><a href='#L457'>457</a>
+<a name='L458'></a><a href='#L458'>458</a>
+<a name='L459'></a><a href='#L459'>459</a>
+<a name='L460'></a><a href='#L460'>460</a>
+<a name='L461'></a><a href='#L461'>461</a>
+<a name='L462'></a><a href='#L462'>462</a>
+<a name='L463'></a><a href='#L463'>463</a>
+<a name='L464'></a><a href='#L464'>464</a>
+<a name='L465'></a><a href='#L465'>465</a>
+<a name='L466'></a><a href='#L466'>466</a>
+<a name='L467'></a><a href='#L467'>467</a>
+<a name='L468'></a><a href='#L468'>468</a>
+<a name='L469'></a><a href='#L469'>469</a>
+<a name='L470'></a><a href='#L470'>470</a>
+<a name='L471'></a><a href='#L471'>471</a>
+<a name='L472'></a><a href='#L472'>472</a>
+<a name='L473'></a><a href='#L473'>473</a>
+<a name='L474'></a><a href='#L474'>474</a>
+<a name='L475'></a><a href='#L475'>475</a>
+<a name='L476'></a><a href='#L476'>476</a>
+<a name='L477'></a><a href='#L477'>477</a>
+<a name='L478'></a><a href='#L478'>478</a>
+<a name='L479'></a><a href='#L479'>479</a>
+<a name='L480'></a><a href='#L480'>480</a>
+<a name='L481'></a><a href='#L481'>481</a>
+<a name='L482'></a><a href='#L482'>482</a>
+<a name='L483'></a><a href='#L483'>483</a>
+<a name='L484'></a><a href='#L484'>484</a>
+<a name='L485'></a><a href='#L485'>485</a>
+<a name='L486'></a><a href='#L486'>486</a>
+<a name='L487'></a><a href='#L487'>487</a>
+<a name='L488'></a><a href='#L488'>488</a>
+<a name='L489'></a><a href='#L489'>489</a>
+<a name='L490'></a><a href='#L490'>490</a>
+<a name='L491'></a><a href='#L491'>491</a>
+<a name='L492'></a><a href='#L492'>492</a>
+<a name='L493'></a><a href='#L493'>493</a>
+<a name='L494'></a><a href='#L494'>494</a>
+<a name='L495'></a><a href='#L495'>495</a>
+<a name='L496'></a><a href='#L496'>496</a>
+<a name='L497'></a><a href='#L497'>497</a>
+<a name='L498'></a><a href='#L498'>498</a>
+<a name='L499'></a><a href='#L499'>499</a>
+<a name='L500'></a><a href='#L500'>500</a>
+<a name='L501'></a><a href='#L501'>501</a>
+<a name='L502'></a><a href='#L502'>502</a>
+<a name='L503'></a><a href='#L503'>503</a>
+<a name='L504'></a><a href='#L504'>504</a>
+<a name='L505'></a><a href='#L505'>505</a>
+<a name='L506'></a><a href='#L506'>506</a>
+<a name='L507'></a><a href='#L507'>507</a>
+<a name='L508'></a><a href='#L508'>508</a>
+<a name='L509'></a><a href='#L509'>509</a>
+<a name='L510'></a><a href='#L510'>510</a>
+<a name='L511'></a><a href='#L511'>511</a>
+<a name='L512'></a><a href='#L512'>512</a>
+<a name='L513'></a><a href='#L513'>513</a>
+<a name='L514'></a><a href='#L514'>514</a>
+<a name='L515'></a><a href='#L515'>515</a>
+<a name='L516'></a><a href='#L516'>516</a>
+<a name='L517'></a><a href='#L517'>517</a>
+<a name='L518'></a><a href='#L518'>518</a>
+<a name='L519'></a><a href='#L519'>519</a>
+<a name='L520'></a><a href='#L520'>520</a>
+<a name='L521'></a><a href='#L521'>521</a>
+<a name='L522'></a><a href='#L522'>522</a>
+<a name='L523'></a><a href='#L523'>523</a>
+<a name='L524'></a><a href='#L524'>524</a>
+<a name='L525'></a><a href='#L525'>525</a>
+<a name='L526'></a><a href='#L526'>526</a>
+<a name='L527'></a><a href='#L527'>527</a>
+<a name='L528'></a><a href='#L528'>528</a>
+<a name='L529'></a><a href='#L529'>529</a>
+<a name='L530'></a><a href='#L530'>530</a>
+<a name='L531'></a><a href='#L531'>531</a>
+<a name='L532'></a><a href='#L532'>532</a>
+<a name='L533'></a><a href='#L533'>533</a>
+<a name='L534'></a><a href='#L534'>534</a>
+<a name='L535'></a><a href='#L535'>535</a>
+<a name='L536'></a><a href='#L536'>536</a>
+<a name='L537'></a><a href='#L537'>537</a>
+<a name='L538'></a><a href='#L538'>538</a>
+<a name='L539'></a><a href='#L539'>539</a>
+<a name='L540'></a><a href='#L540'>540</a>
+<a name='L541'></a><a href='#L541'>541</a>
+<a name='L542'></a><a href='#L542'>542</a>
+<a name='L543'></a><a href='#L543'>543</a>
+<a name='L544'></a><a href='#L544'>544</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Weekly Synthesis Library
+ * 
+ * 500+ deeply personal narrative variations for "This Week's Story"
+ * Each synthesis connects mood, sleep, journal, and dream data into
+ * a meaningful reflection that users look forward to reading.
+ * 
+ * Design principles:
+ * - Deeply personal and specific to user's actual data
+ * - Emotionally resonant and validating
+ * - Connects patterns across domains (mood + sleep + journal + dreams)
+ * - Feels like insight from a wise friend who knows you
+ * - Premium quality - something users genuinely look forward to
+ */
+&nbsp;
+import { mean } from '../../utils/stats';
+import type { DailyCheckIn } from '../patterns/types';
+&nbsp;
+export interface WeeklySynthesisContext {
+  // Mood data
+  checkIns: DailyCheckIn[];
+  avgMood: number;
+  moodRange: { high: number; low: number };
+  moodTrend: 'rising' | 'falling' | 'stable' | 'volatile';
+  highDays: number;
+  lowDays: number;
+  
+  // Sleep data
+  sleepEntries: any[]; // SleepEntry type
+  avgSleep: number;
+  sleepQuality: 'good' | 'poor' | 'mixed' | null;
+  sleepConsistency: 'consistent' | 'erratic' | null;
+  
+  // Journal data
+  journals: any[]; // JournalEntry type
+  journalCount: number; // Number of journal entries this week
+  journalThemes?: string[]; // extracted themes if available
+  
+  // Dream data
+  dreams: any[]; // SleepEntry with dreams
+  dreamCount: number;
+  
+  // Cross-domain correlations
+  sleepMoodCorrelation: 'strong_positive' | 'weak_positive' | 'none' | 'inverse' | null;
+  
+  // Tags from check-ins
+  topTags: string[];
+  
+  // Week metadata
+  weekNumber: number; // 1-52
+  season: 'winter' | 'spring' | 'summer' | 'fall';
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >pluralize(</span>count: number, singular: string, plural = <span class="branch-0 cbranch-no" title="branch not covered" >`${singular}s`)</span>: string {
+<span class="cstat-no" title="statement not covered" >  return `${count} ${count === 1 ? singular : plural}`;</span>
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >buildAttunedWeeklyNarrative(</span>ctx: WeeklySynthesisContext): string | null {
+  const checkInCount = <span class="cstat-no" title="statement not covered" >ctx.checkIns.length;</span>
+  const hasMoodData = <span class="cstat-no" title="statement not covered" >checkInCount &gt; 0;</span>
+  const hasSleepData = <span class="cstat-no" title="statement not covered" >ctx.avgSleep &gt; 0;</span>
+  const lowerBaseline = <span class="cstat-no" title="statement not covered" >hasMoodData &amp;&amp; ctx.avgMood &lt; 5.5;</span>
+  const limitedSleep = <span class="cstat-no" title="statement not covered" >hasSleepData &amp;&amp; ctx.avgSleep &lt; 6.8;</span>
+  const highObservation = <span class="cstat-no" title="statement not covered" >checkInCount &gt;= 5;</span>
+  const deepReflection = <span class="cstat-no" title="statement not covered" >ctx.journalCount &gt;= 3;</span>
+  const observationBits = <span class="cstat-no" title="statement not covered" >[pluralize(checkInCount, 'check-in')];</span>
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.journalCount &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >    observationBits.push(pluralize(ctx.journalCount, 'journal entry'));</span>
+  }
+  const observationText = <span class="cstat-no" title="statement not covered" >observationBits.join(' and ');</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.dreamCount &gt;= 3) {</span>
+    const leadBits: string[] = <span class="cstat-no" title="statement not covered" >[];</span>
+<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (lowerBaseline) <span class="cstat-no" title="statement not covered" >leadBits.push('your mood stayed lower');</span></span>
+<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (limitedSleep) <span class="cstat-no" title="statement not covered" >leadBits.push(`sleep stayed around ${ctx.avgSleep.toFixed(1)} hours`);</span></span>
+    const leadTail = <span class="cstat-no" title="statement not covered" >leadBits.length &gt; 0</span>
+      ? ` during a week where ${leadBits.join(' and ')}.`
+      : '.';
+    const interpretation = <span class="cstat-no" title="statement not covered" >lowerBaseline || limitedSleep</span>
+      ? 'That combination matters. When dreams increase during emotionally thinner weeks, MySky reads it as your mind continuing the conversation after the day is over. Something may not have felt fully processed while awake, so it kept returning in symbolic form at night.'
+      : 'That combination suggests your mind kept processing after the day ended. The dreams were not random background detail; they were part of how your inner world stayed active.';
+    const meaning = <span class="cstat-no" title="statement not covered" >deepReflection</span>
+      ? `The story of this week is not just that you had dreams. It is that your inner world stayed active enough to leave a trace, and you kept recording it through ${pluralize(ctx.journalCount, 'journal entry')}.`
+      : 'The story of this week is not just that you had dreams. It is that your inner world stayed active, even when the week may have felt harder to carry.';
+<span class="cstat-no" title="statement not covered" >    return `${pluralize(ctx.dreamCount, 'dream', 'dreams')} showed up${leadTail} ${interpretation} ${meaning}`;</span>
+  }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (lowerBaseline &amp;&amp; (highObservation || deepReflection)) {</span>
+    const sleepText = <span class="cstat-no" title="statement not covered" >hasSleepData ? `sleep averaged ${ctx.avgSleep.toFixed(1)} hours` : 'sleep data was lighter';</span>
+<span class="cstat-no" title="statement not covered" >    return `This week carried a low, active kind of processing. Your mood averaged ${ctx.avgMood.toFixed(1)}, ${sleepText}, and you still returned with ${observationText}. That mix usually means you were not disappearing from yourself. You were trying to stay close enough to understand what was happening. The shape of the week looks tired, emotionally active, and still trying to understand itself.`;</span>
+  }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.moodTrend === 'rising' &amp;&amp; hasSleepData &amp;&amp; ctx.avgSleep &gt;= 7) {</span>
+<span class="cstat-no" title="statement not covered" >    return `This week looked like recovery becoming easier to track. Your mood rose to ${ctx.avgMood.toFixed(1)} while sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and the archive caught ${observationText}. That combination usually means support was not just helping in theory. It was landing in your body and becoming visible in your emotional baseline.`;</span>
+  }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if ((highObservation || deepReflection) &amp;&amp; hasMoodData) {</span>
+    const sleepClause = <span class="cstat-no" title="statement not covered" >hasSleepData ? `Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, ` : '';</span>
+<span class="cstat-no" title="statement not covered" >    return `${sleepClause}your mood averaged ${ctx.avgMood.toFixed(1)} this week, with ${observationText}. The important part is not the number by itself. It is that the week was observed closely enough to have a shape. MySky reads that as a week you stayed in contact with yourself, even if the emotional tone was quiet or mixed.`;</span>
+  }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  return null;</span>
+}
+&nbsp;
+/**
+ * Generate a deeply personal weekly synthesis narrative
+ */
+<span class="cstat-no" title="statement not covered" >export function <span class="fstat-no" title="function not covered" >g</span>enerateWeeklySynthesis(</span>ctx: WeeklySynthesisContext): string {
+  const attunedNarrative = <span class="cstat-no" title="statement not covered" >buildAttunedWeeklyNarrative(ctx);</span>
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (attunedNarrative) <span class="cstat-no" title="statement not covered" >return attunedNarrative;</span></span>
+&nbsp;
+  // Select narrative based on data patterns
+  const narratives = <span class="cstat-no" title="statement not covered" >selectNarratives(ctx);</span>
+  
+  // Pick one based on week number for consistency within the week
+  const index = <span class="cstat-no" title="statement not covered" >ctx.weekNumber % narratives.length;</span>
+<span class="cstat-no" title="statement not covered" >  return narratives[index];</span>
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >selectNarratives(</span>ctx: WeeklySynthesisContext): string[] {
+  const narratives: string[] = <span class="cstat-no" title="statement not covered" >[];</span>
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MOOD RISING + GOOD SLEEP (50 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.moodTrend === 'rising' &amp;&amp; ctx.avgSleep &gt;= 7) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `Your mood climbed this week, averaging ${ctx.avgMood.toFixed(1)}, and your sleep held steady at ${ctx.avgSleep.toFixed(1)} hours. That combination isn't random — when your body gets what it needs, your emotional weather shifts. The ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} you wrote captured this lift in real time, giving you a record of what rising feels like from the inside.`,
+      
+      `This week brought ${ctx.highDays} brighter days, and your sleep averaged ${ctx.avgSleep.toFixed(1)} hours — enough to let your system recover and your mood rise to ${ctx.avgMood.toFixed(1)}. The ${ctx.journalCount} times you reflected in writing helped anchor these shifts, making them easier to recognize and trust. Something in your rhythm is working.`,
+      
+      `Your mood rose to ${ctx.avgMood.toFixed(1)} this week while sleep stayed generous at ${ctx.avgSleep.toFixed(1)} hours. That's not coincidence — it's your body and mind finding a steadier baseline together. The ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} you left behind ${ctx.journalCount === 1 ? 'marks' : 'mark'} the path of this shift, showing you what support looks like when it's actually working.`,
+      
+      `With ${ctx.avgSleep.toFixed(1)} hours of sleep on average, your mood climbed to ${ctx.avgMood.toFixed(1)} — a clear signal that rest is doing its job. You logged ${ctx.highDays} elevated days this week, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} the texture of that lift. This is what recovery looks like when you give it room.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week, up from where you've been, and sleep held at ${ctx.avgSleep.toFixed(1)} hours. That pairing suggests your nervous system is finding more ease. The ${ctx.journalCount} reflections you wrote captured the feeling of this shift — not dramatic, but real. Trust what's building here.`,
+      
+      `Sleep averaged ${ctx.avgSleep.toFixed(1)} hours this week, and your mood rose to ${ctx.avgMood.toFixed(1)}. The ${ctx.highDays} brighter days you logged weren't flukes — they're what happens when your body gets consistent rest. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} documented this climb, giving you proof that small changes compound.`,
+      
+      `This week your mood lifted to ${ctx.avgMood.toFixed(1)} while sleep stayed steady at ${ctx.avgSleep.toFixed(1)} hours. That's the kind of pairing that builds momentum — rest supporting mood, mood making rest easier. The ${ctx.journalCount} times you wrote about your day helped you see this pattern forming before it became obvious.`,
+      
+      `Your sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your mood climbed to ${ctx.avgMood.toFixed(1)} — a week where the basics worked in your favor. You had ${ctx.highDays} elevated days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what that felt like. This is what stability looks like when it's actually taking root.`,
+      
+      `With ${ctx.avgSleep.toFixed(1)} hours of sleep backing you, your mood rose to ${ctx.avgMood.toFixed(1)} this week. The ${ctx.highDays} brighter days you logged show what happens when your system gets what it needs. Your ${ctx.journalCount} written reflections tracked this shift, making it easier to recognize and repeat.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — higher than recent weeks — and sleep held at ${ctx.avgSleep.toFixed(1)} hours. That's not luck; it's your body and mind working together. The ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry you left' : 'entries you left'} ${ctx.journalCount === 1 ? 'marks' : 'mark'} the path of this climb, showing you what rising actually feels like.`,
+      
+      `Sleep stayed generous at ${ctx.avgSleep.toFixed(1)} hours this week, and your mood climbed to ${ctx.avgMood.toFixed(1)}. You logged ${ctx.highDays} elevated days — evidence that rest is doing more than just preventing exhaustion. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} captured the texture of this lift, giving you a record of what support looks like.`,
+      
+      `This week brought ${ctx.avgSleep.toFixed(1)} hours of sleep on average and a mood lift to ${ctx.avgMood.toFixed(1)}. The ${ctx.highDays} brighter days you experienced weren't random — they're what happens when your nervous system gets consistent care. Your ${ctx.journalCount} written reflections documented this shift in real time.`,
+      
+      `Your mood rose to ${ctx.avgMood.toFixed(1)} while sleep averaged ${ctx.avgSleep.toFixed(1)} hours — a week where the fundamentals aligned. You had ${ctx.highDays} elevated days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that climb felt like from the inside. This is the kind of pattern worth protecting.`,
+      
+      `With ${ctx.avgSleep.toFixed(1)} hours of sleep supporting you, your mood climbed to ${ctx.avgMood.toFixed(1)} this week. The ${ctx.highDays} brighter days you logged show your system responding to consistent rest. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} captured this shift, making it easier to trust and repeat.`,
+      
+      `Your sleep held at ${ctx.avgSleep.toFixed(1)} hours this week, and your mood rose to ${ctx.avgMood.toFixed(1)} — a clear signal that rest is working. You logged ${ctx.highDays} elevated days, and your ${ctx.journalCount} written reflections tracked the feeling of this lift. Something in your rhythm is finding its groove.`,
+      
+      `This week your mood averaged ${ctx.avgMood.toFixed(1)}, lifted by ${ctx.avgSleep.toFixed(1)} hours of sleep. The ${ctx.highDays} brighter days you experienced show what happens when your body gets what it needs. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} this climb, giving you proof that small shifts matter.`,
+      
+      `Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your mood climbed to ${ctx.avgMood.toFixed(1)} — a week where rest and emotional weather moved together. You had ${ctx.highDays} elevated days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what that felt like. This is what recovery looks like when it's actually working.`,
+      
+      `Your mood rose to ${ctx.avgMood.toFixed(1)} this week while sleep stayed steady at ${ctx.avgSleep.toFixed(1)} hours. That pairing isn't accidental — it's your system finding a steadier baseline. The ${ctx.journalCount} times you reflected in writing helped you see this pattern forming before it became obvious.`,
+      
+      `With ${ctx.avgSleep.toFixed(1)} hours of sleep backing you, your mood lifted to ${ctx.avgMood.toFixed(1)} this week. You logged ${ctx.highDays} brighter days — evidence that consistent rest compounds. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} documented this shift, making it easier to recognize what support actually looks like.`,
+      
+      `Your sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your mood climbed to ${ctx.avgMood.toFixed(1)} — a week where the basics worked in your favor. The ${ctx.highDays} elevated days you experienced show your nervous system responding to care. Your ${ctx.journalCount} written reflections captured this lift in real time.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MOOD FALLING + POOR SLEEP (50 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.moodTrend === 'falling' &amp;&amp; ctx.avgSleep &lt; 6.5) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `Your mood softened to ${ctx.avgMood.toFixed(1)} this week, and sleep averaged just ${ctx.avgSleep.toFixed(1)} hours. That's not enough for your system to fully recover, and the ${ctx.lowDays} heavier days you logged show the cost. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} captured what this deficit feels like — not dramatic, but real. Rest might be the most direct path back.`,
+      
+      `This week brought ${ctx.lowDays} heavier days and a mood average of ${ctx.avgMood.toFixed(1)}, while sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours. Your body is carrying a deficit, and your ${ctx.journalCount} written reflections show the texture of that strain. Adding even 30 minutes of sleep could shift how the next week feels.`,
+      
+      `Your mood dropped to ${ctx.avgMood.toFixed(1)} while sleep averaged ${ctx.avgSleep.toFixed(1)} hours — not enough for your nervous system to reset. You logged ${ctx.lowDays} difficult days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that feels like from the inside. Sleep might be the lever that changes everything else.`,
+      
+      `Sleep averaged just ${ctx.avgSleep.toFixed(1)} hours this week, and your mood fell to ${ctx.avgMood.toFixed(1)}. The ${ctx.lowDays} heavier days you experienced aren't failures — they're signals that your body needs more recovery time. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} this strain, making it easier to see what needs attention.`,
+      
+      `Your mood softened to ${ctx.avgMood.toFixed(1)} this week while sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours. That pairing suggests your system is running on fumes. You had ${ctx.lowDays} difficult days, and your ${ctx.journalCount} written reflections captured the weight of that deficit. Rest isn't optional — it's foundational.`,
+      
+      `This week your mood averaged ${ctx.avgMood.toFixed(1)}, down from where you've been, and sleep held at just ${ctx.avgSleep.toFixed(1)} hours. Your body is asking for more recovery time, and the ${ctx.lowDays} heavier days you logged show what happens when it doesn't get it. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} captured this strain in real time.`,
+      
+      `With only ${ctx.avgSleep.toFixed(1)} hours of sleep on average, your mood dropped to ${ctx.avgMood.toFixed(1)} this week. You logged ${ctx.lowDays} difficult days — evidence that sleep debt compounds emotionally. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that deficit feels like, making it easier to prioritize rest.`,
+      
+      `Your sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your mood fell to ${ctx.avgMood.toFixed(1)} — a week where your system didn't get what it needed. The ${ctx.lowDays} heavier days you experienced show the cost of that deficit. Your ${ctx.journalCount} written reflections documented this strain, giving you clarity on what needs to change.`,
+      
+      `Your mood softened to ${ctx.avgMood.toFixed(1)} while sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours this week. That's not enough for your nervous system to fully reset, and the ${ctx.lowDays} difficult days you logged show the impact. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what this feels like — rest might be the most direct path forward.`,
+      
+      `Sleep averaged just ${ctx.avgSleep.toFixed(1)} hours this week, and your mood dropped to ${ctx.avgMood.toFixed(1)}. You had ${ctx.lowDays} heavier days — not random, but a clear signal that your body needs more recovery time. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} documented this deficit, making it easier to see what's asking for attention.`,
+      
+      `Your mood fell to ${ctx.avgMood.toFixed(1)} this week while sleep held at ${ctx.avgSleep.toFixed(1)} hours — not enough for your system to catch up. The ${ctx.lowDays} difficult days you logged show what sleep debt looks like emotionally. Your ${ctx.journalCount} written reflections captured this strain, giving you a record of what needs to shift.`,
+      
+      `This week brought ${ctx.avgSleep.toFixed(1)} hours of sleep on average and a mood drop to ${ctx.avgMood.toFixed(1)}. Your body is carrying a deficit, and the ${ctx.lowDays} heavier days you experienced show the cost. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that feels like — rest isn't optional, it's foundational.`,
+      
+      `With only ${ctx.avgSleep.toFixed(1)} hours of sleep backing you, your mood softened to ${ctx.avgMood.toFixed(1)} this week. You logged ${ctx.lowDays} difficult days — evidence that your nervous system needs more recovery time. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} this strain in real time.`,
+      
+      `Your sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your mood dropped to ${ctx.avgMood.toFixed(1)} — a week where rest didn't keep pace with demand. The ${ctx.lowDays} heavier days you experienced show what that deficit costs. Your ${ctx.journalCount} written reflections captured this strain, making it easier to prioritize what matters.`,
+      
+      `Your mood fell to ${ctx.avgMood.toFixed(1)} while sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours this week. That pairing suggests your system is running on empty. You had ${ctx.lowDays} difficult days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what that feels like. Adding even 30 minutes of sleep could shift everything.`,
+      
+      `Sleep averaged just ${ctx.avgSleep.toFixed(1)} hours this week, and your mood softened to ${ctx.avgMood.toFixed(1)}. The ${ctx.lowDays} heavier days you logged aren't failures — they're signals that your body needs more care. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} documented this deficit, giving you clarity on what needs attention.`,
+      
+      `Your mood dropped to ${ctx.avgMood.toFixed(1)} this week while sleep held at ${ctx.avgSleep.toFixed(1)} hours — not enough for your nervous system to reset. You logged ${ctx.lowDays} difficult days, and your ${ctx.journalCount} written reflections show what that strain feels like. Rest might be the lever that changes everything else.`,
+      
+      `This week your mood averaged ${ctx.avgMood.toFixed(1)}, down from recent weeks, and sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours. Your body is asking for more recovery time, and the ${ctx.lowDays} heavier days you experienced show what happens when it doesn't get it. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} this in real time.`,
+      
+      `With ${ctx.avgSleep.toFixed(1)} hours of sleep on average, your mood fell to ${ctx.avgMood.toFixed(1)} this week. You had ${ctx.lowDays} difficult days — evidence that sleep debt compounds emotionally. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that deficit feels like, making it easier to see what needs to change.`,
+      
+      `Your sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your mood softened to ${ctx.avgMood.toFixed(1)} — a week where your system didn't get what it needed. The ${ctx.lowDays} heavier days you logged show the cost of that deficit. Your ${ctx.journalCount} written reflections documented this strain, giving you a record of what's asking for attention.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VOLATILE MOOD + MIXED SLEEP (50 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.moodTrend === 'volatile' &amp;&amp; ctx.highDays &gt; 0 &amp;&amp; ctx.lowDays &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `Your mood swung between ${ctx.moodRange.low.toFixed(1)} and ${ctx.moodRange.high.toFixed(1)} this week — ${ctx.highDays} brighter days and ${ctx.lowDays} heavier ones. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, which may not be enough to smooth those swings. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} the texture of this volatility, showing you what instability feels like from the inside.`,
+      
+      `This week brought ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a wide emotional range. Your mood averaged ${ctx.avgMood.toFixed(1)}, but that number hides the swings. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} written reflections show how those highs and lows felt in real time. Consistency in rest might help stabilize what's shifting.`,
+      
+      `Your mood ranged from ${ctx.moodRange.low.toFixed(1)} to ${ctx.moodRange.high.toFixed(1)} this week — ${ctx.highDays} brighter days mixed with ${ctx.lowDays} heavier ones. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that volatility feels like. When mood swings this much, rest and routine become even more important.`,
+      
+      `This week you logged ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a mood range that suggests something underneath is shifting. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} the texture of these swings. Volatility isn't failure — it's information about what your system needs.`,
+      
+      `Your mood swung between ${ctx.moodRange.low.toFixed(1)} and ${ctx.moodRange.high.toFixed(1)} this week, with ${ctx.highDays} brighter days and ${ctx.lowDays} heavier ones. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} written reflections captured what that range feels like. When emotions move this much, consistency in the basics can help anchor you.`,
+      
+      `This week brought ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a wide emotional range averaging ${ctx.avgMood.toFixed(1)}. Sleep stayed at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} the texture of these swings. Volatility often signals that something underneath is asking for attention or more care.`,
+      
+      `Your mood ranged from ${ctx.moodRange.low.toFixed(1)} to ${ctx.moodRange.high.toFixed(1)} this week — ${ctx.highDays} brighter days mixed with ${ctx.lowDays} heavier ones. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what that volatility feels like from the inside. Rest and routine might help smooth what's shifting.`,
+      
+      `This week you logged ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a mood range that suggests your system is processing something. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} written reflections documented these swings in real time. When emotions move this much, the basics become even more important.`,
+      
+      `Your mood swung between ${ctx.moodRange.low.toFixed(1)} and ${ctx.moodRange.high.toFixed(1)} this week, with ${ctx.highDays} brighter days and ${ctx.lowDays} heavier ones. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that range feels like. Volatility isn't random — it's your system telling you something.`,
+      
+      `This week brought ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a wide emotional range. Your mood averaged ${ctx.avgMood.toFixed(1)}, but that hides the swings. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} the texture of this volatility. Consistency in rest might help stabilize what's shifting.`,
+      
+      `Your mood ranged from ${ctx.moodRange.low.toFixed(1)} to ${ctx.moodRange.high.toFixed(1)} this week — ${ctx.highDays} brighter days mixed with ${ctx.lowDays} heavier ones. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} written reflections captured what that volatility feels like. When mood swings this much, the basics become your anchor.`,
+      
+      `This week you logged ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a mood range that suggests something underneath is processing. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} these swings in real time. Volatility often signals that your system needs more consistency or care.`,
+      
+      `Your mood swung between ${ctx.moodRange.low.toFixed(1)} and ${ctx.moodRange.high.toFixed(1)} this week, with ${ctx.highDays} brighter days and ${ctx.lowDays} heavier ones. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that range feels like from the inside. When emotions move this much, rest and routine become even more important.`,
+      
+      `This week brought ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a wide emotional range averaging ${ctx.avgMood.toFixed(1)}. Sleep stayed at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} written reflections documented the texture of these swings. Volatility isn't failure — it's information about what your system needs.`,
+      
+      `Your mood ranged from ${ctx.moodRange.low.toFixed(1)} to ${ctx.moodRange.high.toFixed(1)} this week — ${ctx.highDays} brighter days mixed with ${ctx.lowDays} heavier ones. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} what that volatility feels like. Consistency in the basics can help anchor you when emotions swing.`,
+      
+      `This week you logged ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a mood range that suggests your system is processing something. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} these swings in real time. When mood moves this much, rest becomes even more foundational.`,
+      
+      `Your mood swung between ${ctx.moodRange.low.toFixed(1)} and ${ctx.moodRange.high.toFixed(1)} this week, with ${ctx.highDays} brighter days and ${ctx.lowDays} heavier ones. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} written reflections show what that range feels like. Volatility often signals that something underneath is asking for attention.`,
+      
+      `This week brought ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a wide emotional range. Your mood averaged ${ctx.avgMood.toFixed(1)}, but that number hides the swings. Sleep stayed at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} the texture of this volatility. Rest and routine might help smooth what's shifting.`,
+      
+      `Your mood ranged from ${ctx.moodRange.low.toFixed(1)} to ${ctx.moodRange.high.toFixed(1)} this week — ${ctx.highDays} brighter days mixed with ${ctx.lowDays} heavier ones. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} what that volatility feels like from the inside. When emotions move this much, consistency becomes your anchor.`,
+      
+      `This week you logged ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a mood range that suggests something underneath is shifting. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} written reflections captured these swings in real time. Volatility isn't random — it's your system telling you something needs attention.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STABLE MOOD + CONSISTENT SLEEP (50 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.moodTrend === 'stable' &amp;&amp; ctx.avgMood &gt;= 5 &amp;&amp; ctx.avgMood &lt;= 7.5) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `Your mood held steady at ${ctx.avgMood.toFixed(1)} this week, and sleep averaged ${ctx.avgSleep.toFixed(1)} hours — a week of quiet consistency. You logged ${ctx.checkIns.length} check-ins and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'}, building a record of what stability actually feels like. This kind of steadiness is rare and worth protecting.`,
+      
+      `This week brought consistency: mood at ${ctx.avgMood.toFixed(1)}, sleep at ${ctx.avgSleep.toFixed(1)} hours, and ${ctx.journalCount} written reflections. No dramatic swings, just a steady baseline. Your ${ctx.checkIns.length} check-ins show what it looks like when your system finds its rhythm. This is the foundation that makes everything else possible.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — not high, not low, just steady. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what this consistency feels like. Stability isn't boring — it's the ground you build from. Your ${ctx.checkIns.length} check-ins document this rare steadiness.`,
+      
+      `This week you maintained a mood average of ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep — a week where nothing dramatic happened, and that's actually valuable. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins show what it looks like when your system isn't fighting itself. This is what sustainable feels like.`,
+      
+      `Your mood held at ${ctx.avgMood.toFixed(1)} this week while sleep stayed consistent at ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.checkIns.length} check-ins and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} — building a record of what steady actually feels like. This kind of consistency is the foundation for everything else.`,
+      
+      `This week brought quiet stability: mood at ${ctx.avgMood.toFixed(1)}, sleep at ${ctx.avgSleep.toFixed(1)} hours, and ${ctx.journalCount} written reflections. No dramatic highs or lows, just a steady baseline. Your ${ctx.checkIns.length} check-ins show what it looks like when your system finds its groove. This is worth protecting.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — steady, not swinging. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} what this consistency feels like from the inside. Stability isn't dramatic, but it's the ground everything else builds from. Your ${ctx.checkIns.length} check-ins capture this rare steadiness.`,
+      
+      `This week you maintained a mood average of ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep — a week of quiet consistency. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins show what it looks like when your system isn't fighting itself. This is what sustainable actually feels like.`,
+      
+      `Your mood held at ${ctx.avgMood.toFixed(1)} this week while sleep stayed at ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.checkIns.length} check-ins and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} — building a record of what steady feels like. This kind of consistency is rare and worth noticing.`,
+      
+      `This week brought stability: mood at ${ctx.avgMood.toFixed(1)}, sleep at ${ctx.avgSleep.toFixed(1)} hours, and ${ctx.journalCount} written reflections. No dramatic swings, just a steady baseline. Your ${ctx.checkIns.length} check-ins show what it looks like when your system finds its rhythm. This is the foundation that makes growth possible.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — not high, not low, just consistent. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what this steadiness feels like. Stability isn't boring — it's the ground you build from. Your ${ctx.checkIns.length} check-ins document this.`,
+      
+      `This week you maintained a mood average of ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep — a week where nothing dramatic happened, and that's actually valuable. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins show what it looks like when your system isn't in crisis mode. This is what sustainable feels like.`,
+      
+      `Your mood held at ${ctx.avgMood.toFixed(1)} this week while sleep stayed consistent at ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.checkIns.length} check-ins and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} — building a record of what steady actually feels like. This kind of consistency is the foundation for everything else.`,
+      
+      `This week brought quiet stability: mood at ${ctx.avgMood.toFixed(1)}, sleep at ${ctx.avgSleep.toFixed(1)} hours, and ${ctx.journalCount} written reflections. No dramatic highs or lows, just a steady baseline. Your ${ctx.checkIns.length} check-ins show what it looks like when your system finds its groove. This is rare and worth protecting.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — steady, not swinging. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} what this consistency feels like from the inside. Stability isn't dramatic, but it's the ground everything else builds from.`,
+      
+      `This week you maintained a mood average of ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep — a week of quiet consistency. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins show what it looks like when your system isn't fighting itself. This is what sustainable actually feels like.`,
+      
+      `Your mood held at ${ctx.avgMood.toFixed(1)} this week while sleep stayed at ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.checkIns.length} check-ins and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} — building a record of what steady feels like. This kind of consistency is rare and worth noticing.`,
+      
+      `This week brought stability: mood at ${ctx.avgMood.toFixed(1)}, sleep at ${ctx.avgSleep.toFixed(1)} hours, and ${ctx.journalCount} written reflections. No dramatic swings, just a steady baseline. Your ${ctx.checkIns.length} check-ins show what it looks like when your system finds its rhythm.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — not high, not low, just consistent. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what this steadiness feels like. Stability isn't boring — it's the ground you build from.`,
+      
+      `This week you maintained a mood average of ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep — a week where nothing dramatic happened, and that's actually valuable. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins show what it looks like when your system isn't in crisis mode.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HIGH MOOD + GOOD SLEEP + DREAMS (50 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.avgMood &gt;= 7 &amp;&amp; ctx.avgSleep &gt;= 7 &amp;&amp; ctx.dreamCount &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — elevated and steady. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and you recorded ${ctx.dreamCount} dream${ctx.dreamCount === 1 ? '' : 's'}, keeping your subconscious processing visible. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} and ${ctx.checkIns.length} check-ins show what it looks like when rest, mood, and reflection all align. This is the kind of week that builds momentum.`,
+      
+      `This week brought ${ctx.avgMood.toFixed(1)} average mood, ${ctx.avgSleep.toFixed(1)} hours of sleep, and ${ctx.dreamCount} recorded dream${ctx.dreamCount === 1 ? '' : 's'} — a week where multiple domains supported each other. Your ${ctx.journalCount} written reflections captured the texture of this alignment. When rest, mood, and subconscious processing all work together, the effect compounds.`,
+      
+      `Your mood stayed elevated at ${ctx.avgMood.toFixed(1)} while sleep averaged ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.dreamCount} dream${ctx.dreamCount === 1 ? '' : 's'} and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} — building a multi-layered record of what thriving actually feels like. Your ${ctx.checkIns.length} check-ins show this alignment in real time.`,
+      
+      `This week you maintained a ${ctx.avgMood.toFixed(1)} mood average with ${ctx.avgSleep.toFixed(1)} hours of sleep and ${ctx.dreamCount} recorded dream${ctx.dreamCount === 1 ? '' : 's'}. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins document what it looks like when rest, mood, and subconscious processing all support each other. This is the kind of week worth studying and repeating.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — elevated and consistent. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and you recorded ${ctx.dreamCount} dream${ctx.dreamCount === 1 ? '' : 's'}, keeping your subconscious patterns visible. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} captured what this alignment feels like from the inside. When multiple domains work together, the effect is more than additive.`,
+      
+      `This week brought ${ctx.avgMood.toFixed(1)} average mood, ${ctx.avgSleep.toFixed(1)} hours of sleep, and ${ctx.dreamCount} recorded dream${ctx.dreamCount === 1 ? '' : 's'} — a week where rest, mood, and reflection all aligned. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins show what thriving actually looks like. This is the kind of pattern worth protecting.`,
+      
+      `Your mood stayed elevated at ${ctx.avgMood.toFixed(1)} while sleep averaged ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.dreamCount} dream${ctx.dreamCount === 1 ? '' : 's'} and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} — building a record of what it looks like when everything works together. Your ${ctx.checkIns.length} check-ins document this rare alignment.`,
+      
+      `This week you maintained a ${ctx.avgMood.toFixed(1)} mood average with ${ctx.avgSleep.toFixed(1)} hours of sleep and ${ctx.dreamCount} recorded dream${ctx.dreamCount === 1 ? '' : 's'}. Your ${ctx.journalCount} written reflections show what it feels like when rest, mood, and subconscious processing all support each other. This is the kind of week that builds real momentum.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — elevated and steady. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and you recorded ${ctx.dreamCount} dream${ctx.dreamCount === 1 ? '' : 's'}, keeping your subconscious visible. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} and ${ctx.checkIns.length} check-ins show what alignment actually looks like. When multiple domains work together, the effect compounds.`,
+      
+      `This week brought ${ctx.avgMood.toFixed(1)} average mood, ${ctx.avgSleep.toFixed(1)} hours of sleep, and ${ctx.dreamCount} recorded dream${ctx.dreamCount === 1 ? '' : 's'} — a week where rest, mood, and reflection all aligned. Your ${ctx.journalCount} written reflections captured the texture of this. When everything works together, the effect is more than additive.`,
+      
+      `Your mood stayed elevated at ${ctx.avgMood.toFixed(1)} while sleep averaged ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.dreamCount} dream${ctx.dreamCount === 1 ? '' : 's'} and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} — building a multi-layered record of what thriving feels like. Your ${ctx.checkIns.length} check-ins show this alignment in real time.`,
+      
+      `This week you maintained a ${ctx.avgMood.toFixed(1)} mood average with ${ctx.avgSleep.toFixed(1)} hours of sleep and ${ctx.dreamCount} recorded dream${ctx.dreamCount === 1 ? '' : 's'}. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins document what it looks like when rest, mood, and subconscious processing all support each other. This is worth studying and repeating.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — elevated and consistent. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and you recorded ${ctx.dreamCount} dream${ctx.dreamCount === 1 ? '' : 's'}, keeping your subconscious patterns visible. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} captured what this alignment feels like. When multiple domains work together, the effect compounds.`,
+      
+      `This week brought ${ctx.avgMood.toFixed(1)} average mood, ${ctx.avgSleep.toFixed(1)} hours of sleep, and ${ctx.dreamCount} recorded dream${ctx.dreamCount === 1 ? '' : 's'} — a week where rest, mood, and reflection all aligned. Your ${ctx.journalCount} written reflections show what thriving actually looks like. This is the kind of pattern worth protecting.`,
+      
+      `Your mood stayed elevated at ${ctx.avgMood.toFixed(1)} while sleep averaged ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.dreamCount} dream${ctx.dreamCount === 1 ? '' : 's'} and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} — building a record of what it looks like when everything works together. Your ${ctx.checkIns.length} check-ins document this.`,
+      
+      `This week you maintained a ${ctx.avgMood.toFixed(1)} mood average with ${ctx.avgSleep.toFixed(1)} hours of sleep and ${ctx.dreamCount} recorded dream${ctx.dreamCount === 1 ? '' : 's'}. Your ${ctx.journalCount} written reflections show what it feels like when rest, mood, and subconscious processing all support each other. This builds real momentum.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — elevated and steady. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and you recorded ${ctx.dreamCount} dream${ctx.dreamCount === 1 ? '' : 's'}, keeping your subconscious visible. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} and ${ctx.checkIns.length} check-ins show what alignment looks like.`,
+      
+      `This week brought ${ctx.avgMood.toFixed(1)} average mood, ${ctx.avgSleep.toFixed(1)} hours of sleep, and ${ctx.dreamCount} recorded dream${ctx.dreamCount === 1 ? '' : 's'} — a week where rest, mood, and reflection all aligned. Your ${ctx.journalCount} written reflections captured the texture of this. When everything works together, the effect is more than additive.`,
+      
+      `Your mood stayed elevated at ${ctx.avgMood.toFixed(1)} while sleep averaged ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.dreamCount} dream${ctx.dreamCount === 1 ? '' : 's'} and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} — building a multi-layered record of what thriving feels like. Your ${ctx.checkIns.length} check-ins show this in real time.`,
+      
+      `This week you maintained a ${ctx.avgMood.toFixed(1)} mood average with ${ctx.avgSleep.toFixed(1)} hours of sleep and ${ctx.dreamCount} recorded dream${ctx.dreamCount === 1 ? '' : 's'}. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins document what it looks like when rest, mood, and subconscious processing all support each other.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOW MOOD + GOOD SLEEP (Recovery in Progress - 50 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.avgMood &lt; 5.5 &amp;&amp; ctx.avgSleep &gt;= 7) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — lower than you'd like — but sleep held steady at ${ctx.avgSleep.toFixed(1)} hours. That's significant. You're giving your system what it needs to recover, even when it's hard. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} this difficult stretch, and that honesty is valuable. Rest is doing its work, even if you can't feel it yet.`,
+      
+      `This week brought ${ctx.lowDays} heavier days and a mood average of ${ctx.avgMood.toFixed(1)}, but you maintained ${ctx.avgSleep.toFixed(1)} hours of sleep. That's not nothing — you're prioritizing recovery even when it's hard to see the payoff. Your ${ctx.journalCount} written reflections show you're staying present through difficulty. The foundation is there; the lift will follow.`,
+      
+      `Your mood stayed low at ${ctx.avgMood.toFixed(1)} this week, but sleep averaged ${ctx.avgSleep.toFixed(1)} hours — you're doing the right thing even when it doesn't feel like it's working yet. You logged ${ctx.lowDays} difficult days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what that feels like. Recovery isn't linear, but you're building the conditions for it.`,
+      
+      `With ${ctx.avgSleep.toFixed(1)} hours of sleep backing you, your mood still averaged ${ctx.avgMood.toFixed(1)} this week. That gap between rest and mood suggests something deeper is processing. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} and ${ctx.lowDays} difficult days show you're not avoiding what's hard. Sometimes the body heals before the emotions catch up.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — a heavier stretch — but you kept sleep at ${ctx.avgSleep.toFixed(1)} hours. That consistency matters more than you might realize. Your ${ctx.journalCount} written reflections document this difficult period, giving you a record of what it takes to keep going when things are hard. You're doing the work.`,
+      
+      `Sleep stayed generous at ${ctx.avgSleep.toFixed(1)} hours this week, even as your mood held at ${ctx.avgMood.toFixed(1)}. You logged ${ctx.lowDays} heavier days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} you're staying present through difficulty. Rest is the foundation; the emotional shift will follow when your system is ready.`,
+      
+      `This week your mood averaged ${ctx.avgMood.toFixed(1)} while sleep stayed steady at ${ctx.avgSleep.toFixed(1)} hours. That pairing suggests you're doing what you can, even when it doesn't feel like enough. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} and ${ctx.lowDays} difficult days show real honesty. Recovery takes time, but you're building the conditions for it.`,
+      
+      `Your sleep averaged ${ctx.avgSleep.toFixed(1)} hours, but your mood stayed low at ${ctx.avgMood.toFixed(1)} — a week where rest didn't immediately translate to relief. You had ${ctx.lowDays} heavier days, and your ${ctx.journalCount} written reflections captured what that feels like. Sometimes the body needs to catch up before the emotions can shift. You're doing what matters.`,
+      
+      `With ${ctx.avgSleep.toFixed(1)} hours of sleep supporting you, your mood still averaged ${ctx.avgMood.toFixed(1)} this week. That gap is information — something deeper is asking for time or attention. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} documented this stretch, and that honesty is part of the healing. Keep going.`,
+      
+      `Your mood held at ${ctx.avgMood.toFixed(1)} this week — lower than you'd like — but sleep stayed consistent at ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.lowDays} difficult days, and your ${ctx.journalCount} written reflections show you're not avoiding what's hard. Rest is doing its work beneath the surface, even when you can't feel it yet.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HIGH MOOD + POOR SLEEP (Unsustainable - 50 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.avgMood &gt;= 7 &amp;&amp; ctx.avgSleep &lt; 6.5) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — elevated and positive — but sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours. That pairing can feel good in the moment, but it's not sustainable. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} this high-energy stretch. Adding rest now could help you maintain this lift instead of crashing later.`,
+      
+      `This week brought ${ctx.highDays} brighter days and a mood average of ${ctx.avgMood.toFixed(1)}, but sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours. You're running on momentum, and it's working — for now. Your ${ctx.journalCount} written reflections show the texture of this energy. The question is whether you can sustain it without more rest.`,
+      
+      `Your mood stayed elevated at ${ctx.avgMood.toFixed(1)} while sleep averaged just ${ctx.avgSleep.toFixed(1)} hours. That's the kind of pairing that feels productive until it doesn't. You logged ${ctx.highDays} positive days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} you're riding a wave. Adding sleep now could help you stay on it longer.`,
+      
+      `With only ${ctx.avgSleep.toFixed(1)} hours of sleep, your mood still climbed to ${ctx.avgMood.toFixed(1)} this week. That suggests you're running on adrenaline, excitement, or momentum — all of which eventually run out. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} documented this high-energy period. Rest might be the thing that lets you keep going.`,
+      
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — a positive stretch — but sleep held at just ${ctx.avgSleep.toFixed(1)} hours. That gap between mood and rest suggests you're borrowing energy from somewhere. Your ${ctx.journalCount} written reflections captured this lift. The challenge is making it sustainable before your system asks for payback.`,
+      
+      `Sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours this week, even as your mood climbed to ${ctx.avgMood.toFixed(1)}. You logged ${ctx.highDays} elevated days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} you're in a productive flow. But momentum without rest eventually becomes depletion. Adding sleep now could extend this positive stretch.`,
+      
+      `This week your mood lifted to ${ctx.avgMood.toFixed(1)} while sleep stayed at ${ctx.avgSleep.toFixed(1)} hours. That pairing can feel like you're finally getting things done, but it's not sustainable long-term. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} and ${ctx.highDays} positive days show real momentum. Rest is what lets you keep it.`,
+      
+      `Your sleep averaged ${ctx.avgSleep.toFixed(1)} hours, but your mood stayed elevated at ${ctx.avgMood.toFixed(1)} — a week where you felt good despite short rest. You had ${ctx.highDays} brighter days, and your ${ctx.journalCount} written reflections captured that energy. The question is how long you can maintain this before your body asks for recovery time.`,
+      
+      `With ${ctx.avgSleep.toFixed(1)} hours of sleep, your mood still averaged ${ctx.avgMood.toFixed(1)} this week. That's impressive, but it's also a warning sign — you're running on something other than rest. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} this high-energy stretch. Adding sleep now could help you sustain it instead of crashing later.`,
+      
+      `Your mood held at ${ctx.avgMood.toFixed(1)} this week — elevated and positive — but sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.highDays} good days, and your ${ctx.journalCount} written reflections show you're in a flow state. But flow without rest eventually becomes burnout. Protect this momentum by adding recovery time.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HIGH JOURNALING FREQUENCY (Reflection-Heavy Week - 30 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.journalCount &gt;= 5) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `You wrote ${ctx.journalCount} journal entries this week — more than usual. That level of reflection suggests something is processing, and you're giving it space. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. The act of writing itself is part of the work, helping you see patterns before they become overwhelming.`,
+      
+      `This week brought ${ctx.journalCount} written reflections — a significant amount of processing. Your mood averaged ${ctx.avgMood.toFixed(1)}, and sleep held at ${ctx.avgSleep.toFixed(1)} hours. When you write this much, you're not just recording — you're actively making sense of what's happening. That kind of engagement compounds over time.`,
+      
+      `You logged ${ctx.journalCount} journal entries this week, which is notable. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. High journaling frequency often signals that something important is shifting or asking for attention. The fact that you're showing up for it matters more than you might realize.`,
+      
+      `This week you wrote ${ctx.journalCount} journal entries — more reflection than usual. Your mood held at ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. That level of engagement suggests you're working through something real. Writing is how you make the invisible visible, and you're doing that work consistently.`,
+      
+      `You reflected in writing ${ctx.journalCount} times this week — a high level of engagement. Your mood averaged ${ctx.avgMood.toFixed(1)}, and sleep stayed at ${ctx.avgSleep.toFixed(1)} hours. When journaling frequency increases, it's usually because something underneath is asking to be understood. You're giving it the attention it needs.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MINIMAL DATA (Early Archive - 30 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.checkIns.length &lt;= 3 &amp;&amp; ctx.journalCount === 0) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `You logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week with an average mood of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours. It's early, but you're building something. Each signal you leave makes the next week's reflection more meaningful. Keep going — the patterns will emerge.`,
+      
+      `This week brought ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} and a mood average of ${ctx.avgMood.toFixed(1)}. Sleep held at ${ctx.avgSleep.toFixed(1)} hours. You're in the early stages of building your archive. Right now it feels like data, but soon it will start showing you patterns you couldn't see before. Every entry matters.`,
+      
+      `You've logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week — a starting point. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. The first few weeks are about building the habit, not finding perfect insights. You're doing exactly what you need to do. The depth will come.`,
+      
+      `This week you checked in ${ctx.checkIns.length} time${ctx.checkIns.length === 1 ? '' : 's'}, averaging ${ctx.avgMood.toFixed(1)} mood and ${ctx.avgSleep.toFixed(1)} hours of sleep. It's early, but you're creating a foundation. Each signal you leave is a data point your future self will thank you for. Keep showing up — the patterns will reveal themselves.`,
+      
+      `You logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week with a mood average of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours. Right now you're building the archive that will eventually show you what you can't see yet. The first few weeks are about consistency, not perfection. You're on the right path.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DREAM-HEAVY WEEK (Subconscious Active - 30 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.dreamCount &gt;= 4) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `You recorded ${ctx.dreamCount} dreams this week — more than usual. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. High dream recall often signals that your subconscious is processing something significant. The fact that you're capturing these patterns gives you access to a layer most people never see.`,
+      
+      `This week brought ${ctx.dreamCount} recorded dreams alongside a mood average of ${ctx.avgMood.toFixed(1)} and ${ctx.avgSleep.toFixed(1)} hours of sleep. When dream frequency increases, it's usually because your subconscious is working through something important. You're keeping that processing visible, which makes it easier to understand what's shifting beneath the surface.`,
+      
+      `You logged ${ctx.dreamCount} dreams this week — a significant amount of subconscious activity. Your mood held at ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. Dreams are how your mind processes what your waking consciousness can't fully hold. The fact that you're recording them means you're paying attention to a layer most people ignore.`,
+      
+      `This week you captured ${ctx.dreamCount} dreams, which is notable. Your mood averaged ${ctx.avgMood.toFixed(1)}, and sleep stayed at ${ctx.avgSleep.toFixed(1)} hours. High dream recall often correlates with deeper processing — your subconscious is active, and you're giving it space to work. That level of engagement with your inner world is rare.`,
+      
+      `You recorded ${ctx.dreamCount} dreams this week alongside ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'}. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. When you track both dreams and waking reflections, you're building a multi-layered understanding of what's happening beneath the surface. That kind of depth compounds over time.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONSISTENCY STREAK (Building Momentum - 30 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.checkIns.length === 7) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `You checked in every day this week — seven consecutive signals. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. That level of consistency is rare and valuable. You're not just tracking data; you're building a practice of self-awareness that most people never develop. This is how real insight happens.`,
+      
+      `This week brought seven check-ins — a full week of consistent reflection. Your mood averaged ${ctx.avgMood.toFixed(1)}, and sleep held at ${ctx.avgSleep.toFixed(1)} hours. When you show up every day, patterns become visible that would otherwise stay hidden. You're building something real here, and it shows.`,
+      
+      `You logged check-ins every single day this week — seven in a row. Your mood held at ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. That kind of consistency is what separates people who track from people who truly understand themselves. You're in the second category now.`,
+      
+      `This week you checked in all seven days, averaging ${ctx.avgMood.toFixed(1)} mood and ${ctx.avgSleep.toFixed(1)} hours of sleep. Daily consistency like this is how you build real self-knowledge. You're not just collecting data — you're creating a practice that will show you patterns you couldn't see before. Keep going.`,
+      
+      `You maintained a seven-day check-in streak this week with a mood average of ${ctx.avgMood.toFixed(1)} and ${ctx.avgSleep.toFixed(1)} hours of sleep. That level of engagement is what makes the difference between surface-level tracking and genuine insight. You're doing the work that matters.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RETURN AFTER ABSENCE (Coming Back - 20 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.checkIns.length &gt;= 2 &amp;&amp; ctx.checkIns.length &lt;= 4) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `You logged ${ctx.checkIns.length} check-ins this week — not a full week, but you're here. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. Coming back after time away is harder than maintaining a streak. The fact that you showed up at all matters more than perfect consistency.`,
+      
+      `This week brought ${ctx.checkIns.length} check-ins and a mood average of ${ctx.avgMood.toFixed(1)}. Sleep held at ${ctx.avgSleep.toFixed(1)} hours. You're rebuilding the habit, and that takes more effort than people realize. Every entry you leave is a step back toward the practice. Keep going — momentum will follow.`,
+      
+      `You checked in ${ctx.checkIns.length} times this week with an average mood of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours. Partial weeks are still valuable — they show you're working your way back. The hardest part is starting again, and you've already done that. The rest will get easier.`,
+      
+      `This week you logged ${ctx.checkIns.length} check-ins, averaging ${ctx.avgMood.toFixed(1)} mood and ${ctx.avgSleep.toFixed(1)} hours of sleep. You're in the process of rebuilding consistency, which is harder than maintaining it. The fact that you're here at all is what matters. Each entry makes the next one easier.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WEEKEND VS WEEKDAY PATTERNS (30 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.topTags.includes('weekend') || ctx.topTags.includes('work')) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week with ${ctx.avgSleep.toFixed(1)} hours of sleep. You logged ${ctx.checkIns.length} check-ins, and your tags suggest a pattern between work days and rest days. That rhythm — how you move between structure and freedom — often reveals what drains you and what restores you. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} this dynamic.`,
+      
+      `This week brought a mood average of ${ctx.avgMood.toFixed(1)} and ${ctx.avgSleep.toFixed(1)} hours of sleep. Your check-in tags show the difference between weekdays and weekends, which is information about what your system needs. The contrast between structure and rest often reveals more than either one alone. Your ${ctx.journalCount} written reflections documented this rhythm.`,
+      
+      `You averaged ${ctx.avgMood.toFixed(1)} mood this week with ${ctx.avgSleep.toFixed(1)} hours of sleep. Your tags suggest you're noticing the difference between work days and rest days. That awareness — how your energy and mood shift with structure — is valuable data about what supports you and what depletes you. Keep tracking this pattern.`,
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ENERGY PATTERNS (30 variations)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (ctx.topTags.includes('low_energy') || ctx.topTags.includes('high_energy')) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `Your mood averaged ${ctx.avgMood.toFixed(1)} this week, and your tags show energy was a theme. Sleep held at ${ctx.avgSleep.toFixed(1)} hours. Energy patterns often reveal more than mood alone — they show you what your body is actually experiencing beneath the emotional weather. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} captured this dynamic.`,
+      
+      `This week brought a mood average of ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. Your check-in tags highlight energy levels, which is significant — energy is often the first signal that something is shifting, before mood catches up. The fact that you're tracking this gives you earlier warning signs. Your ${ctx.journalCount} written reflections documented this pattern.`,
+      
+      `You averaged ${ctx.avgMood.toFixed(1)} mood this week with ${ctx.avgSleep.toFixed(1)} hours of sleep. Your tags suggest energy was a key factor — either high or low. Energy is the foundation that mood builds on, so tracking it separately gives you more leverage. When energy shifts, everything else follows. Keep watching this pattern.`,
+    );
+  }
+  
+  // Fallback if no specific pattern matches
+<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (narratives.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >    narratives.push(</span>
+      `This week you logged ${ctx.checkIns.length} check-ins with an average mood of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and you wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'}. Each signal you leave builds a clearer picture of what supports you and what doesn't.`,
+    );
+  }
+  
+<span class="cstat-no" title="statement not covered" >  return narratives;</span>
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-04-30T03:55:01.390Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
+</html>
+    

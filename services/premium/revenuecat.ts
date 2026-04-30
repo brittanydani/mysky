@@ -27,6 +27,43 @@ async function getPurchases(): Promise<typeof PurchasesType> {
   return _purchasesModule.default;
 }
 
+type ValidationResult = {
+  valid: boolean;
+  errors: string[];
+};
+
+async function validateRevenueCatConfiguration(): Promise<ValidationResult> {
+  const apiKey = Platform.OS === 'android'
+    ? process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY
+    : process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
+
+  if (!apiKey) {
+    return { valid: false, errors: ['RevenueCat API key not configured'] };
+  }
+
+  const expectedPrefix = Platform.OS === 'android' ? 'goog_' : 'appl_';
+  if (!apiKey.startsWith(expectedPrefix)) {
+    return {
+      valid: false,
+      errors: [`Invalid API key format. Expected ${expectedPrefix} prefix.`],
+    };
+  }
+
+  try {
+    await getPurchases();
+    return { valid: true, errors: [] };
+  } catch (error) {
+    return {
+      valid: false,
+      errors: [
+        `RevenueCat module failed to load: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      ],
+    };
+  }
+}
+
 async function isPurchasesConfigured(Purchases: typeof PurchasesType): Promise<boolean> {
   if (typeof Purchases.isConfigured !== 'function') {
     return false;
@@ -86,14 +123,22 @@ class RevenueCatService {
         return;
       }
 
-      const apiKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
+      const apiKey = Platform.OS === 'android'
+        ? process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY
+        : process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
 
       // Sanity check logging
       logger.info('[RevenueCat] Platform:', Platform.OS);
 
-      // Fail fast if wrong key format
-      if (!apiKey || !(apiKey.startsWith("appl_") || apiKey.startsWith("goog_"))) {
-        throw new Error(`[RevenueCat] Invalid API key format (prefix: ${apiKey?.slice(0, 5) ?? 'none'})`);
+      const validation = await validateRevenueCatConfiguration();
+      if (!validation.valid) {
+        logger.error('[RevenueCat] Configuration invalid', {
+          errors: validation.errors,
+        });
+        throw new Error(`RevenueCat configuration error: ${validation.errors.join('; ')}`);
+      }
+      if (!apiKey) {
+        throw new Error('RevenueCat configuration error: API key missing');
       }
 
       try {
@@ -113,7 +158,9 @@ class RevenueCatService {
         this.disabledReason = null;
         logger.info('[RevenueCat] Initialized successfully');
       } catch (error) {
-        logger.error('[RevenueCat] Failed to initialize:', error);
+        logger.error('[RevenueCat] Failed to initialize', {
+          error: error instanceof Error ? error.message : String(error),
+        });
         throw error;
       }
     })();
@@ -140,7 +187,9 @@ class RevenueCatService {
       const offerings = await Purchases.getOfferings();
       return offerings.current;
     } catch (error) {
-      logger.error('[RevenueCat] Failed to get offerings:', error);
+      logger.error('[RevenueCat] Failed to get offerings', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return null;
     }
   }
@@ -163,7 +212,11 @@ class RevenueCatService {
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
       return { success: true, customerInfo };
     } catch (error: any) {
-      logger.error('[RevenueCat] Purchase failed:', error);
+      logger.error('[RevenueCat] Purchase failed', {
+        code: error?.code,
+        message: error?.message,
+        userCancelled: Boolean(error?.userCancelled),
+      });
       
       if (error.userCancelled) {
         return { success: false, userCancelled: true, error: 'Purchase was cancelled' };
@@ -222,7 +275,10 @@ class RevenueCatService {
       const customerInfo = await Purchases.restorePurchases();
       return { success: true, customerInfo };
     } catch (error: any) {
-      logger.error('[RevenueCat] Restore failed:', error);
+      logger.error('[RevenueCat] Restore failed', {
+        code: error?.code,
+        message: error?.message,
+      });
       return { 
         success: false, 
         error: error.message || 'Failed to restore purchases' 
@@ -247,7 +303,9 @@ class RevenueCatService {
       this.currentAppUserId = userId;
       logger.info('[RevenueCat] User logged in successfully');
     } catch (error) {
-      logger.error('[RevenueCat] logIn failed:', error);
+      logger.error('[RevenueCat] logIn failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -262,7 +320,9 @@ class RevenueCatService {
       this.currentAppUserId = await getPurchasesAppUserId(Purchases);
       logger.info('[RevenueCat] Logged out');
     } catch (error) {
-      logger.error('[RevenueCat] logOut failed:', error);
+      logger.error('[RevenueCat] logOut failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -278,7 +338,9 @@ class RevenueCatService {
       const Purchases = await getPurchases();
       return await Purchases.getCustomerInfo();
     } catch (error) {
-      logger.error('[RevenueCat] Failed to get customer info:', error);
+      logger.error('[RevenueCat] Failed to get customer info', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return null;
     }
   }

@@ -30,12 +30,13 @@ export class ConfigValidator {
   private static readonly REQUIRED_VARS = [
     'EXPO_PUBLIC_SUPABASE_URL',
     'EXPO_PUBLIC_SUPABASE_ANON_KEY',
+    'EXPO_PUBLIC_SENTRY_DSN',
   ];
 
   private static readonly OPTIONAL_VARS = [
-    'EXPO_PUBLIC_SENTRY_DSN',
     'EXPO_PUBLIC_REVENUECAT_IOS_API_KEY',
     'EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY',
+    'EXPO_PUBLIC_REVENUECAT_ALLOW_DEV_BUNDLE',
   ];
 
   static validateStartup(): ConfigValidationResult {
@@ -56,6 +57,10 @@ export class ConfigValidator {
 
       if (key === 'EXPO_PUBLIC_SUPABASE_ANON_KEY' && !value.startsWith('eyJ')) {
         errors.push(`${key} does not look like a Supabase anon JWT: ${redact(value)}`);
+      }
+
+      if (key === 'EXPO_PUBLIC_SENTRY_DSN' && !isValidUrl(value)) {
+        errors.push(`${key} is not a valid URL: ${redact(value)}`);
       }
     }
 
