@@ -37,6 +37,7 @@ export class ConfigValidator {
     'EXPO_PUBLIC_REVENUECAT_IOS_API_KEY',
     'EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY',
     'EXPO_PUBLIC_REVENUECAT_ALLOW_DEV_BUNDLE',
+    'EXPO_PUBLIC_ASTROLOGY_CALCULATION_URL',
   ];
 
   static validateStartup(): ConfigValidationResult {
@@ -82,6 +83,10 @@ export class ConfigValidator {
 
       if (key === 'EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY' && Platform.OS === 'android' && !value.startsWith('goog_')) {
         warnings.push(`${key} is set but does not start with goog_: ${redact(value)}`);
+      }
+
+      if (key === 'EXPO_PUBLIC_ASTROLOGY_CALCULATION_URL' && !isValidUrl(value)) {
+        warnings.push(`${key} is set but is not a valid URL: ${redact(value)}`);
       }
     }
 

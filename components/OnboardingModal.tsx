@@ -525,7 +525,7 @@ export default function OnboardingModal({
         return;
       }
 
-      const chart = AstrologyCalculator.generateNatalChart(birthData);
+      const chart = await AstrologyCalculator.generateNatalChartAsync(birthData);
 
       const savedChart = {
         id: chart.id,
@@ -632,7 +632,7 @@ export default function OnboardingModal({
           houseSystem: charts[0].houseSystem,
           timezone: charts[0].timezone,
         };
-        const chart = AstrologyCalculator.generateNatalChart(birthDataFromChart);
+        const chart = await AstrologyCalculator.generateNatalChartAsync(birthDataFromChart);
 
         timeoutRef.current = setTimeout(async () => {
           await completeChart(chart);

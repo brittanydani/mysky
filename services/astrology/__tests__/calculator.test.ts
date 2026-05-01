@@ -1,5 +1,7 @@
 const mockGetCachedSettings = jest.fn<any, []>(() => null);
 const mockGetCachedOrbConfig = jest.fn<any, []>(() => undefined);
+const mockIsRemoteSwissEphemerisConfigured = jest.fn<boolean, []>(() => false);
+const mockCalculateChartRemoteSwiss = jest.fn();
 
 // Mock the Swiss Ephemeris engine — not available in Node tests
 jest.mock('../swissEphemerisEngine', () => ({
@@ -8,6 +10,11 @@ jest.mock('../swissEphemerisEngine', () => ({
   calcMoonUncertainty: jest.fn(),
   setSiderealMode: jest.fn(),
   setTropicalMode: jest.fn(),
+}));
+
+jest.mock('../remoteSwissEphemerisEngine', () => ({
+  isRemoteSwissEphemerisConfigured: mockIsRemoteSwissEphemerisConfigured,
+  calculateChartRemoteSwiss: mockCalculateChartRemoteSwiss,
 }));
 
 // Mock settings service
@@ -42,6 +49,7 @@ import {
   calculateChart as sweCalculateChart,
   isSwissEphemerisAvailable,
 } from '../swissEphemerisEngine';
+import { calculateChartRemoteSwiss } from '../remoteSwissEphemerisEngine';
 import type { BirthData, HouseSystem } from '../types';
 
 const ORBS = {
@@ -98,6 +106,8 @@ describe('EnhancedAstrologyCalculator', () => {
     EnhancedAstrologyCalculator.clearNatalChartCache();
     mockGetCachedSettings.mockReturnValue(null);
     mockGetCachedOrbConfig.mockReturnValue(undefined);
+    mockIsRemoteSwissEphemerisConfigured.mockReturnValue(false);
+    mockCalculateChartRemoteSwiss.mockReset();
     (isSwissEphemerisAvailable as jest.Mock).mockReturnValue(false);
     (sweCalculateChart as jest.Mock).mockReset();
   });
@@ -353,6 +363,44 @@ describe('EnhancedAstrologyCalculator', () => {
       expect(trueLilith.sun.longitude).toBeCloseTo(mean.sun.longitude, 6);
       expect(trueLilith.moon.longitude).toBeCloseTo(mean.moon.longitude, 6);
       expect(trueLilith.houseCusps.map(c => c.longitude)).toEqual(mean.houseCusps.map(c => c.longitude));
+    });
+
+    it('uses remote Swiss Ephemeris before degraded JS fallback in async chart generation', async () => {
+      mockIsRemoteSwissEphemerisConfigured.mockReturnValue(true);
+      mockCalculateChartRemoteSwiss.mockImplementation(async (request) =>
+        makeSwissChartFixture(Boolean(request.includeAsteroids), request.lilithMethod)
+      );
+
+      const chart = await EnhancedAstrologyCalculator.generateNatalChartAsync(brittanyBirthData);
+
+      expect(calculateChartRemoteSwiss).toHaveBeenCalledWith(expect.objectContaining({
+        houseSystem: 'whole-sign',
+        includeHouses: true,
+        includeAsteroids: true,
+        zodiacSystem: 'tropical',
+        sidereal: false,
+        ayanamsa: 'lahiri',
+        lilithMethod: 'mean',
+      }));
+      expect(chart.calculationEngine).toBe('remote-swiss-ephemeris');
+      expect(chart.calculationSettings?.calculationEngine).toBe('remote-swiss-ephemeris');
+      expect(chart.isDegraded).toBe(false);
+      expect(chart.fallbackReason).toBeUndefined();
+      expect(chart.calculationAccuracy?.validationStatus).toBe('verified');
+      expect(chart.ascendant?.longitude).toBeCloseTo(125, 6);
+    });
+
+    it('marks async JS fallback as degraded when remote Swiss fails', async () => {
+      mockIsRemoteSwissEphemerisConfigured.mockReturnValue(true);
+      mockCalculateChartRemoteSwiss.mockRejectedValue(new Error('remote unavailable'));
+
+      const chart = await EnhancedAstrologyCalculator.generateNatalChartAsync(validBirthData);
+
+      expect(calculateChartRemoteSwiss).toHaveBeenCalled();
+      expect(chart.calculationEngine).toBe('circular-natal-horoscope-js');
+      expect(chart.calculationSettings?.calculationEngine).toBe('circular-natal-horoscope-js');
+      expect(chart.isDegraded).toBe(true);
+      expect(chart.fallbackReason).toContain('remote Swiss Ephemeris failed');
     });
   });
 });

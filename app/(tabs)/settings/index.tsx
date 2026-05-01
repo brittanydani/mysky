@@ -453,7 +453,7 @@ export default function SettingsScreen() {
   const handleIdentitySave = useCallback(async (birthData: BirthData, extra?: { chartName?: string }) => {
     setShowBirthModal(false);
     try {
-      const chart = AstrologyCalculator.generateNatalChart(birthData);
+      const chart = await AstrologyCalculator.generateNatalChartAsync(birthData);
       const now = new Date().toISOString();
       await supabaseDb.saveChart({
         id: identityChartId || chart.id,
@@ -511,7 +511,7 @@ export default function SettingsScreen() {
     try {
       setPdfExporting(true);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-      const chart = AstrologyCalculator.generateNatalChart(birthInitial as any);
+      const chart = await AstrologyCalculator.generateNatalChartAsync(birthInitial as any);
       const { chapters } = FullNatalStoryGenerator.generateFullStory(chart, true);
       await exportChartToPdf(chart, chapters);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});

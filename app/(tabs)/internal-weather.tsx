@@ -453,7 +453,7 @@ export default function MoodCheckIn() {
             houseSystem: saved.houseSystem,
           };
           const astroSettings = await AstrologySettingsService.getSettings();
-          const natal = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
+          const natal = await AstrologyCalculator.generateNatalChartAsync({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
           const today = getLogicalToday();
           const sevenDaysAgo = toLocalDateString(new Date(new Date(today + 'T12:00:00').getTime() - 6 * 86_400_000));
           const recent = await supabaseDb.getCheckInsInRange(saved.id, sevenDaysAgo, today);

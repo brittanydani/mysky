@@ -58,7 +58,7 @@ export default function ChartRevealScreen() {
           zodiacSystem: astroSettings.zodiacSystem,
           orbPreset: astroSettings.orbPreset,
         };
-        const computed = AstrologyCalculator.generateNatalChart(birthData);
+        const computed = await AstrologyCalculator.generateNatalChartAsync(birthData);
         setChart(computed);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       } catch (err) {

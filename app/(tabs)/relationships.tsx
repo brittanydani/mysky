@@ -137,7 +137,7 @@ export default function RelationshipsScreen() {
           orbPreset: astroSettings.orbPreset,
         };
         
-        const chart = AstrologyCalculator.generateNatalChart(birthData);
+        const chart = await AstrologyCalculator.generateNatalChartAsync(birthData);
         chart.id = saved.id;
         chart.name = saved.name || 'You';
         setUserChart(chart);
@@ -160,7 +160,7 @@ export default function RelationshipsScreen() {
               zodiacSystem: astroSettings.zodiacSystem,
               orbPreset: astroSettings.orbPreset,
             };
-            const otherChart = AstrologyCalculator.generateNatalChart(relBirthData);
+            const otherChart = await AstrologyCalculator.generateNatalChartAsync(relBirthData);
             otherChart.name = rel.name;
             const report = SynastryEngine.calculateSynastry(chart, otherChart);
             
@@ -235,7 +235,7 @@ export default function RelationshipsScreen() {
       if (userChart) {
         try {
           const saveAstroSettings = await AstrologySettingsService.getSettings();
-          const otherChart = AstrologyCalculator.generateNatalChart({ ...birthData, houseSystem: saveAstroSettings.houseSystem, zodiacSystem: saveAstroSettings.zodiacSystem, orbPreset: saveAstroSettings.orbPreset });
+          const otherChart = await AstrologyCalculator.generateNatalChartAsync({ ...birthData, houseSystem: saveAstroSettings.houseSystem, zodiacSystem: saveAstroSettings.zodiacSystem, orbPreset: saveAstroSettings.orbPreset });
           otherChart.name = extra?.chartName || 'Someone Special';
           const report = SynastryEngine.calculateSynastry(userChart, otherChart);
           const topAspects = report.aspects.filter(a => a.strength === 'strong').slice(0, 3);
@@ -280,7 +280,7 @@ export default function RelationshipsScreen() {
         orbPreset: astroSettings.orbPreset,
       };
     
-      const otherChart = AstrologyCalculator.generateNatalChart(birthData);
+      const otherChart = await AstrologyCalculator.generateNatalChartAsync(birthData);
       otherChart.name = rel.name;
     
       const synastry = SynastryEngine.calculateSynastry(userChart, otherChart);

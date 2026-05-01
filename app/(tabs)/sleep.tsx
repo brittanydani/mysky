@@ -581,7 +581,7 @@ export default function SleepScreen() {
           setIsEditingUnlocked(!!requestedEntry);
           try {
             const astroSettings = await AstrologySettingsService.getSettings();
-            setNatalChart(AstrologyCalculator.generateNatalChart({
+            setNatalChart(await AstrologyCalculator.generateNatalChartAsync({
               date: savedChart.birthDate, time: savedChart.birthTime, hasUnknownTime: savedChart.hasUnknownTime,
               place: savedChart.birthPlace, latitude: savedChart.latitude, longitude: savedChart.longitude,
               timezone: savedChart.timezone, houseSystem: savedChart.houseSystem,

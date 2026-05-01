@@ -39,6 +39,11 @@ export function getDreamReinterpretPerDreamLimit(email?: string | null): number 
   return DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT;
 }
 
+export function getRemoteAstrologyCalculationUrl(): string | null {
+  const raw = process.env.EXPO_PUBLIC_ASTROLOGY_CALCULATION_URL?.trim();
+  return raw ? raw : null;
+}
+
 export const config = {
   appName: 'MySky',
   tagline: 'Track sleep, mood, dreams, and relationships to understand yourself over time.',

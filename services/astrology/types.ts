@@ -45,6 +45,11 @@ export type ZodiacSystem = 'tropical' | 'sidereal';
 /** Ayanamsa (precession correction) for sidereal zodiac calculations */
 export type Ayanamsa = 'lahiri' | 'raman' | 'krishnamurti' | 'fagan-bradley';
 
+export type AstrologyCalculationEngine =
+  | 'swiss-ephemeris'
+  | 'remote-swiss-ephemeris'
+  | 'circular-natal-horoscope-js';
+
 /** Moon position uncertainty range for unknown/approximate birth times */
 export interface MoonUncertainty {
   /** Earliest possible Moon longitude (0–360) */
@@ -268,7 +273,12 @@ export interface NatalChart {
     showAsteroid?: boolean;
     lilithMethod?: 'mean' | 'true';
     chartOrientation?: string;
+    calculationEngine?: AstrologyCalculationEngine;
   };
+
+  calculationEngine?: AstrologyCalculationEngine;
+  isDegraded?: boolean;
+  fallbackReason?: string;
 
   errorCode?: 'ephemeris_unavailable' | 'timezone_unavailable' | 'validation_failed' | 'unknown_error';
   errorDetails?: string;

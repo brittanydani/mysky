@@ -68,7 +68,7 @@ export default function OnboardingRestoreScreen() {
         timezone: charts[0].timezone,
       };
 
-      AstrologyCalculator.generateNatalChart(birthData); // sanity compute
+      await AstrologyCalculator.generateNatalChartAsync(birthData); // sanity compute
 
       DeviceEventEmitter.emit('ONBOARDING_COMPLETE');
       router.replace('/onboarding/chart-reveal' as Href);

@@ -528,7 +528,7 @@ export default function ChartScreen() {
           orbPreset: astroSettings.orbPreset,
         };
 
-        const chart = AstrologyCalculator.generateNatalChart(birthData);
+        const chart = await AstrologyCalculator.generateNatalChartAsync(birthData);
 
         // Attach persistent database metadata
         (chart as any).id = saved.id;
@@ -596,7 +596,7 @@ export default function ChartScreen() {
           zodiacSystem: astroSettings.zodiacSystem,
           orbPreset: astroSettings.orbPreset,
         };
-        const chart = AstrologyCalculator.generateNatalChart(birthData);
+        const chart = await AstrologyCalculator.generateNatalChartAsync(birthData);
         (chart as any).name = person.name;
 
         setActiveOverlays([{ person, chart, theme: 'silver' }]);

@@ -75,7 +75,7 @@ export default function OnboardingBirthScreen() {
 
   const onSave = useCallback(async (birthData: BirthData, extra?: { chartName?: string }) => {
     try {
-      const chart = AstrologyCalculator.generateNatalChart(birthData);
+      const chart = await AstrologyCalculator.generateNatalChartAsync(birthData);
 
       const savedChart = {
         id: chart.id,

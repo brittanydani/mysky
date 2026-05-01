@@ -21,6 +21,11 @@ import {
   setSiderealMode,
   setTropicalMode,
 } from './swissEphemerisEngine';
+import type { SwissEphChartData } from './swissEphemerisEngine';
+import {
+  calculateChartRemoteSwiss,
+  isRemoteSwissEphemerisConfigured,
+} from './remoteSwissEphemerisEngine';
 
 import {
   BirthData,
@@ -41,6 +46,7 @@ import {
   PointPlacement,
   MoonUncertainty,
   ApproximateTimePeriod,
+  AstrologyCalculationEngine,
 } from './types';
 
 import { ZODIAC_SIGNS, PLANETS, ASPECT_TYPES } from './constants';
@@ -220,11 +226,38 @@ export class EnhancedAstrologyCalculator {
     }
   }
 
+  static async generateNatalChartAsync(birthData: BirthData): Promise<NatalChart> {
+    const cacheKey = this.buildNatalCacheKey(birthData);
+    const cached = this.natalChartCache.get(cacheKey);
+    if (cached && !(cached.isDegraded && isRemoteSwissEphemerisConfigured())) {
+      return cached;
+    }
+
+    try {
+      InputValidator.validateBirthData(birthData);
+      const chart = await this.generateWithTimezoneAsync(birthData);
+
+      // Evict oldest entries if cache is full
+      if (this.natalChartCache.size >= this.NATAL_CACHE_MAX_SIZE) {
+        const firstKey = this.natalChartCache.keys().next().value;
+        if (firstKey !== undefined) this.natalChartCache.delete(firstKey);
+      }
+      this.natalChartCache.set(cacheKey, chart);
+
+      return chart;
+    } catch (err) {
+      const wrapped = err instanceof Error ? err : new Error(String(err));
+      logger.error('Failed to generate natal chart:', wrapped);
+      throw wrapped;
+    }
+  }
+
   private static generateWithTimezone(birthData: BirthData): NatalChart {
     const timezoneInfo = this.resolveTimezone(birthData);
     const { year, month, day, hour, minute } = this.parseBirthDateTime(birthData, timezoneInfo);
 
     const houseSystem: HouseSystem = birthData.houseSystem ?? DEFAULT_HOUSE_SYSTEM;
+    let fallbackReason = 'Native Swiss Ephemeris is unavailable in this runtime.';
 
     // ── Attempt Swiss Ephemeris first (gold standard) ──
     if (isSwissEphemerisAvailable()) {
@@ -234,14 +267,56 @@ export class EnhancedAstrologyCalculator {
         );
       } catch (sweErr) {
         logger.warn('[Calculator] Swiss Ephemeris failed, falling back to JS engine:', sweErr);
+        fallbackReason = `Native Swiss Ephemeris failed: ${this.errorMessage(sweErr)}`;
       }
     }
 
     // ── Fallback: circular-natal-horoscope-js (Node.js tests, web) ──
     logger.info('[Calculator] Using fallback engine (circular-natal-horoscope-js)');
     return this.generateWithFallbackEngine(
-      birthData, timezoneInfo, year, month, day, hour, minute, houseSystem
+      birthData, timezoneInfo, year, month, day, hour, minute, houseSystem, fallbackReason
     );
+  }
+
+  private static async generateWithTimezoneAsync(birthData: BirthData): Promise<NatalChart> {
+    const timezoneInfo = this.resolveTimezone(birthData);
+    const { year, month, day, hour, minute } = this.parseBirthDateTime(birthData, timezoneInfo);
+    const houseSystem: HouseSystem = birthData.houseSystem ?? DEFAULT_HOUSE_SYSTEM;
+
+    let fallbackReason = 'Native Swiss Ephemeris is unavailable in this runtime.';
+
+    if (isSwissEphemerisAvailable()) {
+      try {
+        return this.generateWithSwissEphemeris(
+          birthData, timezoneInfo, year, month, day, hour, minute, houseSystem
+        );
+      } catch (sweErr) {
+        logger.warn('[Calculator] Native Swiss Ephemeris failed; trying remote Swiss fallback:', sweErr);
+        fallbackReason = `Native Swiss Ephemeris failed: ${this.errorMessage(sweErr)}`;
+      }
+    }
+
+    if (isRemoteSwissEphemerisConfigured()) {
+      try {
+        return await this.generateWithRemoteSwissEphemeris(
+          birthData, timezoneInfo, year, month, day, hour, minute, houseSystem
+        );
+      } catch (remoteErr) {
+        logger.warn('[Calculator] Remote Swiss Ephemeris failed, falling back to JS engine:', remoteErr);
+        fallbackReason = `${fallbackReason}; remote Swiss Ephemeris failed: ${this.errorMessage(remoteErr)}`;
+      }
+    } else {
+      fallbackReason = `${fallbackReason}; remote Swiss Ephemeris endpoint is not configured.`;
+    }
+
+    logger.info('[Calculator] Using degraded fallback engine (circular-natal-horoscope-js)');
+    return this.generateWithFallbackEngine(
+      birthData, timezoneInfo, year, month, day, hour, minute, houseSystem, fallbackReason
+    );
+  }
+
+  private static errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
   }
 
   // ── Swiss Ephemeris primary path ────────────────────────
@@ -290,6 +365,71 @@ export class EnhancedAstrologyCalculator {
       lilithMethod,
     );
 
+    return this.buildFromSwissChartData(
+      birthData,
+      timezoneInfo,
+      houseSystem,
+      includeHouses,
+      sweData,
+      'swiss-ephemeris'
+    );
+  }
+
+  private static async generateWithRemoteSwissEphemeris(
+    birthData: BirthData,
+    timezoneInfo: TimezoneInfo,
+    _year: number,
+    _month: number,
+    _day: number,
+    _hour: number,
+    _minute: number,
+    houseSystem: HouseSystem
+  ): Promise<NatalChart> {
+    const includeHouses = !birthData.hasUnknownTime && Boolean(birthData.time);
+    const cachedSettings = AstrologySettingsService.getCachedSettings();
+    const includeAsteroids = cachedSettings?.showAsteroid ?? true;
+    const lilithMethod = cachedSettings?.lilithMethod ?? cachedSettings?.lilitMethod ?? 'mean';
+    const zodiacSystem = birthData.zodiacSystem ?? cachedSettings?.zodiacSystem ?? 'tropical';
+    const utc = timezoneInfo.utcDateTime;
+
+    const sweData = await calculateChartRemoteSwiss({
+      utc: {
+        year: utc.year,
+        month: utc.month,
+        day: utc.day,
+        hour: utc.hour,
+        minute: utc.minute,
+        second: utc.second,
+      },
+      latitude: birthData.latitude,
+      longitude: birthData.longitude,
+      houseSystem,
+      includeHouses,
+      includeAsteroids,
+      zodiacSystem,
+      sidereal: zodiacSystem === 'sidereal',
+      ayanamsa: cachedSettings?.ayanamsa ?? 'lahiri',
+      lilithMethod,
+    });
+
+    return this.buildFromSwissChartData(
+      birthData,
+      timezoneInfo,
+      houseSystem,
+      includeHouses,
+      sweData,
+      'remote-swiss-ephemeris'
+    );
+  }
+
+  private static buildFromSwissChartData(
+    birthData: BirthData,
+    timezoneInfo: TimezoneInfo,
+    houseSystem: HouseSystem,
+    includeHouses: boolean,
+    sweData: SwissEphChartData,
+    engine: Extract<AstrologyCalculationEngine, 'swiss-ephemeris' | 'remote-swiss-ephemeris'>
+  ): NatalChart {
     // Build the same output structures as the fallback engine
     const planets = sweData.planets;
     const aspectPointsByName = new Map<string, number>();
@@ -309,7 +449,7 @@ export class EnhancedAstrologyCalculator {
     let houses: SimpleHouseCusp[] | undefined;
     let risingSign: AstrologySign | null = null;
     let legacyHouseCusps: HouseCusp[] = [];
-    let cuspDegrees: number[] | undefined = sweData.cusps;
+    const cuspDegrees: number[] | undefined = sweData.cusps;
     const ascAbs = sweData.ascendant;
     const mcAbs = sweData.mc;
 
@@ -404,12 +544,11 @@ export class EnhancedAstrologyCalculator {
       this.assignHousesToPlanets(planets, legacyPlacements, cuspDegrees);
     }
 
-    // Build the rest of the chart using shared logic
     return this.assembleChart(
       birthData, timezoneInfo, houseSystem,
       planets, legacyPlacements, aspectPointsByName,
       angles, houses, risingSign, legacyHouseCusps, cuspDegrees,
-      ascAbs, mcAbs, 'swiss-ephemeris'
+      ascAbs, mcAbs, engine
     );
   }
 
@@ -423,7 +562,8 @@ export class EnhancedAstrologyCalculator {
     day: number,
     hour: number,
     minute: number,
-    houseSystem: HouseSystem
+    houseSystem: HouseSystem,
+    fallbackReason?: string
   ): NatalChart {
     const origin = new Origin({
       year,
@@ -477,7 +617,7 @@ export class EnhancedAstrologyCalculator {
       birthData, timezoneInfo, houseSystem,
       planets, legacyPlacements, aspectPointsByName,
       angles, houses, risingSign, legacyHouseCusps, cuspDegrees,
-      ascAbs, mcAbs, 'circular-natal-horoscope-js'
+      ascAbs, mcAbs, 'circular-natal-horoscope-js', fallbackReason
     );
   }
 
@@ -497,7 +637,8 @@ export class EnhancedAstrologyCalculator {
     cuspDegrees: number[] | undefined,
     ascAbs: number | undefined,
     mcAbs: number | undefined,
-    engine: 'swiss-ephemeris' | 'circular-natal-horoscope-js'
+    engine: AstrologyCalculationEngine,
+    fallbackReason?: string
   ): NatalChart {
 
     // ✅ Create REAL legacy Ascendant + Midheaven placements (NO FAKE)
@@ -651,6 +792,9 @@ export class EnhancedAstrologyCalculator {
 
       calculationAccuracy,
       timeBasedFeaturesAvailable,
+      calculationEngine: engine,
+      isDegraded: engine === 'circular-natal-horoscope-js',
+      fallbackReason: engine === 'circular-natal-horoscope-js' ? fallbackReason : undefined,
       calculationSettings: {
         houseSystem,
         zodiacSystem: birthData.zodiacSystem ?? cachedSettings?.zodiacSystem ?? 'tropical',
@@ -660,6 +804,7 @@ export class EnhancedAstrologyCalculator {
         showAsteroid: cachedSettings?.showAsteroid,
         lilithMethod: cachedSettings?.lilithMethod ?? cachedSettings?.lilitMethod ?? 'mean',
         chartOrientation: cachedSettings?.chartOrientation,
+        calculationEngine: engine,
       },
 
       createdAt: new Date().toISOString(),
@@ -1049,10 +1194,11 @@ export class EnhancedAstrologyCalculator {
     birthData: BirthData,
     planets: PlanetPosition[],
     aspects: SimpleAspect[],
-    engine: 'swiss-ephemeris' | 'circular-natal-horoscope-js' = 'circular-natal-horoscope-js'
+    engine: AstrologyCalculationEngine = 'circular-natal-horoscope-js'
   ) {
     // Swiss Ephemeris has sub-arcsecond precision for all bodies
-    const planetaryAccuracy = engine === 'swiss-ephemeris'
+    const usesSwissEphemeris = engine === 'swiss-ephemeris' || engine === 'remote-swiss-ephemeris';
+    const planetaryAccuracy = usesSwissEphemeris
       ? 0.0001
       : planets.reduce((acc, planet) => {
       let expectedAccuracy: number;
@@ -1100,7 +1246,7 @@ export class EnhancedAstrologyCalculator {
       planetaryPositions: planetaryAccuracy,
       housePositions: houseAccuracy,
       aspectOrbs: aspectAccuracy,
-      validationStatus: (engine === 'swiss-ephemeris'
+      validationStatus: (usesSwissEphemeris
         ? 'verified'
         : referenceComparison?.comparisons?.length ? 'verified' : 'unverified') as
         | 'verified'

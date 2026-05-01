@@ -266,7 +266,7 @@ export default function HomeScreen() {
             orbPreset: astroSettings.orbPreset,
           };
 
-          const chart = AstrologyCalculator.generateNatalChart(birthData);
+          const chart = await AstrologyCalculator.generateNatalChartAsync(birthData);
           chart.id = savedChart.id;
           chart.name = savedChart.name;
           chart.createdAt = savedChart.createdAt;
@@ -410,7 +410,7 @@ export default function HomeScreen() {
     setShowEditBirth(false);
     try {
       const astroSettings = await AstrologySettingsService.getSettings();
-      const chart = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
+      const chart = await AstrologyCalculator.generateNatalChartAsync({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
 
       const charts = await supabaseDb.getCharts();
       const existingId = charts.length > 0 ? charts[0].id : chart.id;

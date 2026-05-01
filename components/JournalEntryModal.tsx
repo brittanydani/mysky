@@ -582,7 +582,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
         const savedChart = charts[0];
         setChartId(savedChart.id);
         const astroSettings = await AstrologySettingsService.getSettings();
-        const chart = AstrologyCalculator.generateNatalChart({
+        const chart = await AstrologyCalculator.generateNatalChartAsync({
           date: savedChart.birthDate,
           time: savedChart.birthTime,
           hasUnknownTime: savedChart.hasUnknownTime,

@@ -146,7 +146,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
             houseSystem: saved.houseSystem,
           };
           const astroSettings = await AstrologySettingsService.getSettings();
-          const natal = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
+          const natal = await AstrologyCalculator.generateNatalChartAsync({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
 
           let behavior: BehaviorContext | undefined;
           try {
