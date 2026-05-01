@@ -664,6 +664,29 @@ function checkInToRow(checkIn: DailyCheckIn, userId: string): Row {
   };
 }
 
+async function getExistingCheckInIdentity(
+  userId: string,
+  checkIn: DailyCheckIn,
+): Promise<{ id: string; createdAt?: string } | null> {
+  const { data, error } = await supabase
+    .from('daily_check_ins')
+    .select('id, created_at')
+    .eq('user_id', userId)
+    .eq('log_date', checkIn.date)
+    .eq('time_of_day', checkIn.timeOfDay)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    id: asRequiredString((data as Row).id),
+    createdAt: asOptionalString((data as Row).created_at),
+  };
+}
+
 export async function getCheckIns(
   chartId: string,
   limit = 10000,
@@ -826,11 +849,20 @@ export async function saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
   const row = checkInToRow(checkIn, userId);
 
   try {
+    const existing = await getExistingCheckInIdentity(userId, checkIn);
+    const rowToSave = existing?.id
+      ? {
+          ...row,
+          id: existing.id,
+          created_at: existing.createdAt ?? row.created_at,
+        }
+      : row;
+
     await withRetry(
       async () => {
         const { error } = await supabase
           .from('daily_check_ins')
-          .upsert(row, { onConflict: 'user_id,log_date,time_of_day' });
+          .upsert(rowToSave, { onConflict: 'id' });
 
         if (error) throw error;
       },

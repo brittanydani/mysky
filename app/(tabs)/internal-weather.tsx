@@ -709,7 +709,7 @@ export default function MoodCheckIn() {
 
   // Stable callback — reads all form state from sealRef so the gesture inside
   // SkiaMoodSealButton never gets a new onSeal reference mid-hold.
-  const handleSeal = useCallback(async () => {
+  const handleSeal = useCallback(async (): Promise<boolean> => {
     const {
       chartId, natalChart, isSaving,
       mood, energy, stress,
@@ -718,7 +718,7 @@ export default function MoodCheckIn() {
       isPremium, selectedSlot, selectedDate,
     } = sealRef.current;
 
-    if (!chartId || !natalChart || isSaving) return;
+    if (!chartId || !natalChart || isSaving) return false;
     setIsSaving(true);
     try {
       const influenceTags: ThemeTag[] = [...selectedInfluences.entries()].map(([t, polarity]) => {
@@ -781,11 +781,13 @@ export default function MoodCheckIn() {
         "Your internal weather has been mapped. See how the storm clears."
       ][Math.floor(Math.random() * 6)];
       Alert.alert("Recorded", encouragement);
+      return true;
     } catch (e) {
       logger.error('[MoodCheckIn] Save failed:', e);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       setIsSaving(false);
       Alert.alert('Error', 'Could not save check-in.');
+      return false;
     }
   }, []);
 

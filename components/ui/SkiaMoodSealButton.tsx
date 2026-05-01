@@ -75,7 +75,7 @@ const SEAL_GLYPH = (() => {
 })();
 
 interface Props {
-  onSeal: () => void;
+  onSeal: () => boolean | void | Promise<boolean | void>;
   isSaving?: boolean;
   disabled?: boolean;
   isEditing?: boolean;
@@ -156,9 +156,27 @@ export default function SkiaMoodSealButton({
   const handleComplete = useCallback(() => {
     stopHaptics();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
-    setComplete(true);
-    onSeal();
-  }, [stopHaptics, onSeal]);
+    const revert = () => {
+      setComplete(false);
+      progress.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
+    };
+    const seal = () => {
+      setComplete(true);
+    };
+
+    try {
+      const result = onSeal();
+      if (result instanceof Promise) {
+        result.then((ok) => { if (ok === false) revert(); else seal(); }).catch(revert);
+      } else if (result === false) {
+        revert();
+      } else {
+        seal();
+      }
+    } catch {
+      revert();
+    }
+  }, [stopHaptics, onSeal, progress]);
 
   const isInteractive = !disabled && !isSaving && !complete;
 
