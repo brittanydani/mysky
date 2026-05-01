@@ -72,7 +72,7 @@ export default function AstrologySettingsModal({
   const [selectedHouseSystem, setSelectedHouseSystem] = useState<HouseSystem>('placidus');
   const [selectedOrbPreset, setSelectedOrbPreset] = useState<OrbPreset>('normal');
   const [selectedOrientation, setSelectedOrientation] = useState<ChartOrientation>('standard-natal');
-  const [showAsteroid, setShowAsteroid] = useState<boolean>(true);
+  const [showAsteroid, setShowAsteroid] = useState<boolean>(false);
   const [showMinorAspects, setShowMinorAspects] = useState<boolean>(false);
   const [lilithMethod, setLilithMethod] = useState<'mean' | 'true'>('mean');
 
@@ -92,7 +92,7 @@ export default function AstrologySettingsModal({
       setSelectedHouseSystem(current.houseSystem);
       setSelectedOrbPreset(current.orbPreset);
       setSelectedOrientation(current.chartOrientation ?? 'standard-natal');
-      setShowAsteroid(current.showAsteroid ?? true);
+      setShowAsteroid(current.showAsteroid ?? false);
       setShowMinorAspects(current.showMinorAspects ?? false);
       setLilithMethod(current.lilithMethod ?? current.lilitMethod ?? 'mean');
     } catch (error) {
@@ -160,7 +160,7 @@ export default function AstrologySettingsModal({
       settings.houseSystem !== selectedHouseSystem ||
       settings.orbPreset !== selectedOrbPreset ||
       (settings.chartOrientation ?? 'standard-natal') !== selectedOrientation ||
-      (settings.showAsteroid ?? true) !== showAsteroid ||
+      (settings.showAsteroid ?? false) !== showAsteroid ||
       (settings.showMinorAspects ?? false) !== showMinorAspects ||
       ((settings.lilithMethod ?? settings.lilitMethod) ?? 'mean') !== lilithMethod);
 

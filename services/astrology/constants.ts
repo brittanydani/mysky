@@ -17,7 +17,7 @@ const PLANET_DEFINITIONS: Record<string, Planet> = {
   ascendant: { name: 'Ascendant', symbol: 'AC', type: 'Point' },
   midheaven: { name: 'Midheaven', symbol: 'MC', type: 'Point' },
   chiron: { name: 'Chiron', symbol: '⚷', type: 'Asteroid' },
-  juno: { name: 'Juno', symbol: '⚭', type: 'Asteroid' },
+  juno: { name: 'Juno', symbol: '⚵', type: 'Asteroid' },
   pallas: { name: 'Pallas', symbol: '⚴', type: 'Asteroid' },
   vesta: { name: 'Vesta', symbol: '⚶', type: 'Asteroid' },
   ceres: { name: 'Ceres', symbol: '⚳', type: 'Asteroid' },
@@ -26,8 +26,8 @@ const PLANET_DEFINITIONS: Record<string, Planet> = {
   lilith: { name: 'Lilith', symbol: '⚸', type: 'Point' },
   'true lilith': { name: 'True Lilith', symbol: '⚸', type: 'Point' },
   pholus: { name: 'Pholus', symbol: '⯛', type: 'Asteroid' },
-  vertex: { name: 'Vertex', symbol: 'Vx', type: 'Point' },
-  'anti-vertex': { name: 'Anti-Vertex', symbol: 'AVx', type: 'Point' },
+  vertex: { name: 'Vertex', symbol: '✶', type: 'Point' },
+  'anti-vertex': { name: 'Anti-Vertex', symbol: 'A✶', type: 'Point' },
   'part of fortune': { name: 'Part of Fortune', symbol: '⊗', type: 'Point' },
 };
 

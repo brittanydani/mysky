@@ -272,8 +272,8 @@ export function PartOfFortuneIcon({
 }
 
 /**
- * Vertex (Vx) — Point of Destiny
- * A beautifully woven, continuous-feeling typography piece.
+ * Vertex — Point of Destiny
+ * Six-rayed star matching the chart-wheel Vertex glyph.
  */
 export function VertexIcon({
   size = 24,
@@ -282,11 +282,9 @@ export function VertexIcon({
 }: AstrologyIconProps) {
   const elements = (
     <>
-      {/* The 'V' */}
-      <Path d="M 5 6 L 10.5 18 L 14.5 9.5" fill="none" />
-      {/* The 'x' */}
-      <Path d="M 13 12 L 19 18" fill="none" />
-      <Path d="M 13 18 L 19 12" fill="none" />
+      <Path d="M 12 4 L 12 20" fill="none" />
+      <Path d="M 5.1 8 L 18.9 16" fill="none" />
+      <Path d="M 18.9 8 L 5.1 16" fill="none" />
     </>
   );
 

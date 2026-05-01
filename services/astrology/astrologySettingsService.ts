@@ -168,7 +168,7 @@ const DEFAULT_SETTINGS: AstrologySettings = {
   ayanamsa: 'lahiri',
   orbPreset: 'normal',
   showMinorAspects: false,
-  showAsteroid: true,
+  showAsteroid: false,
   lilithMethod: 'mean',
   lilitMethod: 'mean',
   chartOrientation: 'standard-natal',

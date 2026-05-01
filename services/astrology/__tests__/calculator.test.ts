@@ -376,7 +376,7 @@ describe('EnhancedAstrologyCalculator', () => {
       expect(calculateChartRemoteSwiss).toHaveBeenCalledWith(expect.objectContaining({
         houseSystem: 'whole-sign',
         includeHouses: true,
-        includeAsteroids: true,
+        includeAsteroids: false,
         zodiacSystem: 'tropical',
         sidereal: false,
         ayanamsa: 'lahiri',

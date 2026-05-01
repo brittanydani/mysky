@@ -35,79 +35,6 @@ import {
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
-// ── Icons ────────────────────────────────────────────────────────────────────
-
-function SkiaPholusIcon({ x, y, size = 24, color = '#D4AF37' }: { x: number, y: number, size?: number, color?: string }) {
-  const s = size / 24;
-  const path = Skia.Path.Make();
-  path.moveTo(x + 4 * s, y + 20 * s);
-  path.lineTo(x + 20 * s, y + 4 * s);
-  const dotCx = x + 6.5 * s, dotCy = y + 17.5 * s, dotR = 2.2 * s;
-  return (
-    <Group>
-      <Path path={path} style="stroke" strokeWidth={1.2 * s} color={color} strokeCap="round" />
-      <Circle cx={dotCx} cy={dotCy} r={dotR} color={color} />
-    </Group>
-  );
-}
-
-function SkiaLilithIcon({ x, y, size = 24, color = '#D4AF37' }: { x: number, y: number, size?: number, color?: string }) {
-  const s = size / 24;
-  const cx = x + 12 * s;
-  const cresR = 4 * s;
-  const cresCY = (y + 12 * s) - 5 * s;
-  const stemTop = cresCY;
-  const stemBot = (y + 12 * s) + 4 * s;
-  const cresPath = Skia.Path.Make();
-  cresPath.addArc({ x: cx - cresR, y: cresCY - cresR, width: cresR * 2, height: cresR * 2 }, 180, 180);
-  const stemPath = Skia.Path.Make();
-  stemPath.moveTo(cx, stemTop);
-  stemPath.lineTo(cx, stemBot);
-  stemPath.moveTo(cx - 4 * s, stemBot);
-  stemPath.lineTo(cx + 4 * s, stemBot);
-  return (
-    <Group>
-      <Path path={cresPath} style="stroke" strokeWidth={0.9 * s} color={color} strokeCap="round" />
-      <Path path={stemPath} style="stroke" strokeWidth={0.9 * s} color={color} strokeCap="round" />
-    </Group>
-  );
-}
-
-function SkiaPartOfFortuneIcon({ x, y, size = 24, color = '#D4AF37' }: { x: number, y: number, size?: number, color?: string }) {
-  const s = size / 24;
-  const cx = x + 12 * s, cy = y + 12 * s;
-  const r = 5 * s;
-  const path = Skia.Path.Make();
-  path.addCircle(cx, cy, r);
-  const d = r * 0.65;
-  path.moveTo(cx - d, cy - d);
-  path.lineTo(cx + d, cy + d);
-  path.moveTo(cx + d, cy - d);
-  path.lineTo(cx - d, cy + d);
-  return <Path path={path} style="stroke" strokeWidth={0.9 * s} color={color} strokeCap="round" />;
-}
-
-function SkiaVertexIcon({ x, y, size = 24, color = '#D4AF37' }: { x: number, y: number, size?: number, color?: string }) {
-  const s = size / 24;
-  const vPath = Skia.Path.Make();
-  vPath.moveTo(x + 5 * s, y + 6 * s);
-  vPath.lineTo(x + 10.5 * s, y + 18 * s);
-  vPath.lineTo(x + 14.5 * s, y + 9.5 * s);
-  const x1 = Skia.Path.Make();
-  x1.moveTo(x + 13 * s, y + 12 * s);
-  x1.lineTo(x + 19 * s, y + 18 * s);
-  const x2 = Skia.Path.Make();
-  x2.moveTo(x + 13 * s, y + 18 * s);
-  x2.lineTo(x + 19 * s, y + 12 * s);
-  return (
-    <Group>
-      <Path path={vPath} style="stroke" strokeWidth={1.1 * s} color={color} strokeCap="round" />
-      <Path path={x1} style="stroke" strokeWidth={1.1 * s} color={color} strokeCap="round" />
-      <Path path={x2} style="stroke" strokeWidth={1.1 * s} color={color} strokeCap="round" />
-    </Group>
-  );
-}
-
 // ── Configuration ────────────────────────────────────────────────────────────
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -125,7 +52,7 @@ const R_ASPECT_RING = R_INNER + 22;
 
 const R_DOT_RING_1 = R_PLANET_RING - 18;
 const R_DOT_RING_2 = R_ASPECT_RING + 10;
-const PLANET_R = 13.5;
+const PLANET_R = 12.5;
 
 function makeArcPath(cx: number, cy: number, r: number, startDeg: number, sweepDeg: number): ReturnType<typeof Skia.Path.Make> {
   const path = Skia.Path.Make();
@@ -157,9 +84,44 @@ const ZODIAC_SIGNS = [
 ];
 
 const PLANET_SYMBOLS: Record<string, string> = {
-  Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇',
-  'North Node': '☊', 'South Node': '☋', Chiron: '⚷', Lilith: '⚸', Ceres: '⚳', Pallas: '⚴', Juno: '⚭', Vesta: '⚶', Vertex: 'Vx', 'Part of Fortune': '⊗', Pholus: '⯰', Ascendant: 'AC', Midheaven: 'MC',
+  Sun: '☉',
+  Moon: '☽',
+  Mercury: '☿',
+  Venus: '♀',
+  Mars: '♂',
+  Jupiter: '♃',
+  Saturn: '♄',
+  Uranus: '♅',
+  Neptune: '♆',
+  Pluto: '♇',
+  'North Node': '☊',
+  'South Node': '☋',
+  Chiron: '⚷',
+  Lilith: '⚸',
+  Ceres: '⚳',
+  Pallas: '⚴',
+  Juno: '⚵',
+  Vesta: '⚶',
+  Vertex: '✶',
+  'Part of Fortune': '⊗',
+  Pholus: '⯰',
+  Ascendant: 'AC',
+  Midheaven: 'MC',
 };
+
+const INNER_POINT_LABELS = new Set(['Vertex', 'Part of Fortune']);
+const MAJOR_BODY_LABELS = new Set(['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto']);
+const VECTOR_GLYPH_LABELS = new Set([
+  'Chiron',
+  'Lilith',
+  'Ceres',
+  'Pallas',
+  'Juno',
+  'Vesta',
+  'Vertex',
+  'Part of Fortune',
+  'Pholus',
+]);
 
 const PLANET_COLORS: Record<string, string> = {
   Sun: '#D4AF37', Moon: '#A2C2E1', Mercury: '#86BCEC', Venus: '#D4A3B3', Mars: '#DC5050', Jupiter: '#D4AF37', Saturn: '#8484A0',
@@ -184,6 +146,158 @@ function polarToXY(angle: number, radius: number): { x: number; y: number } {
 }
 
 function normalize360(deg: number): number { const x = deg % 360; return x < 0 ? x + 360 : x; }
+
+function normalizeRadians(rad: number): number {
+  const full = Math.PI * 2;
+  const x = rad % full;
+  return x < 0 ? x + full : x;
+}
+
+function radiansApart(a: number, b: number): number {
+  let d = Math.abs(a - b) % (Math.PI * 2);
+  if (d > Math.PI) d = Math.PI * 2 - d;
+  return d;
+}
+
+function makeGlyphPath(draw: (path: ReturnType<typeof Skia.Path.Make>) => void): ReturnType<typeof Skia.Path.Make> {
+  const path = Skia.Path.Make();
+  draw(path);
+  return path;
+}
+
+function renderVectorGlyph(label: string, x: number, y: number, size: number, color: string): React.ReactNode {
+  if (!VECTOR_GLYPH_LABELS.has(label)) return null;
+
+  const s = size / 24;
+  const stroke = Math.max(0.85, 1.35 * s);
+  const cx = x;
+  const cy = y;
+
+  if (label === 'Chiron') {
+    const path = makeGlyphPath((p) => {
+      p.addCircle(cx, cy - 6 * s, 2.6 * s);
+      p.moveTo(cx, cy - 3.5 * s);
+      p.lineTo(cx, cy + 8 * s);
+      p.moveTo(cx, cy + 1 * s);
+      p.lineTo(cx + 6 * s, cy - 5 * s);
+      p.moveTo(cx, cy + 1 * s);
+      p.lineTo(cx + 6 * s, cy + 7 * s);
+    });
+    return <Path path={path} style="stroke" strokeWidth={stroke} color={color} strokeCap="round" strokeJoin="round" />;
+  }
+
+  if (label === 'Lilith') {
+    const crescent = makeGlyphPath((p) => {
+      p.addArc({ x: cx - 5 * s, y: cy - 10 * s, width: 10 * s, height: 10 * s }, 115, 250);
+    });
+    const stem = makeGlyphPath((p) => {
+      p.moveTo(cx, cy - 1 * s);
+      p.lineTo(cx, cy + 8 * s);
+      p.moveTo(cx - 5 * s, cy + 4 * s);
+      p.lineTo(cx + 5 * s, cy + 4 * s);
+    });
+    return (
+      <Group>
+        <Path path={crescent} style="stroke" strokeWidth={stroke} color={color} strokeCap="round" />
+        <Path path={stem} style="stroke" strokeWidth={stroke} color={color} strokeCap="round" />
+      </Group>
+    );
+  }
+
+  if (label === 'Ceres') {
+    const path = makeGlyphPath((p) => {
+      p.addArc({ x: cx - 7 * s, y: cy - 9 * s, width: 14 * s, height: 14 * s }, 70, 250);
+      p.moveTo(cx, cy + 3 * s);
+      p.lineTo(cx, cy + 9 * s);
+      p.moveTo(cx - 4 * s, cy + 6 * s);
+      p.lineTo(cx + 4 * s, cy + 6 * s);
+    });
+    return <Path path={path} style="stroke" strokeWidth={stroke} color={color} strokeCap="round" />;
+  }
+
+  if (label === 'Pallas') {
+    const path = makeGlyphPath((p) => {
+      p.moveTo(cx, cy - 9 * s);
+      p.lineTo(cx + 6 * s, cy - 3 * s);
+      p.lineTo(cx, cy + 3 * s);
+      p.lineTo(cx - 6 * s, cy - 3 * s);
+      p.close();
+      p.moveTo(cx, cy + 3 * s);
+      p.lineTo(cx, cy + 9 * s);
+      p.moveTo(cx - 5 * s, cy + 6 * s);
+      p.lineTo(cx + 5 * s, cy + 6 * s);
+    });
+    return <Path path={path} style="stroke" strokeWidth={stroke} color={color} strokeCap="round" strokeJoin="round" />;
+  }
+
+  if (label === 'Juno') {
+    const path = makeGlyphPath((p) => {
+      p.moveTo(cx, cy - 9 * s);
+      p.lineTo(cx, cy + 9 * s);
+      p.moveTo(cx - 5 * s, cy - 4 * s);
+      p.lineTo(cx + 5 * s, cy - 4 * s);
+      p.moveTo(cx - 4 * s, cy - 8 * s);
+      p.lineTo(cx + 4 * s, cy);
+      p.moveTo(cx + 4 * s, cy - 8 * s);
+      p.lineTo(cx - 4 * s, cy);
+    });
+    return <Path path={path} style="stroke" strokeWidth={stroke} color={color} strokeCap="round" />;
+  }
+
+  if (label === 'Vesta') {
+    const path = makeGlyphPath((p) => {
+      p.moveTo(cx - 6 * s, cy - 6 * s);
+      p.lineTo(cx, cy - 10 * s);
+      p.lineTo(cx + 6 * s, cy - 6 * s);
+      p.lineTo(cx + 3 * s, cy - 1 * s);
+      p.lineTo(cx, cy - 4 * s);
+      p.lineTo(cx - 3 * s, cy - 1 * s);
+      p.close();
+      p.moveTo(cx, cy - 1 * s);
+      p.lineTo(cx, cy + 9 * s);
+      p.moveTo(cx - 5 * s, cy + 5 * s);
+      p.lineTo(cx + 5 * s, cy + 5 * s);
+    });
+    return <Path path={path} style="stroke" strokeWidth={stroke} color={color} strokeCap="round" strokeJoin="round" />;
+  }
+
+  if (label === 'Vertex') {
+    const path = makeGlyphPath((p) => {
+      for (let i = 0; i < 6; i++) {
+        const angle = (-Math.PI / 2) + i * (Math.PI / 3);
+        p.moveTo(cx, cy);
+        p.lineTo(cx + Math.cos(angle) * 8 * s, cy + Math.sin(angle) * 8 * s);
+      }
+    });
+    return <Path path={path} style="stroke" strokeWidth={stroke} color={color} strokeCap="round" strokeJoin="round" />;
+  }
+
+  if (label === 'Part of Fortune') {
+    const path = makeGlyphPath((p) => {
+      p.addCircle(cx, cy, 7 * s);
+      p.moveTo(cx - 4.5 * s, cy - 4.5 * s);
+      p.lineTo(cx + 4.5 * s, cy + 4.5 * s);
+      p.moveTo(cx + 4.5 * s, cy - 4.5 * s);
+      p.lineTo(cx - 4.5 * s, cy + 4.5 * s);
+    });
+    return <Path path={path} style="stroke" strokeWidth={stroke} color={color} strokeCap="round" />;
+  }
+
+  if (label === 'Pholus') {
+    const path = makeGlyphPath((p) => {
+      p.moveTo(cx - 7 * s, cy + 7 * s);
+      p.lineTo(cx + 7 * s, cy - 7 * s);
+    });
+    return (
+      <Group>
+        <Path path={path} style="stroke" strokeWidth={stroke} color={color} strokeCap="round" />
+        <Circle cx={cx - 5 * s} cy={cy + 5 * s} r={2.1 * s} color={color} />
+      </Group>
+    );
+  }
+
+  return null;
+}
 
 function getLongitude(obj: any): number | null {
   if (!obj) return null;
@@ -228,7 +342,7 @@ function getChartPlanet(chart: NatalChart, name: string): any | null {
 
 interface PlacedPlanet { label: string; symbol: string; color: string; originalAngle: number; displayAngle: number; radialOffset: number; longitude: number; isRetrograde: boolean; }
 
-function spreadPlanets(planets: { label: string; longitude: number; isRetrograde: boolean }[], wheelOptions: ChartWheelAngleOptions, minSeparationDeg: number = 8, radialStepPx: number = 14, baseRadius: number = R_PLANET_RING, fallbackColor: string = '#FFFFFF'): PlacedPlanet[] {
+function spreadPlanets(planets: { label: string; longitude: number; isRetrograde: boolean }[], wheelOptions: ChartWheelAngleOptions, minSeparationDeg: number = 8, radialStepPx: number = 18, _baseRadius: number = R_PLANET_RING, fallbackColor: string = '#FFFFFF'): PlacedPlanet[] {
   const items: PlacedPlanet[] = planets.map((p) => {
     const angle = astroToAngle(p.longitude, wheelOptions);
     return { label: p.label, symbol: PLANET_SYMBOLS[p.label] || '?', color: PLANET_COLORS[p.label] || fallbackColor, originalAngle: angle, displayAngle: angle, radialOffset: 0, longitude: p.longitude, isRetrograde: p.isRetrograde };
@@ -250,23 +364,15 @@ function spreadPlanets(planets: { label: string; longitude: number; isRetrograde
   }
   for (const cluster of clusters) {
     if (cluster.length <= 1) continue;
-    let sumX = 0; let sumY = 0;
-    for (const item of cluster) {
-       sumX += Math.cos(item.originalAngle);
-       sumY += Math.sin(item.originalAngle);
-    }
-    let avgAngle = Math.atan2(sumY, sumX);
-    if (avgAngle < 0) avgAngle += 2 * Math.PI;
-    
-    const totalSpread = (cluster.length - 1) * minSepRad;
-    let startAngle = avgAngle - totalSpread / 2;
-    
+    const laneCount = cluster.length <= 2 ? 2 : cluster.length <= 5 ? 3 : 4;
+    const angleStep = Math.min(minSepRad * 0.38, (6 * Math.PI) / 180);
+    const centerIndex = (cluster.length - 1) / 2;
+
     for (let i = 0; i < cluster.length; i++) {
-      let a = startAngle + i * minSepRad;
-      if (a < 0) a += 2 * Math.PI;
-      if (a >= 2 * Math.PI) a -= 2 * Math.PI;
-      cluster[i].displayAngle = a;
-      cluster[i].radialOffset = 0;
+      const lane = i % laneCount;
+      const extraCycle = Math.floor(i / laneCount);
+      cluster[i].displayAngle = normalizeRadians(cluster[i].originalAngle + (i - centerIndex) * angleStep);
+      cluster[i].radialOffset = lane * radialStepPx + extraCycle * radialStepPx * 0.45;
     }
   }
   return items;
@@ -375,10 +481,9 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
   const sans9 = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 9, fontWeight: '600' }), []);
   const sans8 = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 8, fontWeight: '600' }), []);
   const zodiac24 = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 24, fontWeight: '400' }), []);
-  const sans11Heavy = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 11, fontWeight: '900' }), []);
   const sans9Heavy = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 9, fontWeight: '900' }), []);
-  const zodiacMain = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 24, fontWeight: '900' }), []);
-  const zodiacOverlay = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 18, fontWeight: '900' }), []);
+  const zodiacMain = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 22, fontWeight: '900' }), []);
+  const zodiacOverlay = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 16, fontWeight: '900' }), []);
   
   const placedPlanets = useMemo(() => {
     const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Chiron', 'North Node', 'South Node', 'Lilith', 'Ceres', 'Pallas', 'Juno', 'Vesta', 'Vertex', 'Part of Fortune', 'Pholus'];
@@ -387,7 +492,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
       const obj = getChartPlanet(chart, label); const lon = getLongitude(obj);
       if (lon === null) continue; raw.push({ label, longitude: lon, isRetrograde: getRetrograde(obj) });
     }
-    return spreadPlanets(raw, wheelOptions, 13, 14, R_PLANET_RING, theme.textPrimary);
+    return spreadPlanets(raw, wheelOptions, 18, 20, R_PLANET_RING, theme.textPrimary);
   }, [chart, wheelOptions, theme.textPrimary]);
 
   const planetDisplayAngles = useMemo(() => {
@@ -407,7 +512,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
       const obj = getChartPlanet(overlayChart, label); const lon = getLongitude(obj);
       if (lon === null) continue; raw.push({ label, longitude: lon, isRetrograde: getRetrograde(obj) });
     }
-    const placed = spreadPlanets(raw, wheelOptions, 13, 12, R_OVERLAY_RING, theme.textPrimary);
+    const placed = spreadPlanets(raw, wheelOptions, 16, 14, R_OVERLAY_RING, theme.textPrimary);
     return placed.map((p) => ({ ...p, color: '#E5E7EB' }));
   }, [overlayChart, wheelOptions, R_OVERLAY_RING, theme.textPrimary]);
 
@@ -614,25 +719,27 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
         {/* ── Natal planet glyphs ── */}
         {showPerson1 && placedPlanets.map((planet) => {
-          const nonPlanetPoints = ['Chiron', 'North Node', 'South Node', 'Lilith', 'Vertex', 'Part of Fortune', 'Pholus', 'Ascendant', 'Midheaven', 'ASC', 'MC'];
-          const iconOnlyPoints = ['Lilith', 'Vertex', 'Part of Fortune', 'Pholus'];
-          const isPoint = nonPlanetPoints.includes(planet.label);
-          const isIconOnly = iconOnlyPoints.includes(planet.label);
+          const isPoint = INNER_POINT_LABELS.has(planet.label);
           const baseRadius = isPoint ? R_INNER + 20 : R_PLANET_RING;
-          const actualRadius = baseRadius + planet.radialOffset;
+          const actualRadius = baseRadius + planet.radialOffset * (isPoint ? 1 : -1);
           const glyphPos = polarToXY(planet.displayAngle, actualRadius);
           const tickOuter = polarToXY(planet.originalAngle, R_OUTER - 1);
           const tickInner = polarToXY(planet.displayAngle, isPoint ? actualRadius + 15 : actualRadius + PLANET_R + 2);
           const textColor = isPoint ? wheelPalette.pointText : wheelPalette.glyphText;
-          const textOpacity = 1.0; const textStyle = isPoint ? "fill" : "stroke"; const strokeWidthVal = isPoint ? 0 : 1.5;
+          const textStyle = isPoint ? "fill" : "stroke";
+          const strokeWidthVal = isPoint ? 0 : 1.5;
           const baseColor = PLANET_COLORS[planet.label] || '#D4AF37';
-          const glyph = planet.symbol; const glyphFont = glyph.length > 1 ? sans11Heavy : zodiacMain;
+          const glyph = planet.symbol;
+          const vectorGlyph = renderVectorGlyph(planet.label, glyphPos.x, glyphPos.y, isPoint ? 18 : 20, textColor);
+          const glyphFont = glyph.length > 1 ? sans9Heavy : zodiacMain;
           const glyphWidth = glyphFont ? glyphFont.getTextWidth(glyph) : 12; const fontSize = glyphFont ? glyphFont.getSize() : 12;
           const glyphOffsetX = glyphWidth / 2; const glyphOffsetY = fontSize * 0.35;
+          const showDegreeReadout = MAJOR_BODY_LABELS.has(planet.label) && planet.radialOffset === 0;
+          const isDisplaced = planet.radialOffset > 0 || radiansApart(planet.displayAngle, planet.originalAngle) > 0.01;
 
           return (
             <Group key={`p-${planet.label}`}>
-              {!isPoint && (
+              {isDisplaced && (
                 <Line p1={vec(tickOuter.x, tickOuter.y)} p2={vec(tickInner.x, tickInner.y)} color={baseColor} strokeWidth={0.55} opacity={0.24} />
               )}
               {!isPoint && (
@@ -644,25 +751,12 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                   </Circle>
                 </>
               )}
-              {isIconOnly && (
-                planet.label === 'Pholus' ? <Group><SkiaPholusIcon x={glyphPos.x - 12} y={glyphPos.y - 12} size={24} color={textColor} /></Group> :
-                planet.label === 'Vertex' ? <Group><SkiaVertexIcon x={glyphPos.x - 12} y={glyphPos.y - 12} size={24} color={textColor} /></Group> :
-                planet.label === 'Lilith' ? <Group><SkiaLilithIcon x={glyphPos.x - 12} y={glyphPos.y - 12} size={24} color={textColor} /></Group> :
-                planet.label === 'Part of Fortune' ? <Group><SkiaPartOfFortuneIcon x={glyphPos.x - 12} y={glyphPos.y - 12} size={24} color={textColor} /></Group> :
-                glyphFont ? <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color={textColor} style={"fill"} strokeWidth={0} opacity={1.0} /> : null
-              )}
-              {isPoint && planet.label === 'Chiron' ? (
-                (() => {
-                  const path = Skia.Path.Make(); const cx = glyphPos.x, cy = glyphPos.y;
-                  path.addCircle(cx, cy - 5, 3); path.moveTo(cx, cy - 2); path.lineTo(cx, cy + 5); path.moveTo(cx, cy + 1); path.lineTo(cx + 4.5, cy - 3.5); path.moveTo(cx, cy + 1); path.lineTo(cx + 4.5, cy + 5);
-                  return <Path path={path} style="stroke" strokeWidth={0.8} color={wheelPalette.pointText} strokeCap="round" />;
-                })()
-              ) : glyphFont && !isIconOnly && (
-                <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color={textColor} style={textStyle as "stroke" | "fill"} strokeWidth={strokeWidthVal} opacity={textOpacity} />
-              )}
+              {vectorGlyph ?? (glyphFont && (
+                <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color={textColor} style={textStyle as "stroke" | "fill"} strokeWidth={strokeWidthVal} opacity={1.0} />
+              ))}
               {planet.isRetrograde && sans8 && <SkiaText x={glyphPos.x + 7.5} y={glyphPos.y - 6.5} text="R" font={sans8} color="#DC5050" />}
               {/* Inner degree readout for planets */}
-              {!isPoint && sans8 && (
+              {!isPoint && showDegreeReadout && sans8 && (
                 <SkiaText x={glyphPos.x + 8.5} y={glyphPos.y + 6.5} text={`${Math.floor(planet.longitude % 30)}°`} font={sans8} color="rgba(255,255,255,0.4)" />
               )}
             </Group>
@@ -671,21 +765,26 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
         {/* ── Overlay planets (velvet spheres, secondary hierarchy) ── */}
         {showPerson2 && placedOverlayPlanets.map((planet) => {
-          const isPoint = ['Ascendant', 'Midheaven', 'North Node', 'South Node', 'Chiron', 'ASC', 'MC'].includes(planet.label);
+          const isPoint = INNER_POINT_LABELS.has(planet.label);
           const baseRadius = isPoint ? R_INNER + 36 : R_OVERLAY_RING;
-          const actualRadius = baseRadius + planet.radialOffset;
+          const actualRadius = baseRadius + planet.radialOffset * (isPoint ? 1 : -1);
           const glyphPos = polarToXY(planet.displayAngle, actualRadius);
           const tickOuter = polarToXY(planet.originalAngle, R_OUTER - 1);
           const O_PLANET_R = PLANET_R * 0.75;
           const tickInner = polarToXY(planet.displayAngle, isPoint ? actualRadius + 15 : actualRadius + O_PLANET_R + 2);
           const baseColor = planet.color;
-          const glyph = planet.symbol; const glyphFont = glyph.length > 1 ? sans9Heavy : zodiacOverlay;
+          const glyph = planet.symbol;
+          const vectorGlyph = renderVectorGlyph(planet.label, glyphPos.x, glyphPos.y, isPoint ? 15 : 16, isPoint ? wheelPalette.pointText : wheelPalette.glyphText);
+          const glyphFont = glyph.length > 1 ? sans8 : zodiacOverlay;
           const glyphWidth = glyphFont ? glyphFont.getTextWidth(glyph) : 10; const fontSize = glyphFont ? glyphFont.getSize() : 10;
           const glyphOffsetX = glyphWidth / 2; const glyphOffsetY = fontSize * 0.35;
+          const textStyle = isPoint ? "fill" : "stroke";
+          const strokeWidthVal = isPoint ? 0 : 1.2;
+          const isDisplaced = planet.radialOffset > 0 || radiansApart(planet.displayAngle, planet.originalAngle) > 0.01;
 
           return (
             <Group key={`op-${planet.label}`}>
-              {!isPoint && (
+              {isDisplaced && (
                 <Line p1={vec(tickOuter.x, tickOuter.y)} p2={vec(tickInner.x, tickInner.y)} color={baseColor} strokeWidth={0.6} opacity={0.30}><DashPathEffect intervals={[2, 2]} /></Line>
               )}
               {!isPoint && (
@@ -698,15 +797,9 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                   </Circle>
                 </>
               )}
-              {isPoint && planet.label === 'Chiron' ? (
-                (() => {
-                  const path = Skia.Path.Make(); const cx = glyphPos.x, cy = glyphPos.y;
-                  path.addCircle(cx, cy - 4, 2.4); path.moveTo(cx, cy - 1.6); path.lineTo(cx, cy + 4); path.moveTo(cx, cy + 0.8); path.lineTo(cx + 3.6, cy - 2.8); path.moveTo(cx, cy + 0.8); path.lineTo(cx + 3.6, cy + 4);
-                  return <Path path={path} style="stroke" strokeWidth={0.7} color={wheelPalette.pointText} strokeCap="round" />;
-                })()
-              ) : glyphFont && (
-                <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color={wheelPalette.glyphText} style="stroke" strokeWidth={1.2} />
-              )}
+              {vectorGlyph ?? (glyphFont && (
+                <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color={isPoint ? wheelPalette.pointText : wheelPalette.glyphText} style={textStyle as "stroke" | "fill"} strokeWidth={strokeWidthVal} />
+              ))}
               {planet.isRetrograde && sans8 && <SkiaText x={glyphPos.x + 6.0} y={glyphPos.y - 5.5} text="R" font={sans8} color="#DC5050" />}
             </Group>
           );

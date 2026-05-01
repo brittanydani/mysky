@@ -344,7 +344,7 @@ export class EnhancedAstrologyCalculator {
 
     // Determine if asteroids should be included
     const cachedSettings = AstrologySettingsService.getCachedSettings();
-    const includeAsteroids = cachedSettings?.showAsteroid ?? true;
+    const includeAsteroids = cachedSettings?.showAsteroid ?? false;
     const lilithMethod = cachedSettings?.lilithMethod ?? cachedSettings?.lilitMethod ?? 'mean';
 
     // Convert local time to UTC for Swiss Ephemeris
@@ -387,7 +387,7 @@ export class EnhancedAstrologyCalculator {
   ): Promise<NatalChart> {
     const includeHouses = !birthData.hasUnknownTime && Boolean(birthData.time);
     const cachedSettings = AstrologySettingsService.getCachedSettings();
-    const includeAsteroids = cachedSettings?.showAsteroid ?? true;
+    const includeAsteroids = cachedSettings?.showAsteroid ?? false;
     const lilithMethod = cachedSettings?.lilithMethod ?? cachedSettings?.lilitMethod ?? 'mean';
     const zodiacSystem = birthData.zodiacSystem ?? cachedSettings?.zodiacSystem ?? 'tropical';
     const utc = timezoneInfo.utcDateTime;
