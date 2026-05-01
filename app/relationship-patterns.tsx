@@ -20,7 +20,7 @@ import { KeyboardAwareScrollView } from '../components/keyboard/KeyboardControll
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 import { logger } from '../utils/logger';
@@ -225,6 +225,11 @@ export default function RelationshipPatternsScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
 
+  const handleBack = () => {
+    Haptics.selectionAsync().catch(() => {});
+    router.replace('/(tabs)/identity');
+  };
+
   const clearSavedInsight = () => setLastSavedEntry(null);
 
   const toggleMultiSelect = (id: string, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
@@ -248,6 +253,9 @@ export default function RelationshipPatternsScreen() {
     accentColor,
     selectedBackgroundColor: `${accentColor}1F`,
     selectedTextColor: theme.textPrimary,
+    style: styles.choicePill,
+    labelStyle: styles.choicePillText,
+    selectedLabelStyle: styles.choicePillTextSelected,
   }));
 
   const buildStatePillItems = (
@@ -265,6 +273,9 @@ export default function RelationshipPatternsScreen() {
     accentColor: '#6B9080',
     selectedBackgroundColor: 'rgba(107, 144, 128, 0.20)',
     selectedTextColor: theme.textPrimary,
+    style: styles.choicePill,
+    labelStyle: styles.choicePillText,
+    selectedLabelStyle: styles.choicePillTextSelected,
   }));
 
   const resolveOptionLabels = (options: SelectableOption[], ids?: string[]) => (
@@ -302,7 +313,13 @@ export default function RelationshipPatternsScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => router.replace('/(tabs)/identity')}>
+          <Pressable
+            style={styles.backButton}
+            onPress={handleBack}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
             <MetallicIcon name="chevron-back-outline" size={22} variant="gold" />
           </Pressable>
         </View>
@@ -389,6 +406,9 @@ export default function RelationshipPatternsScreen() {
                 accentColor: color,
                 selectedBackgroundColor: `${color}15`,
                 selectedTextColor: theme.textPrimary,
+                style: styles.choicePill,
+                labelStyle: styles.choicePillText,
+                selectedLabelStyle: styles.choicePillTextSelected,
               }));
 
               return (
@@ -442,12 +462,6 @@ export default function RelationshipPatternsScreen() {
               </View>
             </View>
 
-            { canSave && (
-              <Pressable style={styles.submitBtn} onPress={addEntry}>
-                <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
-                <MetallicText style={styles.submitBtnText} variant="gold">Save Reflection</MetallicText>
-              </Pressable>
-            )}
           </VelvetGlassSurface>
 
           {lastSavedEntry && (
@@ -521,8 +535,22 @@ export default function RelationshipPatternsScreen() {
 
           <ReflectionDisclaimer body="These patterns are for noticing and reflection — not clinical diagnosis or attachment assessment." />
 
-          <View style={{ height: 100 }} />
+          <View style={styles.scrollEndSpacer} />
         </KeyboardAwareScrollView>
+
+        {canSave && (
+          <Animated.View entering={FadeInDown.duration(400)} style={styles.sealBar}>
+            <Pressable
+              style={[styles.saveBtn, theme.velvetBorder]}
+              onPress={addEntry}
+              accessibilityRole="button"
+              accessibilityLabel="Save reflection"
+            >
+              <LinearGradient colors={['rgba(44, 54, 69, 0.95)', 'rgba(26, 30, 41, 0.60)']} style={StyleSheet.absoluteFill} />
+              <MetallicText style={styles.saveBtnText} variant="gold">Save Reflection</MetallicText>
+            </Pressable>
+          </Animated.View>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -551,15 +579,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
+  scrollEndSpacer: { height: 120 },
   emptyHint: { marginTop: 16, marginBottom: 16, padding: 20, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   emptyHintText: { fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 21, textAlign: 'center' },
-  header: { paddingHorizontal: 24, paddingTop: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 12 },
   backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   titleArea: { paddingHorizontal: 24, marginVertical: 32 },
-  headerTitle: { fontSize: 32, fontWeight: '800', color: theme.textPrimary, letterSpacing: -1 },
+  headerTitle: { fontSize: 32, fontWeight: '800', color: theme.textPrimary, letterSpacing: -1, marginBottom: 6, maxWidth: '88%' },
   headerSubtitle: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.6)' },
   
-  summaryCard: { borderRadius: 24, padding: 24, marginBottom: 32, overflow: 'hidden' },
+  summaryCard: { borderRadius: 28, padding: 24, marginBottom: 24, overflow: 'hidden' },
   summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
   summaryTitle: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   
@@ -576,26 +605,30 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   tagCategoryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tagCategoryDot: { fontSize: 8 },
   tagCategoryLabel: { fontSize: 11, fontWeight: '700', color: theme.textSecondary, letterSpacing: 1 },
-  tagRailContent: { paddingTop: 16 },
-  bridgeBlock: { marginTop: 18 },
-  bridgeQuestionTitle: { color: theme.textPrimary, fontSize: 14, fontWeight: '700', lineHeight: 19, marginBottom: 12 },
+  tagRailContent: { paddingTop: 16, gap: 10 },
+  choicePill: { minHeight: 40, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.035)', borderColor: theme.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)' },
+  choicePillText: { color: theme.textSecondary, fontSize: 12, lineHeight: 16, fontWeight: '600' },
+  choicePillTextSelected: { color: theme.textPrimary, fontWeight: '800' },
+  bridgeBlock: { marginTop: 22 },
+  bridgeQuestionTitle: { color: theme.textPrimary, fontSize: 16, fontWeight: '600', lineHeight: 24, marginBottom: 14 },
   bridgePillGrid: { gap: 10 },
-  stateGrid: { gap: 18, marginTop: 18 },
+  stateGrid: { gap: 22, marginTop: 22 },
   stateBlock: { gap: 0 },
   
-  submitBtn: { height: 56, borderRadius: 28, marginTop: 24, overflow: 'hidden', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  submitBtnText: { fontSize: 14, fontWeight: '800', letterSpacing: 1 },
+  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(10,10,15,0.95)' : 'rgba(252,248,241,0.96)' },
+  saveBtn: { height: 50, borderRadius: 25, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
+  saveBtnText: { fontSize: 13, fontWeight: '800', letterSpacing: 0.8 },
 
   savedInsightWrap: { marginTop: -12, marginBottom: 28 },
-  savedInsightCard: { borderRadius: 24, padding: 20, overflow: 'hidden' },
+  savedInsightCard: { borderRadius: 28, padding: 24, overflow: 'hidden' },
   savedInsightHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   savedInsightEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   savedInsightText: { color: theme.textPrimary, fontSize: 14, lineHeight: 21 },
-  nextStepPrompt: { marginTop: 16, padding: 14, borderRadius: 16, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.035)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.06)' },
+  nextStepPrompt: { marginTop: 18, padding: 16, borderRadius: 18, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.035)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.06)' },
   nextStepPromptText: { color: theme.textSecondary, fontSize: 13, fontWeight: '700', lineHeight: 19 },
 
-  historySection: { gap: 12 },
-  entryCard: { padding: 20, borderRadius: 20, marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.05)' },
+  historySection: { gap: 16 },
+  entryCard: { padding: 22, borderRadius: 24, marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.05)' },
   entryDate: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginBottom: 8 },
   entryNote: { fontSize: 14, color: theme.textPrimary, lineHeight: 20 },
   entryChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
