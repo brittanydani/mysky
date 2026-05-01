@@ -179,6 +179,11 @@ export async function saveUserPreference<T>(
   preferenceKey: string,
   payload: T,
 ): Promise<void> {
+  if (payload == null) {
+    await deleteUserPreference(preferenceKey);
+    return;
+  }
+
   const userId = await getUserId();
 
   return withRetry(

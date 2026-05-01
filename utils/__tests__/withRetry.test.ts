@@ -56,6 +56,29 @@ describe('withRetry', () => {
     });
   });
 
+  it('preserves details from thrown object errors', async () => {
+    const promise = withRetry(
+      () => Promise.reject({
+        code: '23505',
+        details: 'Key already exists',
+        message: 'duplicate key value violates unique constraint',
+      }),
+      'objectErrorOperation',
+      {
+        maxRetries: 0,
+        timeoutMs: 500,
+      },
+    );
+
+    await expect(promise).rejects.toMatchObject({
+      name: 'RetryError',
+      message: expect.stringContaining('duplicate key value violates unique constraint'),
+      lastError: expect.objectContaining({
+        message: expect.stringContaining('23505'),
+      }),
+    });
+  });
+
   it('times out hanging operations', async () => {
     const promise = withRetry(
       () => new Promise<string>(() => {}),

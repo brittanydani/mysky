@@ -38,6 +38,31 @@ const wait = (ms: number) =>
     setTimeout(resolve, ms);
   });
 
+function stringifyThrownObject(value: Record<string, unknown>): string {
+  const parts = [value.message, value.details, value.hint, value.code]
+    .filter((part): part is string => typeof part === 'string' && part.length > 0);
+
+  if (parts.length > 0) return parts.join(' | ');
+
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function normalizeThrownError(error: unknown): Error {
+  if (error instanceof Error) return error;
+
+  if (error && typeof error === 'object') {
+    const normalized = new Error(stringifyThrownObject(error as Record<string, unknown>));
+    normalized.name = 'NonErrorThrown';
+    return normalized;
+  }
+
+  return new Error(String(error));
+}
+
 const withTimeout = async <T>(
   operation: () => Promise<T>,
   timeoutMs: number,
@@ -73,7 +98,7 @@ export async function withRetry<T>(
     try {
       return await withTimeout(operation, config.timeoutMs);
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
+      lastError = normalizeThrownError(error);
 
       if (attempt >= totalAttempts) {
         break;

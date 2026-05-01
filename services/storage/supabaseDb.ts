@@ -830,7 +830,7 @@ export async function saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
       async () => {
         const { error } = await supabase
           .from('daily_check_ins')
-          .upsert(row, { onConflict: 'id' });
+          .upsert(row, { onConflict: 'user_id,log_date,time_of_day' });
 
         if (error) throw error;
       },
