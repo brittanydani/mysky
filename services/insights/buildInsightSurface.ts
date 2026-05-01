@@ -30,7 +30,7 @@ import { logger } from '../../utils/logger';
 import { ARCHIVE_PATTERNS } from './archivePatterns';
 import { scoreArchivePattern } from './engine/scoreArchivePatterns';
 import { buildUserSignals } from './normalizers/buildUserSignals';
-import { runKnowledgeEngine } from './knowledgeEngine';
+import { runActiveKnowledgeInsight } from './knowledgeInsightRouter';
 import type { GeneratedInsight, UserSignal } from './types/knowledgeEngine';
 import type { KnowledgeEngineHistoryInput } from './insightHistory';
 
@@ -293,14 +293,14 @@ export async function buildInsightSurface({
     : null;
   const feedInsights = [...buildPatternFeedInsights(deepInsights), ...crossRefs];
   const knowledgeInsight = insightsEnabled && includeKnowledgeInsight
-    ? runKnowledgeEngine(
+    ? await runActiveKnowledgeInsight({
         checkIns,
-        recentJournalEntries,
+        journalEntries: recentJournalEntries,
         sleepEntries,
-        enrichedContext,
-        knowledgeInsightDate ?? `${today}T12:00:00`,
-        knowledgeHistory,
-      )
+        selfKnowledgeContext: enrichedContext,
+        date: knowledgeInsightDate ?? `${today}T12:00:00`,
+        history: knowledgeHistory,
+      })
     : null;
 
   const premiumInsight = await maybeBuildPremiumInsight(

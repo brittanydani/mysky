@@ -74,7 +74,7 @@ export default function AstrologySettingsModal({
   const [selectedOrientation, setSelectedOrientation] = useState<ChartOrientation>('standard-natal');
   const [showAsteroid, setShowAsteroid] = useState<boolean>(true);
   const [showMinorAspects, setShowMinorAspects] = useState<boolean>(false);
-  const [lilitMethod, setLilitMethod] = useState<'mean' | 'true'>('mean');
+  const [lilithMethod, setLilithMethod] = useState<'mean' | 'true'>('mean');
 
   useEffect(() => {
     if (visible) {
@@ -94,7 +94,7 @@ export default function AstrologySettingsModal({
       setSelectedOrientation(current.chartOrientation ?? 'standard-natal');
       setShowAsteroid(current.showAsteroid ?? true);
       setShowMinorAspects(current.showMinorAspects ?? false);
-      setLilitMethod(current.lilitMethod ?? 'mean');
+      setLilithMethod(current.lilithMethod ?? current.lilitMethod ?? 'mean');
     } catch (error) {
       logger.error('[AstrologySettingsModal] Failed to load settings:', error);
     } finally {
@@ -115,7 +115,8 @@ export default function AstrologySettingsModal({
         chartOrientation: selectedOrientation,
         showAsteroid,
         showMinorAspects,
-        lilitMethod,
+        lilithMethod,
+        lilitMethod: lilithMethod,
       });
 
       try {
@@ -161,7 +162,7 @@ export default function AstrologySettingsModal({
       (settings.chartOrientation ?? 'standard-natal') !== selectedOrientation ||
       (settings.showAsteroid ?? true) !== showAsteroid ||
       (settings.showMinorAspects ?? false) !== showMinorAspects ||
-      (settings.lilitMethod ?? 'mean') !== lilitMethod);
+      ((settings.lilithMethod ?? settings.lilitMethod) ?? 'mean') !== lilithMethod);
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -427,23 +428,23 @@ export default function AstrologySettingsModal({
                 ].map((option) => (
                   <Pressable
                     key={option.value}
-                    style={[styles.houseCard, lilitMethod === option.value && styles.cardSelected]}
+                    style={[styles.houseCard, lilithMethod === option.value && styles.cardSelected]}
                     onPress={() => {
                       Haptics.selectionAsync().catch(() => {});
-                      setLilitMethod(option.value as 'mean' | 'true');
+                      setLilithMethod(option.value as 'mean' | 'true');
                     }}
                     accessibilityRole="radio"
-                    accessibilityState={{ selected: lilitMethod === option.value }}
+                    accessibilityState={{ selected: lilithMethod === option.value }}
                     accessibilityLabel={option.label}
                   >
                     <View style={styles.cardHeader}>
-                      {lilitMethod === option.value ? (
+                      {lilithMethod === option.value ? (
                         <MetallicText style={styles.optionTitle} color={PALETTE.gold}>{option.label}</MetallicText>
                       ) : (
                         <Text style={styles.optionTitle}>{option.label}</Text>
                       )}
-                      <View style={[styles.radio, lilitMethod === option.value && styles.radioActive]}>
-                        {lilitMethod === option.value && <View style={styles.radioInner} />}
+                      <View style={[styles.radio, lilithMethod === option.value && styles.radioActive]}>
+                        {lilithMethod === option.value && <View style={styles.radioInner} />}
                       </View>
                     </View>
                     <Text style={styles.optionSub}>{option.description}</Text>

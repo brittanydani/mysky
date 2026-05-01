@@ -171,6 +171,8 @@ export class EnhancedAstrologyCalculator {
   private static NATAL_CACHE_MAX_SIZE = 5;
 
   private static buildNatalCacheKey(birthData: BirthData): string {
+    const cached = AstrologySettingsService.getCachedSettings();
+    const lilithMethod = cached?.lilithMethod ?? cached?.lilitMethod ?? null;
     return JSON.stringify({
       d: birthData.date,
       t: birthData.time,
@@ -182,6 +184,10 @@ export class EnhancedAstrologyCalculator {
       h: birthData.houseSystem,
       z: birthData.zodiacSystem,
       o: birthData.orbPreset,
+      ay: cached?.ayanamsa ?? null,
+      ast: cached?.showAsteroid ?? null,
+      min: cached?.showMinorAspects ?? null,
+      lil: lilithMethod,
     });
   }
 
@@ -264,7 +270,7 @@ export class EnhancedAstrologyCalculator {
     // Determine if asteroids should be included
     const cachedSettings = AstrologySettingsService.getCachedSettings();
     const includeAsteroids = cachedSettings?.showAsteroid ?? true;
-    const lilitMethod = cachedSettings?.lilitMethod ?? 'mean';
+    const lilithMethod = cachedSettings?.lilithMethod ?? cachedSettings?.lilitMethod ?? 'mean';
 
     // Convert local time to UTC for Swiss Ephemeris
     const utc = timezoneInfo.utcDateTime;
@@ -281,7 +287,7 @@ export class EnhancedAstrologyCalculator {
       includeHouses,
       includeAsteroids,
       zodiacSystem === 'sidereal',
-      lilitMethod,
+      lilithMethod,
     );
 
     // Build the same output structures as the fallback engine
@@ -429,10 +435,25 @@ export class EnhancedAstrologyCalculator {
       longitude: birthData.longitude,
     });
 
+    const zodiacSystem = birthData.zodiacSystem ?? 'tropical';
+    const cachedSettings = AstrologySettingsService.getCachedSettings();
+    const requestedLilithMethod = cachedSettings?.lilithMethod ?? cachedSettings?.lilitMethod ?? 'mean';
+
+    if (zodiacSystem === 'sidereal' && cachedSettings?.ayanamsa && cachedSettings.ayanamsa !== 'lahiri') {
+      logger.warn(
+        '[Calculator] Fallback engine uses its built-in sidereal correction; custom ayanamsa selection is only applied by Swiss Ephemeris.',
+        { requestedAyanamsa: cachedSettings.ayanamsa }
+      );
+    }
+
+    if (requestedLilithMethod === 'true') {
+      logger.warn('[Calculator] Fallback engine does not expose true/osculating Lilith; using mean Black Moon Lilith.');
+    }
+
     const horoscope = new Horoscope({
       origin,
       houseSystem,
-      zodiac: 'tropical',
+      zodiac: zodiacSystem,
       aspectPoints: ['bodies', 'angles'],
       aspectWithPoints: ['bodies', 'angles'],
       aspectTypes: ['major'],
@@ -503,7 +524,8 @@ export class EnhancedAstrologyCalculator {
 
     // Aspects (include angles if present) — use orb config from user settings
     const orbConfig = AstrologySettingsService.getCachedOrbConfig();
-    const showMinorAspects = AstrologySettingsService.getCachedSettings()?.showMinorAspects ?? false;
+    const cachedSettings = AstrologySettingsService.getCachedSettings();
+    const showMinorAspects = cachedSettings?.showMinorAspects ?? false;
     const aspectPoints = Array.from(aspectPointsByName.entries()).map(([name, absDeg]) => ({ name, absDeg }));
     const aspectsSimple = computeAspects(aspectPoints, orbConfig, showMinorAspects);
     const aspectsLegacy = this.convertToLegacyAspects(aspectsSimple, legacyPlacements, aspectPointsByName);
@@ -629,6 +651,16 @@ export class EnhancedAstrologyCalculator {
 
       calculationAccuracy,
       timeBasedFeaturesAvailable,
+      calculationSettings: {
+        houseSystem,
+        zodiacSystem: birthData.zodiacSystem ?? cachedSettings?.zodiacSystem ?? 'tropical',
+        ayanamsa: cachedSettings?.ayanamsa,
+        orbPreset: cachedSettings?.orbPreset ?? birthData.orbPreset,
+        showMinorAspects,
+        showAsteroid: cachedSettings?.showAsteroid,
+        lilithMethod: cachedSettings?.lilithMethod ?? cachedSettings?.lilitMethod ?? 'mean',
+        chartOrientation: cachedSettings?.chartOrientation,
+      },
 
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -740,9 +772,10 @@ export class EnhancedAstrologyCalculator {
 
     // Extract Lunar Nodes from CelestialPoints (separate from CelestialBodies)
     const rawPoints = horoscope.CelestialPoints || {};
-    for (const { key, label } of [
-      { key: 'northnode', label: 'North Node' },
-      { key: 'southnode', label: 'South Node' },
+    for (const { key, label, retrograde } of [
+      { key: 'northnode', label: 'North Node', retrograde: true },
+      { key: 'southnode', label: 'South Node', retrograde: true },
+      { key: 'lilith', label: 'Lilith', retrograde: false },
     ]) {
       const point = rawPoints[key];
       const absDeg = extractAbsDegree(point);
@@ -756,8 +789,8 @@ export class EnhancedAstrologyCalculator {
         sign: s.name,
         degree: Number(degIn.toFixed(2)),
         absoluteDegree: Number(absDeg.toFixed(6)),
-        isRetrograde: true,
-        retrograde: true, // Nodes are always mean-retrograde
+        isRetrograde: retrograde,
+        retrograde,
       });
 
       aspectPointsByName.set(label, absDeg);

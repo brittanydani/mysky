@@ -27,6 +27,11 @@ import {
 
 import { NatalChart, Aspect, HouseCusp } from '../../services/astrology/types';
 import { AstrologySettingsService, ChartOrientation } from '../../services/astrology/astrologySettingsService';
+import {
+  ChartWheelAngleOptions,
+  normalizeChartOrientation,
+  zodiacLongitudeToWheelAngleRadians,
+} from '../../services/astrology/chartWheelMath';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
@@ -153,12 +158,13 @@ const ZODIAC_SIGNS = [
 
 const PLANET_SYMBOLS: Record<string, string> = {
   Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇',
-  'North Node': '☊', 'South Node': '☋', Chiron: '⚷', Lilith: '⚸', Vertex: 'Vx', 'Part of Fortune': '⊗', Pholus: '⯰', Ascendant: 'AC', Midheaven: 'MC',
+  'North Node': '☊', 'South Node': '☋', Chiron: '⚷', Lilith: '⚸', Ceres: '⚳', Pallas: '⚴', Juno: '⚭', Vesta: '⚶', Vertex: 'Vx', 'Part of Fortune': '⊗', Pholus: '⯰', Ascendant: 'AC', Midheaven: 'MC',
 };
 
 const PLANET_COLORS: Record<string, string> = {
   Sun: '#D4AF37', Moon: '#A2C2E1', Mercury: '#86BCEC', Venus: '#D4A3B3', Mars: '#DC5050', Jupiter: '#D4AF37', Saturn: '#8484A0',
-  Uranus: '#6CBEC4', Neptune: '#7C8CD0', Pluto: '#A88BEB', 'North Node': '#A0A0B0', 'South Node': '#A0A0B0', Chiron: '#6EBF8B', Ascendant: '#D4AF37', Midheaven: '#D4AF37',
+  Uranus: '#6CBEC4', Neptune: '#7C8CD0', Pluto: '#A88BEB', 'North Node': '#A0A0B0', 'South Node': '#A0A0B0', Chiron: '#6EBF8B', Lilith: '#C9AE78',
+  Ceres: '#8BBF9F', Pallas: '#8DA8D8', Juno: '#D4A3B3', Vesta: '#E0B36D', Pholus: '#B9A0E8', Ascendant: '#D4AF37', Midheaven: '#D4AF37',
 };
 
 const CROSS_ASPECT_COLORS: Record<string, { tight: string; loose: string }> = {
@@ -169,10 +175,8 @@ const CROSS_ASPECT_COLORS: Record<string, { tight: string; loose: string }> = {
 
 // ── Math Helpers ─────────────────────────────────────────────────────────────
 
-function astroToAngle(longitude: number, ascLongitude: number): number {
-  const offset = ascLongitude;
-  const adjusted = offset - longitude;
-  return (adjusted * Math.PI) / 180;
+function astroToAngle(longitude: number, options: ChartWheelAngleOptions): number {
+  return zodiacLongitudeToWheelAngleRadians(longitude, options);
 }
 
 function polarToXY(angle: number, radius: number): { x: number; y: number } {
@@ -204,6 +208,8 @@ function normalizePlanetName(name: unknown): string {
   if (low === 'north node' || low === 'northnode' || low === 'true node') return 'North Node';
   if (low === 'south node' || low === 'southnode') return 'South Node';
   if (low === 'lilith' || low === 'black moon lilith' || low === 'mean lilith') return 'Lilith';
+  if (low === 'ceres') return 'Ceres'; if (low === 'pallas') return 'Pallas';
+  if (low === 'juno') return 'Juno'; if (low === 'vesta') return 'Vesta';
   if (low === 'pholus') return 'Pholus'; if (low === 'vertex') return 'Vertex';
   if (low === 'part of fortune' || low === 'partoffortune') return 'Part of Fortune';
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -222,9 +228,9 @@ function getChartPlanet(chart: NatalChart, name: string): any | null {
 
 interface PlacedPlanet { label: string; symbol: string; color: string; originalAngle: number; displayAngle: number; radialOffset: number; longitude: number; isRetrograde: boolean; }
 
-function spreadPlanets(planets: { label: string; longitude: number; isRetrograde: boolean }[], ascLongitude: number, minSeparationDeg: number = 8, radialStepPx: number = 14, baseRadius: number = R_PLANET_RING, fallbackColor: string = '#FFFFFF'): PlacedPlanet[] {
+function spreadPlanets(planets: { label: string; longitude: number; isRetrograde: boolean }[], wheelOptions: ChartWheelAngleOptions, minSeparationDeg: number = 8, radialStepPx: number = 14, baseRadius: number = R_PLANET_RING, fallbackColor: string = '#FFFFFF'): PlacedPlanet[] {
   const items: PlacedPlanet[] = planets.map((p) => {
-    const angle = astroToAngle(p.longitude, ascLongitude);
+    const angle = astroToAngle(p.longitude, wheelOptions);
     return { label: p.label, symbol: PLANET_SYMBOLS[p.label] || '?', color: PLANET_COLORS[p.label] || fallbackColor, originalAngle: angle, displayAngle: angle, radialOffset: 0, longitude: p.longitude, isRetrograde: p.isRetrograde };
   });
   items.sort((a, b) => a.originalAngle - b.originalAngle);
@@ -352,13 +358,11 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
   const orientation = orientationProp ?? settingsOrientation;
 
-  const ascLongitude = useMemo(() => {
-    if (orientation === 'midheaven-top') {
-      const mc = getLongitude(getChartPlanet(chart, 'Midheaven')); const mcLon = mc ?? rawAscLongitude; return normalize360(mcLon + 90);
-    }
-    if (orientation === 'aries-rising') { return 180; }
-    return normalize360(rawAscLongitude + 180);
-  }, [orientation, rawAscLongitude, chart]);
+  const wheelOptions = useMemo<ChartWheelAngleOptions>(() => ({
+    orientation: normalizeChartOrientation(orientation),
+    ascendantLongitude: rawAscLongitude,
+    midheavenLongitude: getLongitude(getChartPlanet(chart, 'Midheaven')),
+  }), [orientation, rawAscLongitude, chart]);
 
   const showPerson1 = !filterMode || filterMode.person1;
   const showPerson2 = !filterMode || filterMode.person2;
@@ -377,22 +381,22 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
   const zodiacOverlay = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 18, fontWeight: '900' }), []);
   
   const placedPlanets = useMemo(() => {
-    const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Chiron', 'North Node', 'South Node', 'Lilith', 'Vertex', 'Part of Fortune', 'Pholus'];
+    const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Chiron', 'North Node', 'South Node', 'Lilith', 'Ceres', 'Pallas', 'Juno', 'Vesta', 'Vertex', 'Part of Fortune', 'Pholus'];
     const raw: { label: string; longitude: number; isRetrograde: boolean }[] = [];
     for (const label of labels) {
       const obj = getChartPlanet(chart, label); const lon = getLongitude(obj);
       if (lon === null) continue; raw.push({ label, longitude: lon, isRetrograde: getRetrograde(obj) });
     }
-    return spreadPlanets(raw, ascLongitude, 13, 14, R_PLANET_RING, theme.textPrimary);
-  }, [chart, ascLongitude, theme.textPrimary]);
+    return spreadPlanets(raw, wheelOptions, 13, 14, R_PLANET_RING, theme.textPrimary);
+  }, [chart, wheelOptions, theme.textPrimary]);
 
   const planetDisplayAngles = useMemo(() => {
     const map: Record<string, number> = {};
     placedPlanets.forEach((p) => { map[p.label] = p.displayAngle; });
-    const asc = getLongitude(getChartPlanet(chart, 'Ascendant')); if (asc !== null) map['Ascendant'] = astroToAngle(asc, ascLongitude);
-    const mc = getLongitude(getChartPlanet(chart, 'Midheaven')); if (mc !== null) map['Midheaven'] = astroToAngle(mc, ascLongitude);
+    const asc = getLongitude(getChartPlanet(chart, 'Ascendant')); if (asc !== null) map['Ascendant'] = astroToAngle(asc, wheelOptions);
+    const mc = getLongitude(getChartPlanet(chart, 'Midheaven')); if (mc !== null) map['Midheaven'] = astroToAngle(mc, wheelOptions);
     return map;
-  }, [placedPlanets, chart, ascLongitude]);
+  }, [placedPlanets, chart, wheelOptions]);
 
   const R_OVERLAY_RING = R_PLANET_RING - 30;
   const placedOverlayPlanets = useMemo(() => {
@@ -403,9 +407,9 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
       const obj = getChartPlanet(overlayChart, label); const lon = getLongitude(obj);
       if (lon === null) continue; raw.push({ label, longitude: lon, isRetrograde: getRetrograde(obj) });
     }
-    const placed = spreadPlanets(raw, ascLongitude, 13, 12, R_OVERLAY_RING, theme.textPrimary);
+    const placed = spreadPlanets(raw, wheelOptions, 13, 12, R_OVERLAY_RING, theme.textPrimary);
     return placed.map((p) => ({ ...p, color: '#E5E7EB' }));
-  }, [overlayChart, ascLongitude, R_OVERLAY_RING, theme.textPrimary]);
+  }, [overlayChart, wheelOptions, R_OVERLAY_RING, theme.textPrimary]);
 
   const crossAspects = useMemo(() => {
     if (!overlayChart || !showAspects) return [];
@@ -428,7 +432,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
     // Conjunctions are excluded because they create messy short chords around the chart hub
     return (chart.aspects ?? []).filter((a: Aspect) => {
       const typeName = ((a as any)?.type?.name ?? '').toLowerCase();
-      return (a?.orb ?? 99) < 8 && ['opposition', 'trine', 'square', 'sextile'].includes(typeName);
+      return typeName !== 'conjunction';
     }).sort((a: Aspect, b: Aspect) => (a.orb ?? 99) - (b.orb ?? 99)).slice(0, MAX_ASPECTS);
   }, [chart.aspects, showAspects]);
 
@@ -444,15 +448,15 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         if (orb < 3) { topAlpha = 0.25; glowAlpha = 0.10; } else if (orb >= 6) { topAlpha = 0.08; glowAlpha = 0.03; }
         
         let aspectRgb = '212, 175, 55'; // Neutral/Gold
-        if (typeName === 'trine' || typeName === 'sextile') aspectRgb = '162, 194, 225'; // Harmonious (Blue)
-        if (typeName === 'square' || typeName === 'opposition') aspectRgb = '220, 80, 80'; // Challenging (Red)
+        if (['trine', 'sextile', 'semisextile', 'quintile', 'biquintile'].includes(typeName)) aspectRgb = '162, 194, 225'; // Harmonious (Blue)
+        if (['square', 'opposition', 'quincunx', 'semisquare', 'sesquiquadrate'].includes(typeName)) aspectRgb = '220, 80, 80'; // Challenging (Red)
         
         lines.push({ 
           x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, 
           color: `rgba(${aspectRgb}, ${topAlpha})`, 
           glowColor: `rgba(${aspectRgb}, ${glowAlpha})`, 
           strokeWidth: 0.8, 
-          dashed: typeName === 'square' || typeName === 'opposition' 
+          dashed: ['square', 'opposition', 'quincunx', 'semisquare', 'sesquiquadrate'].includes(typeName)
         });
       }
       return lines;
@@ -464,11 +468,11 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
     // Instead of using original longitude and strictly calculating, use the display angles if they are available
     const getDispAngle1 = (lon: number) => {
         const p = placedPlanets.find(x => x.longitude === lon);
-        return p ? p.displayAngle : astroToAngle(lon, ascLongitude);
+        return p ? p.displayAngle : astroToAngle(lon, wheelOptions);
     };
     const getDispAngle2 = (lon: number) => {
         const p = placedOverlayPlanets.find(x => x.longitude === lon);
-        return p ? p.displayAngle : astroToAngle(lon, ascLongitude);
+        return p ? p.displayAngle : astroToAngle(lon, wheelOptions);
     };
 
     for (const ca of crossAspects) {
@@ -478,7 +482,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
       lines.push({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, thread: tight ? colors.tight : colors.loose, tight });
     }
     return lines;
-  }, [crossAspects, ascLongitude, placedPlanets, placedOverlayPlanets]);
+  }, [crossAspects, wheelOptions, placedPlanets, placedOverlayPlanets]);
 
   const accessibilitySummary = useMemo(() => {
     const parts: string[] = ['Natal chart wheel'];
@@ -508,7 +512,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
           {/* ── Precision Degree Astrolabe Ticks ── */}
           {Array.from({ length: 72 }).map((_, i) => {
-            const angle = astroToAngle(i * 5, ascLongitude);
+            const angle = astroToAngle(i * 5, wheelOptions);
             const isTen = i % 2 === 0;
             const pOuter = polarToXY(angle, R_OUTER + 44);
             const pInner = polarToXY(angle, isTen ? R_OUTER + 38 : R_OUTER + 40);
@@ -534,8 +538,8 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
         {/* ── Zodiac sign medallions ── */}
         {ZODIAC_SIGNS.map((sign, i) => {
-          const midAngle = astroToAngle(i * 30 + 15, ascLongitude); const tc = polarToXY(midAngle, R_OUTER + 24);
-          const startAngle = astroToAngle(i * 30, ascLongitude); const pInner = polarToXY(startAngle, R_OUTER + 2); const pOuter = polarToXY(startAngle, R_OUTER + 44);
+          const midAngle = astroToAngle(i * 30 + 15, wheelOptions); const tc = polarToXY(midAngle, R_OUTER + 24);
+          const startAngle = astroToAngle(i * 30, wheelOptions); const pInner = polarToXY(startAngle, R_OUTER + 2); const pOuter = polarToXY(startAngle, R_OUTER + 44);
           return (
             <Group key={sign.name}>
               <Line p1={vec(pInner.x, pInner.y)} p2={vec(pOuter.x, pOuter.y)} color={wheelPalette.divider} strokeWidth={0.5} />
@@ -546,14 +550,14 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
         {/* ── House cusps ── */}
         {(chart.houseCusps ?? []).map((cusp: HouseCusp) => {
-          const angle = astroToAngle((cusp as any).longitude, ascLongitude);
+          const angle = astroToAngle((cusp as any).longitude, wheelOptions);
           const outer = polarToXY(angle, R_OUTER); const inner = polarToXY(angle, R_INNER);
           const isAngular = (cusp as any).house === 1 || (cusp as any).house === 4 || (cusp as any).house === 7 || (cusp as any).house === 10;
           const strokeW = isAngular ? 0.75 : 0.45; const strokeColor = isAngular ? wheelPalette.angularLine : wheelPalette.regularLine;
           const cusps = chart.houseCusps ?? []; const nextHouse = cusps.find((c: HouseCusp) => (c as any).house === (((cusp as any).house % 12) + 1));
           let midLon = (cusp as any).longitude + 15;
           if (nextHouse) { let diff = (nextHouse as any).longitude - (cusp as any).longitude; if (diff < 0) diff += 360; midLon = (cusp as any).longitude + diff / 2; if (midLon >= 360) midLon -= 360; }
-          const midAngle = astroToAngle(midLon, ascLongitude); const numPos = polarToXY(midAngle, R_INNER + 24);
+          const midAngle = astroToAngle(midLon, wheelOptions); const numPos = polarToXY(midAngle, R_INNER + 24);
           const houseText = String((cusp as any).house); const tw = sans9 ? sans9.getTextWidth(houseText) : 7;
           return (
             <Group key={`house-${(cusp as any).house}`}>
@@ -711,7 +715,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         {/* ── ASC / MC axis labels ── */}
         {(chart as any).ascendant && (() => {
           const lon = getLongitude((chart as any).ascendant); if (lon === null) return null;
-          const ascAng = astroToAngle(lon, ascLongitude); const dcAng  = astroToAngle(lon + 180, ascLongitude);
+          const ascAng = astroToAngle(lon, wheelOptions); const dcAng  = astroToAngle(lon + 180, wheelOptions);
           const R_ANGLE_LABEL = R_HOUSE_INNER - 8;
           const acPos = polarToXY(ascAng, R_ANGLE_LABEL); const dcPos = polarToXY(dcAng,  R_ANGLE_LABEL);
           const labelW = sans8 ? sans8.getTextWidth('AC') : 12;
@@ -729,7 +733,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
         {(chart as any).midheaven && (() => {
           const lon = getLongitude((chart as any).midheaven); if (lon === null) return null;
-          const mcAng = astroToAngle(lon, ascLongitude); const icAng = astroToAngle(lon + 180, ascLongitude);
+          const mcAng = astroToAngle(lon, wheelOptions); const icAng = astroToAngle(lon + 180, wheelOptions);
           const R_ANGLE_LABEL = R_HOUSE_INNER - 8;
           const mcPos = polarToXY(mcAng, R_ANGLE_LABEL); const icPos = polarToXY(icAng, R_ANGLE_LABEL);
           const mcW = sans8 ? sans8.getTextWidth('MC') : 12; const icW = sans8 ? sans8.getTextWidth('IC') : 10;

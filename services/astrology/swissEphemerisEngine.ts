@@ -337,13 +337,13 @@ export function calcHouses(
  * Calculate all planetary positions for a given Julian Day.
  * Returns PlanetPosition[] plus a speed map for aspect applying/separating logic.
  * @param includeAsteroids  When true, adds Ceres, Pallas, Juno, Vesta, Pholus
- * @param lilitMethod       'mean' uses SE_MEAN_APOG (default); 'true' uses SE_OSCU_APOG
+ * @param lilithMethod      'mean' uses SE_MEAN_APOG (default); 'true' uses SE_OSCU_APOG
  */
 export function calcAllPlanets(
   julianDay: number,
   includeAsteroids: boolean = false,
   sidereal: boolean = false,
-  lilitMethod: 'mean' | 'true' = 'mean',
+  lilithMethod: 'mean' | 'true' = 'mean',
 ): {
   planets: PlanetPosition[];
   speeds: Map<string, number>;
@@ -351,9 +351,9 @@ export function calcAllPlanets(
   const planets: PlanetPosition[] = [];
   const speeds = new Map<string, number>();
 
-  // Main celestial bodies — swap Lilith ID based on lilitMethod
+  // Main celestial bodies — swap Lilith ID based on lilithMethod
   for (const body of PLANET_BODIES) {
-    const id = body.label === 'Lilith' && lilitMethod === 'true' ? SE.TRUE_LILITH : body.id;
+    const id = body.label === 'Lilith' && lilithMethod === 'true' ? SE.TRUE_LILITH : body.id;
     const result = calcPlanet(julianDay, id, sidereal);
     const sign = signFromLongitude(result.longitude);
     const degIn = degreeInSign(result.longitude);
@@ -435,7 +435,7 @@ export function calcAllPlanets(
  * @param houseSystem House system to use
  * @param includeHouses Whether to calculate houses (false for unknown time)
  * @param includeAsteroids Whether to include Ceres, Pallas, Juno, Vesta, Pholus
- * @param lilitMethod 'mean' (default) or 'true' — controls Black Moon Lilith calculation
+ * @param lilithMethod 'mean' (default) or 'true' — controls Black Moon Lilith calculation
  */
 export function calculateChart(
   year: number,
@@ -450,10 +450,10 @@ export function calculateChart(
   includeHouses: boolean = true,
   includeAsteroids: boolean = false,
   sidereal: boolean = false,
-  lilitMethod: 'mean' | 'true' = 'mean',
+  lilithMethod: 'mean' | 'true' = 'mean',
 ): SwissEphChartData {
   const julianDay = dateToJulianDay(year, month, day, hour, minute, second);
-  const { planets, speeds } = calcAllPlanets(julianDay, includeAsteroids, sidereal, lilitMethod);
+  const { planets, speeds } = calcAllPlanets(julianDay, includeAsteroids, sidereal, lilithMethod);
 
   let cusps: number[] | undefined;
   let ascendant: number | undefined;

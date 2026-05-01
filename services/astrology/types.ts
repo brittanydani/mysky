@@ -259,6 +259,17 @@ export interface NatalChart {
     exactBirthTime?: boolean;
   };
 
+  calculationSettings?: {
+    houseSystem?: HouseSystem;
+    zodiacSystem?: ZodiacSystem;
+    ayanamsa?: Ayanamsa;
+    orbPreset?: string;
+    showMinorAspects?: boolean;
+    showAsteroid?: boolean;
+    lilithMethod?: 'mean' | 'true';
+    chartOrientation?: string;
+  };
+
   errorCode?: 'ephemeris_unavailable' | 'timezone_unavailable' | 'validation_failed' | 'unknown_error';
   errorDetails?: string;
 

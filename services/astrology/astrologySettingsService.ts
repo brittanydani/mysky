@@ -11,6 +11,10 @@
  */
 
 import { HouseSystem, ZodiacSystem, Ayanamsa } from './types';
+import {
+  ChartWheelOrientation,
+  normalizeChartOrientation,
+} from './chartWheelMath';
 import { logger } from '../../utils/logger';
 import { getUserPreference, saveUserPreference, deleteUserPreference } from '../storage/userProfileService';
 
@@ -21,7 +25,7 @@ import { getUserPreference, saveUserPreference, deleteUserPreference } from '../
 
 export type OrbPreset = 'tight' | 'normal' | 'wide';
 
-export type ChartOrientation = 'standard-natal' | 'midheaven-top' | 'aries-rising';
+export type ChartOrientation = ChartWheelOrientation;
 
 export { ZodiacSystem, Ayanamsa } from './types';
 
@@ -64,6 +68,8 @@ export interface AstrologySettings {
   // Lilith calculation method: 'mean' = Black Moon Lilith (Mean Apogee),
   // 'true' = Black Moon Lilith (Osculating/True Apogee).
   // Both appear as a single "Lilith" placement; only the calculation differs.
+  lilithMethod?: 'mean' | 'true';
+  // Backward-compatible persisted typo. Keep synced with lilithMethod.
   lilitMethod: 'mean' | 'true';
 
   // Chart wheel visual orientation (display only — does not affect calculations)
@@ -104,7 +110,7 @@ export const AYANAMSA_OPTIONS: { value: Ayanamsa; label: string; description: st
 export const CHART_ORIENTATION_OPTIONS: { value: ChartOrientation; label: string; description: string }[] = [
   { value: 'standard-natal', label: 'Standard Natal', description: 'Places the Ascendant on the left side of the wheel and the Midheaven near the top. This is the most common natal chart view and matches the way charts are typically displayed in mainstream astrology software.' },
   { value: 'midheaven-top', label: 'Midheaven on Top', description: 'Midheaven at 12 o\u2019clock \u2014 emphasizes the career and public-life axis. A recognizable alternative that highlights the four chart angles.' },
-  { value: 'aries-rising', label: 'Aries First', description: '0\u00b0 Aries at 9 o\u2019clock \u2014 a teaching or reference layout. Typical when not anchoring to a personal Ascendant, such as solar or whole-sign schematic wheels.' },
+  { value: 'aries-first', label: 'Aries First', description: '0\u00b0 Aries at 9 o\u2019clock \u2014 a teaching or reference layout. Typical when not anchoring to a personal Ascendant, such as solar or whole-sign schematic wheels.' },
 ];
 
 export const ORB_PRESET_OPTIONS: { value: OrbPreset; label: string; description: string }[] = [
@@ -163,6 +169,7 @@ const DEFAULT_SETTINGS: AstrologySettings = {
   orbPreset: 'normal',
   showMinorAspects: false,
   showAsteroid: true,
+  lilithMethod: 'mean',
   lilitMethod: 'mean',
   chartOrientation: 'standard-natal',
   updatedAt: new Date().toISOString(),
@@ -201,7 +208,14 @@ class AstrologySettingsServiceClass {
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<AstrologySettings>;
         // Merge with defaults to handle new fields
-        this.cachedSettings = { ...DEFAULT_SETTINGS, ...parsed };
+        const merged = { ...DEFAULT_SETTINGS, ...parsed };
+        const lilithMethod = merged.lilithMethod ?? merged.lilitMethod ?? 'mean';
+        this.cachedSettings = {
+          ...merged,
+          lilithMethod,
+          lilitMethod: lilithMethod,
+          chartOrientation: normalizeChartOrientation(merged.chartOrientation),
+        };
       } else {
         this.cachedSettings = { ...DEFAULT_SETTINGS };
       }
@@ -220,9 +234,18 @@ class AstrologySettingsServiceClass {
   async saveSettings(settings: Partial<AstrologySettings>): Promise<AstrologySettings> {
     try {
       const current = await this.getSettings();
+      const lilithMethod =
+        settings.lilithMethod ??
+        settings.lilitMethod ??
+        current.lilithMethod ??
+        current.lilitMethod ??
+        'mean';
       const updated: AstrologySettings = {
         ...current,
         ...settings,
+        lilithMethod,
+        lilitMethod: lilithMethod,
+        chartOrientation: normalizeChartOrientation(settings.chartOrientation ?? current.chartOrientation),
         updatedAt: new Date().toISOString(),
       };
 

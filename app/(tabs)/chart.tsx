@@ -720,6 +720,7 @@ export default function ChartScreen() {
    */
   const sensitivePoints = useMemo(() => {
     if (!activeChart) return [];
+    const lilithMethod = (activeChart as any).calculationSettings?.lilithMethod === 'true' ? 'true' : 'mean';
     const points: {
       label: string;
       sign: string;
@@ -765,7 +766,9 @@ export default function ChartScreen() {
           addPoint(isNorth ? 'North Node' : 'South Node', signName, deg, min, house, retrograde, 
             isNorth ? <NorthNodeIcon size={20} color={'#000'} /> : <SouthNodeIcon size={20} color={'#000'} />);
         } else if (name === 'lilith' || name === 'black moon lilith') {
-          addPoint('Lilith', signName, deg, min, house, retrograde, <LilithIcon size={20} color={'#000'} />);
+          addPoint(lilithMethod === 'true' ? 'Lilith (True)' : 'Lilith (Mean)', signName, deg, min, house, retrograde, <LilithIcon size={20} color={'#000'} />);
+        } else if (['ceres', 'pallas', 'juno', 'vesta'].includes(name)) {
+          addPoint(name.charAt(0).toUpperCase() + name.slice(1), signName, deg, min, house, retrograde);
         } else if (name === 'pholus') {
           addPoint('Pholus', signName, deg, min, house, retrograde, <PholusIcon size={20} color={'#000'} />);
         }
@@ -788,7 +791,20 @@ export default function ChartScreen() {
       addPoint('Part of Fortune', safeString(pf.sign?.name ?? pf.sign), pf.degree, pf.minute, pf.house, false, <PartOfFortuneIcon size={20} color={'#000'} />);
     }
 
-    const order: Record<string, number> = { 'North Node': 0, 'South Node': 1, 'Chiron': 2, 'Lilith': 3, 'Vertex': 4, 'Part of Fortune': 5, 'Pholus': 6 };
+    const order: Record<string, number> = {
+      'North Node': 0,
+      'South Node': 1,
+      Chiron: 2,
+      'Lilith (Mean)': 3,
+      'Lilith (True)': 3,
+      Ceres: 4,
+      Pallas: 5,
+      Juno: 6,
+      Vesta: 7,
+      Vertex: 8,
+      'Part of Fortune': 9,
+      Pholus: 10,
+    };
     return points.sort((a, b) => (order[a.label] ?? 99) - (order[b.label] ?? 99));
   }, [activeChart]);
 
@@ -1689,7 +1705,7 @@ export default function ChartScreen() {
           {/* ── Sensitive Point Interpretations ── */}
           {viewMode === 'complete' && isPremium && pointInterpretations.length > 0 && (
             <Animated.View entering={FadeInDown.delay(375).duration(600)} style={{ width: '100%' }}>
-              <SectionAccordion title="Chart Points" subtitle="Nodes, Chiron, Lilith, Part of Fortune & Vertex" sectionKey="chartPoints" openSections={openSections} setOpenSections={setOpenSections}>
+              <SectionAccordion title="Chart Points" subtitle="Nodes, Chiron, Lilith, asteroids & Vertex" sectionKey="chartPoints" openSections={openSections} setOpenSections={setOpenSections}>
                 {pointInterpretations.map((pi) => (
                   <VelvetGlassSurface key={pi.name} style={styles.themedCard} intensity={45}>
                   <LinearGradient colors={chartSurfaceGradients.pointsSection} style={StyleSheet.absoluteFill} />
