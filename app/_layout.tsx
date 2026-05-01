@@ -23,7 +23,7 @@ import Constants from 'expo-constants';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from '../components/keyboard/KeyboardControllerCompat';
-import { View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 'react-native';
+import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { StarNotificationProvider } from '../context/StarNotificationContext';
@@ -31,7 +31,6 @@ import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceM
 import { getUserPreference, saveUserPreference } from '../services/storage/userProfileService';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import { initHapticPreference } from '../utils/haptics';
-import { generateId } from '../services/storage/models';
 import { logger } from '../utils/logger';
 import { supabase } from '../lib/supabase';
 import { darkTheme, type AppTheme } from '../constants/theme';
@@ -289,6 +288,29 @@ function readRootInitSnapshot(): RootInitSnapshot | null {
   return rootInitSnapshot;
 }
 
+async function withBootstrapTimeout<T>(
+  label: string,
+  operation: Promise<T>,
+  timeoutMs = 8_000,
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 function AppShell() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
@@ -402,13 +424,25 @@ function AppShell() {
   };
 
 
+  const hasExistingChart = async () => {
+    const {
+      data: { session: currentSession },
+    } = await supabase.auth.getSession();
+
+    if (!currentSession) {
+      return false;
+    }
+
+    const { getCharts } = await import('../services/storage/supabaseDb');
+    const charts = await getCharts();
+    return charts.length > 0;
+  };
+
   const checkIfOnboardingCanBeSkipped = async () => {
     try {
-      const {
-        data: { session: currentSession },
-      } = await supabase.auth.getSession();
+      const canSkip = await hasExistingChart();
 
-      if (!currentSession) {
+      if (!canSkip) {
         setOnboardingComplete(false);
         if (rootInitSnapshot) {
           rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: false };
@@ -416,21 +450,11 @@ function AppShell() {
         return false;
       }
 
-      const { getCharts } = await import('../services/storage/supabaseDb');
-      const charts = await getCharts();
-
-      if (charts.length > 0) {
-        setOnboardingComplete(true);
-        if (rootInitSnapshot) {
-          rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: true };
-        }
-        return true;
-      }
-      setOnboardingComplete(false);
+      setOnboardingComplete(true);
       if (rootInitSnapshot) {
-        rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: false };
+        rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: true };
       }
-      return false;
+      return true;
     } catch (e) {
       logger.error('Failed to check existing charts:', e);
       setOnboardingComplete(false);
@@ -845,9 +869,10 @@ function AppShell() {
 
     (async () => {
       if (isStale()) return;
-      await bindLocalSettingsToUser(session.user.id).catch((e) =>
-        logger.warn('[auth] Bind settings failed:', e)
-      );
+      await withBootstrapTimeout(
+        'Bind local settings',
+        bindLocalSettingsToUser(session.user.id),
+      ).catch((e) => logger.warn('[auth] Bind settings failed or timed out:', e));
       if (isStale()) return;
 
       if (authEntryIntentRef.current === 'sign-in-home') {
@@ -859,9 +884,28 @@ function AppShell() {
         return;
       }
 
-      await checkIfOnboardingCanBeSkipped().catch(() => false);
-      if (isStale()) return;
-      setSessionDataReady(true);
+      try {
+        const canSkip = await withBootstrapTimeout(
+          'Check onboarding state',
+          hasExistingChart(),
+        );
+        if (isStale()) return;
+
+        if (rootInitSnapshot) {
+          rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: canSkip };
+        }
+        setOnboardingComplete(canSkip);
+      } catch (e) {
+        logger.warn('[auth] Onboarding state check failed or timed out; continuing to home:', e);
+        if (rootInitSnapshot) {
+          rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: true };
+        }
+        setOnboardingComplete(true);
+      } finally {
+        if (!isStale()) {
+          setSessionDataReady(true);
+        }
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
@@ -1027,6 +1071,13 @@ function AppShell() {
               </Stack>
 
               <React.Suspense fallback={null}>
+                {session && onboardingComplete && !sessionDataReady && (
+                  <View style={styles.postAuthLoadingOverlay}>
+                    <ActivityIndicator color={theme.primary} />
+                    <Text style={styles.postAuthLoadingText}>Finishing sign in...</Text>
+                  </View>
+                )}
+
                 {session && needsPrivacyConsent && onboardingComplete && (
                   <PrivacyConsentModal visible onConsent={handlePrivacyConsent} />
                 )}
@@ -1090,6 +1141,19 @@ const createStyles = (theme: AppTheme) =>
     errorButtonText: {
       color: theme.textPrimary,
       fontSize: 15,
+      fontWeight: '600',
+    },
+    postAuthLoadingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.background,
+      gap: 12,
+    },
+    postAuthLoadingText: {
+      color: theme.textSecondary,
+      fontSize: 14,
       fontWeight: '600',
     },
   });
