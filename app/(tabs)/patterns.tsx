@@ -28,7 +28,15 @@ import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
-import { buildPatternLibraryState, refineCrossRefCopy } from '../../utils/patternsHelpers';
+import {
+  buildPatternLibraryState,
+  refineCrossRefCopy,
+  selectDistinctPatternInsights,
+} from '../../utils/patternsHelpers';
+import {
+  buildInsightDuplicateKey,
+  dedupeExactInsights,
+} from '../../utils/insightDedupe';
 import { type CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
@@ -134,9 +142,32 @@ export default function PatternsScreen() {
   );
 
   const libraryState = useMemo(() => buildPatternLibraryState(dailyAggregates, crossRefs), [crossRefs, dailyAggregates]);
+  const librarySections = useMemo(() => {
+    const dedupedItems = dedupeExactInsights(
+      libraryState.sections.flatMap((section, sectionIndex) =>
+        section.items.map((item, itemIndex) => ({
+          ...item,
+          sectionIndex,
+          itemIndex,
+        })),
+      ),
+      'PatternsScreen:librarySections',
+    );
+    const visibleItems = new Set(dedupedItems.map(item => `${item.sectionIndex}:${item.itemIndex}`));
+
+    return libraryState.sections
+      .map((section, sectionIndex) => ({
+        ...section,
+        items: section.items.filter((_, itemIndex) => visibleItems.has(`${sectionIndex}:${itemIndex}`)),
+      }))
+      .filter(section => section.items.length > 0);
+  }, [libraryState.sections]);
   const feedInsights = useMemo(() => {
     const profileInsights = buildPatternFeedInsights(deepInsights);
-    return [...crossRefs, ...profileInsights];
+    return dedupeExactInsights(
+      selectDistinctPatternInsights([...profileInsights, ...crossRefs]),
+      'PatternsScreen:feedInsights',
+    );
   }, [crossRefs, deepInsights]);
 
   // Rotate through all surfaced insights daily so the feed keeps evolving with the archive.
@@ -155,12 +186,13 @@ export default function PatternsScreen() {
   const deepDiveInsights = useMemo(() => {
     if (feedInsights.length <= 1) return [];
     const rotated = [...feedInsights.slice(todayIndex), ...feedInsights.slice(0, todayIndex)];
-    return rotated
-      .slice(1)
-      .map(refineCrossRefCopy)
-      .slice(0, 2);
+    const refined = rotated.slice(1).map(refineCrossRefCopy);
+    return dedupeExactInsights(refined, 'PatternsScreen:deepDiveInsights').slice(0, 2);
   }, [feedInsights, todayIndex]);
-  const patternRows = useMemo(() => (leadInsight ? [leadInsight] : []), [leadInsight]);
+  const patternRows = useMemo(
+    () => dedupeExactInsights(leadInsight ? [leadInsight] : [], 'PatternsScreen:patternRows'),
+    [leadInsight],
+  );
   const premiumTeaser = useMemo(
     () => getPersonalizedPremiumTeaser(archiveDepthCounts, {
       detectedPatterns: feedInsights.length,
@@ -180,7 +212,7 @@ export default function PatternsScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <FlatList<CrossRefInsight>
           data={patternRows}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => `${buildInsightDuplicateKey(item)}:${item.id}`}
           renderItem={({ item }) => (
             <>
               <VelvetGlassSurface style={styles.insightCard} intensity={25}>
@@ -222,7 +254,7 @@ export default function PatternsScreen() {
                   }}
                     style={styles.deepDiveButton}
                     accessibilityRole="button"
-                    accessibilityLabel="See what MySky has noticed"
+                    accessibilityLabel="See weekly deep dive"
                 >
                   <LinearGradient colors={['rgba(168,139,235,0.25)', 'rgba(168,139,235,0.08)']} style={StyleSheet.absoluteFill} />
                   <View style={{ alignItems: 'center', flex: 1 }}>
@@ -252,7 +284,7 @@ export default function PatternsScreen() {
             <>
               <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
                 <Text style={styles.title}>Patterns</Text>
-                <GoldSubtitle style={styles.subtitle}>Recognition over time, grounded in your real archive</GoldSubtitle>
+                <GoldSubtitle style={styles.subtitle}>Recognition over time, grounded in your recent entries</GoldSubtitle>
                 <Text style={styles.freshnessText}>
                   {lastUpdated
                     ? `Last updated ${new Date(lastUpdated).toLocaleDateString()} from your recent entries`
@@ -323,19 +355,19 @@ export default function PatternsScreen() {
                 <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
                   <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
                   <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyTitle}>Mood pattern insights are turned off</Text>
-                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>Turn on Mood Pattern Insights in Settings when you want MySky to surface recurring patterns from your check-ins.</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>Turn on Mood Pattern Insights in Settings when you want recurring patterns from your check-ins.</Text>
                 </VelvetGlassSurface>
               ) : !loading && patternRows.length === 0 ? (
                 <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
                   <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
-                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyTitle}>Your archive is not readable yet</Text>
-                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>MySky should not invent a pattern before it has earned one. This space gets stronger as these signals overlap:</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyTitle}>Not enough signal yet</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>A real pattern needs enough evidence. This space gets stronger as these signals overlap:</Text>
                   <View style={{ marginTop: 16, gap: 10 }}>
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>{'\u2022'} Check in with your mood, energy, and stress daily</Text>
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>{'\u2022'} Log sleep duration and dream notes</Text>
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>{'\u2022'} Write a journal entry when something feels important</Text>
                   </View>
-                  <Text {...WRAP_AT_WORD_PROPS} style={[styles.emptyBody, { marginTop: 16, fontStyle: 'italic' }]}>3-5 days of check-ins usually gives MySky enough repetition to surface a first real read.</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={[styles.emptyBody, { marginTop: 16, fontStyle: 'italic' }]}>3-5 days of check-ins usually gives enough repetition for a first real read.</Text>
                 </VelvetGlassSurface>
               ) : null}
             </>
@@ -390,12 +422,12 @@ export default function PatternsScreen() {
               </Pressable>
             </View>
             <Text {...WRAP_AT_WORD_PROPS} style={styles.modalIntro}>
-              Two deeper reads from your archive. These update as patterns intensify, soften, or gain stronger cross-source evidence.
+              Two deeper reads from your recent signals. These update as patterns intensify, soften, or gain stronger cross-source evidence.
             </Text>
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: '85%' }}>
               <View style={{ gap: 16, paddingBottom: 8 }}>
                 {deepDiveInsights.map((insight, idx) => (
-                  <View key={insight.id} style={styles.deepDiveInsightCard}>
+                  <View key={`${buildInsightDuplicateKey(insight)}:${insight.id}`} style={styles.deepDiveInsightCard}>
                     <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.03)']} style={StyleSheet.absoluteFill} />
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.deepDiveInsightTitle}>{insight.title}</Text>
                     <Text {...WRAP_AT_WORD_PROPS} style={[styles.insightBody, { fontSize: 14 }]}>{normalizeDisplayText(insight.body)}</Text>
@@ -461,19 +493,19 @@ export default function PatternsScreen() {
               nestedScrollEnabled
             >
               <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBody}>
-                {normalizeDisplayText('A living profile of who you are becoming — expanding as MySky learns how you feel, recover, connect, and grow.')}
+                {normalizeDisplayText('A living profile of how you move through the world — shaped by what you feel, how you recover, and what your system returns to over time. This is not built from isolated moments. It reflects what repeats often enough to be real.')}
               </Text>
               <Text {...WRAP_AT_WORD_PROPS} style={styles.modalStatus}>{normalizeDisplayText(libraryState.statusLine)}</Text>
               <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBodyMuted}>{normalizeDisplayText(libraryState.helperText)}</Text>
-              {libraryState.sections.length > 0 ? (
+              {librarySections.length > 0 ? (
                 <View style={styles.libraryList}>
-                  {libraryState.sections.map((section, sectionIndex) => (
+                  {librarySections.map((section, sectionIndex) => (
                     <View key={`${section.title}-${sectionIndex}`} style={styles.librarySection}>
                       <Text {...WRAP_AT_WORD_PROPS} style={styles.librarySectionTitle}>{section.title}</Text>
                       {section.items.map((item, itemIndex) => (
-                        <View key={`${section.title}-${item.title}-${itemIndex}`} style={styles.libraryItem}>
+                        <View key={`${section.title}-${buildInsightDuplicateKey(item)}-${itemIndex}`} style={styles.libraryItem}>
                           <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemTitle}>{normalizeDisplayText(item.title)}</Text>
-                          <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemBody}>{normalizeDisplayText(item.body)}</Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemBody}>{item.body}</Text>
                         </View>
                       ))}
                     </View>

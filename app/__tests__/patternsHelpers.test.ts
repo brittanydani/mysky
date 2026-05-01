@@ -1,5 +1,13 @@
 import { type DailyAggregate } from '../../services/insights/types';
-import { buildPatternLibraryState, readableLabel, refineCrossRefCopy } from '../../utils/patternsHelpers';
+import {
+  buildPatternLibraryState,
+  readableLabel,
+  refineCrossRefCopy,
+} from '../../utils/patternsHelpers';
+import {
+  buildInsightDuplicateKey,
+  dedupeExactInsights,
+} from '../../utils/insightDedupe';
 
 function makeAggregate(overrides: Partial<DailyAggregate> = {}): DailyAggregate {
   return {
@@ -34,8 +42,8 @@ describe('patternsHelpers', () => {
 
     expect(state.items).toEqual([]);
     expect(state.sections).toEqual([]);
-    expect(state.statusLine).toBe('Archive still too thin for a real pattern read');
-    expect(state.helperText).toContain('MySky should not guess');
+    expect(state.statusLine).toBe('Not enough signal for a real pattern read');
+    expect(state.helperText).toContain('Do not force a read yet');
   });
 
   it('builds recurring pattern items from tags, keywords, dreams, and stress', () => {
@@ -46,12 +54,16 @@ describe('patternsHelpers', () => {
     ]);
 
     expect(state.statusLine).toBe('Check-in read is live');
-    expect(state.items).toHaveLength(3);
-    expect(state.sections).toHaveLength(1);
-    expect(state.sections[0].title).toBe('Check-In Trends');
-    expect(state.items[0].body).toContain('Overwhelm');
-    expect(state.items[1].body).toContain('Boundaries');
-    expect(state.items[2].body).toContain('3 recent days included dream material');
+    expect(state.items).toHaveLength(4);
+    expect(state.sections.map(section => section.title)).toEqual([
+      'Core Pattern',
+      'Recurring Theme',
+      'Check-in Trends',
+      'Dream/Archive Contrast',
+    ]);
+    expect(state.items.find(item => item.lens === 'checkin_trends')?.body).toContain('Overwhelm');
+    expect(state.items.find(item => item.lens === 'reflection_themes')?.body).toContain('Boundaries');
+    expect(state.items.find(item => item.lens === 'dream_archive_contrast')?.body).toContain('3 recent days included dream material');
   });
 
   it('includes real computed cross-reference insights in the library', () => {
@@ -65,13 +77,13 @@ describe('patternsHelpers', () => {
       } as any,
     ]);
 
-    expect(state.statusLine).toBe('Archive read refreshed today');
-    expect(state.helperText).toContain('patterns your archive keeps repeating strongly enough to name');
-    expect(state.sections[0].title).toBe('Relational Patterns');
-    expect(state.items[0]).toEqual({
-      title: 'The same relationship pressure points keep returning',
-      body: 'When relational themes appear in your check-ins, your emotional baseline tends to drop.',
-    });
+    expect(state.statusLine).toBe('Pattern read refreshed today');
+    expect(state.helperText).toContain('One core pattern sits first');
+    expect(state.sections[0].title).toBe('Core Pattern');
+    expect(state.items[0].lens).toBe('core_pattern');
+    const relationalItem = state.items.find(item => item.lens === 'relational_patterns');
+    expect(relationalItem?.title).toBe('You are highly sensitive to whether connection feels safe');
+    expect(relationalItem?.body).toContain('relational themes show up');
   });
 
   it('explains when only trend analysis is available', () => {
@@ -81,8 +93,8 @@ describe('patternsHelpers', () => {
     ]);
 
     expect(state.statusLine).toBe('Check-in read is live');
-    expect(state.helperText).toContain('deeper source-specific sections need more relational, somatic, trigger, or reflection evidence');
-    expect(state.sections[0].title).toBe('Check-In Trends');
+    expect(state.helperText).toContain('Source-specific sections need more relational, somatic, trigger, or reflection evidence');
+    expect(state.sections[0].title).toBe('Check-in Trends');
   });
 
   it('formats readable labels for pattern copy', () => {
@@ -98,8 +110,8 @@ describe('patternsHelpers', () => {
       isConfirmed: true,
     } as any);
 
-    expect(refined.title).toBe('The values underneath your decisions are getting harder to miss');
-    expect(refined.body).toContain('Across your recent reflections, the same values keep sitting underneath the story');
+    expect(refined.title).toBe('You keep returning to what matters');
+    expect(refined.body).toContain('Across your recent reflections, the same values keep shaping what feels livable');
   });
 
   it('preserves deep insight titles instead of replacing them with generic reflection copy', () => {
@@ -113,6 +125,7 @@ describe('patternsHelpers', () => {
 
     expect(refined.title).toBe('What Repeats on Harder Days');
     expect(refined.body).toContain('overwhelm and boundaries');
+    expect(refined.body).not.toContain('archive');
   });
 
   it('names the repeated reflection theme when reflection copy provides one', () => {
@@ -124,6 +137,72 @@ describe('patternsHelpers', () => {
       isConfirmed: true,
     } as any);
 
-    expect(refined.title).toBe('Recurring Reflection Theme: Boundaries');
+    expect(refined.title).toBe('You keep returning to questions of boundaries');
+  });
+
+  it('deduplicates semantically repeated concepts before rendering sections', () => {
+    const state = buildPatternLibraryState([], [
+      {
+        id: 'somatic-dominant',
+        source: 'somatic',
+        title: 'Body one',
+        body: 'Your archive indicates that your body is carrying pressure.',
+        isConfirmed: true,
+      } as any,
+      {
+        id: 'journal-body-pattern',
+        source: 'somatic',
+        title: 'Body two',
+        body: 'Your archive reveals that your body and your words are carrying the exact same weight.',
+        isConfirmed: true,
+      } as any,
+      {
+        id: 'relationship-pattern',
+        source: 'relationship',
+        title: 'Relational',
+        body: 'Your archive indicates that relational dynamics strongly shape your internal weather.',
+        isConfirmed: true,
+      } as any,
+    ]);
+
+    const concepts = state.items.map(item => item.concept);
+    expect(concepts.filter(concept => concept === 'body_awareness')).toHaveLength(1);
+    expect(concepts).toContain('relational_dynamic');
+  });
+
+  it('builds stable exact duplicate keys from normalized insight content', () => {
+    expect(buildInsightDuplicateKey({
+      id: 'a',
+      lens: 'checkin_trends',
+      title: '  Same\u200B Title ',
+      body: 'Same\n\nbody',
+    })).toBe(buildInsightDuplicateKey({
+      id: 'b',
+      lens: 'checkin_trends',
+      title: 'same title',
+      body: ' same body ',
+    }));
+  });
+
+  it('removes exact duplicate insights while preserving the first instance', () => {
+    const deduped = dedupeExactInsights([
+      {
+        id: 'first',
+        title: 'Same title',
+        body: 'Same body',
+        isConfirmed: false,
+        evidence: [],
+      },
+      {
+        id: 'second',
+        title: ' same   title ',
+        body: 'Same\u200B body',
+        isConfirmed: true,
+        evidence: ['a', 'b'],
+      },
+    ], 'patternsHelpers.test');
+
+    expect(deduped).toHaveLength(1);
+    expect(deduped[0].id).toBe('first');
   });
 });

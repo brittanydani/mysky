@@ -21,7 +21,8 @@ import {
   computeSelfKnowledgeCrossRef,
   type CrossRefInsight,
 } from '../../utils/selfKnowledgeCrossRef';
-import { refineCrossRefCopy } from '../../utils/patternsHelpers';
+import { refineCrossRefCopy, selectDistinctPatternInsights } from '../../utils/patternsHelpers';
+import { dedupeExactInsights } from '../../utils/insightDedupe';
 import { toLocalDateString } from '../../utils/dateUtils';
 import type { DailyCheckIn } from '../patterns/types';
 import type { JournalEntry, SleepEntry } from '../storage/models';
@@ -291,7 +292,10 @@ export async function buildInsightSurface({
   const deepInsights = insightsEnabled && pipelineResult.dailyAggregates.length
     ? computeDeepInsights(buildPersonalProfile(pipelineResult.dailyAggregates))
     : null;
-  const feedInsights = [...buildPatternFeedInsights(deepInsights), ...crossRefs];
+  const feedInsights = dedupeExactInsights(
+    selectDistinctPatternInsights([...buildPatternFeedInsights(deepInsights), ...crossRefs]),
+    'buildInsightSurface:feedInsights',
+  );
   const knowledgeInsight = insightsEnabled && includeKnowledgeInsight
     ? await runActiveKnowledgeInsight({
         checkIns,

@@ -2,37 +2,37 @@ import { DeepInsight, DeepInsightBundle } from './deepInsights';
 import { CrossRefInsight, InsightMetric, InsightTakeaway } from './selfKnowledgeCrossRef';
 
 const CATEGORY_LABELS: Record<DeepInsight['category'], string> = {
-  'what-keeps-happening': 'What Keeps Happening',
-  'how-your-mind-works': 'How Your Mind Works',
-  'who-you-are-underneath': 'Identity Pattern',
-  'what-activates-you': 'What Activates You',
-  'how-you-protect-yourself': 'How You Protect Yourself',
-  'attachment-and-closeness': 'Attachment & Closeness',
-  'what-restores-you': 'What Restores You',
-  'nervous-system': 'Nervous System',
-  'growth-and-change': 'Growth & Change',
-  'inner-contradictions': 'Inner Contradictions',
-  'hidden-costs': 'Hidden Costs',
-  'emotional-logic': 'Emotional Logic',
-  'relational-patterns': 'Relational Patterns',
-  'baseline-shifts': 'Baseline Shifts',
-  'environmental-sensitivity': 'Environmental Sensitivity',
-  'energy-leaks': 'Energy Leaks',
-  'adaptive-behaviors': 'Adaptive Behaviors',
-  'processing-style': 'Processing Style',
-  'quiet-strengths': 'Quiet Strengths',
-  'sleep-and-rhythm': 'Sleep & Rhythm',
-  'dream-patterns': 'Dream Patterns',
-  'somatic-signals': 'Somatic Signals',
-  'trigger-responses': 'Trigger Responses',
-  'glimmers-and-elevation': 'Glimmers & Elevation',
-  'journal-themes': 'Journal Themes',
-  'daily-state': 'Daily State',
-  'focus-and-capacity': 'Focus & Capacity',
-  'cognitive-style': 'Cognitive Style',
-  'archetypes-and-roles': 'Archetypes & Roles',
-  'cosmic-context': 'Cosmic Context',
-  'core-values': 'Core Values',
+  'what-keeps-happening': 'Keeps returning',
+  'how-your-mind-works': 'Needs sense-making',
+  'who-you-are-underneath': 'Identity is clarifying',
+  'what-activates-you': 'Activates quickly',
+  'how-you-protect-yourself': 'Protects under strain',
+  'attachment-and-closeness': 'Closeness shifts baseline',
+  'what-restores-you': 'Brings you back',
+  'nervous-system': 'Capacity changes first',
+  'growth-and-change': 'Change is holding',
+  'inner-contradictions': 'Two needs conflict',
+  'hidden-costs': 'Costs more than it shows',
+  'emotional-logic': 'Has a clear logic',
+  'relational-patterns': 'Connection has conditions',
+  'baseline-shifts': 'Baseline is changing',
+  'environmental-sensitivity': 'Environment changes capacity',
+  'energy-leaks': 'Quietly drains capacity',
+  'adaptive-behaviors': 'Adapts under pressure',
+  'processing-style': 'Needs a clear sequence',
+  'quiet-strengths': 'Strength is consistent',
+  'sleep-and-rhythm': 'Sleep predicts steadiness',
+  'dream-patterns': 'Dreams repeat the material',
+  'somatic-signals': 'Body signals first',
+  'trigger-responses': 'Trigger shifts baseline',
+  'glimmers-and-elevation': 'Small signals stabilize',
+  'journal-themes': 'Writing returns there',
+  'daily-state': 'State is trackable',
+  'focus-and-capacity': 'Capacity sets focus',
+  'cognitive-style': 'Thinks through structure',
+  'archetypes-and-roles': 'Role repeats under strain',
+  'cosmic-context': 'Cycles are being tracked',
+  'core-values': 'Values shape choices',
 };
 
 const ACCENT_MAP: Record<DeepInsight['accent'], CrossRefInsight['accentColor']> = {
@@ -70,8 +70,8 @@ const PREMIUM_TYPE_LABELS: Partial<Record<NonNullable<DeepInsight['premiumType']
 };
 
 function confidenceLabel(confidence: DeepInsight['confidence']): string {
-  if (confidence === 'strong') return 'Strong signal';
-  if (confidence === 'growing') return 'Growing signal';
+  if (confidence === 'strong') return 'Consistent now';
+  if (confidence === 'growing') return 'Becoming consistent';
   return 'Early signal';
 }
 
@@ -84,10 +84,10 @@ function scopeLabel(scope: DeepInsight['scope']): string {
 }
 
 function jobLabel(job: DeepInsight['job']): string {
-  if (job === 'guide') return 'Actionable';
-  if (job === 'clarify') return 'Clarifying';
-  if (job === 'integrate') return 'Integrating';
-  return 'Naming';
+  if (job === 'guide') return 'Gives next move';
+  if (job === 'clarify') return 'Makes sense of it';
+  if (job === 'integrate') return 'Applies what you learn';
+  return 'Names the pattern';
 }
 
 function toHeroMetrics(insight: DeepInsight, bundle: DeepInsightBundle): InsightMetric[] {
@@ -129,7 +129,7 @@ function toHeroMetrics(insight: DeepInsight, bundle: DeepInsightBundle): Insight
   if (typeof insight.valueRank === 'number' && insight.valueRank >= 80) {
     metrics.push({
       value: 'High-value read',
-      label: 'MySky priority',
+      label: 'Priority',
       tone: 'positive',
     });
   } else if (insight.job) {
@@ -168,7 +168,7 @@ function buildPremiumBody(insight: DeepInsight): string {
     parts.push(`Why it matters: ${insight.whyItMatters}`);
   }
   if (insight.evidence && insight.evidence.length > 0) {
-    parts.push(`Why MySky thinks this: ${insight.evidence.slice(0, 3).join(' · ')}`);
+    parts.push(`Evidence: ${insight.evidence.slice(0, 3).join(' · ')}`);
   }
   return parts.join('\n\n');
 }

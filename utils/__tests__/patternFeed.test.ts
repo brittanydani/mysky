@@ -61,11 +61,11 @@ describe('patternFeed', () => {
     });
 
     expect(cards[0].heroMetrics?.map((metric) => metric.value)).toEqual([
-      'How Your Mind Works',
+      'Needs sense-making',
       '12 days',
-      'Strong signal',
+      'Consistent now',
       'Long-term truth',
-      'Integrating',
+      'Applies what you learn',
     ]);
 
     expect(cards[0].takeaway).toMatchObject({
@@ -132,6 +132,6 @@ describe('patternFeed', () => {
     expect(cards[0].takeaway?.body).toEqual('Do this.');
     expect(cards[0].takeaway?.label).toEqual('Next best step');
     expect(cards[0].body).toContain('Why it matters: It matters.');
-    expect(cards[0].body).toContain('Why MySky thinks this: Evidence A');
+    expect(cards[0].body).toContain('Evidence: Evidence A');
   });
 });
