@@ -55,6 +55,7 @@ import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
 import { VelvetGlassSurface } from './ui/VelvetGlassSurface';
 import { useAppTheme, useThemedStyles, useThemePreference } from '../context/ThemeContext';
+import { MAX_JOURNAL_TAGS } from '../services/validation/schemas';
 
 // ── Cinematic Palette ──
 const PALETTE_DARK = {
@@ -323,6 +324,11 @@ const CUSTOM_TAGS_KEY = 'mysky_custom_journal_tags';
 const TITLE_MAX_LENGTH = 120;
 const BODY_MAX_LENGTH = 15000;
 const BODY_COUNTER_THRESHOLD = 9000;
+const TAG_LIMIT_ALERT_MESSAGE = `Choose up to ${MAX_JOURNAL_TAGS} tags per entry.`;
+
+const normalizeJournalTags = (tagIds: string[]) =>
+  Array.from(new Set(tagIds.filter((tagId): tagId is string => typeof tagId === 'string')))
+    .slice(0, MAX_JOURNAL_TAGS);
 
 interface CustomTag {
   id: string;
@@ -349,6 +355,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const tagsRef = useRef<string[]>([]);
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [tagSearch, setTagSearch] = useState('');
   const [customTags, setCustomTags] = useState<CustomTag[]>([]);
@@ -369,6 +376,42 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [archetypePrompt, setArchetypePrompt] = useState<ArchetypeJournalPrompt | null>(null);
   const [moodRecall, setMoodRecall] = useState<JournalRecallResult | null>(null);
   const showBodyCounter = content.length >= BODY_COUNTER_THRESHOLD;
+
+  const updateTags = useCallback((nextTags: string[]) => {
+    const normalizedTags = normalizeJournalTags(nextTags);
+    tagsRef.current = normalizedTags;
+    setTags(normalizedTags);
+  }, []);
+
+  const showTagLimitAlert = useCallback(() => {
+    Alert.alert('Tag limit reached', TAG_LIMIT_ALERT_MESSAGE);
+  }, []);
+
+  const selectTag = useCallback((tagId: string) => {
+    const currentTags = tagsRef.current;
+    if (currentTags.includes(tagId)) return;
+    if (currentTags.length >= MAX_JOURNAL_TAGS) {
+      showTagLimitAlert();
+      return;
+    }
+    updateTags([...currentTags, tagId]);
+  }, [showTagLimitAlert, updateTags]);
+
+  const removeTag = useCallback((tagId: string) => {
+    updateTags(tagsRef.current.filter((existingTagId) => existingTagId !== tagId));
+  }, [updateTags]);
+
+  const toggleTagSelection = useCallback((tagId: string) => {
+    if (tagsRef.current.includes(tagId)) {
+      removeTag(tagId);
+      return;
+    }
+    selectTag(tagId);
+  }, [removeTag, selectTag]);
+
+  useEffect(() => {
+    tagsRef.current = tags;
+  }, [tags]);
 
   useEffect(() => {
     return () => {
@@ -496,9 +539,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       });
       return next;
     });
-    setTags((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    selectTag(id);
     closeCustomTagComposer();
-  }, [closeCustomTagComposer]);
+  }, [closeCustomTagComposer, selectTag]);
 
   const deleteCustomTag = useCallback((id: string) => {
     setCustomTags((prev) => {
@@ -508,9 +551,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       });
       return next;
     });
-    setTags((prev) => prev.filter((t) => t !== id));
+    removeTag(id);
     if (editingCustomTagId === id) closeCustomTagComposer();
-  }, [closeCustomTagComposer, editingCustomTagId]);
+  }, [closeCustomTagComposer, editingCustomTagId, removeTag]);
 
   const promptCustomTagAction = useCallback((tag: CustomTag) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
@@ -637,18 +680,18 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
         waning: 'low', full: 'steady', waxing: 'high', new: 'steady',
       };
       const safeTags = Array.isArray(initialData.tags)
-        ? initialData.tags.filter((t): t is string => typeof t === 'string')
+        ? normalizeJournalTags(initialData.tags.filter((t): t is string => typeof t === 'string'))
         : [];
       setMood(safeMood);
       setEnergyLevel(moonPhaseToEnergy[String(initialData.moonPhase)] ?? 'steady');
       setTitle(typeof initialData.title === 'string' ? initialData.title : '');
       setContent(typeof initialData.content === 'string' ? initialData.content : '');
-      setTags(safeTags);
+      updateTags(safeTags);
     } else {
       setDate(new Date()); setMood('okay'); setEnergyLevel('steady');
-      setTitle(''); setContent(''); setTags([]);
+      setTitle(''); setContent(''); updateTags([]);
     }
-  }, [initialData, visible]);
+  }, [initialData, updateTags, visible]);
 
   const handleSave = () => {
     if (!content.trim()) {
@@ -972,7 +1015,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                         return (
                           <Pressable
                             key={tagId}
-                            onPress={() => { Haptics.selectionAsync().catch(() => {}); setTags((prev) => prev.filter((t) => t !== tagId)); }}
+                            onPress={() => { Haptics.selectionAsync().catch(() => {}); removeTag(tagId); }}
                             style={[styles.tagChip, custom ? styles.tagChipSelectedCustom : styles.tagChipSelected]}
                           >
                             <MetallicText style={styles.tagChipText} color={accent}>{tag.label}</MetallicText>
@@ -1106,9 +1149,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       <Pressable
                         onPress={() => {
                           Haptics.selectionAsync().catch(() => {});
-                          setTags((prev) =>
-                            prev.includes(tag.id) ? prev.filter((t) => t !== tag.id) : [...prev, tag.id]
-                          );
+                          toggleTagSelection(tag.id);
                         }}
                         onLongPress={isCustom ? () => {
                           const customTag = customTags.find((candidate) => candidate.id === tag.id);

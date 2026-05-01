@@ -688,7 +688,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I actively honour the people who have shaped me.',
+            statement: 'I actively honor the people who have shaped me.',
             answer: 'True'
           }
         ],
@@ -4816,7 +4816,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I honour the mystery within myself.',
+            statement: 'I honor the mystery within myself.',
             answer: 'True'
           },
           {
@@ -5258,7 +5258,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
             answer: 'True'
           },
           {
-            statement: 'I fully honour my own boundaries.',
+            statement: 'I fully honor my own boundaries.',
             answer: 'True'
           }
         ],
@@ -9596,7 +9596,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         date: '2026-04-16',
         values: [
           {
-            statement: 'Honour is an active part of my personal code.',
+            statement: 'Honor is an active part of my personal code.',
             answer: 'True'
           },
           {
@@ -9940,7 +9940,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         ],
         archetypes: [
           {
-            statement: 'I honour my past while stepping into my future.',
+            statement: 'I honor my past while stepping into my future.',
             answer: 'True'
           },
           {
@@ -10036,7 +10036,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
         date: '2026-04-20',
         values: [
           {
-            statement: 'I navigate moral grey areas thoughtfully rather than reactively.',
+            statement: 'I navigate moral gray areas thoughtfully rather than reactively.',
             answer: 'True'
           },
           {
@@ -10474,7 +10474,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-01-26',
       category: 'values',
       answer: 'True',
-      questionText: 'I actively honour the people who have shaped me.'
+      questionText: 'I actively honor the people who have shaped me.'
     },
     {
       date: '2026-01-26',
@@ -12556,7 +12556,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-04',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'I honour the mystery within myself.'
+      questionText: 'I honor the mystery within myself.'
     },
     {
       date: '2026-03-04',
@@ -12778,7 +12778,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-03-08',
       category: 'values',
       answer: 'True',
-      questionText: 'I fully honour my own boundaries.'
+      questionText: 'I fully honor my own boundaries.'
     },
     {
       date: '2026-03-08',
@@ -14956,7 +14956,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-16',
       category: 'values',
       answer: 'True',
-      questionText: 'Honour is an active part of my personal code.'
+      questionText: 'Honor is an active part of my personal code.'
     },
     {
       date: '2026-04-16',
@@ -15136,7 +15136,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-19',
       category: 'archetypes',
       answer: 'True',
-      questionText: 'I honour my past while stepping into my future.'
+      questionText: 'I honor my past while stepping into my future.'
     },
     {
       date: '2026-04-19',
@@ -15172,7 +15172,7 @@ export const ACCOUNT_B_DEMO_SEED: AccountBDemoSeed = {
       date: '2026-04-20',
       category: 'values',
       answer: 'True',
-      questionText: 'I navigate moral grey areas thoughtfully rather than reactively.'
+      questionText: 'I navigate moral gray areas thoughtfully rather than reactively.'
     },
     {
       date: '2026-04-20',

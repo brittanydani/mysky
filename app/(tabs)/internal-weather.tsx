@@ -423,7 +423,7 @@ export default function MoodCheckIn() {
 
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
+      let canceled = false;
 
       // Reset date/slot on every focus so stale state from a previous visit
       // doesn't linger after the user returns to this screen a day later.
@@ -437,7 +437,7 @@ export default function MoodCheckIn() {
         try {
           setIsLoading(true);
           const charts = await supabaseDb.getCharts();
-          if (cancelled || !charts || charts.length === 0) {
+          if (canceled || !charts || charts.length === 0) {
             setIsLoading(false);
             return;
           }
@@ -458,7 +458,7 @@ export default function MoodCheckIn() {
           const sevenDaysAgo = toLocalDateString(new Date(new Date(today + 'T12:00:00').getTime() - 6 * 86_400_000));
           const recent = await supabaseDb.getCheckInsInRange(saved.id, sevenDaysAgo, today);
 
-          if (!cancelled) {
+          if (!canceled) {
             setChartId(saved.id);
             setNatalChart(natal);
             setRecentCheckIns(recent);
@@ -466,12 +466,12 @@ export default function MoodCheckIn() {
         } catch (e) {
           logger.error('[MoodCheckIn] Load failed:', e);
         } finally {
-          if (!cancelled) setIsLoading(false);
+          if (!canceled) setIsLoading(false);
         }
       };
 
       load().catch(() => {});
-      return () => { cancelled = true; };
+      return () => { canceled = true; };
     }, [])
   );
 
@@ -482,7 +482,7 @@ export default function MoodCheckIn() {
   // Load the check-in for the currently selected date + slot
   useEffect(() => {
     if (!chartId) return;
-    let cancelled = false;
+    let canceled = false;
 
     const loadSlot = async () => {
       try {
@@ -493,7 +493,7 @@ export default function MoodCheckIn() {
         const slots = await CheckInService.getCompletedTimeSlotsForDate(chartId, selectedDate);
         const existing = await CheckInService.getCheckInForDateAndSlot(chartId, selectedDate, selectedSlot);
 
-        if (!cancelled) {
+        if (!canceled) {
           setCompletedSlots(slots);
 
           // Only auto-select an existing slot when the user explicitly navigated
@@ -596,7 +596,7 @@ export default function MoodCheckIn() {
     };
 
     loadSlot().catch(() => {});
-    return () => { cancelled = true; };
+    return () => { canceled = true; };
   }, [chartId, selectedDate, selectedSlot]);
 
   const toggleInfluenceTag = (tag: string) => {

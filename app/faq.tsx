@@ -2,7 +2,7 @@
 // MySky — Frequently Asked Questions
 //
 // High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
-// 1. Purged generic matte grey cards and "muddy" brownish backgrounds.
+// 1. Purged generic matte gray cards and "muddy" brownish backgrounds.
 // 2. Implemented "Midnight Slate" for the main FAQ anchor shell.
 // 3. Refined header into a cinematic "Hardware" navigation bar.
 // 4. Integrated "Velvet Glass" 1px directional light-catch borders globally.

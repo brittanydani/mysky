@@ -566,7 +566,7 @@ async function getTodayCheckInReflectionInsight(chartId: string): Promise<DailyI
           'High mood alongside high stress is a specific state — activated and stretched at the same time. Your capacity is real today, but it has a cost attached. Use it deliberately, not continuously.',
           'Your check-in shows energy up but stress also elevated. That combination can feel productive while quietly depleting reserves. Build a deliberate stop point into the day before you hit the wall.',
           'You are in an interesting spot today — mood is solid but stress is running high. That usually means you are carrying more than the surface shows. Front-load the important things while the capacity is there, but do not confuse stretched for sustainable.',
-          'High mood and high stress is not contradiction — it is high engagement with elevated cost. The practice today is to notice when the engagement tips into depletion, not wait until after it does.',
+          'High mood and high stress are not a contradiction — they are high engagement with an elevated cost. The practice today is to notice when engagement tips into depletion, not wait until after it does.',
         ]),
         type: 'check-in',
         accentColor: 'copper',

@@ -103,7 +103,7 @@ export class NotificationEngine {
 
   /**
    * Schedules the daily check-in reminder with a tracked identifier so it
-   * can be cancelled independently of other schedules.
+   * can be canceled independently of other schedules.
    */
   static async scheduleCheckInReminder(hour: number = 20, minute: number = 0): Promise<void> {
     try {
@@ -149,7 +149,7 @@ export class NotificationEngine {
 
   /**
    * Schedules the daily inner-world reflection reminder with a tracked
-   * identifier so it can be cancelled independently.
+   * identifier so it can be canceled independently.
    */
   static async scheduleReflectionReminder(hour: number = 19, minute: number = 0): Promise<void> {
     try {

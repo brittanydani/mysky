@@ -219,7 +219,7 @@ class RevenueCatService {
       });
       
       if (error.userCancelled) {
-        return { success: false, userCancelled: true, error: 'Purchase was cancelled' };
+        return { success: false, userCancelled: true, error: 'Purchase was canceled' };
       }
       
       // Handle specific error codes

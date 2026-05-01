@@ -12,7 +12,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 4,
     lookbackDays: 30,
     copyFrame: {
-      observation: 'Your archive suggests that care often leaves your system before it returns to you.',
+      observation: 'A repeated signal is that care often leaves your system before it returns to you.',
       pattern: 'Across recent entries, you seem quick to notice what others need, what might help, and what could fall apart if you do not step in.',
       reframe: {
         shame: 'This does not read as poor boundaries alone.',
@@ -40,7 +40,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 4,
     lookbackDays: 30,
     copyFrame: {
-      observation: 'Your archive suggests that your strength often works silently in the background.',
+      observation: 'What keeps surfacing is that your strength often works silently in the background.',
       pattern: 'Across recent patterns, you appear to keep going, solving, protecting, or enduring without always naming how much it costs.',
       reframe: {
         shame: 'This does not read as needing attention.',
@@ -59,7 +59,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 5,
     lookbackDays: 90,
     copyFrame: {
-      observation: 'Your archive suggests that understanding is one of the ways you regulate.',
+      observation: 'One consistent thread is that understanding is one of the ways you regulate.',
       pattern: 'Across recent entries, you return often to meaning, context, cause, and the deeper thread beneath what happened.',
       reframe: {
         shame: 'This does not read as overthinking.',
@@ -115,7 +115,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 4,
     lookbackDays: 30,
     copyFrame: {
-      observation: 'Your archive suggests that your competence can make your need for support harder to see.',
+      observation: 'The pattern points to competence making your need for support harder to see.',
       pattern: 'Across recent patterns, you keep functioning, planning, producing, or showing up even when your emotional reserves are thin.',
       reframe: {
         shame: 'This does not read as weakness.',
@@ -134,7 +134,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 3,
     lookbackDays: 90,
     copyFrame: {
-      observation: 'Your archive suggests that you rarely leave pain as only pain.',
+      observation: 'The recurring shape here is that you rarely leave pain as only pain.',
       pattern: 'Across recent entries, difficult experiences often become questions about meaning, growth, truth, and what can be carried forward.',
       reframe: {
         shame: 'This does not read as forcing positivity.',
@@ -169,7 +169,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 4,
     lookbackDays: 30,
     copyFrame: {
-      observation: 'Your archive suggests that exhaustion often becomes your permission slip to pause.',
+      observation: 'A repeated signal shows exhaustion becoming your permission slip to pause.',
       pattern: 'Across recent entries, there is a pattern of moving quickly until your body forces a full stop.',
       reframe: {
         shame: 'This does not read as a lack of self-care.',
@@ -213,7 +213,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 4,
     lookbackDays: 60,
     copyFrame: {
-      observation: 'Your archive suggests that vague language rarely feels like enough.',
+      observation: 'What keeps showing up is that vague language rarely feels like enough.',
       pattern: 'Across recent entries, you seem to search for the sentence that finally lands: not too soft, not too harsh, not too exposed, not too small.',
       reframe: {
         shame: 'This does not read as perfectionism alone.',
@@ -232,7 +232,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 5,
     lookbackDays: 90,
     copyFrame: {
-      observation: 'Your archive suggests that safety is something you read through patterns, not promises.',
+      observation: 'A clear thread is that safety is something you read through patterns, not promises.',
       pattern: 'Across recent relational entries, you seem to notice consistency, tone, follow-through, repair, and whether care remains steady when you have needs.',
       reframe: {
         shame: 'This does not read as suspicion.',
@@ -266,7 +266,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 4,
     lookbackDays: 30,
     copyFrame: {
-      observation: 'Your archive suggests that support is not just something you want. It is something your system keeps checking for.',
+      observation: 'The pattern around support is not just about what you want. It is something your system keeps checking for.',
       pattern: 'Across recent entries, the same emotional shape appears around needing backup, feeling grateful for the people you do have, and still aching for a wider safety net.',
       reframe: {
         shame: 'This does not read as greed.',
@@ -302,7 +302,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 3,
     lookbackDays: 90,
     copyFrame: {
-      observation: 'Your archive suggests that anger often rises when something violates a core value.',
+      observation: 'One recurring signal is that anger often rises when something violates a core value.',
       pattern: 'Across recent entries, your strongest emotional charge appears near unfairness, dismissal, harm, or people not being protected.',
       reframe: {
         shame: 'This does not read as being reactive.',
@@ -349,7 +349,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 3,
     lookbackDays: 14,
     copyFrame: {
-      observation: 'Your archive suggests that dreams often pick up what the day could not finish.',
+      observation: 'The dream pattern points to dreams often picking up what the day could not finish.',
       pattern: 'Across recent entries, dream activity appears near emotional pressure, unresolved questions, or lower-capacity weeks.',
       reframe: {
         shame: 'This does not read as random.',

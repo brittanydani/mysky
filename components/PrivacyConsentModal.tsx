@@ -167,7 +167,7 @@ export default function PrivacyConsentModal({
 
                 {showDeclineHint && (
                   <Animated.View entering={FadeInUp.duration(400)}>
-                    <Text style={styles.declineHint}>No worries — we'll be here whenever you're ready ✨</Text>
+                    <Text style={styles.declineHint}>No worries — we'll be here whenever you're ready.</Text>
                   </Animated.View>
                 )}
               </View>

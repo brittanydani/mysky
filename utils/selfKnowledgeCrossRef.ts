@@ -199,8 +199,8 @@ function buildTriggerInsights(
         : `The Anchor of ${titleCase(item)}`;
 
       const observation = isDrain
-        ? `Your archive suggests that "${item}" actively pulls from your reserves in a measurable way.`
-        : `Your archive suggests that "${item}" functions as a profound anchor for your system.`;
+        ? `The pattern around "${item}" points to it actively pulling from your reserves in a measurable way.`
+        : `The pattern around "${item}" points to it functioning as a profound anchor for your system.`;
 
       const pattern = isDrain
         ? `Across ${tagged.length} recent entries where this was present, your baseline dropped by ${Math.abs(diff).toFixed(1)} points. The pattern reveals that this is not just a mild annoyance, but an active energetic hemorrhage.`
@@ -313,7 +313,7 @@ function buildSomaticInsight(
 const ARCHETYPE_SHADOWS: Record<ArchetypeKey, { title: string; observation: string; pattern: string; reframe: string; takeaway: string }> = {
   hero: {
     title: 'The Cost of the Climb',
-    observation: 'Your archive suggests that under strain, your instinct is to simply push harder.',
+    observation: 'When strain rises, the pattern points to an instinct to simply push harder.',
     pattern: 'Across recent entries, rising pressure triggers an urge to overcome, produce, and prove strength, rather than stepping back.',
     reframe: 'This does not read as a need to prove yourself. It reads as a deeply ingrained survival strategy that hasn\'t yet learned it is safe to rest.',
     takeaway: 'When pressure spikes, notice whether you are trying to earn safety by doing more. What would strategic recovery look like first?',
@@ -327,7 +327,7 @@ const ARCHETYPE_SHADOWS: Record<ArchetypeKey, { title: string; observation: stri
   },
   seeker: {
     title: 'Movement as Medicine',
-    observation: 'Your archive suggests that motion and shifting focus act as your primary escape hatches.',
+    observation: 'What keeps showing up is motion and shifting focus as your primary escape hatches.',
     pattern: 'When pressure rises, the data shows an immediate instinct to move, leave, or change the current frame.',
     reframe: 'This does not read as a lack of commitment. It reads as a highly attuned system trying to prevent feeling trapped by staying ten steps ahead.',
     takeaway: 'Notice the urge to leave or switch tasks. What happens if you stay with the current, uncomfortable moment just a little longer?',
@@ -731,7 +731,7 @@ function buildIntelligenceInsight(profile: IntelligenceProfile): CrossRefInsight
   const secondLabel = INTELLIGENCE_DIMENSION_LABELS[second.id];
   const note = INTELLIGENCE_NOTES[top.id];
 
-  const observation = `Your archive suggests that ${topLabel} intelligence dictates how you metabolize the world.`;
+  const observation = `The clearest thread is that ${topLabel} intelligence shapes how you metabolize the world.`;
   const pattern = `Across your entries, ${topLabel} and ${secondLabel} surface as the dominant lenses through which you decode your life. ${note.observation}`;
   const reframe = note.reframe;
 
@@ -803,7 +803,7 @@ function buildReflectionInsight(
     }
   }
 
-  const observation = `Your archive suggests that inward turning is a deeply active, regulatory practice for you.`;
+  const observation = `The throughline is that inward turning is a deeply active, regulatory practice for you.`;
   const reframe = `This does not read as self-absorption. It reads as a meticulous dedication to mapping your own interior so you no longer have to navigate it in the dark.`;
 
   return {
@@ -955,7 +955,7 @@ function buildDreamArchetypeInsight(
   const themeLabel = matchedThemes.slice(0, 2).join(' and ');
   const archetype = archetypeProfile.dominant.charAt(0).toUpperCase() + archetypeProfile.dominant.slice(1);
 
-  const observation = `Your archive suggests that your deepest archetypal traits do not pause when you close your eyes.`;
+  const observation = `The pattern follows you into dreams: your deepest archetypal traits do not pause when you close your eyes.`;
   const pattern = `As the ${archetype}, your waking life is shaped by specific instincts, and your recurring dream themes of ${themeLabel} flawlessly mirror that exact same territory.`;
   const reframe = `This does not read as random neural firing. It reads as a subconscious mind relentlessly working the material your archetype demands you understand.`;
 
@@ -1006,7 +1006,7 @@ function buildSleepMoodInsight(
 
   const dir = diff > 0 ? 'higher' : 'lower';
   
-  const observation = `Your archive suggests your emotional grace is profoundly tethered to your rest.`;
+  const observation = `A recurring thread links your emotional grace closely to your rest.`;
   const pattern = `Across recent mornings, your mood shifts flawlessly by ${Math.abs(diff).toFixed(1)} points depending entirely on the sleep from the night before.`;
   const reframe = `This does not read as emotional instability. It reads as a nervous system that relies almost entirely on sleep to maintain its protective buffer against the world.`;
 

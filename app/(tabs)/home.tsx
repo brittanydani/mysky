@@ -68,7 +68,6 @@ import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 import { scheduleTransitNotification } from '../../services/astrology/transitNotifications';
 import { scheduleInsightNotification } from '../../services/today/insightNotifications';
-import * as StoreReview from 'expo-store-review';
 import { buildInsightSurface } from '../../services/insights/buildInsightSurface';
 import type { CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
 import type { PremiumInsightResult } from '../../services/insights/premiumPipeline';
@@ -356,12 +355,6 @@ export default function HomeScreen() {
               if (loopData.streak.milestone && loopData.streak.milestone !== prevMilestoneRef.current) {
                 prevMilestoneRef.current = loopData.streak.milestone;
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-                // Request App Store review at meaningful milestone moments (7 and 30 days)
-                if (loopData.streak.milestone === 7 || loopData.streak.milestone === 30) {
-                  StoreReview.isAvailableAsync().then((available) => {
-                    if (available) StoreReview.requestReview();
-                  }).catch(() => {});
-                }
               }
 
               // Schedule personalized transit notification for tomorrow

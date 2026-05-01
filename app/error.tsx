@@ -65,7 +65,7 @@ export default function GlobalError({ error, retry }: { error: Error; retry?: ()
             <Text style={styles.title}>System Interruption</Text>
             
             <Text style={styles.subtitle}>
-              We encountered an unexpected anomaly. If this persists, please force-close the app and reopen to recalibrate.
+              Something unexpected happened. If this keeps happening, please force-close the app and reopen it.
             </Text>
 
             <Pressable

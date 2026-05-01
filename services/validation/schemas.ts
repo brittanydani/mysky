@@ -8,6 +8,8 @@ export interface ValidationSchema<T> {
   coerce?(value: unknown): T;
 }
 
+export const MAX_JOURNAL_TAGS = 10;
+
 export class ValidationError extends Error {
   readonly errors: string[];
 
@@ -166,7 +168,7 @@ export const JournalEntrySchema = {
     if (value.tags != null) {
       if (!Array.isArray(value.tags)) {
         errors.push('Tags must be an array');
-      } else if (value.tags.length > 10) {
+      } else if (value.tags.length > MAX_JOURNAL_TAGS) {
         errors.push('Maximum 10 tags per entry');
       } else {
         value.tags.forEach((tag, index) => {

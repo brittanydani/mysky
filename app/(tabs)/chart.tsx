@@ -603,7 +603,7 @@ export default function ChartScreen() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       } catch (e) {
         logger.error('Synastry calculation error', e);
-        Alert.alert('Ecosystem Error', 'Could not synthesize chart for this entity.');
+        Alert.alert('Chart Error', 'Could not generate this relationship chart.');
       }
     },
     [activeOverlays]
@@ -645,7 +645,7 @@ export default function ChartScreen() {
         handleSelectOverlay(newRel);
       } catch (e) {
         logger.error('Database anchor error', e);
-        Alert.alert('Error', 'Failed to anchor celestial data.');
+        Alert.alert('Error', 'Could not save chart data.');
       }
     },
     [savedUserChartId, addingRelationType, handleSelectOverlay]
@@ -856,7 +856,7 @@ export default function ChartScreen() {
     return baseCount;
   }, [chartPatterns, extendedPatterns, chartShape, singletons, interceptions]);
 
-  // ── UI UI Tracking & Derivation ──
+  // ── UI Tracking & Derivation ──
 
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);

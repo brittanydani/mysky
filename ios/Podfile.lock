@@ -268,8 +268,6 @@ PODS:
     - ExpoModulesCore
   - ExpoSplashScreen (31.0.13):
     - ExpoModulesCore
-  - ExpoStoreReview (9.0.9):
-    - ExpoModulesCore
   - ExpoSystemUI (6.0.9):
     - ExpoModulesCore
   - ExpoWebBrowser (15.0.10):
@@ -2538,7 +2536,6 @@ DEPENDENCIES:
   - ExpoPrint (from `../node_modules/expo-print/ios`)
   - ExpoSharing (from `../node_modules/expo-sharing/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
-  - ExpoStoreReview (from `../node_modules/expo-store-review/ios`)
   - ExpoSystemUI (from `../node_modules/expo-system-ui/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
   - EXStructuredHeaders (from `../node_modules/expo-structured-headers/ios`)
@@ -2700,8 +2697,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-sharing/ios"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
-  ExpoStoreReview:
-    :path: "../node_modules/expo-store-review/ios"
   ExpoSystemUI:
     :path: "../node_modules/expo-system-ui/ios"
   ExpoWebBrowser:
@@ -2907,7 +2902,6 @@ SPEC CHECKSUMS:
   ExpoPrint: 813bfa965eda2ecc4b1cdc61612c820e239c382a
   ExpoSharing: 0d983394ed4a80334bab5a0d5384f75710feb7e8
   ExpoSplashScreen: bc3cffefca2716e5f22350ca109badd7e50ec14d
-  ExpoStoreReview: 32bb43b6fae9c8db3e33cad69996dff3785eef5f
   ExpoSystemUI: 2ad325f361a2fcd96a464e8574e19935c461c9cc
   ExpoWebBrowser: 17b064c621789e41d4816c95c93f429b84971f52
   EXStructuredHeaders: c951e77f2d936f88637421e9588c976da5827368

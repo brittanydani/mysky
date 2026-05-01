@@ -521,7 +521,7 @@ export default function InnerTensionsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
+      let canceled = false;
       (async () => {
         try {
           setLoading(true);
@@ -536,7 +536,7 @@ export default function InnerTensionsScreen() {
           const checkIns = charts.length
             ? await supabaseDb.getCheckIns(charts[0].id, 120)
             : [];
-          if (!cancelled) setData(computeInnerTensions(
+          if (!canceled) setData(computeInnerTensions(
             sleepEntries,
             journalEntries.slice(0, 90),
             checkIns,
@@ -545,10 +545,10 @@ export default function InnerTensionsScreen() {
         } catch (err) {
           logger.error('InnerTensions: failed to load', err);
         } finally {
-          if (!cancelled) setLoading(false);
+          if (!canceled) setLoading(false);
         }
       })();
-      return () => { cancelled = true; };
+      return () => { canceled = true; };
     }, []),
   );
 

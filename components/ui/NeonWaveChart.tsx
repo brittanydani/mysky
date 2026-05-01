@@ -5,7 +5,7 @@
 // 1. Purged legacy teal/rose; implemented Atmosphere Blue and Ember Red.
 // 2. Refined "Aurora Pillars" with high-fidelity vertical glass gradients.
 // 3. Implemented "Bioluminescent Bloom" for today's data point and active states.
-// 4. Unified tooltip and legend with the semantic semantic palette.
+// 4. Unified tooltip and legend with the semantic palette.
 
 import React, { useMemo, useState } from 'react';
 import { toLocalDateString } from '../../utils/dateUtils';

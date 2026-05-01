@@ -13,7 +13,7 @@ export const REST_CAPACITY_ANGLES: DailyAngle[] = [
     avoidIfSignals: ['high_energy', 'restorative_moment'],
     sourcePriority: ['dailyCheckIn', 'journal', 'sleep', 'bodyMap'],
     observation:
-      'Your archive suggests that rest may still feel easier to accept once exhaustion has already made the case for it.',
+      'Rest may still feel easier to accept once exhaustion has already made the case for it.',
     pattern:
       'Across recent signals, your body seems to ask for pause before your mind fully gives permission. The pattern suggests that stopping may feel more allowed when you are already depleted.',
     reframe:
@@ -32,7 +32,7 @@ export const REST_CAPACITY_ANGLES: DailyAngle[] = [
     avoidIfSignals: ['high_energy'],
     sourcePriority: ['dailyCheckIn', 'journal', 'sleep'],
     observation:
-      'Your archive suggests that today’s heaviness may be less about the size of the task and more about the energy available to carry it.',
+      'Today’s heaviness may be less about the size of the task and more about the energy available to carry it.',
     pattern:
       'When reserves are low, responsibility can feel louder. Small decisions can take more effort, and things that normally feel manageable can start to feel personal, urgent, or too much.',
     reframe:
@@ -51,7 +51,7 @@ export const REST_CAPACITY_ANGLES: DailyAngle[] = [
     avoidIfSignals: ['body_lightness', 'restorative_moment'],
     sourcePriority: ['bodyMap', 'dailyCheckIn', 'journal'],
     observation:
-      'Your archive suggests that your body may notice the need for rest before your mind is ready to agree.',
+      'Your body may notice the need for rest before your mind is ready to agree.',
     pattern:
       'Physical cues near low-energy days can be a sign that your system is already negotiating with its limits. The need for pause may be showing up in sensation before it becomes clear in thought.',
     reframe:
@@ -70,7 +70,7 @@ export const REST_CAPACITY_ANGLES: DailyAngle[] = [
     avoidIfSignals: ['restorative_moment', 'receiving_openness'],
     sourcePriority: ['journal', 'dailyCheckIn', 'reflectionBank'],
     observation:
-      'Your archive suggests that the hardest part of rest may not be the pause itself, but the guilt that appears around it.',
+      'The hardest part of rest may not be the pause itself, but the guilt that appears around it.',
     pattern:
       'Recent signals point toward a familiar tension: knowing you need to stop, while another part of you still wants proof that stopping is allowed. The pattern suggests that rest may be tangled with worth, usefulness, or responsibility.',
     reframe:
@@ -89,7 +89,7 @@ export const REST_CAPACITY_ANGLES: DailyAngle[] = [
     avoidIfSignals: ['high_energy', 'low_stress'],
     sourcePriority: ['dailyCheckIn', 'sleep', 'bodyMap'],
     observation:
-      'Your archive suggests that your system may be asking for rest before you reach the point of empty.',
+      'Your system may be asking for rest before you reach the point of empty.',
     pattern:
       'The pattern here is subtle but important: the need for pause is appearing before total depletion. That matters because rest becomes more healing when it arrives early enough to actually restore you.',
     reframe:

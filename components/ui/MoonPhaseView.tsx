@@ -8,7 +8,7 @@
 // Rendering layers:
 //   1 – Subtle silver aura (atmosphere glow outside disc)
 //   2 – Dark base disc (shadow / night side)
-//   3 – Earthshine (faint blue-grey on dark limb — never pitch black)
+//   3 – Earthshine (faint blue-gray on dark limb — never pitch black)
 //   4 – Illuminated region (elliptical terminator path, limb-darkened)
 //   5 – Limb rim ring (thin silver stroke)
 //
@@ -137,7 +137,7 @@ export default function MoonPhaseView({ size = 40, date, interactive = true, gra
           />
         </Circle>
 
-        {/* Layer 3 – Earthshine: faint blue-grey on dark limb */}
+        {/* Layer 3 – Earthshine: faint blue-gray on dark limb */}
         <Group clip={discClip}>
           <Circle cx={r} cy={r} r={r}>
             <RadialGradient
@@ -214,5 +214,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-
 

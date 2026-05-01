@@ -6,7 +6,7 @@ export const EMOTIONAL_WEATHER_ANGLES: DailyAngle[] = [
     patternKey: 'emotional_weather_001_low_capacity_day',
     title: 'Capacity Telling the Truth',
     triggerSignals: ['low_capacity'],
-    observation: 'Your archive suggests that today’s heaviness may be a signal from your capacity.',
+    observation: 'Today’s heaviness may be a signal from your capacity.',
     pattern: 'Across recent entries, multiple signals have pointed toward thin reserves.',
     reframe: 'This does not read as failing. It reads as capacity telling the truth.',
     question: 'What would you adjust if your capacity got a real vote today?',

@@ -43,11 +43,21 @@ import { loadSelfKnowledgeContext } from '../../../services/insights/selfKnowled
 import { enhanceInsightCopy } from '../../../services/insights/geminiInsightsService';
 import { getPersonalizedPremiumTeaser } from '../../../utils/archiveDepth';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
+import { MAX_JOURNAL_TAGS } from '../../../services/validation/schemas';
 
 const VALID_MOODS = ['calm', 'soft', 'okay', 'heavy', 'stormy'] as const;
 
 function isValidDateValue(date: Date): boolean {
   return !Number.isNaN(date.getTime());
+}
+
+function normalizeJournalTags(tags: JournalEntry['tags']): JournalEntry['tags'] {
+  if (!Array.isArray(tags)) return undefined;
+
+  const normalized = Array.from(new Set(tags.filter((t): t is string => typeof t === 'string')))
+    .slice(0, MAX_JOURNAL_TAGS);
+
+  return normalized.length > 0 ? normalized : undefined;
 }
 
 function sanitizeJournalEntryForEdit(entry: JournalEntry): JournalEntry {
@@ -69,9 +79,7 @@ function sanitizeJournalEntryForEdit(entry: JournalEntry): JournalEntry {
     mood: (VALID_MOODS as readonly string[]).includes(entry.mood as string)
       ? entry.mood
       : ('okay' as any),
-    tags: Array.isArray(entry.tags)
-      ? entry.tags.filter((t): t is string => typeof t === 'string')
-      : undefined,
+    tags: normalizeJournalTags(entry.tags),
   };
 }
 
@@ -700,7 +708,7 @@ function JournalContent() {
   }, [entries.length, generatePatternInsights]);
 
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     const requestId = ++dreamAiRequestRef.current;
 
     if (!isPremium || !dreamArchiveSummary) {
@@ -708,14 +716,14 @@ function JournalContent() {
       setAiDreamGeneratedAt(null);
       setAiDreamArchiveKey(null);
       return () => {
-        cancelled = true;
+        canceled = true;
       };
     }
 
     void (async () => {
       try {
         const { context, checkIns } = await loadAiInputs();
-        if (cancelled) return;
+        if (canceled) return;
 
         const enhanced = await enhanceInsightCopy(
           [
@@ -737,7 +745,7 @@ function JournalContent() {
           context,
           checkIns,
         );
-        if (cancelled || requestId !== dreamAiRequestRef.current || !enhanced?.insights?.length) return;
+        if (canceled || requestId !== dreamAiRequestRef.current || !enhanced?.insights?.length) return;
 
         const aiBodies = new Map(enhanced.insights.map((insight) => [insight.id, insight.body]));
         setAiDreamGeneratedAt(enhanced.generatedAt ?? null);
@@ -753,7 +761,7 @@ function JournalContent() {
     })();
 
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [dreamArchiveKey, dreamArchiveSummary, isPremium, loadAiInputs, sleepEntries]);
 
@@ -1155,6 +1163,7 @@ function JournalContent() {
         contentWordCount: nlp.wordCount,
         contentReadingMinutes: nlp.readingMinutes,
       };
+      const safeTags = normalizeJournalTags(data.tags ?? editingEntry?.tags);
 
       if (editingEntry?.id) {
         const updated: JournalEntry = {
@@ -1168,7 +1177,7 @@ function JournalContent() {
           date: (data.date ?? editingEntry.date) as string,
           chartId: data.chartId ?? editingEntry.chartId,
           transitSnapshot: data.transitSnapshot ?? editingEntry.transitSnapshot,
-          tags: data.tags ?? editingEntry.tags,
+          tags: safeTags,
         } as JournalEntry;
 
         await supabaseDb.updateJournalEntry(updated);
@@ -1185,7 +1194,7 @@ function JournalContent() {
           isDeleted: false,
           chartId: data.chartId,
           transitSnapshot: data.transitSnapshot,
-          tags: data.tags,
+          tags: safeTags,
           ...nlpFields,
         } as JournalEntry;
 

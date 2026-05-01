@@ -389,7 +389,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
             </View>
 
             <Text style={styles.legalMicro}>
-              {"Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel subscriptions in Settings → Apple ID → Subscriptions."}
+              {"Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Manage or cancel subscriptions in Settings → Apple ID → Subscriptions."}
             </Text>
           </Animated.View>
         </ScrollView>

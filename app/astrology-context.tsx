@@ -2,7 +2,7 @@
 // MySky — Cosmic Context (Celestial Weather)
 //
 // High-End "Lunar Sky" & "Midnight Slate" Aesthetic Update:
-// 1. Purged "Muddy Gold" tints and opaque grey backgrounds.
+// 1. Purged "Muddy Gold" tints and opaque gray backgrounds.
 // 2. Implemented "Midnight Slate" for heavy anchor elements (Transit Shells, Reflection Card).
 // 3. Implemented "Atmosphere" and "Nebula" washes for the weekly moon row and insights.
 // 4. Integrated "Velvet Glass" 1px directional light-catch borders globally.

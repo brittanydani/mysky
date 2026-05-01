@@ -2110,7 +2110,7 @@ function buildPremiumValueInsights(p: PersonalProfile): DeepInsight[] {
           [
             'For you, the earliest warning may arrive in the body before it arrives in words.',
             'Your system appears to signal through capacity shifts sooner than through neat emotional language.',
-            'The archive suggests your body often knows first.',
+            'Your body often seems to know first.',
             'MySky is reading your body as an early-warning channel rather than a side note.',
           ],
           [
@@ -2434,7 +2434,7 @@ function buildPremiumValueInsights(p: PersonalProfile): DeepInsight[] {
         [
           [
             'Your glimmer logs are reading as more than a nice extra.',
-            'The archive suggests small moments of peace are doing real regulatory work for you.',
+            'Small moments of peace seem to be doing real regulatory work for you.',
             'MySky is seeing a repeatable elevation pattern in the days where glimmers are noticed.',
             'This card is tracking something modest but meaningful in your data.',
           ],
