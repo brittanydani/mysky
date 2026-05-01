@@ -51,9 +51,9 @@ describe('geminiDreamInterpretation', () => {
   });
 
   it('classifies expected Gemini availability messages as recoverable', () => {
-    expect(isExpectedGeminiDreamError(new Error('AI insights are at capacity right now. Please wait a minute and try again.'))).toBe(true);
-    expect(isExpectedGeminiDreamError(new Error('AI insights are temporarily unavailable. Please try again soon.'))).toBe(true);
-    expect(isExpectedGeminiDreamError(new Error('Could not reach AI insights. Please check your connection and try again.'))).toBe(true);
+    expect(isExpectedGeminiDreamError(new Error('AI dream interpretation is at capacity right now. Please wait a minute and try again.'))).toBe(true);
+    expect(isExpectedGeminiDreamError(new Error('AI dream interpretation is temporarily unavailable. Please try again soon.'))).toBe(true);
+    expect(isExpectedGeminiDreamError(new Error('Could not reach AI dream interpretation. Please check your connection and try again.'))).toBe(true);
     expect(isExpectedGeminiDreamError(new Error('Invalid response structure from Gemini'))).toBe(false);
   });
 
@@ -114,7 +114,7 @@ describe('geminiDreamInterpretation', () => {
 
     await expect(
       generateGeminiDreamInterpretation({ dreamText: 'I was falling through a red hallway.' }),
-    ).rejects.toThrow('AI insights are temporarily unavailable. Please try again soon.');
+    ).rejects.toThrow('AI dream interpretation is temporarily unavailable. Please try again soon.');
 
     expect(mockInvoke).not.toHaveBeenCalled();
     expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -140,7 +140,7 @@ describe('geminiDreamInterpretation', () => {
 
     await expect(
       generateGeminiDreamInterpretation({ dreamText: 'I was standing in the ocean at night.' }),
-    ).rejects.toThrow('AI insights are temporarily unavailable. Please try again soon.');
+    ).rejects.toThrow('AI dream interpretation is temporarily unavailable. Please try again soon.');
 
     expect(mockInvoke).toHaveBeenCalledTimes(1);
     expect(mockRefreshSession).toHaveBeenCalledTimes(1);
@@ -149,7 +149,7 @@ describe('geminiDreamInterpretation', () => {
       expect.any(Error),
     );
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      '[GeminiDream] Edge function unauthorized; AI dream insights unavailable.',
+      '[GeminiDream] Edge function unauthorized; AI dream interpretation unavailable.',
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
@@ -209,7 +209,7 @@ describe('geminiDreamInterpretation', () => {
         context: {
           status: 502,
           json: jest.fn().mockResolvedValue({
-            error: 'AI insights are at capacity right now. Please wait a minute and try again.',
+            error: 'AI dream interpretation is at capacity right now. Please wait a minute and try again.',
           }),
           clone() {
             return this;
@@ -220,12 +220,12 @@ describe('geminiDreamInterpretation', () => {
 
     await expect(
       generateGeminiDreamInterpretation({ dreamText: 'I was running through an empty station.' }),
-    ).rejects.toThrow('AI insights are at capacity right now. Please wait a minute and try again.');
+    ).rejects.toThrow('AI dream interpretation is at capacity right now. Please wait a minute and try again.');
 
     expect(mockLogger.error).toHaveBeenCalledWith(
       '[GeminiDream] Edge function error:',
       502,
-      'AI insights are at capacity right now. Please wait a minute and try again.',
+      'AI dream interpretation is at capacity right now. Please wait a minute and try again.',
     );
   });
 
@@ -253,7 +253,7 @@ describe('geminiDreamInterpretation', () => {
 
     await expect(
       generateGeminiDreamInterpretation({ dreamText: 'I was looking for a missing train.' }),
-    ).rejects.toThrow('AI insights are temporarily unavailable. Please try again soon.');
+    ).rejects.toThrow('AI dream interpretation is temporarily unavailable. Please try again soon.');
 
     expect(mockLogger.error).toHaveBeenCalledWith(
       '[GeminiDream] Edge function error:',

@@ -6,6 +6,7 @@ import type {
 import { ARCHIVE_PATTERNS } from './patternPacks';
 import { scoreArchivePattern } from './engine/scorePatterns';
 import { selectFreshInsight } from './engine/selectInsight';
+import { selectPrimaryPersona } from './engine/selectPrimaryPersona';
 import { normalizeInsightInputsV2 } from './normalizers';
 import { generateId } from '../storage/models';
 
@@ -30,6 +31,10 @@ export async function buildTodayInsights({
   const patternScores = ARCHIVE_PATTERNS.map(pattern => {
     const prev = previousPatternScores.find(p => p.patternKey === pattern.key);
     return scoreArchivePattern(pattern, signals, date, prev);
+  });
+  const primaryPersona = selectPrimaryPersona({
+    archivePatterns: patternScores,
+    recentSignals: signals,
   });
 
   // 3. Extract Today's Signals
@@ -113,5 +118,6 @@ export async function buildTodayInsights({
     signals,
     patternScores,
     insights,
+    primaryPersona,
   };
 }

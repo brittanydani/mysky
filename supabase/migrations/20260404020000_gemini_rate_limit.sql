@@ -1,7 +1,7 @@
 -- 20260404_gemini_rate_limit.sql
--- Per-user rate-limit table for the gemini-proxy Edge Function.
--- Keeps a separate counter from reflection_rate_limit so dream analysis
--- and AI insights each get their own budget.
+-- Per-user rate-limit table for the dream-insights Edge Function.
+-- Keeps a separate counter from reflection_rate_limit so AI dream
+-- interpretation gets its own budget.
 --
 -- Run: supabase db push
 -- Or:  supabase migration up

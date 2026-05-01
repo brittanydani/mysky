@@ -9,7 +9,7 @@
 // 5. Reserved Metallic Gold strictly for hardware elements and icons.
 
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, Modal, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
@@ -38,9 +38,7 @@ import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { PremiumSegmentedControl } from '../../../components/ui/PremiumSegmentedControl';
 import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
-import { buildDreamArchiveSummary, hasDreamContent } from '../../../utils/dreamArchiveSummary';
-import { loadSelfKnowledgeContext } from '../../../services/insights/selfKnowledgeContext';
-import { enhanceInsightCopy } from '../../../services/insights/geminiInsightsService';
+import { hasDreamContent } from '../../../utils/dreamArchiveSummary';
 import { getPersonalizedPremiumTeaser } from '../../../utils/archiveDepth';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { MAX_JOURNAL_TAGS } from '../../../services/validation/schemas';
@@ -100,35 +98,6 @@ const PALETTE = {
 
 const LIGHT_MODE_INK = '#1A1815';
 const LIGHT_MODE_META = 'rgba(26, 24, 21, 0.5)';
-
-type DreamArchiveSummary = NonNullable<ReturnType<typeof buildDreamArchiveSummary>>;
-
-interface DisplayPatternInsight extends PatternInsight {
-  aiEnhanced: boolean;
-}
-
-function formatAiFreshness(generatedAt: string | null): string | null {
-  if (!generatedAt) return null;
-
-  const date = new Date(generatedAt);
-  if (Number.isNaN(date.getTime())) return 'AI-enhanced';
-
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  if (diffMs < 60_000) return 'AI-enhanced just now';
-  if (diffMs < 3_600_000) return `AI-enhanced ${Math.max(1, Math.round(diffMs / 60_000))}m ago`;
-  if (diffMs < 86_400_000) return `AI-enhanced ${Math.max(1, Math.round(diffMs / 3_600_000))}h ago`;
-  return `AI-enhanced ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-}
-
-function buildDreamArchiveKey(summary: DreamArchiveSummary | null): string | null {
-  if (!summary) return null;
-  return JSON.stringify({
-    summary: summary.summary,
-    chips: summary.chips,
-    grounding: summary.grounding,
-  });
-}
 
 // ─── Dream card ───────────────────────────────────────────────────────────────
 
@@ -289,8 +258,6 @@ function JournalContent() {
   const router = useRouter();
   const { isPremium } = usePremium();
   const reflectionsListRef = useRef<FlatList<JournalEntry> | null>(null);
-  const patternAiRequestRef = useRef(0);
-  const dreamAiRequestRef = useRef(0);
   const entriesRef = useRef<JournalEntry[]>([]);
   const hasMoreRef = useRef(true);
   const loadingMoreRef = useRef(false);
@@ -307,11 +274,6 @@ function JournalContent() {
   const [actionEntry, setActionEntry] = useState<JournalEntry | null>(null);
 
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
-  const [aiPatternEnhancedIds, setAiPatternEnhancedIds] = useState<string[]>([]);
-  const [aiPatternGeneratedAt, setAiPatternGeneratedAt] = useState<string | null>(null);
-  const [aiDreamArchiveSummary, setAiDreamArchiveSummary] = useState<DreamArchiveSummary | null>(null);
-  const [aiDreamGeneratedAt, setAiDreamGeneratedAt] = useState<string | null>(null);
-  const [aiDreamArchiveKey, setAiDreamArchiveKey] = useState<string | null>(null);
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'reflections' | 'dreams'>('reflections');
   const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
@@ -341,26 +303,14 @@ function JournalContent() {
     );
   }, [sleepEntries, searchQuery]);
 
-  const dreamArchiveSummary = useMemo(() => buildDreamArchiveSummary(sleepEntries), [sleepEntries]);
-  const dreamArchiveKey = useMemo(() => buildDreamArchiveKey(dreamArchiveSummary), [dreamArchiveSummary]);
   const archiveDepthCounts = useMemo(() => ({
     journalEntries: totalCount,
     dreamEntries: sleepEntries.filter((entry) => !entry.isDeleted && hasDreamContent(entry)).length,
   }), [sleepEntries, totalCount]);
-  const aiPatternFreshness = useMemo(() => formatAiFreshness(aiPatternGeneratedAt), [aiPatternGeneratedAt]);
-  const aiDreamFreshness = useMemo(
-    () => (aiDreamArchiveKey === dreamArchiveKey ? formatAiFreshness(aiDreamGeneratedAt) : null),
-    [aiDreamArchiveKey, aiDreamGeneratedAt, dreamArchiveKey],
+  const visiblePatternInsights = useMemo<PatternInsight[]>(
+    () => patternInsights.filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline'),
+    [patternInsights],
   );
-  const visiblePatternInsights = useMemo<DisplayPatternInsight[]>(() => {
-    const enhancedIds = new Set(aiPatternEnhancedIds);
-    return patternInsights
-      .filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline')
-      .map((insight, index) => ({
-        ...insight,
-        aiEnhanced: enhancedIds.has(String(index)),
-      }));
-  }, [aiPatternEnhancedIds, patternInsights]);
   const premiumTeaser = useMemo(
     () => getPersonalizedPremiumTeaser(archiveDepthCounts, {
       detectedPatterns: visiblePatternInsights.length,
@@ -369,7 +319,7 @@ function JournalContent() {
     [archiveDepthCounts, visiblePatternInsights.length],
   );
 
-  const weeklyReflectionInsight = useMemo<DisplayPatternInsight>(() => {
+  const weeklyReflectionInsight = useMemo<PatternInsight>(() => {
     const today = toLocalDateString();
     const todayDate = new Date(`${today}T12:00:00`);
     const currentStart = toLocalDateString(new Date(todayDate.getTime() - 6 * DAY_MS));
@@ -445,9 +395,8 @@ function JournalContent() {
         actionable: toneTagNote ?? 'One entry is enough to start a weekly pattern signal.',
         confidence: 'suggested',
         icon: 'book-outline',
-        aiEnhanced: false,
         type: 'mood_pattern',
-      } as DisplayPatternInsight;
+      } as PatternInsight;
     }
 
     const majorShift = Math.abs(currentCount - previousCount) >= 3;
@@ -461,9 +410,8 @@ function JournalContent() {
         : 'Steady reflection supports continuity and clearer pattern recognition over time.'}${toneTagNote ? ` ${toneTagNote}` : ''}`,
       confidence: majorShift ? 'strong' : 'suggested',
       icon: 'book-outline',
-      aiEnhanced: false,
       type: 'mood_pattern',
-    } as DisplayPatternInsight;
+    } as PatternInsight;
   }, [entries, visiblePatternInsights]);
 
   const weeklyDreamInsight = useMemo(() => {
@@ -549,23 +497,8 @@ function JournalContent() {
     return map[mood] ?? 3;
   }, []);
 
-  const loadAiInputs = useCallback(async () => {
-    const [context, charts] = await Promise.all([
-      loadSelfKnowledgeContext(),
-      supabaseDb.getCharts(),
-    ]);
-
-    if (!charts.length) {
-      return { context, checkIns: [] as Awaited<ReturnType<typeof supabaseDb.getCheckIns>> };
-    }
-
-    const checkIns = await supabaseDb.getCheckIns(charts[0].id, 90);
-    return { context, checkIns };
-  }, []);
-
   const generatePatternInsights = useCallback(async () => {
     try {
-      const requestId = ++patternAiRequestRef.current;
       const sample = entries.slice(0, 90);
       const entryMetas: JournalEntryMeta[] = sample.map((e) => {
         let transitSnapshot: TransitSnapshot | undefined;
@@ -584,56 +517,10 @@ function JournalContent() {
 
       const insights = AdvancedJournalAnalyzer.analyzePatterns(entryMetas, isPremium);
       setPatternInsights(insights);
-  setAiPatternEnhancedIds([]);
-      setAiPatternGeneratedAt(null);
-
-      if (!isPremium || insights.length === 0) return;
-
-      const { context, checkIns } = await loadAiInputs();
-      const descriptionInputs = insights.map((insight, index) => ({
-        id: `${index}:description`,
-        source: 'journal-pattern-description',
-        title: insight.title,
-        body: insight.description,
-        isConfirmed: insight.confidence === 'strong',
-      }));
-      const actionableInputs = insights
-        .map((insight, index) => ({ insight, index }))
-        .filter(({ insight }) => typeof insight.actionable === 'string' && insight.actionable.trim().length > 0)
-        .map(({ insight, index }) => ({
-          id: `${index}:actionable`,
-          source: 'journal-pattern-actionable',
-          title: `${insight.title} grounding`,
-          body: insight.actionable ?? '',
-          isConfirmed: insight.confidence === 'strong',
-        }));
-
-      const enhanced = await enhanceInsightCopy(
-        [...descriptionInputs, ...actionableInputs],
-        context,
-        checkIns,
-      );
-      if (requestId !== patternAiRequestRef.current || !enhanced?.insights?.length) return;
-
-      const aiBodies = new Map(enhanced.insights.map((insight) => [insight.id, insight.body]));
-      const enhancedIndices = new Set(
-        enhanced.insights
-          .map((insight) => insight.id.match(/^(\d+):/i)?.[1] ?? null)
-          .filter((value): value is string => !!value),
-      );
-      setAiPatternEnhancedIds([...enhancedIndices]);
-      setAiPatternGeneratedAt(enhanced.generatedAt ?? null);
-      setPatternInsights(
-        insights.map((insight, index) => ({
-          ...insight,
-          description: aiBodies.get(`${index}:description`) ?? insight.description,
-          actionable: aiBodies.get(`${index}:actionable`) ?? insight.actionable,
-        })),
-      );
     } catch (e) {
       logger.error('[Journal] Pattern analysis failed:', e);
     }
-  }, [entries, isPremium, loadAiInputs, moodToLevel]);
+  }, [entries, isPremium, moodToLevel]);
 
   const loadEntries = useCallback(async (reset = false) => {
     try {
@@ -706,64 +593,6 @@ function JournalContent() {
       void generatePatternInsights();
     }
   }, [entries.length, generatePatternInsights]);
-
-  useEffect(() => {
-    let canceled = false;
-    const requestId = ++dreamAiRequestRef.current;
-
-    if (!isPremium || !dreamArchiveSummary) {
-      setAiDreamArchiveSummary(null);
-      setAiDreamGeneratedAt(null);
-      setAiDreamArchiveKey(null);
-      return () => {
-        canceled = true;
-      };
-    }
-
-    void (async () => {
-      try {
-        const { context, checkIns } = await loadAiInputs();
-        if (canceled) return;
-
-        const enhanced = await enhanceInsightCopy(
-          [
-            {
-              id: 'dream-summary',
-              source: 'dream-archive-summary',
-              title: 'Dream Pattern Read',
-              body: `${dreamArchiveSummary.summary}\nSignals: ${dreamArchiveSummary.chips.join(', ')}\nDream entries analyzed: ${sleepEntries.filter(hasDreamContent).length}`,
-              isConfirmed: dreamArchiveSummary.chips[0] !== 'Needs more repeated signals',
-            },
-            {
-              id: 'dream-grounding',
-              source: 'dream-archive-grounding',
-              title: 'Dream Pattern Grounding',
-              body: dreamArchiveSummary.grounding,
-              isConfirmed: true,
-            },
-          ],
-          context,
-          checkIns,
-        );
-        if (canceled || requestId !== dreamAiRequestRef.current || !enhanced?.insights?.length) return;
-
-        const aiBodies = new Map(enhanced.insights.map((insight) => [insight.id, insight.body]));
-        setAiDreamGeneratedAt(enhanced.generatedAt ?? null);
-        setAiDreamArchiveKey(dreamArchiveKey);
-        setAiDreamArchiveSummary({
-          ...dreamArchiveSummary,
-          summary: aiBodies.get('dream-summary') ?? dreamArchiveSummary.summary,
-          grounding: aiBodies.get('dream-grounding') ?? dreamArchiveSummary.grounding,
-        });
-      } catch (error) {
-        logger.warn('[Journal] Dream archive AI enhancement failed; using local summary fallback.', error);
-      }
-    })();
-
-    return () => {
-      canceled = true;
-    };
-  }, [dreamArchiveKey, dreamArchiveSummary, isPremium, loadAiInputs, sleepEntries]);
 
   const handleAddEntry = async () => {
     try {
@@ -962,7 +791,7 @@ function JournalContent() {
         </Animated.View>
       )}
 
-      {/* ── Reflection Insights (journal-based only) ── */}
+      {/* ── Reflection Patterns (journal-based only) ── */}
       {activeTab === 'reflections' && (
         <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.insightsSection}>
           <SectionHeader title="Reflection Patterns" icon="analytics-outline" />
@@ -987,7 +816,6 @@ function JournalContent() {
                 <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && weeklyReflectionInsight.confidence !== 'strong' && { color: PALETTE.gold }]}>{weeklyReflectionInsight.confidence === 'strong' ? 'CONFIRMED' : 'EMERGING'}</Text>
               </View>
             </View>
-            {!!(weeklyReflectionInsight.aiEnhanced && aiPatternFreshness) && <Text style={styles.aiFreshnessText}>{aiPatternFreshness}</Text>}
             <Text style={styles.insightDescription}>{weeklyReflectionInsight.description}</Text>
             {!!weeklyReflectionInsight.actionable && (
               <Text style={[styles.insightActionable, { color: theme.textPrimary }]}>{weeklyReflectionInsight.actionable}</Text>
@@ -1044,7 +872,6 @@ function JournalContent() {
                 <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && weeklyDreamInsight.confidence !== 'strong' && { color: PALETTE.gold }]}>{weeklyDreamInsight.confidence === 'strong' ? 'CONFIRMED' : 'EMERGING'}</Text>
               </View>
             </View>
-            {!!aiDreamFreshness && <Text style={styles.aiFreshnessText}>{aiDreamFreshness}</Text>}
             <Text style={styles.insightDescription}>{weeklyDreamInsight.description}</Text>
             {!!weeklyDreamInsight.actionable && (
               <Text style={[styles.insightActionable, { color: theme.textPrimary }]}>{weeklyDreamInsight.actionable}</Text>

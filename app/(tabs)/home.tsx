@@ -290,10 +290,7 @@ export default function HomeScreen() {
             const historyInput = buildRecentlyShownKnowledgeHistory(knowledgeHistory, nowForInsights);
             const surface = await buildInsightSurface({
               chartId: chart.id,
-              isPremium,
               rangeDays: 90,
-              includePremiumPipeline: false,
-              tier: 'daily',
               insightsEnabled: moodInsightsEnabled,
               includeKnowledgeInsight: moodInsightsEnabled,
               knowledgeInsightDate: nowForInsights,
@@ -382,7 +379,7 @@ export default function HomeScreen() {
         if (!silent && isScreenActiveRef.current) setLoading(false);
       }
     },
-    [isPremium],
+    [],
   );
 
   useFocusEffect(

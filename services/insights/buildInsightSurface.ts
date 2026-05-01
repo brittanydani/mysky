@@ -1,4 +1,3 @@
-import { supabase } from '../../lib/supabase';
 import { supabaseDb } from '../storage/supabaseDb';
 import { runPipeline } from './pipeline';
 import type { DailyAggregate } from './types';
@@ -7,13 +6,6 @@ import {
   enrichSelfKnowledgeContext,
   type SelfKnowledgeContext,
 } from './selfKnowledgeContext';
-import { enhancePatternInsights } from './geminiInsightsService';
-import {
-  runPremiumInsightPipeline,
-  type PremiumInsightResult,
-} from './premiumPipeline';
-import type { PortraitBuilderInput } from './premiumPipeline/portraitBuilder';
-import type { PatternSelectorInput } from './premiumPipeline/patternSelector';
 import { buildPersonalProfile } from '../../utils/personalProfile';
 import { computeDeepInsights, type DeepInsightBundle } from '../../utils/deepInsights';
 import { buildPatternFeedInsights } from '../../utils/patternFeed';
@@ -27,12 +19,8 @@ import { toLocalDateString } from '../../utils/dateUtils';
 import type { DailyCheckIn } from '../patterns/types';
 import type { JournalEntry, SleepEntry } from '../storage/models';
 import type { ArchiveDepthCounts } from '../../utils/archiveDepth';
-import { logger } from '../../utils/logger';
-import { ARCHIVE_PATTERNS } from './archivePatterns';
-import { scoreArchivePattern } from './engine/scoreArchivePatterns';
-import { buildUserSignals } from './normalizers/buildUserSignals';
 import { runActiveKnowledgeInsight } from './knowledgeInsightRouter';
-import type { GeneratedInsight, UserSignal } from './types/knowledgeEngine';
+import type { GeneratedInsight } from './types/knowledgeEngine';
 import type { KnowledgeEngineHistoryInput } from './insightHistory';
 
 export interface InsightSurfaceResult {
@@ -54,16 +42,12 @@ export interface InsightSurfaceResult {
   deepInsights: DeepInsightBundle | null;
   feedInsights: CrossRefInsight[];
   leadInsight: CrossRefInsight | null;
-  premiumInsight: PremiumInsightResult | null;
   knowledgeInsight: GeneratedInsight | null;
 }
 
 interface BuildInsightSurfaceOptions {
   chartId?: string | null;
-  isPremium: boolean;
   rangeDays?: number;
-  includePremiumPipeline?: boolean;
-  tier?: 'daily' | 'deep';
   insightsEnabled?: boolean;
   includeKnowledgeInsight?: boolean;
   knowledgeInsightDate?: string;
@@ -83,137 +67,15 @@ function computeLeadInsight(feedInsights: CrossRefInsight[]): CrossRefInsight | 
   return refineCrossRefCopy(feedInsights[localEpochDay % feedInsights.length]);
 }
 
-function parseJsonObject<T>(value: unknown): T | null {
-  if (typeof value !== 'string' || !value.trim()) return null;
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return null;
-  }
-}
-
-function summarizeJournalForPremium(entry: JournalEntry): Record<string, unknown> {
-  const keywordSummary = parseJsonObject<{
-    keywords?: string[];
-    top?: Array<{ w: string; c: number }>;
-    relationshipContext?: { names?: string[]; roles?: string[]; anchors?: string[] };
-  }>(entry.contentKeywords);
-  const emotionSummary = parseJsonObject<{ counts?: Record<string, number>; rates?: Record<string, number> }>(entry.contentEmotions);
-  const sentimentSummary = parseJsonObject<{ sentiment?: number }>(entry.contentSentiment);
-
-  return {
-    id: entry.id,
-    date: entry.date,
-    mood: entry.mood,
-    tags: entry.tags ?? [],
-    wordCount: entry.contentWordCount,
-    keywords: keywordSummary?.keywords ?? [],
-    topKeywords: keywordSummary?.top ?? [],
-    relationshipContext: keywordSummary?.relationshipContext ?? { names: [], roles: [], anchors: [] },
-    emotionCounts: emotionSummary?.counts ?? {},
-    sentiment: sentimentSummary?.sentiment ?? null,
-  };
-}
-
 async function resolveChartId(inputChartId?: string | null): Promise<string | null> {
   if (inputChartId) return inputChartId;
   const charts = await supabaseDb.getCharts();
   return charts?.[0]?.id ?? null;
 }
 
-async function maybeBuildPremiumInsight(
-  checkIns: DailyCheckIn[],
-  recentJournalEntries: JournalEntry[],
-  sleepEntries: SleepEntry[],
-  enrichedContext: SelfKnowledgeContext,
-  includePremiumPipeline: boolean,
-  tier: 'daily' | 'deep' = 'deep',
-): Promise<PremiumInsightResult | null> {
-  if (!includePremiumPipeline || checkIns.length < 14) return null;
-
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData?.session?.access_token ?? null;
-    if (!accessToken) return null;
-
-    const userId = sessionData.session?.user?.id ?? 'unknown';
-
-    // Compute archive patterns
-    const now = toLocalDateString();
-    const allSignals: UserSignal[] = buildUserSignals({
-      checkIns,
-      journalEntries: recentJournalEntries,
-      sleepEntries,
-      selfKnowledgeContext: enrichedContext,
-    });
-
-    const archiveScores = ARCHIVE_PATTERNS.map((pattern) =>
-      scoreArchivePattern(pattern, allSignals, now),
-    ).filter((score) => score.score >= 0.5); // Only include patterns with meaningful scores
-
-    const portraitInput: PortraitBuilderInput = {
-      user_id: userId,
-      window: {
-        recent_days: 14,
-        extended_days: 60,
-        lifetime_days: 90,
-      },
-      check_ins: checkIns,
-      journal_entries: recentJournalEntries.map(summarizeJournalForPremium),
-      sleep_entries: sleepEntries,
-      somatic_entries: enrichedContext.somaticEntries,
-      trigger_events: enrichedContext.triggerEvents,
-      relationship_patterns: enrichedContext.relationshipPatterns,
-      reflection_answers: enrichedContext.dailyReflections?.recentAnswers ?? [],
-      relationship_charts: [],
-      derived_metrics: {
-        best_days: [],
-        hard_days: [],
-        cross_domain_patterns: [],
-        glimmer_patterns: enrichedContext.triggerEvents
-          .filter((event) => event.mode === 'nourish')
-          .map((event) => event.event)
-          .slice(0, 12),
-        sleep_correlations: [],
-        tone_shifts: [],
-      },
-      archive_patterns: archiveScores,
-    };
-
-    const patternSelectorInput: Omit<PatternSelectorInput, 'portrait'> = {
-      recent_context: {
-        last_7_days: checkIns.slice(-7),
-        last_14_days: checkIns.slice(-14),
-        today_state: checkIns[checkIns.length - 1] ?? null,
-        recent_changes: [],
-        recent_glimmers: enrichedContext.triggers?.restores ?? [],
-        recent_triggers: enrichedContext.triggers?.drains ?? [],
-      },
-      product_context: {
-        insight_type: tier === 'daily' ? 'daily' : 'premium_deep',
-        user_has_seen_recently: [],
-        avoid_repetition_themes: [],
-        minimum_novelty: 0.4,
-      },
-    };
-
-    return await runPremiumInsightPipeline(portraitInput, patternSelectorInput, accessToken, {
-      logLifecycle: false,
-      logErrors: false,
-      tier,
-    });
-  } catch (error) {
-    logger.warn('[InsightSurface] Premium pipeline error (non-fatal):', error);
-    return null;
-  }
-}
-
 export async function buildInsightSurface({
   chartId: inputChartId,
-  isPremium,
   rangeDays = 90,
-  includePremiumPipeline = false,
-  tier = 'deep',
   insightsEnabled = true,
   includeKnowledgeInsight = false,
   knowledgeInsightDate,
@@ -238,7 +100,6 @@ export async function buildInsightSurface({
       deepInsights: null,
       feedInsights: [],
       leadInsight: null,
-      premiumInsight: null,
       knowledgeInsight: null,
     };
   }
@@ -276,18 +137,7 @@ export async function buildInsightSurface({
   const refs = insightsEnabled
     ? computeSelfKnowledgeCrossRef(enrichedContext, checkIns, pipelineResult.dailyAggregates)
     : [];
-  const enhancedRefs = insightsEnabled && refs.length
-    ? await enhancePatternInsights(refs, enrichedContext, checkIns, isPremium, { logErrors: false })
-    : null;
-  const aiBodies = new Map(enhancedRefs?.insights.map((insight) => [insight.id, insight.body]) ?? []);
-  const crossRefs = refs.map((insight) =>
-    aiBodies.has(insight.id)
-      ? {
-          ...insight,
-          body: aiBodies.get(insight.id) ?? insight.body,
-        }
-      : insight,
-  );
+  const crossRefs = refs;
 
   const deepInsights = insightsEnabled && pipelineResult.dailyAggregates.length
     ? computeDeepInsights(buildPersonalProfile(pipelineResult.dailyAggregates))
@@ -306,15 +156,6 @@ export async function buildInsightSurface({
         history: knowledgeHistory,
       })
     : null;
-
-  const premiumInsight = await maybeBuildPremiumInsight(
-    checkIns,
-    recentJournalEntries,
-    sleepEntries,
-    enrichedContext,
-    insightsEnabled && isPremium && includePremiumPipeline,
-    tier,
-  );
 
   const selfKnowledgeSignalCount =
     (enrichedContext.dailyReflections?.totalAnswers ?? 0)
@@ -356,7 +197,6 @@ export async function buildInsightSurface({
     deepInsights,
     feedInsights,
     leadInsight: computeLeadInsight(feedInsights),
-    premiumInsight,
     knowledgeInsight,
   };
 }

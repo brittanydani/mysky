@@ -147,7 +147,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
 
               <View style={styles.dataBlock}>
                 <Text style={styles.subSectionTitle}>Google Gemini</Text>
-                <Text style={styles.paragraph}>Used for AI dream interpretation and AI Reflection Insights (Deeper Sky). When you request an AI pass, only your dream text, selected feelings, and minimal symbolic context are transmitted. No birth data, location, somatic logs, or account identity is included. Transmissions occur only on your explicit action. Google's data processing terms apply.</Text>
+                <Text style={styles.paragraph}>Used only for AI dream interpretation. When you request a dream interpretation, only your dream text, selected feelings, and minimal symbolic context are transmitted. No birth data, location, somatic logs, journal entries, reflection data, or account identity is included. Reflection insights are generated without AI. Google's data processing terms apply.</Text>
               </View>
 
               <View style={styles.dataBlock}>
@@ -219,7 +219,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
               </View>
               <View style={[styles.dataBlock, { marginBottom: 0 }]}>
                 <Text style={styles.subSectionTitle}>Right to Opt Out of AI Features</Text>
-                <Text style={styles.paragraph}>AI features (dream interpretation, AI Reflection Insights) are always opt-in and only trigger on your explicit action. You can use MySky fully without ever activating an AI pass. AI features can be disabled entirely in Settings.</Text>
+                <Text style={styles.paragraph}>AI is limited to dream interpretation and only triggers for that feature. You can use MySky without activating an AI dream interpretation; reflection insights and pattern reads do not use AI.</Text>
               </View>
             </View>
           </View>

@@ -1,5 +1,5 @@
 /**
- * Gemini Dream Interpretation — AI-Enhanced Dream Insights
+ * Gemini Dream Interpretation — AI-Enhanced Dream Interpretation
  *
  * Calls the dream-insights Supabase Edge Function, which owns the Gemini
  * prompt and model selection server-side. The client sends only structured
@@ -76,8 +76,8 @@ export function isGeminiAvailable(hasAuthenticatedSession: boolean): boolean {
 interface DreamInsightRequestPayload {
   dreamText: string;
   modelTier: GeminiDreamTier;
-  feelings: Array<{ id: string; label: string; intensity: number }>;
-  symbols: Array<{ word: string; category: string; description?: string }>;
+  feelings: { id: string; label: string; intensity: number }[];
+  symbols: { word: string; category: string; description?: string }[];
   interpretiveThemes: string[];
   patternAnalysis?: {
     primaryPattern: string;
@@ -117,15 +117,15 @@ function computeRetryDelayMs(attempt: number): number {
 }
 
 function getFriendlyRateLimitMessage(): string {
-  return 'AI insights are at capacity right now. Please wait a minute and try again.';
+  return 'AI dream interpretation is at capacity right now. Please wait a minute and try again.';
 }
 
 function getFriendlyAuthMessage(): string {
   return FRIENDLY_TEMPORARY_UNAVAILABLE_MESSAGE;
 }
 
-const FRIENDLY_TEMPORARY_UNAVAILABLE_MESSAGE = 'AI insights are temporarily unavailable. Please try again soon.';
-const FRIENDLY_NETWORK_UNAVAILABLE_MESSAGE = 'Could not reach AI insights. Please check your connection and try again.';
+const FRIENDLY_TEMPORARY_UNAVAILABLE_MESSAGE = 'AI dream interpretation is temporarily unavailable. Please try again soon.';
+const FRIENDLY_NETWORK_UNAVAILABLE_MESSAGE = 'Could not reach AI dream interpretation. Please check your connection and try again.';
 
 export function isExpectedGeminiDreamError(error: unknown): boolean {
   const message = error instanceof Error
@@ -137,7 +137,8 @@ export function isExpectedGeminiDreamError(error: unknown): boolean {
   if (!message) return false;
 
   const normalized = message.trim().toLowerCase();
-  return normalized.includes('ai insights are at capacity right now')
+  return normalized.includes('ai dream interpretation is at capacity right now')
+    || normalized.includes('ai insights are at capacity right now')
     || normalized.includes(FRIENDLY_TEMPORARY_UNAVAILABLE_MESSAGE.toLowerCase())
     || normalized.includes(FRIENDLY_NETWORK_UNAVAILABLE_MESSAGE.toLowerCase());
 }
@@ -226,7 +227,7 @@ async function ensureGeminiDreamSession(): Promise<string> {
       logger.info('[GeminiDream] Token expired or near-expiry, refreshing session...');
       const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError || !refreshed.session?.access_token) {
-        logger.warn('[GeminiDream] Session refresh failed; AI dream insights unavailable.', refreshError);
+        logger.warn('[GeminiDream] Session refresh failed; AI dream interpretation unavailable.', refreshError);
         throw new Error(getFriendlyAuthMessage());
       }
       return refreshed.session.access_token;
@@ -237,7 +238,7 @@ async function ensureGeminiDreamSession(): Promise<string> {
     if (error instanceof Error && error.message === getFriendlyAuthMessage()) {
       throw error;
     }
-    logger.warn('[GeminiDream] Failed to read Supabase session; AI dream insights unavailable.', error);
+    logger.warn('[GeminiDream] Failed to read Supabase session; AI dream interpretation unavailable.', error);
     throw new Error(getFriendlyAuthMessage());
   }
 }
@@ -302,7 +303,7 @@ export async function generateGeminiDreamInterpretation(
             continue;
           }
 
-          logger.warn('[GeminiDream] Edge function unauthorized; AI dream insights unavailable.');
+          logger.warn('[GeminiDream] Edge function unauthorized; AI dream interpretation unavailable.');
           throw new Error(getFriendlyAuthMessage());
         }
 

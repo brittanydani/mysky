@@ -13,6 +13,16 @@ import { IDENTITY_GROWTH_PATTERNS } from './identityGrowthPatterns';
 import { FAMILY_HOME_PATTERNS } from './familyHomePatterns';
 import { SCARCITY_ABUNDANCE_PATTERNS } from './scarcityAbundancePatterns';
 import { NATAL_CHART_REFLECTION_PATTERNS } from './natalChartReflectionPatterns';
+import { RESPONSIBILITY_CARE_PATTERNS } from './responsibilityCarePatterns';
+import { WORK_AMBITION_PATTERNS } from './workAmbitionPatterns';
+import { GRIEF_TRANSITIONS_PATTERNS } from './griefTransitionsPatterns';
+import { TIME_RHYTHMS_PATTERNS } from './timeRhythmsPatterns';
+import { SELF_WORTH_RECEIVING_PATTERNS } from './selfWorthReceivingPatterns';
+import { COMMUNICATION_VOICE_PATTERNS } from './communicationVoicePatterns';
+import { SPIRITUAL_MEANING_PATTERNS } from './spiritualMeaningPatterns';
+import { SAFETY_REGULATION_PATTERNS } from './safetyRegulationPatterns';
+import { LIFE_DIRECTION_PATTERNS } from './lifeDirectionPatterns';
+import { PLEASURE_PLAY_PATTERNS } from './pleasurePlayPatterns';
 
 export const ARCHIVE_PATTERNS = [
   ...EMOTIONAL_WEATHER_PATTERNS,
@@ -30,4 +40,14 @@ export const ARCHIVE_PATTERNS = [
   ...FAMILY_HOME_PATTERNS,
   ...SCARCITY_ABUNDANCE_PATTERNS,
   ...NATAL_CHART_REFLECTION_PATTERNS,
+  ...RESPONSIBILITY_CARE_PATTERNS,
+  ...WORK_AMBITION_PATTERNS,
+  ...GRIEF_TRANSITIONS_PATTERNS,
+  ...TIME_RHYTHMS_PATTERNS,
+  ...SELF_WORTH_RECEIVING_PATTERNS,
+  ...COMMUNICATION_VOICE_PATTERNS,
+  ...SPIRITUAL_MEANING_PATTERNS,
+  ...SAFETY_REGULATION_PATTERNS,
+  ...LIFE_DIRECTION_PATTERNS,
+  ...PLEASURE_PLAY_PATTERNS,
 ];

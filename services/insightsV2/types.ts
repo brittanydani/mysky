@@ -31,7 +31,17 @@ export type InsightCategory =
   | 'identityGrowth'
   | 'familyHome'
   | 'scarcityAbundance'
-  | 'natalChartReflection';
+  | 'natalChartReflection'
+  | 'responsibilityCare'
+  | 'workAmbition'
+  | 'griefTransitions'
+  | 'timeRhythms'
+  | 'selfWorthReceiving'
+  | 'communicationVoice'
+  | 'spiritualMeaning'
+  | 'safetyRegulation'
+  | 'lifeDirection'
+  | 'pleasurePlay';
 
 export type InsightSurface =
   | 'today'
@@ -43,6 +53,7 @@ export type InsightSurface =
 export type InsightSlot =
   | 'todaySignal'
   | 'whatMySkyNoticed'
+  | 'primaryPersona'
   | 'dailyAffirmation'
   | 'weeklyStory'
   | 'archivePattern'
@@ -386,6 +397,47 @@ export interface GeneratedInsight {
   createdAt: string;
 }
 
+export type PersonaProfileKey =
+  | 'overResponsibleStabilizer'
+  | 'deepProcessor'
+  | 'relationalTracker'
+  | 'quietWithdrawer'
+  | 'workAmbition'
+  | 'emotionalWeather'
+  | 'restCapacity'
+  | 'bodySignals'
+  | 'selfWorthReceiving';
+
+export interface PersonaProfileCopy {
+  key: PersonaProfileKey;
+  personNumber: number;
+  title: string;
+  focus?: string;
+  category: InsightCategory;
+  secondaryCategories: InsightCategory[];
+  triggerSignals: SignalKey[];
+  supportingSignals: SignalKey[];
+  intro: string[];
+  sentences: string[];
+}
+
+export interface SelectedPersonaProfile {
+  key: PersonaProfileKey;
+  personNumber: number;
+  title: string;
+  focus?: string;
+  category: InsightCategory;
+  secondaryCategories: InsightCategory[];
+  intro: string[];
+  sentences: string[];
+  selectedSentence: string;
+  score: number;
+  confidence: PatternConfidence;
+  matchedSignals: SignalKey[];
+  matchedPatternKeys: string[];
+  evidence: EvidenceAnchor[];
+}
+
 export interface InsightHistoryItem {
   id: string;
   patternKey: string;
@@ -417,6 +469,7 @@ export interface BuildTodayInsightsResult {
   signals: UserSignal[];
   patternScores: ArchivePatternScore[];
   insights: GeneratedInsight[];
+  primaryPersona: SelectedPersonaProfile | null;
 }
 
 export interface InsightRawInputs {

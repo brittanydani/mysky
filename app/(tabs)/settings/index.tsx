@@ -82,7 +82,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'How does sleep tracking work?',
     answer:
-      'Open the Sleep tab to log your nightly sleep. Rate quality (1–5 moons), log duration, and write a dream narrative — all free. Symbolic dream interpretation and pattern analysis are Deeper Sky (premium) features. When a Deeper Sky member logs a dream, MySky generates a personalized reflection drawn from your sleep, mood, check-in, and journal data — entirely on your device, with no AI or network calls. You can log one entry per night and edit it any time that day. Free users see basic weekly averages; Deeper Sky members get full trend analysis over time.',
+      'Open the Sleep tab to log your nightly sleep. Rate quality (1–5 moons), log duration, and write a dream narrative. Sleep trends and dream pattern summaries are generated from your saved data. Dream interpretation can use Google Gemini: free users get the standard model, while Deeper Sky uses a richer model for more nuance.',
   },
   {
     question: 'What behavioral patterns does MySky track?',
@@ -112,7 +112,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Is my journal private?',
     answer:
-      'Completely. Journal entries are private to your account, stored in MySky\'s Supabase backend with row-level access controls so only you can access them. They are not sold or shared for advertising, and optional AI features only send the minimal content needed when you explicitly request them.',
+      'Completely. Journal entries are private to your account, stored in MySky\'s Supabase backend with row-level access controls so only you can access them. They are not sold or shared for advertising, and journal entries are not sent to AI for reflection insights.',
   },
   {
     question: 'How do symbolic dream reflections work?',

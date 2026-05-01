@@ -5,7 +5,7 @@
  * fetch errors), the request payload is persisted to Supabase preferences.
  * On next app focus or connectivity restoration, queued items are retried.
  *
- * Scope: dream-insights and pattern-insights only.
+ * Scope: dream-insights only.
  * Max queue depth: 10 items (oldest evicted on overflow).
  * TTL: 24 hours per item.
  */
@@ -15,7 +15,7 @@ import { logger } from '../../utils/logger';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type QueuedRequestType = 'dream-insights' | 'pattern-insights';
+export type QueuedRequestType = 'dream-insights';
 
 export interface QueuedGeminiRequest {
   id: string;
@@ -87,6 +87,7 @@ export async function getPendingRequests(): Promise<QueuedGeminiRequest[]> {
   const now = Date.now();
 
   const valid = queue.filter((item) => {
+    if (item.type !== 'dream-insights') return false;
     const age = now - new Date(item.createdAt).getTime();
     return age < MAX_AGE_MS && item.attempts < MAX_ATTEMPTS;
   });

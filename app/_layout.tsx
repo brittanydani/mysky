@@ -67,6 +67,10 @@ const AuthRequiredModal = lazyRequire(
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   () => require('../components/AuthRequiredModal') as { default: React.ComponentType<any> }
 );
+const OtaUpdatePrompt = lazyRequire(
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  () => require('../components/OtaUpdatePrompt') as { default: React.ComponentType<any> }
+);
 const CosmicBackground = lazyRequire(
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   () => require('../components/ui/CosmicBackground') as { default: React.ComponentType<any> }
@@ -1094,6 +1098,7 @@ function AppShell() {
                 <AuthRequiredModal
                   visible={!completingOnboarding && !authLoading && !session}
                 />
+                <OtaUpdatePrompt />
               </React.Suspense>
             </SafeAreaProvider>
             <NetworkErrorOverlay />

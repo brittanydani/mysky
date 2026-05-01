@@ -113,9 +113,7 @@ export default function PatternsScreen() {
           const moodInsightPref = await getUserPreference<string | null>('pref_mood_insights', null).catch(() => null);
           const insightsEnabled = moodInsightPref !== '0';
           const surface = await buildInsightSurface({
-            isPremium,
             rangeDays: 90,
-            includePremiumPipeline: false,
             insightsEnabled,
           });
           if (!active) return;
@@ -138,7 +136,7 @@ export default function PatternsScreen() {
         }
       })();
       return () => { active = false; };
-    }, [isPremium])
+    }, [])
   );
 
   const libraryState = useMemo(() => buildPatternLibraryState(dailyAggregates, crossRefs), [crossRefs, dailyAggregates]);

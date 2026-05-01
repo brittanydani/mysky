@@ -266,7 +266,7 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
     if (await isRateLimited(supabaseAdmin, user.id)) {
-      return jsonResponse({ error: "AI insights are at capacity right now. Please wait a minute and try again." }, 429);
+      return jsonResponse({ error: "AI dream interpretation is at capacity right now. Please wait a minute and try again." }, 429);
     }
 
     const payload = validatePayload(await req.json());
@@ -347,7 +347,7 @@ serve(async (req: Request) => {
 
         console.error("[dream-insights] Gemini API error:", geminiResponse.status, responseBody);
         if (lastStatus === 429) {
-          return jsonResponse({ error: "AI insights are at capacity right now. Please wait a minute and try again." }, 429);
+          return jsonResponse({ error: "AI dream interpretation is at capacity right now. Please wait a minute and try again." }, 429);
         }
         return jsonResponse({ error: `Gemini API error: ${geminiResponse.status}` }, lastStatus);
       }
@@ -355,7 +355,7 @@ serve(async (req: Request) => {
 
     console.error("[dream-insights] Gemini API error:", lastStatus, lastResponseBody);
     if (lastStatus === 429) {
-      return jsonResponse({ error: "AI insights are at capacity right now. Please wait a minute and try again." }, 429);
+      return jsonResponse({ error: "AI dream interpretation is at capacity right now. Please wait a minute and try again." }, 429);
     }
     return jsonResponse({ error: `Gemini API error: ${lastStatus}` }, lastStatus);
   } catch (error) {

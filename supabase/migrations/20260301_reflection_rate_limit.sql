@@ -1,6 +1,6 @@
 -- 20260301_reflection_rate_limit.sql
--- Rate-limit table + atomic check function for reflection-insights Edge Function.
--- Persists across cold starts and is shared across all function instances.
+-- Legacy rate-limit table + atomic check function.
+-- Kept as an applied migration for remote/local history consistency.
 --
 -- Run: supabase db push
 -- Or:  supabase migration up

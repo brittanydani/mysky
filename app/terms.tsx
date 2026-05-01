@@ -95,7 +95,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
                 <Text style={styles.boldText}>Free:</Text> Personal birth chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, AI dream interpretation using the standard Gemini model, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context.
               </Text>
               <Text style={styles.paragraph}>
-                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with AI interpretation using a richer Gemini model, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, reflective daily guidance with action prompts, sensitivity and growth mapping, PDF chart export, backup and restore, and extended pattern reflections.
+                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with AI interpretation using a richer Gemini model, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, reflective daily guidance with action prompts, sensitivity and growth mapping, PDF chart export, backup and restore, and extended pattern reflections.
               </Text>
             </View>
 
@@ -106,7 +106,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Accounts</Text>
             <Text style={styles.paragraph}>
-              A free account is required to use MySky. Accounts are managed via Supabase Auth (email and password) and are used to authenticate your identity, support purchase restoration, and enable optional network-backed features such as AI dream interpretation and AI Reflection Insights. A Deeper Sky subscription is required for premium upgrades, including the richer dream model and other premium features.
+              A free account is required to use MySky. Accounts are managed via Supabase Auth (email and password) and are used to authenticate your identity, support purchase restoration, and enable optional network-backed features such as AI dream interpretation. A Deeper Sky subscription is required for premium upgrades, including the richer dream model and other premium features.
             </Text>
 
             <LinearGradient 
@@ -135,7 +135,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Data & Privacy</Text>
             <Text style={styles.paragraph}>
-              Core app data is stored in your dedicated cloud account, with this device optionally keeping local cache and queued writes for resilience and responsiveness. No analytics SDKs, advertising identifiers, or cross-app tracking are used. Optional AI features may transmit limited data to third-party processors only when needed to fulfill that feature, as described in our Privacy Policy.
+              Core app data is stored in your dedicated cloud account, with this device optionally keeping local cache and queued writes for resilience and responsiveness. No analytics SDKs, advertising identifiers, or cross-app tracking are used. Optional AI dream interpretation may transmit limited dream data to third-party processors only when needed to fulfill that feature, as described in our Privacy Policy.
             </Text>
 
             <Text style={styles.sectionTitle}>Limitation of Liability</Text>
@@ -199,7 +199,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Third-Party Services</Text>
             <Text style={styles.paragraph}>
-              The App may integrate with or rely on third-party services, including but not limited to Apple App Store, Google Play, RevenueCat, Supabase, OpenStreetMap Nominatim, Sentry, Anthropic Claude, and Google Gemini. Your use of these third-party services is subject to their respective terms of service and privacy policies. We are not responsible for the practices or content of any third-party services.
+              The App may integrate with or rely on third-party services, including but not limited to Apple App Store, Google Play, RevenueCat, Supabase, OpenStreetMap Nominatim, Sentry, and Google Gemini for dream interpretation. Your use of these third-party services is subject to their respective terms of service and privacy policies. We are not responsible for the practices or content of any third-party services.
             </Text>
 
             <Text style={styles.sectionTitle}>Apple App Store Terms</Text>
