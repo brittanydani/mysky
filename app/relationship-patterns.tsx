@@ -256,6 +256,7 @@ export default function RelationshipPatternsScreen() {
     style: styles.choicePill,
     labelStyle: styles.choicePillText,
     selectedLabelStyle: styles.choicePillTextSelected,
+    maxFontSizeMultiplier: 1.15,
   }));
 
   const buildStatePillItems = (
@@ -276,6 +277,7 @@ export default function RelationshipPatternsScreen() {
     style: styles.choicePill,
     labelStyle: styles.choicePillText,
     selectedLabelStyle: styles.choicePillTextSelected,
+    maxFontSizeMultiplier: 1.15,
   }));
 
   const resolveOptionLabels = (options: SelectableOption[], ids?: string[]) => (
@@ -384,14 +386,15 @@ export default function RelationshipPatternsScreen() {
               style={styles.noteInput}
               placeholder="What happened — and what did it stir in you?"
               placeholderTextColor={theme.isDark ? 'rgba(255,255,255,0.58)' : 'rgba(0,0,0,0.48)'}
+              maxFontSizeMultiplier={1.15}
               multiline value={note} onChangeText={(value) => {
                 clearSavedInsight();
                 setNote(value);
               }}
             />
-            <Text style={styles.inputHelper}>Notice the feeling beneath the interaction, not just the details.</Text>
+            <Text maxFontSizeMultiplier={1.15} style={styles.inputHelper}>Notice the feeling beneath the interaction, not just the details.</Text>
 
-            <Text style={styles.tagSectionLabel}>SELECT ACTIVE PATTERNS</Text>
+            <Text maxFontSizeMultiplier={1.1} style={styles.tagSectionLabel}>SELECT ACTIVE PATTERNS</Text>
 
             {(['anxious', 'avoidant', 'control', 'secure'] as PatternCategory[]).map((cat) => {
               const { color } = getSemanticWashes(cat);
@@ -409,13 +412,14 @@ export default function RelationshipPatternsScreen() {
                 style: styles.choicePill,
                 labelStyle: styles.choicePillText,
                 selectedLabelStyle: styles.choicePillTextSelected,
+                maxFontSizeMultiplier: 1.15,
               }));
 
               return (
                 <View key={cat} style={[styles.tagCategoryGroup, theme.velvetBorder]}>
                   <Pressable style={styles.tagCategoryHeader} onPress={() => setExpandedCategory(isExpanded ? null : cat)}>
                     <Text style={[styles.tagCategoryDot, { color }]}>◆</Text>
-                    <Text style={styles.tagCategoryLabel}>{cat.toUpperCase()}</Text>
+                    <Text maxFontSizeMultiplier={1.1} style={styles.tagCategoryLabel}>{cat.toUpperCase()}</Text>
                     <Ionicons name={isExpanded ? 'remove' : 'add'} size={16} color={color} style={{ marginLeft: 'auto' }} />
                   </Pressable>
 
@@ -430,7 +434,7 @@ export default function RelationshipPatternsScreen() {
             })}
 
             <View style={styles.bridgeBlock}>
-              <Text style={styles.bridgeQuestionTitle}>What felt activated?</Text>
+              <Text maxFontSizeMultiplier={1.12} style={styles.bridgeQuestionTitle}>What felt activated?</Text>
               <EditorialPillGrid
                 items={buildBridgePillItems(ACTIVATION_OPTIONS, selectedActivations, setSelectedActivations, '#A88BEB')}
                 style={styles.bridgePillGrid}
@@ -438,7 +442,7 @@ export default function RelationshipPatternsScreen() {
             </View>
 
             <View style={styles.bridgeBlock}>
-              <Text style={styles.bridgeQuestionTitle}>What did you need?</Text>
+              <Text maxFontSizeMultiplier={1.12} style={styles.bridgeQuestionTitle}>What did you need?</Text>
               <EditorialPillGrid
                 items={buildBridgePillItems(NEED_OPTIONS, selectedNeeds, setSelectedNeeds, '#6B9080')}
                 style={styles.bridgePillGrid}
@@ -447,14 +451,14 @@ export default function RelationshipPatternsScreen() {
 
             <View style={styles.stateGrid}>
               <View style={styles.stateBlock}>
-                <Text style={styles.bridgeQuestionTitle}>Where were you before this?</Text>
+                <Text maxFontSizeMultiplier={1.12} style={styles.bridgeQuestionTitle}>Where were you before this?</Text>
                 <EditorialPillGrid
                   items={buildStatePillItems(stateBefore, setStateBefore)}
                   style={styles.bridgePillGrid}
                 />
               </View>
               <View style={styles.stateBlock}>
-                <Text style={styles.bridgeQuestionTitle}>Where did it move you?</Text>
+                <Text maxFontSizeMultiplier={1.12} style={styles.bridgeQuestionTitle}>Where did it move you?</Text>
                 <EditorialPillGrid
                   items={buildStatePillItems(stateAfter, setStateAfter)}
                   style={styles.bridgePillGrid}
@@ -596,22 +600,22 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   gravitySegment: { height: '100%' },
   legendRow: { flexDirection: 'row', justifyContent: 'space-between' },
 
-  formCard: { borderRadius: 28, padding: 24, marginBottom: 32 },
-  noteInput: { minHeight: 126, borderRadius: 24, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.035)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)', padding: 20, paddingTop: 20, color: theme.textPrimary, fontSize: 16, lineHeight: 23, marginBottom: 10 },
-  inputHelper: { color: theme.textMuted, fontSize: 13, lineHeight: 19, marginBottom: 24, paddingHorizontal: 2 },
+  formCard: { borderRadius: 28, padding: 22, marginBottom: 32 },
+  noteInput: { minHeight: 116, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.035)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)', padding: 18, paddingTop: 18, color: theme.textPrimary, fontSize: 15, lineHeight: 22, fontWeight: '600', marginBottom: 10 },
+  inputHelper: { color: theme.textMuted, fontSize: 13, lineHeight: 19, marginBottom: 22, paddingHorizontal: 2, fontWeight: '600' },
   tagSectionLabel: { fontSize: 10, color: theme.textMuted, fontWeight: '800', letterSpacing: 1.5, marginBottom: 16 },
   
-  tagCategoryGroup: { marginBottom: 12, borderRadius: 20, padding: 16, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' },
+  tagCategoryGroup: { marginBottom: 12, borderRadius: 20, padding: 14, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' },
   tagCategoryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tagCategoryDot: { fontSize: 8 },
   tagCategoryLabel: { fontSize: 11, fontWeight: '700', color: theme.textSecondary, letterSpacing: 1 },
   tagRailContent: { paddingTop: 16, gap: 10 },
-  choicePill: { minHeight: 40, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.035)', borderColor: theme.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)' },
-  choicePillText: { color: theme.textSecondary, fontSize: 12, lineHeight: 16, fontWeight: '600' },
+  choicePill: { minHeight: 36, paddingHorizontal: 13, paddingVertical: 8, borderRadius: 18, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.065)' : 'rgba(0,0,0,0.04)', borderColor: theme.isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.10)' },
+  choicePillText: { color: theme.textSecondary, fontSize: 11, lineHeight: 14, fontWeight: '700' },
   choicePillTextSelected: { color: theme.textPrimary, fontWeight: '800' },
-  bridgeBlock: { marginTop: 22 },
-  bridgeQuestionTitle: { color: theme.textPrimary, fontSize: 16, fontWeight: '600', lineHeight: 24, marginBottom: 14 },
-  bridgePillGrid: { gap: 10 },
+  bridgeBlock: { marginTop: 20 },
+  bridgeQuestionTitle: { color: theme.textPrimary, fontSize: 15, fontWeight: '700', lineHeight: 21, marginBottom: 12 },
+  bridgePillGrid: { gap: 8 },
   stateGrid: { gap: 22, marginTop: 22 },
   stateBlock: { gap: 0 },
   

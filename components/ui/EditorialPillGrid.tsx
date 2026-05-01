@@ -25,6 +25,7 @@ export interface EditorialPillItem {
   selectedStyle?: StyleProp<ViewStyle>;
   labelStyle?: StyleProp<TextStyle>;
   selectedLabelStyle?: StyleProp<TextStyle>;
+  maxFontSizeMultiplier?: number;
 }
 
 interface EditorialPillGridProps {
@@ -72,6 +73,7 @@ export const EditorialPillGrid = memo(function EditorialPillGrid({
             accessibilityState={{ selected: isSelected, disabled: item.disabled }}
           >
             <Text
+              maxFontSizeMultiplier={item.maxFontSizeMultiplier}
               style={[
                 styles.label,
                 item.labelStyle,
