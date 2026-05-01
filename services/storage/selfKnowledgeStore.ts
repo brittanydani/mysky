@@ -360,10 +360,50 @@ const RELATIONSHIP_REGULATION_STATES = new Set<RelationshipRegulationState>([
   'secure',
 ]);
 
+const RELATIONSHIP_PATTERN_SELECT_COLUMNS =
+  'id,date,note,tags,activated_emotions,needs,state_before,state_after,is_deleted';
+const LEGACY_RELATIONSHIP_PATTERN_SELECT_COLUMNS = 'id,date,note,tags,is_deleted';
+const RELATIONSHIP_PATTERN_BRIDGE_COLUMNS = [
+  'activated_emotions',
+  'needs',
+  'state_before',
+  'state_after',
+] as const;
+
+type RelationshipPatternRow = {
+  id: string;
+  date: string;
+  note?: unknown;
+  tags?: unknown;
+  activated_emotions?: unknown;
+  needs?: unknown;
+  state_before?: unknown;
+  state_after?: unknown;
+};
+
 function parseRelationshipRegulationState(value: unknown): RelationshipRegulationState | null {
   return typeof value === 'string' && RELATIONSHIP_REGULATION_STATES.has(value as RelationshipRegulationState)
     ? value as RelationshipRegulationState
     : null;
+}
+
+function isMissingRelationshipPatternBridgeColumnError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+
+  const { code, message, details, hint } = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+  const errorText = [message, details, hint]
+    .filter((value): value is string => typeof value === 'string')
+    .join(' ')
+    .toLowerCase();
+
+  if (code !== '42703' && code !== 'PGRST204') return false;
+
+  return RELATIONSHIP_PATTERN_BRIDGE_COLUMNS.some((column) => errorText.includes(column));
 }
 
 function parseTimestampValue(value: unknown): number | null {
@@ -556,30 +596,88 @@ export async function addTriggerEvent(event: TriggerEvent): Promise<void> {
   }
 }
 
+function buildRelationshipPatternRows(
+  userId: string,
+  entries: RelationshipPatternRecord[],
+  includeBridgeColumns: boolean,
+) {
+  return entries.map((entry) => {
+    const baseRow = {
+      id: entry.id,
+      user_id: userId,
+      date: entry.date,
+      note: entry.note,
+      tags: entry.tags,
+      is_deleted: false,
+      created_at: entry.date,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (!includeBridgeColumns) return baseRow;
+
+    return {
+      ...baseRow,
+      activated_emotions: entry.activatedEmotions ?? [],
+      needs: entry.needs ?? [],
+      state_before: entry.stateBefore ?? null,
+      state_after: entry.stateAfter ?? null,
+    };
+  });
+}
+
 async function upsertRelationshipPatternRows(entries: RelationshipPatternRecord[]): Promise<void> {
   const userId = await getUserId();
   if (!userId || entries.length === 0) return;
 
-  const rows = entries.map((entry) => ({
-    id: entry.id,
-    user_id: userId,
-    date: entry.date,
-    note: entry.note,
-    tags: entry.tags,
-    activated_emotions: entry.activatedEmotions ?? [],
-    needs: entry.needs ?? [],
-    state_before: entry.stateBefore ?? null,
-    state_after: entry.stateAfter ?? null,
-    is_deleted: false,
-    created_at: entry.date,
-    updated_at: new Date().toISOString(),
-  }));
-
   const { error } = await supabase
     .from('relationship_patterns')
-    .upsert(rows, { onConflict: 'id' });
+    .upsert(buildRelationshipPatternRows(userId, entries, true), { onConflict: 'id' });
 
-  if (error) throw error;
+  if (!error) return;
+  if (!isMissingRelationshipPatternBridgeColumnError(error)) throw error;
+
+  const { error: legacyError } = await supabase
+    .from('relationship_patterns')
+    .upsert(buildRelationshipPatternRows(userId, entries, false), { onConflict: 'id' });
+
+  if (legacyError) throw legacyError;
+}
+
+async function loadRelationshipPatternRows(userId: string): Promise<{
+  hasBridgeColumns: boolean;
+  rows: RelationshipPatternRow[];
+}> {
+  const { data, error } = await supabase
+    .from('relationship_patterns')
+    .select(RELATIONSHIP_PATTERN_SELECT_COLUMNS)
+    .eq('user_id', userId)
+    .eq('is_deleted', false)
+    .order('date', { ascending: false })
+    .limit(1000);
+
+  if (!error) {
+    return {
+      hasBridgeColumns: true,
+      rows: (data ?? []) as RelationshipPatternRow[],
+    };
+  }
+
+  if (!isMissingRelationshipPatternBridgeColumnError(error)) throw error;
+
+  const { data: legacyData, error: legacyError } = await supabase
+    .from('relationship_patterns')
+    .select(LEGACY_RELATIONSHIP_PATTERN_SELECT_COLUMNS)
+    .eq('user_id', userId)
+    .eq('is_deleted', false)
+    .order('date', { ascending: false })
+    .limit(1000);
+
+  if (legacyError) throw legacyError;
+
+  return {
+    hasBridgeColumns: false,
+    rows: (legacyData ?? []) as RelationshipPatternRow[],
+  };
 }
 
 export async function loadRelationshipPatterns(): Promise<RelationshipPatternRecord[]> {
@@ -592,24 +690,26 @@ export async function loadRelationshipPatterns(): Promise<RelationshipPatternRec
   if (!userId) return fallback;
 
   try {
-    const { data, error } = await supabase
-      .from('relationship_patterns')
-      .select('id,date,note,tags,activated_emotions,needs,state_before,state_after,is_deleted')
-      .eq('user_id', userId)
-      .eq('is_deleted', false)
-      .order('date', { ascending: false })
-      .limit(1000);
-
-    if (error) throw error;
+    const { hasBridgeColumns, rows } = await loadRelationshipPatternRows(userId);
+    const fallbackById = new Map(fallback.map((entry) => [entry.id, entry]));
 
     const entries: RelationshipPatternRecord[] = [];
-    for (const row of data ?? []) {
+    for (const row of rows) {
+      const fallbackEntry = hasBridgeColumns ? null : fallbackById.get(row.id);
       const note = typeof row.note === 'string' ? row.note : '';
       const tags = parseStringArray(row.tags);
-      const activatedEmotions = parseStringArray(row.activated_emotions);
-      const needs = parseStringArray(row.needs);
-      const stateBefore = parseRelationshipRegulationState(row.state_before);
-      const stateAfter = parseRelationshipRegulationState(row.state_after);
+      const activatedEmotions = hasBridgeColumns
+        ? parseStringArray(row.activated_emotions)
+        : fallbackEntry?.activatedEmotions ?? [];
+      const needs = hasBridgeColumns
+        ? parseStringArray(row.needs)
+        : fallbackEntry?.needs ?? [];
+      const stateBefore = hasBridgeColumns
+        ? parseRelationshipRegulationState(row.state_before)
+        : fallbackEntry?.stateBefore ?? null;
+      const stateAfter = hasBridgeColumns
+        ? parseRelationshipRegulationState(row.state_after)
+        : fallbackEntry?.stateAfter ?? null;
       if (!note && tags.length === 0 && activatedEmotions.length === 0 && needs.length === 0 && !stateBefore && !stateAfter) continue;
 
       entries.push({
