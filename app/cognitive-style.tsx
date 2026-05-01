@@ -193,7 +193,7 @@ export default function CognitiveStyleScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setSaved(true);
     } catch {
-      Alert.alert('Error', 'Could not save profile.');
+      Alert.alert('Error', 'Could not save your profile. Please try again.');
     }
   };
 

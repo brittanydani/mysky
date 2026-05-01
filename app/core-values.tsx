@@ -213,7 +213,7 @@ export default function CoreValuesScreen() {
       await saveSelfKnowledgeProfile('core_values', state);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setSaved(true);
-    } catch { Alert.alert('Error', 'Could not save.'); }
+    } catch { Alert.alert('Error', 'Could not save your values. Please try again.'); }
   };
 
   const allValueOptions = useMemo(() => [...ALL_VALUES, ...(state.customValues ?? []).filter(v => !ALL_VALUES.includes(v))], [state.customValues]);

@@ -786,7 +786,7 @@ export default function MoodCheckIn() {
       logger.error('[MoodCheckIn] Save failed:', e);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       setIsSaving(false);
-      Alert.alert('Error', 'Could not save check-in.');
+      Alert.alert('Error', 'Could not save your check-in. Please try again.');
       return false;
     }
   }, []);

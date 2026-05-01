@@ -224,7 +224,7 @@ export default function DailyReflectionSection({
         Alert.alert("Recorded", encouragement);
       }
     } catch {
-      Alert.alert('Error', 'Failed to save reflections.');
+      Alert.alert('Error', 'Could not save your reflections. Please try again.');
     }
   };
 

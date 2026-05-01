@@ -67,7 +67,7 @@ export const REST_CAPACITY_PATTERNS: ArchivePattern[] = [
     title: 'Your Relationship with Rest',
     category: 'restCapacity',
     description:
-      'Exhaustion is often your permission slip to pause, moving at high velocity until depletion forces a full stop.',
+      'Exhaustion is often the point when pausing finally feels allowed, after moving at high velocity until depletion forces a full stop.',
     requiredSignals: ['rest_guilt'],
     supportingSignals: [
       'rest_resistance',

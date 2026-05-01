@@ -718,7 +718,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch {
-      Alert.alert('Save Error', 'Could not secure your entry. Please try again.');
+      Alert.alert('Save Error', 'Could not save your entry. Please try again.');
     }
   };
 

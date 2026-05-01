@@ -306,7 +306,7 @@ function buildPatternInsights(p: PersonalProfile): DeepInsight[] {
       category: 'nervous-system',
       scope: 'weekly',
       title: 'Sleep Changes More Than Energy',
-      body: `Your archive shows that sleep disruption affects more than just your energy levels. ${daysReceipt(p.totalDays, 'weekly')}, after lower-rest nights, your system becomes noticeably easier to knock off center—your patience thins, your steadiness wavers, and small stressors land harder. The pattern suggests that for you, sleep functions less like a performance enhancer and more like emotional scaffolding. This does not read as weakness. It reads as a nervous system that requires consistent rest to maintain its equilibrium.`,
+      body: `Your archive shows that sleep disruption affects more than just your energy levels. ${daysReceipt(p.totalDays, 'weekly')}, after lower-rest nights, your system becomes noticeably easier to knock off center: your patience thins, your steadiness wavers, and small stressors land harder. The pattern suggests that, for you, sleep is part of how emotional steadiness gets rebuilt. This does not read as weakness. It reads as a nervous system that needs consistent rest to stay regulated.`,
       detail: sleepCorr ? `Correlation strength: ${sleepCorr.strength > 0.5 ? 'strong' : sleepCorr.strength > 0.3 ? 'moderate' : 'mild'}` : undefined,
       reflectionPrompt: 'How does a bad night of sleep tend to show up for you the next day?',
       selfLanguage: 'sleep-sensitive',
@@ -600,7 +600,7 @@ function buildPatternInsights(p: PersonalProfile): DeepInsight[] {
       category: 'cognitive-style',
       scope: 'monthly',
       title: 'How You Process Information',
-      body: `Your archive shows that understanding is one of the ways you regulate. ${daysReceipt(p.totalDays, 'monthly')}, you return often to analysis, meaning-making, and trying to locate the deeper thread beneath what happened. The pattern suggests that you may not fully move through an experience until it has a shape: what happened, what it touched, and why it stayed with you. This does not read as overthinking. It reads as your mind trying to make something emotionally survivable by making it understandable.`,
+      body: `Your archive shows that understanding is one of the ways you regulate. ${daysReceipt(p.totalDays, 'monthly')}, you return often to analysis, meaning-making, and trying to locate the deeper thread beneath what happened. The pattern suggests that you may not fully move through an experience until it has a shape: what happened, what it touched, and why it stayed with you. This does not read as overthinking. It reads as your mind trying to make something easier to feel by making it understandable.`,
       reflectionPrompt: 'Does analyzing a feeling help it pass, or does it keep you stuck inside it?',
       selfLanguage: 'requires cognitive resolution to regulate',
       confidence: 'strong',
@@ -2434,7 +2434,7 @@ function buildPremiumValueInsights(p: PersonalProfile): DeepInsight[] {
         [
           [
             'Your glimmer logs are reading as more than a nice extra.',
-            'Small moments of peace seem to be doing real regulatory work for you.',
+            'Small moments of peace seem to be helping your system settle.',
             'MySky is seeing a repeatable elevation pattern in the days where glimmers are noticed.',
             'This card is tracking something modest but meaningful in your data.',
           ],

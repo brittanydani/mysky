@@ -786,7 +786,7 @@ function JournalContent() {
       await loadEntries(true);
     } catch (error) {
       logger.error('Failed to delete journal entry:', error);
-      Alert.alert('Error', 'Failed to delete entry');
+      Alert.alert('Error', 'Could not delete this entry. Please try again.');
     }
   }, [loadEntries]);
 
@@ -816,7 +816,7 @@ function JournalContent() {
       await loadSleepEntries();
     } catch (error) {
       logger.error('Failed to delete dream entry:', error);
-      Alert.alert('Error', 'Failed to delete dream entry');
+      Alert.alert('Error', 'Could not delete this dream entry. Please try again.');
     }
   }, [loadSleepEntries]);
 
@@ -1206,7 +1206,7 @@ function JournalContent() {
       await loadEntries(true);
     } catch (error) {
       logger.error('Failed to save journal entry:', error);
-      Alert.alert('Error', 'Failed to save entry');
+      Alert.alert('Error', 'Could not save this entry. Please try again.');
     }
   };
 

@@ -17,7 +17,7 @@ export const REST_CAPACITY_ANGLES: DailyAngle[] = [
     pattern:
       'Across recent signals, your body seems to ask for pause before your mind fully gives permission. The pattern suggests that stopping may feel more allowed when you are already depleted.',
     reframe:
-      'This does not read as laziness. It reads as a body asking for care before exhaustion becomes the only permission slip.',
+      'This does not read as laziness. It reads as a body asking for care before exhaustion becomes the only reason you stop.',
     question:
       'What would rest look like today if it did not need to be justified first?',
     tone: 'soft',

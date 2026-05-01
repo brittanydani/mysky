@@ -6,7 +6,7 @@ export const SUPPORT_BELONGING_ANGLES: DailyAngle[] = [
     patternKey: 'support_belonging_001_support_scarcity',
     title: 'Gratitude and Grief Can Coexist',
     triggerSignals: ['relief', 'envy_as_longing', 'asks_for_support'],
-    observation: 'The pattern around support is not just about what you want. It is something your system keeps checking for.',
+    observation: 'The pattern around support is not just about what you want. It is something your system keeps looking for.',
     pattern: 'Across recent entries, the same emotional shape appears around needing backup, feeling grateful for the people you do have, and still aching for a wider safety net.',
     reframe: 'This does not read as greed. It reads as grief for the kind of care that arrives before you have to prove how much you need it.',
     question: 'What kind of support would feel easiest to receive today?',

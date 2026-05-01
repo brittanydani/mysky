@@ -653,10 +653,10 @@ export default function ChartScreen() {
 
   const handleDeletePerson = useCallback(
     async (person: RelationshipChart) => {
-      Alert.alert('Remove Blueprint', `Purge ${person.name}'s data from the archive?`, [
+      Alert.alert('Remove Relationship Chart', `Remove ${person.name}'s chart?`, [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Purge',
+          text: 'Remove',
           style: 'destructive',
           onPress: async () => {
             try {

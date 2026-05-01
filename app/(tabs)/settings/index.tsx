@@ -480,7 +480,7 @@ export default function SettingsScreen() {
       Alert.alert('Birth Data Updated', 'Your chart and insights will recalculate.');
     } catch (error) {
       logger.error('Identity save failed:', error);
-      Alert.alert('Error', 'Failed to update birth data.');
+      Alert.alert('Error', 'Could not update your birth data. Please try again.');
     }
   }, [identityChartId]);
 

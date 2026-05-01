@@ -36,7 +36,7 @@ export const BOUNDARY_SELF_TRUST_PATTERNS: ArchivePattern[] = [
     ['self_trust_growth', 'limits_tested', 'inner_authority', 'says_no'],
     'becoming cold',
     'the quiet confidence of someone who has realized their peace is no longer up for negotiation',
-    'A subtle but profound shift in your relational gravity, moving away from over-explaining and toward simply observing your boundaries.',
+    'A meaningful shift in your relational gravity, moving away from over-explaining and toward simply observing your boundaries.',
     ['limits', 'self-trust', 'permission'],
   ),
   boundaryPattern(

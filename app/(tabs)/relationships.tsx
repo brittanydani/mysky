@@ -254,7 +254,7 @@ export default function RelationshipsScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (error) {
       logger.error('Failed to save relationship:', error);
-      Alert.alert('Error', 'Failed to save relationship. Please try again.');
+      Alert.alert('Error', 'Could not save this relationship. Please try again.');
     }
   };
 
@@ -303,7 +303,7 @@ export default function RelationshipsScreen() {
       }
     } catch (error) {
       logger.error('Failed to load relationship detail:', error);
-      Alert.alert('Error', 'Failed to load relationship details. Please try again.');
+      Alert.alert('Error', 'Could not load these relationship details. Please try again.');
     }
   };
 

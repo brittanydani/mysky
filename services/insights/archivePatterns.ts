@@ -169,7 +169,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 4,
     lookbackDays: 30,
     copyFrame: {
-      observation: 'A repeated signal shows exhaustion becoming your permission slip to pause.',
+      observation: 'A repeated signal shows exhaustion becoming the moment you finally allow yourself to pause.',
       pattern: 'Across recent entries, there is a pattern of moving quickly until your body forces a full stop.',
       reframe: {
         shame: 'This does not read as a lack of self-care.',
@@ -182,7 +182,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
         triggerSignals: [SIGNALS.LOW_ENERGY.key],
         title: 'Rest Before the Full Stop',
         shameFrame: 'This does not read as laziness.',
-        clarityFrame: 'It reads as your system asking for care before depletion becomes the only permission slip.',
+        clarityFrame: 'It reads as your system asking for care before depletion becomes the only reason you stop.',
         prompt: 'What would help before you hit empty?',
       },
       {
@@ -266,7 +266,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 4,
     lookbackDays: 30,
     copyFrame: {
-      observation: 'The pattern around support is not just about what you want. It is something your system keeps checking for.',
+      observation: 'The pattern around support is not just about what you want. It is something your system keeps looking for.',
       pattern: 'Across recent entries, the same emotional shape appears around needing backup, feeling grateful for the people you do have, and still aching for a wider safety net.',
       reframe: {
         shame: 'This does not read as greed.',
@@ -349,7 +349,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 3,
     lookbackDays: 14,
     copyFrame: {
-      observation: 'The dream pattern points to dreams often picking up what the day could not finish.',
+      observation: 'The dream pattern points to dreams picking up what the day could not finish.',
       pattern: 'Across recent entries, dream activity appears near emotional pressure, unresolved questions, or lower-capacity weeks.',
       reframe: {
         shame: 'This does not read as random.',
@@ -362,7 +362,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
         triggerSignals: [SIGNALS.DREAM_UNFINISHED_PROCESSING.key],
         title: 'The Dream Journal Is Continuing the Thread',
         shameFrame: 'This does not read as noise.',
-        clarityFrame: 'It reads as the night archive carrying material that the day archive has not fully metabolized.',
+        clarityFrame: 'It reads as your dream life carrying material the day did not have room to finish.',
         prompt: 'What theme from the dream also appears in a check-in, question answer, body map, or journal entry?',
       },
     ],
