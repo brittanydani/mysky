@@ -18,12 +18,9 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import { supabaseDb } from '../../services/storage/supabaseDb';
-import { runPipeline } from '../../services/insights/pipeline';
+import { buildInsightSurface } from '../../services/insights/buildInsightSurface';
 import { type DailyAggregate } from '../../services/insights/types';
-import { computeNarrativeInsights, NarrativeInsightBundle } from '../../utils/narrativeInsights';
-import { buildPersonalProfile } from '../../utils/personalProfile';
-import { computeDeepInsights, DeepInsightBundle } from '../../utils/deepInsights';
+import { type DeepInsightBundle } from '../../utils/deepInsights';
 import { buildPatternFeedInsights } from '../../utils/patternFeed';
 import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
 import { DailyCheckIn } from '../../services/patterns/types';
@@ -31,19 +28,14 @@ import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
-import { enrichSelfKnowledgeContext, loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
-import { enhancePatternInsights } from '../../services/insights/geminiInsightsService';
 import { buildPatternLibraryState, refineCrossRefCopy } from '../../utils/patternsHelpers';
-import {
-  computeSelfKnowledgeCrossRef,
-  CrossRefInsight,
-} from '../../utils/selfKnowledgeCrossRef';
+import { type CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
-import { toLocalDateString } from '../../utils/dateUtils';
 import { normalizeDisplayText } from '../../utils/textLayout';
 import { getPersonalizedPremiumTeaser, type ArchiveDepthCounts } from '../../utils/archiveDepth';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
+import { getUserPreference } from '../../services/storage/userProfileService';
 import { usePremium } from '../../context/PremiumContext';
 import { useRouter, Href } from 'expo-router';
 import { logger } from '../../utils/logger';
@@ -94,12 +86,12 @@ export default function PatternsScreen() {
   const [orbitLoading, setOrbitLoading] = useState(true);
   const [crossRefs, setCrossRefs] = useState<CrossRefInsight[]>([]);
   const [dailyAggregates, setDailyAggregates] = useState<DailyAggregate[]>([]);
-  const [, setNarrative] = useState<NarrativeInsightBundle | null>(null);
   const [deepInsights, setDeepInsights] = useState<DeepInsightBundle | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [showDeepDiveModal, setShowDeepDiveModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
@@ -110,104 +102,25 @@ export default function PatternsScreen() {
       trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
       (async () => {
         try {
-          const charts = await supabaseDb.getCharts();
-          if (!charts?.length) {
-            if (!active) return;
-            setTrendCheckIns([]);
-            setSnapshot({ avgMood: 0, avgStress: 0, checkInCount: 0 });
-            setArchiveDepthCounts({});
-            setLastUpdated(null);
-            setCrossRefs([]);
-            setDailyAggregates([]);
-            setDeepInsights(null);
-            setOrbitLoading(false);
-            return;
-          }
-          const chartId = charts[0].id;
-          const today = toLocalDateString();
-          const ninetyDaysAgo = toLocalDateString(
-            new Date(new Date(`${today}T12:00:00`).getTime() - 89 * 86_400_000),
-          );
-          const [checkIns, sleepEntries, journalEntries] = await Promise.all([
-            supabaseDb.getCheckInsInRange(chartId, ninetyDaysAgo, today),
-            supabaseDb.getSleepEntriesInRange(chartId, ninetyDaysAgo, today),
-            supabaseDb.getJournalEntries(),
-          ]);
+          const moodInsightPref = await getUserPreference<string | null>('pref_mood_insights', null).catch(() => null);
+          const insightsEnabled = moodInsightPref !== '0';
+          const surface = await buildInsightSurface({
+            isPremium,
+            rangeDays: 90,
+            includePremiumPipeline: false,
+            insightsEnabled,
+          });
           if (!active) return;
-          const recentJournalEntries = journalEntries.filter((entry) => {
-            return entry.date >= ninetyDaysAgo && entry.date <= today;
-          });
-          
-          const moods = checkIns.map(c => c.moodScore).filter(v => v != null) as number[];
-          const avgMood = moods.length ? moods.reduce((a, b) => a + b, 0) / moods.length : 0;
-          const stressValues = checkIns.map((checkIn) => {
-            if (checkIn.stressLevel === 'high') return 8;
-            if (checkIn.stressLevel === 'low') return 2;
-            return 5;
-          });
-          const avgStress = stressValues.length
-            ? stressValues.reduce((sum, value) => sum + value, 0) / stressValues.length
-            : 0;
 
-          if (!active) return;
-          setTrendCheckIns(checkIns);
-          setSnapshot({ avgMood, avgStress, checkInCount: checkIns.length });
-          setArchiveDepthCounts({
-            checkIns: checkIns.length,
-            journalEntries: recentJournalEntries.length,
-            sleepEntries: sleepEntries.filter((entry) => entry.quality != null || entry.durationHours != null).length,
-            dreamEntries: sleepEntries.filter((entry) => !!entry.dreamText?.trim()).length,
-          });
-          setLastUpdated(new Date().toISOString());
+          setMoodInsightsEnabled(insightsEnabled);
+          setTrendCheckIns(surface.checkIns);
+          setSnapshot(surface.snapshot);
+          setArchiveDepthCounts(surface.archiveDepthCounts);
+          setLastUpdated(surface.lastUpdated);
           setOrbitLoading(false);
-
-          const skContext = enrichSelfKnowledgeContext(
-            await loadSelfKnowledgeContext(),
-            recentJournalEntries,
-            sleepEntries,
-          );
-          if (!active) return;
-          setArchiveDepthCounts({
-            checkIns: checkIns.length,
-            journalEntries: recentJournalEntries.length,
-            sleepEntries: sleepEntries.filter((entry) => entry.quality != null || entry.durationHours != null).length,
-            dreamEntries: sleepEntries.filter((entry) => !!entry.dreamText?.trim()).length,
-            dailyReflections: skContext.dailyReflections?.totalAnswers ?? 0,
-            somaticEntries: skContext.somaticEntries.length,
-            triggerEvents: skContext.triggerEvents.filter((event) => event.mode === 'drain').length,
-            glimmerEvents: skContext.triggerEvents.filter((event) => event.mode === 'nourish').length,
-            relationshipPatterns: skContext.relationshipPatterns.length,
-            astrologyCheckIns: checkIns.filter((entry) =>
-              entry.moonSign || entry.lunarPhase !== 'unknown' || (entry.transitEvents?.length ?? 0) > 0,
-            ).length,
-          });
-
-          const pipelineResult = runPipeline({
-            checkIns,
-            journalEntries: recentJournalEntries,
-            sleepEntries,
-            chart: null,
-            todayContext: null,
-          });
-          if (!active) return;
-          setDailyAggregates(pipelineResult.dailyAggregates);
-          setNarrative(computeNarrativeInsights(pipelineResult.dailyAggregates));
-          setDeepInsights(computeDeepInsights(buildPersonalProfile(pipelineResult.dailyAggregates)));
-
-          const refs = computeSelfKnowledgeCrossRef(skContext, checkIns, pipelineResult.dailyAggregates);
-          const enhancedRefs = await enhancePatternInsights(refs, skContext, checkIns, isPremium);
-          if (!active) return;
-          const aiBodies = new Map(enhancedRefs?.insights.map((insight) => [insight.id, insight.body]) ?? []);
-          setCrossRefs(
-            refs.map((insight) =>
-              aiBodies.has(insight.id)
-                ? {
-                    ...insight,
-                    body: aiBodies.get(insight.id) ?? insight.body,
-                  }
-              : insight,
-            ),
-          );
+          setDailyAggregates(surface.dailyAggregates);
+          setDeepInsights(surface.deepInsights);
+          setCrossRefs(surface.crossRefs);
 
         } catch (e) {
           logger.error('[Patterns] Pipeline error:', e);
@@ -363,7 +276,7 @@ export default function PatternsScreen() {
               </View>
 
               <SectionHeader label="THIS WEEK'S PATTERN" icon="radio-outline" />
-              {!isPremium && !loading && snapshot.checkInCount >= 5 && (
+              {moodInsightsEnabled && !isPremium && !loading && snapshot.checkInCount >= 5 && (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                   <VelvetGlassSurface style={styles.insightCard} intensity={25}>
                     <LinearGradient colors={['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)']} style={StyleSheet.absoluteFill} />
@@ -388,7 +301,7 @@ export default function PatternsScreen() {
                   </VelvetGlassSurface>
                 </Pressable>
               )}
-              {!isPremium && !loading && snapshot.checkInCount >= 3 && snapshot.checkInCount < 5 && (
+              {moodInsightsEnabled && !isPremium && !loading && snapshot.checkInCount >= 3 && snapshot.checkInCount < 5 && (
                 <VelvetGlassSurface style={styles.insightCard} intensity={25}>
                   <LinearGradient colors={['rgba(107, 144, 128, 0.15)', 'rgba(107, 144, 128, 0.05)']} style={StyleSheet.absoluteFill} />
                   <View style={styles.cardHeader}>
@@ -406,6 +319,12 @@ export default function PatternsScreen() {
                   <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyTitle}>Couldn't load patterns right now</Text>
                   <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>Something went wrong while analyzing your data. Try again in a moment.</Text>
                 </VelvetGlassSurface>
+              ) : !loading && !moodInsightsEnabled ? (
+                <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
+                  <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyTitle}>Mood pattern insights are turned off</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>Turn on Mood Pattern Insights in Settings when you want MySky to surface recurring patterns from your check-ins.</Text>
+                </VelvetGlassSurface>
               ) : !loading && patternRows.length === 0 ? (
                 <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
                   <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
@@ -421,7 +340,7 @@ export default function PatternsScreen() {
               ) : null}
             </>
           )}
-          ListFooterComponent={(
+          ListFooterComponent={moodInsightsEnabled ? (
             <Pressable
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
@@ -436,7 +355,7 @@ export default function PatternsScreen() {
               <MetallicIcon name="library-outline" size={16} variant="gold" />
               <MetallicText style={styles.libraryButtonText} variant="gold">Open Pattern Library</MetallicText>
             </Pressable>
-          )}
+          ) : null}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           initialNumToRender={3}

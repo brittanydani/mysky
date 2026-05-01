@@ -5,6 +5,11 @@ import type {
   PatternMovement,
   UserSignal,
 } from '../types';
+import {
+  compareEvidenceByPrimarySource,
+  orderSourcesByPrimaryPriority,
+  sourcePriorityScore,
+} from '../sourcePriority';
 
 /**
  * Scores an ArchivePattern based on normalized UserSignals.
@@ -46,14 +51,18 @@ export function scoreArchivePattern(
   const strengthScore =
     relevantSignals.reduce((sum, s) => sum + s.strength, 0) /
     Math.max(relevantSignals.length, 1);
+  const primarySourceScore = relevantSignals.length
+    ? Math.max(...relevantSignals.map(s => sourcePriorityScore(s.source)))
+    : 0;
   
   const conflictPenalty = Math.min(conflictingMatches.length * 0.2, 0.4);
 
   const score = Math.max(0,
     (requiredScore * 0.35 +
     frequencyScore * 0.25 +
-    sourceScore * 0.2 +
-    strengthScore * 0.2) - conflictPenalty
+    sourceScore * 0.18 +
+    strengthScore * 0.17 +
+    primarySourceScore * 0.05) - conflictPenalty
   );
 
   let confidence: PatternConfidence = 'emerging';
@@ -73,7 +82,7 @@ export function scoreArchivePattern(
   const evidence = relevantSignals
     .map(s => s.evidence)
     .filter((e): e is any => !!e)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .sort(compareEvidenceByPrimarySource)
     .slice(0, 6);
 
   const lastSeenAt = relevantSignals.length > 0 ? relevantSignals[0].date : now;
@@ -86,7 +95,7 @@ export function scoreArchivePattern(
     confidence,
     movement,
     timeframeDays: pattern.lookbackDays,
-    sources: Array.from(new Set(relevantSignals.map(s => s.source))),
+    sources: orderSourcesByPrimaryPriority(relevantSignals.map(s => s.source)),
     evidence,
     lastSeenAt,
   };

@@ -40,7 +40,7 @@ describe('Knowledge Engine V2', () => {
     if (insight) {
         expect(insight.patternKey).toBe('rest_capacity_001_rest_resistance');
         expect(insight.title).toBeDefined();
-        expect(insight.body).toContain('rest may still feel easier to accept');
+        expect(insight.body.toLowerCase()).toContain('rest may still feel easier to accept');
         expect(insight.reframe).toContain('This does not read as laziness');
     }
   });
@@ -104,6 +104,49 @@ describe('Knowledge Engine V2', () => {
       const slots = result.insights.map(i => i.slot);
       expect(slots).toContain('whatMySkyNoticed');
       expect(slots).toContain('todaySignal');
+  });
+
+  it('normalizes app model field names against the requested insight date', async () => {
+    const result = await buildTodayInsights({
+      date: now,
+      rawInputs: {
+        dailyCheckIns: [{
+          date: today,
+          moodScore: 2,
+          energyLevel: 'low',
+          stressLevel: 'high',
+          tags: ['rest'],
+        }],
+        journals: [{
+          date: today,
+          content: 'I feel guilty for resting.',
+        }],
+        sleepLogs: [{
+          date: today,
+          durationHours: 5,
+          quality: 2,
+        }],
+        bodyMaps: [{
+          date: today,
+          cues: ['chest'],
+        }],
+      },
+      history: [],
+    });
+
+    const bodyMapIndex = result.signals.findIndex((signal) => signal.source === 'bodyMap');
+    const journalIndex = result.signals.findIndex((signal) => signal.source === 'journal');
+    const checkInIndex = result.signals.findIndex((signal) => signal.source === 'dailyCheckIn');
+    const sleepIndex = result.signals.findIndex((signal) => signal.source === 'sleep');
+
+    expect(bodyMapIndex).toBeGreaterThanOrEqual(0);
+    expect(bodyMapIndex).toBeLessThan(journalIndex);
+    expect(journalIndex).toBeLessThan(checkInIndex);
+    expect(checkInIndex).toBeLessThan(sleepIndex);
+    expect(result.signals.some((signal) => signal.key === 'low_energy' && signal.date === today)).toBe(true);
+    expect(result.signals.some((signal) => signal.key === 'rest_guilt' && signal.source === 'journal')).toBe(true);
+    expect(result.signals.some((signal) => signal.key === 'low_capacity' && signal.date === today)).toBe(true);
+    expect(result.insights.length).toBeGreaterThan(0);
   });
 
   it('enforces freshness rules (cooldowns)', async () => {

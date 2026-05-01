@@ -10,6 +10,7 @@ import { normalizeRelationshipPatterns } from './normalizeRelationshipPatterns';
 import { normalizeSleep } from './normalizeSleep';
 import { normalizeSomatic } from './normalizeSomatic';
 import { normalizeTriggerEvents } from './normalizeTriggerEvents';
+import { compareSignalsByPrimarySource } from '../sourcePriority';
 
 export interface BuildUserSignalsInput {
   checkIns: DailyCheckIn[];
@@ -27,11 +28,10 @@ export function buildUserSignals({
   sleepEntries = [],
   selfKnowledgeContext,
 }: BuildUserSignalsInput): UserSignal[] {
-  return [
-    ...checkIns.flatMap(normalizeDailyCheckIn),
-    ...checkIns.flatMap(normalizeAstrology),
-    ...journalEntries.flatMap(normalizeJournal),
-    ...sleepEntries.flatMap(normalizeSleep),
+  const signals = [
+    ...(selfKnowledgeContext?.dailyReflections?.recentAnswers
+      ? normalizeDailyReflections(selfKnowledgeContext.dailyReflections.recentAnswers)
+      : []),
     ...(selfKnowledgeContext?.somaticEntries
       ? normalizeSomatic(selfKnowledgeContext.somaticEntries)
       : []),
@@ -41,8 +41,11 @@ export function buildUserSignals({
     ...(selfKnowledgeContext?.relationshipPatterns
       ? normalizeRelationshipPatterns(selfKnowledgeContext.relationshipPatterns)
       : []),
-    ...(selfKnowledgeContext?.dailyReflections?.recentAnswers
-      ? normalizeDailyReflections(selfKnowledgeContext.dailyReflections.recentAnswers)
-      : []),
+    ...journalEntries.flatMap(normalizeJournal),
+    ...checkIns.flatMap(normalizeDailyCheckIn),
+    ...sleepEntries.flatMap(normalizeSleep),
+    ...checkIns.flatMap(normalizeAstrology),
   ];
+
+  return signals.sort(compareSignalsByPrimarySource);
 }

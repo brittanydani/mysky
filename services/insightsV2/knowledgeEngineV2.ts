@@ -18,8 +18,13 @@ export async function buildTodayInsights({
   history = [],
   previousPatternScores = [],
 }: BuildTodayInsightsArgs): Promise<BuildTodayInsightsResult> {
+  const createdAtDate = new Date(date);
+  const createdAt = Number.isFinite(createdAtDate.getTime())
+    ? createdAtDate.toISOString()
+    : new Date().toISOString();
+
   // 1. Normalize
-  const signals = normalizeInsightInputsV2(rawInputs);
+  const signals = normalizeInsightInputsV2(rawInputs, date);
 
   // 2. Score Archive Patterns
   const patternScores = ARCHIVE_PATTERNS.map(pattern => {
@@ -76,12 +81,12 @@ export async function buildTodayInsights({
       confidence: patternScore.confidence,
       movement: patternScore.movement,
       evidence: patternScore.evidence,
-      createdAt: new Date().toISOString(),
+      createdAt,
     });
   }
 
   // Handle slot: todaySignal (The most prominent daily signal)
-  const strongestTodaySignal = todaySignals.sort((a, b) => b.strength - a.strength)[0];
+  const strongestTodaySignal = [...todaySignals].sort((a, b) => b.strength - a.strength)[0];
   if (strongestTodaySignal) {
       // Find a pattern related to this signal for context
       const relatedPattern = ARCHIVE_PATTERNS.find(p => 
@@ -100,7 +105,7 @@ export async function buildTodayInsights({
           confidence: 'moderate',
           movement: 'new',
           evidence: strongestTodaySignal.evidence ? [strongestTodaySignal.evidence] : [],
-          createdAt: new Date().toISOString()
+          createdAt
       });
   }
 

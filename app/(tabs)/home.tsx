@@ -18,7 +18,6 @@ import {
   StyleSheet,
   Pressable,
   Dimensions,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -57,8 +56,8 @@ import { normalizeDisplayText } from '../../utils/textLayout';
 import { getDailyAffirmation, PersonalAffirmationContext } from '../../services/today/todayContentLibrary';
 import { SelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { logger } from '../../utils/logger';
-import { getDisplayName } from '../../services/storage/userProfileService';
-import { getArchiveDepth, getPersonalizedPremiumTeaser } from '../../utils/archiveDepth';
+import { getDisplayName, getUserPreference } from '../../services/storage/userProfileService';
+import { getPersonalizedPremiumTeaser } from '../../utils/archiveDepth';
 import { hasDreamContent } from '../../utils/dreamArchiveSummary';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
@@ -69,10 +68,12 @@ import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 import { scheduleTransitNotification } from '../../services/astrology/transitNotifications';
 import { scheduleInsightNotification } from '../../services/today/insightNotifications';
 import { buildInsightSurface } from '../../services/insights/buildInsightSurface';
-import type { CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
-import type { PremiumInsightResult } from '../../services/insights/premiumPipeline';
-import { runKnowledgeEngine } from '../../services/insights/knowledgeEngine';
-import { GeneratedInsight } from '../../services/insights/types/knowledgeEngine';
+import {
+  buildRecentlyShownKnowledgeHistory,
+  getInsightHistory,
+  recordInsight,
+} from '../../services/insights/insightHistory';
+import { type GeneratedInsight } from '../../services/insights/types/knowledgeEngine';
 import { KnowledgeInsightCard } from '../../components/KnowledgeInsightCard';
 
 const { width } = Dimensions.get('window');
@@ -197,11 +198,7 @@ export default function HomeScreen() {
 
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
-  const [surfaceLeadInsight, setSurfaceLeadInsight] = useState<CrossRefInsight | null>(null);
-  const [surfaceInsightCount, setSurfaceInsightCount] = useState(0);
   const [knowledgeInsight, setKnowledgeInsight] = useState<GeneratedInsight | null>(null);
-  const [premiumInsight, setPremiumInsight] = useState<PremiumInsightResult | null>(null);
-  const [premiumInsightLoading, setPremiumInsightLoading] = useState(false);
   const prevMilestoneRef = useRef<number | null>(null);
 
   // Self-knowledge context — used to personalize affirmations
@@ -231,7 +228,6 @@ export default function HomeScreen() {
     sleepSignalCount,
     weeklyCheckIns,
   ]);
-  const archiveDepth = useMemo(() => getArchiveDepth(archiveDepthCounts), [archiveDepthCounts]);
   const premiumTeaser = useMemo(
     () => getPersonalizedPremiumTeaser(archiveDepthCounts, { surface: 'today' }),
     [archiveDepthCounts],
@@ -284,58 +280,59 @@ export default function HomeScreen() {
 
           // Hydrate data in parallel — checkins, sleep, and self-knowledge are independent
           try {
-            const [checkins, sleepEntries, allJournals, surface] = await Promise.all([
-              supabaseDb.getCheckIns(chart.id, 90),
-              supabaseDb.getSleepEntries(chart.id, 90),
-              supabaseDb.getJournalEntries(),
-              buildInsightSurface({
-                chartId: chart.id,
-                isPremium,
-                rangeDays: 90,
-                includePremiumPipeline: isPremium,
-                tier: 'daily',
-              }),
+            const todayKey = getLogicalToday();
+            const [moodInsightPref, knowledgeHistory] = await Promise.all([
+              getUserPreference<string | null>('pref_mood_insights', null).catch(() => null),
+              getInsightHistory(),
             ]);
+            const moodInsightsEnabled = moodInsightPref !== '0';
+            const nowForInsights = `${todayKey}T12:00:00`;
+            const historyInput = buildRecentlyShownKnowledgeHistory(knowledgeHistory, nowForInsights);
+            const surface = await buildInsightSurface({
+              chartId: chart.id,
+              isPremium,
+              rangeDays: 90,
+              includePremiumPipeline: false,
+              tier: 'daily',
+              insightsEnabled: moodInsightsEnabled,
+              includeKnowledgeInsight: moodInsightsEnabled,
+              knowledgeInsightDate: nowForInsights,
+              knowledgeHistory: historyInput,
+            });
             if (!isScreenActiveRef.current) return;
+
+            const checkins = surface.checkIns;
+            const sleepEntries = surface.sleepEntries;
 
             setIfActive(setWeeklyCheckIns, checkins);
             setIfActive(setSelfKnowledge, surface.selfKnowledgeContext);
-            setIfActive(setSurfaceLeadInsight, surface.leadInsight);
-            setIfActive(setSurfaceInsightCount, surface.feedInsights.length);
 
             // Knowledge Engine Integration
-            const todayKey = getLogicalToday();
-            const kInsight = runKnowledgeEngine(
-              checkins,
-              allJournals,
-              sleepEntries,
-              surface.selfKnowledgeContext,
-              `${todayKey}T12:00:00`,
-              { recentlyShownPatternKeys: [], recentlyShownCopyHashes: [] }
-            );
-            setIfActive(setKnowledgeInsight, kInsight);
+            if (moodInsightsEnabled) {
+              const kInsight = surface.knowledgeInsight;
+              setIfActive(setKnowledgeInsight, kInsight);
+              if (kInsight && checkins.some((entry) => entry.date === todayKey)) {
+                recordInsight(kInsight).catch((err) => {
+                  logger.warn('[Home] Failed to record knowledge insight history:', err);
+                });
+              }
+            } else {
+              setIfActive(setKnowledgeInsight, null);
+            }
 
-            setIfActive(setPremiumInsight, surface.premiumInsight);
-            setIfActive(setPremiumInsightLoading, false);
-            let nextMood = mood;
-            let nextEnergy = energy;
             if (checkins.length > 0) {
               const latest = checkins[0];
               if (latest.moodScore != null) {
-                nextMood = latest.moodScore;
                 setIfActive(setMood, latest.moodScore);
               }
               const energyMap: Record<string, number> = { low: 3, medium: 5, high: 8 };
               if (latest.energyLevel) {
-                nextEnergy = energyMap[latest.energyLevel] ?? 5;
-                setIfActive(setEnergy, nextEnergy);
+                setIfActive(setEnergy, energyMap[latest.energyLevel] ?? 5);
               }
             }
 
-            let nextSleep = latestSleep;
             if (sleepEntries.length > 0 && sleepEntries[0].durationHours != null) {
-              nextSleep = sleepEntries[0].durationHours;
-              setIfActive(setLatestSleep, nextSleep);
+              setIfActive(setLatestSleep, sleepEntries[0].durationHours);
             }
             setIfActive(
               setSleepSignalCount,
@@ -370,8 +367,7 @@ export default function HomeScreen() {
           }
         } else {
           setIfActive(setUserChart, null);
-          setIfActive(setSurfaceLeadInsight, null);
-          setIfActive(setSurfaceInsightCount, 0);
+          setIfActive(setKnowledgeInsight, null);
           setIfActive(setSleepSignalCount, 0);
           setIfActive(setDreamSignalCount, 0);
 
@@ -379,15 +375,14 @@ export default function HomeScreen() {
       } catch (error) {
         logger.error('Failed to load user chart:', error);
         setIfActive(setUserChart, null);
-        setIfActive(setSurfaceLeadInsight, null);
-        setIfActive(setSurfaceInsightCount, 0);
+        setIfActive(setKnowledgeInsight, null);
         setIfActive(setSleepSignalCount, 0);
         setIfActive(setDreamSignalCount, 0);
       } finally {
         if (!silent && isScreenActiveRef.current) setLoading(false);
       }
     },
-    [energy, isPremium, latestSleep, mood],
+    [isPremium],
   );
 
   useFocusEffect(
@@ -1039,16 +1034,6 @@ function ScorePill({ label, val, color }: { label: string; val: string; color: s
       <View style={[styles.pillDot, { backgroundColor: color }]} />
       <Text style={styles.pillLabel} numberOfLines={1}>{label}</Text>
       <Text style={styles.pillVal}>{val}</Text>
-    </View>
-  );
-}
-
-function MetricChip({ value, label }: { value: string; label: string }) {
-  const styles = useThemedStyles(createStyles);
-  return (
-    <View style={styles.metricChip}>
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
     </View>
   );
 }

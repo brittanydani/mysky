@@ -11,8 +11,11 @@ import { useRouter, useFocusEffect, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-import { getUserPreference, saveUserPreference } from '../../../services/storage/userProfileService';
-import { getDisplayName } from '../../../services/storage/userProfileService';
+import {
+  getDisplayName,
+  getUserPreference,
+  saveUserPreference,
+} from '../../../services/storage/userProfileService';
 
 import { type AppTheme } from '../../../constants/theme';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';

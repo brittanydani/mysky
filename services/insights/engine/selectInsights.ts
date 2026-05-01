@@ -1,10 +1,9 @@
 import {
   DailyInsightAngle,
-  GeneratedInsight,
-  ArchivePatternScore,
   DailyInsightContext,
 } from '../types/knowledgeEngine';
 import { ARCHIVE_PATTERNS } from '../archivePatterns';
+import { createKnowledgeInsightCopyHash } from '../insightHash';
 
 /**
  * Selects the best insight candidate for today.
@@ -28,6 +27,12 @@ export function selectDailyInsight(context: DailyInsightContext): {
     if (!patternScore || patternScore.score < pattern.minConfidence) continue;
 
     for (const angle of pattern.dailyAngles) {
+      const copyHash = createKnowledgeInsightCopyHash({
+        observation: angle.observationOverride || pattern.copyFrame.observation,
+        pattern: angle.patternOverride || pattern.copyFrame.pattern,
+      });
+      if (context.recentlyShownCopyHashes.includes(copyHash)) continue;
+
       // Basic Trigger Check
       const hasTrigger = angle.triggerSignals.some((ts) =>
         context.todaySignals.some((s) => s.key === ts),

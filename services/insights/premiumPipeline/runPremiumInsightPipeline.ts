@@ -306,7 +306,12 @@ export async function runPremiumInsightPipeline(
 
   const gateResult = await runQualityGate(qualityGateInput, accessToken);
 
-  if (gateResult && !gateResult.approved) {
+  if (!gateResult) {
+    warn('[PremiumPipeline] AI quality gate unavailable — suppressing premium insight.');
+    return null;
+  }
+
+  if (!gateResult.approved) {
     info('[PremiumPipeline] AI quality gate rejected:', gateResult.reason);
 
     if (gateResult.downgradeTo) {

@@ -30,7 +30,9 @@ import { logger } from '../../utils/logger';
 import { ARCHIVE_PATTERNS } from './archivePatterns';
 import { scoreArchivePattern } from './engine/scoreArchivePatterns';
 import { buildUserSignals } from './normalizers/buildUserSignals';
-import type { UserSignal } from './types/knowledgeEngine';
+import { runKnowledgeEngine } from './knowledgeEngine';
+import type { GeneratedInsight, UserSignal } from './types/knowledgeEngine';
+import type { KnowledgeEngineHistoryInput } from './insightHistory';
 
 export interface InsightSurfaceResult {
   chartId: string | null;
@@ -52,6 +54,7 @@ export interface InsightSurfaceResult {
   feedInsights: CrossRefInsight[];
   leadInsight: CrossRefInsight | null;
   premiumInsight: PremiumInsightResult | null;
+  knowledgeInsight: GeneratedInsight | null;
 }
 
 interface BuildInsightSurfaceOptions {
@@ -60,6 +63,10 @@ interface BuildInsightSurfaceOptions {
   rangeDays?: number;
   includePremiumPipeline?: boolean;
   tier?: 'daily' | 'deep';
+  insightsEnabled?: boolean;
+  includeKnowledgeInsight?: boolean;
+  knowledgeInsightDate?: string;
+  knowledgeHistory?: KnowledgeEngineHistoryInput;
 }
 
 function getStressScore(checkIn: DailyCheckIn): number {
@@ -206,6 +213,10 @@ export async function buildInsightSurface({
   rangeDays = 90,
   includePremiumPipeline = false,
   tier = 'deep',
+  insightsEnabled = true,
+  includeKnowledgeInsight = false,
+  knowledgeInsightDate,
+  knowledgeHistory = { recentlyShownPatternKeys: [], recentlyShownCopyHashes: [] },
 }: BuildInsightSurfaceOptions): Promise<InsightSurfaceResult> {
   const chartId = await resolveChartId(inputChartId);
 
@@ -227,6 +238,7 @@ export async function buildInsightSurface({
       feedInsights: [],
       leadInsight: null,
       premiumInsight: null,
+      knowledgeInsight: null,
     };
   }
 
@@ -260,8 +272,10 @@ export async function buildInsightSurface({
     todayContext: null,
   });
 
-  const refs = computeSelfKnowledgeCrossRef(enrichedContext, checkIns, pipelineResult.dailyAggregates);
-  const enhancedRefs = refs.length
+  const refs = insightsEnabled
+    ? computeSelfKnowledgeCrossRef(enrichedContext, checkIns, pipelineResult.dailyAggregates)
+    : [];
+  const enhancedRefs = insightsEnabled && refs.length
     ? await enhancePatternInsights(refs, enrichedContext, checkIns, isPremium, { logErrors: false })
     : null;
   const aiBodies = new Map(enhancedRefs?.insights.map((insight) => [insight.id, insight.body]) ?? []);
@@ -274,17 +288,27 @@ export async function buildInsightSurface({
       : insight,
   );
 
-  const deepInsights = pipelineResult.dailyAggregates.length
+  const deepInsights = insightsEnabled && pipelineResult.dailyAggregates.length
     ? computeDeepInsights(buildPersonalProfile(pipelineResult.dailyAggregates))
     : null;
   const feedInsights = [...buildPatternFeedInsights(deepInsights), ...crossRefs];
+  const knowledgeInsight = insightsEnabled && includeKnowledgeInsight
+    ? runKnowledgeEngine(
+        checkIns,
+        recentJournalEntries,
+        sleepEntries,
+        enrichedContext,
+        knowledgeInsightDate ?? `${today}T12:00:00`,
+        knowledgeHistory,
+      )
+    : null;
 
   const premiumInsight = await maybeBuildPremiumInsight(
     checkIns,
     recentJournalEntries,
     sleepEntries,
     enrichedContext,
-    isPremium && includePremiumPipeline,
+    insightsEnabled && isPremium && includePremiumPipeline,
     tier,
   );
 
@@ -329,5 +353,6 @@ export async function buildInsightSurface({
     feedInsights,
     leadInsight: computeLeadInsight(feedInsights),
     premiumInsight,
+    knowledgeInsight,
   };
 }

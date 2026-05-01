@@ -16,7 +16,8 @@ export function generateInsightCopy(
   angle: DailyInsightAngle,
   context: DailyInsightContext,
 ): GeneratedInsight {
-  const date = new Date().toISOString();
+  const contextDate = new Date(context.date);
+  const date = Number.isFinite(contextDate.getTime()) ? contextDate.toISOString() : new Date().toISOString();
 
   // Combine frames
   const observation = angle.observationOverride || pattern.copyFrame.observation;

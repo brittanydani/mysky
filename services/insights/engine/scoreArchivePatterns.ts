@@ -5,6 +5,11 @@ import {
   PatternMovement,
   UserSignal,
 } from '../types/knowledgeEngine';
+import {
+  compareEvidenceByPrimarySource,
+  orderSourcesByPrimaryPriority,
+  sourcePriorityScore,
+} from '../sourcePriority';
 
 /**
  * Scores an ArchivePattern based on normalized UserSignals.
@@ -42,13 +47,17 @@ export function scoreArchivePattern(
   const strengthScore =
     relevantSignals.reduce((sum, signal) => sum + signal.strength, 0) /
     Math.max(relevantSignals.length, 1);
+  const primarySourceScore = relevantSignals.length
+    ? Math.max(...relevantSignals.map((signal) => sourcePriorityScore(signal.source)))
+    : 0;
 
   const score = Math.min(
     1,
     requiredScore * 0.35 +
       frequencyScore * 0.25 +
-      sourceScore * 0.2 +
-      strengthScore * 0.2 +
+      sourceScore * 0.18 +
+      strengthScore * 0.17 +
+      primarySourceScore * 0.05 +
       (hasDailyQuestionEvidence ? 0.05 : 0),
   );
 
@@ -57,11 +66,10 @@ export function scoreArchivePattern(
   else if (score > 0.7) confidence = 'strong';
   else if (score > 0.55) confidence = 'moderate';
 
-  // Sort evidence by recency
   const evidence = relevantSignals
     .map((s) => s.evidence)
     .filter((e): e is any => !!e)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .sort(compareEvidenceByPrimarySource)
     .slice(0, 6);
 
   const lastSeenAt = relevantSignals.length > 0 ? relevantSignals[0].date : now;
@@ -74,7 +82,7 @@ export function scoreArchivePattern(
     confidence,
     movement: 'repeating', // Logic for movement will be in a separate step
     timeframeDays: pattern.lookbackDays,
-    sources: Array.from(new Set(relevantSignals.map((signal) => signal.source))),
+    sources: orderSourcesByPrimaryPriority(relevantSignals.map((signal) => signal.source)),
     evidence,
     lastSeenAt,
   };

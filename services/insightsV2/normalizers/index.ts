@@ -1,4 +1,5 @@
 import type { UserSignal, InsightRawInputs, SignalKey } from '../types';
+import { compareSignalsByPrimarySource } from '../sourcePriority';
 
 /**
  * Normalizes Daily Check-Ins into V2 UserSignals.
@@ -8,37 +9,52 @@ export function normalizeDailyCheckInV2(checkIns: any[] = []): UserSignal[] {
 
   for (const ci of checkIns) {
     const date = ci.date.slice(0, 10);
+    const mood = typeof ci.mood === 'number' ? ci.mood : ci.moodScore;
+    const energy = typeof ci.energy === 'number'
+      ? ci.energy
+      : ci.energyLevel === 'low'
+        ? 1
+        : ci.energyLevel === 'high'
+          ? 5
+          : 3;
+    const stress = typeof ci.stress === 'number'
+      ? ci.stress
+      : ci.stressLevel === 'high'
+        ? 5
+        : ci.stressLevel === 'low'
+          ? 1
+          : 3;
 
     // Energy
-    if (ci.energy <= 2) {
+    if (energy <= 2) {
       signals.push({
         key: 'low_energy',
         source: 'dailyCheckIn',
         date,
         strength: 0.8,
-        evidence: { source: 'dailyCheckIn', date, label: 'Low energy', value: ci.energy },
+        evidence: { source: 'dailyCheckIn', date, label: 'Low energy', value: energy },
       });
     }
 
     // Mood
-    if (ci.mood <= 2) {
+    if (typeof mood === 'number' && mood <= 2) {
       signals.push({
         key: 'low_mood',
         source: 'dailyCheckIn',
         date,
         strength: 0.8,
-        evidence: { source: 'dailyCheckIn', date, label: 'Low mood', value: ci.mood },
+        evidence: { source: 'dailyCheckIn', date, label: 'Low mood', value: mood },
       });
     }
 
     // Stress
-    if (ci.stress >= 4) {
+    if (stress >= 4) {
       signals.push({
         key: 'high_stress',
         source: 'dailyCheckIn',
         date,
         strength: 0.9,
-        evidence: { source: 'dailyCheckIn', date, label: 'High stress', value: ci.stress },
+        evidence: { source: 'dailyCheckIn', date, label: 'High stress', value: stress },
       });
     }
 
@@ -65,7 +81,7 @@ export function normalizeDailyCheckInV2(checkIns: any[] = []): UserSignal[] {
     }
   }
 
-  return signals;
+  return signals.sort(compareSignalsByPrimarySource);
 }
 
 /**
@@ -76,7 +92,7 @@ export function normalizeJournalV2(journals: any[] = []): UserSignal[] {
 
   for (const j of journals) {
     const date = j.date.slice(0, 10);
-    const content = j.text.toLowerCase();
+    const content = String(j.text ?? j.content ?? '').toLowerCase();
 
     // Simple keyword matching for V2 signals
     const keywordMap: Record<string, SignalKey> = {
@@ -115,24 +131,26 @@ export function normalizeSleepV2(sleepLogs: any[] = []): UserSignal[] {
 
   for (const s of sleepLogs) {
     const date = s.date.slice(0, 10);
+    const hours = s.hours ?? s.durationHours;
+    const quality = s.quality ?? s.sleepQuality;
 
-    if (s.hours && s.hours < 6) {
+    if (typeof hours === 'number' && hours < 6) {
       signals.push({
         key: 'low_sleep',
         source: 'sleep',
         date,
         strength: 0.8,
-        evidence: { source: 'sleep', date, label: 'Short sleep', value: s.hours },
+        evidence: { source: 'sleep', date, label: 'Short sleep', value: hours },
       });
     }
 
-    if (s.quality && s.quality <= 2) {
+    if (typeof quality === 'number' && quality <= 2) {
       signals.push({
         key: 'poor_sleep_quality',
         source: 'sleep',
         date,
         strength: 0.7,
-        evidence: { source: 'sleep', date, label: 'Poor sleep quality', value: s.quality },
+        evidence: { source: 'sleep', date, label: 'Poor sleep quality', value: quality },
       });
     }
   }
@@ -182,16 +200,16 @@ export function normalizeBodyMapV2(bodyMaps: any[] = []): UserSignal[] {
 /**
  * Main Normalizer
  */
-export function normalizeInsightInputsV2(raw: InsightRawInputs): UserSignal[] {
+export function normalizeInsightInputsV2(raw: InsightRawInputs, referenceDate?: string): UserSignal[] {
   const signals = [
-    ...normalizeDailyCheckInV2(raw.dailyCheckIns),
-    ...normalizeJournalV2(raw.journals),
-    ...normalizeSleepV2(raw.sleepLogs),
     ...normalizeBodyMapV2(raw.bodyMaps),
+    ...normalizeJournalV2(raw.journals),
+    ...normalizeDailyCheckInV2(raw.dailyCheckIns),
+    ...normalizeSleepV2(raw.sleepLogs),
   ];
 
   // Logic for low_capacity cross-source
-  const today = new Date().toISOString().slice(0, 10);
+  const today = (referenceDate ?? new Date().toISOString()).slice(0, 10);
   const todaySignals = signals.filter(s => s.date === today);
   const sources = new Set(todaySignals.map(s => s.source));
   
@@ -208,5 +226,5 @@ export function normalizeInsightInputsV2(raw: InsightRawInputs): UserSignal[] {
       });
   }
 
-  return signals;
+  return signals.sort(compareSignalsByPrimarySource);
 }
