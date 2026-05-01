@@ -8,14 +8,12 @@
 // 4. Mapped attachment styles to Lunar Sky semantic washes (Nebula, Stratosphere, Ember, Sage).
 // 5. Integrated "Velvet Glass" 1px directional light-catch borders.
 
-import * as React from 'react';
-const { useCallback, useState, useMemo } = React;
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
-  ScrollView,
   TextInput,
 } from 'react-native';
 import { KeyboardAwareScrollView } from '../components/keyboard/KeyboardControllerCompat';
@@ -47,11 +45,17 @@ import {
 const CUSTOM_TAGS_KEY = '@mysky:relationship_pattern_custom_tags';
 
 type PatternCategory = 'anxious' | 'avoidant' | 'control' | 'secure';
+type RegulationState = 'fight' | 'flight' | 'freeze' | 'fawn' | 'secure';
 
 interface PatternTag {
   id: string;
   label: string;
   category: PatternCategory;
+}
+
+interface SelectableOption {
+  id: string;
+  label: string;
 }
 
 const PATTERN_TAGS: PatternTag[] = [
@@ -60,18 +64,75 @@ const PATTERN_TAGS: PatternTag[] = [
   { id: 't3', label: 'Rushing intimacy', category: 'anxious' },
   { id: 't4', label: 'Caretaking others', category: 'anxious' },
   { id: 't15', label: 'Seeking reassurance', category: 'anxious' },
-  { id: 't6', label: 'Avoidant when close', category: 'avoidant' },
-  { id: 't7', label: 'Emotional withdrawal', category: 'avoidant' },
-  { id: 't8', label: 'Hyper-independence', category: 'avoidant' },
+  { id: 't5', label: 'Over-explaining', category: 'anxious' },
+  { id: 't16', label: 'Feeling too much', category: 'anxious' },
+  { id: 't17', label: 'Scanning for rejection', category: 'anxious' },
+  { id: 't6', label: 'Pulling away', category: 'avoidant' },
+  { id: 't7', label: 'Going quiet', category: 'avoidant' },
+  { id: 't10', label: 'Needing space', category: 'avoidant' },
+  { id: 't8', label: 'Minimizing needs', category: 'avoidant' },
+  { id: 't19', label: 'Feeling trapped', category: 'avoidant' },
   { id: 't9', label: 'Shutting down', category: 'avoidant' },
-  { id: 't11', label: 'Need for control', category: 'control' },
+  { id: 't20', label: 'Distracting yourself', category: 'avoidant' },
+  { id: 't21', label: 'Avoiding repair', category: 'avoidant' },
+  { id: 't11', label: 'Trying to manage the outcome', category: 'control' },
+  { id: 't13', label: 'Testing the connection', category: 'control' },
+  { id: 't22', label: 'Needing certainty', category: 'control' },
+  { id: 't23', label: 'Pushing for answers', category: 'control' },
+  { id: 't24', label: 'Emotional monitoring', category: 'control' },
+  { id: 't25', label: 'Assuming the worst', category: 'control' },
+  { id: 't26', label: 'Fixing instead of feeling', category: 'control' },
+  { id: 't27', label: 'Holding resentment', category: 'control' },
+  { id: 's2', label: 'Naming needs clearly', category: 'secure' },
+  { id: 's4', label: 'Staying present', category: 'secure' },
+  { id: 's7', label: 'Offering repair', category: 'secure' },
+  { id: 's9', label: 'Trusting the connection', category: 'secure' },
+  { id: 's1', label: 'Asking directly', category: 'secure' },
+  { id: 's6', label: 'Respecting space', category: 'secure' },
+  { id: 's8', label: 'Feeling grounded', category: 'secure' },
+  { id: 's10', label: 'Letting things unfold', category: 'secure' },
+];
+
+const LEGACY_PATTERN_TAGS: PatternTag[] = [
   { id: 't12', label: 'Difficulty with boundaries', category: 'control' },
+  { id: 't14', label: 'Perfectionism in love', category: 'control' },
   { id: 't18', label: 'Defensiveness', category: 'control' },
-  { id: 's1', label: 'Direct Reassurance', category: 'secure' },
-  { id: 's2', label: 'Clear Needs', category: 'secure' },
-  { id: 's4', label: 'Staying Present', category: 'secure' },
-  { id: 's6', label: 'Calm Boundaries', category: 'secure' },
-  { id: 's8', label: 'Self-Soothing', category: 'secure' },
+  { id: 's3', label: 'Letting myself be seen', category: 'secure' },
+  { id: 's5', label: 'Receiving care without deflecting', category: 'secure' },
+];
+
+const ACTIVATION_OPTIONS: SelectableOption[] = [
+  { id: 'fear', label: 'Fear' },
+  { id: 'shame', label: 'Shame' },
+  { id: 'loneliness', label: 'Loneliness' },
+  { id: 'rejection', label: 'Rejection' },
+  { id: 'pressure', label: 'Pressure' },
+  { id: 'anger', label: 'Anger' },
+  { id: 'grief', label: 'Grief' },
+  { id: 'confusion', label: 'Confusion' },
+  { id: 'tenderness', label: 'Tenderness' },
+  { id: 'hope', label: 'Hope' },
+];
+
+const NEED_OPTIONS: SelectableOption[] = [
+  { id: 'reassurance', label: 'Reassurance' },
+  { id: 'space', label: 'Space' },
+  { id: 'clarity', label: 'Clarity' },
+  { id: 'comfort', label: 'Comfort' },
+  { id: 'repair', label: 'Repair' },
+  { id: 'honesty', label: 'Honesty' },
+  { id: 'softness', label: 'Softness' },
+  { id: 'boundaries', label: 'Boundaries' },
+  { id: 'presence', label: 'Presence' },
+  { id: 'time', label: 'Time' },
+];
+
+const REGULATION_STATES: (SelectableOption & { id: RegulationState })[] = [
+  { id: 'fight', label: 'Fight' },
+  { id: 'flight', label: 'Flight' },
+  { id: 'freeze', label: 'Freeze' },
+  { id: 'fawn', label: 'Fawn' },
+  { id: 'secure', label: 'Secure' },
 ];
 
 interface PatternEntry {
@@ -79,6 +140,10 @@ interface PatternEntry {
   date: string;
   note: string;
   tags: string[];
+  activatedEmotions?: string[];
+  needs?: string[];
+  stateBefore?: RegulationState | null;
+  stateAfter?: RegulationState | null;
 }
 
 export default function RelationshipPatternsScreen() {
@@ -90,6 +155,11 @@ export default function RelationshipPatternsScreen() {
   const [entries, setEntries] = useState<PatternEntry[]>([]);
   const [note, setNote] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedActivations, setSelectedActivations] = useState<string[]>([]);
+  const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
+  const [stateBefore, setStateBefore] = useState<RegulationState | null>(null);
+  const [stateAfter, setStateAfter] = useState<RegulationState | null>(null);
+  const [lastSavedEntry, setLastSavedEntry] = useState<PatternEntry | null>(null);
   const [customTags, setCustomTags] = useState<PatternTag[]>([]);
   const [expandedCategory, setExpandedCategory] = useState<PatternCategory | null>('anxious');
 
@@ -106,6 +176,16 @@ export default function RelationshipPatternsScreen() {
   );
 
   const allTags = useMemo(() => [...PATTERN_TAGS, ...customTags], [customTags]);
+  const resolvableTags = useMemo(() => [...PATTERN_TAGS, ...LEGACY_PATTERN_TAGS, ...customTags], [customTags]);
+
+  const canSave = Boolean(
+    note.trim()
+      || selectedTags.length > 0
+      || selectedActivations.length > 0
+      || selectedNeeds.length > 0
+      || stateBefore
+      || stateAfter,
+  );
 
   const getSemanticWashes = (cat: PatternCategory) => {
     if (cat === 'anxious') return { wash: ['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)'], color: '#A88BEB' }; // Nebula
@@ -115,12 +195,16 @@ export default function RelationshipPatternsScreen() {
   };
 
   const addEntry = async () => {
-    if (!note.trim() && selectedTags.length === 0) return;
+    if (!canSave) return;
     const newEntry: PatternEntry = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
       note: note.trim(),
       tags: selectedTags,
+      activatedEmotions: selectedActivations,
+      needs: selectedNeeds,
+      stateBefore,
+      stateAfter,
     };
     const updated = [newEntry, ...entries];
     setEntries(updated);
@@ -133,13 +217,68 @@ export default function RelationshipPatternsScreen() {
     }
     setNote('');
     setSelectedTags([]);
+    setSelectedActivations([]);
+    setSelectedNeeds([]);
+    setStateBefore(null);
+    setStateAfter(null);
+    setLastSavedEntry(newEntry);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
+
+  const clearSavedInsight = () => setLastSavedEntry(null);
+
+  const toggleMultiSelect = (id: string, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
+    clearSavedInsight();
+    Haptics.selectionAsync().catch(() => {});
+    setter(prev => (
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    ));
+  };
+
+  const buildBridgePillItems = (
+    options: SelectableOption[],
+    selected: string[],
+    setter: React.Dispatch<React.SetStateAction<string[]>>,
+    accentColor: string,
+  ): EditorialPillItem[] => options.map(option => ({
+    key: option.id,
+    label: option.label,
+    selected: selected.includes(option.id),
+    onPress: () => toggleMultiSelect(option.id, setter),
+    accentColor,
+    selectedBackgroundColor: `${accentColor}1F`,
+    selectedTextColor: theme.textPrimary,
+  }));
+
+  const buildStatePillItems = (
+    selected: RegulationState | null,
+    setter: React.Dispatch<React.SetStateAction<RegulationState | null>>,
+  ): EditorialPillItem[] => REGULATION_STATES.map(option => ({
+    key: option.id,
+    label: option.label,
+    selected: selected === option.id,
+    onPress: () => {
+      clearSavedInsight();
+      Haptics.selectionAsync().catch(() => {});
+      setter(prev => prev === option.id ? null : option.id);
+    },
+    accentColor: '#6B9080',
+    selectedBackgroundColor: 'rgba(107, 144, 128, 0.20)',
+    selectedTextColor: theme.textPrimary,
+  }));
+
+  const resolveOptionLabels = (options: SelectableOption[], ids?: string[]) => (
+    ids?.map(id => options.find(option => option.id === id)?.label ?? id) ?? []
+  );
+
+  const resolveStateLabel = (state?: RegulationState | null) => (
+    state ? REGULATION_STATES.find(option => option.id === state)?.label ?? state : null
+  );
 
   const gravityStats = useMemo(() => {
     let counts = { anxious: 0, avoidant: 0, control: 0, secure: 0 };
     entries.forEach(e => e.tags.forEach(tId => {
-      const cat = allTags.find(t => t.id === tId)?.category;
+      const cat = resolvableTags.find(t => t.id === tId)?.category;
       if (cat) counts[cat]++;
     }));
     const total = Object.values(counts).reduce((a, b) => a + b, 0);
@@ -150,7 +289,7 @@ export default function RelationshipPatternsScreen() {
       control: total > 0 ? (counts.control / total) * 100 : 0,
       secure: total > 0 ? (counts.secure / total) * 100 : 0,
     };
-  }, [allTags, entries]);
+  }, [resolvableTags, entries]);
 
   return (
     <View style={styles.container}>
@@ -170,7 +309,7 @@ export default function RelationshipPatternsScreen() {
 
         <View style={styles.titleArea}>
           <Text style={styles.headerTitle}>Relational Mirror</Text>
-          <GoldSubtitle style={styles.headerSubtitle}>Mirroring your attachment and connection dynamics</GoldSubtitle>
+          <GoldSubtitle style={styles.headerSubtitle}>Notice the patterns beneath your connections</GoldSubtitle>
         </View>
 
         <KeyboardAwareScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -222,14 +361,18 @@ export default function RelationshipPatternsScreen() {
 
           {/* Log Form */}
           <SectionHeader title="Log a Pattern" icon="pencil-outline" />
-              <VelvetGlassSurface style={styles.formCard as any} intensity={30} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.54)' : 'rgba(255, 255, 255, 0.82)'}>
+          <VelvetGlassSurface style={styles.formCard as any} intensity={30} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.54)' : 'rgba(255, 255, 255, 0.82)'}>
             
             <TextInput
               style={styles.noteInput}
-              placeholder="What played out today? Describe the dynamic..."
-              placeholderTextColor={theme.isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
-              multiline value={note} onChangeText={setNote}
+              placeholder="What happened — and what did it stir in you?"
+              placeholderTextColor={theme.isDark ? 'rgba(255,255,255,0.58)' : 'rgba(0,0,0,0.48)'}
+              multiline value={note} onChangeText={(value) => {
+                clearSavedInsight();
+                setNote(value);
+              }}
             />
+            <Text style={styles.inputHelper}>Notice the feeling beneath the interaction, not just the details.</Text>
 
             <Text style={styles.tagSectionLabel}>SELECT ACTIVE PATTERNS</Text>
 
@@ -242,9 +385,7 @@ export default function RelationshipPatternsScreen() {
                 key: tag.id,
                 label: tag.label,
                 selected: selectedTags.includes(tag.id),
-                onPress: () => setSelectedTags(prev => 
-                  prev.includes(tag.id) ? prev.filter(i => i !== tag.id) : [...prev, tag.id]
-                ),
+                onPress: () => toggleMultiSelect(tag.id, setSelectedTags),
                 accentColor: color,
                 selectedBackgroundColor: `${color}15`,
                 selectedTextColor: theme.textPrimary,
@@ -255,7 +396,7 @@ export default function RelationshipPatternsScreen() {
                   <Pressable style={styles.tagCategoryHeader} onPress={() => setExpandedCategory(isExpanded ? null : cat)}>
                     <Text style={[styles.tagCategoryDot, { color }]}>◆</Text>
                     <Text style={styles.tagCategoryLabel}>{cat.toUpperCase()}</Text>
-                    <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={14} color={color} style={{ marginLeft: 'auto' }} />
+                    <Ionicons name={isExpanded ? 'remove' : 'add'} size={16} color={color} style={{ marginLeft: 'auto' }} />
                   </Pressable>
 
                   {isExpanded && (
@@ -268,13 +409,64 @@ export default function RelationshipPatternsScreen() {
               );
             })}
 
-            { (note.trim() || selectedTags.length > 0) && (
+            <View style={styles.bridgeBlock}>
+              <Text style={styles.bridgeQuestionTitle}>What felt activated?</Text>
+              <EditorialPillGrid
+                items={buildBridgePillItems(ACTIVATION_OPTIONS, selectedActivations, setSelectedActivations, '#A88BEB')}
+                style={styles.bridgePillGrid}
+              />
+            </View>
+
+            <View style={styles.bridgeBlock}>
+              <Text style={styles.bridgeQuestionTitle}>What did you need?</Text>
+              <EditorialPillGrid
+                items={buildBridgePillItems(NEED_OPTIONS, selectedNeeds, setSelectedNeeds, '#6B9080')}
+                style={styles.bridgePillGrid}
+              />
+            </View>
+
+            <View style={styles.stateGrid}>
+              <View style={styles.stateBlock}>
+                <Text style={styles.bridgeQuestionTitle}>Where were you before this?</Text>
+                <EditorialPillGrid
+                  items={buildStatePillItems(stateBefore, setStateBefore)}
+                  style={styles.bridgePillGrid}
+                />
+              </View>
+              <View style={styles.stateBlock}>
+                <Text style={styles.bridgeQuestionTitle}>Where did it move you?</Text>
+                <EditorialPillGrid
+                  items={buildStatePillItems(stateAfter, setStateAfter)}
+                  style={styles.bridgePillGrid}
+                />
+              </View>
+            </View>
+
+            { canSave && (
               <Pressable style={styles.submitBtn} onPress={addEntry}>
                 <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
-                <MetallicText style={styles.submitBtnText} variant="gold">Seal Reflection</MetallicText>
+                <MetallicText style={styles.submitBtnText} variant="gold">Save Reflection</MetallicText>
               </Pressable>
             )}
           </VelvetGlassSurface>
+
+          {lastSavedEntry && (
+            <Animated.View entering={FadeIn.duration(500)} style={styles.savedInsightWrap}>
+              <VelvetGlassSurface style={styles.savedInsightCard as any} intensity={24}>
+                <LinearGradient colors={['rgba(107, 144, 128, 0.18)', 'rgba(15, 18, 25, 0.68)']} style={StyleSheet.absoluteFill} />
+                <View style={styles.savedInsightHeader}>
+                  <MetallicIcon name="sparkles-outline" size={16} variant="gold" />
+                  <MetallicText style={styles.savedInsightEyebrow} variant="gold">REFLECTION SAVED</MetallicText>
+                </View>
+                <Text style={styles.savedInsightText}>
+                  This may be less about the interaction itself and more about what it touched in you. Patterns often repeat where a need has gone unseen for a long time.
+                </Text>
+                <View style={styles.nextStepPrompt}>
+                  <Text style={styles.nextStepPromptText}>What would feel like one secure next step?</Text>
+                </View>
+              </VelvetGlassSurface>
+            </Animated.View>
+          )}
 
           {/* History */}
           {entries.length > 0 && (
@@ -284,7 +476,37 @@ export default function RelationshipPatternsScreen() {
                 <View key={e.id}>
                   <VelvetGlassSurface style={styles.entryCard as any} intensity={20}>
                      <Text style={styles.entryDate}>{new Date(e.date).toLocaleDateString()}</Text>
-                     <Text style={styles.entryNote}>{e.note}</Text>
+                     {e.note ? <Text style={styles.entryNote}>{e.note}</Text> : null}
+                     {(() => {
+                       const patternLabels = e.tags.map(tagId => resolvableTags.find(tag => tag.id === tagId)?.label ?? tagId);
+                       const activationLabels = resolveOptionLabels(ACTIVATION_OPTIONS, e.activatedEmotions);
+                       const needLabels = resolveOptionLabels(NEED_OPTIONS, e.needs);
+                       const beforeLabel = resolveStateLabel(e.stateBefore);
+                       const afterLabel = resolveStateLabel(e.stateAfter);
+                       const movementLabels = [
+                         beforeLabel ? `Before: ${beforeLabel}` : null,
+                         afterLabel ? `Moved to: ${afterLabel}` : null,
+                       ].filter((label): label is string => !!label);
+                       const labels = [...patternLabels, ...activationLabels, ...needLabels, ...movementLabels];
+                       if (labels.length === 0) return null;
+                       const visibleLabels = labels.slice(0, 8);
+                       const hiddenLabelCount = labels.length - visibleLabels.length;
+
+                       return (
+                         <View style={styles.entryChipRow}>
+                           {visibleLabels.map(label => (
+                             <View key={label} style={styles.entryChip}>
+                               <Text style={styles.entryChipText}>{label}</Text>
+                             </View>
+                           ))}
+                           {hiddenLabelCount > 0 && (
+                             <View style={styles.entryChip}>
+                               <Text style={styles.entryChipText}>+{hiddenLabelCount}</Text>
+                             </View>
+                           )}
+                         </View>
+                       );
+                     })()}
                   </VelvetGlassSurface>
                 </View>
               ))}
@@ -346,7 +568,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   legendRow: { flexDirection: 'row', justifyContent: 'space-between' },
 
   formCard: { borderRadius: 28, padding: 24, marginBottom: 32 },
-  noteInput: { minHeight: 120, borderRadius: 24, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', padding: 20, paddingTop: 20, color: theme.textPrimary, fontSize: 16, marginBottom: 24 },
+  noteInput: { minHeight: 126, borderRadius: 24, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.035)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)', padding: 20, paddingTop: 20, color: theme.textPrimary, fontSize: 16, lineHeight: 23, marginBottom: 10 },
+  inputHelper: { color: theme.textMuted, fontSize: 13, lineHeight: 19, marginBottom: 24, paddingHorizontal: 2 },
   tagSectionLabel: { fontSize: 10, color: theme.textMuted, fontWeight: '800', letterSpacing: 1.5, marginBottom: 16 },
   
   tagCategoryGroup: { marginBottom: 12, borderRadius: 20, padding: 16, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' },
@@ -354,13 +577,29 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   tagCategoryDot: { fontSize: 8 },
   tagCategoryLabel: { fontSize: 11, fontWeight: '700', color: theme.textSecondary, letterSpacing: 1 },
   tagRailContent: { paddingTop: 16 },
+  bridgeBlock: { marginTop: 18 },
+  bridgeQuestionTitle: { color: theme.textPrimary, fontSize: 14, fontWeight: '700', lineHeight: 19, marginBottom: 12 },
+  bridgePillGrid: { gap: 10 },
+  stateGrid: { gap: 18, marginTop: 18 },
+  stateBlock: { gap: 0 },
   
   submitBtn: { height: 56, borderRadius: 28, marginTop: 24, overflow: 'hidden', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   submitBtnText: { fontSize: 14, fontWeight: '800', letterSpacing: 1 },
+
+  savedInsightWrap: { marginTop: -12, marginBottom: 28 },
+  savedInsightCard: { borderRadius: 24, padding: 20, overflow: 'hidden' },
+  savedInsightHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  savedInsightEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  savedInsightText: { color: theme.textPrimary, fontSize: 14, lineHeight: 21 },
+  nextStepPrompt: { marginTop: 16, padding: 14, borderRadius: 16, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.035)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.06)' },
+  nextStepPromptText: { color: theme.textSecondary, fontSize: 13, fontWeight: '700', lineHeight: 19 },
 
   historySection: { gap: 12 },
   entryCard: { padding: 20, borderRadius: 20, marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.05)' },
   entryDate: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginBottom: 8 },
   entryNote: { fontSize: 14, color: theme.textPrimary, lineHeight: 20 },
+  entryChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  entryChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.035)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' },
+  entryChipText: { color: theme.textSecondary, fontSize: 10, fontWeight: '700', lineHeight: 13 },
   glowOrb: { position: 'absolute', width: 300, height: 300, borderRadius: 150, opacity: 0.5 },
 });

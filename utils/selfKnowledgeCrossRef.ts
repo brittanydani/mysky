@@ -449,25 +449,38 @@ const PATTERN_TAG_LABELS: Record<string, string> = {
   t3: 'Rushing intimacy',
   t4: 'Caretaking others',
   t5: 'Over-explaining',
-  t6: 'Avoidant when close',
-  t7: 'Emotional withdrawal',
-  t8: 'Hyper-independence',
+  t6: 'Pulling away',
+  t7: 'Going quiet',
+  t8: 'Minimizing needs',
   t9: 'Shutting down',
-  t10: 'Fear of enmeshment',
-  t11: 'Need for control',
+  t10: 'Needing space',
+  t11: 'Trying to manage the outcome',
   t12: 'Difficulty with boundaries',
-  t13: 'Testing the relationship',
+  t13: 'Testing the connection',
   t14: 'Perfectionism in love',
-  s1: 'Asking for reassurance directly',
-  s2: 'Expressing needs clearly',
+  t15: 'Seeking reassurance',
+  t16: 'Feeling too much',
+  t17: 'Scanning for rejection',
+  t18: 'Defensiveness',
+  t19: 'Feeling trapped',
+  t20: 'Distracting yourself',
+  t21: 'Avoiding repair',
+  t22: 'Needing certainty',
+  t23: 'Pushing for answers',
+  t24: 'Emotional monitoring',
+  t25: 'Assuming the worst',
+  t26: 'Fixing instead of feeling',
+  t27: 'Holding resentment',
+  s1: 'Asking directly',
+  s2: 'Naming needs clearly',
   s3: 'Letting myself be seen',
   s4: 'Staying present in connection',
   s5: 'Receiving care without deflecting',
-  s6: 'Holding boundaries calmly',
-  s7: 'Repairing after disconnection',
-  s8: 'Self-soothing instead of spiraling',
-  s9: 'Tolerating uncertainty',
-  s10: 'Staying open instead of shutting down',
+  s6: 'Respecting space',
+  s7: 'Offering repair',
+  s8: 'Feeling grounded',
+  s9: 'Trusting the connection',
+  s10: 'Letting things unfold',
 };
 
 function resolveTagLabel(tag: string): string {
@@ -855,7 +868,7 @@ function buildDreamSomaticInsight(
     somaticEmotionCounts[e.emotion] = (somaticEmotionCounts[e.emotion] ?? 0) + 1;
   }
 
-  const matches: Array<{ dreamFeeling: string; somaticEmotion: string; count: number }> = [];
+  const matches: { dreamFeeling: string; somaticEmotion: string; count: number }[] = [];
   for (const feelingId of dreamSummary.topFeelingIds) {
     const mapped = DREAM_TO_SOMATIC_EMOTION[feelingId] ?? [];
     for (const somaticLabel of mapped) {

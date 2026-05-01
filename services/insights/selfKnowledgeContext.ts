@@ -88,6 +88,10 @@ export interface RelationshipPatternEntry {
   date: string;
   note: string;
   tags: string[];
+  activatedEmotions?: string[];
+  needs?: string[];
+  stateBefore?: 'fight' | 'flight' | 'freeze' | 'fawn' | 'secure' | null;
+  stateAfter?: 'fight' | 'flight' | 'freeze' | 'fawn' | 'secure' | null;
 }
 
 export interface DailyReflectionSummary {
@@ -313,7 +317,7 @@ export function enrichSelfKnowledgeContext(
   for (const entry of withDreams) {
     if (!entry.dreamFeelings) continue;
     try {
-      const feelings = JSON.parse(entry.dreamFeelings) as Array<{ id?: string } | string>;
+      const feelings = JSON.parse(entry.dreamFeelings) as ({ id?: string } | string)[];
       for (const f of feelings) {
         const id = typeof f === 'string' ? f : f.id;
         if (id) feelingCount[id] = (feelingCount[id] ?? 0) + 1;

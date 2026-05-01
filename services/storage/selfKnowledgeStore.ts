@@ -15,11 +15,17 @@ export interface SomaticEntryRecord {
   intensity: number;
 }
 
+export type RelationshipRegulationState = 'fight' | 'flight' | 'freeze' | 'fawn' | 'secure';
+
 export interface RelationshipPatternRecord {
   id: string;
   date: string;
   note: string;
   tags: string[];
+  activatedEmotions?: string[];
+  needs?: string[];
+  stateBefore?: RelationshipRegulationState | null;
+  stateAfter?: RelationshipRegulationState | null;
 }
 
 const CACHE_KEYS = {
@@ -346,6 +352,20 @@ function parseStringArray(value: unknown): string[] {
   }
 }
 
+const RELATIONSHIP_REGULATION_STATES = new Set<RelationshipRegulationState>([
+  'fight',
+  'flight',
+  'freeze',
+  'fawn',
+  'secure',
+]);
+
+function parseRelationshipRegulationState(value: unknown): RelationshipRegulationState | null {
+  return typeof value === 'string' && RELATIONSHIP_REGULATION_STATES.has(value as RelationshipRegulationState)
+    ? value as RelationshipRegulationState
+    : null;
+}
+
 function parseTimestampValue(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return Math.trunc(value);
@@ -546,6 +566,10 @@ async function upsertRelationshipPatternRows(entries: RelationshipPatternRecord[
     date: entry.date,
     note: entry.note,
     tags: entry.tags,
+    activated_emotions: entry.activatedEmotions ?? [],
+    needs: entry.needs ?? [],
+    state_before: entry.stateBefore ?? null,
+    state_after: entry.stateAfter ?? null,
     is_deleted: false,
     created_at: entry.date,
     updated_at: new Date().toISOString(),
@@ -570,7 +594,7 @@ export async function loadRelationshipPatterns(): Promise<RelationshipPatternRec
   try {
     const { data, error } = await supabase
       .from('relationship_patterns')
-      .select('id,date,note,tags,is_deleted')
+      .select('id,date,note,tags,activated_emotions,needs,state_before,state_after,is_deleted')
       .eq('user_id', userId)
       .eq('is_deleted', false)
       .order('date', { ascending: false })
@@ -580,14 +604,23 @@ export async function loadRelationshipPatterns(): Promise<RelationshipPatternRec
 
     const entries: RelationshipPatternRecord[] = [];
     for (const row of data ?? []) {
-      const note = row.note;
-      if (!note) continue;
+      const note = typeof row.note === 'string' ? row.note : '';
+      const tags = parseStringArray(row.tags);
+      const activatedEmotions = parseStringArray(row.activated_emotions);
+      const needs = parseStringArray(row.needs);
+      const stateBefore = parseRelationshipRegulationState(row.state_before);
+      const stateAfter = parseRelationshipRegulationState(row.state_after);
+      if (!note && tags.length === 0 && activatedEmotions.length === 0 && needs.length === 0 && !stateBefore && !stateAfter) continue;
 
       entries.push({
         id: row.id,
         date: row.date,
         note,
-        tags: parseStringArray(row.tags),
+        tags,
+        activatedEmotions,
+        needs,
+        stateBefore,
+        stateAfter,
       });
     }
 
