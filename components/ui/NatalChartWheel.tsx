@@ -402,8 +402,10 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
       divider: 'rgba(255, 255, 255, 0.08)',
       zodiacInk: 'rgba(255, 252, 244, 0.80)',
       houseInk: 'rgba(255, 248, 232, 0.52)',
-      angularLine: 'rgba(232, 209, 154, 0.32)',
-      regularLine: 'rgba(255, 255, 255, 0.09)',
+      angularLine: 'rgba(232, 209, 154, 0.44)',
+      regularLine: 'rgba(255, 248, 232, 0.17)',
+      axisLine: 'rgba(232, 209, 154, 0.52)',
+      axisGlow: 'rgba(232, 209, 154, 0.12)',
       ringStroke: [
         'rgba(255, 255, 255, 0.05)',
         'rgba(255, 255, 255, 0.85)',
@@ -549,8 +551,8 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         if (angle1 === undefined || angle2 === undefined) continue;
         const p1 = polarToXY(angle1, R_ASPECT_RING); const p2 = polarToXY(angle2, R_ASPECT_RING);
         const orb = asp.orb ?? 99; const typeName = ((asp as any)?.type?.name ?? '').toLowerCase();
-        let topAlpha = 0.15; let glowAlpha = 0.05;
-        if (orb < 3) { topAlpha = 0.25; glowAlpha = 0.10; } else if (orb >= 6) { topAlpha = 0.08; glowAlpha = 0.03; }
+        let topAlpha = 0.30; let glowAlpha = 0.09;
+        if (orb < 3) { topAlpha = 0.42; glowAlpha = 0.15; } else if (orb >= 6) { topAlpha = 0.22; glowAlpha = 0.06; }
         
         let aspectRgb = '212, 175, 55'; // Neutral/Gold
         if (['trine', 'sextile', 'semisextile', 'quintile', 'biquintile'].includes(typeName)) aspectRgb = '162, 194, 225'; // Harmonious (Blue)
@@ -560,12 +562,34 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, 
           color: `rgba(${aspectRgb}, ${topAlpha})`, 
           glowColor: `rgba(${aspectRgb}, ${glowAlpha})`, 
-          strokeWidth: 0.8, 
+          strokeWidth: orb < 3 ? 1.0 : 0.85,
           dashed: ['square', 'opposition', 'quincunx', 'semisquare', 'sesquiquadrate'].includes(typeName)
         });
       }
       return lines;
     }, [visibleAspects, planetDisplayAngles]);
+
+  const axisGuideLines = useMemo(() => {
+    const angles: { key: string; angle: number }[] = [];
+    const asc = getLongitude(getChartPlanet(chart, 'Ascendant'));
+    const mc = getLongitude(getChartPlanet(chart, 'Midheaven'));
+
+    if (asc !== null) {
+      angles.push({ key: 'ac', angle: astroToAngle(asc, wheelOptions) });
+      angles.push({ key: 'dc', angle: astroToAngle(asc + 180, wheelOptions) });
+    }
+
+    if (mc !== null) {
+      angles.push({ key: 'mc', angle: astroToAngle(mc, wheelOptions) });
+      angles.push({ key: 'ic', angle: astroToAngle(mc + 180, wheelOptions) });
+    }
+
+    return angles.map(({ key, angle }) => {
+      const outer = polarToXY(angle, R_OUTER);
+      const inner = polarToXY(angle, R_INNER);
+      return { key, outer, inner };
+    });
+  }, [chart, wheelOptions]);
     
   const crossLines = useMemo(() => {
     const lines: { x1: number; y1: number; x2: number; y2: number; thread: string; tight: boolean; }[] = [];
@@ -658,7 +682,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           const angle = astroToAngle((cusp as any).longitude, wheelOptions);
           const outer = polarToXY(angle, R_OUTER); const inner = polarToXY(angle, R_INNER);
           const isAngular = (cusp as any).house === 1 || (cusp as any).house === 4 || (cusp as any).house === 7 || (cusp as any).house === 10;
-          const strokeW = isAngular ? 0.75 : 0.45; const strokeColor = isAngular ? wheelPalette.angularLine : wheelPalette.regularLine;
+          const strokeW = isAngular ? 0.95 : 0.65; const strokeColor = isAngular ? wheelPalette.angularLine : wheelPalette.regularLine;
           const cusps = chart.houseCusps ?? []; const nextHouse = cusps.find((c: HouseCusp) => (c as any).house === (((cusp as any).house % 12) + 1));
           let midLon = (cusp as any).longitude + 15;
           if (nextHouse) { let diff = (nextHouse as any).longitude - (cusp as any).longitude; if (diff < 0) diff += 360; midLon = (cusp as any).longitude + diff / 2; if (midLon >= 360) midLon -= 360; }
@@ -671,6 +695,18 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
             </Group>
           );
         })}
+
+        {/* ── Angle axis guides ── */}
+        {axisGuideLines.length > 0 && (
+          <Group>
+            {axisGuideLines.map((line) => (
+              <Group key={`axis-${line.key}`}>
+                <Line p1={vec(line.outer.x, line.outer.y)} p2={vec(line.inner.x, line.inner.y)} color={wheelPalette.axisGlow} strokeWidth={2.1} />
+                <Line p1={vec(line.outer.x, line.outer.y)} p2={vec(line.inner.x, line.inner.y)} color={wheelPalette.axisLine} strokeWidth={1.05} />
+              </Group>
+            ))}
+          </Group>
+        )}
 
         {/* ── House ring border ── */}
         <Group>
@@ -702,7 +738,12 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         {/* ── Natal aspect lines ── */}
         {showAspects && showPerson1 && aspectLines.length > 0 && (
           <>
-            {aspectLines.map((a, i) => ( <Line key={`asp-${i}`} p1={vec(a.x1, a.y1)} p2={vec(a.x2, a.y2)} color={a.color} strokeWidth={a.strokeWidth}>{a.dashed ? <DashPathEffect intervals={[2, 5]} /> : null}</Line> ))}
+            {aspectLines.map((a, i) => (
+              <Group key={`asp-${i}`}>
+                <Line p1={vec(a.x1, a.y1)} p2={vec(a.x2, a.y2)} color={a.glowColor} strokeWidth={a.strokeWidth + 1.1}>{a.dashed ? <DashPathEffect intervals={[2, 5]} /> : null}</Line>
+                <Line p1={vec(a.x1, a.y1)} p2={vec(a.x2, a.y2)} color={a.color} strokeWidth={a.strokeWidth}>{a.dashed ? <DashPathEffect intervals={[2, 5]} /> : null}</Line>
+              </Group>
+            ))}
           </>
         )}
 
@@ -740,7 +781,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           return (
             <Group key={`p-${planet.label}`}>
               {isDisplaced && (
-                <Line p1={vec(tickOuter.x, tickOuter.y)} p2={vec(tickInner.x, tickInner.y)} color={baseColor} strokeWidth={0.55} opacity={0.24} />
+                <Line p1={vec(tickOuter.x, tickOuter.y)} p2={vec(tickInner.x, tickInner.y)} color={baseColor} strokeWidth={0.65} opacity={0.30} />
               )}
               {!isPoint && (
                 <>
@@ -785,7 +826,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           return (
             <Group key={`op-${planet.label}`}>
               {isDisplaced && (
-                <Line p1={vec(tickOuter.x, tickOuter.y)} p2={vec(tickInner.x, tickInner.y)} color={baseColor} strokeWidth={0.6} opacity={0.30}><DashPathEffect intervals={[2, 2]} /></Line>
+                <Line p1={vec(tickOuter.x, tickOuter.y)} p2={vec(tickInner.x, tickInner.y)} color={baseColor} strokeWidth={0.65} opacity={0.32}><DashPathEffect intervals={[2, 2]} /></Line>
               )}
               {!isPoint && (
                 <>
