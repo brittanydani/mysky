@@ -136,10 +136,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSessionIfChanged(restored);
 
           if (restored?.user) {
-            await revenueCatService.logIn(restored.user.id);
+            void revenueCatService
+              .logIn(restored.user.id)
+              .catch((e) => logger.error('[AuthContext] RC logIn failed:', e));
 
             if (restored.user.email) {
-              await syncDemoArtifacts(restored.user.email);
+              void syncDemoArtifacts(restored.user.email).catch((e) =>
+                logger.warn('[AuthContext] Demo sync failed:', e),
+              );
             }
           }
 

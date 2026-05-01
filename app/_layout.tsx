@@ -214,6 +214,7 @@ function RootLayout() {
   React.useEffect(() => {
     if (!configValidation.valid) {
       console.error('[Config] Startup validation failed:', configValidation.errors);
+      SplashScreen.hideAsync().catch(() => {});
       return;
     }
 
@@ -378,6 +379,13 @@ function AppShell() {
     setNeedsTermsConsent(snapshot.needsTermsConsent);
     setOnboardingComplete(snapshot.onboardingComplete);
   };
+
+  const hideSplashOnce = React.useCallback(() => {
+    if (!didHideSplash.current) {
+      didHideSplash.current = true;
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, []);
 
   const bindLocalSettingsToUser = async (userId: string) => {
     const { getSettings, updateSettings } = await import('../services/storage/supabaseDb');
@@ -627,10 +635,7 @@ function AppShell() {
       } finally {
         rootInitInFlight = null;
         setCheckingConsent(false);
-        if (!didHideSplash.current) {
-          didHideSplash.current = true;
-          SplashScreen.hideAsync().catch(() => {});
-        }
+        hideSplashOnce();
         if (initTimeoutRef.current) {
           clearTimeout(initTimeoutRef.current);
           initTimeoutRef.current = null;
@@ -643,6 +648,7 @@ function AppShell() {
       if (checkingConsent || !dbReady) {
         setInitTimedOut(true);
         logger.error('App initialization timed out after 15 seconds');
+        hideSplashOnce();
       }
     }, 15_000);
 
@@ -674,6 +680,7 @@ function AppShell() {
     initTimeoutRef.current = setTimeout(() => {
       setInitTimedOut(true);
       logger.error('App initialization retry timed out');
+      hideSplashOnce();
     }, 15_000);
 
     const retryInitializeApp = async () => {
@@ -695,10 +702,7 @@ function AppShell() {
         setDbReady(true);
       } finally {
         setCheckingConsent(false);
-        if (!didHideSplash.current) {
-          didHideSplash.current = true;
-          SplashScreen.hideAsync().catch(() => {});
-        }
+        hideSplashOnce();
         if (initTimeoutRef.current) {
           clearTimeout(initTimeoutRef.current);
           initTimeoutRef.current = null;
@@ -931,8 +935,7 @@ function AppShell() {
   // up forever while auth/session events churn.
   useEffect(() => {
     if (!checkingConsent && dbReady && !authLoading && !didHideSplash.current) {
-      didHideSplash.current = true;
-      SplashScreen.hideAsync().catch(() => {});
+      hideSplashOnce();
 
       if (isLightweightDevMode) {
         return;
@@ -948,7 +951,7 @@ function AppShell() {
         })
         .catch(() => {});
     }
-  }, [checkingConsent, dbReady, authLoading]);
+  }, [checkingConsent, dbReady, authLoading, hideSplashOnce]);
 
   if (checkingConsent || !dbReady) {
     if (initTimedOut) {
