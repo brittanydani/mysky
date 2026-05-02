@@ -62,7 +62,7 @@ describe('personalProfile', () => {
     expect(profile.bestDayIngredients.length).toBeGreaterThan(0);
     expect(profile.todayContext.type).toMatch(/anomaly|rough-patch|pattern|baseline/);
     expect(Array.isArray(profile.strengths)).toBe(true);
-    expect(profile.strengths.find(s => s.id === 'consistent-presence')?.description).toContain('archive keeps naming');
+    expect(profile.strengths.find(s => s.id === 'consistent-presence')?.description).toContain('same themes keep returning');
     expect(Array.isArray(profile.anticipations)).toBe(true);
     expect(Array.isArray(profile.progressMarkers)).toBe(true);
   });

@@ -16,7 +16,7 @@ describe('archiveDepth', () => {
     expect(depth.label).toBe('Weekly read unlocked');
     expect(depth.totalSignals).toBe(7);
     expect(depth.nextMilestone).toBe(15);
-    expect(depth.headline).toContain('connect the week into a real story');
+    expect(depth.headline).toContain('week can now become a real story');
   });
 
   it('counts sleep entries as archive signals', () => {
