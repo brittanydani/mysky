@@ -70,8 +70,13 @@ function getConfidence(score: number): PatternConfidence {
   return 'emerging';
 }
 
-function selectUniquePersonaSentence(profile: PersonaProfileCopy): string {
-  const introSentences = new Set(profile.intro.map(sentence => sentence.trim().toLowerCase()));
+function selectPersonaIntro(profile: PersonaProfileCopy): string[] {
+  if (profile.intro.length > 0) return profile.intro;
+  return profile.sentences[0] ? [profile.sentences[0]] : [];
+}
+
+function selectUniquePersonaSentence(profile: PersonaProfileCopy, intro: string[]): string {
+  const introSentences = new Set(intro.map(sentence => sentence.trim().toLowerCase()));
   return profile.sentences.find(sentence => !introSentences.has(sentence.trim().toLowerCase())) ?? profile.sentences[0];
 }
 
@@ -138,6 +143,7 @@ function getProfileScore(
   const signalEvidence = matchedSignalRows
     .map(signal => signal.evidence)
     .filter((evidence): evidence is EvidenceAnchor => !!evidence);
+  const intro = selectPersonaIntro(profile);
 
   return {
     key: profile.key,
@@ -147,9 +153,9 @@ function getProfileScore(
     category: profile.category,
     secondaryCategories: profile.secondaryCategories,
     polarity: profile.polarity,
-    intro: profile.intro,
+    intro,
     sentences: profile.sentences,
-    selectedSentence: selectUniquePersonaSentence(profile),
+    selectedSentence: selectUniquePersonaSentence(profile, intro),
     score,
     confidence: getConfidence(score),
     matchedSignals,

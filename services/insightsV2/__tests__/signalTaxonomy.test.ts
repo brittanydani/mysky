@@ -31,6 +31,19 @@ describe('insightsV2 signal taxonomy', () => {
     expect(getSignalRoles('restorative_moment')).not.toContain('feeling_state');
   });
 
+  it('classifies expanded signals with explicit non-feeling roles', () => {
+    expect(getSignalRoles('throat_tightness')).toContain('body_signal');
+    expect(getSignalRoles('support_without_dependence')).toEqual(expect.arrayContaining([
+      'recovery_lever',
+      'relational_context',
+    ]));
+    expect(getSignalRoles('truth_telling')).toContain('value_theme');
+    expect(getSignalRoles('meaning_making')).toContain('cognitive_process');
+    expect(getSignalRoles('responsibility_weight')).toContain('resource_context');
+    expect(getSignalRoles('play_glimmer')).toContain('glimmer');
+    expect(getSignalRoles('structured_pleasure')).toContain('recovery_lever');
+  });
+
   it('adds sentiment and role metadata during normalization', () => {
     const signals = normalizeInsightInputsV2({
       dailyCheckIns: [{

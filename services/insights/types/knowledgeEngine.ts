@@ -119,6 +119,7 @@ export interface ArchivePatternScore {
 export interface GeneratedInsight {
   id: string;
   slot: string;
+  slotLabel?: string;
   title: string;
   observation: string;
   pattern: string;

@@ -22,6 +22,22 @@ import {
   COMMUNICATION_VOICE_EXPANSION,
   COMMUNICATION_VOICE_PATTERNS,
 } from '../patternPacks/communicationVoicePatterns';
+import {
+  SPIRITUAL_MEANING_EXPANSION,
+  SPIRITUAL_MEANING_PATTERNS,
+} from '../patternPacks/spiritualMeaningPatterns';
+import {
+  SAFETY_REGULATION_EXPANSION,
+  SAFETY_REGULATION_PATTERNS,
+} from '../patternPacks/safetyRegulationPatterns';
+import {
+  LIFE_DIRECTION_EXPANSION,
+  LIFE_DIRECTION_PATTERNS,
+} from '../patternPacks/lifeDirectionPatterns';
+import {
+  PLEASURE_PLAY_EXPANSION,
+  PLEASURE_PLAY_PATTERNS,
+} from '../patternPacks/pleasurePlayPatterns';
 
 describe('new category archive patterns', () => {
   it('expands responsibility care to the full 20-pattern category', () => {
@@ -59,6 +75,10 @@ describe('new category archive patterns', () => {
       ...TIME_RHYTHMS_EXPANSION,
       ...SELF_WORTH_RECEIVING_EXPANSION,
       ...COMMUNICATION_VOICE_EXPANSION,
+      ...SPIRITUAL_MEANING_EXPANSION,
+      ...SAFETY_REGULATION_EXPANSION,
+      ...LIFE_DIRECTION_EXPANSION,
+      ...PLEASURE_PLAY_EXPANSION,
     ].forEach((pattern) => {
       const matchingSignals = new Set([
         ...pattern.requiredSignals,
@@ -204,6 +224,113 @@ describe('new category archive patterns', () => {
       shameLabel: 'Honesty has to be harsh to be real.',
       clarityReframe:
         'Your voice can be clear without becoming cruel. Care and honesty can belong in the same sentence.',
+    });
+  });
+
+  it('expands spiritual meaning to the full 20-pattern category', () => {
+    const keys = SPIRITUAL_MEANING_PATTERNS.map((pattern) => pattern.key);
+
+    expect(SPIRITUAL_MEANING_EXPANSION).toHaveLength(17);
+    expect(SPIRITUAL_MEANING_PATTERNS).toHaveLength(20);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('preserves supplied spiritual meaning copy', () => {
+    expect(SPIRITUAL_MEANING_EXPANSION[0]).toMatchObject({
+      key: 'spiritualMeaning_meaningMaking',
+      title: 'Looking for Meaning',
+      description:
+        'The user is trying to understand the deeper meaning or significance of what happened.',
+      shameLabel: 'I should not need this to mean something.',
+      clarityReframe:
+        'Looking for meaning may be part of how you stay connected to what matters, not a failure to accept reality.',
+    });
+    expect(SPIRITUAL_MEANING_EXPANSION[16]).toMatchObject({
+      key: 'spiritualMeaning_meaningWithoutCertainty',
+      title: 'Meaning Without Certainty',
+      shameLabel: 'If I cannot explain it, it does not count.',
+      clarityReframe: 'Meaning can be real before it is fully clear.',
+    });
+  });
+
+  it('expands safety regulation to the full 20-pattern category', () => {
+    const keys = SAFETY_REGULATION_PATTERNS.map((pattern) => pattern.key);
+
+    expect(SAFETY_REGULATION_EXPANSION).toHaveLength(17);
+    expect(SAFETY_REGULATION_PATTERNS).toHaveLength(20);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('preserves supplied safety regulation copy', () => {
+    expect(SAFETY_REGULATION_EXPANSION[0]).toMatchObject({
+      key: 'safetyRegulation_subtleBracing',
+      title: 'Subtle Bracing',
+      description:
+        'The user appears calm or functional while the body remains slightly prepared underneath.',
+      shameLabel: 'If I look calm, I should feel calm.',
+      clarityReframe:
+        'Looking composed and feeling fully safe are not always the same thing.',
+    });
+    expect(SAFETY_REGULATION_EXPANSION[16]).toMatchObject({
+      key: 'safetyRegulation_trappedActivation',
+      title: 'Trapped Activation',
+      shameLabel: 'I should be able to just deal with it.',
+      clarityReframe:
+        'Feeling trapped can make your system search for agency. Even one real choice can matter.',
+    });
+  });
+
+  it('expands life direction to the full 20-pattern category', () => {
+    const keys = LIFE_DIRECTION_PATTERNS.map((pattern) => pattern.key);
+
+    expect(LIFE_DIRECTION_EXPANSION).toHaveLength(17);
+    expect(LIFE_DIRECTION_PATTERNS).toHaveLength(20);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('preserves supplied life direction copy', () => {
+    expect(LIFE_DIRECTION_EXPANSION[0]).toMatchObject({
+      key: 'lifeDirection_quietPull',
+      title: 'A Quiet Pull',
+      description:
+        'A direction or change is beginning to form before the full plan is clear.',
+      shameLabel: 'I should already know where this is going.',
+      clarityReframe:
+        'Direction does not always arrive as certainty. Sometimes it starts as a pull that keeps returning.',
+    });
+    expect(LIFE_DIRECTION_EXPANSION[16]).toMatchObject({
+      key: 'lifeDirection_selfTrustThroughChange',
+      title: 'Self-Trust Through Change',
+      shameLabel: 'I need the whole plan before I can trust myself.',
+      clarityReframe:
+        'Self-trust does not require knowing everything. It may mean staying connected to yourself as the next part becomes clear.',
+    });
+  });
+
+  it('expands pleasure play to the full 20-pattern category', () => {
+    const keys = PLEASURE_PLAY_PATTERNS.map((pattern) => pattern.key);
+
+    expect(PLEASURE_PLAY_EXPANSION).toHaveLength(17);
+    expect(PLEASURE_PLAY_PATTERNS).toHaveLength(20);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('preserves supplied pleasure play copy', () => {
+    expect(PLEASURE_PLAY_EXPANSION[0]).toMatchObject({
+      key: 'pleasurePlay_playStarved',
+      title: 'Joy Is Getting Crowded Out',
+      description:
+        'Pleasure, play, or enjoyment is present as a need but is not getting much space.',
+      shameLabel: 'Fun can wait until everything else is handled.',
+      clarityReframe:
+        'Pleasure may not be extra. It may be one way your system reconnects with aliveness.',
+    });
+    expect(PLEASURE_PLAY_EXPANSION[16]).toMatchObject({
+      key: 'pleasurePlay_curiosityReturns',
+      title: 'Curiosity Returns',
+      shameLabel: 'Curiosity is not important compared to everything else.',
+      clarityReframe:
+        'Curiosity can be a sign that your system has enough room to look outward again.',
     });
   });
 });

@@ -25,7 +25,7 @@ const spiritualMeaningPattern = (
   tags,
 });
 
-export const SPIRITUAL_MEANING_PATTERNS: ArchivePattern[] = [
+const SPIRITUAL_MEANING_FOUNDATION_PATTERNS: ArchivePattern[] = [
   spiritualMeaningPattern(
     'spiritual_meaning_001_faith_meaning',
     'Meaning as an Anchor',
@@ -56,4 +56,383 @@ export const SPIRITUAL_MEANING_PATTERNS: ArchivePattern[] = [
     'A sense of purpose may act as a compass during change, doubt, or decision pressure.',
     ['purpose', 'compass', 'direction'],
   ),
+];
+
+export const SPIRITUAL_MEANING_EXPANSION: ArchivePattern[] = [
+  {
+    key: 'spiritualMeaning_meaningMaking',
+    title: 'Looking for Meaning',
+    category: 'spiritualMeaning',
+    description:
+      'The user is trying to understand the deeper meaning or significance of what happened.',
+    requiredSignals: ['meaning_making', 'faith_meaning'],
+    supportingSignals: [
+      'deep_processing',
+      'ordinary_sacred',
+      'pattern_recognition',
+      'purpose_signal',
+    ],
+    conflictingSignals: ['practical_mood_tracking', 'real_events_over_symbols'],
+    shameLabel: 'I should not need this to mean something.',
+    clarityReframe:
+      'Looking for meaning may be part of how you stay connected to what matters, not a failure to accept reality.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['meaning', 'faith', 'reflection'],
+  },
+  {
+    key: 'spiritualMeaning_purposeSignal',
+    title: 'Purpose Keeps Returning',
+    category: 'spiritualMeaning',
+    description:
+      'Purpose, calling, or direction is showing up repeatedly as a theme.',
+    requiredSignals: ['purpose_signal'],
+    supportingSignals: [
+      'future_self_orientation',
+      'legacy_signal',
+      'values_conflict',
+      'faith_meaning',
+    ],
+    conflictingSignals: ['indifferent', 'low_future_urgency'],
+    shameLabel: 'I should already know my purpose clearly.',
+    clarityReframe:
+      'Purpose does not always arrive as certainty. Sometimes it returns as a repeated pull toward what still matters.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['purpose', 'direction', 'meaning'],
+  },
+  {
+    key: 'spiritualMeaning_meaningAndAction',
+    title: 'Meaning Needs a Next Step',
+    category: 'spiritualMeaning',
+    description:
+      'The user wants meaning to stay grounded in practical life and real action.',
+    requiredSignals: ['meaning_with_practical_action', 'why_and_next_step'],
+    supportingSignals: [
+      'reflection_and_realism',
+      'purpose_signal',
+      'truth_telling',
+    ],
+    conflictingSignals: ['meaning_replaces_change', 'interpretation_over_action'],
+    shameLabel: 'If I understand it deeply enough, that should be enough.',
+    clarityReframe:
+      'Meaning can guide action, but it does not have to replace it.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['meaning', 'action', 'grounding'],
+  },
+  {
+    key: 'spiritualMeaning_ordinarySacred',
+    title: 'The Ordinary Feels Meaningful',
+    category: 'spiritualMeaning',
+    description:
+      'Meaning is showing up in ordinary moments, not only major events.',
+    requiredSignals: ['ordinary_sacred'],
+    supportingSignals: [
+      'gratitude',
+      'beauty_glimmer',
+      'peace',
+      'connection_glimmer',
+    ],
+    conflictingSignals: ['numbness', 'disconnected'],
+    shameLabel: 'This is too small to matter.',
+    clarityReframe:
+      'Small moments can carry meaning when they help you feel connected to life again.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['ordinary sacred', 'meaning', 'glimmers'],
+  },
+  {
+    key: 'spiritualMeaning_timingAndPattern',
+    title: 'Timing Feels Significant',
+    category: 'spiritualMeaning',
+    description:
+      'The user is noticing timing, repetition, or patterns that feel meaningful.',
+    requiredSignals: ['pattern_recognition', 'faith_meaning'],
+    supportingSignals: [
+      'ordinary_sacred',
+      'meaning_making',
+      'spiritual_depth',
+    ],
+    conflictingSignals: ['practical_literalist', 'real_events_over_symbols'],
+    shameLabel: 'I am reading too much into this.',
+    clarityReframe:
+      'Not every pattern needs to become a sign, but noticing what repeatedly feels meaningful can still offer information.',
+    lookbackDays: 60,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['timing', 'patterns', 'meaning'],
+  },
+  {
+    key: 'spiritualMeaning_painWithoutJustification',
+    title: 'Meaning Without Justifying Pain',
+    category: 'spiritualMeaning',
+    description:
+      'The user is trying to make meaning from hardship without minimizing the harm.',
+    requiredSignals: ['spiritual_depth', 'meaning_making'],
+    supportingSignals: ['grief', 'hurt', 'values_conflict', 'truth_telling'],
+    conflictingSignals: ['toxic_positivity', 'meaning_replaces_change'],
+    shameLabel: 'If it shaped me, I have to call it good.',
+    clarityReframe:
+      'Something can shape you without being justified. Meaning does not have to excuse pain.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['pain', 'meaning', 'truth'],
+  },
+  {
+    key: 'spiritualMeaning_connectionToLarger',
+    title: 'Connection to Something Larger',
+    category: 'spiritualMeaning',
+    description:
+      'The user is sensing connection to something beyond the immediate situation.',
+    requiredSignals: ['spiritual_depth', 'faith_meaning'],
+    supportingSignals: ['peace', 'hope', 'ordinary_sacred', 'purpose_signal'],
+    conflictingSignals: ['disconnected', 'mistrust'],
+    shameLabel: 'I should be able to explain this logically.',
+    clarityReframe:
+      'Some forms of connection may be felt before they can be explained.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['spirituality', 'connection', 'faith'],
+  },
+  {
+    key: 'spiritualMeaning_faithFeelsDistant',
+    title: 'Meaning Feels Distant',
+    category: 'spiritualMeaning',
+    description:
+      'The user may feel separated from faith, meaning, or a larger sense of connection.',
+    requiredSignals: ['faith_meaning', 'disconnected'],
+    supportingSignals: ['grief', 'confusion', 'spiritual_depth', 'longing'],
+    conflictingSignals: ['peace', 'ordinary_sacred', 'hope'],
+    shameLabel: 'If I cannot feel meaning right now, I have lost it.',
+    clarityReframe:
+      'A distant sense of meaning does not mean meaning is gone. It may mean your system is tired, grieving, or waiting for something real to return.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['faith', 'disconnection', 'meaning'],
+  },
+  {
+    key: 'spiritualMeaning_valuesAsCompass',
+    title: 'Values as Compass',
+    category: 'spiritualMeaning',
+    description:
+      'Values are acting as a spiritual or existential orientation point.',
+    requiredSignals: ['values_conflict', 'purpose_signal'],
+    supportingSignals: [
+      'truth_telling',
+      'integrity_cost',
+      'faith_meaning',
+      'inner_authority',
+    ],
+    conflictingSignals: ['flexible_pragmatism'],
+    shameLabel: 'This should not matter as much as it does.',
+    clarityReframe:
+      'Your discomfort may be pointing toward a value that helps you stay oriented.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['values', 'purpose', 'integrity'],
+  },
+  {
+    key: 'spiritualMeaning_existentialQuestioning',
+    title: 'Bigger Questions Are Active',
+    category: 'spiritualMeaning',
+    description:
+      'The user is asking larger questions about purpose, life, meaning, or direction.',
+    requiredSignals: ['spiritual_depth', 'purpose_signal'],
+    supportingSignals: [
+      'lifeDirection',
+      'future_self_orientation',
+      'meaning_making',
+      'identity_rewriting',
+    ],
+    conflictingSignals: ['present_focus', 'low_future_urgency'],
+    shameLabel: 'I should not be thinking this deeply about everything.',
+    clarityReframe:
+      'Bigger questions can surface when your life is asking for a more honest orientation.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['existential', 'purpose', 'life direction'],
+  },
+  {
+    key: 'spiritualMeaning_practicalLiteralist',
+    title: 'Meaning Stays Practical',
+    category: 'spiritualMeaning',
+    description:
+      'The user prefers meaning that stays connected to facts, action, and lived reality.',
+    requiredSignals: ['practical_literalist', 'real_events_over_symbols'],
+    supportingSignals: [
+      'what_now_focus',
+      'clear_over_symbolic_explanation',
+      'grounded',
+    ],
+    conflictingSignals: [
+      'symbolic_self_understanding',
+      'dream_repeated_symbol',
+    ],
+    shameLabel:
+      'If I am not symbolic or spiritual enough, I am missing something.',
+    clarityReframe:
+      'Practical meaning is still meaning. Grounded truth can be just as deep as abstract interpretation.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['practicality', 'meaning', 'grounded'],
+  },
+  {
+    key: 'spiritualMeaning_symbolicButGrounded',
+    title: 'Symbolic, But Grounded',
+    category: 'spiritualMeaning',
+    description:
+      'The user is open to symbols and meaning, but wants them tied back to real life.',
+    requiredSignals: [
+      'symbols_grounded_real',
+      'meaning_clarifies_actual_life',
+    ],
+    supportingSignals: [
+      'intuition_and_evidence',
+      'pattern_with_context',
+      'dream_image_true_feeling',
+    ],
+    conflictingSignals: ['meaning_replaces_change'],
+    shameLabel: 'If I use symbols, I am losing touch with reality.',
+    clarityReframe:
+      'Symbolic meaning can be useful when it helps you understand real feelings, choices, or patterns.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['symbols', 'meaning', 'grounded'],
+  },
+  {
+    key: 'spiritualMeaning_hopeAsOrientation',
+    title: 'Hope as Orientation',
+    category: 'spiritualMeaning',
+    description:
+      'Hope is functioning as a way to stay oriented, not as denial.',
+    requiredSignals: ['hope', 'purpose_signal'],
+    supportingSignals: [
+      'faith_meaning',
+      'future_self_orientation',
+      'ordinary_sacred',
+    ],
+    conflictingSignals: ['helplessness', 'despair'],
+    shameLabel: 'Hope is naive if things are still hard.',
+    clarityReframe:
+      'Hope does not require everything to be okay. Sometimes it is the part of you still facing forward.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['hope', 'purpose', 'orientation'],
+  },
+  {
+    key: 'spiritualMeaning_meaningThroughBeauty',
+    title: 'Beauty Carries Meaning',
+    category: 'spiritualMeaning',
+    description:
+      'Beauty, art, nature, color, music, or sensory experience is helping meaning become felt.',
+    requiredSignals: ['beauty_glimmer', 'ordinary_sacred'],
+    supportingSignals: [
+      'beauty_regulation',
+      'creative_aliveness',
+      'peace',
+      'gratitude',
+    ],
+    conflictingSignals: ['disconnected', 'numbness'],
+    shameLabel: 'Beauty is not practical enough to matter.',
+    clarityReframe:
+      'Beauty can help meaning reach the body, not just the mind.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['beauty', 'meaning', 'regulation'],
+  },
+  {
+    key: 'spiritualMeaning_legacySignal',
+    title: 'Legacy Is Showing Up',
+    category: 'spiritualMeaning',
+    description:
+      'The user is thinking about what they are building, leaving, protecting, or becoming part of.',
+    requiredSignals: ['legacy_signal'],
+    supportingSignals: [
+      'purpose_signal',
+      'future_self_orientation',
+      'values_conflict',
+      'wants_to_build',
+    ],
+    conflictingSignals: ['present_focus'],
+    shameLabel: 'It is too much to care about the larger impact.',
+    clarityReframe:
+      'Legacy does not have to be grand. It can be the quiet shape of what you keep choosing to protect or build.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['legacy', 'purpose', 'future'],
+  },
+  {
+    key: 'spiritualMeaning_truthAsSacred',
+    title: 'Truth Feels Sacred',
+    category: 'spiritualMeaning',
+    description:
+      'Truth-telling, honesty, and naming reality appear connected to the user’s sense of meaning.',
+    requiredSignals: ['truth_telling', 'spiritual_depth'],
+    supportingSignals: ['values_conflict', 'integrity_cost', 'voice_emerging'],
+    conflictingSignals: ['smooth_over_limit'],
+    shameLabel: 'I should be able to move on without naming it.',
+    clarityReframe:
+      'For you, naming the truth may be part of how something becomes spiritually or emotionally settled.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['truth', 'meaning', 'integrity'],
+  },
+  {
+    key: 'spiritualMeaning_meaningWithoutCertainty',
+    title: 'Meaning Without Certainty',
+    category: 'spiritualMeaning',
+    description:
+      'The user is sensing meaning without needing a complete explanation yet.',
+    requiredSignals: ['meaning_making', 'confusion'],
+    supportingSignals: [
+      'faith_meaning',
+      'spiritual_depth',
+      'pattern_recognition',
+    ],
+    conflictingSignals: ['practical_literalist'],
+    shameLabel: 'If I cannot explain it, it does not count.',
+    clarityReframe: 'Meaning can be real before it is fully clear.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['uncertainty', 'meaning', 'faith'],
+  },
+];
+
+export const SPIRITUAL_MEANING_PATTERNS: ArchivePattern[] = [
+  ...SPIRITUAL_MEANING_FOUNDATION_PATTERNS,
+  ...SPIRITUAL_MEANING_EXPANSION,
 ];

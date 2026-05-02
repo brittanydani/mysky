@@ -12,16 +12,18 @@ import { View, Text, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndica
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
-import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { buildInsightSurface } from '../../services/insights/buildInsightSurface';
-import { type DailyAggregate } from '../../services/insights/types';
-import { type DeepInsightBundle } from '../../utils/deepInsights';
-import { buildPatternFeedInsights } from '../../utils/patternFeed';
+import { type PremiumPersonaProfile } from '../../services/insightsV2/adapters/premiumPersonaProfile';
+import {
+  type PremiumPatternItem,
+  type PremiumThisWeekPatternItem,
+  type PremiumWeeklyDeepDiveItem,
+} from '../../services/insightsV2/adapters/premiumPatterns';
 import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
@@ -30,14 +32,12 @@ import { MetallicText } from '../../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import {
   buildPatternLibraryState,
-  refineCrossRefCopy,
-  selectDistinctPatternInsights,
+  type PatternLibraryItem,
 } from '../../utils/patternsHelpers';
 import {
   buildInsightDuplicateKey,
   dedupeExactInsights,
 } from '../../utils/insightDedupe';
-import { type CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 import { normalizeDisplayText } from '../../utils/textLayout';
@@ -69,15 +69,46 @@ const WRAP_AT_WORD_PROPS = {
   textBreakStrategy: 'simple' as const,
 };
 
-const FIT_TEXT_PROPS = {
-  ...WRAP_AT_WORD_PROPS,
-  adjustsFontSizeToFit: true,
-  minimumFontScale: 0.68,
+type WeeklyDeepDiveDisplayItem = {
+  id: string;
+  title: string;
+  body: string;
+  whyItMayMatter?: string;
+  reframe?: string;
+  evidenceSummary?: string;
+  reflectionPrompt?: string;
+  patternKey?: string;
 };
 
-function shouldUseWideMetric(value: string): boolean {
-  const normalized = normalizeDisplayText(value);
-  return normalized.length > 20 || normalized.split(/\s+/).some((word) => word.length >= 11);
+function compactDisplayText(text: string, maxLength: number): string {
+  const normalized = normalizeDisplayText(text);
+  if (normalized.length <= maxLength) return normalized;
+  const trimmed = normalized.slice(0, maxLength).replace(/\s+\S*$/, '').trim();
+  return `${trimmed}...`;
+}
+
+function splitDeepReadSections(body: string): Array<{ label: string; body: string }> {
+  const sections = normalizeDisplayText(body)
+    .split(/\n{2,}/)
+    .map(section => section.trim())
+    .filter(Boolean);
+
+  if (sections.length <= 1) {
+    return [{ label: 'What MySky noticed', body: sections[0] ?? normalizeDisplayText(body) }];
+  }
+
+  const labels = ['What MySky noticed', 'Why it may matter', 'The pattern underneath'];
+  return sections.slice(0, 3).map((section, index) => ({
+    label: labels[index] ?? 'Read deeper',
+    body: section,
+  }));
+}
+
+function weeklyPatternBadgeLabel(pattern: PremiumThisWeekPatternItem): string {
+  if (pattern.isEmptyState) return 'GATHERING SIGNAL';
+  if (pattern.isLowConfidenceFallback || pattern.confidence === 'emerging') return 'EMERGING';
+  if (pattern.confidence === 'moderate') return 'GETTING CLEARER';
+  return 'SEEN REPEATEDLY';
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -92,10 +123,13 @@ export default function PatternsScreen() {
   const [trendCheckIns, setTrendCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
   const [orbitLoading, setOrbitLoading] = useState(true);
-  const [crossRefs, setCrossRefs] = useState<CrossRefInsight[]>([]);
-  const [dailyAggregates, setDailyAggregates] = useState<DailyAggregate[]>([]);
-  const [deepInsights, setDeepInsights] = useState<DeepInsightBundle | null>(null);
+  const [premiumPersonaProfile, setPremiumPersonaProfile] = useState<PremiumPersonaProfile | null>(null);
+  const [premiumPatterns, setPremiumPatterns] = useState<PremiumPatternItem[]>([]);
+  const [thisWeeksV2Pattern, setThisWeeksV2Pattern] = useState<PremiumThisWeekPatternItem | null>(null);
+  const [premiumWeeklyDeepDive, setPremiumWeeklyDeepDive] = useState<PremiumWeeklyDeepDiveItem[]>([]);
+  const [selectedPatternItem, setSelectedPatternItem] = useState<PatternLibraryItem | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [patternModalView, setPatternModalView] = useState<'archive' | 'library'>('archive');
   const [showDeepDiveModal, setShowDeepDiveModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -115,6 +149,7 @@ export default function PatternsScreen() {
           const surface = await buildInsightSurface({
             rangeDays: 90,
             insightsEnabled,
+            includeKnowledgeInsight: insightsEnabled,
           });
           if (!active) return;
 
@@ -124,13 +159,21 @@ export default function PatternsScreen() {
           setArchiveDepthCounts(surface.archiveDepthCounts);
           setLastUpdated(surface.lastUpdated);
           setOrbitLoading(false);
-          setDailyAggregates(surface.dailyAggregates);
-          setDeepInsights(surface.deepInsights);
-          setCrossRefs(surface.crossRefs);
+          setPremiumPersonaProfile(surface.premiumPersonaProfile);
+          setPremiumPatterns(surface.premiumPatterns);
+          setThisWeeksV2Pattern(surface.thisWeeksV2Pattern);
+          setPremiumWeeklyDeepDive(surface.premiumWeeklyDeepDive);
 
         } catch (e) {
           logger.error('[Patterns] Pipeline error:', e);
-          if (active) setLoadError(true);
+          if (active) {
+            setLoadError(true);
+            setPremiumPersonaProfile(null);
+            setPremiumPatterns([]);
+            setThisWeeksV2Pattern(null);
+            setPremiumWeeklyDeepDive([]);
+            setSelectedPatternItem(null);
+          }
         } finally {
           if (active) setLoading(false);
         }
@@ -139,8 +182,11 @@ export default function PatternsScreen() {
     }, [])
   );
 
-  const libraryState = useMemo(() => buildPatternLibraryState(dailyAggregates, crossRefs), [crossRefs, dailyAggregates]);
-  const librarySections = useMemo(() => {
+  const libraryState = useMemo(
+    () => buildPatternLibraryState(premiumPatterns),
+    [premiumPatterns],
+  );
+  const archiveSections = useMemo(() => {
     const dedupedItems = dedupeExactInsights(
       libraryState.sections.flatMap((section, sectionIndex) =>
         section.items.map((item, itemIndex) => ({
@@ -160,43 +206,49 @@ export default function PatternsScreen() {
       }))
       .filter(section => section.items.length > 0);
   }, [libraryState.sections]);
-  const feedInsights = useMemo(() => {
-    const profileInsights = buildPatternFeedInsights(deepInsights);
-    return dedupeExactInsights(
-      selectDistinctPatternInsights([...profileInsights, ...crossRefs]),
-      'PatternsScreen:feedInsights',
+  const fullLibrarySections = useMemo(() => {
+    const sections = libraryState.librarySections ?? [];
+    const dedupedItems = dedupeExactInsights(
+      sections.flatMap((section, sectionIndex) =>
+        section.items.map((item, itemIndex) => ({
+          ...item,
+          sectionIndex,
+          itemIndex,
+        })),
+      ),
+      'PatternsScreen:fullLibrarySections',
     );
-  }, [crossRefs, deepInsights]);
+    const visibleItems = new Set(dedupedItems.map(item => `${item.sectionIndex}:${item.itemIndex}`));
 
-  // Rotate through all surfaced insights daily so the feed keeps evolving with the archive.
-  const todayIndex = useMemo(() => {
-    // Calculate the number of days since the Unix epoch in the local timezone.
-    // This provides a guaranteed sequential increment each local day, whereas 
-    // hashing the date string caused unpredictable jumps during date rollovers.
-    const localEpochDay = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60_000) / 86_400_000);
-    return feedInsights.length > 0 ? localEpochDay % feedInsights.length : 0;
-  }, [feedInsights.length]);
-
-  const leadInsight = useMemo(
-    () => (feedInsights.length > 0 ? refineCrossRefCopy(feedInsights[todayIndex]) : null),
-    [feedInsights, todayIndex],
-  );
-  const deepDiveInsights = useMemo(() => {
-    if (feedInsights.length <= 1) return [];
-    const rotated = [...feedInsights.slice(todayIndex), ...feedInsights.slice(0, todayIndex)];
-    const refined = rotated.slice(1).map(refineCrossRefCopy);
-    return dedupeExactInsights(refined, 'PatternsScreen:deepDiveInsights').slice(0, 2);
-  }, [feedInsights, todayIndex]);
+    return sections
+      .map((section, sectionIndex) => ({
+        ...section,
+        items: section.items.filter((_, itemIndex) => visibleItems.has(`${sectionIndex}:${itemIndex}`)),
+      }))
+      .filter(section => section.items.length > 0);
+  }, [libraryState.librarySections]);
+  const deepDiveInsights = useMemo<WeeklyDeepDiveDisplayItem[]>(() => {
+    return premiumWeeklyDeepDive.map(insight => ({
+      id: insight.id,
+      title: insight.title,
+      body: insight.body,
+      whyItMayMatter: insight.whyItMayMatter,
+      reframe: insight.reframe,
+      evidenceSummary: insight.evidenceSummary,
+      reflectionPrompt: insight.reflectionPrompt,
+      patternKey: insight.patternKey,
+    }));
+  }, [premiumWeeklyDeepDive]);
   const patternRows = useMemo(
-    () => dedupeExactInsights(leadInsight ? [leadInsight] : [], 'PatternsScreen:patternRows'),
-    [leadInsight],
+    () => (thisWeeksV2Pattern ? [thisWeeksV2Pattern] : []),
+    [thisWeeksV2Pattern],
   );
   const premiumTeaser = useMemo(
     () => getPersonalizedPremiumTeaser(archiveDepthCounts, {
-      detectedPatterns: feedInsights.length,
+      detectedPatterns: premiumPatterns.length || (thisWeeksV2Pattern && !thisWeeksV2Pattern.isEmptyState ? 1 : 0),
       surface: 'patterns',
     }),
-    [archiveDepthCounts, feedInsights.length],
+    [archiveDepthCounts, premiumPatterns.length, thisWeeksV2Pattern],
   );
 
   return (
@@ -208,9 +260,9 @@ export default function PatternsScreen() {
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <FlatList<CrossRefInsight>
+        <FlatList<PremiumThisWeekPatternItem>
           data={patternRows}
-          keyExtractor={(item) => `${buildInsightDuplicateKey(item)}:${item.id}`}
+          keyExtractor={(item) => `${item.patternKey}:${item.id}`}
           renderItem={({ item }) => (
             <>
               <VelvetGlassSurface style={styles.insightCard} intensity={25}>
@@ -218,29 +270,23 @@ export default function PatternsScreen() {
                 <View style={styles.cardHeader}>
                   <MetallicText style={styles.cardLabel} variant="gold">THIS WEEK'S PATTERN</MetallicText>
                   <View style={styles.confirmedBadge}>
-                    <Text {...WRAP_AT_WORD_PROPS} style={styles.confirmedText}>{item.isConfirmed ? 'SEEN REPEATEDLY' : 'EARLY SIGNAL'}</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.confirmedText}>{weeklyPatternBadgeLabel(item)}</Text>
                   </View>
                 </View>
                 <Text {...WRAP_AT_WORD_PROPS} style={styles.patternTitle}>{normalizeDisplayText(item.title)}</Text>
-                <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>{normalizeDisplayText(item.body)}</Text>
-                {item.heroMetrics && item.heroMetrics.length > 0 && (
-                  <View style={styles.heroMetricsRow}>
-                    {item.heroMetrics.map((m) => (
-                      <View key={m.label} style={[styles.heroMetricChip, shouldUseWideMetric(m.value) && styles.heroMetricChipWide]}>
-                        <Text {...FIT_TEXT_PROPS} numberOfLines={3} style={styles.heroMetricValue}>{m.value}</Text>
-                        <Text {...FIT_TEXT_PROPS} numberOfLines={2} style={styles.heroMetricLabel}>{m.label}</Text>
-                      </View>
-                    ))}
+                <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>{compactDisplayText(item.body, 720)}</Text>
+                {item.reframe ? (
+                  <View style={[styles.supportCallout, { marginTop: 14 }]}>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Clarity reframe</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(item.reframe)}</Text>
                   </View>
-                )}
-                {item.takeaway && (
-                  <GlassTakeaway label={item.takeaway.label} body={item.takeaway.body} icon="compass-outline" />
-                )}
-                {feedInsights.length > 1 && (
-                  <Text style={styles.rotationHint}>
-                    Insight {todayIndex + 1} of {feedInsights.length} · refreshes daily
-                  </Text>
-                )}
+                ) : null}
+                {item.evidenceSummary ? (
+                  <View style={[styles.supportCallout, { marginTop: 12 }]}>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Where it showed up</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(item.evidenceSummary)}</Text>
+                  </View>
+                ) : null}
               </VelvetGlassSurface>
 
               {/* Premium: Full Analysis CTA */}
@@ -257,7 +303,7 @@ export default function PatternsScreen() {
                   <LinearGradient colors={['rgba(168,139,235,0.25)', 'rgba(168,139,235,0.08)']} style={StyleSheet.absoluteFill} />
                   <View style={{ alignItems: 'center', flex: 1 }}>
                     <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">Open Weekly Deep Dive</MetallicText>
-                    <Text {...WRAP_AT_WORD_PROPS} style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>{normalizeDisplayText(`${deepDiveInsights.length} deep reads currently in focus`)}</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>Curated cross-source reads from recent signals</Text>
                   </View>
                 </Pressable>
               ) : (
@@ -304,6 +350,13 @@ export default function PatternsScreen() {
                 </View>
                 {orbitLoading ? <ActivityIndicator size="large" color={PALETTE.gold} /> : <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />}
               </View>
+
+              {isPremium && premiumPersonaProfile ? (
+                <>
+                  <SectionHeader label="A PART OF YOU" icon="person-circle-outline" />
+                  <PersonaProfileCard profile={premiumPersonaProfile} />
+                </>
+              ) : null}
 
               <SectionHeader label="THIS WEEK'S PATTERN" icon="radio-outline" />
               {moodInsightsEnabled && !isPremium && !loading && snapshot.checkInCount >= 5 && (
@@ -375,15 +428,16 @@ export default function PatternsScreen() {
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
                 trackGrowthEvent('pattern_library_opened').catch(() => {});
+                setPatternModalView('archive');
                 setShowLibraryModal(true);
               }}
               style={styles.libraryButton}
               accessibilityRole="button"
-              accessibilityLabel="View pattern library"
+              accessibilityLabel="View pattern archive"
             >
               <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
               <MetallicIcon name="library-outline" size={16} variant="gold" />
-              <MetallicText style={styles.libraryButtonText} variant="gold">Open Pattern Library</MetallicText>
+              <MetallicText style={styles.libraryButtonText} variant="gold">Open Pattern Archive</MetallicText>
             </Pressable>
           ) : null}
           showsVerticalScrollIndicator={false}
@@ -420,32 +474,46 @@ export default function PatternsScreen() {
               </Pressable>
             </View>
             <Text {...WRAP_AT_WORD_PROPS} style={styles.modalIntro}>
-              Two deeper reads from your recent signals. These update as patterns intensify, soften, or gain stronger cross-source evidence.
+              A few deeper reads from your recent signals, chosen for what feels most useful to notice right now.
             </Text>
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: '85%' }}>
-              <View style={{ gap: 16, paddingBottom: 8 }}>
-                {deepDiveInsights.map((insight, idx) => (
-                  <View key={`${buildInsightDuplicateKey(insight)}:${insight.id}`} style={styles.deepDiveInsightCard}>
+              <View style={{ gap: 16, paddingBottom: 32 }}>
+                {deepDiveInsights.map((insight) => (
+                  <View key={`${insight.patternKey ?? buildInsightDuplicateKey(insight)}:${insight.id}`} style={styles.deepDiveInsightCard}>
                     <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.03)']} style={StyleSheet.absoluteFill} />
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.deepDiveInsightTitle}>{insight.title}</Text>
-                    <Text {...WRAP_AT_WORD_PROPS} style={[styles.insightBody, { fontSize: 14 }]}>{normalizeDisplayText(insight.body)}</Text>
-                    {insight.heroMetrics && insight.heroMetrics.length > 0 && (
-                      <View style={[styles.heroMetricsRow, { marginTop: 12 }]}>
-                        {insight.heroMetrics.map((m) => (
-                          <View key={m.label} style={[styles.heroMetricChip, shouldUseWideMetric(m.value) && styles.heroMetricChipWide]}>
-                            <Text {...FIT_TEXT_PROPS} numberOfLines={3} style={styles.heroMetricValue}>{m.value}</Text>
-                            <Text {...FIT_TEXT_PROPS} numberOfLines={2} style={styles.heroMetricLabel}>{m.label}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                    {insight.takeaway && (
+                    <View style={styles.deepReadSections}>
+                      {splitDeepReadSections(insight.body).map(section => (
+                        <View key={section.label} style={styles.deepReadSection}>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>{section.label}</Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={[styles.insightBody, { fontSize: 14 }]}>{compactDisplayText(section.body, 540)}</Text>
+                        </View>
+                      ))}
+                      {insight.whyItMayMatter ? (
+                        <View style={styles.deepReadSection}>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>Why it may matter</Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={[styles.insightBody, { fontSize: 14 }]}>{normalizeDisplayText(insight.whyItMayMatter)}</Text>
+                        </View>
+                      ) : null}
+                      {insight.reframe ? (
+                        <View style={styles.deepReadSection}>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>Shame-to-clarity reframe</Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={[styles.insightBody, { fontSize: 14 }]}>{normalizeDisplayText(insight.reframe)}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    {insight.evidenceSummary ? (
                       <View style={[styles.supportCallout, { marginTop: 12 }]}>
-                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>{insight.takeaway.label}</Text>
-                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{insight.takeaway.body}</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Where it showed up</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(insight.evidenceSummary)}</Text>
                       </View>
-                    )}
-                    <Text style={[styles.rotationHint, { textAlign: 'left', marginTop: 8 }]}>Insight {idx + 1} of {deepDiveInsights.length}</Text>
+                    ) : null}
+                    {insight.reflectionPrompt ? (
+                      <View style={[styles.supportCallout, { marginTop: 12 }]}>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Question to keep</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(insight.reflectionPrompt)}</Text>
+                      </View>
+                    ) : null}
                   </View>
                 ))}
               </View>
@@ -471,11 +539,14 @@ export default function PatternsScreen() {
           <VelvetGlassSurface style={[styles.modalCard, styles.libraryModalCard]} intensity={35}>
             <LinearGradient colors={['rgba(44, 54, 69, 0.92)', 'rgba(26, 30, 41, 0.72)']} style={StyleSheet.absoluteFill} />
             <View style={styles.modalHeader}>
-              <MetallicText style={styles.modalTitle} variant="gold">Your Pattern Archive</MetallicText>
+              <MetallicText style={styles.modalTitle} variant="gold">
+                {patternModalView === 'archive' ? 'Your Pattern Archive' : 'Pattern Library'}
+              </MetallicText>
               <Pressable
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
                   setShowLibraryModal(false);
+                  setSelectedPatternItem(null);
                 }}
                 hitSlop={12}
                 accessibilityRole="button"
@@ -484,37 +555,105 @@ export default function PatternsScreen() {
                 <MetallicIcon name="close-outline" size={18} variant="gold" />
               </Pressable>
             </View>
+            <View style={styles.modalTabs}>
+              {([
+                { key: 'archive' as const, label: 'Archive Map' },
+                { key: 'library' as const, label: 'Library' },
+              ]).map(tab => {
+                const active = patternModalView === tab.key;
+                return (
+                  <Pressable
+                    key={tab.key}
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setPatternModalView(tab.key);
+                    }}
+                    style={[styles.modalTab, active && styles.modalTabActive]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Show ${tab.label}`}
+                  >
+                    <Text style={[styles.modalTabText, active && styles.modalTabTextActive]}>{tab.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
             <ScrollView
               style={styles.libraryModalScroll}
               contentContainerStyle={styles.libraryModalScrollContent}
               showsVerticalScrollIndicator={false}
               nestedScrollEnabled
             >
-              <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBody}>
-                {normalizeDisplayText('A living profile of how you move through the world — shaped by what you feel, how you recover, and what your system returns to over time. This is not built from isolated moments. It reflects what repeats often enough to be real.')}
-              </Text>
-              <Text {...WRAP_AT_WORD_PROPS} style={styles.modalStatus}>{normalizeDisplayText(libraryState.statusLine)}</Text>
-              <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBodyMuted}>{normalizeDisplayText(libraryState.helperText)}</Text>
-              {librarySections.length > 0 ? (
-                <View style={styles.libraryList}>
-                  {librarySections.map((section, sectionIndex) => (
-                    <View key={`${section.title}-${sectionIndex}`} style={styles.librarySection}>
-                      <Text {...WRAP_AT_WORD_PROPS} style={styles.librarySectionTitle}>{section.title}</Text>
-                      {section.items.map((item, itemIndex) => (
-                        <View key={`${section.title}-${buildInsightDuplicateKey(item)}-${itemIndex}`} style={styles.libraryItem}>
-                          <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemTitle}>{normalizeDisplayText(item.title)}</Text>
-                          <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemBody}>{item.body}</Text>
+              {patternModalView === 'archive' ? (
+                <>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBody}>
+                    {normalizeDisplayText('A living profile of how you move through the world — shaped by what you feel, how you recover, and what your system returns to over time. This is not built from isolated moments. It reflects what repeats often enough to be real.')}
+                  </Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.modalStatus}>{normalizeDisplayText(libraryState.statusLine)}</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBodyMuted}>{normalizeDisplayText(libraryState.helperText)}</Text>
+                  {archiveSections.length > 0 ? (
+                    <View style={styles.libraryList}>
+                      {archiveSections.map((section, sectionIndex) => (
+                        <View key={`${section.title}-${sectionIndex}`} style={styles.librarySection}>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.librarySectionTitle}>{section.title}</Text>
+                          {section.items.map((item, itemIndex) => (
+                            <Pressable
+                              key={`${section.title}-${buildInsightDuplicateKey(item)}-${itemIndex}`}
+                              onPress={() => {
+                                Haptics.selectionAsync().catch(() => {});
+                                setSelectedPatternItem(item);
+                              }}
+                              style={styles.libraryItem}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Read more about ${item.title}`}
+                            >
+                              <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemTitle}>{normalizeDisplayText(item.title)}</Text>
+                              <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemBody}>{compactDisplayText(item.body, 420)}</Text>
+                            </Pressable>
+                          ))}
                         </View>
                       ))}
                     </View>
-                  ))}
-                </View>
-              ) : null}
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBody}>
+                    {normalizeDisplayText('A browsable library of the longer-term threads your archive can currently see. Cards stay compact here; open the weekly deep dive when you want a fuller read.')}
+                  </Text>
+                  {fullLibrarySections.length > 0 ? (
+                    <View style={styles.libraryList}>
+                      {fullLibrarySections.map((section, sectionIndex) => (
+                        <View key={`${section.title}-${sectionIndex}`} style={styles.librarySection}>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.librarySectionTitle}>{section.title}</Text>
+                          {section.items.map((item, itemIndex) => (
+                            <Pressable
+                              key={`${section.title}-${buildInsightDuplicateKey(item)}-${itemIndex}`}
+                              onPress={() => {
+                                Haptics.selectionAsync().catch(() => {});
+                                setSelectedPatternItem(item);
+                              }}
+                              style={styles.libraryItem}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Read more about ${item.title}`}
+                            >
+                              <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemTitle}>{normalizeDisplayText(item.title)}</Text>
+                              <Text {...WRAP_AT_WORD_PROPS} style={styles.libraryItemBody}>{compactDisplayText(item.body, 300)}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBodyMuted}>The library will fill in as different kinds of signals start repeating.</Text>
+                  )}
+                </>
+              )}
             </ScrollView>
             <Pressable
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
                 setShowLibraryModal(false);
+                setSelectedPatternItem(null);
               }}
               style={styles.modalCloseButton}
               accessibilityRole="button"
@@ -524,6 +663,60 @@ export default function PatternsScreen() {
               <MetallicText style={styles.modalCloseButtonText} variant="gold">Done</MetallicText>
             </Pressable>
           </VelvetGlassSurface>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={!!selectedPatternItem}
+        onRequestClose={() => setSelectedPatternItem(null)}
+      >
+        <View style={styles.modalBackdrop}>
+          <Pressable
+            onPress={() => setSelectedPatternItem(null)}
+            style={StyleSheet.absoluteFill}
+            accessibilityRole="button"
+            accessibilityLabel="Close pattern read"
+          />
+          <BlurView intensity={30} tint={theme.blurTint} style={StyleSheet.absoluteFill} />
+          {selectedPatternItem ? (
+            <VelvetGlassSurface style={[styles.modalCard, styles.patternReadModalCard]} intensity={35}>
+              <LinearGradient colors={['rgba(44, 54, 69, 0.94)', 'rgba(26, 30, 41, 0.78)']} style={StyleSheet.absoluteFill} />
+              <View style={styles.modalHeader}>
+                <MetallicText style={styles.modalTitle} variant="gold">Read Deeper</MetallicText>
+                <Pressable
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setSelectedPatternItem(null);
+                  }}
+                  hitSlop={12}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close"
+                >
+                  <MetallicIcon name="close-outline" size={18} variant="gold" />
+                </Pressable>
+              </View>
+              <ScrollView showsVerticalScrollIndicator={false} style={styles.libraryModalScroll} contentContainerStyle={styles.libraryModalScrollContent}>
+                <Text {...WRAP_AT_WORD_PROPS} style={styles.deepDiveInsightTitle}>{normalizeDisplayText(selectedPatternItem.title)}</Text>
+                <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBody}>
+                  {normalizeDisplayText(selectedPatternItem.body)}
+                </Text>
+                {selectedPatternItem.evidenceSummary ? (
+                  <View style={styles.supportCallout}>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Where it showed up</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(selectedPatternItem.evidenceSummary)}</Text>
+                  </View>
+                ) : null}
+                {selectedPatternItem.clarityReframe ? (
+                  <View style={[styles.supportCallout, { marginTop: 12 }]}>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Clarity reframe</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(selectedPatternItem.clarityReframe)}</Text>
+                  </View>
+                ) : null}
+              </ScrollView>
+            </VelvetGlassSurface>
+          ) : null}
         </View>
       </Modal>
     </View>
@@ -556,15 +749,50 @@ const SectionHeader = ({ label, icon }: { label: string; icon: any }) => {
   );
 };
 
-const GlassTakeaway = ({ label, body, icon }: { label: string; body: string; icon: any }) => {
+const PersonaProfileCard = ({ profile }: { profile: PremiumPersonaProfile }) => {
+  const styles = useThemedStyles(createStyles);
+  const strengths = profile.strengths.join(' ');
+  const whatHelps = profile.whatHelps.join(' ');
+
+  return (
+    <VelvetGlassSurface style={styles.personaProfileCard} intensity={28}>
+      <LinearGradient colors={['rgba(168,139,235,0.18)', 'rgba(107,144,128,0.06)']} style={StyleSheet.absoluteFill} />
+      <View style={styles.cardHeader}>
+        <MetallicText style={styles.cardLabel} variant="gold">{profile.label.toUpperCase()}</MetallicText>
+        <View style={styles.personaBadge}>
+          <Text {...WRAP_AT_WORD_PROPS} style={styles.personaBadgeText}>PREMIUM</Text>
+        </View>
+      </View>
+      <Text {...WRAP_AT_WORD_PROPS} style={styles.patternTitle}>{normalizeDisplayText(profile.title)}</Text>
+      <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>
+        {normalizeDisplayText(profile.selectedSentence)}
+      </Text>
+
+      <View style={styles.personaSections}>
+        <PersonaProfileSection label="Protective purpose" body={profile.protectivePurpose} />
+        <PersonaProfileSection label="Strengths" body={strengths} />
+        <PersonaProfileSection label="Growth edge" body={profile.growthEdge} />
+        <PersonaProfileSection label="What helps" body={whatHelps} />
+      </View>
+
+      <View style={styles.supportCallout}>
+        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Where it showed up</Text>
+        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(profile.evidenceSummary)}</Text>
+      </View>
+      <View style={[styles.supportCallout, { marginTop: 12 }]}>
+        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Reflection prompt</Text>
+        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(profile.reflectionPrompt)}</Text>
+      </View>
+    </VelvetGlassSurface>
+  );
+};
+
+const PersonaProfileSection = ({ label, body }: { label: string; body: string }) => {
   const styles = useThemedStyles(createStyles);
   return (
-    <View style={styles.supportCallout}>
-      <View style={styles.supportCalloutHeader}>
-        <Ionicons name={icon} size={13} color={PALETTE.sage} />
-        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>{label}</Text>
-      </View>
-      <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{body}</Text>
+    <View style={styles.personaSection}>
+      <Text {...WRAP_AT_WORD_PROPS} style={styles.personaSectionLabel}>{label}</Text>
+      <Text {...WRAP_AT_WORD_PROPS} style={styles.personaSectionBody}>{normalizeDisplayText(body)}</Text>
     </View>
   );
 };
@@ -606,6 +834,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   patternTitle: { width: '100%', flexShrink: 1, fontSize: 18, fontWeight: '700', color: theme.textPrimary, marginBottom: 12 },
   insightBody: { width: '100%', flexShrink: 1, fontSize: 15, color: 'rgba(255,255,255,0.7)', lineHeight: 24 },
 
+  personaProfileCard: { padding: 28, borderRadius: 24, marginBottom: 28, overflow: 'hidden' },
+  personaBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(168,139,235,0.15)', borderWidth: 1, borderColor: 'rgba(168,139,235,0.30)' },
+  personaBadgeText: { flexShrink: 1, fontSize: 8, fontWeight: '800', color: '#A88BEB' },
+  personaSections: { gap: 10, marginTop: 20 },
+  personaSection: { padding: 14, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.045)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  personaSectionLabel: { width: '100%', flexShrink: 1, fontSize: 10, fontWeight: '800', color: 'rgba(212,175,55,0.86)', textTransform: 'uppercase', letterSpacing: 1 },
+  personaSectionBody: { width: '100%', flexShrink: 1, marginTop: 6, fontSize: 13, lineHeight: 20, color: 'rgba(255,255,255,0.68)' },
+
   blurredInsightPreview: { padding: 32, gap: 10 },
   blurredInsightLine: { height: 14, borderRadius: 7, width: '95%', backgroundColor: 'rgba(255,255,255,0.25)' },
 
@@ -621,14 +857,43 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   libraryModalBackdrop: { justifyContent: 'flex-end', paddingBottom: 42 },
   modalCard: { borderRadius: 24, padding: 24, overflow: 'hidden' },
   libraryModalCard: { maxHeight: '86%' },
+  patternReadModalCard: { maxHeight: '82%' },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   modalTitle: { fontSize: 20, fontWeight: '800' },
+  modalTabs: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  modalTab: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  modalTabActive: {
+    borderColor: 'rgba(212,175,55,0.32)',
+    backgroundColor: 'rgba(212,175,55,0.10)',
+  },
+  modalTabText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.58)',
+    letterSpacing: 0.5,
+  },
+  modalTabTextActive: {
+    color: 'rgba(212,175,55,0.92)',
+  },
   modalIntro: { width: '100%', flexShrink: 1, fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.72)', marginBottom: 16 },
   modalBody: { width: '100%', flexShrink: 1, fontSize: 15, lineHeight: 24, color: theme.textPrimary, marginBottom: 12 },
   modalStatus: { width: '100%', flexShrink: 1, fontSize: 12, fontWeight: '700', color: 'rgba(212,175,55,0.9)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8 },
   modalBodyMuted: { width: '100%', flexShrink: 1, fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.62)' },
   libraryModalScroll: { flexShrink: 1 },
-  libraryModalScrollContent: { paddingBottom: 2 },
+  libraryModalScrollContent: { paddingBottom: 24 },
   libraryList: { marginTop: 18, gap: 12 },
   librarySection: { gap: 10 },
   librarySectionTitle: { width: '100%', flexShrink: 1, fontSize: 12, fontWeight: '700', color: 'rgba(212,175,55,0.9)', textTransform: 'uppercase', letterSpacing: 1.1 },
@@ -703,4 +968,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   deepDiveModalCard: { maxHeight: '90%', paddingBottom: 24 },
   deepDiveInsightCard: { borderRadius: 20, padding: 24, overflow: 'hidden' },
   deepDiveInsightTitle: { width: '100%', flexShrink: 1, fontSize: 16, fontWeight: '700', color: theme.textPrimary, marginBottom: 10 },
+  deepReadSections: { gap: 14 },
+  deepReadSection: { gap: 6 },
+  deepReadSectionLabel: {
+    width: '100%',
+    flexShrink: 1,
+    fontSize: 10,
+    fontWeight: '800',
+    color: 'rgba(212,175,55,0.82)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.1,
+  },
 });

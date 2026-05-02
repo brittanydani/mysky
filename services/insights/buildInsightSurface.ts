@@ -6,22 +6,23 @@ import {
   enrichSelfKnowledgeContext,
   type SelfKnowledgeContext,
 } from './selfKnowledgeContext';
-import { buildPersonalProfile } from '../../utils/personalProfile';
-import { computeDeepInsights, type DeepInsightBundle } from '../../utils/deepInsights';
-import { buildPatternFeedInsights } from '../../utils/patternFeed';
 import {
   computeSelfKnowledgeCrossRef,
   type CrossRefInsight,
 } from '../../utils/selfKnowledgeCrossRef';
-import { refineCrossRefCopy, selectDistinctPatternInsights } from '../../utils/patternsHelpers';
-import { dedupeExactInsights } from '../../utils/insightDedupe';
 import { toLocalDateString } from '../../utils/dateUtils';
 import type { DailyCheckIn } from '../patterns/types';
 import type { JournalEntry, SleepEntry } from '../storage/models';
 import type { ArchiveDepthCounts } from '../../utils/archiveDepth';
-import { runActiveKnowledgeInsight } from './knowledgeInsightRouter';
+import { runActiveKnowledgeInsights } from './knowledgeInsightRouter';
 import type { GeneratedInsight } from './types/knowledgeEngine';
 import type { KnowledgeEngineHistoryInput } from './insightHistory';
+import type { PremiumPersonaProfile } from '../insightsV2/adapters/premiumPersonaProfile';
+import type {
+  PremiumPatternItem,
+  PremiumThisWeekPatternItem,
+  PremiumWeeklyDeepDiveItem,
+} from '../insightsV2/adapters/premiumPatterns';
 
 export interface InsightSurfaceResult {
   chartId: string | null;
@@ -39,10 +40,12 @@ export interface InsightSurfaceResult {
   lastUpdated: string | null;
   crossRefs: CrossRefInsight[];
   dailyAggregates: DailyAggregate[];
-  deepInsights: DeepInsightBundle | null;
-  feedInsights: CrossRefInsight[];
-  leadInsight: CrossRefInsight | null;
   knowledgeInsight: GeneratedInsight | null;
+  knowledgeInsights: GeneratedInsight[];
+  premiumPersonaProfile: PremiumPersonaProfile | null;
+  premiumPatterns: PremiumPatternItem[];
+  thisWeeksV2Pattern: PremiumThisWeekPatternItem | null;
+  premiumWeeklyDeepDive: PremiumWeeklyDeepDiveItem[];
 }
 
 interface BuildInsightSurfaceOptions {
@@ -58,13 +61,6 @@ function getStressScore(checkIn: DailyCheckIn): number {
   if (checkIn.stressLevel === 'high') return 8;
   if (checkIn.stressLevel === 'low') return 2;
   return 5;
-}
-
-function computeLeadInsight(feedInsights: CrossRefInsight[]): CrossRefInsight | null {
-  if (!feedInsights.length) return null;
-
-  const localEpochDay = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60_000) / 86_400_000);
-  return refineCrossRefCopy(feedInsights[localEpochDay % feedInsights.length]);
 }
 
 async function resolveChartId(inputChartId?: string | null): Promise<string | null> {
@@ -97,10 +93,12 @@ export async function buildInsightSurface({
       lastUpdated: null,
       crossRefs: [],
       dailyAggregates: [],
-      deepInsights: null,
-      feedInsights: [],
-      leadInsight: null,
       knowledgeInsight: null,
+      knowledgeInsights: [],
+      premiumPersonaProfile: null,
+      premiumPatterns: [],
+      thisWeeksV2Pattern: null,
+      premiumWeeklyDeepDive: [],
     };
   }
 
@@ -139,15 +137,8 @@ export async function buildInsightSurface({
     : [];
   const crossRefs = refs;
 
-  const deepInsights = insightsEnabled && pipelineResult.dailyAggregates.length
-    ? computeDeepInsights(buildPersonalProfile(pipelineResult.dailyAggregates))
-    : null;
-  const feedInsights = dedupeExactInsights(
-    selectDistinctPatternInsights([...buildPatternFeedInsights(deepInsights), ...crossRefs]),
-    'buildInsightSurface:feedInsights',
-  );
-  const knowledgeInsight = insightsEnabled && includeKnowledgeInsight
-    ? await runActiveKnowledgeInsight({
+  const knowledgeInsightResult = insightsEnabled && includeKnowledgeInsight
+    ? await runActiveKnowledgeInsights({
         checkIns,
         journalEntries: recentJournalEntries,
         sleepEntries,
@@ -155,7 +146,20 @@ export async function buildInsightSurface({
         date: knowledgeInsightDate ?? `${today}T12:00:00`,
         history: knowledgeHistory,
       })
-    : null;
+    : {
+        primaryInsight: null,
+        dailyInsights: [],
+        premiumPersonaProfile: null,
+        premiumPatterns: [],
+        thisWeeksV2Pattern: null,
+        premiumWeeklyDeepDive: [],
+      };
+  const premiumPersonaProfile = knowledgeInsightResult.premiumPersonaProfile;
+  const premiumPatterns = knowledgeInsightResult.premiumPatterns;
+  const thisWeeksV2Pattern = knowledgeInsightResult.thisWeeksV2Pattern;
+  const premiumWeeklyDeepDive = knowledgeInsightResult.premiumWeeklyDeepDive;
+  const knowledgeInsight = knowledgeInsightResult.primaryInsight;
+  const knowledgeInsights = knowledgeInsightResult.dailyInsights;
 
   const selfKnowledgeSignalCount =
     (enrichedContext.dailyReflections?.totalAnswers ?? 0)
@@ -194,9 +198,11 @@ export async function buildInsightSurface({
       : null,
     crossRefs,
     dailyAggregates: pipelineResult.dailyAggregates,
-    deepInsights,
-    feedInsights,
-    leadInsight: computeLeadInsight(feedInsights),
     knowledgeInsight,
+    knowledgeInsights,
+    premiumPersonaProfile,
+    premiumPatterns,
+    thisWeeksV2Pattern,
+    premiumWeeklyDeepDive,
   };
 }

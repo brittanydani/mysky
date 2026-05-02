@@ -199,6 +199,7 @@ export default function HomeScreen() {
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
   const [knowledgeInsight, setKnowledgeInsight] = useState<GeneratedInsight | null>(null);
+  const [knowledgeInsights, setKnowledgeInsights] = useState<GeneratedInsight[]>([]);
   const prevMilestoneRef = useRef<number | null>(null);
 
   // Self-knowledge context — used to personalize affirmations
@@ -306,15 +307,24 @@ export default function HomeScreen() {
 
             // Knowledge Engine Integration
             if (moodInsightsEnabled) {
-              const kInsight = surface.knowledgeInsight;
-              setIfActive(setKnowledgeInsight, kInsight);
-              if (kInsight && checkins.some((entry) => entry.date === todayKey)) {
-                recordInsight(kInsight).catch((err) => {
-                  logger.warn('[Home] Failed to record knowledge insight history:', err);
+              const kInsights = surface.knowledgeInsights.length
+                ? surface.knowledgeInsights
+                : surface.knowledgeInsight
+                  ? [surface.knowledgeInsight]
+                  : [];
+              const shownKnowledgeInsights = isPremium ? kInsights : kInsights.slice(0, 1);
+              setIfActive(setKnowledgeInsight, kInsights[0] ?? null);
+              setIfActive(setKnowledgeInsights, kInsights);
+              if (shownKnowledgeInsights.length && checkins.some((entry) => entry.date === todayKey)) {
+                shownKnowledgeInsights.forEach((insight) => {
+                  recordInsight(insight).catch((err) => {
+                    logger.warn('[Home] Failed to record knowledge insight history:', err);
+                  });
                 });
               }
             } else {
               setIfActive(setKnowledgeInsight, null);
+              setIfActive(setKnowledgeInsights, []);
             }
 
             if (checkins.length > 0) {
@@ -365,6 +375,7 @@ export default function HomeScreen() {
         } else {
           setIfActive(setUserChart, null);
           setIfActive(setKnowledgeInsight, null);
+          setIfActive(setKnowledgeInsights, []);
           setIfActive(setSleepSignalCount, 0);
           setIfActive(setDreamSignalCount, 0);
 
@@ -373,13 +384,14 @@ export default function HomeScreen() {
         logger.error('Failed to load user chart:', error);
         setIfActive(setUserChart, null);
         setIfActive(setKnowledgeInsight, null);
+        setIfActive(setKnowledgeInsights, []);
         setIfActive(setSleepSignalCount, 0);
         setIfActive(setDreamSignalCount, 0);
       } finally {
         if (!silent && isScreenActiveRef.current) setLoading(false);
       }
     },
-    [],
+    [isPremium],
   );
 
   useFocusEffect(
@@ -511,6 +523,15 @@ export default function HomeScreen() {
         : 'Log a check-in today to see your personalized daily reflection.',
     };
   }, [dailyLoop, hasDataToday, balanceScore, mood, energy, latestSleep]);
+
+  const availableKnowledgeInsights = useMemo(
+    () => knowledgeInsights.length ? knowledgeInsights : knowledgeInsight ? [knowledgeInsight] : [],
+    [knowledgeInsight, knowledgeInsights],
+  );
+  const visibleKnowledgeInsights = useMemo(
+    () => isPremium ? availableKnowledgeInsights : availableKnowledgeInsights.slice(0, 1),
+    [availableKnowledgeInsights, isPremium],
+  );
 
   /** Pixel heights (max ~120px) for each of the past 7 days, oldest → today */
   const stabilityBars = useMemo(() => {
@@ -733,8 +754,15 @@ export default function HomeScreen() {
           {/* ── Daily Insight ── */}
           <SectionHeader title="Daily Insight" icon="sparkles-outline" />
           <Animated.View entering={FadeInDown.delay(700).duration(600)}>
-            {hasDataToday && knowledgeInsight ? (
-              <KnowledgeInsightCard insight={knowledgeInsight} />
+            {hasDataToday && visibleKnowledgeInsights.length > 0 ? (
+              <View style={styles.dailyInsightList}>
+                {visibleKnowledgeInsights.map((insight) => (
+                  <KnowledgeInsightCard
+                    key={`${insight.slot}-${insight.patternKey}-${insight.id}`}
+                    insight={insight}
+                  />
+                ))}
+              </View>
             ) : (
               <VelvetGlassSurface style={styles.insightCard} intensity={20}>
                 <LinearGradient
@@ -1144,6 +1172,9 @@ const createStyles = (theme: AppTheme) => {
   },
 
   // Insight Card
+  dailyInsightList: {
+    marginBottom: 12,
+  },
   insightCard: { marginTop: 0, marginBottom: 32 },
   insightGradient: {
     borderRadius: 24,

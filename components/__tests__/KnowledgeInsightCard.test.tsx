@@ -3,7 +3,11 @@ jest.mock('@react-native-masked-view/masked-view', () => ({
   default: ({ children }: { children: unknown }) => children,
 }));
 
-import { buildReframeText } from '../KnowledgeInsightCard';
+import React from 'react';
+import { render } from '@testing-library/react-native';
+import { ThemeProvider } from '../../context/ThemeContext';
+import { KnowledgeInsightCard, buildReframeText } from '../KnowledgeInsightCard';
+import type { GeneratedInsight } from '../../services/insights/types/knowledgeEngine';
 
 describe('buildReframeText', () => {
   it('does not duplicate complete reframe sentences', () => {
@@ -26,5 +30,40 @@ describe('buildReframeText', () => {
     ).toBe(
       'This does not read as being needy. It reads as a generous heart learning that its own needs are valid too.',
     );
+  });
+});
+
+describe('KnowledgeInsightCard', () => {
+  it('renders the adapted insight fields used by the app surface', () => {
+    const insight: GeneratedInsight = {
+      id: 'insight-1',
+      slot: 'whatMySkyNoticed',
+      slotLabel: 'What MySky Noticed',
+      title: 'Low-Capacity Windows',
+      observation: 'Low capacity is showing up today.',
+      pattern: 'Sleep and energy may be shaping what feels possible.',
+      reframe: {
+        shame: '',
+        clarity: 'Low capacity may be a timing signal, not a character flaw.',
+      },
+      prompt: 'What keeps landing in your lowest-capacity window?',
+      patternKey: 'timeRhythms_lowCapacityPatterns',
+      confidence: 'moderate',
+      movement: 'new',
+      evidence: [],
+      createdAt: '2026-04-24T12:00:00Z',
+    };
+
+    const { getByText } = render(
+      <ThemeProvider>
+        <KnowledgeInsightCard insight={insight} />
+      </ThemeProvider>,
+    );
+
+    expect(getByText('Low-Capacity Windows')).toBeTruthy();
+    expect(getByText('What MySky Noticed')).toBeTruthy();
+    expect(getByText('Low capacity is showing up today. Sleep and energy may be shaping what feels possible.')).toBeTruthy();
+    expect(getByText('It reads as Low capacity may be a timing signal, not a character flaw.')).toBeTruthy();
+    expect(getByText('What keeps landing in your lowest-capacity window?')).toBeTruthy();
   });
 });

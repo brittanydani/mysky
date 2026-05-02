@@ -2121,7 +2121,7 @@ export function computeInsightBundle(
 export function confidenceLabel(level: ConfidenceLevel): string {
   if (level === 'high') return 'High confidence';
   if (level === 'medium') return 'Building clarity';
-  return 'Early signal';
+  return 'Emerging';
 }
 
 export function trendArrow(dir: TrendDirection): string {

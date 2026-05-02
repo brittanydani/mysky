@@ -25,7 +25,7 @@ const safetyRegulationPattern = (
   tags,
 });
 
-export const SAFETY_REGULATION_PATTERNS: ArchivePattern[] = [
+const SAFETY_REGULATION_FOUNDATION_PATTERNS: ArchivePattern[] = [
   safetyRegulationPattern(
     'safety_regulation_001_calm_bracing',
     'When Calm Still Feels Watchful',
@@ -56,4 +56,392 @@ export const SAFETY_REGULATION_PATTERNS: ArchivePattern[] = [
     'The archive may show a distinction forming between true calm and protective numbness.',
     ['numbness', 'calm', 'regulation'],
   ),
+];
+
+export const SAFETY_REGULATION_EXPANSION: ArchivePattern[] = [
+  {
+    key: 'safetyRegulation_subtleBracing',
+    title: 'Subtle Bracing',
+    category: 'safetyRegulation',
+    description:
+      'The user appears calm or functional while the body remains slightly prepared underneath.',
+    requiredSignals: ['calm_bracing', 'preparedness'],
+    supportingSignals: [
+      'always_on',
+      'body_heaviness',
+      'jaw_restraint',
+      'shoulder_burden',
+    ],
+    conflictingSignals: ['easy_settling', 'complete_calm'],
+    shameLabel: 'If I look calm, I should feel calm.',
+    clarityReframe:
+      'Looking composed and feeling fully safe are not always the same thing.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['bracing', 'safety', 'body'],
+  },
+  {
+    key: 'safetyRegulation_calmFeelsNew',
+    title: 'Calm Feels Unfamiliar',
+    category: 'safetyRegulation',
+    description:
+      'Calm is present or possible, but the user may not fully trust it yet.',
+    requiredSignals: ['calm_is_new'],
+    supportingSignals: [
+      'quiet_safety',
+      'numbness_vs_calm',
+      'tension_release',
+      'body_lightness',
+    ],
+    conflictingSignals: ['familiar_calm', 'easy_settling'],
+    shameLabel: 'If calm feels strange, something must be wrong.',
+    clarityReframe:
+      'Calm can feel unfamiliar when your system is used to staying prepared.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['calm', 'safety', 'regulation'],
+  },
+  {
+    key: 'safetyRegulation_calmBraced',
+    title: 'Calm, But Still Braced',
+    category: 'safetyRegulation',
+    description:
+      'The user may experience some steadiness while part of the body continues monitoring.',
+    requiredSignals: [
+      'outward_settled_under_ready',
+      'composed_still_tracking',
+    ],
+    supportingSignals: [
+      'quiet_readiness',
+      'smooth_monitoring_change',
+      'calm_seen_attention_hidden',
+    ],
+    conflictingSignals: ['complete_calm', 'settles_without_readiness'],
+    shameLabel: 'If I am calm, I should not still be tracking.',
+    clarityReframe:
+      'This can be a layered state: calm on one level, readiness on another.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['calm', 'tracking', 'bracing'],
+  },
+  {
+    key: 'safetyRegulation_alwaysOn',
+    title: 'Always On',
+    category: 'safetyRegulation',
+    description:
+      'The user’s system is staying alert or prepared even when there is no immediate demand.',
+    requiredSignals: ['always_on'],
+    supportingSignals: [
+      'preparedness',
+      'calm_bracing',
+      'rest_resistance',
+      'mental_load',
+    ],
+    conflictingSignals: ['easy_rest', 'unbraced_stillness'],
+    shameLabel: 'I should be able to shut this off.',
+    clarityReframe:
+      'Being always on may have helped you respond quickly, but it can also make rest harder to reach.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.62,
+    cooldownDays: 14,
+    tags: ['always on', 'alertness', 'rest'],
+  },
+  {
+    key: 'safetyRegulation_bodyNeedsEvidence',
+    title: 'The Body Needs Evidence',
+    category: 'safetyRegulation',
+    description:
+      'Words or logic may not be enough for the body to believe safety is real.',
+    requiredSignals: ['somatic_safety', 'body_knows_first'],
+    supportingSignals: [
+      'mental_first_body_agrees',
+      'body_vote_when_mind_sure',
+      'tension_release',
+    ],
+    conflictingSignals: ['logic_over_sensation'],
+    shameLabel: 'I should be able to think my way into feeling safe.',
+    clarityReframe:
+      'Your body may need repeated evidence of safety, not just a convincing thought.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['body', 'safety', 'evidence'],
+  },
+  {
+    key: 'safetyRegulation_unpredictabilityShift',
+    title: 'Unpredictability Shifts Your State',
+    category: 'safetyRegulation',
+    description:
+      'Small changes or unpredictability may move the user from settled to alert.',
+    requiredSignals: ['preparedness', 'relationship_safety_testing'],
+    supportingSignals: [
+      'tone_sensitivity',
+      'sharp_connection_awareness',
+      'trigger_faster_than_explanation',
+    ],
+    conflictingSignals: ['silence_neutral', 'low_scanning'],
+    shameLabel: 'This should not affect me this quickly.',
+    clarityReframe:
+      'A quick shift into alertness may mean your system is sensitive to uncertainty, not that you are making things up.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['unpredictability', 'alertness', 'relationships'],
+  },
+  {
+    key: 'safetyRegulation_settlesWithoutReadiness',
+    title: 'Settling Without Readiness',
+    category: 'safetyRegulation',
+    description:
+      'The user’s body is able to settle without keeping a layer of preparation active.',
+    requiredSignals: ['settles_without_readiness'],
+    supportingSignals: [
+      'complete_calm',
+      'easy_settling',
+      'unbraced_stillness',
+      'familiar_calm',
+    ],
+    conflictingSignals: ['calm_bracing', 'always_on'],
+    shameLabel: 'If I relax, I will miss something.',
+    clarityReframe:
+      'Letting readiness fade can be a sign that your body has enough evidence to rest.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['settling', 'calm', 'safety'],
+  },
+  {
+    key: 'safetyRegulation_completeCalm',
+    title: 'Complete Calm',
+    category: 'safetyRegulation',
+    description:
+      'Calm appears to reach both the outer presentation and the inner body state.',
+    requiredSignals: ['complete_calm'],
+    supportingSignals: [
+      'easy_settling',
+      'unbraced_stillness',
+      'low_stress',
+      'body_lightness',
+    ],
+    conflictingSignals: [
+      'outward_settled_under_ready',
+      'quiet_readiness',
+    ],
+    shameLabel: 'Calm cannot last, so I should not trust it.',
+    clarityReframe:
+      'A calm moment does not have to prove forever. It can still show what safety feels like in your body.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['calm', 'safety', 'ease'],
+  },
+  {
+    key: 'safetyRegulation_numbnessVsCalm',
+    title: 'Numbness Is Not Calm',
+    category: 'safetyRegulation',
+    description:
+      'The user may be distinguishing between true calm and emotional shutdown.',
+    requiredSignals: ['numbness_vs_calm'],
+    supportingSignals: ['body_heaviness', 'disconnected', 'quiet_safety'],
+    conflictingSignals: ['body_lightness', 'peace'],
+    shameLabel: 'If I am not reacting, I must be calm.',
+    clarityReframe:
+      'Not reacting and feeling safe are different states. Numbness may be quiet, but it may not be rest.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['numbness', 'calm', 'shutdown'],
+  },
+  {
+    key: 'safetyRegulation_quietSafety',
+    title: 'Quiet Safety',
+    category: 'safetyRegulation',
+    description:
+      'Safety appears in small, quiet moments rather than dramatic shifts.',
+    requiredSignals: ['quiet_safety'],
+    supportingSignals: [
+      'low_stress',
+      'glimmer_softening',
+      'body_lightness',
+      'peace',
+    ],
+    conflictingSignals: ['high_stress', 'unsafe'],
+    shameLabel: 'If it is subtle, it does not matter.',
+    clarityReframe:
+      'Safety can be quiet and still meaningful. Sometimes the body softens before the mind names it.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['quiet safety', 'glimmers', 'regulation'],
+  },
+  {
+    key: 'safetyRegulation_safetyAfterConsistency',
+    title: 'Safety Builds Through Consistency',
+    category: 'safetyRegulation',
+    description:
+      'Repeated steadiness or reliability appears important for the user’s system to settle.',
+    requiredSignals: ['consistency_need', 'quiet_safety'],
+    supportingSignals: [
+      'trust_builds_slowly',
+      'relationship_safety_testing',
+      'low_stress',
+    ],
+    conflictingSignals: ['rupture_sensitivity', 'unpredictability_shift'],
+    shameLabel: 'One reassurance should be enough.',
+    clarityReframe:
+      'Some systems need consistency, not just reassurance, before safety becomes believable.',
+    lookbackDays: 60,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['consistency', 'safety', 'trust'],
+  },
+  {
+    key: 'safetyRegulation_motionFeelsSafer',
+    title: 'Motion Feels Safer Than Stillness',
+    category: 'safetyRegulation',
+    description:
+      'Doing something may feel safer than being still with the body or moment.',
+    requiredSignals: ['handling_trust_keeps_engaged', 'rest_resistance'],
+    supportingSignals: [
+      'always_on',
+      'preparedness',
+      'physical_pause_mind_moving',
+    ],
+    conflictingSignals: ['unbraced_stillness', 'easy_rest'],
+    shameLabel: 'If I stop moving, I will lose control.',
+    clarityReframe:
+      'Motion can feel regulating, but stillness may need safety before it can become rest.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['motion', 'stillness', 'safety'],
+  },
+  {
+    key: 'safetyRegulation_layeredRelaxation',
+    title: 'Relaxation Happens in Layers',
+    category: 'safetyRegulation',
+    description:
+      'Relaxation may begin externally before reaching deeper body readiness.',
+    requiredSignals: ['layered_relaxation'],
+    supportingSignals: [
+      'outward_settled_under_ready',
+      'calm_bracing',
+      'quiet_readiness',
+    ],
+    conflictingSignals: ['complete_calm'],
+    shameLabel: 'If I am not fully relaxed, it does not count.',
+    clarityReframe:
+      'Partial relaxation is still movement. Your body may soften one layer at a time.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['relaxation', 'layers', 'body'],
+  },
+  {
+    key: 'safetyRegulation_openWithEarlySigns',
+    title: 'Open, With Early Signs',
+    category: 'safetyRegulation',
+    description:
+      'The user can remain open while still noticing early signs of shift or risk.',
+    requiredSignals: ['open_with_early_signs'],
+    supportingSignals: [
+      'grounded_without_monitoring',
+      'calm_presence_for_others',
+      'early_signal_tracking',
+    ],
+    conflictingSignals: ['low_scanning', 'always_on'],
+    shameLabel: 'If I am open, I cannot protect myself.',
+    clarityReframe:
+      'Openness and awareness can coexist. You do not have to choose between softness and discernment.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['openness', 'discernment', 'safety'],
+  },
+  {
+    key: 'safetyRegulation_unsafeSignal',
+    title: 'Unsafe Signal',
+    category: 'safetyRegulation',
+    description:
+      'The user’s system is registering something as unsafe, unclear, invasive, or uncontained.',
+    requiredSignals: ['unsafe'],
+    supportingSignals: [
+      'mistrust',
+      'disgust',
+      'distance_for_safety',
+      'body_knows_first',
+    ],
+    conflictingSignals: ['safe', 'quiet_safety'],
+    shameLabel: 'I should talk myself out of this feeling.',
+    clarityReframe:
+      'Feeling unsafe deserves attention before it deserves dismissal. The signal may need clarity, distance, or evidence.',
+    lookbackDays: 30,
+    minEvidenceCount: 2,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['unsafe', 'body signal', 'protection'],
+  },
+  {
+    key: 'safetyRegulation_safeSignal',
+    title: 'Safe Signal',
+    category: 'safetyRegulation',
+    description:
+      'The user’s system is registering safety, steadiness, or enough containment to soften.',
+    requiredSignals: ['safe'],
+    supportingSignals: ['quiet_safety', 'body_lightness', 'low_stress', 'trust'],
+    conflictingSignals: ['unsafe', 'mistrust'],
+    shameLabel: 'I should not trust safety too quickly.',
+    clarityReframe:
+      'Safety does not have to be permanent to be real. It can still be worth noticing while it is here.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['safe', 'trust', 'regulation'],
+  },
+  {
+    key: 'safetyRegulation_trappedActivation',
+    title: 'Trapped Activation',
+    category: 'safetyRegulation',
+    description:
+      'Feeling trapped appears to activate fight, freeze, shutdown, or escape responses.',
+    requiredSignals: ['trapped'],
+    supportingSignals: [
+      'helplessness',
+      'powerlessness',
+      'body_heaviness',
+      'high_stress',
+    ],
+    conflictingSignals: ['agency', 'grounded'],
+    shameLabel: 'I should be able to just deal with it.',
+    clarityReframe:
+      'Feeling trapped can make your system search for agency. Even one real choice can matter.',
+    lookbackDays: 30,
+    minEvidenceCount: 2,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['trapped', 'agency', 'activation'],
+  },
+];
+
+export const SAFETY_REGULATION_PATTERNS: ArchivePattern[] = [
+  ...SAFETY_REGULATION_FOUNDATION_PATTERNS,
+  ...SAFETY_REGULATION_EXPANSION,
 ];

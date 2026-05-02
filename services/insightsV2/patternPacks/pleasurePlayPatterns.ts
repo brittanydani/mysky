@@ -25,7 +25,7 @@ const pleasurePlayPattern = (
   tags,
 });
 
-export const PLEASURE_PLAY_PATTERNS: ArchivePattern[] = [
+const PLEASURE_PLAY_FOUNDATION_PATTERNS: ArchivePattern[] = [
   pleasurePlayPattern(
     'pleasure_play_001_play_starved',
     'The Play-Starved Pattern',
@@ -56,4 +56,399 @@ export const PLEASURE_PLAY_PATTERNS: ArchivePattern[] = [
     'Beauty, sensory pleasure, or delight may regulate the body and restore emotional aliveness.',
     ['beauty', 'pleasure', 'aliveness'],
   ),
+];
+
+export const PLEASURE_PLAY_EXPANSION: ArchivePattern[] = [
+  {
+    key: 'pleasurePlay_playStarved',
+    title: 'Joy Is Getting Crowded Out',
+    category: 'pleasurePlay',
+    description:
+      'Pleasure, play, or enjoyment is present as a need but is not getting much space.',
+    requiredSignals: ['play_starved'],
+    supportingSignals: [
+      'rest_resistance',
+      'responsibility_weight',
+      'pleasure_secondary',
+      'low_energy',
+    ],
+    conflictingSignals: ['play_glimmer', 'joy_tolerance'],
+    shameLabel: 'Fun can wait until everything else is handled.',
+    clarityReframe:
+      'Pleasure may not be extra. It may be one way your system reconnects with aliveness.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['play', 'joy', 'aliveness'],
+  },
+  {
+    key: 'pleasurePlay_earnedPleasure',
+    title: 'Pleasure Feels Earned',
+    category: 'pleasurePlay',
+    description:
+      'Enjoyment feels easier after responsibilities are handled or enough effort has been given.',
+    requiredSignals: [
+      'pleasure_after_completion',
+      'earned_pleasure_relaxation',
+    ],
+    supportingSignals: [
+      'responsibilities_during_pleasure',
+      'rest_guilt',
+      'high_standards',
+    ],
+    conflictingSignals: ['pleasure_without_productivity', 'joy_tolerance'],
+    shameLabel: 'I need to earn feeling good.',
+    clarityReframe: 'Pleasure does not have to be a reward for exhaustion.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['pleasure', 'earning', 'rest'],
+  },
+  {
+    key: 'pleasurePlay_alivenessSignals',
+    title: 'Aliveness Has Clues',
+    category: 'pleasurePlay',
+    description:
+      'Certain moments, activities, or sensations bring the user into a more alive state.',
+    requiredSignals: ['creative_aliveness', 'play_glimmer'],
+    supportingSignals: [
+      'body_lightness',
+      'mood_improvement',
+      'beauty_regulation',
+      'laughter_glimmer',
+    ],
+    conflictingSignals: ['numbness', 'disconnected'],
+    shameLabel: 'This is not practical enough to matter.',
+    clarityReframe:
+      'Aliveness is useful data. It can show what restores you, not just what entertains you.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['aliveness', 'play', 'glimmer'],
+  },
+  {
+    key: 'pleasurePlay_joyTolerance',
+    title: 'Letting Joy Land',
+    category: 'pleasurePlay',
+    description:
+      'The user is becoming more able to notice and receive joy without rushing past it.',
+    requiredSignals: ['joy_tolerance'],
+    supportingSignals: [
+      'play_glimmer',
+      'laughter_glimmer',
+      'body_lightness',
+      'hope',
+    ],
+    conflictingSignals: ['play_starved', 'pleasure_secondary'],
+    shameLabel: 'Joy will disappear if I trust it.',
+    clarityReframe:
+      'Letting joy land does not require pretending everything is solved.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['joy', 'receiving', 'glimmers'],
+  },
+  {
+    key: 'pleasurePlay_pleasureSecondary',
+    title: 'Pleasure Comes Second',
+    category: 'pleasurePlay',
+    description:
+      'Pleasure is consistently placed behind responsibility, usefulness, or urgency.',
+    requiredSignals: ['pleasure_secondary'],
+    supportingSignals: [
+      'responsibility_weight',
+      'high_standards',
+      'rest_guilt',
+      'time_scarcity',
+    ],
+    conflictingSignals: ['pleasure_without_productivity', 'play_glimmer'],
+    shameLabel:
+      'Enjoyment is less important than what needs to be done.',
+    clarityReframe:
+      'Pleasure may be one of the ways your life becomes livable, not a distraction from responsibility.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['pleasure', 'priority', 'responsibility'],
+  },
+  {
+    key: 'pleasurePlay_playGlimmer',
+    title: 'Play Softens Something',
+    category: 'pleasurePlay',
+    description:
+      "Playful moments appear to shift the user's state toward ease, lightness, or connection.",
+    requiredSignals: ['play_glimmer'],
+    supportingSignals: [
+      'laughter_glimmer',
+      'body_lightness',
+      'low_stress',
+      'connection_glimmer',
+    ],
+    conflictingSignals: ['high_stress', 'unsafe'],
+    shameLabel: 'This is too small to count.',
+    clarityReframe:
+      'A playful moment can be small and still change your state.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['play', 'glimmer', 'ease'],
+  },
+  {
+    key: 'pleasurePlay_laughterGlimmer',
+    title: 'Laughter Changes the State',
+    category: 'pleasurePlay',
+    description:
+      'Laughter or humor appears to create a noticeable shift in mood or body state.',
+    requiredSignals: ['laughter_glimmer'],
+    supportingSignals: [
+      'mood_improvement',
+      'body_lightness',
+      'tension_release',
+      'connection_glimmer',
+    ],
+    conflictingSignals: ['numbness', 'disconnected'],
+    shameLabel: 'Laughter does not fix anything, so it does not matter.',
+    clarityReframe:
+      'Laughter may not solve the problem, but it can give your system a moment of release.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['laughter', 'release', 'joy'],
+  },
+  {
+    key: 'pleasurePlay_desireAsInformation',
+    title: 'Desire Is Information',
+    category: 'pleasurePlay',
+    description:
+      'The user is noticing desire, preference, or wanting as meaningful information.',
+    requiredSignals: ['desire'],
+    supportingSignals: [
+      'creative_aliveness',
+      'pleasure_without_productivity',
+      'body_aliveness_cues',
+    ],
+    conflictingSignals: ['shame', 'numbness'],
+    shameLabel: 'Wanting something is selfish or impractical.',
+    clarityReframe:
+      'Desire does not always need immediate action, but it may deserve acknowledgment.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['desire', 'wanting', 'aliveness'],
+  },
+  {
+    key: 'pleasurePlay_bodyAlivenessCues',
+    title: 'Your Body Recognizes Aliveness',
+    category: 'pleasurePlay',
+    description:
+      'The body responds noticeably to beauty, movement, music, touch, laughter, or sensory pleasure.',
+    requiredSignals: ['body_aliveness_cues'],
+    supportingSignals: [
+      'body_lightness',
+      'beauty_regulation',
+      'creative_aliveness',
+      'play_glimmer',
+    ],
+    conflictingSignals: ['body_heaviness', 'numbness'],
+    shameLabel: 'This body signal is not important enough to track.',
+    clarityReframe:
+      'Your body may know what brings you back to life before your mind explains it.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['body', 'aliveness', 'pleasure'],
+  },
+  {
+    key: 'pleasurePlay_structuredPleasure',
+    title: 'Pleasure Feels Safer With Structure',
+    category: 'pleasurePlay',
+    description:
+      'Enjoyment becomes easier when it has a clear container, plan, or boundary.',
+    requiredSignals: ['structured_pleasure'],
+    supportingSignals: [
+      'bounded_rest_return',
+      'earned_pleasure_relaxation',
+      'rest_needs_safety',
+    ],
+    conflictingSignals: ['spontaneous_play'],
+    shameLabel: 'If pleasure needs structure, it is not real pleasure.',
+    clarityReframe:
+      'Structure can help pleasure feel safe enough to receive.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['pleasure', 'structure', 'safety'],
+  },
+  {
+    key: 'pleasurePlay_spontaneousPlay',
+    title: 'Spontaneous Play Is Available',
+    category: 'pleasurePlay',
+    description:
+      'The user is able to follow small impulses toward play, curiosity, or enjoyment.',
+    requiredSignals: ['spontaneous_play'],
+    supportingSignals: [
+      'play_glimmer',
+      'curiosity',
+      'joy_tolerance',
+      'body_lightness',
+    ],
+    conflictingSignals: ['structured_pleasure', 'pleasure_secondary'],
+    shameLabel: 'If it is not planned, it does not deserve space.',
+    clarityReframe:
+      'Spontaneous play can be a sign that your system has enough room to explore.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['spontaneity', 'play', 'curiosity'],
+  },
+  {
+    key: 'pleasurePlay_creativeAliveness',
+    title: 'Creative Aliveness',
+    category: 'pleasurePlay',
+    description:
+      'Creative expression is connected to energy, joy, or a stronger sense of self.',
+    requiredSignals: ['creative_aliveness'],
+    supportingSignals: [
+      'creativityExpression',
+      'beauty_glimmer',
+      'inspired',
+      'body_lightness',
+    ],
+    conflictingSignals: ['creative_block', 'numbness'],
+    shameLabel: 'Creating only matters if it becomes something useful.',
+    clarityReframe:
+      'Creative energy can be valuable because of what it awakens in you, not only because of what it produces.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['creativity', 'aliveness', 'expression'],
+  },
+  {
+    key: 'pleasurePlay_funWithoutPurpose',
+    title: 'Fun Without a Purpose',
+    category: 'pleasurePlay',
+    description:
+      'The user may benefit from enjoyment that does not need an outcome or justification.',
+    requiredSignals: ['pleasure_without_productivity'],
+    supportingSignals: [
+      'play_glimmer',
+      'joy_tolerance',
+      'spontaneous_play',
+    ],
+    conflictingSignals: [
+      'earned_pleasure_relaxation',
+      'pleasure_secondary',
+    ],
+    shameLabel: 'If it does not produce anything, it does not count.',
+    clarityReframe:
+      'Fun does not have to become productive to be part of a meaningful life.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['fun', 'purpose', 'play'],
+  },
+  {
+    key: 'pleasurePlay_sensoryPleasure',
+    title: 'Sensory Pleasure Matters',
+    category: 'pleasurePlay',
+    description:
+      'Taste, touch, color, sound, scent, movement, or texture may support regulation and aliveness.',
+    requiredSignals: ['sensory_sensitivity', 'beauty_regulation'],
+    supportingSignals: ['body_lightness', 'ordinary_sacred', 'calm', 'joy'],
+    conflictingSignals: ['sensory_overload'],
+    shameLabel: 'Sensory comfort is too small to matter.',
+    clarityReframe:
+      'Sensory pleasure can help your body remember safety, ease, or delight in ordinary ways.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['sensory', 'pleasure', 'regulation'],
+  },
+  {
+    key: 'pleasurePlay_pleasureAndResponsibility',
+    title: 'Pleasure Beside Responsibility',
+    category: 'pleasurePlay',
+    description:
+      'The user is learning to let enjoyment exist even when responsibilities are not fully complete.',
+    requiredSignals: ['responsibilities_during_pleasure'],
+    supportingSignals: [
+      'pleasure_after_completion',
+      'rest_guilt',
+      'responsibility_weight',
+    ],
+    conflictingSignals: ['pleasure_without_productivity'],
+    shameLabel: 'I cannot enjoy anything while something is unfinished.',
+    clarityReframe:
+      'Unfinished responsibilities do not have to cancel every moment of pleasure.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['pleasure', 'responsibility', 'unfinished'],
+  },
+  {
+    key: 'pleasurePlay_joyAfterHardness',
+    title: 'Joy After Hardness',
+    category: 'pleasurePlay',
+    description:
+      'Joy or play returns after a hard period, showing that aliveness is still accessible.',
+    requiredSignals: ['joy_tolerance', 'mood_improvement'],
+    supportingSignals: [
+      'play_glimmer',
+      'laughter_glimmer',
+      'relief',
+      'body_lightness',
+    ],
+    conflictingSignals: ['ongoing_high_distress'],
+    shameLabel: 'If things were hard, joy should not be here yet.',
+    clarityReframe:
+      'Joy can return before everything is solved. Its presence does not erase what was hard.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['joy', 'recovery', 'aliveness'],
+  },
+  {
+    key: 'pleasurePlay_curiosityReturns',
+    title: 'Curiosity Returns',
+    category: 'pleasurePlay',
+    description:
+      'Curiosity is becoming available again after pressure, heaviness, or disconnection.',
+    requiredSignals: ['curiosity'],
+    supportingSignals: [
+      'inspired',
+      'creative_aliveness',
+      'play_glimmer',
+      'low_stress',
+    ],
+    conflictingSignals: ['overwhelm', 'numbness'],
+    shameLabel: 'Curiosity is not important compared to everything else.',
+    clarityReframe:
+      'Curiosity can be a sign that your system has enough room to look outward again.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['curiosity', 'play', 'openness'],
+  },
+];
+
+export const PLEASURE_PLAY_PATTERNS: ArchivePattern[] = [
+  ...PLEASURE_PLAY_FOUNDATION_PATTERNS,
+  ...PLEASURE_PLAY_EXPANSION,
 ];

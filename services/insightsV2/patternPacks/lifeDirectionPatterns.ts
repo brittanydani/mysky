@@ -25,7 +25,7 @@ const lifeDirectionPattern = (
   tags,
 });
 
-export const LIFE_DIRECTION_PATTERNS: ArchivePattern[] = [
+const LIFE_DIRECTION_FOUNDATION_PATTERNS: ArchivePattern[] = [
   lifeDirectionPattern(
     'life_direction_001_future_self',
     'The Future Self Signal',
@@ -56,4 +56,369 @@ export const LIFE_DIRECTION_PATTERNS: ArchivePattern[] = [
     'Identity rewriting may point to a broader reorientation in direction, priorities, or self-definition.',
     ['reorientation', 'identity', 'purpose'],
   ),
+];
+
+export const LIFE_DIRECTION_EXPANSION: ArchivePattern[] = [
+  {
+    key: 'lifeDirection_quietPull',
+    title: 'A Quiet Pull',
+    category: 'lifeDirection',
+    description:
+      'A direction or change is beginning to form before the full plan is clear.',
+    requiredSignals: ['future_self_orientation', 'growth_edge'],
+    supportingSignals: ['purpose_signal', 'identity_rewriting', 'chapter_shift'],
+    conflictingSignals: ['present_focus', 'low_future_urgency'],
+    shameLabel: 'I should already know where this is going.',
+    clarityReframe:
+      'Direction does not always arrive as certainty. Sometimes it starts as a pull that keeps returning.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['direction', 'future self', 'growth'],
+  },
+  {
+    key: 'lifeDirection_personalStakes',
+    title: 'The Decision Carries Identity Weight',
+    category: 'lifeDirection',
+    description:
+      'A decision feels heavy because it touches identity, values, or the future self.',
+    requiredSignals: ['decision_uncertainty', 'identity_rewriting'],
+    supportingSignals: [
+      'values_conflict',
+      'future_self_orientation',
+      'inner_authority',
+    ],
+    conflictingSignals: ['low_life_defining_pressure'],
+    shameLabel: 'This should be an easier decision.',
+    clarityReframe:
+      'This may feel hard because it is not only about options. It may be about who you are becoming.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['decision', 'identity', 'future'],
+  },
+  {
+    key: 'lifeDirection_stabilityAndGrowth',
+    title: 'Stability and Growth',
+    category: 'lifeDirection',
+    description:
+      'The user is holding both the need for stability and the desire to grow.',
+    requiredSignals: ['future_self_orientation', 'chapter_shift'],
+    supportingSignals: [
+      'self_trust_growth',
+      'safetyRegulation',
+      'values_conflict',
+    ],
+    conflictingSignals: ['reckless_change'],
+    shameLabel: 'If I want growth, I should not need stability.',
+    clarityReframe:
+      'Wanting stability does not mean you are avoiding growth. It may mean growth needs to happen in a way your system can actually hold.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['growth', 'stability', 'direction'],
+  },
+  {
+    key: 'lifeDirection_waitingForClarity',
+    title: 'Waiting for Clarity',
+    category: 'lifeDirection',
+    description:
+      'The user may be waiting for clarity before taking a step, even though clarity may come through movement.',
+    requiredSignals: ['decision_uncertainty', 'clarity_before_release'],
+    supportingSignals: [
+      'future_self_orientation',
+      'deep_processing',
+      'asks_why',
+    ],
+    conflictingSignals: ['action_forward_processing', 'next_step_momentum'],
+    shameLabel: 'I cannot move until I am completely sure.',
+    clarityReframe:
+      'Some clarity comes before movement. Some clarity only arrives after one honest step.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['clarity', 'decision', 'movement'],
+  },
+  {
+    key: 'lifeDirection_alignmentOverLogic',
+    title: 'Alignment Over Logic',
+    category: 'lifeDirection',
+    description:
+      'The user is sensitive to whether a choice feels aligned, not only whether it makes sense logically.',
+    requiredSignals: ['values_conflict', 'inner_authority'],
+    supportingSignals: [
+      'future_self_orientation',
+      'truth_telling',
+      'purpose_signal',
+    ],
+    conflictingSignals: ['practical_literalist'],
+    shameLabel: 'If it makes sense on paper, I should be fine with it.',
+    clarityReframe:
+      'A choice can make sense and still not feel aligned. That mismatch is worth listening to.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['alignment', 'values', 'decision'],
+  },
+  {
+    key: 'lifeDirection_internalProgress',
+    title: 'Internal Progress',
+    category: 'lifeDirection',
+    description:
+      'Progress is happening internally before it is visible externally.',
+    requiredSignals: ['integrates_insight', 'future_self_orientation'],
+    supportingSignals: [
+      'identity_rewriting',
+      'self_trust_growth',
+      'old_story_loosening',
+    ],
+    conflictingSignals: ['pure_output_focus'],
+    shameLabel: 'If nothing outside has changed, nothing is happening.',
+    clarityReframe:
+      'Internal progress can precede visible change. Becoming clearer is not the same as standing still.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['internal progress', 'growth', 'future'],
+  },
+  {
+    key: 'lifeDirection_presentGuidesFuture',
+    title: 'The Present Is Guiding the Future',
+    category: 'lifeDirection',
+    description:
+      'The user is mostly present-focused, but future questions are beginning to appear when something shifts.',
+    requiredSignals: ['present_grounded_future_questions'],
+    supportingSignals: [
+      'now_focus_with_possibility',
+      'direction_when_shift',
+      'future_key_moment_pull',
+    ],
+    conflictingSignals: ['future_preoccupation'],
+    shameLabel: 'If I am not always planning, I am directionless.',
+    clarityReframe:
+      'You may not need to live far ahead of yourself for the future to matter. Sometimes the present shows the next question.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['present', 'future', 'direction'],
+  },
+  {
+    key: 'lifeDirection_futurePreoccupation',
+    title: 'Living Ahead of Yourself',
+    category: 'lifeDirection',
+    description:
+      'The user\'s attention is pulled strongly toward future outcomes, plans, or possibilities.',
+    requiredSignals: ['future_preoccupation'],
+    supportingSignals: [
+      'change_over_present',
+      'planning_over_presence',
+      'restless_without_progress',
+    ],
+    conflictingSignals: ['current_moment_grounding', 'present_focus'],
+    shameLabel: 'I cannot rest until I know what comes next.',
+    clarityReframe:
+      'Future thinking can help you prepare, but it can also pull you away from the life that is happening now.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['future', 'planning', 'presence'],
+  },
+  {
+    key: 'lifeDirection_nextStepMomentum',
+    title: 'Next-Step Momentum',
+    category: 'lifeDirection',
+    description:
+      'Momentum is becoming available through one reachable next step rather than a complete plan.',
+    requiredSignals: ['next_step_momentum'],
+    supportingSignals: ['what_now_focus', 'action_forward_processing', 'confidence'],
+    conflictingSignals: ['decision_uncertainty', 'stuck'],
+    shameLabel: 'If I cannot see the whole path, I cannot move.',
+    clarityReframe:
+      'A full map is not always required. Sometimes the next honest step is enough to create movement.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['next step', 'momentum', 'decision'],
+  },
+  {
+    key: 'lifeDirection_stuckBetweenOptions',
+    title: 'Stuck Between Options',
+    category: 'lifeDirection',
+    description:
+      'The user feels unable to move because each option carries a cost.',
+    requiredSignals: ['stuck', 'decision_uncertainty'],
+    supportingSignals: ['conflicted', 'values_conflict', 'fear'],
+    conflictingSignals: ['next_step_momentum', 'confidence'],
+    shameLabel: 'If I were stronger, I would just choose.',
+    clarityReframe:
+      'Feeling stuck can mean the choice has real costs on more than one side. The next step may need to get smaller.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['stuck', 'decision', 'conflict'],
+  },
+  {
+    key: 'lifeDirection_futureSelfOrientation',
+    title: 'Future Self Orientation',
+    category: 'lifeDirection',
+    description:
+      'The user is considering what a future version of themselves may need or choose.',
+    requiredSignals: ['future_self_orientation'],
+    supportingSignals: [
+      'identity_rewriting',
+      'purpose_signal',
+      'self_trust_growth',
+    ],
+    conflictingSignals: ['present_focus'],
+    shameLabel: 'Thinking about my future self is too abstract.',
+    clarityReframe:
+      'Your future self can be a compass, especially when the present moment has too many competing demands.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['future self', 'direction', 'growth'],
+  },
+  {
+    key: 'lifeDirection_directionWhenShift',
+    title: 'Direction Matters When Something Shifts',
+    category: 'lifeDirection',
+    description:
+      'Direction does not feel constantly urgent, but becomes important when a change begins.',
+    requiredSignals: ['direction_when_shift'],
+    supportingSignals: [
+      'chapter_shift',
+      'present_trust_path_want',
+      'future_key_moment_pull',
+    ],
+    conflictingSignals: ['future_preoccupation'],
+    shameLabel: 'If direction only matters sometimes, I must not care enough.',
+    clarityReframe:
+      'Some people orient through the present until a shift asks for future attention. That can still be a valid way of moving through life.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['direction', 'present', 'change'],
+  },
+  {
+    key: 'lifeDirection_changeSignal',
+    title: 'Something Wants to Change',
+    category: 'lifeDirection',
+    description:
+      'The user is noticing a change signal before knowing exactly what change is needed.',
+    requiredSignals: ['not_goal_defined_change_signal'],
+    supportingSignals: [
+      'future_self_orientation',
+      'growth_edge',
+      'identity_rewriting',
+    ],
+    conflictingSignals: ['indifferent'],
+    shameLabel: 'If I cannot name it clearly, it does not count.',
+    clarityReframe: 'A change signal can be real before it becomes specific.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['change', 'signal', 'direction'],
+  },
+  {
+    key: 'lifeDirection_uncertaintyBothWays',
+    title: 'Uncertainty Exists Either Way',
+    category: 'lifeDirection',
+    description:
+      'The user feels tension because staying still and moving forward both carry uncertainty.',
+    requiredSignals: ['decision_uncertainty', 'future_self_orientation'],
+    supportingSignals: ['conflicted', 'stuck', 'fear'],
+    conflictingSignals: ['confidence'],
+    shameLabel: 'There must be a fully safe option.',
+    clarityReframe:
+      'Sometimes the question is not how to avoid uncertainty, but which uncertainty you are willing to live with.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['uncertainty', 'decision', 'future'],
+  },
+  {
+    key: 'lifeDirection_growthEdge',
+    title: 'A Growth Edge Is Active',
+    category: 'lifeDirection',
+    description:
+      'The user is encountering an area that asks for growth, courage, or a new response.',
+    requiredSignals: ['growth_edge'],
+    supportingSignals: [
+      'self_trust_growth',
+      'inner_authority',
+      'identity_rewriting',
+    ],
+    conflictingSignals: ['avoidance', 'shutdown'],
+    shameLabel: 'If this is hard, I am not ready.',
+    clarityReframe:
+      'A growth edge can feel uncomfortable because it is asking for something new, not because you are failing.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['growth edge', 'self-trust', 'change'],
+  },
+  {
+    key: 'lifeDirection_pathNotPerfect',
+    title: 'The Path Does Not Need to Be Perfect',
+    category: 'lifeDirection',
+    description:
+      'The user may be waiting for the perfect direction instead of allowing a workable next step.',
+    requiredSignals: ['decision_uncertainty', 'high_standards'],
+    supportingSignals: [
+      'future_self_orientation',
+      'clarity_before_release',
+      'fear',
+    ],
+    conflictingSignals: ['next_step_momentum'],
+    shameLabel: 'If I choose imperfectly, I will ruin the direction.',
+    clarityReframe:
+      'Direction can be adjusted. A workable step may teach you more than waiting for a perfect path.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['path', 'decision', 'perfection'],
+  },
+  {
+    key: 'lifeDirection_selfTrustThroughChange',
+    title: 'Self-Trust Through Change',
+    category: 'lifeDirection',
+    description:
+      'The user is learning to trust themselves while direction, identity, or circumstances shift.',
+    requiredSignals: ['self_trust_growth', 'chapter_shift'],
+    supportingSignals: [
+      'identity_rewriting',
+      'inner_authority',
+      'future_self_orientation',
+    ],
+    conflictingSignals: ['self_doubt', 'shame'],
+    shameLabel: 'I need the whole plan before I can trust myself.',
+    clarityReframe:
+      'Self-trust does not require knowing everything. It may mean staying connected to yourself as the next part becomes clear.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['self-trust', 'change', 'direction'],
+  },
+];
+
+export const LIFE_DIRECTION_PATTERNS: ArchivePattern[] = [
+  ...LIFE_DIRECTION_FOUNDATION_PATTERNS,
+  ...LIFE_DIRECTION_EXPANSION,
 ];

@@ -41,7 +41,7 @@ describe('Knowledge Engine V2', () => {
         expect(insight.patternKey).toBe('timeRhythms_lowCapacityPatterns');
         expect(insight.title).toBeDefined();
         expect(insight.body).toContain('Low-capacity states are repeating enough to notice');
-        expect(insight.reframe).toContain('This does not read as I should be able to push through this.');
+        expect(insight.reframe).toBe('This may need rhythm-aware planning, not more self-criticism.');
     }
   });
 
@@ -104,6 +104,74 @@ describe('Knowledge Engine V2', () => {
       const slots = result.insights.map(i => i.slot);
       expect(slots).toContain('whatMySkyNoticed');
       expect(slots).toContain('todaySignal');
+  });
+
+  it('caps the live today surface while keeping expanded V2 slots evidence-gated', async () => {
+    const result = await buildTodayInsights({
+      date: now,
+      rawInputs: {
+        dailyCheckIns: [{
+          date: today,
+          moodScore: 7,
+          energyLevel: 'high',
+          stressLevel: 'low',
+          tags: ['gratitude', 'rest'],
+        }],
+        journals: [{
+          date: today,
+          content: 'I felt grounded after a hard conversation, but my chest was tight and I wanted repair.',
+        }],
+        bodyMaps: [{
+          date: today,
+          region: 'chest',
+          emotion: 'anxiety',
+          sensation: 'tight',
+          intensity: 4,
+          cues: ['chest', 'tight'],
+        }],
+        relationshipMirrors: [{
+          date: today,
+          note: 'I wanted repair and reassurance after the tone shifted.',
+          tags: ['t2'],
+        }],
+        glimmerLogs: [{
+          timestamp: new Date(now).getTime(),
+          event: 'quiet walk helped me settle',
+          sensations: ['soft chest'],
+          intensity: 4,
+        }],
+        dreams: [{
+          date: today,
+          dreamText: 'A dream about unfinished conversations stayed with me.',
+        }],
+      },
+      history: [],
+    });
+
+    expect(result.insights.length).toBeLessThanOrEqual(4);
+    expect(result.insights.map(insight => insight.slot)).toContain('whatMySkyNoticed');
+    expect(result.insights.some(insight => insight.patternKey === 'unknown')).toBe(false);
+  });
+
+  it('uses feeling set copy for the primary daily feeling', async () => {
+    const result = await buildTodayInsights({
+      date: now,
+      rawInputs: {
+        journals: [{
+          date: today,
+          text: 'I feel hurt and unseen after that conversation.',
+        }],
+      },
+      history: [],
+    });
+
+    expect(result.primaryFeeling?.key).toBe('hurt');
+
+    const todaySignal = result.insights.find(i => i.slot === 'todaySignal');
+    expect(todaySignal?.title).toBe("Today's Hurt");
+    expect(todaySignal?.body).toBe(result.primaryFeeling?.selectedSentence);
+    expect(todaySignal?.reframe).toBe(result.primaryFeeling?.reframeSentence);
+    expect(todaySignal?.body).not.toContain('Your archive is noticing');
   });
 
   it('normalizes app model field names against the requested insight date', async () => {

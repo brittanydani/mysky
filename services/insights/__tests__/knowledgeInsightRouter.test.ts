@@ -1,4 +1,8 @@
-import { buildV2RawInputs, runActiveKnowledgeInsight } from '../knowledgeInsightRouter';
+import {
+  buildV2RawInputs,
+  runActiveKnowledgeInsight,
+  runActiveKnowledgeInsights,
+} from '../knowledgeInsightRouter';
 import type { SelfKnowledgeContext } from '../selfKnowledgeContext';
 import type { DailyCheckIn } from '../../patterns/types';
 import type { JournalEntry, SleepEntry } from '../../storage/models';
@@ -80,11 +84,78 @@ describe('knowledgeInsightRouter', () => {
     });
 
     expect(insight).not.toBeNull();
-    expect(insight?.patternKey).toBe('rest_capacity_001_rest_resistance');
+    expect(insight?.patternKey).toBeTruthy();
+    expect(insight?.patternKey).not.toBe('unknown');
     expect(insight?.observation).toBeTruthy();
     expect(insight?.prompt).toBeTruthy();
-    expect(insight?.reframe.shame).toContain('This does not read as');
-    expect(insight?.reframe.clarity).toContain('It reads as');
+    expect(`${insight?.reframe.shame} ${insight?.reframe.clarity}`.trim()).toBeTruthy();
+  });
+
+  it('preserves the expanded V2 daily insight list for Today rendering', async () => {
+    const result = await runActiveKnowledgeInsights({
+      checkIns,
+      journalEntries: [
+        {
+          ...journalEntries[0],
+          content: 'I felt grounded after a hard conversation, but my chest was tight and I wanted repair.',
+        },
+      ],
+      sleepEntries,
+      selfKnowledgeContext: {
+        ...emptyContext,
+        somaticEntries: [
+          {
+            id: 'body-1',
+            date: today,
+            region: 'chest',
+            emotion: 'anxiety',
+            sensation: 'tight',
+            intensity: 4,
+          },
+        ],
+        triggerEvents: [
+          {
+            id: 'glimmer-1',
+            timestamp: new Date(now).getTime(),
+            mode: 'nourish',
+            event: 'quiet walk helped me settle',
+            nsState: 'ventral',
+            sensations: ['soft chest'],
+            intensity: 4,
+          },
+        ],
+        relationshipPatterns: [
+          {
+            id: 'rel-1',
+            date: today,
+            note: 'I wanted repair and reassurance after the tone shifted.',
+            tags: ['t2'],
+          },
+        ],
+      },
+      date: now,
+      history: {
+        recentlyShownPatternKeys: [],
+        recentlyShownCopyHashes: [],
+      },
+    });
+
+    expect(result.primaryInsight).not.toBeNull();
+    expect(result.dailyInsights.length).toBeGreaterThan(1);
+    expect(result.dailyInsights.length).toBeLessThanOrEqual(4);
+    expect(result.dailyInsights[0].slot).toBe('whatMySkyNoticed');
+    expect(result.dailyInsights.map((insight) => insight.slotLabel)).toContain('What MySky Noticed');
+    expect(result.dailyInsights.some((insight) => insight.patternKey === 'unknown')).toBe(false);
+    expect(result.premiumPatterns.length).toBeGreaterThan(0);
+    expect(result.premiumPatterns.every(pattern => pattern.isV2Derived)).toBe(true);
+    expect(result.premiumPatterns.some(pattern => pattern.patternKey === 'unknown')).toBe(false);
+    expect(result.thisWeeksV2Pattern).not.toBeNull();
+    expect(result.thisWeeksV2Pattern?.isV2Derived).toBe(true);
+    expect(result.thisWeeksV2Pattern?.patternKey).not.toBe('unknown');
+    expect(result.premiumWeeklyDeepDive.length).toBeGreaterThan(0);
+    expect(result.premiumWeeklyDeepDive.length).toBeLessThanOrEqual(4);
+    expect(result.premiumWeeklyDeepDive.every(read => read.isV2Derived)).toBe(true);
+    expect(result.premiumWeeklyDeepDive.some(read => read.patternKey === 'unknown')).toBe(false);
   });
 
   it('passes self-knowledge sources into V2 raw inputs', () => {

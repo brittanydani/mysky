@@ -301,7 +301,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   // spiritualMeaning
   {
     key: 'spiritualMeaning_emergingMeaning',
-    patternKey: 'spiritual_meaning_001_faith_meaning',
+    patternKey: 'spiritualMeaning_meaningMaking',
     title: 'You Are Looking for Meaning',
     triggerSignals: ['faith_meaning', 'meaning_making', 'ordinary_sacred'],
     observation: 'Meaning is showing up as part of how you process.',
@@ -316,7 +316,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   },
   {
     key: 'spiritualMeaning_repeatingPurpose',
-    patternKey: 'spiritual_meaning_003_purpose_as_compass',
+    patternKey: 'spiritualMeaning_purposeSignal',
     title: 'Purpose Keeps Returning',
     triggerSignals: ['purpose_signal', 'legacy_signal', 'future_self_orientation'],
     observation: 'Purpose or direction is appearing repeatedly.',
@@ -330,7 +330,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   },
   {
     key: 'spiritualMeaning_mixedPracticalMeaning',
-    patternKey: 'spiritual_meaning_001_faith_meaning',
+    patternKey: 'spiritualMeaning_meaningAndAction',
     title: 'Meaning Needs a Next Step',
     triggerSignals: [
       'meaning_with_practical_action',
@@ -351,7 +351,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   // safetyRegulation
   {
     key: 'safetyRegulation_emergingBracing',
-    patternKey: 'safety_regulation_001_calm_bracing',
+    patternKey: 'safetyRegulation_subtleBracing',
     title: 'Your Body May Be Bracing Quietly',
     triggerSignals: ['calm_bracing', 'preparedness', 'always_on'],
     avoidIfSignals: ['easy_settling', 'settles_without_readiness'],
@@ -366,7 +366,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   },
   {
     key: 'safetyRegulation_repeatingCalmUnfamiliar',
-    patternKey: 'safety_regulation_003_numbness_or_calm',
+    patternKey: 'safetyRegulation_calmFeelsNew',
     title: 'Calm May Still Feel Unfamiliar',
     triggerSignals: ['calm_is_new', 'numbness_vs_calm', 'quiet_safety'],
     observation: 'Safety may be present, but not fully trusted yet.',
@@ -380,7 +380,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   },
   {
     key: 'safetyRegulation_mixedSettledButTracking',
-    patternKey: 'safety_regulation_001_calm_bracing',
+    patternKey: 'safetyRegulation_calmBraced',
     title: 'Settled and Still Tracking',
     triggerSignals: [
       'outward_settled_under_ready',
@@ -401,7 +401,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   // lifeDirection
   {
     key: 'lifeDirection_emergingPull',
-    patternKey: 'life_direction_001_future_self',
+    patternKey: 'lifeDirection_quietPull',
     title: 'A Quiet Pull Is Showing Up',
     triggerSignals: ['future_self_orientation', 'growth_edge', 'purpose_signal'],
     observation:
@@ -416,7 +416,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   },
   {
     key: 'lifeDirection_repeatingDecisionWeight',
-    patternKey: 'life_direction_002_decision_fog',
+    patternKey: 'lifeDirection_personalStakes',
     title: 'This Decision Carries Identity Weight',
     triggerSignals: ['decision_uncertainty', 'identity_rewriting', 'values_conflict'],
     observation:
@@ -431,7 +431,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   },
   {
     key: 'lifeDirection_mixedStabilityGrowth',
-    patternKey: 'life_direction_003_life_reorientation',
+    patternKey: 'lifeDirection_stabilityAndGrowth',
     title: 'Stability and Growth Are Both Asking for Space',
     triggerSignals: [
       'future_self_orientation',
@@ -453,7 +453,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   // pleasurePlay
   {
     key: 'pleasurePlay_emergingPlayStarved',
-    patternKey: 'pleasure_play_001_play_starved',
+    patternKey: 'pleasurePlay_playStarved',
     title: 'Joy May Be Getting Crowded Out',
     triggerSignals: ['play_starved', 'pleasure_secondary', 'enjoyment_minimized'],
     avoidIfSignals: ['joy_tolerance', 'play_glimmer'],
@@ -468,7 +468,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   },
   {
     key: 'pleasurePlay_repeatingEarnedPleasure',
-    patternKey: 'pleasure_play_002_joy_tolerance',
+    patternKey: 'pleasurePlay_earnedPleasure',
     title: 'Pleasure Feels Easier After Completion',
     triggerSignals: [
       'pleasure_after_completion',
@@ -488,7 +488,7 @@ export const NEW_CATEGORY_DAILY_ANGLES: DailyAngle[] = [
   },
   {
     key: 'pleasurePlay_mixedAliveness',
-    patternKey: 'pleasure_play_003_beauty_as_aliveness',
+    patternKey: 'pleasurePlay_alivenessSignals',
     title: 'Your Aliveness Has Clues',
     triggerSignals: ['body_aliveness_cues', 'creative_aliveness', 'play_glimmer'],
     observation: 'Certain moments may bring more life back into your body.',

@@ -103,7 +103,7 @@ describe('confidenceLabel (insightsEngine)', () => {
   it('maps levels correctly', () => {
     expect(confidenceLabel('high')).toBe('High confidence');
     expect(confidenceLabel('medium')).toBe('Building clarity');
-    expect(confidenceLabel('low')).toBe('Early signal');
+    expect(confidenceLabel('low')).toBe('Emerging');
   });
 });
 

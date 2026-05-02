@@ -1,6 +1,19 @@
 import type { DailyCheckIn } from '../patterns/types';
 import type { JournalEntry, SleepEntry } from '../storage/models';
 import { buildTodayInsights } from '../insightsV2/knowledgeEngineV2';
+import {
+  adaptPremiumPersonaProfile,
+  type PremiumPersonaProfile,
+} from '../insightsV2/adapters/premiumPersonaProfile';
+import {
+  adaptWeeklyPremiumPatternCandidates,
+  adaptPremiumPatterns,
+  selectThisWeeksV2Pattern,
+  selectPremiumWeeklyDeepDive,
+  type PremiumPatternItem,
+  type PremiumThisWeekPatternItem,
+  type PremiumWeeklyDeepDiveItem,
+} from '../insightsV2/adapters/premiumPatterns';
 import type {
   EvidenceAnchor as V2EvidenceAnchor,
   GeneratedInsight as V2GeneratedInsight,
@@ -9,7 +22,6 @@ import type {
   PatternMovement as V2PatternMovement,
 } from '../insightsV2/types';
 import type { KnowledgeEngineHistoryInput } from './insightHistory';
-import { runKnowledgeEngine } from './knowledgeEngine';
 import type {
   EvidenceAnchor,
   GeneratedInsight,
@@ -25,6 +37,39 @@ interface RunActiveKnowledgeInsightInput {
   date: string;
   history: KnowledgeEngineHistoryInput;
 }
+
+export interface ActiveKnowledgeInsightResult {
+  primaryInsight: GeneratedInsight | null;
+  dailyInsights: GeneratedInsight[];
+  premiumPersonaProfile: PremiumPersonaProfile | null;
+  premiumPatterns: PremiumPatternItem[];
+  thisWeeksV2Pattern: PremiumThisWeekPatternItem | null;
+  premiumWeeklyDeepDive: PremiumWeeklyDeepDiveItem[];
+}
+
+const MAX_DAILY_INSIGHT_CARDS = 4;
+
+const DAILY_INSIGHT_SLOT_LABELS: Record<string, string> = {
+  whatMySkyNoticed: 'What MySky Noticed',
+  primaryPersona: 'A Part of You',
+  whatHelped: 'What Helped',
+  bodySignal: 'Body Signal',
+  relationshipMirror: 'Relationship Thread',
+  dreamPattern: 'Dream Thread',
+  growthEdge: 'Growth Edge',
+  todaySignal: "Today's Signal",
+};
+
+const DAILY_INSIGHT_SLOT_ORDER: Record<string, number> = {
+  whatMySkyNoticed: 0,
+  primaryPersona: 1,
+  whatHelped: 2,
+  bodySignal: 3,
+  relationshipMirror: 4,
+  dreamPattern: 5,
+  growthEdge: 6,
+  todaySignal: 7,
+};
 
 function unique(values: string[]): string[] {
   return Array.from(new Set(values.filter(Boolean)));
@@ -159,12 +204,64 @@ function adaptEvidence(evidence: V2EvidenceAnchor): EvidenceAnchor {
   };
 }
 
+function normalizeInsightText(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function v2InsightConceptKeys(insight: V2GeneratedInsight): string[] {
+  return [
+    `slot:${insight.slot}`,
+    `pattern:${insight.patternKey}`,
+    `title:${normalizeInsightText(insight.title)}`,
+  ];
+}
+
+function selectDailyV2Insights(insights: V2GeneratedInsight[]): V2GeneratedInsight[] {
+  const sorted = [...insights].sort(
+    (a, b) =>
+      (DAILY_INSIGHT_SLOT_ORDER[a.slot] ?? 99) - (DAILY_INSIGHT_SLOT_ORDER[b.slot] ?? 99),
+  );
+  const primary = sorted.find((insight) => insight.slot === 'whatMySkyNoticed') ?? null;
+  const selected: V2GeneratedInsight[] = [];
+  const seenConcepts = new Set<string>();
+
+  const addIfDistinct = (insight: V2GeneratedInsight) => {
+    if (selected.length >= MAX_DAILY_INSIGHT_CARDS) return;
+
+    const conceptKeys = v2InsightConceptKeys(insight);
+    if (conceptKeys.some((key) => seenConcepts.has(key))) return;
+
+    selected.push(insight);
+    conceptKeys.forEach((key) => seenConcepts.add(key));
+  };
+
+  if (primary) {
+    addIfDistinct(primary);
+  }
+
+  for (const insight of sorted) {
+    if (primary && insight.id === primary.id) continue;
+    addIfDistinct(insight);
+  }
+
+  return selected;
+}
+
+function selectPrimaryV2Insight(insights: V2GeneratedInsight[]): V2GeneratedInsight | null {
+  return insights.find((insight) => insight.slot === 'whatMySkyNoticed') ?? insights[0] ?? null;
+}
+
 export function adaptV2Insight(insight: V2GeneratedInsight): GeneratedInsight {
   const { observation, pattern } = splitBody(insight.body);
 
   return {
     id: insight.id,
     slot: insight.slot,
+    slotLabel: DAILY_INSIGHT_SLOT_LABELS[insight.slot],
     title: insight.title,
     observation,
     pattern,
@@ -178,14 +275,14 @@ export function adaptV2Insight(insight: V2GeneratedInsight): GeneratedInsight {
   };
 }
 
-async function runV2KnowledgeInsight({
+async function runV2KnowledgeInsights({
   checkIns,
   journalEntries,
   sleepEntries,
   selfKnowledgeContext,
   date,
   history,
-}: RunActiveKnowledgeInsightInput): Promise<GeneratedInsight | null> {
+}: RunActiveKnowledgeInsightInput): Promise<ActiveKnowledgeInsightResult> {
   const result = await buildTodayInsights({
     date,
     rawInputs: buildV2RawInputs({
@@ -197,26 +294,51 @@ async function runV2KnowledgeInsight({
     history: buildV2History(history, date),
   });
 
-  const primaryInsight = result.insights.find((insight) => insight.slot === 'whatMySkyNoticed');
-  return primaryInsight ? adaptV2Insight(primaryInsight) : null;
+  const dailyInsights = selectDailyV2Insights(result.insights).map(adaptV2Insight);
+  const fallbackPrimary = selectPrimaryV2Insight(result.insights);
+  const primaryInsight = dailyInsights[0] ?? (fallbackPrimary ? adaptV2Insight(fallbackPrimary) : null);
+  const premiumPersonaProfile = adaptPremiumPersonaProfile(result.primaryPersona);
+  const premiumPatterns = adaptPremiumPatterns(result.patternScores);
+  const premiumWeeklyDeepDive = selectPremiumWeeklyDeepDive(
+    adaptWeeklyPremiumPatternCandidates(result.patternScores),
+  );
+  const thisWeeksV2Pattern = selectThisWeeksV2Pattern(
+    result.patternScores,
+    premiumPatterns,
+    premiumWeeklyDeepDive,
+  );
+
+  return {
+    primaryInsight,
+    dailyInsights,
+    premiumPersonaProfile,
+    premiumPatterns,
+    thisWeeksV2Pattern,
+    premiumWeeklyDeepDive,
+  };
+}
+
+export async function runActiveKnowledgeInsights(
+  input: RunActiveKnowledgeInsightInput,
+): Promise<ActiveKnowledgeInsightResult> {
+  try {
+    return await runV2KnowledgeInsights(input);
+  } catch (error) {
+    logger.warn('[KnowledgeInsightRouter] V2 insight generation failed:', error);
+    return {
+      primaryInsight: null,
+      dailyInsights: [],
+      premiumPersonaProfile: null,
+      premiumPatterns: [],
+      thisWeeksV2Pattern: null,
+      premiumWeeklyDeepDive: [],
+    };
+  }
 }
 
 export async function runActiveKnowledgeInsight(
   input: RunActiveKnowledgeInsightInput,
 ): Promise<GeneratedInsight | null> {
-  try {
-    const v2Insight = await runV2KnowledgeInsight(input);
-    if (v2Insight) return v2Insight;
-  } catch (error) {
-    logger.warn('[KnowledgeInsightRouter] V2 insight generation failed; falling back to v1:', error);
-  }
-
-  return runKnowledgeEngine(
-    input.checkIns,
-    input.journalEntries,
-    input.sleepEntries,
-    input.selfKnowledgeContext,
-    input.date,
-    input.history,
-  );
+  const result = await runActiveKnowledgeInsights(input);
+  return result.primaryInsight;
 }

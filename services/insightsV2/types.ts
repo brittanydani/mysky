@@ -1,3 +1,5 @@
+import type { FeelingSetKey } from './feelingSets';
+
 /**
  * MySky Insights V2
  *
@@ -121,6 +123,32 @@ export type SignalKey =
   | 'mixed_emotions'
   | 'scattered_attention'
   | 'vulnerability'
+  | 'confusion'
+  | 'conflicted'
+  | 'overwhelm'
+  | 'numbness'
+  | 'peace'
+  | 'gratitude'
+  | 'trust'
+  | 'mistrust'
+  | 'unsafe'
+  | 'trapped'
+  | 'powerlessness'
+  | 'disgust'
+  | 'grounded'
+  | 'disconnected'
+  | 'indifferent'
+  | 'helplessness'
+  | 'fear'
+  | 'stuck'
+  | 'despair'
+  | 'self_doubt'
+  | 'desire'
+  | 'curiosity'
+  | 'inspired'
+  | 'calm'
+  | 'joy'
+  | 'ongoing_high_distress'
   | 'hurt'
   | 'self_blame'
   | 'guilt'
@@ -164,6 +192,7 @@ export type SignalKey =
   | 'recovery_gap'
   | 'capacity_strain'
   | 'depletion'
+  | 'shutdown'
   | 'overextension'
   | 'burnout_risk'
   | 'needs_pause'
@@ -367,6 +396,7 @@ export type SignalKey =
   | 'overexplaining'
   | 'self_trust_growth'
   | 'inner_authority'
+  | 'agency'
   | 'peace_boundary'
   | 'says_no'
   | 'limits_tested'
@@ -506,6 +536,7 @@ export type SignalKey =
   | 'tension_release'
   | 'somatic_safety'
   | 'sensory_sensitivity'
+  | 'sensory_overload'
   | 'beauty_regulation'
   | 'thought_first_processing'
   | 'delayed_body_awareness'
@@ -640,6 +671,8 @@ export type SignalKey =
   | 'grounded_without_monitoring'
   | 'calm_presence_for_others'
   | 'open_with_early_signs'
+  | 'early_signal_tracking'
+  | 'unpredictability_shift'
   | 'subtle_shift_blindspot'
   | 'obvious_change_only'
   | 'low_gradual_progress_tracking'
@@ -687,6 +720,10 @@ export type SignalKey =
   | 'meaning_before_action'
   | 'reflection_over_action'
   | 'interpretation_as_distance'
+  | 'interpretation_over_action'
+  | 'practical_literalist'
+  | 'toxic_positivity'
+  | 'flexible_pragmatism'
   | 'symbolic_over_practical'
   | 'insight_without_steps'
   | 'meaning_replaces_change'
@@ -745,6 +782,7 @@ export type SignalKey =
   | 'creative_processing'
   | 'creative_block'
   | 'creative_aliveness'
+  | 'creativityExpression'
   | 'expression_need'
   | 'vision_gap'
   | 'beauty_making'
@@ -775,6 +813,8 @@ export type SignalKey =
   | 'responsibilities_during_pleasure'
   | 'pleasure_without_productivity'
   | 'natural_play'
+  | 'structured_pleasure'
+  | 'spontaneous_play'
   | 'desire_as_information'
   | 'chooses_beauty_comfort'
   | 'joy_recovery'
@@ -867,9 +907,13 @@ export type SignalKey =
   // Identity + growth
   | 'identity_rewriting'
   | 'future_self_orientation'
+  | 'lifeDirection'
   | 'old_story_loosening'
   | 'chapter_shift'
   | 'transformation_season'
+  | 'safetyRegulation'
+  | 'reckless_change'
+  | 'avoidance'
   | 'self_definition'
   | 'growth_edge'
   | 'past_self_compassion'
@@ -1088,6 +1132,21 @@ export interface GeneratedInsight {
   createdAt: string;
 }
 
+export interface SelectedFeelingSet {
+  key: FeelingSetKey;
+  setNumber: number;
+  title: string;
+  signalKey: SignalKey;
+  sentiment: SignalSentiment;
+  roles: SignalRole[];
+  source: InsightDataSource;
+  strength: number;
+  selectedSentence: string;
+  reframeSentence: string;
+  sentences: string[];
+  evidence?: EvidenceAnchor;
+}
+
 export type PersonaProfileKey =
   | 'overResponsibleStabilizer'
   | 'deepProcessor'
@@ -1256,6 +1315,7 @@ export interface BuildTodayInsightsResult {
   signals: UserSignal[];
   patternScores: ArchivePatternScore[];
   insights: GeneratedInsight[];
+  primaryFeeling: SelectedFeelingSet | null;
   primaryPersona: SelectedPersonaProfile | null;
 }
 

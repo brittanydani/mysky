@@ -52,6 +52,7 @@ export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insi
   };
 
   const movementLabel = movementLabelMap[insight.movement] || 'ARCHIVE ECHO';
+  const eyebrowLabel = insight.slotLabel ?? movementLabel;
 
   return (
     <VelvetGlassSurface style={styles.card} intensity={20}>
@@ -65,7 +66,7 @@ export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insi
           <View style={styles.headerLeft}>
             <MetallicIcon name="sparkles-outline" size={16} variant="gold" />
             <MetallicText style={styles.eyebrow} variant="gold">
-              {movementLabel}
+              {eyebrowLabel}
             </MetallicText>
           </View>
           <View style={styles.confidenceBadge}>
