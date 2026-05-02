@@ -63,7 +63,7 @@ export const PRACTICAL_ACTION_ANGLES: DailyAngle[] = [
     observation:
       'There may be more possibility moving through you than your current capacity can hold at once.',
     pattern:
-      'The archive is picking up a gap between what you can imagine or build and what the day realistically has room to execute. That gap can feel like failure when it may actually be a capacity and sequencing problem.',
+      'There is a gap between what you can imagine or build and what the day realistically has room to execute. That gap can feel like failure when it may actually be a capacity and sequencing problem.',
     reframe:
       'This does not read as never finishing anything. It reads as vision needing order, pacing, and a place to land.',
     question:
@@ -97,7 +97,7 @@ export const PRACTICAL_ACTION_ANGLES: DailyAngle[] = [
     observation:
       'Some of the load may be coming from work that only becomes visible when it is not done.',
     pattern:
-      'Planning, tracking, remembering, cleaning, scheduling, and logistics can create a real internal workload. The archive is noticing the weight of what keeps life running.',
+      'Planning, tracking, remembering, cleaning, scheduling, and logistics create a real internal workload. The weight is in what keeps life running, even when no one else can see it.',
     reframe:
       'This does not read as resentment. It reads as invisible labor becoming visible enough to be redistributed or reduced.',
     question:

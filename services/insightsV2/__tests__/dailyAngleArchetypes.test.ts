@@ -30,7 +30,7 @@ describe('daily angle archetypes', () => {
     });
     expect(DAILY_ANGLE_ARCHETYPES[49]).toMatchObject({
       key: 'the_archive_mirror',
-      formula: 'Your archive is not reducing you to this pattern. It is showing one place where your inner world has been asking to be understood.',
+      formula: 'You are not reduced to this pattern. This is one place where your inner world has been asking to be understood.',
     });
   });
 });

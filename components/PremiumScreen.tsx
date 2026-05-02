@@ -316,7 +316,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
                     {tier.price}
                   </Text>
                   <Text style={[styles.pricingMeta, isSelected && styles.pricingMetaSelected]}>
-                    {isAnnual ? 'Build your pattern archive all year' : 'Flexible access'}
+                    {isAnnual ? 'Build your pattern profile all year' : 'Flexible access'}
                   </Text>
                 </Pressable>
               );

@@ -327,8 +327,8 @@ function buildSaveReflection(entry: SleepEntry, updatedEntries: SleepEntry[]): S
       icon: 'alert-circle-outline',
       eyebrow: 'Saved signal',
       title: 'This looks like a lower-capacity signal',
-      body: 'MySky will remember this as part of your rest-and-strain map. If today feels harder to interpret, start by lowering input before analyzing.',
-      contribution: `This gives your archive ${sleepEntries} sleep signal${sleepEntries === 1 ? '' : 's'} for spotting what usually comes before harder days.`,
+      body: 'This belongs in your rest-and-strain map. If today feels harder to interpret, start by lowering input before analyzing.',
+      contribution: `This adds ${sleepEntries} sleep signal${sleepEntries === 1 ? '' : 's'} for spotting what usually comes before harder days.`,
     };
   }
 
@@ -337,7 +337,7 @@ function buildSaveReflection(entry: SleepEntry, updatedEntries: SleepEntry[]): S
       icon: 'leaf-outline',
       eyebrow: 'Recovery map',
       title: 'This belongs in your better-day formula',
-      body: 'A restored night gives MySky a comparison point for what steadier capacity can feel like in your body and mood.',
+      body: 'A restored night gives the pattern a comparison point for what steadier capacity can feel like in your body and mood.',
       contribution: `This helps separate your recovery conditions from your overload conditions across ${sleepEntries} logged night${sleepEntries === 1 ? '' : 's'}.`,
     };
   }
@@ -347,8 +347,8 @@ function buildSaveReflection(entry: SleepEntry, updatedEntries: SleepEntry[]): S
       icon: 'moon-outline',
       eyebrow: 'Dream signal',
       title: 'Your dream carried an emotional signal',
-      body: 'You do not have to solve it right now. Naming the tone gives MySky a thread to compare with future sleep, mood, and body cues.',
-      contribution: `This adds to ${dreamEntries} dream signal${dreamEntries === 1 ? '' : 's'} in your archive.`,
+      body: 'You do not have to solve it right now. Naming the tone gives the dream thread something to compare with future sleep, mood, and body cues.',
+      contribution: `This adds to ${dreamEntries} saved dream signal${dreamEntries === 1 ? '' : 's'}.`,
     };
   }
 
@@ -358,7 +358,7 @@ function buildSaveReflection(entry: SleepEntry, updatedEntries: SleepEntry[]): S
       eyebrow: 'Archive memory',
       title: 'This gives future you more context',
       body: 'Dream fragments can become useful later, especially when they repeat near the same stress, recovery, or relationship signals.',
-      contribution: `MySky now has ${dreamEntries} dream signal${dreamEntries === 1 ? '' : 's'} to compare over time.`,
+      contribution: `${dreamEntries} dream signal${dreamEntries === 1 ? '' : 's'} can now be compared over time.`,
     };
   }
 
@@ -366,8 +366,8 @@ function buildSaveReflection(entry: SleepEntry, updatedEntries: SleepEntry[]): S
     icon: 'analytics-outline',
     eyebrow: 'Saved signal',
     title: 'One signal is enough',
-    body: 'This entry gives MySky one more point of context. You can add words later if they come.',
-    contribution: `Your sleep archive now has ${sleepEntries} logged night${sleepEntries === 1 ? '' : 's'}.`,
+    body: 'This entry adds one more point of context. You can add words later if they come.',
+    contribution: `${sleepEntries} logged night${sleepEntries === 1 ? '' : 's'} can now be compared over time.`,
   };
 }
 
@@ -822,7 +822,7 @@ export default function SleepScreen() {
               })}
             </GoldSubtitle>
             <Text style={styles.headerDesc}>
-              No need to explain everything. Rest quality, hours, or one dream fragment is enough for MySky to remember the pattern.
+              No need to explain everything. Rest quality, hours, or one dream fragment is enough to remember the pattern.
             </Text>
           </Animated.View>
 
@@ -859,8 +859,8 @@ export default function SleepScreen() {
                   </View>
                   <Text style={styles.signalHintBody}>
                     {sleepArchiveDepth.totalSignals > 0
-                      ? `${sleepArchiveDepth.totalSignals} signal${sleepArchiveDepth.totalSignals === 1 ? '' : 's'} are helping MySky compare sleep, dreams, and recovery over time.`
-                      : 'Your archive begins with one low-pressure signal. You can add words later.'}
+                      ? `${sleepArchiveDepth.totalSignals} signal${sleepArchiveDepth.totalSignals === 1 ? '' : 's'} are connecting sleep, dreams, and recovery over time.`
+                      : 'One low-pressure signal is enough to begin. You can add words later.'}
                   </Text>
                   <View style={styles.archiveProgressTrack}>
                     <View style={[styles.archiveProgressFill, { width: `${Math.max(8, sleepArchiveDepth.progress * 100)}%` }]} />

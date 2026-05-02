@@ -27,7 +27,7 @@ export const SUPPORT_BOUNDARY_ANGLES: DailyAngle[] = [
     observation:
       'Wanting backup may be about steadiness, not helplessness.',
     pattern:
-      'The archive is noticing language around wanting someone to check in, notice, follow through, or be there before the need becomes a crisis.',
+      'Wanting someone to check in, notice, follow through, or be there before the need becomes a crisis is part of the pattern.',
     reframe:
       'This does not read as dependency. It reads as a need for reliable backup while still carrying your own life.',
     question:
@@ -61,7 +61,7 @@ export const SUPPORT_BOUNDARY_ANGLES: DailyAngle[] = [
     observation:
       'Guilt after a no may be an old loyalty pattern adjusting to a newer truth.',
     pattern:
-      'The archive is noticing no, limits, guilt, or fear of letting someone down. That after-feeling can show the nervous system catching up to a boundary the self already needed.',
+      'No, limits, guilt, or fear of letting someone down are active here. That after-feeling can show the nervous system catching up to a boundary the self already needed.',
     reframe:
       'This does not read as being selfish. It reads as an old loyalty pattern adjusting to the truth that limits protect connection too.',
     question:
@@ -95,7 +95,7 @@ export const SUPPORT_BOUNDARY_ANGLES: DailyAngle[] = [
     observation:
       'Resistance may be information about where choice or self-connection got too narrow.',
     pattern:
-      'The archive is noticing pressure, control, trapped feelings, restricted choice, or a need to make the decision from the inside instead of only responding to demand.',
+      'Pressure, control, trapped feelings, restricted choice, or a need to decide from the inside are shaping the pattern instead of demand alone.',
     reframe:
       "This does not read as being resistant. It reads as the need to stay connected to yourself while responding to life's demands.",
     question:

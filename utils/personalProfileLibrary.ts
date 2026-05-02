@@ -484,14 +484,14 @@ export function generateStressPatternDescription(
 export function generateStrengthDescription(id: string, strength: number, context?: any): string {
   const strengthDescriptions: Record<string, string[]> = {
     'consistent-presence': [
-      `Your archive is not just showing consistency. It is showing what keeps surfacing when capacity drops, which makes the pattern personal instead of generic.`,
-      `You do not only track the easy days. The archive can see recurring themes during difficult stretches too, which means MySky reads your real emotional pattern instead of just the polished version.`,
+      `This is not just consistency. It is the material that keeps surfacing when capacity drops, which makes the pattern personal instead of generic.`,
+      `You do not only track the easy days. Recurring themes during difficult stretches make the read honest instead of polished.`,
       `A clear pattern in your data is that you keep leaving signals in the archive, even when your baseline drops. That kind of consistency turns hard weeks into something understandable instead of invisible.`,
       `You maintain contact with yourself through check-ins even during difficult periods. That consistency gives the archive something real to work with.`,
-      `Your archive shows a repeated willingness to check back in, even when the week is heavier. That is how hard moments stop going untracked.`,
+      `You keep checking back in, even when the week is heavier. That is how hard moments stop going untracked.`,
       `The useful pattern is not the act of logging. It is the repeated emotional material that stays visible instead of waiting until everything is sorted out.`,
       `Your consistency is not just about discipline. It means your lower-capacity moments are becoming visible enough to understand in the archive.`,
-      `You show up in your check-ins across different kinds of days, not just the easier ones. That makes the picture MySky sees more honest and more useful.`,
+      `You show up in your check-ins across different kinds of days, not just the easier ones. That makes the picture more honest and more useful.`,
       `The pattern here is not perfect consistency for its own sake. It is your willingness to leave a trace in the archive even when the week feels harder to hold.`,
       `You keep the archive in contact with your real life, including the harder stretches. That kind of presence compounds over time.`,
     ],

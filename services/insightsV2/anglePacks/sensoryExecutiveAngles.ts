@@ -27,7 +27,7 @@ export const SENSORY_EXECUTIVE_ANGLES: DailyAngle[] = [
     observation:
       'Your body may be tracking sensory input before your mood has words for it.',
     pattern:
-      'The archive is noticing sound, light, texture, clutter, screens, crowding, or interruption near body cues like head pressure, heaviness, or the need to pause.',
+      'Sound, light, texture, clutter, screens, crowding, or interruption are sitting close to body cues like head pressure, heaviness, or the need to pause.',
     reframe:
       'This does not read as being too sensitive. It reads as a system that notices the world in high resolution.',
     question:
@@ -61,7 +61,7 @@ export const SENSORY_EXECUTIVE_ANGLES: DailyAngle[] = [
     observation:
       'Switching tasks may be costing more attention than the task list shows.',
     pattern:
-      'The archive is picking up friction around choosing, changing gears, context shifts, or holding too many open loops. The delay may be less about motivation and more about transition cost.',
+      'Friction around choosing, changing gears, context shifts, or holding too many open loops is part of the pattern. The delay may be less about motivation and more about transition cost.',
     reframe:
       'This does not read as procrastination. It reads as your system needing a clearer bridge between one demand and the next.',
     question:
@@ -95,7 +95,7 @@ export const SENSORY_EXECUTIVE_ANGLES: DailyAngle[] = [
     observation:
       'Some of the exhaustion may come from editing yourself before anyone else responds.',
     pattern:
-      'The archive is noticing language around masking, performing, shrinking, or translating yourself to be easier to receive. That kind of self-editing can be protective and costly at the same time.',
+      'Masking, performing, shrinking, or translating yourself to be easier to receive is part of the cost. That kind of self-editing can be protective and costly at the same time.',
     reframe:
       'This does not read as wanting attention. It reads as the self becoming visible after being edited for too long.',
     question:

@@ -140,6 +140,8 @@ describe('buildInsightSurface knowledge insights', () => {
     expect(surface.premiumPatterns.length).toBeGreaterThan(0);
     expect(surface.premiumPatterns.every(pattern => pattern.isV2Derived)).toBe(true);
     expect(surface.premiumPatterns.some(pattern => pattern.patternKey === 'unknown')).toBe(false);
+    expect(surface.premiumPatternProfile).not.toBeNull();
+    expect(surface.premiumPatternProfile?.sourcePatternKeys.some(patternKey => patternKey === 'unknown')).toBe(false);
     expect(surface.thisWeeksV2Pattern).not.toBeNull();
     expect(surface.thisWeeksV2Pattern?.isV2Derived).toBe(true);
     expect(surface.thisWeeksV2Pattern?.patternKey).not.toBe('unknown');

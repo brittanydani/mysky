@@ -76,7 +76,7 @@ export const EMOTIONAL_WEATHER_PATTERNS: ArchivePattern[] = [
     ['gratitude_and_grief', 'hope', 'sadness', 'relief', 'longing'],
     'being contradictory',
     'more than one emotional truth asking to belong',
-    'The archive shows more than one emotional state present at once instead of one clear mood.',
+    'More than one emotional state is present at once instead of one clear mood.',
     ['mixed-emotions', 'two-truths', 'complexity'],
   ),
   emotionalWeatherPattern(

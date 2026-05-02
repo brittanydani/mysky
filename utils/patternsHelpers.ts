@@ -293,7 +293,7 @@ export function buildPatternLibraryState(
     return {
       statusLine: 'Not enough signal for a real pattern read',
       helperText:
-        'Do not force a read yet. A few more check-ins, reflections, body signals, dreams, or relationship notes will help MySky build a pattern map from V2 evidence.',
+        'Do not force a read yet. A few more check-ins, reflections, body signals, dreams, or relationship notes will give the pattern map enough evidence to become useful.',
       items: [] as PatternLibraryItem[],
       sections: [] as PatternLibrarySection[],
       librarySections: [] as PatternLibrarySection[],

@@ -73,7 +73,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
         title: 'The Question Underneath the Question',
         shameFrame: 'This does not read as spiraling.',
         clarityFrame: 'It reads as your daily questions giving shape to something your system has been trying to understand for a while.',
-        prompt: 'Which answer from your daily questions feels most alive in the rest of your archive right now?',
+        prompt: 'Which answer from your daily questions feels most alive in the rest of what you have been tracking right now?',
       },
     ],
   },
@@ -87,7 +87,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 3,
     lookbackDays: 60,
     copyFrame: {
-      observation: 'Your archive shows a growing shift in how you hold your limits.',
+      observation: 'There is a growing shift in how you hold your limits.',
       pattern: 'Across recent entries, there is less energy spent asking whether your boundary is acceptable and more attention given to whether it is true.',
       reframe: {
         shame: 'This does not read as becoming cold.',
@@ -321,7 +321,7 @@ export const ARCHIVE_PATTERNS: ArchivePattern[] = [
     minEvidenceCount: 3,
     lookbackDays: 30,
     copyFrame: {
-      observation: 'Your archive shows a complex relationship with calm.',
+      observation: 'There is a complex relationship with calm.',
       pattern: 'When things become easier, quieter, or more stable, there may still be a quiet bracing for the next interruption.',
       reframe: {
         shame: 'This does not read as pessimism.',

@@ -153,12 +153,12 @@ describe('Knowledge Engine V2', () => {
     expect(result.insights.some(insight => insight.patternKey === 'unknown')).toBe(false);
 
     const whatHelped = result.insights.find(insight => insight.slot === 'whatHelped');
-    expect(whatHelped?.body).toContain('Your archive is noticing');
+    expect(whatHelped?.body).toContain('helped your system');
     expect(whatHelped?.body).not.toBe('Something today may have helped your system soften, settle, recover, or feel a little more supported.');
 
     const bodySignal = result.insights.find(insight => insight.slot === 'bodySignal');
     if (bodySignal) {
-      expect(bodySignal.body).toContain('The body signal around');
+      expect(bodySignal.body).toContain('Your body is giving you information');
       expect(bodySignal.body).not.toBe('Your body may be giving you information before your mind has fully organized it.');
     }
   });
@@ -181,7 +181,7 @@ describe('Knowledge Engine V2', () => {
     expect(todaySignal?.title).toBe("Today's Hurt");
     expect(todaySignal?.body).toBe(result.primaryFeeling?.selectedSentence);
     expect(todaySignal?.reframe).toBe(result.primaryFeeling?.reframeSentence);
-    expect(todaySignal?.body).not.toContain('Your archive is noticing');
+    expect(todaySignal?.body).not.toMatch(/Your archive|MySky is noticing/i);
   });
 
   it('normalizes app model field names against the requested insight date', async () => {

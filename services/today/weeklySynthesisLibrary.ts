@@ -442,13 +442,13 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
     narratives.push(
       `You logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week with an average mood of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours. It's early, but you're building something. Each signal you leave makes the next week's reflection more meaningful. Keep going — the patterns will emerge.`,
       
-      `This week brought ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} and a mood average of ${ctx.avgMood.toFixed(1)}. Sleep held at ${ctx.avgSleep.toFixed(1)} hours. You're in the early stages of building your archive. Right now it feels like data, but soon it will start showing you patterns you couldn't see before. Every entry matters.`,
+      `This week brought ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} and a mood average of ${ctx.avgMood.toFixed(1)}. Sleep held at ${ctx.avgSleep.toFixed(1)} hours. You're in the early stages of building your pattern history. Right now it feels like data, but soon the repetition will start showing you patterns you couldn't see before. Every entry matters.`,
       
       `You've logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week — a starting point. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. The first few weeks are about building the habit, not finding perfect insights. You're doing exactly what you need to do. The depth will come.`,
       
       `This week you checked in ${ctx.checkIns.length} time${ctx.checkIns.length === 1 ? '' : 's'}, averaging ${ctx.avgMood.toFixed(1)} mood and ${ctx.avgSleep.toFixed(1)} hours of sleep. It's early, but you're creating a foundation. Each signal you leave is a data point your future self will thank you for. Keep showing up — the patterns will reveal themselves.`,
       
-      `You logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week with a mood average of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours. Right now you're building the archive that will eventually show you what you can't see yet. The first few weeks are about consistency, not perfection. You're on the right path.`,
+      `You logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week with a mood average of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours. Right now you're building the pattern history that will eventually show you what you can't see yet. The first few weeks are about consistency, not perfection. You're on the right path.`,
     );
   }
   

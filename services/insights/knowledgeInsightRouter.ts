@@ -10,7 +10,9 @@ import {
   adaptPremiumPatterns,
   selectThisWeeksV2Pattern,
   selectPremiumWeeklyDeepDive,
+  selectPremiumPatternProfile,
   type PremiumPatternItem,
+  type PremiumPatternProfile,
   type PremiumThisWeekPatternItem,
   type PremiumWeeklyDeepDiveItem,
 } from '../insightsV2/adapters/premiumPatterns';
@@ -43,6 +45,7 @@ export interface ActiveKnowledgeInsightResult {
   dailyInsights: GeneratedInsight[];
   premiumPersonaProfile: PremiumPersonaProfile | null;
   premiumPatterns: PremiumPatternItem[];
+  premiumPatternProfile: PremiumPatternProfile | null;
   thisWeeksV2Pattern: PremiumThisWeekPatternItem | null;
   premiumWeeklyDeepDive: PremiumWeeklyDeepDiveItem[];
 }
@@ -50,7 +53,7 @@ export interface ActiveKnowledgeInsightResult {
 const MAX_DAILY_INSIGHT_CARDS = 2;
 
 const DAILY_INSIGHT_SLOT_LABELS: Record<string, string> = {
-  whatMySkyNoticed: 'What MySky Noticed',
+  whatMySkyNoticed: 'What Stands Out',
   primaryPersona: 'A Part of You',
   whatHelped: 'What Helped',
   bodySignal: 'Body Signal',
@@ -323,6 +326,7 @@ async function runV2KnowledgeInsights({
     ? null
     : adaptPremiumPersonaProfile(result.primaryPersona);
   const premiumPatterns = adaptPremiumPatterns(premiumPatternScores);
+  const premiumPatternProfile = selectPremiumPatternProfile(premiumPatterns);
   const premiumWeeklyDeepDive = selectPremiumWeeklyDeepDive(
     adaptWeeklyPremiumPatternCandidates(premiumPatternScores),
   );
@@ -337,6 +341,7 @@ async function runV2KnowledgeInsights({
     dailyInsights,
     premiumPersonaProfile,
     premiumPatterns,
+    premiumPatternProfile,
     thisWeeksV2Pattern,
     premiumWeeklyDeepDive,
   };
@@ -354,6 +359,7 @@ export async function runActiveKnowledgeInsights(
       dailyInsights: [],
       premiumPersonaProfile: null,
       premiumPatterns: [],
+      premiumPatternProfile: null,
       thisWeeksV2Pattern: null,
       premiumWeeklyDeepDive: [],
     };

@@ -1,6 +1,7 @@
 import {
   adaptPremiumPatterns,
   adaptWeeklyPremiumPatternCandidates,
+  selectPremiumPatternProfile,
   selectPremiumWeeklyDeepDive,
   selectThisWeeksV2Pattern,
   type PremiumPatternItem,
@@ -11,7 +12,7 @@ const item = (overrides: Partial<PremiumPatternItem>): PremiumPatternItem => ({
   title: 'Invisible Load',
   body: [
     'Mental and emotional responsibility is showing up even when there is not a visible task attached to it.',
-    'This pattern is showing up repeatedly enough to belong in the map. The evidence is clear enough to take seriously.',
+    'This repeats enough to belong in the map. There is enough consistency to name it.',
     'This does not read as I should be able to handle this. It reads as the cost of carrying things that are hard for others to see.',
     'Seen across journal entries and body maps over roughly 30 days.',
   ].join('\n\n'),
@@ -103,6 +104,8 @@ describe('selectPremiumWeeklyDeepDive', () => {
     ].join(' ');
 
     expect(copy).not.toMatch(/High-value read|Insight type|Priority|Evidence:|debug|score/i);
+    expect(copy).not.toMatch(/evidence is .*clear read|evidence is .*clear enough|evidence is .*take seriously/i);
+    expect(copy).not.toMatch(/Your archive|MySky is noticing|MySky is seeing|The data suggests|This pattern indicates/i);
     expect(read.whyItMayMatter).toContain('recovery');
     expect(read.reflectionPrompt).toContain('helped');
   });
@@ -256,5 +259,84 @@ describe('selectPremiumWeeklyDeepDive', () => {
     expect(selected.isEmptyState).toBe(true);
     expect(selected.isV2Derived).toBe(true);
     expect(selected.title).toContain('Still Forming');
+  });
+
+  it('builds Pattern Profile as a cohesive V2 profile with distinct prominent areas', () => {
+    const profile = selectPremiumPatternProfile([
+      item({
+        title: 'Invisible Load',
+        patternKey: 'responsibilityCare_invisibleLoad',
+        category: 'responsibilityCare',
+        archiveSectionTitle: 'Responsibility & Care',
+        score: 96,
+        confidence: 'veryStrong',
+      }),
+      item({
+        title: 'Repair Helps You Settle',
+        patternKey: 'communicationVoice_repairSettles',
+        category: 'communicationVoice',
+        archiveSectionTitle: 'Relationships',
+        score: 90,
+      }),
+      item({
+        title: 'Subtle Bracing',
+        patternKey: 'safetyRegulation_subtleBracing',
+        category: 'safetyRegulation',
+        archiveSectionTitle: 'Safety & Regulation',
+        score: 82,
+      }),
+      item({
+        title: 'Letting Joy Land',
+        patternKey: 'pleasurePlay_joyTolerance',
+        category: 'pleasurePlay',
+        concept: 'recovery_pattern',
+        lens: 'recovery_patterns',
+        archiveSectionTitle: 'What Helps',
+        score: 78,
+      }),
+    ]);
+
+    expect(profile.isLowData).toBeFalsy();
+    expect(profile.title).toBe('Your Pattern Profile');
+    expect(profile.sections.length).toBeGreaterThanOrEqual(2);
+    expect(profile.sections.length).toBeLessThanOrEqual(3);
+    expect(new Set(profile.sections.map(section => section.title)).size).toBe(profile.sections.length);
+    expect(profile.growthOrRecovery?.title).toBe('What Helps You Soften');
+    expect(profile.sourcePatternKeys).toEqual(expect.arrayContaining([
+      'responsibilityCare_invisibleLoad',
+      'communicationVoice_repairSettles',
+    ]));
+
+    const copy = [
+      profile.title,
+      profile.subtitle,
+      profile.portrait,
+      ...profile.sections.flatMap(section => [section.title, section.body]),
+      profile.growthOrRecovery?.title ?? '',
+      profile.growthOrRecovery?.body ?? '',
+      profile.reflectionPrompt,
+    ].join(' ');
+
+    expect(copy).toContain('There is a clear pattern around responsibility');
+    expect(copy).toContain('Connection carries weight');
+    expect(copy).not.toMatch(/Your archive|MySky noticed|MySky is noticing|The data suggests|This pattern indicates|This may point to/i);
+  });
+
+  it('returns a polished low-data Pattern Profile when prominent areas are not ready', () => {
+    const profile = selectPremiumPatternProfile([
+      item({
+        title: 'Early Responsibility Thread',
+        patternKey: 'responsibilityCare_needNotAssignment',
+        category: 'responsibilityCare',
+        confidence: 'emerging',
+        movement: 'new',
+        score: 24,
+      }),
+    ]);
+
+    expect(profile.isLowData).toBe(true);
+    expect(profile.sections).toHaveLength(0);
+    expect(profile.portrait).toContain('This profile is still forming');
+    expect(profile.portrait).not.toMatch(/Your archive|MySky noticed|The data suggests/i);
   });
 });

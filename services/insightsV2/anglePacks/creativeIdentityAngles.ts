@@ -27,7 +27,7 @@ export const CREATIVE_IDENTITY_ANGLES: DailyAngle[] = [
     observation:
       'Your voice may be becoming easier to hear after being edited down.',
     pattern:
-      'The archive is noticing language around speaking more clearly, saying what is true, naming yourself, or letting more of the self be visible.',
+      'Speaking more clearly, saying what is true, naming yourself, or letting more of the self be visible is becoming part of the pattern.',
     reframe:
       'This does not read as wanting attention. It reads as a self becoming easier to hear after being edited down.',
     question:
@@ -61,7 +61,7 @@ export const CREATIVE_IDENTITY_ANGLES: DailyAngle[] = [
     observation:
       'Changing the space may be part of how your system changes state.',
     pattern:
-      'The archive is noticing atmosphere, lighting, color, arrangement, beauty, order, or sensory design near steadiness. The environment may be participating in regulation.',
+      'Atmosphere, lighting, color, arrangement, beauty, order, or sensory design are showing up near steadiness. The environment may be participating in regulation.',
     reframe:
       'This does not read as being particular. It reads as the environment becoming part of the support system.',
     question:
@@ -95,7 +95,7 @@ export const CREATIVE_IDENTITY_ANGLES: DailyAngle[] = [
     observation:
       'A life chapter may be changing before every part of you has caught up.',
     pattern:
-      'The archive is noticing new-chapter, old-story, identity, becoming, or transition language. This may be a real shift even if it has not fully stabilized yet.',
+      'New-chapter, old-story, identity, becoming, or transition language is active here. This may be a real shift even if it has not fully stabilized yet.',
     reframe:
       'This does not read as instability. It reads as a life chapter changing before every part of you has caught up.',
     question:

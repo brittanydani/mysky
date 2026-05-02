@@ -27,7 +27,7 @@ export const LIFE_CONTEXT_ANGLES: DailyAngle[] = [
     observation:
       'Some belonging may be getting built deliberately, not inherited automatically.',
     pattern:
-      'The archive is noticing chosen family, community care, mutuality, or people who help the self feel less translated. This kind of support can be quiet and still structurally important.',
+      'Chosen family, community care, mutuality, or people who help the self feel less translated are becoming part of the support structure. This kind of support can be quiet and still structurally important.',
     reframe:
       'This does not read as not having a normal support system. It reads as belonging being built with care.',
     question:
@@ -61,7 +61,7 @@ export const LIFE_CONTEXT_ANGLES: DailyAngle[] = [
     observation:
       'Some responsibility may be arriving through an old role, not only through today.',
     pattern:
-      'The archive is noticing family, culture, caregiving, or inherited-role language near responsibility and caretaking. The weight may be bigger than the current task because the role has history.',
+      'Family, culture, caregiving, or inherited-role language is sitting close to responsibility and caretaking. The weight may be bigger than the current task because the role has history.',
     reframe:
       'This does not read as being stuck in old roles. It reads as an old role becoming visible enough to renegotiate.',
     question:
@@ -95,7 +95,7 @@ export const LIFE_CONTEXT_ANGLES: DailyAngle[] = [
     observation:
       'Some discomfort may be coming from a context that asks you to move against your values.',
     pattern:
-      'The archive is picking up misalignment around work, school, institutions, community expectations, culture, fairness, or systems. The strain may not be only personal; it may be contextual.',
+      'Misalignment around work, school, institutions, community expectations, culture, fairness, or systems is part of the strain. This may not be only personal; it may be contextual.',
     reframe:
       'This does not read as being dissatisfied. It reads as your inner compass noticing where life no longer fits.',
     question:

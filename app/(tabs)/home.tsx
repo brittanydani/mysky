@@ -614,10 +614,10 @@ export default function HomeScreen() {
                 <SectionHeader
                   title={
                     dailyLoop.streak.totalCheckIns === 0
-                      ? 'Start your archive'
+                      ? 'Start your pattern history'
                       : dailyLoop.streak.atRisk
                         ? 'Keep your streak going'
-                        : 'Archive momentum'
+                        : 'Pattern momentum'
                   }
                   icon="bookmark-outline"
                 />
@@ -696,7 +696,7 @@ export default function HomeScreen() {
                     <MetallicIcon name="add-circle-outline" size={28} variant="gold" />
                     <View style={{ flex: 1 }}>
                       <MetallicText style={styles.firstCheckInTitle} variant="gold">Give MySky one signal</MetallicText>
-                      <Text style={styles.firstCheckInBody}>Mood, energy, or one sentence is enough. Your archive starts learning from the first signal.</Text>
+                      <Text style={styles.firstCheckInBody}>Mood, energy, or one sentence is enough. The first signal starts building your pattern history.</Text>
                     </View>
                     <MetallicIcon name="chevron-forward-outline" size={18} variant="gold" />
                   </View>
@@ -819,7 +819,7 @@ export default function HomeScreen() {
                       <MetallicText style={styles.insightEyebrow} variant="gold">NEXT STEP</MetallicText>
                     </View>
                     <Text style={styles.weeklySummaryText}>
-                      Your archive has {dailyLoop.streak.current} recent mood signal{dailyLoop.streak.current === 1 ? '' : 's'}. Add sleep or a journal note to help MySky connect what restores, drains, and shifts.
+                      You have {dailyLoop.streak.current} recent mood signal{dailyLoop.streak.current === 1 ? '' : 's'}. Add sleep or a journal note to connect what restores, drains, and shifts.
                     </Text>
                   </View>
                 </VelvetGlassSurface>

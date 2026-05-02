@@ -20,6 +20,7 @@ import type { KnowledgeEngineHistoryInput } from './insightHistory';
 import type { PremiumPersonaProfile } from '../insightsV2/adapters/premiumPersonaProfile';
 import type {
   PremiumPatternItem,
+  PremiumPatternProfile,
   PremiumThisWeekPatternItem,
   PremiumWeeklyDeepDiveItem,
 } from '../insightsV2/adapters/premiumPatterns';
@@ -44,6 +45,7 @@ export interface InsightSurfaceResult {
   knowledgeInsights: GeneratedInsight[];
   premiumPersonaProfile: PremiumPersonaProfile | null;
   premiumPatterns: PremiumPatternItem[];
+  premiumPatternProfile: PremiumPatternProfile | null;
   thisWeeksV2Pattern: PremiumThisWeekPatternItem | null;
   premiumWeeklyDeepDive: PremiumWeeklyDeepDiveItem[];
 }
@@ -97,6 +99,7 @@ export async function buildInsightSurface({
       knowledgeInsights: [],
       premiumPersonaProfile: null,
       premiumPatterns: [],
+      premiumPatternProfile: null,
       thisWeeksV2Pattern: null,
       premiumWeeklyDeepDive: [],
     };
@@ -151,11 +154,13 @@ export async function buildInsightSurface({
         dailyInsights: [],
         premiumPersonaProfile: null,
         premiumPatterns: [],
+        premiumPatternProfile: null,
         thisWeeksV2Pattern: null,
         premiumWeeklyDeepDive: [],
       };
   const premiumPersonaProfile = knowledgeInsightResult.premiumPersonaProfile;
   const premiumPatterns = knowledgeInsightResult.premiumPatterns;
+  const premiumPatternProfile = knowledgeInsightResult.premiumPatternProfile;
   const thisWeeksV2Pattern = knowledgeInsightResult.thisWeeksV2Pattern;
   const premiumWeeklyDeepDive = knowledgeInsightResult.premiumWeeklyDeepDive;
   const knowledgeInsight = knowledgeInsightResult.primaryInsight;
@@ -202,6 +207,7 @@ export async function buildInsightSurface({
     knowledgeInsights,
     premiumPersonaProfile,
     premiumPatterns,
+    premiumPatternProfile,
     thisWeeksV2Pattern,
     premiumWeeklyDeepDive,
   };

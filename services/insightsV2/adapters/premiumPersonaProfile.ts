@@ -35,7 +35,7 @@ interface CategoryPersonaCopy {
 
 const DEFAULT_PERSONA_COPY: CategoryPersonaCopy = {
   protectivePurpose:
-    'This part may be trying to keep you oriented by noticing what matters, tracking risk, and helping your system choose a steadier next step.',
+    'This part keeps you oriented by noticing what matters, tracking risk, and helping your system choose a steadier next step.',
   strengths: [
     'It can notice patterns that a more surface-level read might miss.',
     'It helps you stay connected to what feels meaningful, protective, or unresolved.',
@@ -53,7 +53,7 @@ const DEFAULT_PERSONA_COPY: CategoryPersonaCopy = {
 const CATEGORY_PERSONA_COPY: Partial<Record<InsightCategory, CategoryPersonaCopy>> = {
   responsibilityCare: {
     protectivePurpose:
-      'This part may have learned to keep people, tasks, or emotional loose ends from falling through the cracks.',
+      'This part learned to keep people, tasks, or emotional loose ends from falling through the cracks.',
     strengths: [
       'You often notice what needs care before it becomes obvious.',
       'You can hold responsibility with real tenderness and follow-through.',
@@ -69,7 +69,7 @@ const CATEGORY_PERSONA_COPY: Partial<Record<InsightCategory, CategoryPersonaCopy
   },
   workAmbition: {
     protectivePurpose:
-      'This part may use progress, output, or high standards to help your system feel safer and more in control.',
+      'This part uses progress, output, or high standards to help your system feel safer and more in control.',
     strengths: [
       'You can move toward what matters with discipline and vision.',
       'You often see the gap between what exists and what could be built.',
@@ -85,10 +85,10 @@ const CATEGORY_PERSONA_COPY: Partial<Record<InsightCategory, CategoryPersonaCopy
   },
   safetyRegulation: {
     protectivePurpose:
-      'This part may keep scanning for safety so your nervous system is not caught unprepared.',
+      'This part keeps scanning for safety so your nervous system is not caught unprepared.',
     strengths: [
       'You can sense shifts quickly, sometimes before your mind has language for them.',
-      'You may have a precise read on what helps your body settle or brace.',
+      'You have a precise read on what helps your body settle or brace.',
     ],
     growthEdge:
       'The growth edge is letting discernment stay available while giving your body enough evidence that it can soften.',
@@ -101,10 +101,10 @@ const CATEGORY_PERSONA_COPY: Partial<Record<InsightCategory, CategoryPersonaCopy
   },
   selfWorthReceiving: {
     protectivePurpose:
-      'This part may protect you from the vulnerability of needing, receiving, or being cared for without earning it first.',
+      'This part protects you from the vulnerability of needing, receiving, or being cared for without earning it first.',
     strengths: [
       'You can notice the emotional weight of care, reciprocity, and being valued.',
-      'You may be deeply attuned to whether support feels respectful or costly.',
+      'You are deeply attuned to whether support feels respectful or costly.',
     ],
     growthEdge:
       'The growth edge is letting care reach the real need before turning it into proof, debt, or usefulness.',
@@ -117,7 +117,7 @@ const CATEGORY_PERSONA_COPY: Partial<Record<InsightCategory, CategoryPersonaCopy
   },
   relationships: {
     protectivePurpose:
-      'This part may track tone, distance, repair, and belonging so connection feels safer to stay inside.',
+      'This part tracks tone, distance, repair, and belonging so connection feels safer to stay inside.',
     strengths: [
       'You can notice relational shifts with emotional precision.',
       'You often care about repair because the meaning underneath the moment matters.',
@@ -133,9 +133,9 @@ const CATEGORY_PERSONA_COPY: Partial<Record<InsightCategory, CategoryPersonaCopy
   },
   bodySignals: {
     protectivePurpose:
-      'This part may use body signals to bring attention to what your mind has not fully organized yet.',
+      'This part uses body signals to bring attention to what your mind has not fully organized yet.',
     strengths: [
-      'Your body may give you early information about strain, safety, grief, desire, or overload.',
+      'Your body gives you early information about strain, safety, grief, desire, or overload.',
       'You can learn from sensation without needing to turn it into a diagnosis.',
     ],
     growthEdge:
@@ -145,14 +145,14 @@ const CATEGORY_PERSONA_COPY: Partial<Record<InsightCategory, CategoryPersonaCopy
       'Ask what would bring a little more regulation or room.',
     ],
     reflectionPrompt:
-      'What sensation has been most noticeable, and what might it be asking for?',
+      'What sensation has been most noticeable, and what is it asking for?',
   },
   dreamsSymbols: {
     protectivePurpose:
-      'This part may process emotional residue, symbols, and unfinished material while your waking mind is less defended.',
+      'This part processes emotional residue, symbols, and unfinished material while your waking mind is less defended.',
     strengths: [
       'You can notice meaning without needing every image to become a prediction.',
-      'You may be able to track repeated emotional themes across dreams and waking life.',
+      'You can track repeated emotional themes across dreams and waking life.',
     ],
     growthEdge:
       'The growth edge is letting symbolic material clarify real feelings without replacing grounded action.',
@@ -165,10 +165,10 @@ const CATEGORY_PERSONA_COPY: Partial<Record<InsightCategory, CategoryPersonaCopy
   },
   griefTransitions: {
     protectivePurpose:
-      'This part may protect the meaning of what changed by refusing to rush your emotional world past what still matters.',
+      'This part protects the meaning of what changed by refusing to rush your emotional world past what still matters.',
     strengths: [
       'You can honor complexity when relief, grief, longing, or closure arrive together.',
-      'You may notice the slower emotional truth beneath a logical ending.',
+      'You notice the slower emotional truth beneath a logical ending.',
     ],
     growthEdge:
       'The growth edge is allowing movement without treating returning feelings as failure.',
@@ -181,10 +181,10 @@ const CATEGORY_PERSONA_COPY: Partial<Record<InsightCategory, CategoryPersonaCopy
   },
   pleasurePlay: {
     protectivePurpose:
-      'This part may protect access to aliveness, delight, and relief when responsibility or pressure starts crowding out joy.',
+      'This part protects access to aliveness, delight, and relief when responsibility or pressure starts crowding out joy.',
     strengths: [
       'You can recognize what brings life back into your body.',
-      'You may notice that pleasure is not extra; it can be part of regulation and recovery.',
+      'You notice that pleasure is not extra; it can be part of regulation and recovery.',
     ],
     growthEdge:
       'The growth edge is letting something good count before everything is finished or earned.',
@@ -226,15 +226,15 @@ function formatList(values: string[]): string {
 
 function confidenceLead(confidence: PatternConfidence): string {
   if (confidence === 'veryStrong') {
-    return 'MySky is seeing this part repeatedly';
+    return 'This part is showing up repeatedly';
   }
   if (confidence === 'strong') {
-    return 'MySky is seeing this part clearly';
+    return 'This part is showing up clearly';
   }
   if (confidence === 'moderate') {
-    return 'MySky is noticing this part becoming clearer';
+    return 'This part is becoming clearer';
   }
-  return 'MySky is beginning to notice this part';
+  return 'This part is beginning to show itself';
 }
 
 function buildEvidenceSummary(profile: SelectedPersonaProfile): string {

@@ -144,11 +144,13 @@ describe('knowledgeInsightRouter', () => {
     expect(result.dailyInsights.length).toBeGreaterThan(1);
     expect(result.dailyInsights.length).toBeLessThanOrEqual(2);
     expect(result.dailyInsights[0].slot).toBe('whatMySkyNoticed');
-    expect(result.dailyInsights.map((insight) => insight.slotLabel)).toContain('What MySky Noticed');
+    expect(result.dailyInsights.map((insight) => insight.slotLabel)).toContain('What Stands Out');
     expect(result.dailyInsights.some((insight) => insight.patternKey === 'unknown')).toBe(false);
     expect(result.premiumPatterns.length).toBeGreaterThan(0);
     expect(result.premiumPatterns.every(pattern => pattern.isV2Derived)).toBe(true);
     expect(result.premiumPatterns.some(pattern => pattern.patternKey === 'unknown')).toBe(false);
+    expect(result.premiumPatternProfile).not.toBeNull();
+    expect(result.premiumPatternProfile?.sourcePatternKeys.some(patternKey => patternKey === 'unknown')).toBe(false);
     expect(result.thisWeeksV2Pattern).not.toBeNull();
     expect(result.thisWeeksV2Pattern?.isV2Derived).toBe(true);
     expect(result.thisWeeksV2Pattern?.patternKey).not.toBe('unknown');

@@ -26,7 +26,7 @@ export const POSITIVE_CAPACITY_ANGLES: DailyAngle[] = [
     triggerSignals: ['glimmer_softening', 'relief', 'tension_release'],
     sourcePriority: ['glimmerLog', 'bodyMap', 'reflectionBank', 'journal'],
     observation:
-      'The archive is noticing what helped your system soften.',
+      'Something helped your system soften.',
     pattern:
       'A glimmer, body shift, moment of relief, or small safety cue may not solve everything, but it gives your nervous system specific evidence about what helps.',
     reframe:
@@ -62,7 +62,7 @@ export const POSITIVE_CAPACITY_ANGLES: DailyAngle[] = [
     observation:
       'Some connection may be functioning as regulation, not just company.',
     pattern:
-      'The archive is picking up warmth, being understood, receiving care, or body softening near connection. That suggests a relationship or interaction helped your system come back to itself.',
+      'Warmth, being understood, receiving care, or body softening near connection can be more than a nice moment. A relationship or interaction helped your system come back to itself.',
     reframe:
       'This does not read as dependency. It reads as connection becoming a real source of return.',
     question:
@@ -96,7 +96,7 @@ export const POSITIVE_CAPACITY_ANGLES: DailyAngle[] = [
     observation:
       'Hope may be present in a small enough form that it can be trusted.',
     pattern:
-      'The archive is noticing relief, mood lift, or a gentler inner weather signal. It may not mean everything is resolved; it means something in the system found a little more room.',
+      'Relief, mood lift, or a gentler inner weather signal may not mean everything is resolved; it means something in the system found a little more room.',
     reframe:
       'This does not read as pretending everything is fine. It reads as a real shift, even if it is still small.',
     question:

@@ -32,7 +32,7 @@ describe('patternsHelpers', () => {
     expect(state.statusLine).toBe('Not enough signal for a real pattern read');
   });
 
-  it('caps the pattern archive to one core pattern plus two supporting V2 sections', () => {
+  it('caps the V2 pattern map to one core pattern plus two supporting sections', () => {
     const state = buildPatternLibraryState([
       v2Pattern({
         title: 'Invisible Load',

@@ -19,8 +19,11 @@ describe('insight surface wiring', () => {
     const patternsSource = readRepoFile('app/(tabs)/patterns.tsx');
 
     expect(patternsSource).toContain('setPremiumPatterns(surface.premiumPatterns)');
+    expect(patternsSource).toContain('setPremiumPatternProfile(surface.premiumPatternProfile)');
     expect(patternsSource).toContain('setPremiumWeeklyDeepDive(surface.premiumWeeklyDeepDive)');
     expect(patternsSource).toContain('setThisWeeksV2Pattern(surface.thisWeeksV2Pattern)');
+    expect(patternsSource).toContain('premiumPatternProfile.sections.map');
     expect(patternsSource).toContain('buildPatternLibraryState(premiumPatterns)');
+    expect(patternsSource).toContain('fullLibrarySections.map');
   });
 });

@@ -760,10 +760,10 @@ function describeConsistentPresence(profile: PatternProfile): string {
     : '';
 
   if (lowerStabilityDays.length >= 2) {
-    return `Across ${lowerStabilityDays.length} lower-stability days, your archive keeps naming ${repeatedSignalText}.${sourceLine} The important part is the recurrence: these are the themes that stay visible when capacity drops, which makes the insight about your pattern rather than your logging habit.`;
+    return `Across ${lowerStabilityDays.length} lower-stability days, the same themes keep returning: ${repeatedSignalText}.${sourceLine} The important part is the recurrence: these are the themes that stay visible when capacity drops, which makes the insight about your pattern rather than your logging habit.`;
   }
 
-  return `Across ${days.length} tracked days, your archive keeps naming ${repeatedSignalText}.${sourceLine} The useful signal is the recurring material that stays visible long enough to understand.`;
+  return `Across ${days.length} tracked days, the same themes keep returning: ${repeatedSignalText}.${sourceLine} The useful signal is the recurring material that stays visible long enough to understand.`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

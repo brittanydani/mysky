@@ -47,7 +47,7 @@ describe('KnowledgeInsightCard', () => {
     const insight: GeneratedInsight = {
       id: 'insight-1',
       slot: 'whatMySkyNoticed',
-      slotLabel: 'What MySky Noticed',
+      slotLabel: 'What Stands Out',
       title: 'Low-Capacity Windows',
       observation: 'Low capacity is showing up today.',
       pattern: 'Sleep and energy may be shaping what feels possible.',
@@ -70,7 +70,7 @@ describe('KnowledgeInsightCard', () => {
     );
 
     expect(getByText('Low-Capacity Windows')).toBeTruthy();
-    expect(getByText('What MySky Noticed')).toBeTruthy();
+    expect(getByText('What Stands Out')).toBeTruthy();
     expect(getByText('Low capacity is showing up today. Sleep and energy may be shaping what feels possible.')).toBeTruthy();
     expect(getByText('Low capacity may be a timing signal, not a character flaw.')).toBeTruthy();
     expect(getByText('What keeps landing in your lowest-capacity window?')).toBeTruthy();

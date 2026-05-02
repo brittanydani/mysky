@@ -288,7 +288,7 @@ function buildSomaticInsight(
   return {
     id: 'somatic-dominant',
     title: 'The Silent Ledger of the Body',
-    body: `Your archive indicates that your body is carrying much of your emotional load.\n\nAcross recent entries, when ${topEmotion.toLowerCase()} arises, it reliably lands in your ${regionLabel} before your mind fully processes it.${sensationNote}\n\nThis does not read as physical weakness. It reads as a highly attuned nervous system tracking what your mind should not have to carry alone.`,
+    body: `Your body is carrying much of the emotional load.\n\nAcross recent entries, when ${topEmotion.toLowerCase()} arises, it reliably lands in your ${regionLabel} before your mind fully processes it.${sensationNote}\n\nThis does not read as physical weakness. It reads as a highly attuned nervous system tracking what your mind should not have to carry alone.`,
     heroMetrics: [
       metric(heavyLabel.toUpperCase(), 'Somatic days', overlap >= 2 ? 'caution' : 'default'),
       metric(regionMetric.toUpperCase(), 'Primary signal'),
@@ -320,7 +320,7 @@ const ARCHETYPE_SHADOWS: Record<ArchetypeKey, { title: string; observation: stri
   },
   caregiver: {
     title: 'The Architecture of Protection',
-    observation: 'Your archive indicates that responsibility for others often attaches to you before you can refuse it.',
+    observation: 'Responsibility for others often attaches to you before you can refuse it.',
     pattern: 'Across your reflections, your orientation stays fixed on tending and holding others, often resulting in real depletion.',
     reframe: 'This does not read as poor boundaries. It reads as the heavy, quiet cost of being the one who ensures everyone else is okay before checking your own reserves.',
     takeaway: 'Before meeting someone else’s need, pause long enough to ask whether the exact same need is unspoken in you.',
@@ -328,20 +328,20 @@ const ARCHETYPE_SHADOWS: Record<ArchetypeKey, { title: string; observation: stri
   seeker: {
     title: 'Movement as Medicine',
     observation: 'What keeps showing up is motion and shifting focus as your go-to escape routes.',
-    pattern: 'When pressure rises, the data shows an immediate instinct to move, leave, or change the current frame.',
+    pattern: 'When pressure rises, there is an immediate instinct to move, leave, or change the current frame.',
     reframe: 'This does not read as a lack of commitment. It reads as a highly attuned system trying to prevent feeling trapped by staying ten steps ahead.',
     takeaway: 'Notice the urge to leave or switch tasks. What happens if you stay with the current, uncomfortable moment just a little longer?',
   },
   sage: {
     title: 'The Shield of Understanding',
-    observation: 'Your archive shows that cognitive understanding is your main regulatory tool.',
+    observation: 'Cognitive understanding is your main regulatory tool.',
     pattern: 'Under pressure, your reflections immediately lean toward analyzing and solving before the raw feeling itself has had room to register.',
     reframe: 'This does not read as emotional avoidance. It reads as a brilliant mind trying to make an experience emotionally survivable by making it understandable.',
     takeaway: 'When the mind speeds up, pause before solving. What feeling is asking to be felt before it is explained?',
   },
   rebel: {
     title: 'The Friction of Constraint',
-    observation: 'Your archive indicates a strong sensitivity to anything that feels like a cage.',
+    observation: 'Anything that feels like a cage carries a strong charge for you.',
     pattern: 'Across recent entries, overload instantly morphs into a resistance against expectations, rules, or what feels confining.',
     reframe: 'This does not read as mere defiance. It reads as a fierce, protective stance over your own autonomy when your capacity is already stretched thin.',
     takeaway: 'Pause long enough to ask what is truly misaligned, and what only feels intolerable because you are already overloaded.',
@@ -538,7 +538,7 @@ function buildRelationshipInsight(
 
   const secureThemeLabel = topSecureTags.length > 0 ? resolveTagLabel(topSecureTags[0][0]) : null;
 
-  let observation = `Your archive indicates that relational dynamics strongly shape your internal weather.`;
+  let observation = `Relational dynamics strongly shape your internal weather.`;
   let pattern = safeThemeLabel === 'still emerging'
     ? `Across recent entries, these subtle relational dynamics repeatedly surface to the top of your reflections.`
     : `Across recent entries, themes of ${safeThemeLabel.toLowerCase()} repeatedly surface to the top of your reflections.`;
@@ -616,7 +616,7 @@ function buildValuesInsight(
     }
   }
 
-  const observation = `Your archive indicates that your core values are part of your inner structure.`;
+  const observation = `Your core values are part of your inner structure.`;
   const pattern = `You have consistently anchored yourself to ${topList}. ${hardDayNote}`;
   const reframe = `This does not read as being stubborn or inflexible. It reads as a fierce, necessary protective stance over your own integrity.`;
 
@@ -771,7 +771,7 @@ function buildCognitiveInsight(scores: NonNullable<SelfKnowledgeContext['cogniti
   return {
     id: 'cognitive-workflow',
     title: 'The Architecture of Your Choices',
-    body: `Your archive shows that understanding is your primary regulatory tool.\n\n${note.pattern}\n\n${note.reframe}`,
+    body: `Understanding is your primary regulatory tool.\n\n${note.pattern}\n\n${note.reframe}`,
     accentColor: 'midnightSlate',
     source: 'cognitive',
     isConfirmed: false,
@@ -885,7 +885,7 @@ function buildDreamSomaticInsight(
 
   const primary = matches[0];
   
-  const observation = `Your archive indicates that your sleep is functioning as an active, heavy processing state.`;
+  const observation = `Sleep is functioning as an active, heavy processing state.`;
   const pattern = `Across both your physical body logs and your dream entries, the exact same sensation of ${primary.somaticEmotion.toLowerCase()} and ${primary.dreamFeeling.replace(/_/g, ' ')} surfaces repeatedly.`;
   const reframe = `This does not read as poor rest. It reads as one system trying to process the same emotional material from two directions: day and night.`;
 
@@ -920,7 +920,7 @@ function buildJournalBodyInsight(
   }
   const topEmotion = Object.entries(overlapEmotions).sort((a, b) => b[1] - a[1])[0];
 
-  const observation = `Your archive reveals that your body and your words are carrying the exact same weight.`;
+  const observation = `Your body and your words are carrying the exact same weight.`;
   const pattern = `Across your heaviest journal entries, the precise feeling of ${topEmotion[0].toLowerCase()} is simultaneously registered in your physical body map.`;
   const reframe = `This does not read as a coincidence. It reads as a physical signature: your body registering what your mind is still trying to name.`;
 

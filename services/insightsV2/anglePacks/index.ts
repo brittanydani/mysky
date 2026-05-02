@@ -22,7 +22,7 @@ export const BOUNDARY_ANGLES: DailyAngle[] = [
         patternKey: 'boundaries_001_boundary_rebuilding',
         title: 'Where You Draw the Line',
         triggerSignals: ['boundary_rebuilding', 'inner_authority'],
-        observation: 'Your archive shows a growing shift in how you hold your limits.',
+        observation: 'There is a growing shift in how you hold your limits.',
         pattern: 'Across recent entries, there is less energy spent asking whether your boundary is acceptable and more attention given to whether it is true.',
         reframe: 'This does not read as becoming cold. It reads as self-trust beginning to stand without needing everyone’s permission.',
         question: 'Which of your limits felt most honest today?',

@@ -34,7 +34,7 @@ describe('patternsHelpers', () => {
     expect(state.sections).toEqual([]);
     expect(state.librarySections).toEqual([]);
     expect(state.statusLine).toBe('Not enough signal for a real pattern read');
-    expect(state.helperText).toContain('V2 evidence');
+    expect(state.helperText).toContain('pattern map');
   });
 
   it('builds archive and library sections from V2 pattern items only', () => {

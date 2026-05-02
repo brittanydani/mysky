@@ -443,7 +443,7 @@ function buildRestorationPattern(profile: PatternProfile): NarrativeInsight | nu
     body = `Among your tracked activities, ${restoreSignals[0].tag.replace(/_/g, ' ')} stands out as restorative — your restoration score averages ${Math.round(restoreSignals[0].lift)} points higher on those days.`;
   } else {
     effectStrength = 20;
-    body = 'Your restoration pattern is still emerging. As you continue logging, MySky will identify which conditions, activities, and rhythms truly help you recover.';
+    body = 'Your restoration pattern is still emerging. As you continue logging, the conditions, activities, and rhythms that truly help you recover will become clearer.';
   }
 
   const stat = restoreSignals.length > 0
@@ -813,7 +813,7 @@ function buildDreamTheme(profile: PatternProfile): NarrativeInsight | null {
     body = `Recurring themes in your dream-adjacent entries include ${topKw.map(k => k.key).join(', ')}. These patterns may reflect deeper needs surfacing beneath daily life.`;
   } else {
     effectStrength = 20;
-    body = 'You\'ve been logging dreams consistently. Over time, MySky will surface recurring themes and emotional patterns from your dream world.';
+    body = 'You\'ve been logging dreams consistently. Over time, recurring themes and emotional patterns from your dream world will become easier to see.';
   }
 
   return {

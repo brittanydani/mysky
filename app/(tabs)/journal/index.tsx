@@ -677,7 +677,7 @@ function JournalContent() {
           text: 'Delete Dream',
           style: 'destructive',
           onPress: () => {
-            Alert.alert('Delete Dream', 'Remove this dream from your archive?', [
+            Alert.alert('Delete Dream', 'Remove this dream from saved dreams?', [
               { text: 'Cancel', style: 'cancel' },
               { text: 'Delete', style: 'destructive', onPress: () => void handleDeleteDream(entry) },
             ]);
@@ -1154,7 +1154,7 @@ function JournalContent() {
                     </View>
                     <View style={styles.entryActionTextWrap}>
                       <Text style={[styles.entryActionLabel, styles.entryActionLabelDanger]}>Delete Entry</Text>
-                      <Text style={styles.entryActionHint}>Remove this reflection from your archive.</Text>
+                      <Text style={styles.entryActionHint}>Remove this saved reflection.</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={18} color="rgba(243,163,163,0.5)" />
                   </Pressable>

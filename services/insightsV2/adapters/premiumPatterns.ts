@@ -88,6 +88,31 @@ export interface PremiumThisWeekPatternItem {
   isEmptyState?: boolean;
 }
 
+export interface PremiumPatternProfileSection {
+  key: string;
+  title: string;
+  body: string;
+  category: InsightCategory;
+  patternKey: string;
+  confidence: PatternConfidence;
+}
+
+export interface PremiumPatternProfile {
+  title: string;
+  subtitle: string;
+  portrait: string;
+  sections: PremiumPatternProfileSection[];
+  growthOrRecovery?: {
+    title: string;
+    body: string;
+    patternKey?: string;
+  };
+  reflectionPrompt: string;
+  areaLabels: string[];
+  sourcePatternKeys: string[];
+  isLowData?: boolean;
+}
+
 interface AdaptPremiumPatternsOptions {
   includeLowConfidence?: boolean;
   maxItems?: number;
@@ -98,6 +123,8 @@ const MAX_PREMIUM_PATTERN_ITEMS = 24;
 const MAX_WEEKLY_PATTERN_CANDIDATES = 32;
 const MIN_WEEKLY_DEEP_READS = 2;
 const MAX_WEEKLY_DEEP_READS = 4;
+const MIN_PROFILE_PATTERN_AREAS = 2;
+const MAX_PROFILE_PATTERN_AREAS = 3;
 
 const SOURCE_LABELS: Partial<Record<EvidenceAnchor['source'], string>> = {
   dailyCheckIn: 'daily check-ins',
@@ -198,25 +225,25 @@ const CATEGORY_CONCEPT: Record<InsightCategory, PremiumPatternConcept> = {
 
 const WHY_IT_MAY_MATTER: Record<PremiumPatternConcept, string> = {
   core_synthesis:
-    'This may matter because it is organizing more than one part of your week. A core pattern becomes useful when you can recognize it before it decides the whole moment for you.',
+    'This matters because it is organizing more than one part of your week. A core pattern becomes useful when you can recognize it before it decides the whole moment for you.',
   body_awareness:
-    'This may matter because your body may be giving you information before your thoughts have finished explaining it. The signal is not an enemy; it may be an early doorway into regulation.',
+    'This matters because your body gives information before your thoughts have finished explaining it. The signal is not an enemy; it is an early doorway into regulation.',
   protective_behavior:
-    'This may matter because protective patterns often begin as care, survival, or responsibility. Seeing the protection clearly gives you more choice about when it helps and when it starts costing too much.',
+    'This matters because protective patterns often begin as care, survival, or responsibility. Seeing the protection clearly gives you more choice about when it helps and when it starts costing too much.',
   relational_dynamic:
-    'This may matter because connection can change your nervous system quickly. Tone, repair, distance, and support are not small details when your body is trying to decide whether closeness is safe.',
+    'This matters because connection can change your nervous system quickly. Tone, repair, distance, and support are not small details when your body is trying to decide whether closeness is safe.',
   processing_style:
-    'This may matter because the way you make sense of things affects how quickly you can move. Your system may need clarity, language, or a smaller next step before action feels honest.',
+    'This matters because the way you make sense of things affects how quickly you can move. Your system needs clarity, language, or a smaller next step before action feels honest.',
   emotional_theme:
-    'This may matter because repeated emotion is often information, not noise. When the same feeling keeps returning, it may be pointing to something that still wants care, closure, or space.',
+    'This matters because repeated emotion is often information, not noise. When the same feeling keeps returning, something still wants care, closure, or space.',
   recovery_pattern:
-    'This may matter because recovery is easier to protect when you know what actually helps you come back. Small relief becomes useful when it is recognizable and repeatable.',
+    'This matters because recovery is easier to protect when you know what actually helps you come back. Small relief becomes useful when it is recognizable and repeatable.',
   dream_archive_contrast:
-    'This may matter because dream material can carry emotional residue that waking life has not fully organized. It does not have to predict anything to show what your system is still processing.',
+    'This matters because dream material can carry emotional residue that waking life has not fully organized. It does not have to predict anything to show what your system is still processing.',
   values_pattern:
-    'This may matter because values often show up first as friction. The discomfort may be helping you protect something honest, even before the next choice is fully clear.',
+    'This matters because values often show up first as friction. The discomfort helps you protect something honest, even before the next choice is fully clear.',
   statistical_trend:
-    'This may matter because rhythm is data. Repeated capacity, sleep, mood, or timing patterns can help you plan with your system instead of judging it from the outside.',
+    'This matters because rhythm is data. Repeated capacity, sleep, mood, or timing patterns help you plan with your system instead of judging it from the outside.',
 };
 
 const REFLECTION_PROMPTS: Record<PremiumPatternConcept, string> = {
@@ -252,25 +279,25 @@ function formatList(values: string[]): string {
 
 function movementSentence(score: ArchivePatternScore): string {
   if (score.movement === 'intensifying') {
-    return 'This pattern appears louder than it has been recently.';
+    return 'This has been louder than it was recently.';
   }
   if (score.movement === 'softening') {
-    return 'This pattern is still present, but it may be softening.';
+    return 'This is still present, and it is softening.';
   }
   if (score.movement === 'returning') {
-    return 'This pattern appears to be returning after being quieter.';
+    return 'This is returning after being quieter.';
   }
   if (score.movement === 'repeating') {
-    return 'This pattern is showing up repeatedly enough to belong in the map.';
+    return 'This repeats enough to belong in the map.';
   }
-  return 'This pattern has enough signal to be worth tracking now.';
+  return 'This is clear enough to track now.';
 }
 
 function confidenceSentence(confidence: PatternConfidence): string {
-  if (confidence === 'veryStrong') return 'The evidence is strong enough for a clear read.';
-  if (confidence === 'strong') return 'The evidence is clear enough to take seriously.';
-  if (confidence === 'moderate') return 'The evidence is still forming, so the read should stay spacious.';
-  return 'The evidence is early, so this should stay tentative.';
+  if (confidence === 'veryStrong') return 'The pattern is clear now.';
+  if (confidence === 'strong') return 'There is enough consistency to name it.';
+  if (confidence === 'moderate') return 'This is still forming, so hold it spaciously.';
+  return 'This is early, so hold it lightly.';
 }
 
 function buildSourceCoverage(score: ArchivePatternScore): string[] {
@@ -283,7 +310,7 @@ function buildEvidenceSummary(score: ArchivePatternScore): string {
   const sources = buildSourceCoverage(score).slice(0, 3);
   const sourceText = sources.length
     ? `Seen across ${formatList(sources)}`
-    : 'Seen in your recent archive';
+    : 'Seen in recent signals';
   return `${sourceText} over roughly ${score.timeframeDays} days.`;
 }
 
@@ -296,7 +323,7 @@ function buildBody(
     ...pattern.supportingSignals,
   ].map(humanizeKey)).slice(0, 3);
   const signalSentence = signalNames.length
-    ? `The related signals include ${formatList(signalNames)}.`
+    ? `It shows up around ${formatList(signalNames)}.`
     : '';
   const clarity = trimTerminalPunctuation(pattern.clarityReframe);
   const shame = trimTerminalPunctuation(pattern.shameLabel);
@@ -404,6 +431,196 @@ function isRecoveryOrHelpfulPattern(item: PremiumPatternItem): boolean {
   );
 }
 
+function confidenceRank(confidence: PatternConfidence): number {
+  if (confidence === 'veryStrong') return 4;
+  if (confidence === 'strong') return 3;
+  if (confidence === 'moderate') return 2;
+  return 1;
+}
+
+function patternAreaLabel(item: PremiumPatternItem): string {
+  return item.archiveSectionTitle ?? item.librarySectionTitle ?? CATEGORY_DISPLAY[item.category];
+}
+
+function patternAreaKey(item: PremiumPatternItem): string {
+  return patternAreaLabel(item).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
+
+function isProfileCandidate(item: PremiumPatternItem): boolean {
+  return item.confidence !== 'emerging' && (item.score ?? 0) >= 50;
+}
+
+function sortPatternsForProfile(patterns: PremiumPatternItem[]): PremiumPatternItem[] {
+  return [...patterns].sort((a, b) => {
+    const confidenceDelta = confidenceRank(b.confidence) - confidenceRank(a.confidence);
+    if (confidenceDelta !== 0) return confidenceDelta;
+    const scoreDelta = (b.score ?? 0) - (a.score ?? 0);
+    if (scoreDelta !== 0) return scoreDelta;
+    return timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt);
+  });
+}
+
+function selectDistinctProfilePatterns(
+  premiumPatterns: PremiumPatternItem[],
+): PremiumPatternItem[] {
+  const selected: PremiumPatternItem[] = [];
+  const seenAreaKeys = new Set<string>();
+  const seenPatternKeys = new Set<string>();
+  const candidates = sortPatternsForProfile(premiumPatterns.filter(isProfileCandidate));
+
+  for (const candidate of candidates) {
+    const areaKey = patternAreaKey(candidate);
+    if (seenAreaKeys.has(areaKey) || seenPatternKeys.has(candidate.patternKey)) continue;
+    selected.push(candidate);
+    seenAreaKeys.add(areaKey);
+    seenPatternKeys.add(candidate.patternKey);
+    if (selected.length >= MAX_PROFILE_PATTERN_AREAS) break;
+  }
+
+  return selected;
+}
+
+function lowerFirst(text: string): string {
+  if (!text) return '';
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+function sectionBodyForPattern(item: PremiumPatternItem): string {
+  switch (item.category) {
+    case 'responsibilityCare':
+      return 'There is a clear pattern around responsibility. You often notice what needs to be held before you notice what it is costing you. Care moves quickly into tracking, preparing, and making sure nothing important gets missed.';
+    case 'relationships':
+    case 'supportBelonging':
+    case 'communicationVoice':
+    case 'familyHome':
+      return 'Connection carries weight. Tone, consistency, repair, support, and being understood are not small details; they shape whether your system can soften or stays on alert.';
+    case 'bodySignals':
+      return 'Your body often joins the conversation before your mind has finished explaining what happened. Sensation becomes an early language for strain, safety, grief, overload, or the need to pause.';
+    case 'safetyRegulation':
+      return 'Safety is an active thread. Part of your system tracks what feels steady, what feels uncertain, and what needs more evidence before it can fully settle.';
+    case 'restCapacity':
+    case 'timeRhythms':
+      return 'Capacity has a rhythm. Rest is not only about stopping; it has to feel safe enough to receive, and timing matters more than force when your system is already stretched.';
+    case 'selfWorthReceiving':
+    case 'scarcityAbundance':
+      return 'Receiving, enoughness, and worth are active themes. Support can feel meaningful and exposed at the same time, especially when being cared for touches the part of you that learned to stay useful.';
+    case 'workAmbition':
+      return 'Ambition carries emotional weight. Progress, standards, and output can become ways to create safety, which means success has to include capacity or it starts costing the person doing the building.';
+    case 'lifeDirection':
+    case 'identityGrowth':
+      return 'Direction is connected to identity here. The question is not only what comes next; it is who you are becoming and what kind of stability that becoming needs.';
+    case 'cognitiveStyle':
+      return 'Understanding is one of your organizing tools. Your mind looks for language, context, and structure so the feeling becomes less shapeless and the next step becomes honest.';
+    case 'valuesIntegrity':
+    case 'spiritualMeaning':
+    case 'natalChartReflection':
+      return 'Meaning matters here. Values, truth, alignment, and symbolic language help you stay oriented when the obvious answer is not the honest one.';
+    case 'emotionalWeather':
+    case 'griefTransitions':
+      return 'Your emotional world holds complexity. More than one truth can be present at once, and the slower feeling often needs room after the practical situation has already moved on.';
+    case 'dreamsSymbols':
+      return 'Dreams and symbols carry emotional residue. They do not need to predict anything to matter; they often give shape to what waking life has not fully organized yet.';
+    case 'creativityExpression':
+      return 'Expression is part of how your inner world moves. Making, naming, designing, or speaking can turn what is internal into something your system can work with.';
+    case 'pleasurePlay':
+    case 'glimmersRegulation':
+      return 'Aliveness matters. Joy, play, beauty, relief, and small glimmers are not extras; they are part of how your system finds its way back to itself.';
+    default:
+      return `${item.title} is one of the clearer threads right now. ${item.clarityReframe ? `The clearer truth is ${lowerFirst(trimTerminalPunctuation(item.clarityReframe))}.` : 'It belongs in the profile because it shows where your system keeps returning for protection, clarity, or care.'}`;
+  }
+}
+
+function sectionForPattern(item: PremiumPatternItem): PremiumPatternProfileSection {
+  const title = patternAreaLabel(item);
+  return {
+    key: `profile-section-${item.patternKey}`,
+    title,
+    body: sectionBodyForPattern(item),
+    category: item.category,
+    patternKey: item.patternKey,
+    confidence: item.confidence,
+  };
+}
+
+function lowDataPatternProfile(): PremiumPatternProfile {
+  return {
+    title: 'Pattern Profile Is Still Forming',
+    subtitle: 'A deeper read will appear when enough distinct patterns repeat.',
+    portrait:
+      'This profile is still forming. As more check-ins, journals, dreams, body signals, and relationship reflections are added, this space becomes a clearer read of the patterns that keep returning.',
+    sections: [],
+    reflectionPrompt:
+      'What has repeated lately, even if it only feels like a small signal right now?',
+    areaLabels: [],
+    sourcePatternKeys: [],
+    isLowData: true,
+  };
+}
+
+function buildProfilePortrait(sections: PremiumPatternProfileSection[]): string {
+  const labels = sections.map(section => section.title.toLowerCase());
+  const areaText = formatList(labels);
+
+  return `The strongest threads right now are ${areaText}. Together, they describe how you protect what matters, where your system works hardest, and what helps it soften again. This is not a fixed identity; it is a profile of the patterns asking for the most attention right now.`;
+}
+
+function growthOrRecoveryForProfile(
+  premiumPatterns: PremiumPatternItem[],
+  selectedPatterns: PremiumPatternItem[],
+): PremiumPatternProfile['growthOrRecovery'] {
+  const selectedKeys = new Set(selectedPatterns.map(item => item.patternKey));
+  const candidates = sortPatternsForProfile(premiumPatterns.filter(isProfileCandidate));
+  const recovery = candidates.find(item => !selectedKeys.has(item.patternKey) && isRecoveryOrHelpfulPattern(item));
+
+  if (recovery) {
+    return {
+      title: 'What Helps You Soften',
+      body:
+        'Recovery is not about one dramatic breakthrough. It comes through small moments where the pressure lowers: being supported, feeling understood, finding quiet safety, or realizing something does not have to be carried alone.',
+      patternKey: recovery.patternKey,
+    };
+  }
+
+  const growth = candidates.find(item => !selectedKeys.has(item.patternKey));
+  return {
+    title: 'Growth Edge',
+    body:
+      'The growth edge is choice. The pattern does not need to disappear; it needs more room around it, so you can notice when it is protecting you and when it is costing too much.',
+    patternKey: growth?.patternKey,
+  };
+}
+
+export function selectPremiumPatternProfile(
+  premiumPatterns: PremiumPatternItem[],
+): PremiumPatternProfile {
+  const selectedPatterns = selectDistinctProfilePatterns(premiumPatterns);
+  if (selectedPatterns.length < MIN_PROFILE_PATTERN_AREAS) {
+    return lowDataPatternProfile();
+  }
+
+  const sections = selectedPatterns.map(sectionForPattern);
+  const growthOrRecovery = growthOrRecoveryForProfile(premiumPatterns, selectedPatterns);
+  const areaLabels = unique([
+    ...sections.map(section => section.title),
+    ...(growthOrRecovery ? [growthOrRecovery.title] : []),
+  ]).slice(0, 4);
+
+  return {
+    title: 'Your Pattern Profile',
+    subtitle: 'A deeper read of the patterns that keep returning.',
+    portrait: buildProfilePortrait(sections),
+    sections,
+    growthOrRecovery,
+    reflectionPrompt:
+      'What would change if you treated the strongest pattern as information about what needs support, not proof of who you have to be?',
+    areaLabels,
+    sourcePatternKeys: unique([
+      ...sections.map(section => section.patternKey),
+      ...(growthOrRecovery?.patternKey ? [growthOrRecovery.patternKey] : []),
+    ]),
+  };
+}
+
 function isLowConfidenceWeeklyCandidate(item: PremiumPatternItem): boolean {
   return item.confidence === 'emerging' || (item.score ?? 0) < 50;
 }
@@ -443,7 +660,7 @@ function weeklyReadForPattern(item: PremiumPatternItem): PremiumWeeklyDeepDiveIt
   const isLowConfidenceFallback = isLowConfidenceWeeklyCandidate(item);
   const body = isLowConfidenceFallback
     ? [
-        `Your archive has a light signal around ${item.title.toLowerCase()}. It is not enough for a firm read yet, but it may be worth holding gently as an emerging thread.`,
+        `A light signal is forming around ${item.title.toLowerCase()}. It is not enough for a firm read yet, but it is worth holding gently as an emerging thread.`,
         description,
       ].join('\n\n')
     : [description, movement].filter(Boolean).join('\n\n');
@@ -457,7 +674,7 @@ function weeklyReadForPattern(item: PremiumPatternItem): PremiumWeeklyDeepDiveIt
     body,
     whyItMayMatter: WHY_IT_MAY_MATTER[concept],
     reframe: isLowConfidenceFallback
-      ? 'This is not a conclusion yet. It is a possible thread MySky is tracking softly until more evidence gathers around it.'
+      ? 'This is not a conclusion yet. It is a possible thread to track softly until more evidence gathers around it.'
       : reframe || (item.clarityReframe ?? ''),
     evidenceSummary: isLowConfidenceFallback
       ? `Emerging: ${item.evidenceSummary}`
@@ -476,13 +693,13 @@ function weeklyLowDataEmptyState(): PremiumWeeklyDeepDiveItem {
     patternKey: 'weeklyDeepDive_lowData',
     category: 'emotionalWeather',
     title: 'Weekly Deep Dive Is Still Gathering Signal',
-    preview: 'MySky does not have enough pattern evidence for a firm weekly read yet.',
+    preview: 'There is not enough pattern evidence for a firm weekly read yet.',
     body:
-      'Your archive is still learning what repeats. Rather than forcing a pattern too early, MySky is waiting for enough evidence across moods, body signals, dreams, relationships, rest, and recovery.',
+      'There is not enough repeating signal for a firm weekly read yet. Rather than forcing a pattern too early, the next few check-ins can help the pattern become clearer across moods, body signals, dreams, relationships, rest, and recovery.',
     whyItMayMatter:
       'This matters because weak evidence should stay spacious. The read is more useful when it can name a real pattern instead of turning a thin signal into a story.',
     reframe:
-      'Not having a deep read yet does not mean nothing is happening. It means MySky is waiting for a pattern with enough evidence to name responsibly.',
+      'Not having a deep read yet does not mean nothing is happening. It means the pattern needs more evidence before it can be named responsibly.',
     evidenceSummary: 'No pattern has enough recent evidence for a responsible weekly read yet.',
     reflectionPrompt: 'What felt most worth noting this week, even if it only happened once?',
     confidence: 'emerging',
@@ -556,7 +773,7 @@ function thisWeekLowDataEmptyState(): PremiumThisWeekPatternItem {
     category: 'emotionalWeather',
     title: 'Your Weekly Pattern Is Still Forming',
     body:
-      'MySky is still gathering enough repetition to name a weekly pattern responsibly. A thin signal can matter, but it should not be forced into a story before the archive has more evidence.',
+      'There is not enough repetition to name a weekly pattern responsibly. A thin signal can matter, but it should not be forced into a story before more evidence gathers.',
     reframe:
       'This is not a lack of progress. It means your pattern map is waiting for something real enough to name.',
     confidence: 'emerging',
@@ -577,7 +794,7 @@ function thisWeekPatternForPattern(item: PremiumPatternItem): PremiumThisWeekPat
     category: item.category,
     title: item.title,
     body: isLowConfidenceFallback
-      ? `MySky is seeing an early thread around ${item.title.toLowerCase()}. It is not a firm read yet, but it may be worth noticing gently this week.`
+      ? `An early thread is forming around ${item.title.toLowerCase()}. It is not a firm read yet, but it is worth noticing gently this week.`
       : [description, movement].filter(Boolean).join(' '),
     reframe: isLowConfidenceFallback
       ? 'This is an emerging signal, not a conclusion. Let it stay spacious while more evidence gathers.'

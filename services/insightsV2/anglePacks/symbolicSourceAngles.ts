@@ -27,7 +27,7 @@ export const SYMBOLIC_SOURCE_ANGLES: DailyAngle[] = [
     observation:
       'Repetition may be making one dream image part of your symbolic archive.',
     pattern:
-      'The archive is noticing recurring people, places, rooms, searches, or images. The repetition may matter less as prediction and more as a way your system marks something that wants attention.',
+      'Recurring people, places, rooms, searches, or images are showing up with emotional weight. The repetition may matter less as prediction and more as a way your system marks something that wants attention.',
     reframe:
       'This does not read as being weird or superstitious. It reads as repetition asking to be noticed as part of your symbolic archive.',
     question:
@@ -61,7 +61,7 @@ export const SYMBOLIC_SOURCE_ANGLES: DailyAngle[] = [
     observation:
       'A home, room, or familiar place in a dream may be carrying memory, safety, identity, or belonging.',
     pattern:
-      'The archive is noticing place-based dream material: houses, rooms, childhood spaces, apartments, hallways, or unfamiliar homes. These may be ways the inner world explores what feels safe or unsettled.',
+      'Place-based dream material is active here: houses, rooms, childhood spaces, apartments, hallways, or unfamiliar homes. These may be ways the inner world explores what feels safe or unsettled.',
     reframe:
       'This does not read as dreams being random. It reads as your inner world using place to explore safety, identity, memory, or belonging.',
     question:
@@ -76,7 +76,7 @@ export const SYMBOLIC_SOURCE_ANGLES: DailyAngle[] = [
     triggerSignals: ['chart_theme_confirmed', 'pattern_recognition', 'meaning_making'],
     sourcePriority: ['reflectionBank', 'journal', 'natalChart'],
     observation:
-      'A chart theme may be useful when it gives language to something your lived archive is already noticing.',
+      'A chart theme may be useful when it gives language to something your lived pattern already carries.',
     pattern:
       'Recent signals suggest that symbolic language and lived data may be pointing toward the same area. The chart is not treated as a verdict here; it works best as a mirror for patterns already becoming visible.',
     reframe:
@@ -95,7 +95,7 @@ export const SYMBOLIC_SOURCE_ANGLES: DailyAngle[] = [
     observation:
       'Communication themes may be more useful when they connect to how you actually process, write, or need words to land.',
     pattern:
-      'The archive is seeing symbolic communication data near exact wording, journaling, expression, or the need for language that finds the center of the feeling.',
+      'Exact wording, journaling, expression, or the need for language that finds the center of the feeling is carrying symbolic weight.',
     reframe:
       'This does not read as over-explaining. It reads as language becoming one of the ways your inner world finds form.',
     question:
@@ -129,7 +129,7 @@ export const SYMBOLIC_SOURCE_ANGLES: DailyAngle[] = [
     observation:
       'A values theme may be most useful when it helps name the choices already asking for integrity.',
     pattern:
-      'The archive is noticing symbolic values data near purpose, truth, misalignment, or the cost of choosing what matters.',
+      'Purpose, truth, misalignment, or the cost of choosing what matters is showing up as symbolic values material.',
     reframe:
       'This does not read as taking meaning too seriously. It reads as values becoming the deeper thread connecting your choices.',
     question:

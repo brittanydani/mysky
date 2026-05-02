@@ -478,13 +478,13 @@ async function getSleepMoodInsight(chartId: string): Promise<DailyInsight | null
 function getConsistencyInsight(streak: StreakStatus): DailyInsight | null {
   if (streak.milestone != null) {
     const milestoneMessages: Record<number, string> = {
-      7: `Seven consecutive days. That is enough data for MySky to start detecting real patterns in your mood and energy — not just individual moments.`,
-      14: `Two weeks of daily tracking. The gap between who you think you are and what your data actually shows is starting to narrow.`,
-      30: `Thirty days logged. A full month of behavioral data means your patterns are no longer theoretical — they are visible and specific to you.`,
-      60: `Sixty check-ins. You have now built an archive detailed enough that MySky can detect subtle shifts most people would never notice about themselves.`,
-      90: `Ninety days. At this depth, your data reveals not just what you feel but what reliably causes it — and that is a different kind of knowledge.`,
-      180: `Six months of consistent tracking. Your archive now spans multiple seasons, stress cycles, and life contexts. That longitudinal depth is genuinely rare.`,
-      365: `One year. Your data now covers enough variation — highs, lows, seasons, hard weeks and strong ones — that the patterns inside it are no longer guesses. They are yours.`,
+      7: `Seven consecutive days. That is enough history for real mood and energy patterns to start separating from individual moments.`,
+      14: `Two weeks of daily tracking. The gap between who you think you are and what actually repeats is starting to narrow.`,
+      30: `Thirty days logged. A full month of behavior means your patterns are no longer theoretical — they are visible and specific to you.`,
+      60: `Sixty check-ins. You have built enough detail for subtle shifts to become visible before most people would notice them.`,
+      90: `Ninety days. At this depth, the pattern reveals not just what you feel but what reliably shapes it — and that is a different kind of knowledge.`,
+      180: `Six months of consistent tracking. The pattern history now spans multiple seasons, stress cycles, and life contexts. That longitudinal depth is genuinely rare.`,
+      365: `One year. Your history now covers enough variation — highs, lows, seasons, hard weeks and strong ones — that the patterns inside it are no longer guesses. They are yours.`,
     };
 
     return {
@@ -498,7 +498,7 @@ function getConsistencyInsight(streak: StreakStatus): DailyInsight | null {
 
   if (streak.current >= 5 && streak.current < 7) {
     return {
-      text: `Five days logged this week. You are close enough to a full week of data that MySky can start detecting whether your mood follows a weekly rhythm — most people's does.`,
+      text: `Five days logged this week. You are close enough to a full week for your mood rhythm to become easier to read — most people's does.`,
       type: 'consistency',
       accentColor: 'emerald',
       icon: 'flame-outline',
@@ -580,7 +580,7 @@ async function getTodayCheckInReflectionInsight(chartId: string): Promise<DailyI
         text: pick([
           'Your check-in points to lower fuel and a heavier emotional load today. The useful move is not to force clarity — it is to lower the demand and choose one supportive next step.',
           'Low mood and low energy together signal that your system is in conservation mode. Today is not a day to push through. Protect your baseline and keep the agenda minimal.',
-          'Today\'s data shows both mood and energy contracted. The most productive thing you can do right now is reduce what you are asking of yourself, not increase effort.',
+          'Mood and energy are both contracted today. The most productive thing you can do right now is reduce what you are asking of yourself, not increase effort.',
           'Your check-in reads as a depleted day. That is information, not a verdict. One small act of recovery now is worth more than forcing your way through everything on the list.',
         ]),
         type: 'check-in',
@@ -624,7 +624,7 @@ async function getTodayCheckInReflectionInsight(chartId: string): Promise<DailyI
       return {
         text: pick([
           'Your check-in shows a steadier, brighter baseline today. Study what is supporting that, because repeatable support is more useful than a lucky good mood.',
-          'High mood and low stress is not just a good day — it is a data point worth analyzing. What did yesterday and this morning look like? The conditions driving this are worth knowing.',
+          'High mood and low stress is not just a good day. What did yesterday and this morning look like? The conditions driving this are worth knowing.',
           'Today\'s check-in reads as a genuinely strong day. That makes it a good time to handle the harder conversations or decisions you have been deferring. You have more capacity than usual right now.',
           'A clean check-in like today\'s is worth pausing on. What was different? Sleep, connection, reduced demands? Identifying the input helps you reproduce the output.',
         ]),
@@ -640,9 +640,9 @@ async function getTodayCheckInReflectionInsight(chartId: string): Promise<DailyI
       return {
         text: pick([
           `You named "${primaryTag}" in today's check-in. That signal is worth watching — repeated tags often reveal what shapes your baseline before the pattern is obvious.`,
-          `"${primaryTag}" showed up in your check-in today. MySky will track whether it keeps appearing. Tags that recur across different mood days tell a different story than ones that cluster at the extremes.`,
+          `"${primaryTag}" showed up in your check-in today. If it keeps appearing, it can tell a different story than a tag that only shows up at the extremes.`,
           `Today you tagged "${primaryTag}". The most useful thing to notice is whether this tag tends to appear when mood is higher, lower, or does not seem to matter. That correlation takes a few more data points to confirm.`,
-          `You logged "${primaryTag}" as part of today's picture. Consistent tagging is how MySky eventually shows you which situations reliably move your needle — in either direction.`,
+          `You logged "${primaryTag}" as part of today's picture. Consistent tagging reveals which situations reliably move your needle — in either direction.`,
         ]),
         type: 'check-in',
         accentColor: 'gold',
@@ -653,10 +653,10 @@ async function getTodayCheckInReflectionInsight(chartId: string): Promise<DailyI
 
     return {
       text: pick([
-        "Today's check-in gives MySky a fresh read on your inner weather. Things look workable — the practice is to stay close to what keeps you steady.",
+        "Today's check-in gives a fresh read on your inner weather. Things look workable — the practice is to stay close to what keeps you steady.",
         "Check-in logged. Your baseline looks stable today. Stable is worth noting — it means what you are doing right now is working well enough to sustain.",
         "Today\'s entry is captured. A mid-range day is not a wasted one — it is the reference point that makes your highs and lows more legible over time.",
-        "MySky has your check-in for today. Consistent logging on ordinary days is what makes pattern recognition possible on the interesting ones.",
+        "Your check-in is in. Consistent logging on ordinary days is what makes pattern recognition possible on the interesting ones.",
       ]),
       type: 'check-in',
       accentColor: 'silverBlue',
@@ -801,7 +801,7 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
 
 const ENCOURAGEMENTS: DailyInsight[] = [
   {
-    text: 'A check-in today gives MySky a real data point instead of a guess. The picture it builds is one only you can see.',
+    text: 'A check-in today gives the pattern a real signal instead of a guess. The picture it builds is one only you can see.',
     type: 'encouragement',
     accentColor: 'gold',
     icon: 'sunny-outline',
@@ -822,7 +822,7 @@ const ENCOURAGEMENTS: DailyInsight[] = [
     theme: 'reflect',
   },
   {
-    text: 'Recovery is data too. Noticing what restores you is as informative as noticing what drains you.',
+    text: 'Recovery counts too. Noticing what restores you is as informative as noticing what drains you.',
     type: 'encouragement',
     accentColor: 'silverBlue',
     icon: 'moon-outline',
@@ -892,7 +892,7 @@ const ENCOURAGEMENTS: DailyInsight[] = [
     theme: 'calm',
   },
   {
-    text: 'A low score logged honestly is more useful than a high score logged to feel better. MySky needs the truth to help.',
+    text: 'A low score logged honestly is more useful than a high score logged to feel better. The truth is what makes the pattern useful.',
     type: 'encouragement',
     accentColor: 'emerald',
     icon: 'shield-checkmark-outline',
@@ -941,7 +941,7 @@ const ENCOURAGEMENTS: DailyInsight[] = [
     theme: 'reflect',
   },
   {
-    text: 'Your patterns are personal. What drains one person restores another. MySky is learning your specific version.',
+    text: 'Your patterns are personal. What drains one person restores another. Your specific version is what matters.',
     type: 'encouragement',
     accentColor: 'silverBlue',
     icon: 'person-outline',
@@ -1056,7 +1056,7 @@ async function getTriggerCrossRefInsight(
       const tagAvg = mean(tagged.map(c => c.moodScore as number));
       if (tagAvg - overallAvg < 0.4) continue;
       return {
-        text: `"${item}" is in your restores — and your data confirms it. Mood averages ${tagAvg.toFixed(1)} on those days vs ${overallAvg.toFixed(1)} overall.`,
+        text: `"${item}" is in your restores, and the pattern backs that up. Mood averages ${tagAvg.toFixed(1)} on those days vs ${overallAvg.toFixed(1)} overall.`,
         type: 'pattern',
         accentColor: 'emerald',
         icon: 'sparkles-outline',
@@ -1073,7 +1073,7 @@ async function getTriggerCrossRefInsight(
       const tagAvg = mean(tagged.map(c => c.moodScore as number));
       if (overallAvg - tagAvg < 0.4) continue;
       return {
-        text: `You listed "${item}" as a drain — your check-in data reflects this. Mood on "${tag.replace(/_/g, ' ')}" days averages ${tagAvg.toFixed(1)} vs ${overallAvg.toFixed(1)} overall.`,
+        text: `You listed "${item}" as a drain, and your check-ins reflect this. Mood on "${tag.replace(/_/g, ' ')}" days averages ${tagAvg.toFixed(1)} vs ${overallAvg.toFixed(1)} overall.`,
         type: 'pattern',
         accentColor: 'copper',
         icon: 'leaf-outline',

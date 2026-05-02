@@ -59,7 +59,7 @@ export function buildDreamArchiveSummary(entries: SleepEntry[]) {
     return {
       summary: hints.length > 0
         ? `You have ${dreamEntries.length} dream entries, but the signal is still wide rather than repetitive. ${hints.join(' and ')} have appeared, though not often enough yet to call the dream pattern settled.`
-        : `You already have ${dreamEntries.length} dream entries in your archive. That is enough to know your dream life is active, but not enough repetition yet to trust the first interpretation.`,
+        : `You already have ${dreamEntries.length} dream entries saved. That is enough to know your dream life is active, but not enough repetition yet to trust the first interpretation.`,
       chips: ['Needs more repeated signals'],
       grounding: 'Keep saving one feeling, one place, or one symbol after each dream. The next few mornings are what usually reveal whether the thread is emotional, relational, or environmental.',
     };
@@ -76,7 +76,7 @@ export function buildDreamArchiveSummary(entries: SleepEntry[]) {
   }
 
   return {
-    summary: `${leadPieces.join(', ')} across your recent dreams. When the same setting, theme, or feeling keeps returning, MySky treats that as emotional pattern rather than dream noise. ${chips.slice(0, 2).join(' and ')} look like part of what your inner world is still trying to work through.`,
+    summary: `${leadPieces.join(', ')} across your recent dreams. When the same setting, theme, or feeling keeps returning, it becomes emotional pattern rather than dream noise. ${chips.slice(0, 2).join(' and ')} look like part of what your inner world is still trying to work through.`,
     chips,
     grounding: 'Notice where this same theme brushes against waking life this week. The useful part is usually not a single symbol by itself, but the overlap between the dream pattern and what already feels unresolved during the day.',
   };

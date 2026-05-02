@@ -88,26 +88,26 @@ function signalMixLine(counts: ArchiveDepthCounts): string {
   ].filter(Boolean).length;
 
   if (sourceTypes >= 5) {
-    return 'That collective mix lets MySky compare what you report, what you write, what your body logs, what relationships activate, and what the sky snapshot was marking at the same time.';
+    return 'That collective mix connects what you report, what you write, what your body logs, what relationships activate, and what the sky snapshot was marking at the same time.';
   }
   if (hasDailyReflections && sourceTypes >= 3) {
     return 'Daily question answers give the archive a clear self-knowledge thread, while the other logs show whether that thread repeats in daily life.';
   }
   if (hasRelationships && (hasTriggers || hasSomatic)) {
-    return 'That overlap helps MySky separate a relationship story from the body cues and trigger/glimmer conditions around it.';
+    return 'That overlap separates the relationship story from the body cues and trigger/glimmer conditions around it.';
   }
 
   if (hasCheckIns && hasJournals && (hasSleep || hasDreams)) {
-    return 'That mix gives MySky enough contrast to compare how your body, mood, and inner language move together.';
+    return 'That mix gives the read enough contrast to compare how your body, mood, and inner language move together.';
   }
   if (hasCheckIns && hasJournals) {
-    return 'That overlap is what lets MySky compare the number of the week with the meaning underneath it.';
+    return 'That overlap connects the number of the week with the meaning underneath it.';
   }
   if (hasCheckIns && (hasSleep || hasDreams)) {
     return 'That overlap is where the archive stops sounding generic and starts seeing how your days and nights affect each other.';
   }
   if (hasJournals && hasDreams) {
-    return 'That combination gives MySky access to both your waking language and what keeps returning after dark.';
+    return 'That combination connects your waking language with what keeps returning after dark.';
   }
   if (hasDailyReflections) {
     return 'Daily question answers add depth because they show the themes you are consciously naming, not just the moods you are tracking.';
@@ -141,8 +141,8 @@ export function getArchiveDepth(counts: ArchiveDepthCounts): ArchiveDepth {
     return {
       totalSignals,
       label: 'Archive depth is now usable',
-      headline: 'Your archive has enough history to say something personal',
-      body: `${describeSignals(counts)} now give MySky enough history to separate a hard day from the patterns that actually repeat. ${signalMixLine(counts)}`,
+      headline: 'There is enough history for a personal read',
+      body: `${describeSignals(counts)} now give the read enough history to separate a hard day from the patterns that actually repeat. ${signalMixLine(counts)}`,
       nextMilestone,
       remaining: 0,
       progress,
@@ -153,8 +153,8 @@ export function getArchiveDepth(counts: ArchiveDepthCounts): ArchiveDepth {
     return {
       totalSignals,
       label: 'Weekly read unlocked',
-      headline: 'Your archive can now connect the week into a real story',
-      body: `${describeSignals(counts)} are enough for MySky to move beyond recap and start interpreting what the week was actually like. ${signalMixLine(counts)}`,
+      headline: 'The week can now become a real story',
+      body: `${describeSignals(counts)} are enough to move beyond recap and start interpreting what the week was actually like. ${signalMixLine(counts)}`,
       nextMilestone,
       remaining: Math.max(0, (nextMilestone ?? 15) - totalSignals),
       progress,
@@ -166,7 +166,7 @@ export function getArchiveDepth(counts: ArchiveDepthCounts): ArchiveDepth {
       totalSignals,
       label: 'Patterns forming',
       headline: `${7 - totalSignals} more signals until the archive can read the week with confidence`,
-      body: `${describeSignals(counts)} are enough to start sketching a baseline, but not enough yet for MySky to trust its first interpretation. ${signalMixLine(counts)}`,
+      body: `${describeSignals(counts)} are enough to start sketching a baseline, but not enough yet for a confident first interpretation. ${signalMixLine(counts)}`,
       nextMilestone,
       remaining: Math.max(0, (nextMilestone ?? 7) - totalSignals),
       progress,
@@ -176,10 +176,10 @@ export function getArchiveDepth(counts: ArchiveDepthCounts): ArchiveDepth {
   return {
     totalSignals,
     label: 'Starting signal',
-    headline: totalSignals === 0 ? 'Start building the archive MySky will read from' : 'Your first signals are saved',
+    headline: totalSignals === 0 ? 'Start building the pattern history' : 'Your first signals are saved',
     body: totalSignals === 0
-      ? 'Log a check-in, daily question answer, journal entry, sleep entry, dream, somatic map entry, trigger, glimmer, relationship pattern, or astrology-backed check-in to begin building the history MySky reads from.'
-      : `${describeSignals(counts)} saved. A few more signals will let MySky stop describing isolated moments and start noticing your actual patterns.`,
+      ? 'Log a check-in, daily question answer, journal entry, sleep entry, dream, somatic map entry, trigger, glimmer, relationship pattern, or astrology-backed check-in to begin building enough history for a personal read.'
+      : `${describeSignals(counts)} saved. A few more signals can turn isolated moments into actual patterns.`,
     nextMilestone,
     remaining: Math.max(0, (nextMilestone ?? 3) - totalSignals),
     progress,
@@ -198,7 +198,7 @@ export function getPersonalizedPremiumTeaser(
   if (detectedPatterns > 0) {
     return {
       eyebrow: 'Patterns detected',
-      title: `MySky has ${detectedPatterns} deeper ${detectedPatterns === 1 ? 'pattern' : 'patterns'} ready from your archive`,
+      title: `${detectedPatterns} deeper ${detectedPatterns === 1 ? 'pattern is' : 'patterns are'} ready`,
       body: `Your ${signalSummary} are repeating strongly enough for Deeper Sky to name what steadies you, what drains you, and what keeps returning in the background of your life.`,
       cta: 'Reveal your patterns',
     };
@@ -224,8 +224,8 @@ export function getPersonalizedPremiumTeaser(
 
   return {
     eyebrow: 'Deeper Insight',
-    title: 'Build the archive that makes MySky specific',
-    body: 'Deeper Sky gets better as daily questions, mood, sleep, dreams, journals, body maps, glimmers, triggers, relationship patterns, and astrology snapshots begin overlapping enough for MySky to stop guessing and start recognizing you.',
+    title: 'Build the history that makes the read specific',
+    body: 'Deeper Sky gets better as daily questions, mood, sleep, dreams, journals, body maps, glimmers, triggers, relationship patterns, and astrology snapshots begin overlapping enough to stop guessing and start recognizing what repeats.',
     cta: 'Explore Deeper Sky',
   };
 }

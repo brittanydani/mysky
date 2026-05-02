@@ -335,7 +335,7 @@ export const DAILY_ANGLE_ARCHETYPES: DailyAngleArchetype[] = [
     order: 48,
     title: 'The Recovery Clue',
     description: 'Names what helped the user return after stress.',
-    formula: 'Your archive may be showing that [specific support] helps you come back.',
+    formula: '[Specific support] helps you come back.',
   },
   {
     key: 'the_patterns_request',
@@ -348,7 +348,7 @@ export const DAILY_ANGLE_ARCHETYPES: DailyAngleArchetype[] = [
     key: 'the_archive_mirror',
     order: 50,
     title: 'The Archive Mirror',
-    description: 'Zooms out and shows what the archive is reflecting back.',
-    formula: 'Your archive is not reducing you to this pattern. It is showing one place where your inner world has been asking to be understood.',
+    description: 'Zooms out and names the larger reflective pattern.',
+    formula: 'You are not reduced to this pattern. This is one place where your inner world has been asking to be understood.',
   },
 ];

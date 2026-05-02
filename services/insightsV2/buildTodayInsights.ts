@@ -157,30 +157,30 @@ function signalBodyForSentiment(signal: UserSignal): string {
   const label = signalCue(signal);
 
   if (signal.sentiment === 'positive') {
-    return `Your archive is picking up ${label} today. This may be worth noticing as evidence of what supports you.`;
+    return `${label} showed up today as support your system can use. Small evidence of relief, steadiness, or aliveness still matters.`;
   }
 
   if (signal.sentiment === 'mixed') {
-    return `Your archive is picking up ${label} today. There may be more than one truth active at the same time.`;
+    return `${label} carried more than one emotional truth today. It makes sense if the signal felt layered instead of simple.`;
   }
 
   if (signal.sentiment === 'negative') {
-    return `Your archive is picking up ${label} today. This may be asking for care, pacing, or clarity rather than quick self-judgment.`;
+    return `${label} asked for care, pacing, or clarity today rather than quick self-judgment.`;
   }
 
-  return `Your archive is picking up ${label} today. It may be useful context for how the day is moving through you.`;
+  return `${label} was part of today's inner weather. It helps explain how the day moved through you.`;
 }
 
 function personaProtectivePurpose(persona: SelectedPersonaProfile): string {
   if (persona.polarity === 'negative') {
-    return 'This part may be trying to protect you through safety, care, or survival.';
+    return 'This part is trying to protect you through safety, care, or survival.';
   }
 
   if (persona.polarity === 'positive') {
-    return 'This part may be showing a strength your system can keep trusting.';
+    return 'This part is showing a strength your system can keep trusting.';
   }
 
-  return 'This part may be helping your system stay oriented when more than one need is present.';
+  return 'This part helps your system stay oriented when more than one need is present.';
 }
 
 function personaBody(persona: SelectedPersonaProfile): string {
@@ -189,30 +189,30 @@ function personaBody(persona: SelectedPersonaProfile): string {
 
 function whatHelpedBody(signal: UserSignal): string {
   const cue = signalCue(signal);
-  return `Your archive is noticing ${cue} today. That may be part of what helped your system soften, settle, recover, or feel a little more supported.`;
+  return `${cue} helped your system soften, settle, recover, or feel a little more supported today.`;
 }
 
 function bodySignalBody(signal: UserSignal): string {
   const cue = signalCue(signal);
-  return `The body signal around ${cue} may be giving you information before your mind has fully organized it.`;
+  return `Your body is giving you information around ${cue} before your mind has fully organized it.`;
 }
 
 function relationshipSignalBody(signal: UserSignal): string {
   const cue = signalCue(signal);
-  return `The relationship signal around ${cue} may be standing out today: tone, closeness, distance, repair, support, or feeling understood.`;
+  return `The relationship signal around ${cue} is standing out today: tone, closeness, distance, repair, support, or feeling understood.`;
 }
 
 function dreamSignalBody(signal: UserSignal): string {
   const cue = signalCue(signal);
-  return `The dream thread around ${cue} may be carrying emotional residue, symbolic meaning, or unfinished processing.`;
+  return `The dream thread around ${cue} is carrying emotional residue, symbolic meaning, or unfinished processing.`;
 }
 
 function growthEdgeBody(pattern: ArchivePattern | undefined): string {
   if (pattern) {
-    return `The ${pattern.title} pattern may be asking for attention, not because you are doing anything wrong, but because it may be ready to become more conscious.`;
+    return `The ${pattern.title} pattern is asking for attention, not because you are doing anything wrong, but because it is becoming conscious enough to meet with more choice.`;
   }
 
-  return 'Another pattern in your archive may be asking for attention, not because you are doing anything wrong, but because it may be ready to become more conscious.';
+  return 'A pattern is asking for attention, not because you are doing anything wrong, but because it is becoming conscious enough to meet with more choice.';
 }
 
 function confidenceFromSignalStrength(strength: number): PatternConfidence {
@@ -269,14 +269,14 @@ function patternKeyForSignal(signal: UserSignal): string {
 
 function personaReframe(persona: SelectedPersonaProfile): string {
   if (persona.polarity === 'negative') {
-    return 'This is not a flaw. It may be a pattern your system learned to use for safety, care, or survival.';
+    return 'This is not a flaw. It is a pattern your system learned to use for safety, care, or survival.';
   }
 
   if (persona.polarity === 'positive') {
     return 'This looks like a strength your system can keep building on.';
   }
 
-  return 'This may be one of the ways your system tries to stay oriented.';
+  return 'This is one of the ways your system tries to stay oriented.';
 }
 
 function growthEdgeScore(
@@ -493,8 +493,8 @@ export async function buildTodayInsights({
       surface: 'today' as const,
       title: 'What your body noticed',
       body: bodySignalBody(bodySignal),
-      reframe: 'This does not mean your body is against you. It may be trying to get your attention in the language it knows.',
-      reflectionPrompt: 'What sensation felt most noticeable today, and what might it have been asking for?',
+      reframe: 'This does not mean your body is against you. It is trying to get your attention in the language it knows.',
+      reflectionPrompt: 'What sensation felt most noticeable today, and what was it asking for?',
       patternKey,
       confidence: confidenceFromSignalStrength(bodySignal.strength),
       movement: 'new',
@@ -519,7 +519,7 @@ export async function buildTodayInsights({
       surface: 'today' as const,
       title: 'A relationship thread',
       body: relationshipSignalBody(relationshipSignal),
-      reframe: 'Noticing relational shifts does not mean you are too sensitive. It may mean connection carries meaningful information for you.',
+      reframe: 'Noticing relational shifts does not mean you are too sensitive. Connection carries meaningful information for you.',
       reflectionPrompt: 'Did this relationship moment make you want closeness, distance, clarity, repair, or reassurance?',
       patternKey,
       confidence: confidenceFromSignalStrength(relationshipSignal.strength),
@@ -545,7 +545,7 @@ export async function buildTodayInsights({
       surface: 'today' as const,
       title: 'A dream thread',
       body: dreamSignalBody(dreamSignal),
-      reframe: 'A dream does not have to predict anything to matter. It may simply show what your mind or body is still working through.',
+      reframe: 'A dream does not have to predict anything to matter. It shows what your mind or body is still working through.',
       reflectionPrompt: 'What feeling from the dream stayed with you after waking?',
       patternKey,
       confidence: confidenceFromSignalStrength(dreamSignal.strength),
@@ -566,7 +566,7 @@ export async function buildTodayInsights({
       surface: 'today' as const,
       title: 'A growth edge',
       body: growthEdgeBody(pattern),
-      reframe: pattern?.clarityReframe ?? 'This pattern may be ready to meet with a little more choice.',
+      reframe: pattern?.clarityReframe ?? 'This pattern is ready to meet with a little more choice.',
       reflectionPrompt: 'What would it look like to meet this pattern with a little more choice today?',
       patternKey: growthPattern.patternKey,
       confidence: growthPattern.confidence,
