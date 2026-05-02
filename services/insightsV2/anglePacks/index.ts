@@ -10,6 +10,7 @@ import { LIFE_CONTEXT_ANGLES } from './lifeContextAngles';
 import { SYMBOLIC_SOURCE_ANGLES } from './symbolicSourceAngles';
 import { CREATIVE_IDENTITY_ANGLES } from './creativeIdentityAngles';
 import { SUPPORT_BOUNDARY_ANGLES } from './supportBoundaryAngles';
+import { NEW_CATEGORY_DAILY_ANGLES } from './newCategoryDailyAngles';
 import { DailyAngle } from '../types';
 
 /**
@@ -93,6 +94,7 @@ export const DAILY_ANGLES = [
   ...CREATIVE_IDENTITY_ANGLES,
   ...SUPPORT_BOUNDARY_ANGLES,
   ...PRACTICAL_ACTION_ANGLES,
+  ...NEW_CATEGORY_DAILY_ANGLES,
   ...BOUNDARY_ANGLES,
   ...VALUES_ANGLES,
   ...COGNITIVE_ANGLES,

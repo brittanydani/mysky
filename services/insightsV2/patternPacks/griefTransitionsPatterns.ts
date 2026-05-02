@@ -25,7 +25,7 @@ const griefTransitionsPattern = (
   tags,
 });
 
-export const GRIEF_TRANSITIONS_PATTERNS: ArchivePattern[] = [
+const GRIEF_TRANSITIONS_FOUNDATION_PATTERNS: ArchivePattern[] = [
   griefTransitionsPattern(
     'grief_transitions_001_gratitude_and_grief',
     'Gratitude and Grief Together',
@@ -56,4 +56,384 @@ export const GRIEF_TRANSITIONS_PATTERNS: ArchivePattern[] = [
     'Loss themes may return through dreams, longing, or fear when something important is still being integrated.',
     ['loss', 'dreams', 'integration'],
   ),
+];
+
+export const GRIEF_TRANSITIONS_EXPANSION: ArchivePattern[] = [
+  {
+    key: 'griefTransitions_logicalOverEmotional',
+    title: 'Over Logically, Not Emotionally',
+    category: 'griefTransitions',
+    description:
+      'Something has ended or shifted, but the emotional impact is still catching up.',
+    requiredSignals: ['chapter_shift', 'sadness'],
+    supportingSignals: [
+      'emotional_heaviness',
+      'old_story_loosening',
+      'mixed_emotions',
+    ],
+    conflictingSignals: ['clean_closure', 'quick_recovery'],
+    shameLabel: 'I should be over this by now.',
+    clarityReframe:
+      'Knowing something is over does not mean your emotional world has finished adjusting.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['grief', 'transition', 'emotional lag'],
+  },
+  {
+    key: 'griefTransitions_griefReturns',
+    title: 'Grief Returns in Waves',
+    category: 'griefTransitions',
+    description:
+      'Loss or transition appears in waves rather than as one continuous feeling.',
+    requiredSignals: ['gratitude_and_grief', 'longing'],
+    supportingSignals: [
+      'dream_loss',
+      'sadness',
+      'emotional_heaviness',
+      'mixed_emotions',
+    ],
+    conflictingSignals: ['relief_after_ending'],
+    shameLabel: 'If it came back, I must not be healing.',
+    clarityReframe:
+      'Grief returning does not mean you are back at the beginning. It may mean another part of the loss is becoming real.',
+    lookbackDays: 60,
+    minEvidenceCount: 3,
+    minScore: 0.62,
+    cooldownDays: 21,
+    tags: ['grief waves', 'longing', 'loss'],
+  },
+  {
+    key: 'griefTransitions_reliefAndGrief',
+    title: 'Relief and Grief Together',
+    category: 'griefTransitions',
+    description:
+      'Relief and grief are both present around the same change or ending.',
+    requiredSignals: ['gratitude_and_grief', 'relief'],
+    supportingSignals: ['mixed_emotions', 'chapter_shift', 'sadness'],
+    conflictingSignals: [],
+    shameLabel: 'I should feel only one way about this.',
+    clarityReframe:
+      'Relief and grief can belong to the same truth. One does not cancel the other.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['mixed emotions', 'relief', 'grief'],
+  },
+  {
+    key: 'griefTransitions_identityShift',
+    title: 'A Version of You Is Changing',
+    category: 'griefTransitions',
+    description:
+      'The transition is affecting identity, not only circumstances.',
+    requiredSignals: ['identity_rewriting', 'chapter_shift'],
+    supportingSignals: [
+      'old_story_loosening',
+      'transformation_season',
+      'future_self_orientation',
+    ],
+    conflictingSignals: ['stable_self_continuity'],
+    shameLabel: 'I should know who I am by now.',
+    clarityReframe:
+      'A life change can ask your identity to reorganize slowly. That does not mean you are lost.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['identity', 'transition', 'change'],
+  },
+  {
+    key: 'griefTransitions_oldStoryLoosening',
+    title: 'The Old Story Is Loosening',
+    category: 'griefTransitions',
+    description:
+      'An old self-understanding or life story is becoming less fixed.',
+    requiredSignals: ['old_story_loosening', 'self_definition'],
+    supportingSignals: [
+      'identity_rewriting',
+      'past_self_compassion',
+      'truth_telling',
+    ],
+    conflictingSignals: ['stable_self_continuity'],
+    shameLabel: 'If the old story changes, I lose who I was.',
+    clarityReframe:
+      'Letting an old story loosen does not erase your past. It may give you more room to tell the truth now.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['old story', 'identity', 'growth'],
+  },
+  {
+    key: 'griefTransitions_futureNotHereYet',
+    title: 'The Next Chapter Is Not Fully Here Yet',
+    category: 'griefTransitions',
+    description:
+      'The user is between what ended and what has not fully formed yet.',
+    requiredSignals: ['chapter_shift', 'future_self_orientation'],
+    supportingSignals: [
+      'decision_uncertainty',
+      'transformation_season',
+      'longing',
+    ],
+    conflictingSignals: ['clean_closure'],
+    shameLabel: 'I should already know what comes next.',
+    clarityReframe:
+      'Being between chapters can feel unclear because the old has shifted before the new has fully arrived.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['in between', 'future self', 'transition'],
+  },
+  {
+    key: 'griefTransitions_dreamLossEcho',
+    title: 'Loss Is Showing Up in Dreams',
+    category: 'griefTransitions',
+    description:
+      'Dream material is echoing themes of loss, endings, or unfinished change.',
+    requiredSignals: ['dream_loss', 'dream_unfinished_processing'],
+    supportingSignals: [
+      'sadness',
+      'longing',
+      'chapter_shift',
+      'dream_emotional_tone',
+    ],
+    conflictingSignals: ['low_dream_interpretation'],
+    shameLabel: 'This dream should not still affect me.',
+    clarityReframe:
+      'A dream can carry the feeling of a transition before your waking mind has fully organized it.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['dreams', 'loss', 'unfinished processing'],
+  },
+  {
+    key: 'griefTransitions_absenceLouderThanNew',
+    title: 'The Absence Is Still Loud',
+    category: 'griefTransitions',
+    description:
+      'What is missing remains more emotionally present than what has replaced it.',
+    requiredSignals: ['longing', 'sadness'],
+    supportingSignals: [
+      'emotional_heaviness',
+      'gratitude_and_grief',
+      'fear_of_loss',
+    ],
+    conflictingSignals: ['relief', 'contentment'],
+    shameLabel: 'I should focus on what I still have.',
+    clarityReframe:
+      'Noticing what is missing does not mean you are ungrateful. It means the absence still has weight.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['absence', 'longing', 'loss'],
+  },
+  {
+    key: 'griefTransitions_slowMeaningSurface',
+    title: 'The Meaning Is Surfacing Slowly',
+    category: 'griefTransitions',
+    description:
+      'The meaning of a change appears gradually after the event itself.',
+    requiredSignals: ['meaning_making', 'chapter_shift'],
+    supportingSignals: [
+      'deep_processing',
+      'integrates_insight',
+      'emotional_heaviness',
+    ],
+    conflictingSignals: ['move_on_orientation'],
+    shameLabel: 'I should have understood this sooner.',
+    clarityReframe:
+      'Some changes reveal their meaning over time. The delay may be part of the processing.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['meaning', 'processing', 'transition'],
+  },
+  {
+    key: 'griefTransitions_forwardWithWaves',
+    title: 'Forward With Waves',
+    category: 'griefTransitions',
+    description:
+      'The user is moving forward while still experiencing returning feelings.',
+    requiredSignals: ['forward_with_waves', 'moving_on_still_affected'],
+    supportingSignals: [
+      'closure_wanted_feelings_lag',
+      'ready_then_resurfacing',
+      'sadness',
+    ],
+    conflictingSignals: ['clean_closure'],
+    shameLabel: 'Moving forward should mean this does not come back.',
+    clarityReframe:
+      'Forward movement and returning feelings can both be real. Healing does not require one to cancel the other.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['moving forward', 'waves', 'grief'],
+  },
+  {
+    key: 'griefTransitions_cleanClosureAvailable',
+    title: 'Clean Closure Is Available',
+    category: 'griefTransitions',
+    description:
+      'The user may be able to accept an ending without needing to keep revisiting it.',
+    requiredSignals: ['clean_closure', 'lets_endings_complete'],
+    supportingSignals: [
+      'future_after_ending',
+      'memory_without_attachment',
+      'relief_after_ending',
+    ],
+    conflictingSignals: ['unwanted_revisiting', 'ready_then_resurfacing'],
+    shameLabel: 'If I move on, it must not have mattered.',
+    clarityReframe:
+      'Letting an ending become the past does not erase its meaning.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['closure', 'acceptance', 'moving on'],
+  },
+  {
+    key: 'griefTransitions_avoidantForwardMotion',
+    title: 'Forward Motion May Be Avoiding Weight',
+    category: 'griefTransitions',
+    description:
+      'The user is moving forward quickly, but the emotional impact may not be fully acknowledged.',
+    requiredSignals: ['moves_on_to_avoid_heavy', 'forward_motion_over_reflection'],
+    supportingSignals: [
+      'emotions_not_registered',
+      'later_importance_realization',
+      'unprocessed_forward_easier',
+    ],
+    conflictingSignals: ['deep_processing', 'grief_returns'],
+    shameLabel: 'If I stop moving, it will be too much.',
+    clarityReframe:
+      'Forward motion can help, but some feelings may still need a place to land.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['avoidance', 'movement', 'unprocessed grief'],
+  },
+  {
+    key: 'griefTransitions_pastReturnsUnexpectedly',
+    title: 'The Past Returns Unexpectedly',
+    category: 'griefTransitions',
+    description:
+      'Past experiences or old feelings resurface after seeming settled.',
+    requiredSignals: ['ready_then_resurfacing', 'done_but_unfinished_underneath'],
+    supportingSignals: [
+      'unwanted_revisiting',
+      'settled_then_returns_frustration',
+      'emotional_heaviness',
+    ],
+    conflictingSignals: ['clean_closure'],
+    shameLabel: 'I already dealt with this, so it should not return.',
+    clarityReframe:
+      'Something returning does not mean your work was undone. It may mean another layer is ready to be seen.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['resurfacing', 'past', 'unfinished'],
+  },
+  {
+    key: 'griefTransitions_gratitudeDoesNotEraseGrief',
+    title: 'Gratitude Does Not Erase Grief',
+    category: 'griefTransitions',
+    description:
+      'Gratitude and grief are present together, especially around change or loss.',
+    requiredSignals: ['gratitude_and_grief'],
+    supportingSignals: ['sadness', 'longing', 'mixed_emotions', 'relief'],
+    conflictingSignals: [],
+    shameLabel: 'If I am grateful, I should not still feel sad.',
+    clarityReframe:
+      'Gratitude can sit beside grief. It does not require the loss to become painless.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['gratitude', 'grief', 'mixed emotion'],
+  },
+  {
+    key: 'griefTransitions_lossOfFuture',
+    title: 'Grieving the Future That Did Not Happen',
+    category: 'griefTransitions',
+    description:
+      'The grief may be connected to an imagined future, not only a concrete ending.',
+    requiredSignals: ['longing', 'future_self_orientation'],
+    supportingSignals: [
+      'sadness',
+      'chapter_shift',
+      'fear_of_loss',
+      'emotional_heaviness',
+    ],
+    conflictingSignals: ['present_focus'],
+    shameLabel:
+      'It is strange to grieve something that never fully happened.',
+    clarityReframe:
+      'You can grieve a future you hoped for, even if no one else saw it clearly.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['future grief', 'longing', 'loss'],
+  },
+  {
+    key: 'griefTransitions_transitionFatigue',
+    title: 'Transition Fatigue',
+    category: 'griefTransitions',
+    description:
+      'Repeated or ongoing change is creating emotional tiredness.',
+    requiredSignals: ['transformation_season', 'depletion'],
+    supportingSignals: [
+      'chapter_shift',
+      'low_energy',
+      'capacity_strain',
+      'emotional_heaviness',
+    ],
+    conflictingSignals: ['high_energy', 'energized'],
+    shameLabel: 'I should be excited about change.',
+    clarityReframe:
+      'Even meaningful change can be tiring. Becoming new still takes energy.',
+    lookbackDays: 60,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['transition fatigue', 'change', 'energy'],
+  },
+  {
+    key: 'griefTransitions_oldAndNewBothTrue',
+    title: 'Old and New Both Feel True',
+    category: 'griefTransitions',
+    description:
+      'The user is holding attachment to what was and movement toward what is next.',
+    requiredSignals: ['chapter_shift', 'mixed_emotions'],
+    supportingSignals: [
+      'old_story_loosening',
+      'future_self_orientation',
+      'gratitude_and_grief',
+    ],
+    conflictingSignals: ['clean_closure'],
+    shameLabel:
+      'I need to choose whether I am moving on or holding on.',
+    clarityReframe:
+      'You may be doing both: honoring what was while slowly making room for what is next.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['old and new', 'transition', 'mixed emotions'],
+  },
+];
+
+export const GRIEF_TRANSITIONS_PATTERNS: ArchivePattern[] = [
+  ...GRIEF_TRANSITIONS_FOUNDATION_PATTERNS,
+  ...GRIEF_TRANSITIONS_EXPANSION,
 ];

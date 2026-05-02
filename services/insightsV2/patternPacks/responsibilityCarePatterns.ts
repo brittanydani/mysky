@@ -25,7 +25,7 @@ const responsibilityCarePattern = (
   tags,
 });
 
-export const RESPONSIBILITY_CARE_PATTERNS: ArchivePattern[] = [
+const RESPONSIBILITY_CARE_FOUNDATION_PATTERNS: ArchivePattern[] = [
   responsibilityCarePattern(
     'responsibility_care_001_invisible_labor',
     'The Invisible Labor Pattern',
@@ -56,4 +56,395 @@ export const RESPONSIBILITY_CARE_PATTERNS: ArchivePattern[] = [
     'Giving, noticing, or accommodating may become costly when mutuality is missing.',
     ['caretaking', 'mutuality', 'depletion'],
   ),
+];
+
+export const RESPONSIBILITY_CARE_EXPANSION: ArchivePattern[] = [
+  {
+    key: 'responsibilityCare_invisibleLoad',
+    title: 'Invisible Load',
+    category: 'responsibilityCare',
+    description:
+      'Mental and emotional responsibility is showing up even when there is not a visible task attached to it.',
+    requiredSignals: ['mental_load', 'responsibility_weight'],
+    supportingSignals: [
+      'invisible_labor',
+      'always_on',
+      'preparedness',
+      'capacity_strain',
+    ],
+    conflictingSignals: ['shared_responsibility', 'lets_others_handle'],
+    shameLabel: 'I should be able to handle this.',
+    clarityReframe:
+      'This may not be about weakness. It may be the cost of carrying things that are hard for others to see.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 14,
+    tags: ['mental load', 'invisible labor', 'responsibility'],
+  },
+  {
+    key: 'responsibilityCare_overfunctioningLoop',
+    title: 'Stepping In Before Capacity',
+    category: 'responsibilityCare',
+    description:
+      'Care turns into action quickly, sometimes before capacity is checked.',
+    requiredSignals: ['overfunctioning', 'caretaking_pressure'],
+    supportingSignals: [
+      'capacity_strain',
+      'depletion',
+      'responsibility_weight',
+      'always_on',
+    ],
+    conflictingSignals: ['care_with_boundaries', 'capacity_before_support'],
+    shameLabel: 'If I do not step in, I am failing.',
+    clarityReframe:
+      'Care may need a pause before it becomes responsibility. That pause protects the care instead of weakening it.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['overfunctioning', 'capacity', 'care'],
+  },
+  {
+    key: 'responsibilityCare_careWithLimits',
+    title: 'Care With Limits',
+    category: 'responsibilityCare',
+    description:
+      'Care is still present, but it is beginning to include limits and capacity checks.',
+    requiredSignals: ['care_with_boundaries', 'limits_protect_care'],
+    supportingSignals: [
+      'support_without_guilt',
+      'capacity_before_support',
+      'sustainable_care',
+    ],
+    conflictingSignals: ['automatic_giving_need', 'helps_before_capacity_check'],
+    shameLabel: 'Having limits means I care less.',
+    clarityReframe:
+      'Bounded care is not less real. It is often the form of care that can last.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['bounded care', 'limits', 'sustainable support'],
+  },
+  {
+    key: 'responsibilityCare_emotionalResponsibility',
+    title: 'Emotional Responsibility',
+    category: 'responsibilityCare',
+    description:
+      'Other people’s emotional states are being tracked as something that may need managing.',
+    requiredSignals: [
+      'caretaking_pressure',
+      'emotional_not_practical_responsibility',
+    ],
+    supportingSignals: [
+      'tone_sensitivity',
+      'wants_to_be_seen',
+      'small_circle_pressure',
+    ],
+    conflictingSignals: ['lets_others_handle', 'low_relational_tracking'],
+    shameLabel: 'I have to keep everyone okay.',
+    clarityReframe:
+      'You can care about someone’s feelings without becoming responsible for regulating them.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 14,
+    tags: ['emotional labor', 'caretaking', 'relationships'],
+  },
+  {
+    key: 'responsibilityCare_delayedCost',
+    title: 'The Cost Shows Up Later',
+    category: 'responsibilityCare',
+    description:
+      'The impact of carrying responsibility appears after the situation has already been handled.',
+    requiredSignals: ['depletion', 'responsibility_weight'],
+    supportingSignals: [
+      'recovery_gap',
+      'low_energy',
+      'body_heaviness',
+      'capacity_strain',
+    ],
+    conflictingSignals: ['restorative_moment', 'high_energy'],
+    shameLabel: 'It is over, so I should be fine.',
+    clarityReframe:
+      'Handling the situation does not mean your body is done recovering from what it took.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['delayed cost', 'depletion', 'recovery'],
+  },
+  {
+    key: 'responsibilityCare_needNotAssignment',
+    title: 'Need Is Not Assignment',
+    category: 'responsibilityCare',
+    description:
+      'The presence of a need is being felt as a possible assignment.',
+    requiredSignals: ['need_not_assignment', 'responsibility_weight'],
+    supportingSignals: [
+      'notices_need_without_job',
+      'help_pull_with_boundary',
+      'ownership_pause',
+    ],
+    conflictingSignals: ['assigned_responsibility_only', 'selective_helping'],
+    shameLabel: 'If I notice it, I have to handle it.',
+    clarityReframe:
+      'Noticing a need gives information. It does not automatically decide ownership.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['ownership', 'need', 'boundaries'],
+  },
+  {
+    key: 'responsibilityCare_allOrNothingEngagement',
+    title: 'All-or-Nothing Engagement',
+    category: 'responsibilityCare',
+    description:
+      'Responsibility is not always constant, but once it registers, it can become intense quickly.',
+    requiredSignals: [
+      'responsibility_registers_intense',
+      'step_in_after_involved',
+    ],
+    supportingSignals: [
+      'responsibility_waves',
+      'surprised_by_taken_on',
+      'clear_need_sudden_urgency',
+    ],
+    conflictingSignals: ['defined_support', 'care_with_boundaries'],
+    shameLabel: 'Once I am involved, I have to fully take over.',
+    clarityReframe:
+      'Engagement can have degrees. You do not have to choose between distance and total responsibility.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['all-or-nothing', 'responsibility waves', 'engagement'],
+  },
+  {
+    key: 'responsibilityCare_automaticGiving',
+    title: 'Automatic Giving',
+    category: 'responsibilityCare',
+    description:
+      'Support is offered before capacity or desire has been checked.',
+    requiredSignals: ['automatic_giving_need', 'helps_before_capacity_check'],
+    supportingSignals: [
+      'yes_before_pause',
+      'natural_help_overwhelming',
+      'other_need_before_own',
+    ],
+    conflictingSignals: ['capacity_before_support', 'chosen_support'],
+    shameLabel: 'Pausing before helping is selfish.',
+    clarityReframe:
+      'A pause does not remove generosity. It helps generosity stay honest.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['giving', 'capacity', 'pause'],
+  },
+  {
+    key: 'responsibilityCare_pullBackHarderThanStepIn',
+    title: 'Hard to Pull Back',
+    category: 'responsibilityCare',
+    description:
+      'Once support has begun, reducing involvement feels harder than starting it.',
+    requiredSignals: ['pulling_back_harder', 'responsible_after_involved'],
+    supportingSignals: [
+      'energy_cost_after_commit',
+      'limits_noticed_after_crossed',
+      'overextension',
+    ],
+    conflictingSignals: ['defined_support', 'care_with_boundaries'],
+    shameLabel: 'I cannot stop now that I started.',
+    clarityReframe:
+      'Changing your level of support is not abandonment. Sometimes it is how the support becomes sustainable.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['pulling back', 'support', 'limits'],
+  },
+  {
+    key: 'responsibilityCare_preparednessAsBurden',
+    title: 'Always Prepared',
+    category: 'responsibilityCare',
+    description:
+      'Preparedness is acting like a form of responsibility, keeping the user mentally on-call.',
+    requiredSignals: ['preparedness', 'always_on'],
+    supportingSignals: [
+      'mental_load',
+      'responsibility_weight',
+      'rest_resistance',
+      'calm_bracing',
+    ],
+    conflictingSignals: ['easy_rest', 'settles_without_readiness'],
+    shameLabel: 'If I stop preparing, something will fall apart.',
+    clarityReframe:
+      'Preparedness may help you respond, but being constantly on-call has a cost.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['preparedness', 'always on', 'mental load'],
+  },
+  {
+    key: 'responsibilityCare_responsibilityAndWorth',
+    title: 'Worth Through Usefulness',
+    category: 'responsibilityCare',
+    description:
+      'Being helpful or capable appears connected to feeling secure in one’s role.',
+    requiredSignals: ['responsibility_weight', 'kindness_usefulness_pressure'],
+    supportingSignals: ['receiving_care_difficulty', 'support_need'],
+    conflictingSignals: ['open_receiving', 'valued_without_usefulness'],
+    shameLabel: 'I matter most when I am useful.',
+    clarityReframe:
+      'Usefulness can be meaningful, but it is not the full measure of your worth.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['worth', 'usefulness', 'receiving'],
+  },
+  {
+    key: 'responsibilityCare_sharedResponsibilityEmerging',
+    title: 'Shared Responsibility Is Emerging',
+    category: 'responsibilityCare',
+    description:
+      'The user is beginning to let responsibility be shared instead of privately carried.',
+    requiredSignals: ['shared_responsibility', 'lets_others_handle'],
+    supportingSignals: [
+      'defined_support',
+      'care_with_boundaries',
+      'support_without_guilt',
+    ],
+    conflictingSignals: ['overfunctioning', 'automatic_giving_need'],
+    shameLabel: 'If I share this, I am not doing enough.',
+    clarityReframe:
+      'Letting responsibility be shared may be a sign of trust, not a lack of care.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['shared responsibility', 'trust', 'growth'],
+  },
+  {
+    key: 'responsibilityCare_supportWithoutGuilt',
+    title: 'Support Without Guilt',
+    category: 'responsibilityCare',
+    description:
+      'Support is being offered from choice rather than guilt.',
+    requiredSignals: ['support_without_guilt', 'chosen_support'],
+    supportingSignals: [
+      'care_with_boundaries',
+      'sustainable_care',
+      'capacity_before_support',
+    ],
+    conflictingSignals: ['old_overgive_pull', 'automatic_giving_need'],
+    shameLabel: 'If support does not come from urgency, it does not count.',
+    clarityReframe:
+      'Support can be more honest when it comes from choice instead of guilt.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['chosen support', 'guilt', 'care'],
+  },
+  {
+    key: 'responsibilityCare_oldOvergivePull',
+    title: 'The Old Pull to Overgive',
+    category: 'responsibilityCare',
+    description:
+      'A familiar pull toward overgiving appears even when the user knows it may cost them.',
+    requiredSignals: ['old_overgive_pull', 'overfunctioning'],
+    supportingSignals: [
+      'capacity_strain',
+      'rest_resistance',
+      'generous_without_self_abandoning',
+    ],
+    conflictingSignals: ['sustainable_care', 'limits_protect_care'],
+    shameLabel: 'I should give more, even if I am already stretched.',
+    clarityReframe:
+      'The pull to overgive can be familiar without being the best guide.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['overgiving', 'old pattern', 'capacity'],
+  },
+  {
+    key: 'responsibilityCare_concernWithoutOverResponsibility',
+    title: 'Concern Without Over-Responsibility',
+    category: 'responsibilityCare',
+    description:
+      'Concern is present, but the user is not automatically turning it into ownership.',
+    requiredSignals: [
+      'concern_without_overresponsibility',
+      'tracks_without_fixing',
+    ],
+    supportingSignals: [
+      'ownership_pause',
+      'help_pull_with_boundary',
+      'limits_protect_care',
+    ],
+    conflictingSignals: ['clear_need_sudden_urgency', 'overfunctioning'],
+    shameLabel: 'If I care, I should do more.',
+    clarityReframe:
+      'Concern can stay present without becoming control, rescue, or self-abandonment.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['concern', 'boundaries', 'growth'],
+  },
+  {
+    key: 'responsibilityCare_capacityBeforeSupport',
+    title: 'Checking Capacity First',
+    category: 'responsibilityCare',
+    description:
+      'The user is beginning to check capacity before offering support.',
+    requiredSignals: ['capacity_before_support', 'careful_about_taken_on'],
+    supportingSignals: [
+      'chosen_support',
+      'sustainable_care',
+      'limits_protect_care',
+    ],
+    conflictingSignals: ['helps_before_capacity_check', 'yes_before_pause'],
+    shameLabel: 'I should not have to check capacity if I really care.',
+    clarityReframe:
+      'Checking capacity is part of honest care. It tells you what kind of support is actually possible.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['capacity', 'support', 'self-trust'],
+  },
+  {
+    key: 'responsibilityCare_involvementIntensity',
+    title: 'Intense Once Involved',
+    category: 'responsibilityCare',
+    description:
+      'The user may not feel responsible immediately, but involvement quickly becomes emotionally intense.',
+    requiredSignals: ['step_in_after_involved', 'surprised_by_taken_on'],
+    supportingSignals: [
+      'responsibility_waves',
+      'responsibility_arrives_unprepared',
+      'selective_obligation_activation',
+    ],
+    conflictingSignals: ['assigned_responsibility_only', 'defined_support'],
+    shameLabel: 'If I am involved, I have to give all of myself.',
+    clarityReframe:
+      'Involvement does not have to mean total absorption.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['involvement', 'intensity', 'responsibility'],
+  },
+];
+
+export const RESPONSIBILITY_CARE_PATTERNS: ArchivePattern[] = [
+  ...RESPONSIBILITY_CARE_FOUNDATION_PATTERNS,
+  ...RESPONSIBILITY_CARE_EXPANSION,
 ];

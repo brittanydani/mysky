@@ -10,6 +10,49 @@ import { selectPrimaryPersona } from './engine/selectPrimaryPersona';
 import { normalizeInsightInputsV2 } from './normalizers';
 import { generateId } from '../storage/models';
 
+function dedupeSentences(text: string): string {
+  const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map(part => part.trim()) ?? [];
+  if (sentences.length <= 1) return text;
+
+  const seen = new Set<string>();
+  const deduped = sentences.filter((sentence) => {
+    const key = sentence.toLowerCase().replace(/\s+/g, ' ');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return deduped.join(' ');
+}
+
+function dedupeInsights(insights: GeneratedInsight[]): GeneratedInsight[] {
+  const seen = new Set<string>();
+
+  return insights
+    .map(insight => ({
+      ...insight,
+      body: dedupeSentences(insight.body),
+      reframe: dedupeSentences(insight.reframe),
+    }))
+    .filter((insight) => {
+      const key = [
+        insight.slot,
+        insight.patternKey,
+        insight.angleKey ?? '',
+        insight.title.toLowerCase(),
+        insight.body.toLowerCase(),
+      ].join('|');
+
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function trimTerminalPunctuation(text: string): string {
+  return text.trim().replace(/[.!?]+$/, '');
+}
+
 /**
  * Knowledge Engine V2 Main Entry Point
  */
@@ -71,7 +114,7 @@ export async function buildTodayInsights({
     const body = `${bodyIntro}${angle.observation} ${angle.pattern}`;
     
     // Shame-to-Clarity reframe construction
-    const reframe = `This does not read as ${pattern.shameLabel}. It reads as ${pattern.clarityReframe}.`;
+    const reframe = `This does not read as ${trimTerminalPunctuation(pattern.shameLabel)}. It reads as ${trimTerminalPunctuation(pattern.clarityReframe)}.`;
 
     insights.push({
       id: generateId(),
@@ -117,7 +160,7 @@ export async function buildTodayInsights({
   return {
     signals,
     patternScores,
-    insights,
+    insights: dedupeInsights(insights),
     primaryPersona,
   };
 }

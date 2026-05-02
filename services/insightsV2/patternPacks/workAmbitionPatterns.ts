@@ -25,7 +25,7 @@ const workAmbitionPattern = (
   tags,
 });
 
-export const WORK_AMBITION_PATTERNS: ArchivePattern[] = [
+const WORK_AMBITION_FOUNDATION_PATTERNS: ArchivePattern[] = [
   workAmbitionPattern(
     'work_ambition_001_excellence_pressure',
     'The Excellence Pressure Pattern',
@@ -56,4 +56,405 @@ export const WORK_AMBITION_PATTERNS: ArchivePattern[] = [
     'Productivity may come with a visible cost when effort continues past the body capacity line.',
     ['productivity', 'burnout', 'recovery'],
   ),
+];
+
+export const WORK_AMBITION_EXPANSION: ArchivePattern[] = [
+  {
+    key: 'workAmbition_pressureAsSafety',
+    title: 'Progress Feels Like Safety',
+    category: 'workAmbition',
+    description:
+      'Progress and output are functioning as emotional anchors, not just productivity markers.',
+    requiredSignals: ['excellence_pressure', 'wants_to_build'],
+    supportingSignals: [
+      'high_standards',
+      'preparedness',
+      'responsibility_weight',
+      'future_self_orientation',
+    ],
+    conflictingSignals: ['low_pressure_motivation', 'ease_over_achievement'],
+    shameLabel: 'If I am not making progress, I am falling behind.',
+    clarityReframe:
+      'Progress may help you feel safe, but safety cannot depend only on constant output.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 14,
+    tags: ['progress', 'pressure', 'ambition'],
+  },
+  {
+    key: 'workAmbition_movingFinishLine',
+    title: 'The Moving Finish Line',
+    category: 'workAmbition',
+    description:
+      'Standards rise quickly, making satisfaction hard to reach.',
+    requiredSignals: ['high_standards', 'excellence_pressure'],
+    supportingSignals: [
+      'creative_standards',
+      'vision_gap',
+      'self_blame',
+      'capacity_strain',
+    ],
+    conflictingSignals: ['good_enough_acceptance', 'ease_over_achievement'],
+    shameLabel: 'It is not good enough yet.',
+    clarityReframe:
+      'The issue may not be lack of progress. It may be that the standard keeps moving as soon as you reach it.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['standards', 'perfectionism', 'progress'],
+  },
+  {
+    key: 'workAmbition_burnoutSignals',
+    title: 'Capability Is Hiding Strain',
+    category: 'workAmbition',
+    description:
+      'The user continues functioning while signs of burnout or depletion are increasing.',
+    requiredSignals: ['burnout_risk', 'overextension'],
+    supportingSignals: [
+      'depletion',
+      'low_energy',
+      'capacity_strain',
+      'rest_resistance',
+    ],
+    conflictingSignals: ['high_energy', 'restorative_moment'],
+    shameLabel: 'I am still functioning, so I should be fine.',
+    clarityReframe:
+      'Functioning can hide strain. Output does not always mean capacity is intact.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.62,
+    cooldownDays: 14,
+    tags: ['burnout', 'capacity', 'strain'],
+  },
+  {
+    key: 'workAmbition_productivityAsProof',
+    title: 'Productivity as Proof',
+    category: 'workAmbition',
+    description:
+      'Getting things done is being used as proof of being okay or capable.',
+    requiredSignals: ['high_standards', 'responsibility_weight'],
+    supportingSignals: [
+      'excellence_pressure',
+      'self_trust_when_performing',
+      'achievement_momentum_slowing_loss',
+    ],
+    conflictingSignals: ['valued_without_usefulness', 'rest_without_guilt'],
+    shameLabel: 'If I am not productive, I am not doing well.',
+    clarityReframe:
+      'Productivity can show effort, but it cannot fully measure how you are doing.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['productivity', 'worth', 'functioning'],
+  },
+  {
+    key: 'workAmbition_pressureSharpensFocus',
+    title: 'Pressure Sharpens Focus',
+    category: 'workAmbition',
+    description:
+      'Pressure increases focus and performance, but may also narrow access to ease.',
+    requiredSignals: [
+      'pressure_sharpens_focus',
+      'clear_expectations_motivation',
+    ],
+    supportingSignals: [
+      'deadline_standard_best_work',
+      'structure_directs_energy',
+      'demand_capable_obligation',
+    ],
+    conflictingSignals: ['low_pressure_motivation', 'freedom_before_ambition'],
+    shameLabel: 'I only do well under pressure.',
+    clarityReframe:
+      'Pressure may sharpen your focus, but it does not have to be the only path to motivation.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['pressure', 'focus', 'performance'],
+  },
+  {
+    key: 'workAmbition_freedomBeforeAmbition',
+    title: 'Freedom Before Ambition',
+    category: 'workAmbition',
+    description:
+      'Motivation appears more available when there is enough freedom and less rigidity.',
+    requiredSignals: ['freedom_before_ambition', 'flexibility_need'],
+    supportingSignals: [
+      'experiment_room_motivation',
+      'low_pressure_motivation',
+      'supportive_structure_not_cage',
+    ],
+    conflictingSignals: [
+      'clear_expectations_motivation',
+      'pressure_sharpens_focus',
+    ],
+    shameLabel: 'If I need freedom, I must not be serious enough.',
+    clarityReframe:
+      'Freedom may be part of how your ambition becomes reachable, not evidence that ambition is missing.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['freedom', 'motivation', 'structure'],
+  },
+  {
+    key: 'workAmbition_goalAsTestShutdown',
+    title: 'When Goals Become Tests',
+    category: 'workAmbition',
+    description:
+      'Motivation drops when a goal begins to feel like a test of worth or ability.',
+    requiredSignals: ['goal_as_test_shutdown', 'cares_resists_pressure'],
+    supportingSignals: [
+      'big_hopes_structure_heavy',
+      'loved_goal_becomes_have_to',
+      'self_blame',
+    ],
+    conflictingSignals: ['pressure_sharpens_focus'],
+    shameLabel: 'I must not want it enough.',
+    clarityReframe:
+      'You may care deeply. The shutdown may come from the pressure around the goal, not from lack of desire.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['motivation', 'shutdown', 'pressure'],
+  },
+  {
+    key: 'workAmbition_burstPacing',
+    title: 'Burst Pacing',
+    category: 'workAmbition',
+    description:
+      'Work and ambition show up in bursts rather than steady output.',
+    requiredSignals: ['burst_pacing', 'burst_ambition'],
+    supportingSignals: [
+      'high_energy',
+      'low_energy',
+      'capacity_strain',
+      'creative_aliveness',
+    ],
+    conflictingSignals: ['steady_mood_baseline'],
+    shameLabel: 'I should be consistent all the time.',
+    clarityReframe:
+      'Your pace may not be linear. The work may need rhythm-aware structure rather than constant pressure.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['pacing', 'energy', 'ambition'],
+  },
+  {
+    key: 'workAmbition_meaningNotOnlyPressure',
+    title: 'Meaning, Not Only Pressure',
+    category: 'workAmbition',
+    description:
+      'The user is learning to move from meaning rather than only demand.',
+    requiredSignals: ['meaning_not_only_pressure', 'purpose_signal'],
+    supportingSignals: [
+      'wants_to_build',
+      'future_self_orientation',
+      'creative_aliveness',
+    ],
+    conflictingSignals: ['pressure_sharpens_focus', 'drive_less_without_pressure'],
+    shameLabel: 'I need pressure to move.',
+    clarityReframe:
+      'Pressure can create movement, but meaning may create a steadier kind of motivation.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['meaning', 'motivation', 'purpose'],
+  },
+  {
+    key: 'workAmbition_outputVsEmotionalWork',
+    title: 'Invisible Work Counts Too',
+    category: 'workAmbition',
+    description:
+      'Important internal work is not being valued as much as visible output.',
+    requiredSignals: ['integrates_insight', 'deep_processing'],
+    supportingSignals: [
+      'decision_uncertainty',
+      'future_self_orientation',
+      'emotional_heaviness',
+    ],
+    conflictingSignals: ['pure_output_focus'],
+    shameLabel: 'If nothing visible changed, nothing counted.',
+    clarityReframe:
+      'Thinking, deciding, recovering, and integrating can be real work even when they do not produce something visible.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['invisible work', 'integration', 'progress'],
+  },
+  {
+    key: 'workAmbition_visionGap',
+    title: 'The Vision Gap',
+    category: 'workAmbition',
+    description:
+      'The user can see what they want to create before their current capacity can execute it.',
+    requiredSignals: ['vision_gap', 'creative_standards'],
+    supportingSignals: [
+      'wants_to_build',
+      'excellence_pressure',
+      'self_blame',
+      'capacity_strain',
+    ],
+    conflictingSignals: ['good_enough_acceptance'],
+    shameLabel:
+      'If I can see it, I should be able to make it happen now.',
+    clarityReframe:
+      'Seeing the vision clearly does not mean your capacity has to match it all at once.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['vision', 'capacity', 'creative standards'],
+  },
+  {
+    key: 'workAmbition_restFeelsLikeLosingGround',
+    title: 'Rest Feels Like Losing Ground',
+    category: 'workAmbition',
+    description:
+      'Stopping or slowing down feels like falling behind rather than recovering.',
+    requiredSignals: [
+      'achievement_momentum_slowing_loss',
+      'rest_resistance',
+    ],
+    supportingSignals: [
+      'excellence_pressure',
+      'time_scarcity',
+      'overextension',
+      'burnout_risk',
+    ],
+    conflictingSignals: ['rest_without_guilt', 'easy_rest'],
+    shameLabel: 'If I slow down, I will lose everything I built.',
+    clarityReframe:
+      'Rest may feel like losing ground when progress has become the main proof of safety.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['rest', 'achievement', 'pressure'],
+  },
+  {
+    key: 'workAmbition_highStandardsWithCare',
+    title: 'Care Raises the Standard',
+    category: 'workAmbition',
+    description:
+      'High standards are connected to care and investment, not only criticism.',
+    requiredSignals: ['high_standards', 'wants_to_build'],
+    supportingSignals: ['creative_standards', 'values_conflict', 'integrity_cost'],
+    conflictingSignals: ['self_blame'],
+    shameLabel: 'I am too hard on everything.',
+    clarityReframe:
+      'Some of the standard may come from care. The question is where care becomes pressure.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['standards', 'care', 'values'],
+  },
+  {
+    key: 'workAmbition_externalPressureMismatch',
+    title: 'Pressure Without Alignment',
+    category: 'workAmbition',
+    description:
+      'External expectations are creating pressure without enough internal alignment.',
+    requiredSignals: ['obligation_resistance', 'values_conflict'],
+    supportingSignals: [
+      'low_pressure_motivation',
+      'freedom_before_ambition',
+      'identity_rewriting',
+    ],
+    conflictingSignals: ['purpose_signal', 'meaning_not_only_pressure'],
+    shameLabel: 'I should be able to force myself through this.',
+    clarityReframe:
+      'Resistance may be information. It can show where pressure and alignment are not matching.',
+    lookbackDays: 45,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['alignment', 'pressure', 'resistance'],
+  },
+  {
+    key: 'workAmbition_successNotConstantOutput',
+    title: 'Success Without Constant Output',
+    category: 'workAmbition',
+    description:
+      'The user wants success, but not a version that requires constant productivity.',
+    requiredSignals: [
+      'success_not_constant_output',
+      'progress_without_productivity_life',
+    ],
+    supportingSignals: [
+      'ease_over_achievement',
+      'supportive_structure_not_cage',
+      'freedom_restores_care',
+    ],
+    conflictingSignals: ['excellence_pressure', 'always_on'],
+    shameLabel:
+      'If I do not want constant output, I must not want success.',
+    clarityReframe:
+      'Wanting a sustainable version of success does not mean you want it less.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['success', 'sustainability', 'output'],
+  },
+  {
+    key: 'workAmbition_driveLessWithoutPressure',
+    title: 'Drive Drops Without Pressure',
+    category: 'workAmbition',
+    description:
+      'Motivation becomes less accessible when pressure is removed.',
+    requiredSignals: [
+      'drive_less_without_pressure',
+      'freedom_without_direction_discomfort',
+    ],
+    supportingSignals: [
+      'clear_expectations_motivation',
+      'structure_directs_energy',
+    ],
+    conflictingSignals: ['meaning_not_only_pressure', 'freedom_restores_care'],
+    shameLabel: 'Without pressure, I do not know how to move.',
+    clarityReframe:
+      'This may be less about laziness and more about needing a new source of motivation besides demand.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['drive', 'pressure', 'motivation'],
+  },
+  {
+    key: 'workAmbition_capacityVsStandards',
+    title: 'Capacity and Standards Are Out of Sync',
+    category: 'workAmbition',
+    description:
+      'The expected level of performance exceeds current energy or capacity.',
+    requiredSignals: ['capacity_strain', 'high_standards'],
+    supportingSignals: [
+      'low_energy',
+      'depletion',
+      'poor_sleep_quality',
+      'excellence_pressure',
+    ],
+    conflictingSignals: ['high_energy', 'steady_mood_baseline'],
+    shameLabel: 'I should be able to meet the standard anyway.',
+    clarityReframe:
+      'The standard may be real, but so is capacity. Ignoring either one distorts the picture.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.62,
+    cooldownDays: 14,
+    tags: ['capacity', 'standards', 'energy'],
+  },
+];
+
+export const WORK_AMBITION_PATTERNS: ArchivePattern[] = [
+  ...WORK_AMBITION_FOUNDATION_PATTERNS,
+  ...WORK_AMBITION_EXPANSION,
 ];

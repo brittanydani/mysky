@@ -1,4 +1,5 @@
 import { PERSONA_PROFILES } from '../personaProfiles';
+import { hasSignalRole } from '../signalTaxonomy';
 import type {
   ArchivePatternScore,
   EvidenceAnchor,
@@ -20,11 +21,58 @@ function uniqueSignals(signals: UserSignal[]): SignalKey[] {
   return Array.from(new Set(signals.map(signal => signal.key)));
 }
 
+function hasAnySignal(signals: UserSignal[], keys: SignalKey[] = []): boolean {
+  if (keys.length === 0) return false;
+  const keySet = new Set(keys);
+  return signals.some(signal => keySet.has(signal.key));
+}
+
+function matchesRequiredSignalRole(
+  signals: UserSignal[],
+  profile: PersonaProfileCopy,
+): boolean {
+  if (!profile.requiredSignalRoles || profile.requiredSignalRoles.length === 0) return true;
+
+  return signals.some(signal =>
+    profile.requiredSignalRoles?.some(role => hasSignalRole(signal, role)),
+  );
+}
+
+function isBlockedByRecoveryOnlyEvidence(
+  signals: UserSignal[],
+  profile: PersonaProfileCopy,
+): boolean {
+  if (profile.polarity !== 'negative' || signals.length === 0) return false;
+
+  const blockedRecoverySignals = new Set(profile.blockedRecoverySignals ?? []);
+  if (blockedRecoverySignals.size === 0) return false;
+
+  const hasRecoverySignal = signals.some(signal =>
+    blockedRecoverySignals.has(signal.key) || hasSignalRole(signal, 'recovery_lever'),
+  );
+  if (!hasRecoverySignal) return false;
+
+  const hasPainOrContextSignal = signals.some(signal =>
+    signal.sentiment === 'negative' ||
+    hasSignalRole(signal, 'feeling_state') ||
+    hasSignalRole(signal, 'body_signal') ||
+    hasSignalRole(signal, 'protective_strategy') ||
+    hasSignalRole(signal, 'relational_context'),
+  );
+
+  return !hasPainOrContextSignal;
+}
+
 function getConfidence(score: number): PatternConfidence {
   if (score > 0.82) return 'veryStrong';
   if (score > 0.68) return 'strong';
   if (score > 0.5) return 'moderate';
   return 'emerging';
+}
+
+function selectUniquePersonaSentence(profile: PersonaProfileCopy): string {
+  const introSentences = new Set(profile.intro.map(sentence => sentence.trim().toLowerCase()));
+  return profile.sentences.find(sentence => !introSentences.has(sentence.trim().toLowerCase())) ?? profile.sentences[0];
 }
 
 function scoreCategory(
@@ -52,6 +100,9 @@ function getProfileScore(
   archivePatterns: ArchivePatternScore[],
   recentSignals: UserSignal[],
 ): SelectedPersonaProfile | null {
+  if (hasAnySignal(recentSignals, profile.avoidIfSignals)) return null;
+  if (hasAnySignal(recentSignals, profile.conflictingSignals)) return null;
+
   const triggerSet = new Set(profile.triggerSignals);
   const supportingSet = new Set(profile.supportingSignals);
   const matchedTriggerSignals = uniqueSignals(recentSignals.filter(signal => triggerSet.has(signal.key)));
@@ -59,6 +110,9 @@ function getProfileScore(
   const matchedSignals = Array.from(new Set([...matchedTriggerSignals, ...matchedSupportingSignals]));
 
   const matchedSignalRows = recentSignals.filter(signal => matchedSignals.includes(signal.key));
+  if (!matchesRequiredSignalRole(matchedSignalRows, profile)) return null;
+  if (isBlockedByRecoveryOnlyEvidence(matchedSignalRows, profile)) return null;
+
   const averageStrength = matchedSignalRows.length
     ? matchedSignalRows.reduce((sum, signal) => sum + signal.strength, 0) / matchedSignalRows.length
     : 0;
@@ -92,9 +146,10 @@ function getProfileScore(
     focus: profile.focus,
     category: profile.category,
     secondaryCategories: profile.secondaryCategories,
+    polarity: profile.polarity,
     intro: profile.intro,
     sentences: profile.sentences,
-    selectedSentence: profile.sentences[0],
+    selectedSentence: selectUniquePersonaSentence(profile),
     score,
     confidence: getConfidence(score),
     matchedSignals,

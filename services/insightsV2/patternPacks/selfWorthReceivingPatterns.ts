@@ -25,7 +25,7 @@ const selfWorthReceivingPattern = (
   tags,
 });
 
-export const SELF_WORTH_RECEIVING_PATTERNS: ArchivePattern[] = [
+const SELF_WORTH_RECEIVING_FOUNDATION_PATTERNS: ArchivePattern[] = [
   selfWorthReceivingPattern(
     'self_worth_receiving_001_receiving_care',
     'Receiving Care Without Earning It',
@@ -56,4 +56,391 @@ export const SELF_WORTH_RECEIVING_PATTERNS: ArchivePattern[] = [
     'Asking for support may signal growing self-worth where needs are allowed to be named.',
     ['asking', 'support', 'needs'],
   ),
+];
+
+export const SELF_WORTH_RECEIVING_EXPANSION: ArchivePattern[] = [
+  {
+    key: 'selfWorthReceiving_minimizedNeed',
+    title: 'Needs Made Smaller',
+    category: 'selfWorthReceiving',
+    description:
+      'Needs are present, but they are being minimized before they are expressed.',
+    requiredSignals: ['minimizes_need', 'support_need'],
+    supportingSignals: [
+      'fear_of_being_too_much',
+      'receiving_care_difficulty',
+      'wants_to_be_seen',
+    ],
+    conflictingSignals: ['asks_for_support', 'receiving_openness'],
+    shameLabel: 'My needs are too much.',
+    clarityReframe:
+      'Making a need smaller can feel safer, but it can also keep support from reaching the real place.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['needs', 'support', 'minimizing'],
+  },
+  {
+    key: 'selfWorthReceiving_earnedCare',
+    title: 'Care Feels Earned',
+    category: 'selfWorthReceiving',
+    description:
+      'Receiving care feels easier when there is a clear reason it has been earned or justified.',
+    requiredSignals: [
+      'receiving_care_difficulty',
+      'kindness_usefulness_pressure',
+    ],
+    supportingSignals: [
+      'indebted_receiving_discomfort',
+      'support_trusted_when_reciprocal',
+      'enoughness',
+    ],
+    conflictingSignals: ['open_receiving', 'receives_but_exposed_need'],
+    shameLabel: 'I need to earn care before I can receive it.',
+    clarityReframe:
+      'Care may feel safer when it is earned, but being cared for does not have to depend on usefulness.',
+    lookbackDays: 60,
+    minEvidenceCount: 3,
+    minScore: 0.62,
+    cooldownDays: 21,
+    tags: ['receiving', 'care', 'worth'],
+  },
+  {
+    key: 'selfWorthReceiving_receivesButBalances',
+    title: 'Receiving, Then Balancing',
+    category: 'selfWorthReceiving',
+    description:
+      'Care is received, but there is a pull to return it quickly so the relationship feels even.',
+    requiredSignals: ['receives_then_returns', 'care_evenness_question'],
+    supportingSignals: [
+      'support_trusted_when_reciprocal',
+      'indebted_receiving_discomfort',
+      'mutuality_need',
+    ],
+    conflictingSignals: ['care_before_owed', 'open_receiving'],
+    shameLabel: 'If I receive too much, I owe something back.',
+    clarityReframe:
+      'You may be letting care in, while still learning that receiving does not always create debt.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['reciprocity', 'receiving', 'support'],
+  },
+  {
+    key: 'selfWorthReceiving_supportWithoutDependence',
+    title: 'Support Without Dependence',
+    category: 'selfWorthReceiving',
+    description:
+      'Support is easier to receive when autonomy and competence remain intact.',
+    requiredSignals: ['support_without_dependence', 'supported_autonomy_intact'],
+    supportingSignals: [
+      'help_respects_competence',
+      'collaborative_not_rescuing',
+      'care_with_selfhood',
+    ],
+    conflictingSignals: ['receiving_care_difficulty'],
+    shameLabel: 'If I accept help, I lose independence.',
+    clarityReframe:
+      'The right kind of support can strengthen your agency instead of taking it away.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['support', 'autonomy', 'receiving'],
+  },
+  {
+    key: 'selfWorthReceiving_enoughnessQuestion',
+    title: 'The Enoughness Question',
+    category: 'selfWorthReceiving',
+    description:
+      'The user is questioning whether they are enough without proving, fixing, or performing.',
+    requiredSignals: ['enoughness'],
+    supportingSignals: [
+      'self_blame',
+      'receiving_care_difficulty',
+      'high_standards',
+      'minimizes_need',
+    ],
+    conflictingSignals: ['confidence', 'open_receiving'],
+    shameLabel: 'I am not enough as I am.',
+    clarityReframe:
+      'Enoughness may not come from doing more. It may come from loosening the standard that keeps moving.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['enoughness', 'worth', 'self-trust'],
+  },
+  {
+    key: 'selfWorthReceiving_appreciationDoesNotLand',
+    title: 'Appreciation Lands Slowly',
+    category: 'selfWorthReceiving',
+    description:
+      'Positive recognition is heard intellectually but does not fully settle emotionally.',
+    requiredSignals: ['appreciation_lands_slow_rest'],
+    supportingSignals: [
+      'receiving_care_difficulty',
+      'wants_to_be_seen',
+      'fear_of_being_too_much',
+    ],
+    conflictingSignals: ['open_receiving'],
+    shameLabel: 'If I cannot feel it, it must not count.',
+    clarityReframe:
+      'Appreciation can be real even when your body needs more time to believe it.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['appreciation', 'receiving', 'worth'],
+  },
+  {
+    key: 'selfWorthReceiving_supportAsLastResort',
+    title: 'Support as a Last Resort',
+    category: 'selfWorthReceiving',
+    description:
+      'Help is delayed until the need feels clearly justified or unavoidable.',
+    requiredSignals: ['asks_for_support', 'minimizes_need'],
+    supportingSignals: [
+      'support_need',
+      'receiving_care_difficulty',
+      'fear_of_being_too_much',
+    ],
+    conflictingSignals: ['support_without_dependence', 'open_receiving'],
+    shameLabel: 'I should only ask if I really cannot handle it.',
+    clarityReframe:
+      'Support does not have to wait until you are past capacity to be valid.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['asking for help', 'support', 'capacity'],
+  },
+  {
+    key: 'selfWorthReceiving_givingAsSecurity',
+    title: 'Giving as Security',
+    category: 'selfWorthReceiving',
+    description:
+      'Contributing or being useful helps the user feel secure in their place with others.',
+    requiredSignals: ['kindness_usefulness_pressure', 'support_need'],
+    supportingSignals: [
+      'responsibility_weight',
+      'overfunctioning',
+      'receiving_care_difficulty',
+    ],
+    conflictingSignals: ['valued_without_usefulness', 'open_receiving'],
+    shameLabel: 'I need to be useful to belong.',
+    clarityReframe:
+      'Usefulness may help you feel secure, but it is not the only reason you belong.',
+    lookbackDays: 60,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['belonging', 'usefulness', 'worth'],
+  },
+  {
+    key: 'selfWorthReceiving_needBelongsInRoom',
+    title: 'Your Need Belongs in the Room',
+    category: 'selfWorthReceiving',
+    description:
+      'The user is beginning to treat their needs as valid before they become extreme.',
+    requiredSignals: ['asks_for_support', 'self_trust_growth'],
+    supportingSignals: ['receiving_openness', 'support_need', 'inner_authority'],
+    conflictingSignals: ['minimizes_need', 'fear_of_being_too_much'],
+    shameLabel: 'My needs only count when they are urgent.',
+    clarityReframe:
+      'A need does not have to become a crisis before it deserves space.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['needs', 'self-trust', 'support'],
+  },
+  {
+    key: 'selfWorthReceiving_receivingOpenness',
+    title: 'Letting Care Reach You',
+    category: 'selfWorthReceiving',
+    description:
+      'The user is becoming more able to receive care without immediately deflecting it.',
+    requiredSignals: ['receiving_openness'],
+    supportingSignals: [
+      'support_abundance_shift',
+      'care_before_owed',
+      'mutual_flow_safety',
+    ],
+    conflictingSignals: [
+      'receiving_care_difficulty',
+      'indebted_receiving_discomfort',
+    ],
+    shameLabel: 'I should deflect care before it gets too close.',
+    clarityReframe:
+      'Letting care reach you may be a sign of trust, not neediness.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['receiving', 'care', 'trust'],
+  },
+  {
+    key: 'selfWorthReceiving_careBeforeOwed',
+    title: 'Care Before Owed',
+    category: 'selfWorthReceiving',
+    description:
+      'Care is being allowed to exist before it is converted into something owed.',
+    requiredSignals: ['care_before_owed', 'receives_then_returns'],
+    supportingSignals: [
+      'receiving_openness',
+      'support_abundance_shift',
+      'mutual_flow_safety',
+    ],
+    conflictingSignals: ['indebted_receiving_discomfort'],
+    shameLabel: 'If someone cares for me, I have to repay it immediately.',
+    clarityReframe:
+      'Care can be part of connection before it becomes a balance sheet.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['care', 'receiving', 'reciprocity'],
+  },
+  {
+    key: 'selfWorthReceiving_tooMuchFear',
+    title: 'Fear of Being Too Much',
+    category: 'selfWorthReceiving',
+    description:
+      'The user may hold back needs or feelings out of concern that they will overwhelm others.',
+    requiredSignals: ['fear_of_being_too_much'],
+    supportingSignals: [
+      'minimizes_need',
+      'support_need',
+      'selective_vulnerability',
+      'wants_to_be_seen',
+    ],
+    conflictingSignals: ['open_receiving', 'safe'],
+    shameLabel: 'If I show the real need, I will be too much.',
+    clarityReframe:
+      'The fear of being too much may be old protection around a very real need to be met.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['too much', 'needs', 'support'],
+  },
+  {
+    key: 'selfWorthReceiving_mutualFlowSafety',
+    title: 'Mutual Care Feels Safest',
+    category: 'selfWorthReceiving',
+    description:
+      'Support feels safest when giving and receiving both have room.',
+    requiredSignals: ['mutual_flow_safety', 'mutuality_need'],
+    supportingSignals: [
+      'receiving_openness',
+      'care_with_selfhood',
+      'support_trusted_when_reciprocal',
+    ],
+    conflictingSignals: ['support_scarcity'],
+    shameLabel: 'Receiving is risky unless I can give too.',
+    clarityReframe:
+      'Mutuality can help support feel safe, as long as it does not turn care into debt.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['mutuality', 'support', 'safety'],
+  },
+  {
+    key: 'selfWorthReceiving_receivingExposesNeed',
+    title: 'Receiving Exposes the Need',
+    category: 'selfWorthReceiving',
+    description:
+      'Being supported makes the underlying need more visible and emotionally exposed.',
+    requiredSignals: ['receives_but_exposed_need'],
+    supportingSignals: [
+      'receiving_care_difficulty',
+      'support_need',
+      'vulnerability',
+    ],
+    conflictingSignals: ['open_receiving'],
+    shameLabel: 'If I need this, I am too vulnerable.',
+    clarityReframe:
+      'Receiving can feel exposed because it touches the part of you that had to need quietly.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.55,
+    cooldownDays: 21,
+    tags: ['vulnerability', 'receiving', 'need'],
+  },
+  {
+    key: 'selfWorthReceiving_supportAbundanceShift',
+    title: 'Support Is Becoming More Available',
+    category: 'selfWorthReceiving',
+    description:
+      'The user is experiencing or noticing more support than before.',
+    requiredSignals: ['support_abundance_shift'],
+    supportingSignals: [
+      'receiving_openness',
+      'asks_for_support',
+      'mutual_flow_safety',
+      'relief',
+    ],
+    conflictingSignals: ['support_scarcity'],
+    shameLabel: 'Support will disappear if I trust it.',
+    clarityReframe:
+      'Noticing support does not mean depending blindly on it. It means your system is registering what is available now.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['support', 'abundance', 'receiving'],
+  },
+  {
+    key: 'selfWorthReceiving_worthWithoutUsefulness',
+    title: 'Worth Without Usefulness',
+    category: 'selfWorthReceiving',
+    description:
+      'The user is beginning to separate worth from what they provide or accomplish.',
+    requiredSignals: ['valued_without_usefulness'],
+    supportingSignals: [
+      'self_forgiveness',
+      'inner_critic_softening',
+      'receiving_openness',
+    ],
+    conflictingSignals: ['kindness_usefulness_pressure', 'productivity_as_proof'],
+    shameLabel: 'I only matter when I am useful.',
+    clarityReframe:
+      'Being valued for who you are can feel unfamiliar when usefulness has been the safer role.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['worth', 'usefulness', 'identity'],
+  },
+  {
+    key: 'selfWorthReceiving_innerCriticSoftening',
+    title: 'The Inner Critic Is Softening',
+    category: 'selfWorthReceiving',
+    description:
+      'Self-judgment is loosening enough for care, receiving, or self-forgiveness to become more accessible.',
+    requiredSignals: ['inner_critic_softening'],
+    supportingSignals: [
+      'self_forgiveness',
+      'past_self_compassion',
+      'receiving_openness',
+    ],
+    conflictingSignals: ['self_blame', 'shame'],
+    shameLabel: 'I have to be hard on myself to improve.',
+    clarityReframe:
+      'Softening toward yourself does not erase accountability. It may make growth more honest and less punishing.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['self-compassion', 'inner critic', 'growth'],
+  },
+];
+
+export const SELF_WORTH_RECEIVING_PATTERNS: ArchivePattern[] = [
+  ...SELF_WORTH_RECEIVING_FOUNDATION_PATTERNS,
+  ...SELF_WORTH_RECEIVING_EXPANSION,
 ];

@@ -25,7 +25,7 @@ const timeRhythmsPattern = (
   tags,
 });
 
-export const TIME_RHYTHMS_PATTERNS: ArchivePattern[] = [
+const TIME_RHYTHMS_FOUNDATION_PATTERNS: ArchivePattern[] = [
   timeRhythmsPattern(
     'time_rhythms_001_time_scarcity',
     'The Time Scarcity Pattern',
@@ -56,4 +56,391 @@ export const TIME_RHYTHMS_PATTERNS: ArchivePattern[] = [
     'Mood or energy may drop after sustained demand, pointing to a rhythm that needs earlier support.',
     ['evening', 'capacity', 'drop'],
   ),
+];
+
+export const TIME_RHYTHMS_EXPANSION: ArchivePattern[] = [
+  {
+    key: 'timeRhythms_energyWindows',
+    title: 'Energy Windows',
+    category: 'timeRhythms',
+    description:
+      'Capacity changes depending on timing, even when the task itself stays the same.',
+    requiredSignals: ['high_energy', 'low_energy'],
+    supportingSignals: [
+      'capacity_strain',
+      'low_capacity',
+      'restorative_moment',
+    ],
+    conflictingSignals: ['same_capacity_expectation'],
+    shameLabel: 'I should have the same capacity all day.',
+    clarityReframe:
+      'Your capacity may have a rhythm. Working with it can be more effective than judging the shifts.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 14,
+    tags: ['energy', 'timing', 'capacity'],
+  },
+  {
+    key: 'timeRhythms_lowCapacityPatterns',
+    title: 'Low-Capacity Windows',
+    category: 'timeRhythms',
+    description:
+      'Lower-capacity periods are repeating enough to be planned around.',
+    requiredSignals: ['low_capacity', 'low_energy'],
+    supportingSignals: [
+      'poor_sleep_quality',
+      'depletion',
+      'capacity_strain',
+      'low_sleep',
+    ],
+    conflictingSignals: ['high_energy'],
+    shameLabel: 'I should be able to push through this.',
+    clarityReframe:
+      'Low capacity may be a timing signal, not a character flaw.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['low energy', 'capacity', 'rhythm'],
+  },
+  {
+    key: 'timeRhythms_rhythmAwarePushing',
+    title: 'Knowing the Rhythm, Overriding It',
+    category: 'timeRhythms',
+    description:
+      'The user recognizes timing or capacity patterns but still pushes against them.',
+    requiredSignals: ['knows_rhythm_overrides', 'pushes_low_capacity'],
+    supportingSignals: [
+      'same_capacity_expectation',
+      'timing_plan_overridden',
+      'rest_resistance',
+    ],
+    conflictingSignals: ['moves_with_rhythm'],
+    shameLabel: 'Knowing better means I should be able to do better.',
+    clarityReframe:
+      'The gap may not be awareness. It may be permission to trust what your rhythm is already showing you.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['rhythm', 'override', 'capacity'],
+  },
+  {
+    key: 'timeRhythms_scheduleOverCapacity',
+    title: 'Schedule Over Capacity',
+    category: 'timeRhythms',
+    description:
+      'Tasks are being placed by availability on the calendar rather than real capacity.',
+    requiredSignals: ['schedule_over_capacity', 'capacity_strain'],
+    supportingSignals: ['time_scarcity', 'low_energy', 'mental_load'],
+    conflictingSignals: ['timing_guides_decisions', 'moves_with_rhythm'],
+    shameLabel: 'If there is time, I should be able to do it.',
+    clarityReframe:
+      'Available time and available capacity are not always the same thing.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['schedule', 'capacity', 'time'],
+  },
+  {
+    key: 'timeRhythms_sleepMoodLink',
+    title: 'Sleep Is Shaping the Day',
+    category: 'timeRhythms',
+    description:
+      'Sleep quality appears connected to mood, energy, or capacity the following day.',
+    requiredSignals: ['sleep_mood_link', 'poor_sleep_quality'],
+    supportingSignals: [
+      'low_energy',
+      'low_mood',
+      'capacity_strain',
+      'high_stress',
+    ],
+    conflictingSignals: ['high_energy', 'low_stress'],
+    shameLabel:
+      'I should be able to function the same no matter how I slept.',
+    clarityReframe:
+      'Sleep may be influencing more than tiredness. It may be shaping emotional bandwidth too.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.62,
+    cooldownDays: 14,
+    tags: ['sleep', 'mood', 'energy'],
+  },
+  {
+    key: 'timeRhythms_timeScarcity',
+    title: 'Time Feels Tight',
+    category: 'timeRhythms',
+    description:
+      'The user is experiencing time as scarce, pressured, or hard to trust.',
+    requiredSignals: ['time_scarcity'],
+    supportingSignals: [
+      'preparedness',
+      'mental_load',
+      'responsibility_weight',
+      'high_stress',
+    ],
+    conflictingSignals: ['ordinary_downtime', 'restorative_pause'],
+    shameLabel: 'There is never enough time.',
+    clarityReframe:
+      'Time scarcity can make everything feel urgent, even when not everything needs the same level of attention.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 14,
+    tags: ['time scarcity', 'urgency', 'pressure'],
+  },
+  {
+    key: 'timeRhythms_oneMoreThingLoop',
+    title: 'One More Thing',
+    category: 'timeRhythms',
+    description:
+      'Stopping is delayed by repeatedly adding one more task, thought, or responsibility.',
+    requiredSignals: ['one_more_thing_loop', 'rest_resistance'],
+    supportingSignals: [
+      'mental_load',
+      'time_scarcity',
+      'always_on',
+      'overextension',
+    ],
+    conflictingSignals: ['bounded_rest_return', 'easy_rest'],
+    shameLabel: 'I can stop after one more thing.',
+    clarityReframe:
+      'The loop may not be about the task itself. It may be about the discomfort of stopping while something still feels open.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.62,
+    cooldownDays: 14,
+    tags: ['stopping', 'rest', 'unfinished'],
+  },
+  {
+    key: 'timeRhythms_morningNightPattern',
+    title: 'Morning and Night Carry Different States',
+    category: 'timeRhythms',
+    description:
+      'The user’s internal state shifts noticeably between morning and night.',
+    requiredSignals: ['high_energy', 'low_energy'],
+    supportingSignals: [
+      'sleep_mood_link',
+      'low_sleep',
+      'poor_sleep_quality',
+      'emotional_heaviness',
+    ],
+    conflictingSignals: [],
+    shameLabel: 'I should feel like the same person all day.',
+    clarityReframe:
+      'Morning and night may bring different versions of your capacity online.',
+    lookbackDays: 45,
+    minEvidenceCount: 4,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['morning', 'night', 'daily rhythm'],
+  },
+  {
+    key: 'timeRhythms_weeklyCycle',
+    title: 'Weekly Rhythm',
+    category: 'timeRhythms',
+    description:
+      'Certain days or parts of the week appear to carry different emotional or energy patterns.',
+    requiredSignals: [
+      'productive_slow_day_variation',
+      'capacity_changes_consistency_hard',
+    ],
+    supportingSignals: ['low_energy', 'high_energy', 'high_stress', 'low_stress'],
+    conflictingSignals: ['steady_mood_baseline'],
+    shameLabel: 'My capacity should be consistent every day.',
+    clarityReframe:
+      'Your week may have a rhythm of its own. Naming it can make planning less punishing.',
+    lookbackDays: 60,
+    minEvidenceCount: 4,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['weekly rhythm', 'energy', 'planning'],
+  },
+  {
+    key: 'timeRhythms_willpowerOverTiming',
+    title: 'Willpower Over Timing',
+    category: 'timeRhythms',
+    description:
+      'The user tries to solve timing mismatch with more force or discipline.',
+    requiredSignals: ['willpower_over_timing', 'pushes_low_capacity'],
+    supportingSignals: [
+      'same_capacity_expectation',
+      'overrides_tiredness',
+      'high_standards',
+    ],
+    conflictingSignals: ['alignment_over_routine', 'moves_with_rhythm'],
+    shameLabel: 'If I had more discipline, timing would not matter.',
+    clarityReframe:
+      'Some resistance may be timing mismatch. More force is not always the most accurate solution.',
+    lookbackDays: 45,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 21,
+    tags: ['willpower', 'timing', 'discipline'],
+  },
+  {
+    key: 'timeRhythms_flexibleStructure',
+    title: 'Flexible Structure Helps',
+    category: 'timeRhythms',
+    description:
+      'The user benefits from structure that supports rhythm without becoming rigid.',
+    requiredSignals: ['flexible_structure_need', 'consistency_supports_rhythm'],
+    supportingSignals: [
+      'moves_with_rhythm',
+      'alignment_over_routine',
+      'supportive_structure_not_cage',
+    ],
+    conflictingSignals: ['same_capacity_expectation', 'schedule_over_capacity'],
+    shameLabel: 'If I need flexibility, I am not consistent enough.',
+    clarityReframe:
+      'Flexible structure can still be real structure. It may fit your capacity better than rigidity does.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['structure', 'flexibility', 'rhythm'],
+  },
+  {
+    key: 'timeRhythms_movesWithRhythm',
+    title: 'Moving With Rhythm',
+    category: 'timeRhythms',
+    description:
+      'The user is beginning to let timing and capacity guide decisions.',
+    requiredSignals: ['moves_with_rhythm', 'timing_guides_decisions'],
+    supportingSignals: [
+      'energy_guides_decisions',
+      'trusts_unpredictable_timing',
+      'alignment_over_routine',
+    ],
+    conflictingSignals: ['pushes_low_capacity', 'schedule_over_capacity'],
+    shameLabel:
+      'Adapting to my rhythm means I am being inconsistent.',
+    clarityReframe:
+      'Moving with rhythm can be a form of self-trust, not a lack of discipline.',
+    lookbackDays: 90,
+    minEvidenceCount: 2,
+    minScore: 0.52,
+    cooldownDays: 21,
+    tags: ['rhythm', 'self-trust', 'timing'],
+  },
+  {
+    key: 'timeRhythms_lowCapacityJudgment',
+    title: 'Judging the Lowest-Capacity Moment',
+    category: 'timeRhythms',
+    description:
+      'The user is judging themselves based on low-capacity windows rather than the full pattern.',
+    requiredSignals: ['low_capacity', 'self_blame'],
+    supportingSignals: [
+      'low_energy',
+      'poor_sleep_quality',
+      'capacity_strain',
+    ],
+    conflictingSignals: ['self_forgiveness', 'past_self_compassion'],
+    shameLabel: 'This low-capacity moment proves I am failing.',
+    clarityReframe:
+      'A low-capacity window is not the whole story of your ability.',
+    lookbackDays: 30,
+    minEvidenceCount: 3,
+    minScore: 0.6,
+    cooldownDays: 14,
+    tags: ['self-judgment', 'capacity', 'energy'],
+  },
+  {
+    key: 'timeRhythms_ritualRegulation',
+    title: 'Ritual Helps the Shift',
+    category: 'timeRhythms',
+    description:
+      'Small rituals or repeated cues appear to help the user transition between states.',
+    requiredSignals: ['ritual_regulation'],
+    supportingSignals: [
+      'quiet_safety',
+      'restorative_moment',
+      'tension_release',
+      'low_stress',
+    ],
+    conflictingSignals: ['scattered_attention'],
+    shameLabel: 'Small routines should not matter this much.',
+    clarityReframe:
+      'Ritual can help your body understand what mode it is allowed to enter.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['ritual', 'routine', 'regulation'],
+  },
+  {
+    key: 'timeRhythms_boundedRestReturn',
+    title: 'Rest Works Better With a Return Point',
+    category: 'timeRhythms',
+    description:
+      'Rest becomes easier when there is a clear boundary or return point.',
+    requiredSignals: ['bounded_rest_return'],
+    supportingSignals: [
+      'rest_theory_hard_choice',
+      'one_more_thing_loop',
+      'rest_needs_safety',
+    ],
+    conflictingSignals: ['easy_rest'],
+    shameLabel: 'If I need structure to rest, I am not really resting.',
+    clarityReframe:
+      'A defined pause can make rest feel safer because your mind knows it is not abandoning everything.',
+    lookbackDays: 60,
+    minEvidenceCount: 2,
+    minScore: 0.54,
+    cooldownDays: 21,
+    tags: ['rest', 'structure', 'timing'],
+  },
+  {
+    key: 'timeRhythms_capacityChangesConsistencyHard',
+    title: 'Capacity Changes Make Consistency Hard',
+    category: 'timeRhythms',
+    description:
+      'Changing capacity is interfering with consistent output or routines.',
+    requiredSignals: ['capacity_changes_consistency_hard'],
+    supportingSignals: [
+      'low_energy',
+      'high_energy',
+      'productive_slow_day_variation',
+      'depletion',
+    ],
+    conflictingSignals: ['steady_mood_baseline'],
+    shameLabel: 'If I cannot be consistent, I am not trying hard enough.',
+    clarityReframe:
+      'Consistency may need to be built around capacity shifts instead of pretending they are not there.',
+    lookbackDays: 60,
+    minEvidenceCount: 3,
+    minScore: 0.58,
+    cooldownDays: 21,
+    tags: ['consistency', 'capacity', 'rhythm'],
+  },
+  {
+    key: 'timeRhythms_timingAsData',
+    title: 'Timing Is Data',
+    category: 'timeRhythms',
+    description:
+      'The timing of mood, energy, stress, or clarity is itself becoming meaningful evidence.',
+    requiredSignals: ['time_scarcity', 'capacity_strain'],
+    supportingSignals: [
+      'high_energy',
+      'low_energy',
+      'sleep_mood_link',
+      'ritual_regulation',
+    ],
+    conflictingSignals: [],
+    shameLabel: 'Timing should not matter this much.',
+    clarityReframe:
+      'Timing is part of the pattern. It can show you when your system has more or less room.',
+    lookbackDays: 45,
+    minEvidenceCount: 4,
+    minScore: 0.56,
+    cooldownDays: 21,
+    tags: ['timing', 'pattern', 'capacity'],
+  },
+];
+
+export const TIME_RHYTHMS_PATTERNS: ArchivePattern[] = [
+  ...TIME_RHYTHMS_FOUNDATION_PATTERNS,
+  ...TIME_RHYTHMS_EXPANSION,
 ];

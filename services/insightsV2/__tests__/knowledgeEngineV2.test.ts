@@ -38,17 +38,17 @@ describe('Knowledge Engine V2', () => {
     const insight = result.insights.find(i => i.slot === 'whatMySkyNoticed');
     expect(insight).toBeDefined();
     if (insight) {
-        expect(insight.patternKey).toBe('rest_capacity_001_rest_resistance');
+        expect(insight.patternKey).toBe('timeRhythms_lowCapacityPatterns');
         expect(insight.title).toBeDefined();
-        expect(insight.body.toLowerCase()).toContain('rest may still feel easier to accept');
-        expect(insight.reframe).toContain('This does not read as laziness');
+        expect(insight.body).toContain('Low-capacity states are repeating enough to notice');
+        expect(insight.reframe).toContain('This does not read as I should be able to push through this.');
     }
   });
 
   it('detects intensifying movement', async () => {
     const previousPatternScores = [
       {
-        patternKey: 'rest_capacity_001_rest_resistance',
+        patternKey: 'timeRhythms_lowCapacityPatterns',
         score: 0.5,
         confidence: 'emerging' as const,
         movement: 'new' as const,
@@ -56,8 +56,8 @@ describe('Knowledge Engine V2', () => {
         sources: [],
         evidence: [],
         lastSeenAt: now,
-        title: 'Title',
-        category: 'restCapacity' as const,
+        title: 'Low-Capacity Windows',
+        category: 'timeRhythms' as const,
       }
     ];
 
@@ -87,7 +87,7 @@ describe('Knowledge Engine V2', () => {
     });
 
     const insight = result.insights.find(i => i.slot === 'whatMySkyNoticed');
-    expect(insight?.angleKey).toBe('rest_resistance_001_rest_without_earning');
+    expect(insight?.angleKey).toBe('timeRhythms_repeatingLowCapacity');
   });
 
   it('populates multiple slots (whatMySkyNoticed and todaySignal)', async () => {
