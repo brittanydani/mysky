@@ -529,7 +529,7 @@ export default function HomeScreen() {
     [knowledgeInsight, knowledgeInsights],
   );
   const visibleKnowledgeInsights = useMemo(
-    () => isPremium ? availableKnowledgeInsights : availableKnowledgeInsights.slice(0, 1),
+    () => availableKnowledgeInsights.slice(0, isPremium ? 2 : 1),
     [availableKnowledgeInsights, isPremium],
   );
 

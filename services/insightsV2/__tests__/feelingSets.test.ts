@@ -1,4 +1,5 @@
 import { FEELING_SET_BY_KEY, FEELING_SETS } from '../feelingSets';
+import { selectPrimaryFeeling } from '../engine/selectPrimaryFeeling';
 
 describe('insightsV2 feeling sets', () => {
   it('keeps the provided feeling-set copy as the canonical list', () => {
@@ -1431,5 +1432,27 @@ describe('insightsV2 feeling sets', () => {
       `It can soften when needs are clearly expressed and received.`,
       `Feeling unsupported may be asking for connection, clarity, or care.`,
     ]);
+  });
+
+  it('lets expanded emotional signals select their feeling-set copy', () => {
+    const selected = selectPrimaryFeeling([
+      {
+        key: 'resource_anxiety_only_with_reason',
+        source: 'journal',
+        date: '2026-04-24',
+        strength: 0.8,
+        sentiment: 'negative',
+      },
+      {
+        key: 'support_abundance_shift',
+        source: 'glimmerLog',
+        date: '2026-04-24',
+        strength: 0.7,
+        sentiment: 'positive',
+      },
+    ]);
+
+    expect(selected?.key).toBe('anxiety');
+    expect(selected?.selectedSentence).toBe(FEELING_SET_BY_KEY.anxiety.sentences[0]);
   });
 });

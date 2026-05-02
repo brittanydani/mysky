@@ -22,6 +22,11 @@ function stripTerminalPunctuation(text: string): string {
   return text.trim().replace(/[.!?]+$/, '');
 }
 
+function readsLikeCompleteSentence(text: string): boolean {
+  const trimmed = text.trim();
+  return /^[A-Z]/.test(trimmed) && /[.!?]$/.test(trimmed);
+}
+
 export function buildReframeText(reframe: GeneratedInsight['reframe']): string {
   const shameText = reframe.shame.trim();
   const clarityText = reframe.clarity.trim();
@@ -34,6 +39,8 @@ export function buildReframeText(reframe: GeneratedInsight['reframe']): string {
     ? ''
     : /^it reads as\b/i.test(clarityText)
       ? ensureSentence(clarityText)
+      : readsLikeCompleteSentence(clarityText)
+        ? ensureSentence(clarityText)
       : `It reads as ${stripTerminalPunctuation(clarityText)}.`;
 
   return [shameSentence, claritySentence].filter(Boolean).join(' ');

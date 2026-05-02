@@ -460,7 +460,7 @@ function weeklyReadForPattern(item: PremiumPatternItem): PremiumWeeklyDeepDiveIt
       ? 'This is not a conclusion yet. It is a possible thread MySky is tracking softly until more evidence gathers around it.'
       : reframe || (item.clarityReframe ?? ''),
     evidenceSummary: isLowConfidenceFallback
-      ? `Early signal: ${item.evidenceSummary}`
+      ? `Emerging: ${item.evidenceSummary}`
       : item.evidenceSummary,
     reflectionPrompt: REFLECTION_PROMPTS[concept],
     confidence: item.confidence,
@@ -480,7 +480,7 @@ function weeklyLowDataEmptyState(): PremiumWeeklyDeepDiveItem {
     body:
       'Your archive is still learning what repeats. Rather than forcing a pattern too early, MySky is waiting for enough evidence across moods, body signals, dreams, relationships, rest, and recovery.',
     whyItMayMatter:
-      'This matters because weak evidence should stay spacious. A premium read is more useful when it can name a real pattern instead of turning a thin signal into a story.',
+      'This matters because weak evidence should stay spacious. The read is more useful when it can name a real pattern instead of turning a thin signal into a story.',
     reframe:
       'Not having a deep read yet does not mean nothing is happening. It means MySky is waiting for a pattern with enough evidence to name responsibly.',
     evidenceSummary: 'No pattern has enough recent evidence for a responsible weekly read yet.',
@@ -585,7 +585,7 @@ function thisWeekPatternForPattern(item: PremiumPatternItem): PremiumThisWeekPat
     confidence: item.confidence,
     movement: item.movement,
     evidenceSummary: isLowConfidenceFallback
-      ? `Early signal: ${item.evidenceSummary}`
+      ? `Emerging: ${item.evidenceSummary}`
       : item.evidenceSummary,
     isV2Derived: true,
     isLowConfidenceFallback,

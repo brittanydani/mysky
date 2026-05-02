@@ -44,6 +44,22 @@ describe('insightsV2 signal taxonomy', () => {
     expect(getSignalRoles('structured_pleasure')).toContain('recovery_lever');
   });
 
+  it('classifies nuanced expanded signals by role keywords', () => {
+    expect(getSignalRoles('dream_loss')).toContain('cognitive_process');
+    expect(getSignalRoles('dream_loss')).toContain('feeling_state');
+    expect(getSignalRoles('creative_aliveness')).toContain('glimmer');
+    expect(getSignalRoles('calm_bracing')).toContain('feeling_state');
+    expect(getSignalRoles('calm_bracing')).toContain('body_signal');
+    expect(getSignalRoles('pressure_sharpens_focus')).toContain('resource_context');
+    expect(getSignalRoles('boundary_without_approval')).toContain('protective_strategy');
+  });
+
+  it('keeps mixed emotional states from defaulting to neutral', () => {
+    expect(getSignalSentiment('vulnerability')).toBe('mixed');
+    expect(getSignalSentiment('longing')).toBe('mixed');
+    expect(getSignalSentiment('quiet_emotional_change')).toBe('mixed');
+  });
+
   it('adds sentiment and role metadata during normalization', () => {
     const signals = normalizeInsightInputsV2({
       dailyCheckIns: [{

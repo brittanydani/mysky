@@ -142,7 +142,7 @@ describe('knowledgeInsightRouter', () => {
 
     expect(result.primaryInsight).not.toBeNull();
     expect(result.dailyInsights.length).toBeGreaterThan(1);
-    expect(result.dailyInsights.length).toBeLessThanOrEqual(4);
+    expect(result.dailyInsights.length).toBeLessThanOrEqual(2);
     expect(result.dailyInsights[0].slot).toBe('whatMySkyNoticed');
     expect(result.dailyInsights.map((insight) => insight.slotLabel)).toContain('What MySky Noticed');
     expect(result.dailyInsights.some((insight) => insight.patternKey === 'unknown')).toBe(false);
@@ -156,6 +156,16 @@ describe('knowledgeInsightRouter', () => {
     expect(result.premiumWeeklyDeepDive.length).toBeLessThanOrEqual(4);
     expect(result.premiumWeeklyDeepDive.every(read => read.isV2Derived)).toBe(true);
     expect(result.premiumWeeklyDeepDive.some(read => read.patternKey === 'unknown')).toBe(false);
+
+    const todayPatternKeys = new Set(result.dailyInsights.map(insight => insight.patternKey));
+    expect(result.premiumPatterns.some(pattern => todayPatternKeys.has(pattern.patternKey))).toBe(false);
+    expect(result.premiumWeeklyDeepDive.some(read => !read.isEmptyState && todayPatternKeys.has(read.patternKey))).toBe(false);
+    if (result.thisWeeksV2Pattern && !result.thisWeeksV2Pattern.isEmptyState) {
+      expect(todayPatternKeys.has(result.thisWeeksV2Pattern.patternKey)).toBe(false);
+    }
+    if (result.dailyInsights.some(insight => insight.slot === 'primaryPersona')) {
+      expect(result.premiumPersonaProfile).toBeNull();
+    }
   });
 
   it('passes self-knowledge sources into V2 raw inputs', () => {

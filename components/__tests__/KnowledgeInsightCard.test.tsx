@@ -31,6 +31,15 @@ describe('buildReframeText', () => {
       'This does not read as being needy. It reads as a generous heart learning that its own needs are valid too.',
     );
   });
+
+  it('does not force full V2 clarity sentences into an it-reads-as frame', () => {
+    expect(
+      buildReframeText({
+        shame: '',
+        clarity: 'This may need rhythm-aware planning, not more self-criticism.',
+      }),
+    ).toBe('This may need rhythm-aware planning, not more self-criticism.');
+  });
 });
 
 describe('KnowledgeInsightCard', () => {
@@ -63,7 +72,7 @@ describe('KnowledgeInsightCard', () => {
     expect(getByText('Low-Capacity Windows')).toBeTruthy();
     expect(getByText('What MySky Noticed')).toBeTruthy();
     expect(getByText('Low capacity is showing up today. Sleep and energy may be shaping what feels possible.')).toBeTruthy();
-    expect(getByText('It reads as Low capacity may be a timing signal, not a character flaw.')).toBeTruthy();
+    expect(getByText('Low capacity may be a timing signal, not a character flaw.')).toBeTruthy();
     expect(getByText('What keeps landing in your lowest-capacity window?')).toBeTruthy();
   });
 });

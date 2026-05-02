@@ -6,6 +6,7 @@ const FEELING_STATE_SIGNALS = new Set<SignalKey>([
   'contentment',
   'confusion',
   'calm',
+  'confidence',
   'curiosity',
   'despair',
   'desire',
@@ -69,7 +70,6 @@ const NEGATIVE_FEELING_SIGNALS = new Set<SignalKey>([
   'emotional_heaviness',
   'fear',
   'grief',
-  'grief_returns',
   'guilt',
   'helplessness',
   'hurt',
@@ -96,12 +96,12 @@ const NEGATIVE_FEELING_SIGNALS = new Set<SignalKey>([
 
 const POSITIVE_FEELING_SIGNALS = new Set<SignalKey>([
   'calm',
+  'confidence',
   'curiosity',
   'desire',
   'emotional_softening',
   'contentment',
   'energized',
-  'confidence',
   'gratitude',
   'grounded',
   'hope',
@@ -112,6 +112,33 @@ const POSITIVE_FEELING_SIGNALS = new Set<SignalKey>([
   'relief',
   'safe',
   'trust',
+]);
+
+const MIXED_FEELING_SIGNALS = new Set<SignalKey>([
+  'boundary_guilt',
+  'care_with_boundaries',
+  'conflicted',
+  'decision_uncertainty',
+  'emotional_intensity',
+  'fear_of_being_too_much',
+  'grief_returns',
+  'growth_edge',
+  'hidden_emotional_variability',
+  'indifferent',
+  'internal_feeling_external_function',
+  'longing',
+  'mixed_emotions',
+  'protective_care',
+  'quiet_emotional_change',
+  'receiving_care_difficulty',
+  'responsibility_weight',
+  'selective_vulnerability',
+  'steady_not_unaffected',
+  'steady_not_unaffected_inner',
+  'support_need',
+  'transformation_season',
+  'vulnerability',
+  'wants_to_be_seen',
 ]);
 
 const RECOVERY_LEVER_SIGNALS = new Set<SignalKey>([
@@ -138,6 +165,20 @@ const RECOVERY_LEVER_SIGNALS = new Set<SignalKey>([
   'structured_pleasure',
   'support_abundance_shift',
   'support_without_dependence',
+  'unbraced_stillness',
+]);
+
+const SETTLED_SAFETY_SIGNALS = new Set<SignalKey>([
+  'body_lightness',
+  'complete_calm',
+  'easy_rest',
+  'easy_settling',
+  'familiar_calm',
+  'quiet_safety',
+  'safe',
+  'settles_without_readiness',
+  'somatic_safety',
+  'trusts_safe_moments',
   'unbraced_stillness',
 ]);
 
@@ -354,9 +395,14 @@ const VALUE_THEME_SIGNALS = new Set<SignalKey>([
 
 const GLIMMER_SIGNALS = new Set<SignalKey>([
   'beauty_glimmer',
+  'beauty_regulation',
+  'body_aliveness_cues',
+  'creative_aliveness',
   'connection_glimmer',
   'glimmer_softening',
+  'joy_tolerance',
   'laughter_glimmer',
+  'mood_improvement',
   'play_glimmer',
   'small_good_moments_matter',
   'small_relief_signals_change',
@@ -395,31 +441,330 @@ const RESOURCE_CONTEXT_SIGNALS = new Set<SignalKey>([
   'time_scarcity',
 ]);
 
+const ADDITIONAL_FEELING_STATE_SIGNALS = new Set<SignalKey>([
+  'affected_before_words',
+  'belonging_ache',
+  'body_heaviness',
+  'boundary_guilt',
+  'calm_bracing',
+  'calm_is_new',
+  'calm_outside_many_states',
+  'calm_seen_attention_hidden',
+  'closeness_uncertainty',
+  'closure_wanted_feelings_lag',
+  'disappointment_reduces_certainty',
+  'dream_emotional_tone',
+  'dream_image_true_feeling',
+  'dream_loss',
+  'dream_relief',
+  'emotional_availability_need',
+  'emotional_not_practical_responsibility',
+  'emotional_truth_symbol',
+  'emotions_not_registered',
+  'enoughness',
+  'envy_as_longing',
+  'fear_of_being_too_much',
+  'fear_of_loss',
+  'feeling_not_visible',
+  'feeling_over_practicality',
+  'gratitude_and_grief',
+  'guilt_for_not_stepping_in',
+  'joy_recovery',
+  'love_scarcity',
+  'mutuality_need',
+  'numbness_vs_calm',
+  'quiet_safety',
+  'receives_but_exposed_need',
+  'receiving_care_difficulty',
+  'rest_awareness_frustration',
+  'rupture_sensitivity',
+  'settled_then_returns_frustration',
+  'support_need',
+  'support_scarcity',
+  'support_too_much_fear',
+  'unaffected_until_safe',
+  'wants_to_be_seen',
+]);
+
+const ADDITIONAL_BODY_SIGNAL_SIGNALS = new Set<SignalKey>([
+  'adult_body_old_position',
+  'body_aliveness_cues',
+  'calm_bracing',
+  'calm_is_new',
+  'calm_outside_many_states',
+  'calm_seen_attention_hidden',
+  'complete_calm',
+  'easy_settling',
+  'old_expectations_body_pressure',
+  'outward_settled_under_ready',
+  'overrides_tiredness',
+  'pushes_low_capacity',
+  'responds_to_fatigue',
+  'rest_needed_unresolved',
+  'settles_without_readiness',
+  'shoulder_burden',
+  'still_body_scanning_mind',
+  'tired_but_not_free_stop',
+  'unbraced_stillness',
+]);
+
+const ADDITIONAL_RELATIONAL_CONTEXT_SIGNALS = new Set<SignalKey>([
+  'asks_help_early',
+  'autonomy_in_family_connection',
+  'autonomy_harder_in_family',
+  'chosen_family',
+  'family_activates_old_parts',
+  'family_choice_effort',
+  'family_dynamics_pull_in',
+  'family_expectations_louder',
+  'family_loyalty_tension',
+  'family_residue_carried',
+  'family_responsibility_automatic',
+  'hidden_silence_distress',
+  'home_as_safety',
+  'old_guilt_after_new_response',
+  'old_pattern_nonparticipation',
+  'old_roles_feel_current',
+  'old_roles_observed',
+  'peacekeeping_responsibility',
+  'pulls_back_first',
+  'quick_disruption_recovery',
+  'separate_pattern_mixed',
+  'silence_for_safety',
+  'small_circle_pressure',
+  'support_abundance_shift',
+  'tracks_tone_acts_unaffected',
+  'unseen_deep_landing',
+]);
+
+const ADDITIONAL_PROTECTIVE_STRATEGY_SIGNALS = new Set<SignalKey>([
+  'accounted_for_security',
+  'calm_outside_tracking_inside',
+  'control_for_uncertainty',
+  'distance_for_safety',
+  'fear_of_loss',
+  'guard_not_dropped',
+  'handling_trust_keeps_engaged',
+  'help_with_control',
+  'less_invested_protection',
+  'one_more_thing_loop',
+  'planning_as_protection',
+  'prepared_steadiness',
+  'quiet_readiness',
+  'resource_triggers_prepare',
+  'safety_over_flexibility',
+  'scarcity_planning',
+  'scarcity_scanning',
+  'silence_for_safety',
+  'still_body_scanning_mind',
+  'worst_case_preparation',
+]);
+
+const ADDITIONAL_COGNITIVE_PROCESS_SIGNALS = new Set<SignalKey>([
+  'action_processing_change',
+  'alignment_over_routine',
+  'awareness_hard_to_follow',
+  'beneath_surface_attention',
+  'chapter_shift',
+  'clear_over_symbolic_explanation',
+  'conversation_replay',
+  'daytime_processing',
+  'dream_after_relationship_theme',
+  'dream_after_stress',
+  'dream_conflict',
+  'dream_home',
+  'dream_image_true_feeling',
+  'dream_loss',
+  'dream_protection',
+  'dream_relief',
+  'dream_searching',
+  'dreams_fade_quickly',
+  'easier_later_push_now',
+  'emotional_truth_symbol',
+  'forward_motion_over_reflection',
+  'growth_edge',
+  'identity_rewriting',
+  'inner_world_patterns',
+  'intuition_and_evidence',
+  'intuition_before_explanation',
+  'intuition_problem_solving',
+  'later_importance_realization',
+  'lifeDirection',
+  'low_dream_interpretation',
+  'low_dream_theme_tracking',
+  'metaphor_before_practical',
+  'past_revisiting_unhelpful',
+  'repeated_symbols_pointing',
+  'transformation_season',
+  'waking_life_processing',
+]);
+
+const ADDITIONAL_VALUE_THEME_SIGNALS = new Set<SignalKey>([
+  'alignment_over_routine',
+  'bounded_meaning',
+  'compromise_deep_cost',
+  'conscience_settling',
+  'emotion_beauty_personal_meaning',
+  'faith_meaning',
+  'feeling_over_practicality',
+  'harder_honest_path',
+  'honesty_over_delivery',
+  'loyalty_conflict',
+  'purpose_signal',
+  'spiritual_depth',
+  'truth_over_harmony',
+  'values_conflict',
+]);
+
+const ADDITIONAL_GLIMMER_SIGNALS = new Set<SignalKey>([
+  'body_lightness',
+  'calm_presence_for_others',
+  'easy_settling',
+  'encouraged_by_small_shifts',
+  'familiar_calm',
+  'joy_recovery',
+  'lightness_partial_day',
+  'nature_regulation',
+  'ordinary_sacred',
+  'pleasure_unearned_trust',
+  'quiet_safety',
+  'relief_in_closing_ununderstood',
+  'settles_without_readiness',
+  'somatic_safety',
+  'trusts_safe_moments',
+  'unbraced_stillness',
+]);
+
+const ADDITIONAL_RECOVERY_LEVER_SIGNALS = new Set<SignalKey>([
+  'body_lightness',
+  'body_rest_before_responsibility',
+  'breaks_between_effort',
+  'calm_presence_for_others',
+  'complete_calm',
+  'easy_settling',
+  'familiar_calm',
+  'joy_recovery',
+  'nature_regulation',
+  'needs_handled_as_arise',
+  'pleasure_unearned_trust',
+  'responds_to_fatigue',
+  'settles_without_readiness',
+  'somatic_safety',
+  'support_abundance_shift',
+  'trusts_safe_moments',
+  'unbraced_stillness',
+]);
+
+const ADDITIONAL_RESOURCE_CONTEXT_SIGNALS = new Set<SignalKey>([
+  'achievement_momentum_slowing_loss',
+  'capacity_before_support',
+  'capacity_difference_same_practice',
+  'clear_expectations_motivation',
+  'deadline_standard_best_work',
+  'demand_capable_obligation',
+  'drive_less_without_pressure',
+  'energy_cost_after_commit',
+  'freedom_without_direction_discomfort',
+  'helps_before_capacity_check',
+  'low_sleep',
+  'overrides_tiredness',
+  'productivity_as_proof',
+  'pulling_back_harder',
+  'responds_to_fatigue',
+  'schedule_over_capacity',
+  'sleep_mood_link',
+  'support_need',
+  'workAmbition',
+  'yes_before_pause',
+]);
+
 const BODY_SIGNAL_KEYWORDS = [
+  'braced',
+  'bracing',
+  'breath',
+  'breathing',
   'body',
   'chest',
+  'fatigue',
+  'fawn',
+  'fight',
+  'flight',
+  'freeze',
+  'grounded',
   'gut',
+  'heartbeat',
+  'heaviness',
   'jaw',
+  'lightness',
   'nausea',
+  'nervous',
   'physical',
+  'pressure',
+  'readiness',
+  'rest',
   'shoulder',
+  'sleep',
   'somatic',
   'sensation',
   'sensory',
+  'settle',
+  'settled',
   'stomach',
   'throat',
   'tension',
 ];
 
+const FEELING_KEYWORDS = [
+  'ache',
+  'anger',
+  'anxiety',
+  'calm',
+  'confident',
+  'confusion',
+  'despair',
+  'disappointment',
+  'disgust',
+  'doubt',
+  'emotion',
+  'fear',
+  'feeling',
+  'grief',
+  'guilt',
+  'heaviness',
+  'hope',
+  'hurt',
+  'jealousy',
+  'joy',
+  'loss',
+  'longing',
+  'mood',
+  'numb',
+  'overwhelm',
+  'peace',
+  'relief',
+  'sadness',
+  'shame',
+  'stuck',
+  'trust',
+  'vulnerability',
+];
+
 const RELATIONAL_KEYWORDS = [
+  'attachment',
   'belonging',
   'care',
   'closeness',
   'communication',
+  'community',
   'connection',
   'conversation',
+  'distance',
   'family',
+  'friend',
   'home',
+  'included',
+  'partner',
+  'rejected',
   'relational',
   'relationship',
   'repair',
@@ -427,67 +772,174 @@ const RELATIONAL_KEYWORDS = [
   'support',
   'tone',
   'trust',
+  'understood',
+  'unseen',
 ];
 
 const PROTECTIVE_KEYWORDS = [
+  'approval',
   'autonomy',
   'avoid',
   'boundary',
   'bracing',
+  'confirmation',
+  'control',
   'defensive',
   'distance',
   'guard',
+  'guarded',
   'agency',
   'limit',
+  'monitoring',
   'no',
+  'prepared',
+  'protect',
   'protection',
-  'safe',
+  'pressure',
+  'scanning',
   'silence',
+  'tracking',
+  'trapped',
+  'unsafe',
   'vulnerability',
-  'safety',
   'self_trust',
+  'withdraw',
 ];
 
 const COGNITIVE_KEYWORDS = [
   'analysis',
   'attention',
+  'chapter',
   'clarity',
   'closure',
   'cognitive',
+  'context',
+  'creative',
   'decision',
+  'direction',
+  'dream',
+  'evidence',
+  'express',
+  'expression',
   'explain',
+  'future',
+  'goal',
+  'growth',
+  'identity',
+  'intuition',
   'insight',
   'interpretation',
+  'logic',
   'meaning',
   'overthinking',
   'pattern',
+  'planning',
   'practical',
   'processing',
+  'question',
+  'reflection',
   'resolution',
+  'rumination',
+  'rhythm',
+  'story',
+  'structure',
+  'symbol',
+  'thinking',
+  'thought',
   'understand',
+  'understanding',
   'unfinished',
+  'why',
 ];
 
 const VALUE_KEYWORDS = [
   'fairness',
+  'faith',
+  'alignment',
+  'honest',
+  'honesty',
   'integrity',
   'justice',
+  'legacy',
+  'moral',
+  'purpose',
+  'spiritual',
   'truth',
   'value',
 ];
 
+const GLIMMER_KEYWORDS = [
+  'alive',
+  'aliveness',
+  'beauty',
+  'body_lightness',
+  'calm',
+  'connection_glimmer',
+  'delight',
+  'ease',
+  'familiar_calm',
+  'glimmer',
+  'joy',
+  'laughter',
+  'play',
+  'peaceful',
+  'quiet_safety',
+  'receiving_openness',
+  'relief',
+  'safe',
+  'soften',
+  'support_abundance',
+  'unbraced',
+];
+
+const RECOVERY_KEYWORDS = [
+  'ease',
+  'grounded',
+  'regulation',
+  'relief',
+  'rest_without_guilt',
+  'restorative',
+  'safe',
+  'settle',
+  'settled',
+  'soften',
+  'softening',
+  'unbraced',
+];
+
 const RESOURCE_KEYWORDS = [
   'abundance',
+  'achievement',
   'capacity',
+  'care',
+  'completion',
   'energy',
+  'help',
   'load',
   'money',
+  'output',
+  'performance',
+  'pressure',
+  'productivity',
   'resource',
   'responsibility',
   'rest',
   'scarcity',
   'sleep',
+  'standard',
+  'success',
+  'support',
   'time',
+  'work',
+];
+
+const DREAM_KEYWORDS = [
+  'dream',
+  'nightmare',
+  'sleep_residue',
+  'symbol',
+  'unfinished_processing',
+  'waking',
 ];
 
 function keyText(key: SignalKey): string {
@@ -502,15 +954,20 @@ function hasAnyKeyword(key: SignalKey, keywords: string[]): boolean {
 export function getSignalRoles(key: SignalKey): SignalRole[] {
   const roles = new Set<SignalRole>();
 
-  if (FEELING_STATE_SIGNALS.has(key)) roles.add('feeling_state');
-  if (RECOVERY_LEVER_SIGNALS.has(key)) roles.add('recovery_lever');
-  if (GLIMMER_SIGNALS.has(key) || keyText(key).includes('glimmer')) roles.add('glimmer');
-  if (BODY_SIGNAL_SIGNALS.has(key) || hasAnyKeyword(key, BODY_SIGNAL_KEYWORDS)) roles.add('body_signal');
-  if (RELATIONAL_CONTEXT_SIGNALS.has(key) || hasAnyKeyword(key, RELATIONAL_KEYWORDS)) roles.add('relational_context');
-  if (PROTECTIVE_STRATEGY_SIGNALS.has(key) || hasAnyKeyword(key, PROTECTIVE_KEYWORDS)) roles.add('protective_strategy');
-  if (COGNITIVE_PROCESS_SIGNALS.has(key) || hasAnyKeyword(key, COGNITIVE_KEYWORDS)) roles.add('cognitive_process');
-  if (VALUE_THEME_SIGNALS.has(key) || hasAnyKeyword(key, VALUE_KEYWORDS)) roles.add('value_theme');
-  if (RESOURCE_CONTEXT_SIGNALS.has(key) || hasAnyKeyword(key, RESOURCE_KEYWORDS)) roles.add('resource_context');
+  if (FEELING_STATE_SIGNALS.has(key) || ADDITIONAL_FEELING_STATE_SIGNALS.has(key) || hasAnyKeyword(key, FEELING_KEYWORDS)) roles.add('feeling_state');
+  if (RECOVERY_LEVER_SIGNALS.has(key) || ADDITIONAL_RECOVERY_LEVER_SIGNALS.has(key) || hasAnyKeyword(key, RECOVERY_KEYWORDS)) roles.add('recovery_lever');
+  if (GLIMMER_SIGNALS.has(key) || ADDITIONAL_GLIMMER_SIGNALS.has(key) || hasAnyKeyword(key, GLIMMER_KEYWORDS)) roles.add('glimmer');
+  if (BODY_SIGNAL_SIGNALS.has(key) || ADDITIONAL_BODY_SIGNAL_SIGNALS.has(key) || hasAnyKeyword(key, BODY_SIGNAL_KEYWORDS)) roles.add('body_signal');
+  if (RELATIONAL_CONTEXT_SIGNALS.has(key) || ADDITIONAL_RELATIONAL_CONTEXT_SIGNALS.has(key) || hasAnyKeyword(key, RELATIONAL_KEYWORDS)) roles.add('relational_context');
+  if (
+    (PROTECTIVE_STRATEGY_SIGNALS.has(key) ||
+      ADDITIONAL_PROTECTIVE_STRATEGY_SIGNALS.has(key) ||
+      hasAnyKeyword(key, PROTECTIVE_KEYWORDS)) &&
+    !SETTLED_SAFETY_SIGNALS.has(key)
+  ) roles.add('protective_strategy');
+  if (COGNITIVE_PROCESS_SIGNALS.has(key) || ADDITIONAL_COGNITIVE_PROCESS_SIGNALS.has(key) || hasAnyKeyword(key, COGNITIVE_KEYWORDS) || hasAnyKeyword(key, DREAM_KEYWORDS)) roles.add('cognitive_process');
+  if (VALUE_THEME_SIGNALS.has(key) || ADDITIONAL_VALUE_THEME_SIGNALS.has(key) || hasAnyKeyword(key, VALUE_KEYWORDS)) roles.add('value_theme');
+  if (RESOURCE_CONTEXT_SIGNALS.has(key) || ADDITIONAL_RESOURCE_CONTEXT_SIGNALS.has(key) || hasAnyKeyword(key, RESOURCE_KEYWORDS)) roles.add('resource_context');
 
   return Array.from(roles);
 }
@@ -518,8 +975,16 @@ export function getSignalRoles(key: SignalKey): SignalRole[] {
 export function getSignalSentiment(key: SignalKey): SignalSentiment {
   if (NEGATIVE_FEELING_SIGNALS.has(key)) return 'negative';
   if (POSITIVE_FEELING_SIGNALS.has(key)) return 'positive';
-  if (RECOVERY_LEVER_SIGNALS.has(key) || keyText(key).includes('glimmer')) return 'positive';
-  if (keyText(key).includes('conflict') || keyText(key).includes('mixed')) return 'mixed';
+  if (MIXED_FEELING_SIGNALS.has(key)) return 'mixed';
+  if (RECOVERY_LEVER_SIGNALS.has(key) || ADDITIONAL_RECOVERY_LEVER_SIGNALS.has(key) || GLIMMER_SIGNALS.has(key) || ADDITIONAL_GLIMMER_SIGNALS.has(key) || hasAnyKeyword(key, GLIMMER_KEYWORDS)) return 'positive';
+  if (
+    keyText(key).includes('ambivalence') ||
+    keyText(key).includes('ambivalent') ||
+    keyText(key).includes('conflict') ||
+    keyText(key).includes('mixed') ||
+    keyText(key).includes('uncertain') ||
+    keyText(key).includes('uncertainty')
+  ) return 'mixed';
   return 'neutral';
 }
 

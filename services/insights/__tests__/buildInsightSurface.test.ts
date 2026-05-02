@@ -133,7 +133,7 @@ describe('buildInsightSurface knowledge insights', () => {
     });
 
     expect(surface.knowledgeInsights.length).toBeGreaterThan(1);
-    expect(surface.knowledgeInsights.length).toBeLessThanOrEqual(4);
+    expect(surface.knowledgeInsights.length).toBeLessThanOrEqual(2);
     expect(surface.knowledgeInsight).toBe(surface.knowledgeInsights[0]);
     expect(surface.knowledgeInsights[0].slot).toBe('whatMySkyNoticed');
     expect(surface.knowledgeInsights.some((insight) => insight.patternKey === 'unknown')).toBe(false);
@@ -147,5 +147,15 @@ describe('buildInsightSurface knowledge insights', () => {
     expect(surface.premiumWeeklyDeepDive.length).toBeLessThanOrEqual(4);
     expect(surface.premiumWeeklyDeepDive.every(read => read.isV2Derived)).toBe(true);
     expect(surface.premiumWeeklyDeepDive.some(read => read.patternKey === 'unknown')).toBe(false);
+
+    const todayPatternKeys = new Set(surface.knowledgeInsights.map(insight => insight.patternKey));
+    expect(surface.premiumPatterns.some(pattern => todayPatternKeys.has(pattern.patternKey))).toBe(false);
+    expect(surface.premiumWeeklyDeepDive.some(read => !read.isEmptyState && todayPatternKeys.has(read.patternKey))).toBe(false);
+    if (surface.thisWeeksV2Pattern && !surface.thisWeeksV2Pattern.isEmptyState) {
+      expect(todayPatternKeys.has(surface.thisWeeksV2Pattern.patternKey)).toBe(false);
+    }
+    if (surface.knowledgeInsights.some(insight => insight.slot === 'primaryPersona')) {
+      expect(surface.premiumPersonaProfile).toBeNull();
+    }
   });
 });

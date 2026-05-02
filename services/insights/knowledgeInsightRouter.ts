@@ -47,7 +47,7 @@ export interface ActiveKnowledgeInsightResult {
   premiumWeeklyDeepDive: PremiumWeeklyDeepDiveItem[];
 }
 
-const MAX_DAILY_INSIGHT_CARDS = 4;
+const MAX_DAILY_INSIGHT_CARDS = 2;
 
 const DAILY_INSIGHT_SLOT_LABELS: Record<string, string> = {
   whatMySkyNoticed: 'What MySky Noticed',
@@ -255,6 +255,22 @@ function selectPrimaryV2Insight(insights: V2GeneratedInsight[]): V2GeneratedInsi
   return insights.find((insight) => insight.slot === 'whatMySkyNoticed') ?? insights[0] ?? null;
 }
 
+function patternScoreKeySet(patternScores: { patternKey: string }[]): Set<string> {
+  return new Set(patternScores.map(score => score.patternKey));
+}
+
+function selectedArchivePatternKeys(
+  insights: V2GeneratedInsight[],
+  patternScores: { patternKey: string }[],
+): Set<string> {
+  const archiveKeys = patternScoreKeySet(patternScores);
+  return new Set(
+    insights
+      .map(insight => insight.patternKey)
+      .filter(patternKey => archiveKeys.has(patternKey)),
+  );
+}
+
 export function adaptV2Insight(insight: V2GeneratedInsight): GeneratedInsight {
   const { observation, pattern } = splitBody(insight.body);
 
@@ -294,16 +310,24 @@ async function runV2KnowledgeInsights({
     history: buildV2History(history, date),
   });
 
-  const dailyInsights = selectDailyV2Insights(result.insights).map(adaptV2Insight);
+  const selectedDailyV2Insights = selectDailyV2Insights(result.insights);
+  const dailyPatternKeys = selectedArchivePatternKeys(selectedDailyV2Insights, result.patternScores);
+  const premiumPatternScores = result.patternScores.filter(
+    score => !dailyPatternKeys.has(score.patternKey),
+  );
+  const dailyInsights = selectedDailyV2Insights.map(adaptV2Insight);
   const fallbackPrimary = selectPrimaryV2Insight(result.insights);
   const primaryInsight = dailyInsights[0] ?? (fallbackPrimary ? adaptV2Insight(fallbackPrimary) : null);
-  const premiumPersonaProfile = adaptPremiumPersonaProfile(result.primaryPersona);
-  const premiumPatterns = adaptPremiumPatterns(result.patternScores);
+  const dailyShowsPrimaryPersona = selectedDailyV2Insights.some(insight => insight.slot === 'primaryPersona');
+  const premiumPersonaProfile = dailyShowsPrimaryPersona
+    ? null
+    : adaptPremiumPersonaProfile(result.primaryPersona);
+  const premiumPatterns = adaptPremiumPatterns(premiumPatternScores);
   const premiumWeeklyDeepDive = selectPremiumWeeklyDeepDive(
-    adaptWeeklyPremiumPatternCandidates(result.patternScores),
+    adaptWeeklyPremiumPatternCandidates(premiumPatternScores),
   );
   const thisWeeksV2Pattern = selectThisWeeksV2Pattern(
-    result.patternScores,
+    premiumPatternScores,
     premiumPatterns,
     premiumWeeklyDeepDive,
   );

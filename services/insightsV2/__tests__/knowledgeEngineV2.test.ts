@@ -151,6 +151,16 @@ describe('Knowledge Engine V2', () => {
     expect(result.insights.length).toBeLessThanOrEqual(4);
     expect(result.insights.map(insight => insight.slot)).toContain('whatMySkyNoticed');
     expect(result.insights.some(insight => insight.patternKey === 'unknown')).toBe(false);
+
+    const whatHelped = result.insights.find(insight => insight.slot === 'whatHelped');
+    expect(whatHelped?.body).toContain('Your archive is noticing');
+    expect(whatHelped?.body).not.toBe('Something today may have helped your system soften, settle, recover, or feel a little more supported.');
+
+    const bodySignal = result.insights.find(insight => insight.slot === 'bodySignal');
+    if (bodySignal) {
+      expect(bodySignal.body).toContain('The body signal around');
+      expect(bodySignal.body).not.toBe('Your body may be giving you information before your mind has fully organized it.');
+    }
   });
 
   it('uses feeling set copy for the primary daily feeling', async () => {
