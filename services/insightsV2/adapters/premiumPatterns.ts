@@ -485,49 +485,169 @@ function lowerFirst(text: string): string {
   return text.charAt(0).toLowerCase() + text.slice(1);
 }
 
-function sectionBodyForPattern(item: PremiumPatternItem): string {
+function sentence(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
+function titleAsPhrase(title: string): string {
+  return trimTerminalPunctuation(title)
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function confidentReframeText(text: string, confidence: PatternConfidence): string {
+  const trimmed = trimTerminalPunctuation(text)
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!trimmed) return '';
+
+  if (confidence === 'moderate' || confidence === 'emerging') return trimmed;
+
+  return trimmed
+    .replace(/\bThis may not be\b/gi, 'This is not')
+    .replace(/\bThis may be\b/gi, 'This is')
+    .replace(/\bIt may not be\b/gi, 'It is not')
+    .replace(/\bIt may be\b/gi, 'It is')
+    .replace(/\bmay create\b/gi, 'can create')
+    .replace(/\bmay need\b/gi, 'needs')
+    .replace(/\bmay show\b/gi, 'shows')
+    .replace(/\bmay help\b/gi, 'helps');
+}
+
+function personalReframeSentence(item: PremiumPatternItem): string {
+  const raw = item.clarityReframe ?? '';
+  const reframe = confidentReframeText(raw, item.confidence);
+  if (!reframe) return '';
+
+  if (/\byou\b|\byour\b|\byourself\b/i.test(reframe)) {
+    return sentence(reframe);
+  }
+
+  if (/^this\b/i.test(reframe)) {
+    return sentence(reframe.replace(/^this\b/i, 'For you, this'));
+  }
+
+  if (/^it\b/i.test(reframe)) {
+    return sentence(reframe.replace(/^it\b/i, 'For you, it'));
+  }
+
+  return sentence(`For you, ${lowerFirst(reframe)}`);
+}
+
+function secondPersonPressure(text: string): string {
+  return trimTerminalPunctuation(text)
+    .replace(/\bI should not\b/gi, 'you should not')
+    .replace(/\bI should\b/gi, 'you should')
+    .replace(/\bI have to\b/gi, 'you have to')
+    .replace(/\bI need to\b/gi, 'you need to')
+    .replace(/\bI must\b/gi, 'you must')
+    .replace(/\bI cannot\b/gi, 'you cannot')
+    .replace(/\bI can\b/gi, 'you can')
+    .replace(/\bI am not\b/gi, 'you are not')
+    .replace(/\bI am\b/gi, 'you are')
+    .replace(/\bIf I\b/gi, 'if you')
+    .replace(/\bmy\b/gi, 'your')
+    .replace(/\bme\b/gi, 'you')
+    .replace(/\bmyself\b/gi, 'yourself')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function pressureReframeSentence(item: PremiumPatternItem): string {
+  if (!item.shameLabel) return '';
+  const pressure = secondPersonPressure(item.shameLabel);
+  if (!pressure) return '';
+
+  if (/^if you\b/i.test(pressure)) {
+    return sentence(`The old fear that ${lowerFirst(pressure)} does not have to run the whole story`);
+  }
+
+  if (/\bshould\b|\bhave to\b|\bmust\b|\bcannot\b/i.test(pressure)) {
+    return sentence(`The old expectation that ${lowerFirst(pressure)} does not have to run the whole story`);
+  }
+
+  return sentence(`The old belief that ${lowerFirst(pressure)} does not get to define who you are`);
+}
+
+function evidenceAsPersonalSentence(item: PremiumPatternItem): string {
+  const summary = item.evidenceSummary.trim();
+  if (!summary) return '';
+
+  const rewritten = summary
+    .replace(/^Seen across\b/i, 'It has shown up across')
+    .replace(/^Seen in\b/i, 'It has shown up in')
+    .replace(/^Emerging:\s*/i, 'It is still emerging, but ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return sentence(rewritten);
+}
+
+function relatedSignalSentence(item: PremiumPatternItem): string {
+  const signals = unique(item.relatedSignals.map(humanizeKey)).slice(0, 3);
+  if (!signals.length) return '';
+
+  return sentence(`For you, it tends to gather around ${formatList(signals)}`);
+}
+
+function personalLeadForPattern(item: PremiumPatternItem): string {
+  const title = titleAsPhrase(item.title);
+
   switch (item.category) {
     case 'responsibilityCare':
-      return 'There is a clear pattern around responsibility. You often notice what needs to be held before you notice what it is costing you. Care moves quickly into tracking, preparing, and making sure nothing important gets missed.';
+      return `There is a clear pattern around ${title}. You often notice what needs to be held before you notice what it is costing you.`;
     case 'relationships':
     case 'supportBelonging':
     case 'communicationVoice':
     case 'familyHome':
-      return 'Connection carries weight. Tone, consistency, repair, support, and being understood are not small details; they shape whether your system can soften or stays on alert.';
+      return `${item.title} is active in how you read connection. Tone, repair, support, distance, and being understood carry real weight for you.`;
     case 'bodySignals':
-      return 'Your body often joins the conversation before your mind has finished explaining what happened. Sensation becomes an early language for strain, safety, grief, overload, or the need to pause.';
+      return `${item.title} is active in your body. Your body often joins the conversation before your mind has finished explaining what happened.`;
     case 'safetyRegulation':
-      return 'Safety is an active thread. Part of your system tracks what feels steady, what feels uncertain, and what needs more evidence before it can fully settle.';
+      return `${item.title} is active in how your system tracks safety. Part of you notices what feels steady, what feels uncertain, and what needs more evidence before it can settle.`;
     case 'restCapacity':
     case 'timeRhythms':
-      return 'Capacity has a rhythm. Rest is not only about stopping; it has to feel safe enough to receive, and timing matters more than force when your system is already stretched.';
+      return `${item.title} is active around capacity. Rest is not simple when part of you is still tracking what needs to be handled.`;
     case 'selfWorthReceiving':
     case 'scarcityAbundance':
-      return 'Receiving, enoughness, and worth are active themes. Support can feel meaningful and exposed at the same time, especially when being cared for touches the part of you that learned to stay useful.';
+      return `${item.title} is active around receiving and enoughness. Support can feel meaningful and exposed at the same time when being cared for touches the part of you that learned to stay useful.`;
     case 'workAmbition':
-      return 'Ambition carries emotional weight. Progress, standards, and output can become ways to create safety, which means success has to include capacity or it starts costing the person doing the building.';
+      return `${item.title} is active around ambition. Progress, standards, and output can become ways your system tries to create safety.`;
     case 'lifeDirection':
     case 'identityGrowth':
-      return 'Direction is connected to identity here. The question is not only what comes next; it is who you are becoming and what kind of stability that becoming needs.';
+      return `${item.title} is active around becoming. For you, the question is not only what comes next; it is who you are becoming and what kind of stability that becoming needs.`;
     case 'cognitiveStyle':
-      return 'Understanding is one of your organizing tools. Your mind looks for language, context, and structure so the feeling becomes less shapeless and the next step becomes honest.';
+      return `${item.title} is active in how your mind organizes experience. You look for language, context, and structure so the feeling becomes less shapeless and the next step becomes honest.`;
     case 'valuesIntegrity':
     case 'spiritualMeaning':
     case 'natalChartReflection':
-      return 'Meaning matters here. Values, truth, alignment, and symbolic language help you stay oriented when the obvious answer is not the honest one.';
+      return `${item.title} is active around meaning. You rely on inner truth more than surface answers when something does not feel honest or aligned.`;
     case 'emotionalWeather':
     case 'griefTransitions':
-      return 'Your emotional world holds complexity. More than one truth can be present at once, and the slower feeling often needs room after the practical situation has already moved on.';
+      return `${item.title} is active in your emotional world. You can hold more than one truth at once, and the slower feeling often needs room after the practical situation has already moved on.`;
     case 'dreamsSymbols':
-      return 'Dreams and symbols carry emotional residue. They do not need to predict anything to matter; they often give shape to what waking life has not fully organized yet.';
+      return `${item.title} is active in your dream life. Your dreams seem to hold material your waking life has not finished organizing.`;
     case 'creativityExpression':
-      return 'Expression is part of how your inner world moves. Making, naming, designing, or speaking can turn what is internal into something your system can work with.';
+      return `${item.title} is active in how your inner world moves outward. Making, naming, designing, or speaking can turn what is internal into something your system can work with.`;
     case 'pleasurePlay':
     case 'glimmersRegulation':
-      return 'Aliveness matters. Joy, play, beauty, relief, and small glimmers are not extras; they are part of how your system finds its way back to itself.';
+      return `${item.title} is active around aliveness. Joy, beauty, relief, and small glimmers are part of how your system finds its way back to itself.`;
     default:
-      return `${item.title} is one of the clearer threads right now. ${item.clarityReframe ? `The clearer truth is ${lowerFirst(trimTerminalPunctuation(item.clarityReframe))}.` : 'It belongs in the profile because it shows where your system keeps returning for protection, clarity, or care.'}`;
+      return `${item.title} is one of the clearer patterns here. You keep returning to it because something in it still needs protection, clarity, or care.`;
   }
+}
+
+function sectionBodyForPattern(item: PremiumPatternItem): string {
+  return [
+    personalLeadForPattern(item),
+    personalReframeSentence(item),
+    pressureReframeSentence(item),
+    relatedSignalSentence(item),
+    evidenceAsPersonalSentence(item),
+  ].filter(Boolean).join(' ');
 }
 
 function sectionForPattern(item: PremiumPatternItem): PremiumPatternProfileSection {
@@ -557,11 +677,229 @@ function lowDataPatternProfile(): PremiumPatternProfile {
   };
 }
 
-function buildProfilePortrait(sections: PremiumPatternProfileSection[]): string {
-  const labels = sections.map(section => section.title.toLowerCase());
-  const areaText = formatList(labels);
+function portraitLeadForPattern(item: PremiumPatternItem): string {
+  switch (item.category) {
+    case 'dreamsSymbols':
+      return 'You seem to process life by looking for the deeper shape underneath what happened.';
+    case 'responsibilityCare':
+      return 'You often sense the weight of a situation before other people realize there is anything to hold.';
+    case 'relationships':
+    case 'supportBelonging':
+    case 'communicationVoice':
+    case 'familyHome':
+      return 'Connection carries real weight for you.';
+    case 'bodySignals':
+      return 'Your body often joins the conversation early.';
+    case 'restCapacity':
+    case 'timeRhythms':
+      return 'Rest and capacity are closely tied to safety for you.';
+    case 'valuesIntegrity':
+    case 'spiritualMeaning':
+    case 'natalChartReflection':
+      return 'Meaning matters because it helps you stay oriented when the obvious answer is not the honest one.';
+    default:
+      return 'You seem to track what stays emotionally unfinished until it has enough language, support, or choice around it.';
+  }
+}
 
-  return `The strongest threads right now are ${areaText}. Together, they describe how you protect what matters, where your system works hardest, and what helps it soften again. This is not a fixed identity; it is a profile of the patterns asking for the most attention right now.`;
+function portraitSearchText(patterns: PremiumPatternItem[]): string {
+  return patterns
+    .flatMap(item => [
+      item.patternKey,
+      item.title,
+      item.category,
+      item.clarityReframe,
+      item.shameLabel,
+      item.evidenceSummary,
+      ...item.relatedSignals.map(humanizeKey),
+    ])
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .join(' ')
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ');
+}
+
+function hasPortraitSignal(patterns: PremiumPatternItem[], matcher: RegExp): boolean {
+  return matcher.test(portraitSearchText(patterns));
+}
+
+type ProfilePortraitRole =
+  | 'recurringPattern'
+  | 'protectiveAction'
+  | 'protectivePurpose'
+  | 'cost'
+  | 'recoveryOrSoftening'
+  | 'growthEdge';
+
+type ProfilePortraitRoles = Record<ProfilePortraitRole, PremiumPatternItem[]>;
+
+function emptyProfilePortraitRoles(): ProfilePortraitRoles {
+  return {
+    recurringPattern: [],
+    protectiveAction: [],
+    protectivePurpose: [],
+    cost: [],
+    recoveryOrSoftening: [],
+    growthEdge: [],
+  };
+}
+
+function patternSearchText(item: PremiumPatternItem): string {
+  return [
+    item.patternKey,
+    item.title,
+    item.category,
+    item.clarityReframe,
+    item.shameLabel,
+    item.evidenceSummary,
+    ...item.relatedSignals.map(humanizeKey),
+  ]
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .join(' ')
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ');
+}
+
+function patternMatches(item: PremiumPatternItem, matcher: RegExp): boolean {
+  return matcher.test(patternSearchText(item));
+}
+
+function classifyProfilePortraitRoles(patterns: PremiumPatternItem[]): ProfilePortraitRoles {
+  const roles = emptyProfilePortraitRoles();
+
+  for (const pattern of patterns) {
+    const isRecovery = isRecoveryOrHelpfulPattern(pattern) || patternMatches(pattern, /\bglimmer\b|\bjoy\b|\bplay\b|\brelief\b|\bsupport\b|\bsoften\b|\bsettle\b|\brestorative\b/);
+    const isBurden = patternMatches(pattern, /\binvisible\b|\bmental load\b|\bresponsibility\b|\bcarrying\b|\bcapacity\b|\brest\b|\bdream\b|\bunfinished\b|\bgrief\b|\blonging\b/);
+    const isProtective = patternMatches(pattern, /\bbracing\b|\bprepared\b|\balways on\b|\bboundary\b|\blimit\b|\bprotect\b|\brepair\b|\brupture\b|\bsafety\b|\btruth\b|\balignment\b/);
+
+    if (isBurden || roles.recurringPattern.length === 0) roles.recurringPattern.push(pattern);
+    if (isProtective || pattern.concept === 'protective_behavior') {
+      roles.protectiveAction.push(pattern);
+      roles.protectivePurpose.push(pattern);
+      roles.cost.push(pattern);
+    }
+    if (isRecovery) roles.recoveryOrSoftening.push(pattern);
+    if (!isRecovery && !isBurden && !isProtective) roles.growthEdge.push(pattern);
+  }
+
+  return roles;
+}
+
+function rolePatterns(
+  roles: ProfilePortraitRoles,
+  role: ProfilePortraitRole,
+  fallback: PremiumPatternItem[],
+): PremiumPatternItem[] {
+  return roles[role].length ? roles[role] : fallback;
+}
+
+function portraitProtectiveAction(patterns: PremiumPatternItem[]): string {
+  if (hasPortraitSignal(patterns, /\brepair\b|\brupture\b|\bbracing\b|\bprepared\b|\balways on\b|\binvisible\b|\bmental load\b|\bresponsibility\b|\bcarrying\b/)) {
+    return 'When something feels unfinished, tense, or uncertain, your system moves into readiness.';
+  }
+
+  if (hasPortraitSignal(patterns, /\bdream\b|\bsymbol\b|\bmeaning\b|\bunfinished\b|\bemotional residue\b/)) {
+    return 'Part of you keeps looking for the deeper shape underneath what happened, especially when the feeling is too layered to name directly.';
+  }
+
+  if (hasPortraitSignal(patterns, /\bbody\b|\bsensation\b|\bchest\b|\bjaw\b|\bgut\b|\bthroat\b|\bbreath\b|\bsomatic\b/)) {
+    return 'Your body tends to register strain early, before the story has fully organized itself in words.';
+  }
+
+  if (hasPortraitSignal(patterns, /\bboundary\b|\blimit\b|\btruth\b|\balignment\b|\bintegrity\b|\bsay no\b|\bsaying no\b/)) {
+    return 'Part of you keeps checking whether the shape of things still lines up with what is true for you.';
+  }
+
+  if (hasPortraitSignal(patterns, /\brest\b|\bcapacity\b|\bsleep\b|\bpause\b|\blow energy\b|\blow capacity\b/)) {
+    return 'Part of you keeps measuring whether there is enough safety and capacity to actually stop.';
+  }
+
+  return 'Part of you keeps tracking what still needs language, support, or a little more choice.';
+}
+
+function portraitProtectivePurpose(patterns: PremiumPatternItem[]): string {
+  if (hasPortraitSignal(patterns, /\brepair\b|\brupture\b|\bbracing\b|\bprepared\b|\balways on\b|\binvisible\b|\bmental load\b|\bresponsibility\b|\bcarrying\b/)) {
+    return 'This is not just worry or overthinking. It is an old form of protection: trying to prevent the moment from becoming heavier than you can carry alone.';
+  }
+
+  if (hasPortraitSignal(patterns, /\bdream\b|\bsymbol\b|\bmeaning\b|\bunfinished\b|\bemotional residue\b/)) {
+    return 'That search for meaning helps your system hold what waking life has not finished organizing yet.';
+  }
+
+  if (hasPortraitSignal(patterns, /\bbody\b|\bsensation\b|\bchest\b|\bjaw\b|\bgut\b|\bthroat\b|\bbreath\b|\bsomatic\b/)) {
+    return 'That early body signal helps your system ask for pacing, support, or protection before everything becomes too much.';
+  }
+
+  if (hasPortraitSignal(patterns, /\bboundary\b|\blimit\b|\btruth\b|\balignment\b|\bintegrity\b|\bsay no\b|\bsaying no\b/)) {
+    return 'That checking protects your integrity, even when it makes simple answers harder to accept.';
+  }
+
+  return 'That tracking helps you stay close to what matters, even when it keeps your system working harder than it should have to.';
+}
+
+function portraitCost(patterns: PremiumPatternItem[]): string {
+  if (hasPortraitSignal(patterns, /\brepair\b|\brupture\b|\bbracing\b|\bprepared\b|\balways on\b|\binvisible\b|\bmental load\b|\bresponsibility\b|\bcarrying\b/)) {
+    return 'The cost is that you may stay prepared for weight that should not have to fall on you.';
+  }
+
+  if (hasPortraitSignal(patterns, /\bdream\b|\bsymbol\b|\bmeaning\b|\bunfinished\b|\bemotional residue\b/)) {
+    return 'The cost is that your mind can keep working on the feeling long after the day has moved on.';
+  }
+
+  if (hasPortraitSignal(patterns, /\brest\b|\bcapacity\b|\bsleep\b|\bpause\b|\blow energy\b|\blow capacity\b/)) {
+    return 'The cost is that rest can start to feel like another task your system has to earn.';
+  }
+
+  if (hasPortraitSignal(patterns, /\bboundary\b|\blimit\b|\btruth\b|\balignment\b|\bintegrity\b|\bsay no\b|\bsaying no\b/)) {
+    return 'The cost is that protecting what is true can make you carry extra tension before you feel allowed to stand by it.';
+  }
+
+  return 'The cost is that your system can stay busy managing the pattern before you have had a chance to choose what you need.';
+}
+
+function portraitRecovery(patterns: PremiumPatternItem[]): string {
+  if (hasPortraitSignal(patterns, /\brepair\b|\bsupport\b|\bunderstood\b|\bnot alone\b|\bbracing\b|\bcarrying\b|\bresponsibility\b/)) {
+    return 'What helps you soften is not being told to let it go, but feeling that repair is possible, support is real, and the heaviness is not yours to carry alone.';
+  }
+
+  if (hasPortraitSignal(patterns, /\brest\b|\bcapacity\b|\bsleep\b|\bpause\b|\blow energy\b|\blow capacity\b/)) {
+    return 'What helps is rest that feels chosen and protected, not collapse after carrying too much for too long.';
+  }
+
+  if (hasPortraitSignal(patterns, /\bdream\b|\bsymbol\b|\bmeaning\b|\bunfinished\b|\bemotional residue\b/)) {
+    return 'What helps is enough quiet for the feeling to become language instead of staying trapped as residue.';
+  }
+
+  if (hasPortraitSignal(patterns, /\bjoy\b|\bplay\b|\bglimmer\b|\baliveness\b|\bbeauty\b|\blaughter\b|\brelief\b/)) {
+    return 'What helps is letting small moments of aliveness count before everything is fixed.';
+  }
+
+  return 'What helps is support, language, and enough room to choose a response instead of only managing the pattern.';
+}
+
+function buildProfilePortrait(selectedPatterns: PremiumPatternItem[]): string {
+  const roles = classifyProfilePortraitRoles(selectedPatterns);
+  const [primary] = rolePatterns(roles, 'recurringPattern', selectedPatterns);
+  const hasMultipleIngredients = selectedPatterns.length > 1;
+  const primaryLead = primary
+    ? portraitLeadForPattern(primary)
+    : 'You seem to track what stays emotionally unfinished until it has enough language, support, or choice around it.';
+  const actionSentence = portraitProtectiveAction(rolePatterns(roles, 'protectiveAction', selectedPatterns));
+  const purposeSentence = portraitProtectivePurpose(rolePatterns(roles, 'protectivePurpose', selectedPatterns));
+  const costSentence = portraitCost(rolePatterns(roles, 'cost', selectedPatterns));
+  const recoverySentence = portraitRecovery(rolePatterns(roles, 'recoveryOrSoftening', selectedPatterns));
+  const identitySentence = hasMultipleIngredients
+    ? 'This is not a fixed identity; it is the pattern asking for the most attention right now.'
+    : 'This is not a fixed identity; it is the pattern asking for support right now.';
+
+  return [
+    primaryLead,
+    actionSentence,
+    purposeSentence,
+    costSentence,
+    recoverySentence,
+    identitySentence,
+  ].filter(Boolean).join(' ');
 }
 
 function growthOrRecoveryForProfile(
@@ -573,10 +911,18 @@ function growthOrRecoveryForProfile(
   const recovery = candidates.find(item => !selectedKeys.has(item.patternKey) && isRecoveryOrHelpfulPattern(item));
 
   if (recovery) {
+    const signals = unique(recovery.relatedSignals.map(humanizeKey)).slice(0, 3);
+    const signalPhrase = signals.length
+      ? ` For you, softening gathers around ${formatList(signals)}.`
+      : '';
+    const reframe = personalReframeSentence(recovery);
     return {
       title: 'What Helps You Soften',
-      body:
-        'Recovery is not about one dramatic breakthrough. It comes through small moments where the pressure lowers: being supported, feeling understood, finding quiet safety, or realizing something does not have to be carried alone.',
+      body: [
+        'Recovery is not about one dramatic breakthrough.',
+        `${recovery.title} shows what lowers the pressure without asking you to abandon what you care about.${signalPhrase}`,
+        reframe,
+      ].filter(Boolean).join(' '),
       patternKey: recovery.patternKey,
     };
   }
@@ -608,7 +954,7 @@ export function selectPremiumPatternProfile(
   return {
     title: 'Your Pattern Profile',
     subtitle: 'A deeper read of the patterns that keep returning.',
-    portrait: buildProfilePortrait(sections),
+    portrait: buildProfilePortrait(selectedPatterns),
     sections,
     growthOrRecovery,
     reflectionPrompt:

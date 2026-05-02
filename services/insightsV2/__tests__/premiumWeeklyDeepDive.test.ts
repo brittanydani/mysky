@@ -277,6 +277,11 @@ describe('selectPremiumWeeklyDeepDive', () => {
         category: 'communicationVoice',
         archiveSectionTitle: 'Relationships',
         score: 90,
+        clarityReframe:
+          'Needing repair does not mean you want conflict. It may be how your body knows the rupture is actually over.',
+        shameLabel: 'I should just move on.',
+        evidenceSummary: 'Seen across relationship reflections and journal entries over roughly 45 days.',
+        relatedSignals: ['repair_need', 'rupture_sensitivity', 'tone_sensitivity'],
       }),
       item({
         title: 'Subtle Bracing',
@@ -284,6 +289,11 @@ describe('selectPremiumWeeklyDeepDive', () => {
         category: 'safetyRegulation',
         archiveSectionTitle: 'Safety & Regulation',
         score: 82,
+        clarityReframe:
+          'Looking composed and feeling fully safe are not always the same thing.',
+        shameLabel: 'If I look calm, I should feel calm.',
+        evidenceSummary: 'Seen across body maps and trigger logs over roughly 30 days.',
+        relatedSignals: ['calm_bracing', 'preparedness', 'always_on'],
       }),
       item({
         title: 'Letting Joy Land',
@@ -293,6 +303,10 @@ describe('selectPremiumWeeklyDeepDive', () => {
         lens: 'recovery_patterns',
         archiveSectionTitle: 'What Helps',
         score: 78,
+        clarityReframe:
+          'Letting joy land does not require pretending everything is solved.',
+        evidenceSummary: 'Seen across glimmer logs and reflection answers over roughly 90 days.',
+        relatedSignals: ['joy_tolerance', 'play_glimmer', 'body_lightness'],
       }),
     ]);
 
@@ -302,6 +316,17 @@ describe('selectPremiumWeeklyDeepDive', () => {
     expect(profile.sections.length).toBeLessThanOrEqual(3);
     expect(new Set(profile.sections.map(section => section.title)).size).toBe(profile.sections.length);
     expect(profile.growthOrRecovery?.title).toBe('What Helps You Soften');
+    expect(profile.portrait).toContain('You often sense the weight of a situation before other people realize there is anything to hold');
+    expect(profile.portrait).toContain('When something feels unfinished, tense, or uncertain, your system moves into readiness');
+    expect(profile.portrait).toContain('This is not just worry or overthinking');
+    expect(profile.portrait).toContain('old form of protection');
+    expect(profile.portrait).toContain('The cost is that you may stay prepared for weight that should not have to fall on you');
+    expect(profile.portrait).toContain('repair is possible, support is real, and the heaviness is not yours to carry alone');
+    expect(profile.portrait).not.toContain('Right now, the clearest shape is around');
+    expect(profile.portrait).not.toMatch(/clearest shape is around|give this profile|gives this profile/i);
+    expect(profile.portrait).not.toMatch(/invisible responsibility.*relief.*bracing/i);
+    expect(profile.portrait).not.toMatch(/notices strain early, reaches for repair, and stays braced/i);
+    expect(profile.portrait).not.toContain('Invisible Load, Repair Helps You Settle, and Subtle Bracing');
     expect(profile.sourcePatternKeys).toEqual(expect.arrayContaining([
       'responsibilityCare_invisibleLoad',
       'communicationVoice_repairSettles',
@@ -317,8 +342,13 @@ describe('selectPremiumWeeklyDeepDive', () => {
       profile.reflectionPrompt,
     ].join(' ');
 
-    expect(copy).toContain('There is a clear pattern around responsibility');
-    expect(copy).toContain('Connection carries weight');
+    expect(copy).toContain('There is a clear pattern around invisible load');
+    expect(copy).toContain('Tone, repair, support, distance, and being understood carry real weight for you');
+    expect(copy).toContain('For you, this is the cost of carrying things that are hard for others to see');
+    expect(copy).toContain('It has shown up across relationship reflections and journal entries');
+    expect(copy).not.toContain('The strongest threads right now are');
+    expect(copy).not.toMatch(/Dreams and symbols carry emotional residue|Capacity has a rhythm|Boundaries and self-trust/i);
+    expect(profile.sections.every(section => /\byou\b|\byour\b|\byour system\b|For you\b/i.test(section.body))).toBe(true);
     expect(copy).not.toMatch(/Your archive|MySky noticed|MySky is noticing|The data suggests|This pattern indicates|This may point to/i);
   });
 

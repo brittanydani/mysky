@@ -153,12 +153,12 @@ describe('Knowledge Engine V2', () => {
     expect(result.insights.some(insight => insight.patternKey === 'unknown')).toBe(false);
 
     const whatHelped = result.insights.find(insight => insight.slot === 'whatHelped');
-    expect(whatHelped?.body).toContain('helped your system');
+    expect(whatHelped?.body).toMatch(/helped your system|gave connection|gave your body/);
     expect(whatHelped?.body).not.toBe('Something today may have helped your system soften, settle, recover, or feel a little more supported.');
 
     const bodySignal = result.insights.find(insight => insight.slot === 'bodySignal');
     if (bodySignal) {
-      expect(bodySignal.body).toContain('Your body is giving you information');
+      expect(bodySignal.body).toContain('Your body is joining the conversation');
       expect(bodySignal.body).not.toBe('Your body may be giving you information before your mind has fully organized it.');
     }
   });

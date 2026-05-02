@@ -113,6 +113,12 @@ function humanizeSignalKey(key: string): string {
   return key.replace(/_/g, ' ');
 }
 
+function capitalizeFirst(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+  return `${trimmed.charAt(0).toUpperCase()}${trimmed.slice(1)}`;
+}
+
 function ensureSentence(text: string): string {
   const trimmed = text.trim();
   if (!trimmed) return '';
@@ -153,22 +159,108 @@ function signalCue(signal: UserSignal): string {
   return normalizeEvidenceLabel(signal.evidence?.label) ?? humanizeSignalKey(signal.key);
 }
 
+function cueSubject(cue: string, useArticle = false): string {
+  const normalized = cue.trim().replace(/\s+/g, ' ');
+  if (!normalized) return 'This signal';
+  if (/^(a|an|the|your)\s+/i.test(normalized)) return capitalizeFirst(normalized);
+  if (useArticle && !normalized.includes(' ')) return capitalizeFirst(`the ${normalized}`);
+  return capitalizeFirst(normalized);
+}
+
+function bodySignalSubject(signal: UserSignal): string {
+  const keyCueMap: Partial<Record<SignalKey, string>> = {
+    body_knows_first: 'your body',
+    chest_pressure: 'chest pressure',
+    gut_signal: 'your gut',
+    jaw_restraint: 'your jaw',
+    shoulder_burden: 'your shoulders',
+    throat_tightness: 'your throat',
+    head_pressure: 'head pressure',
+    breath_change: 'your breathing',
+    body_heaviness: 'heaviness',
+    body_lightness: 'lightness',
+    tension_release: 'release',
+    somatic_safety: 'settling',
+    sensory_sensitivity: 'sensory sensitivity',
+  };
+  const keyCue = keyCueMap[signal.key];
+  if (keyCue) return capitalizeFirst(keyCue);
+
+  const cue = signalCue(signal);
+  const normalized = cue.toLowerCase();
+  const bodyCueMap: Record<string, string> = {
+    belly: 'your belly',
+    breath: 'your breathing',
+    breathing: 'your breathing',
+    chest: 'your chest',
+    gut: 'your gut',
+    head: 'your head',
+    jaw: 'your jaw',
+    neck: 'your neck',
+    shoulder: 'your shoulders',
+    shoulders: 'your shoulders',
+    stomach: 'your stomach',
+    throat: 'your throat',
+    tight: 'tightness',
+    tension: 'tension',
+    heavy: 'heaviness',
+    heaviness: 'heaviness',
+    light: 'lightness',
+    lightness: 'lightness',
+    soft: 'softening',
+    release: 'release',
+    relaxed: 'relaxation',
+    settled: 'settling',
+  };
+
+  return capitalizeFirst(bodyCueMap[normalized] ?? cue);
+}
+
+function relationshipThreadSubject(signal: UserSignal): string {
+  const cue = signalCue(signal);
+  if (signal.key === 'repair_need') return 'Repair';
+  if (signal.key === 'tone_sensitivity') return 'Tone';
+  if (signal.key === 'rupture_sensitivity') return 'Rupture and repair';
+  if (signal.key === 'consistency_need') return 'Consistency';
+  if (signal.key === 'relationship_safety_testing') return 'Trust and safety';
+  if (signal.key === 'support_need' || signal.key === 'support_scarcity') return 'Support';
+  if (signal.key === 'wants_to_be_seen') return 'Being understood';
+  if (signal.key === 'belonging_ache') return 'Belonging';
+  if (signal.key === 'distance_for_safety') return 'Distance';
+  if (signal.key === 'closeness_uncertainty') return 'Closeness';
+  return cueSubject(cue);
+}
+
+function dreamThreadSubject(signal: UserSignal): string {
+  const cue = signalCue(signal);
+  if (signal.key === 'dream_loss') return 'Loss';
+  if (signal.key === 'dream_conflict') return 'Conflict';
+  if (signal.key === 'dream_home') return 'Home';
+  if (signal.key === 'dream_protection') return 'Protection';
+  if (signal.key === 'dream_relief') return 'Relief';
+  if (signal.key === 'dream_searching') return 'Searching';
+  if (signal.key === 'dream_repeated_symbol') return 'A repeated symbol';
+  if (signal.key === 'dream_after_relationship_theme') return 'A relationship thread';
+  if (signal.key === 'dream_unfinished_processing') return 'Unfinished processing';
+  return cueSubject(cue);
+}
+
 function signalBodyForSentiment(signal: UserSignal): string {
-  const label = signalCue(signal);
+  const subject = cueSubject(signalCue(signal));
 
   if (signal.sentiment === 'positive') {
-    return `${label} showed up today as support your system can use. Small evidence of relief, steadiness, or aliveness still matters.`;
+    return `${subject} brought a real point of support into the day. Small evidence of relief, steadiness, or aliveness still matters.`;
   }
 
   if (signal.sentiment === 'mixed') {
-    return `${label} carried more than one emotional truth today. It makes sense if the signal felt layered instead of simple.`;
+    return `${subject} held more than one emotional truth today. The signal is layered, not unclear.`;
   }
 
   if (signal.sentiment === 'negative') {
-    return `${label} asked for care, pacing, or clarity today rather than quick self-judgment.`;
+    return `${subject} asked for care, pacing, or clarity today rather than quick self-judgment.`;
   }
 
-  return `${label} was part of today's inner weather. It helps explain how the day moved through you.`;
+  return `${subject} shaped today's inner weather. It gives useful context for how the day moved through you.`;
 }
 
 function personaProtectivePurpose(persona: SelectedPersonaProfile): string {
@@ -188,23 +280,36 @@ function personaBody(persona: SelectedPersonaProfile): string {
 }
 
 function whatHelpedBody(signal: UserSignal): string {
-  const cue = signalCue(signal);
-  return `${cue} helped your system soften, settle, recover, or feel a little more supported today.`;
+  const subject = cueSubject(signalCue(signal), true);
+
+  if (signal.source === 'glimmerLog' || hasRole(signal, 'glimmer')) {
+    return `${subject} helped your system soften today. That relief matters because it shows what supports regulation, not only what overwhelms it.`;
+  }
+
+  if (signal.source === 'relationshipMirror' || hasRole(signal, 'relational_context')) {
+    return `${subject} gave connection a little more room today. Feeling supported, understood, or met can be part of recovery too.`;
+  }
+
+  if (hasRole(signal, 'body_signal')) {
+    return `${subject} gave your body a little more room today. Recovery can begin as a small physical shift before it becomes a full emotional change.`;
+  }
+
+  return `${subject} helped your system soften, settle, or recover today. Small relief still counts.`;
 }
 
 function bodySignalBody(signal: UserSignal): string {
-  const cue = signalCue(signal);
-  return `Your body is giving you information around ${cue} before your mind has fully organized it.`;
+  const subject = bodySignalSubject(signal);
+  return `${subject} is part of the signal today. Your body is joining the conversation before your mind has finished explaining what happened.`;
 }
 
 function relationshipSignalBody(signal: UserSignal): string {
-  const cue = signalCue(signal);
-  return `The relationship signal around ${cue} is standing out today: tone, closeness, distance, repair, support, or feeling understood.`;
+  const subject = relationshipThreadSubject(signal);
+  return `${subject} is carrying relational weight today. Tone, closeness, distance, repair, support, and being understood shape whether your system can soften or stays on alert.`;
 }
 
 function dreamSignalBody(signal: UserSignal): string {
-  const cue = signalCue(signal);
-  return `The dream thread around ${cue} is carrying emotional residue, symbolic meaning, or unfinished processing.`;
+  const subject = dreamThreadSubject(signal);
+  return `${subject} stayed with the day. Dream material can hold emotional residue, symbolic meaning, or unfinished processing that waking life has not fully organized yet.`;
 }
 
 function growthEdgeBody(pattern: ArchivePattern | undefined): string {
