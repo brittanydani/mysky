@@ -1,5 +1,9 @@
 import { buildTodayInsights } from '../knowledgeEngineV2';
 
+const sentenceCount = (text: string): number => (
+  text.match(/[.!?](?=\s|$)/g)?.length ?? 0
+);
+
 describe('Knowledge Engine V2', () => {
   const now = '2026-04-24T12:00:00Z';
   const today = '2026-04-24';
@@ -40,8 +44,15 @@ describe('Knowledge Engine V2', () => {
     if (insight) {
         expect(insight.patternKey).toBe('timeRhythms_lowCapacityPatterns');
         expect(insight.title).toBeDefined();
-        expect(insight.body).toContain('Low-capacity states are repeating enough to notice');
+        expect(sentenceCount(insight.body)).toBeGreaterThanOrEqual(4);
+        expect(sentenceCount(insight.body)).toBeLessThanOrEqual(5);
+        expect(insight.body).not.toMatch(/Low-capacity states are repeating enough to notice|This pattern appears/i);
         expect(insight.reframe).toBe('This may need rhythm-aware planning, not more self-criticism.');
+        expect(insight.paragraphId).toBeDefined();
+        expect(insight.majorDomain).toBeDefined();
+        expect(insight.insightSubcategory).toBeDefined();
+        expect(insight.patternType).toMatch(/highTracking|lowAccess|pushPull|delayedActivation/);
+        expect(insight.writerShape).toBeDefined();
     }
   });
 
@@ -73,7 +84,8 @@ describe('Knowledge Engine V2', () => {
 
     const insight = result.insights.find(i => i.slot === 'whatMySkyNoticed');
     expect(insight?.movement).toBe('intensifying');
-    expect(insight?.body).toContain('appears louder than it has been recently');
+    expect(insight?.body).not.toContain('appears louder than it has been recently');
+    expect(sentenceCount(insight?.body ?? '')).toBeGreaterThanOrEqual(4);
   });
 
   it('detects cross-source match score impact', async () => {
@@ -161,6 +173,25 @@ describe('Knowledge Engine V2', () => {
       expect(bodySignal.body).toContain('Your body is joining the conversation');
       expect(bodySignal.body).not.toBe('Your body may be giving you information before your mind has fully organized it.');
     }
+  });
+
+  it('keeps dream material out of Today insight cards', async () => {
+    const result = await buildTodayInsights({
+      date: now,
+      rawInputs: {
+        dreams: [
+          {
+            date: today,
+            dreamText: 'A dream about unfinished conversations stayed with me.',
+          },
+        ],
+      },
+      history: [],
+    });
+
+    expect(result.patternScores.some(score => score.category === 'dreamsSymbols')).toBe(false);
+    expect(result.insights.some(insight => insight.slot === 'dreamPattern')).toBe(false);
+    expect(result.insights.some(insight => insight.patternKey.startsWith('dreams_'))).toBe(false);
   });
 
   it('uses feeling set copy for the primary daily feeling', async () => {

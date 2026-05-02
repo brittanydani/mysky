@@ -24,6 +24,11 @@ import type {
   PremiumThisWeekPatternItem,
   PremiumWeeklyDeepDiveItem,
 } from '../insightsV2/adapters/premiumPatterns';
+import type { InsightFeedbackProfile } from '../insightsV2/feedback/insightOutcomeFeedback';
+import {
+  previousPatternScoresFromInsightMemory,
+  type InsightMemoryProfile,
+} from '../insightsV2/memory/insightMemory';
 
 export interface InsightSurfaceResult {
   chartId: string | null;
@@ -48,6 +53,7 @@ export interface InsightSurfaceResult {
   premiumPatternProfile: PremiumPatternProfile | null;
   thisWeeksV2Pattern: PremiumThisWeekPatternItem | null;
   premiumWeeklyDeepDive: PremiumWeeklyDeepDiveItem[];
+  insightMemory: InsightMemoryProfile | null;
 }
 
 interface BuildInsightSurfaceOptions {
@@ -57,6 +63,8 @@ interface BuildInsightSurfaceOptions {
   includeKnowledgeInsight?: boolean;
   knowledgeInsightDate?: string;
   knowledgeHistory?: KnowledgeEngineHistoryInput;
+  insightFeedbackProfile?: InsightFeedbackProfile | null;
+  insightMemoryProfile?: InsightMemoryProfile | null;
 }
 
 function getStressScore(checkIn: DailyCheckIn): number {
@@ -78,6 +86,8 @@ export async function buildInsightSurface({
   includeKnowledgeInsight = false,
   knowledgeInsightDate,
   knowledgeHistory = { recentlyShownPatternKeys: [], recentlyShownCopyHashes: [] },
+  insightFeedbackProfile = null,
+  insightMemoryProfile = null,
 }: BuildInsightSurfaceOptions): Promise<InsightSurfaceResult> {
   const chartId = await resolveChartId(inputChartId);
 
@@ -102,6 +112,7 @@ export async function buildInsightSurface({
       premiumPatternProfile: null,
       thisWeeksV2Pattern: null,
       premiumWeeklyDeepDive: [],
+      insightMemory: null,
     };
   }
 
@@ -139,6 +150,11 @@ export async function buildInsightSurface({
     ? computeSelfKnowledgeCrossRef(enrichedContext, checkIns, pipelineResult.dailyAggregates)
     : [];
   const crossRefs = refs;
+  const insightMemory = insightsEnabled ? insightMemoryProfile : null;
+  const previousPatternScores = previousPatternScoresFromInsightMemory(
+    insightMemory,
+    knowledgeInsightDate ?? `${today}T12:00:00`,
+  );
 
   const knowledgeInsightResult = insightsEnabled && includeKnowledgeInsight
     ? await runActiveKnowledgeInsights({
@@ -148,6 +164,8 @@ export async function buildInsightSurface({
         selfKnowledgeContext: enrichedContext,
         date: knowledgeInsightDate ?? `${today}T12:00:00`,
         history: knowledgeHistory,
+        feedbackProfile: insightFeedbackProfile,
+        previousPatternScores,
       })
     : {
         primaryInsight: null,
@@ -210,5 +228,6 @@ export async function buildInsightSurface({
     premiumPatternProfile,
     thisWeeksV2Pattern,
     premiumWeeklyDeepDive,
+    insightMemory,
   };
 }

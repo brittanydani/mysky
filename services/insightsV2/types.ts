@@ -1,4 +1,5 @@
 import type { FeelingSetKey } from './feelingSets';
+import type { InsightFeedbackProfile } from './feedback/insightOutcomeFeedback';
 
 /**
  * MySky Insights V2
@@ -80,6 +81,33 @@ export type SignalRole =
   | 'resource_context';
 
 export type PatternConfidence = 'emerging' | 'moderate' | 'strong' | 'veryStrong';
+
+export type PatternType =
+  | 'highTracking'
+  | 'lowAccess'
+  | 'pushPull'
+  | 'delayedActivation';
+
+export type InsightCandidateSurface =
+  | 'today'
+  | 'patterns'
+  | 'weeklyDeepDive'
+  | 'thisWeek';
+
+export interface InsightCandidate {
+  majorDomain: string;
+  theoryLens: string[];
+  subcategory: string;
+  category: InsightCategory;
+  patternTypeScores: Record<PatternType, number>;
+  selectedPatternType: PatternType;
+  anchors: string[];
+  signalTypes: string[];
+  strength: number;
+  confidence: number;
+  sources: InsightDataSource[];
+  surfaces: InsightCandidateSurface[];
+}
 
 export type PatternMovement =
   | 'new'
@@ -1122,6 +1150,19 @@ export interface GeneratedInsight {
   surface: InsightSurface;
   title: string;
   body: string;
+  paragraphId?: string;
+  category?: InsightCategory;
+  writerShape?: string;
+  patternType?: PatternType;
+  majorDomain?: string;
+  theoryLens?: readonly string[];
+  insightSubcategory?: string;
+  paragraphTone?: string;
+  paragraphIntensity?: string;
+  paragraphSource?: string;
+  isCuratedParagraph?: boolean;
+  sentenceCount?: number;
+  hasPracticalPrompt?: boolean;
   reframe: string;
   reflectionPrompt?: string;
   patternKey: string;
@@ -1309,6 +1350,7 @@ export interface BuildTodayInsightsArgs {
   rawInputs: InsightRawInputs;
   history?: InsightHistoryItem[];
   previousPatternScores?: ArchivePatternScore[];
+  feedbackProfile?: InsightFeedbackProfile | null;
 }
 
 export interface BuildTodayInsightsResult {

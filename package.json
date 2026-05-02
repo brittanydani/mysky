@@ -25,6 +25,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --config jest.coverage.config.js --runInBand",
     "typecheck": "tsc --noEmit",
+    "insights:generate": "python3 scripts/generateInsightParagraphLibrary.py",
+    "insights:validate": "python3 scripts/validateInsightParagraphLibrary.py",
+    "insights:sweep": "! grep -R \"This is clear enough to track now\\|The pattern is clear now\\|This does not read as\\|It reads as\\|Seen across\\|Detected in\\|Based on\\|The user\" services/insights/generatedInsightParagraphs.ts services/insightsV2/adapters services/insightsV2/buildTodayInsights.ts components/KnowledgeInsightCard.tsx 'app/(tabs)/patterns.tsx' --exclude-dir=node_modules --exclude-dir=coverage",
+    "insights:check": "npm run insights:validate && npx tsc --noEmit",
     "postinstall": "patch-package",
     "android": "expo run:android"
   },

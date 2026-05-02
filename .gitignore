@@ -73,6 +73,8 @@ dist/
 # Reusable insight generation tooling
 !scripts/
 scripts/*
+!scripts/generateInsightParagraphLibrary.py
+!scripts/validateInsightParagraphLibrary.py
 !scripts/insights/
 scripts/insights/*
 !scripts/insights/generate_weighted_insights.py

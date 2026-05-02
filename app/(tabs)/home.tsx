@@ -73,6 +73,15 @@ import {
   getInsightHistory,
   recordInsight,
 } from '../../services/insights/insightHistory';
+import {
+  getInsightFeedbackProfile,
+  recordGeneratedInsightOutcome,
+} from '../../services/insightsV2/feedback/insightOutcomeFeedback';
+import {
+  getInsightMemoryProfile,
+  insightMemorySnapshotFromGeneratedInsight,
+  recordInsightMemorySnapshots,
+} from '../../services/insightsV2/memory/insightMemory';
 import { type GeneratedInsight } from '../../services/insights/types/knowledgeEngine';
 import { KnowledgeInsightCard } from '../../components/KnowledgeInsightCard';
 
@@ -282,9 +291,11 @@ export default function HomeScreen() {
           // Hydrate data in parallel — checkins, sleep, and self-knowledge are independent
           try {
             const todayKey = getLogicalToday();
-            const [moodInsightPref, knowledgeHistory] = await Promise.all([
+            const [moodInsightPref, knowledgeHistory, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
               getUserPreference<string | null>('pref_mood_insights', null).catch(() => null),
               getInsightHistory(),
+              getInsightFeedbackProfile().catch(() => null),
+              getInsightMemoryProfile().catch(() => null),
             ]);
             const moodInsightsEnabled = moodInsightPref !== '0';
             const nowForInsights = `${todayKey}T12:00:00`;
@@ -296,6 +307,8 @@ export default function HomeScreen() {
               includeKnowledgeInsight: moodInsightsEnabled,
               knowledgeInsightDate: nowForInsights,
               knowledgeHistory: historyInput,
+              insightFeedbackProfile,
+              insightMemoryProfile,
             });
             if (!isScreenActiveRef.current) return;
 
@@ -320,6 +333,21 @@ export default function HomeScreen() {
                   recordInsight(insight).catch((err) => {
                     logger.warn('[Home] Failed to record knowledge insight history:', err);
                   });
+                  recordGeneratedInsightOutcome(insight, 'shown', { surface: 'today' }).catch((err) => {
+                    logger.warn('[Home] Failed to record insight outcome:', err);
+                  });
+                });
+                recordInsightMemorySnapshots(
+                  shownKnowledgeInsights.map((insight, index) =>
+                    insightMemorySnapshotFromGeneratedInsight(insight, {
+                      surface: 'today',
+                      rank: index,
+                      observedAt: nowForInsights,
+                    }),
+                  ),
+                  nowForInsights,
+                ).catch((err) => {
+                  logger.warn('[Home] Failed to record insight memory:', err);
                 });
               }
             } else {

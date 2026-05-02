@@ -7,6 +7,15 @@ export type PatternLibraryItem = {
   conceptFingerprint?: PatternConceptFingerprint;
   concept?: PatternConcept;
   fingerprint?: string;
+  paragraphId?: string;
+  writerShape?: string;
+  patternType?: string;
+  paragraphTone?: string;
+  paragraphIntensity?: string;
+  majorDomain?: string;
+  insightSubcategory?: string;
+  paragraphSource?: string;
+  isCuratedParagraph?: boolean;
   score?: number;
   patternKey?: string;
   category?: string;

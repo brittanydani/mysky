@@ -27,23 +27,70 @@ function readsLikeCompleteSentence(text: string): boolean {
   return /^[A-Z]/.test(trimmed) && /[.!?]$/.test(trimmed);
 }
 
+function lowerFirst(text: string): string {
+  if (!text) return '';
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+function capitalizeFirst(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+  return `${trimmed.charAt(0).toUpperCase()}${trimmed.slice(1)}`;
+}
+
+function stripShamePrefix(text: string): string {
+  return stripTerminalPunctuation(text)
+    .replace(/^this does not read as\s+/i, '')
+    .replace(/^this is not\s+/i, '')
+    .trim();
+}
+
+function stripClarityPrefix(text: string): string {
+  return stripTerminalPunctuation(text)
+    .replace(/^it reads as\s+/i, '')
+    .replace(/^this reads as\s+/i, '')
+    .trim();
+}
+
+function claritySentence(text: string): string {
+  const clarity = stripClarityPrefix(text);
+  if (!clarity) return '';
+  if (readsLikeCompleteSentence(text) && !/^it reads as\b/i.test(text)) {
+    return ensureSentence(text);
+  }
+  if (/^(this|it|you|your)\b/i.test(clarity)) {
+    return ensureSentence(clarity);
+  }
+  const gerund = clarity.match(/^(.+?)\s+(becoming|asking|speaking|recognizing|learning|trying|holding|making|finding|protecting|showing|tracking|searching|moving|looking|giving)\b(.+)$/i);
+  if (gerund) {
+    const [, subject, verb, rest] = gerund;
+    return ensureSentence(`${capitalizeFirst(subject)} is ${verb.toLowerCase()}${rest}`);
+  }
+  return ensureSentence(`This is ${lowerFirst(clarity)}`);
+}
+
+function inlineClarity(text: string): string {
+  return lowerFirst(stripClarityPrefix(text))
+    .replace(/^(it|this)\s+is\s+/i, '');
+}
+
 export function buildReframeText(reframe: GeneratedInsight['reframe']): string {
   const shameText = reframe.shame.trim();
   const clarityText = reframe.clarity.trim();
-  const shameSentence = !shameText
-    ? ''
-    : /^this does not read as\b/i.test(shameText)
-      ? ensureSentence(shameText)
-      : `This does not read as ${stripTerminalPunctuation(shameText)}.`;
-  const claritySentence = !clarityText
-    ? ''
-    : /^it reads as\b/i.test(clarityText)
-      ? ensureSentence(clarityText)
-      : readsLikeCompleteSentence(clarityText)
-        ? ensureSentence(clarityText)
-      : `It reads as ${stripTerminalPunctuation(clarityText)}.`;
+  const shame = stripShamePrefix(shameText);
+  const clarity = claritySentence(clarityText);
 
-  return [shameSentence, claritySentence].filter(Boolean).join(' ');
+  if (!shame) return clarity;
+  if (!clarity) return ensureSentence(`This is not ${shame}`);
+
+  const variant = (shame.length + clarityText.length) % 3;
+  if (variant === 0) {
+    return `This is not ${shame}. ${clarity}`;
+  }
+  if (variant === 1) {
+    return clarity;
+  }
+  return ensureSentence(`The cleaner read: ${inlineClarity(clarityText)}`);
 }
 
 export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insight }) => {

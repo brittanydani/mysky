@@ -123,6 +123,19 @@ export interface GeneratedInsight {
   title: string;
   observation: string;
   pattern: string;
+  paragraphId?: string;
+  category?: string;
+  writerShape?: string;
+  patternType?: string;
+  majorDomain?: string;
+  theoryLens?: readonly string[];
+  insightSubcategory?: string;
+  paragraphTone?: string;
+  paragraphIntensity?: string;
+  paragraphSource?: string;
+  isCuratedParagraph?: boolean;
+  sentenceCount?: number;
+  hasPracticalPrompt?: boolean;
   reframe: {
     shame: string;
     clarity: string;

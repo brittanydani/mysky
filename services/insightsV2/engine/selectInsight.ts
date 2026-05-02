@@ -10,8 +10,9 @@ import type {
 import { ARCHIVE_PATTERNS } from '../patternPacks';
 import { DAILY_ANGLES } from '../anglePacks';
 import { checkInsightFreshness } from '../insightFreshness';
+import { isArchivePatternAllowedOnSurface } from '../insightSurfacePolicy';
 
-export type InsightCandidate = {
+export type FreshInsightCandidate = {
   pattern: ArchivePattern;
   patternScore: ArchivePatternScore;
   angle: DailyAngle;
@@ -28,10 +29,12 @@ export function selectFreshInsight(
   context: DailyInsightContext,
   slot: InsightSlot,
   surface: InsightSurface,
-): InsightCandidate | null {
-  const candidates: InsightCandidate[] = [];
+): FreshInsightCandidate | null {
+  const candidates: FreshInsightCandidate[] = [];
 
   for (const pattern of ARCHIVE_PATTERNS) {
+    if (surface === 'today' && !isArchivePatternAllowedOnSurface(pattern, 'today')) continue;
+
     const patternScore = context.archivePatterns.find(p => p.patternKey === pattern.key);
     // Be lenient for tests or specific patterns
     const minScore = pattern.minScore ?? 0.55; 

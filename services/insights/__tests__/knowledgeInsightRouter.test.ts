@@ -7,6 +7,30 @@ import type { SelfKnowledgeContext } from '../selfKnowledgeContext';
 import type { DailyCheckIn } from '../../patterns/types';
 import type { JournalEntry, SleepEntry } from '../../storage/models';
 
+const paragraphKey = (text: string): string => (
+  text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim()
+);
+
+function visibleParagraphBodies(result: Awaited<ReturnType<typeof runActiveKnowledgeInsights>>): string[] {
+  return [
+    ...result.dailyInsights.map(insight => `${insight.observation} ${insight.pattern}`.trim()),
+    ...result.premiumPatterns.map(pattern => pattern.body),
+    ...result.premiumWeeklyDeepDive
+      .filter(read => !read.isEmptyState)
+      .map(read => read.body),
+    ...(result.thisWeeksV2Pattern && !result.thisWeeksV2Pattern.isEmptyState
+      ? [result.thisWeeksV2Pattern.body]
+      : []),
+    ...(result.premiumPatternProfile
+      ? [
+        result.premiumPatternProfile.portrait,
+        ...result.premiumPatternProfile.sections.map(section => section.body),
+        result.premiumPatternProfile.growthOrRecovery?.body ?? '',
+      ]
+      : []),
+  ].filter(body => body.trim().length > 0);
+}
+
 describe('knowledgeInsightRouter', () => {
   const now = '2026-04-24T12:00:00Z';
   const today = '2026-04-24';
@@ -165,6 +189,8 @@ describe('knowledgeInsightRouter', () => {
     if (result.thisWeeksV2Pattern && !result.thisWeeksV2Pattern.isEmptyState) {
       expect(todayPatternKeys.has(result.thisWeeksV2Pattern.patternKey)).toBe(false);
     }
+    const paragraphKeys = visibleParagraphBodies(result).map(paragraphKey);
+    expect(new Set(paragraphKeys).size).toBe(paragraphKeys.length);
     if (result.dailyInsights.some(insight => insight.slot === 'primaryPersona')) {
       expect(result.premiumPersonaProfile).toBeNull();
     }

@@ -10,26 +10,22 @@ import { KnowledgeInsightCard, buildReframeText } from '../KnowledgeInsightCard'
 import type { GeneratedInsight } from '../../services/insights/types/knowledgeEngine';
 
 describe('buildReframeText', () => {
-  it('does not duplicate complete reframe sentences', () => {
+  it('does not preserve old complete reframe scaffolding', () => {
     expect(
       buildReframeText({
         shame: 'This does not read as being needy.',
         clarity: 'It reads as a generous heart learning that its own needs are valid too.',
       }),
-    ).toBe(
-      'This does not read as being needy. It reads as a generous heart learning that its own needs are valid too.',
-    );
+    ).toBe('A generous heart is learning that its own needs are valid too.');
   });
 
-  it('formats fragment reframe values', () => {
+  it('formats fragment reframe values without it-reads-as framing', () => {
     expect(
       buildReframeText({
         shame: 'being needy.',
         clarity: 'a generous heart learning that its own needs are valid too.',
       }),
-    ).toBe(
-      'This does not read as being needy. It reads as a generous heart learning that its own needs are valid too.',
-    );
+    ).toBe('A generous heart is learning that its own needs are valid too.');
   });
 
   it('does not force full V2 clarity sentences into an it-reads-as frame', () => {

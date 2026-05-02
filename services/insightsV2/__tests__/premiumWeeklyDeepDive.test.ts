@@ -10,21 +10,23 @@ import type { ArchivePatternScore } from '../types';
 
 const item = (overrides: Partial<PremiumPatternItem>): PremiumPatternItem => ({
   title: 'Invisible Load',
-  body: [
-    'Mental and emotional responsibility is showing up even when there is not a visible task attached to it.',
-    'This repeats enough to belong in the map. There is enough consistency to name it.',
-    'This does not read as I should be able to handle this. It reads as the cost of carrying things that are hard for others to see.',
-    'Seen across journal entries and body maps over roughly 30 days.',
-  ].join('\n\n'),
+  body:
+    'The pattern around care and responsibility carries a direct message here: you notice what needs holding before you notice whether it should be yours. It tends to get loud when care turns into responsibility, before anyone names how much weight has entered the moment. The pressure in that moment points to private load becoming visible, not to a personal defect. The weight is not proof that you care too much; it shows how quickly care can become private labor. Let capacity and support enter before the loose end lands entirely in your hands.',
   lens: 'protective_patterns',
   concept: 'protective_behavior',
+  writerShape: 'punch',
+  paragraphId: 'responsibilityCare_punch_001',
+  weeklyParagraphId: 'responsibilityCare_weekly_001',
+  weeklyBody:
+    'This week, care and responsibility seems to be organizing more than one moment. It may show up when care turns into responsibility, before anyone names how much weight has entered the moment. The important signal is not the event by itself; it is how quickly you notice what needs holding before you notice whether it should be yours. The weight is not proof that you care too much; it shows how quickly care can become private labor.\n\nCarry this into next week as a capacity question before it becomes a character question. Notice what would change when support feels uncertain, especially around shared load. The next useful response is shared support, not another demand to make the signal disappear. Let capacity and support enter before the loose end lands entirely in your hands.',
+  specificityAnchor: 'when you are holding more than the visible task',
   fingerprint: 'v2:responsibilityCare_invisibleLoad',
   score: 92,
   patternKey: 'responsibilityCare_invisibleLoad',
   category: 'responsibilityCare',
   confidence: 'strong',
   movement: 'repeating',
-  evidenceSummary: 'Seen across journal entries and body maps over roughly 30 days.',
+  evidenceSummary: 'It has repeated for roughly 30 days, especially in journaling and body check-ins.',
   sourceCoverage: ['journal entries', 'body maps'],
   lastSeenAt: '2026-04-24',
   observedAcrossDays: 30,
@@ -106,7 +108,11 @@ describe('selectPremiumWeeklyDeepDive', () => {
     expect(copy).not.toMatch(/High-value read|Insight type|Priority|Evidence:|debug|score/i);
     expect(copy).not.toMatch(/evidence is .*clear read|evidence is .*clear enough|evidence is .*take seriously/i);
     expect(copy).not.toMatch(/Your archive|MySky is noticing|MySky is seeing|The data suggests|This pattern indicates/i);
-    expect(read.whyItMayMatter).toContain('recovery');
+    expect(copy).not.toMatch(/This does not read as|It reads as|Seen across/i);
+    expect(read.body).not.toContain('This week, the signal gathered');
+    expect(read.body).not.toContain('The point is not');
+    expect(read.body.split('\n\n')).toHaveLength(2);
+    expect(read.whyItMayMatter).toContain('Recovery');
     expect(read.reflectionPrompt).toContain('helped');
   });
 
@@ -124,6 +130,10 @@ describe('selectPremiumWeeklyDeepDive', () => {
         title: 'Early Rhythm Thread',
         patternKey: 'timeRhythms_timingAsData',
         category: 'timeRhythms',
+        body:
+          'When the day has no margin, the pressure starts before anything is actually late. You move ahead in your mind, trying to keep the next thing from catching you off guard. That response makes sense when too much has been fitting into too little room. It can help you stay prepared, but it also keeps your body from ever fully arriving. The pace itself becomes part of what needs care.',
+        weeklyBody:
+          'This week, time and rhythm may be asking for a more honest amount of space. During rushed transitions, you may feel your mind moving ahead before the current moment has finished. That does not mean you are failing at discipline. It means the shape of the day may be asking for more room than it has been given.\n\nThe useful question is not how to force more into the same space. Start with the place where the day begins to compress. A little more margin there may change more than another push for speed. The pressure may not need more force.',
         confidence: 'emerging',
         movement: 'new',
         score: 18,
@@ -133,8 +143,9 @@ describe('selectPremiumWeeklyDeepDive', () => {
     expect(reads).toHaveLength(2);
     expect(reads.every(read => read.isV2Derived)).toBe(true);
     expect(reads.every(read => read.isLowConfidenceFallback)).toBe(true);
-    expect(reads[0].body).toContain('light signal');
-    expect(reads[0].reframe).toContain('not a conclusion yet');
+    expect(reads[0].body.split('\n\n').length).toBeGreaterThanOrEqual(2);
+    expect(reads[0].body).not.toContain('light signal');
+    expect(reads[0].reframe).toContain('possible thread');
   });
 
   it('returns a polished V2 low-data empty state when no V2 patterns exist', () => {
@@ -166,6 +177,36 @@ describe('selectPremiumWeeklyDeepDive', () => {
     const weeklyCandidates = adaptWeeklyPremiumPatternCandidates([lowScore]);
     expect(weeklyCandidates).toHaveLength(1);
     expect(weeklyCandidates[0].patternKey).toBe('responsibilityCare_invisibleLoad');
+  });
+
+  it('does not adapt dream-only scores into Weekly or This Week pattern reads', () => {
+    const dreamScore: ArchivePatternScore = {
+      patternKey: 'dreams_001_unfinished_processing',
+      title: 'When Dreams Continue the Conversation',
+      category: 'dreamsSymbols',
+      score: 0.9,
+      confidence: 'veryStrong',
+      movement: 'repeating',
+      timeframeDays: 90,
+      sources: ['dream'],
+      evidence: [
+        {
+          source: 'dream',
+          date: '2026-04-24',
+          label: 'Dream',
+          signal: 'dream_unfinished_processing',
+          strength: 0.9,
+        },
+      ],
+      lastSeenAt: '2026-04-24',
+    };
+
+    expect(adaptWeeklyPremiumPatternCandidates([dreamScore])).toHaveLength(0);
+
+    const selected = selectThisWeeksV2Pattern([dreamScore], [], []);
+
+    expect(selected.isEmptyState).toBe(true);
+    expect(selected.category).not.toBe('dreamsSymbols');
   });
 
   it("selects This Week's Pattern from V2 patterns when available", () => {
@@ -248,8 +289,9 @@ describe('selectPremiumWeeklyDeepDive', () => {
 
     expect(selected.patternKey).toBe('responsibilityCare_invisibleLoad');
     expect(selected.isLowConfidenceFallback).toBe(true);
-    expect(selected.body).toContain('early thread');
-    expect(selected.reframe).toContain('emerging signal');
+    expect(selected.body).toMatch(/care|responsibility|support|load|held|weight|pick it up/i);
+    expect(selected.body).not.toContain('early thread');
+    expect(selected.reframe).toContain('stay spacious');
   });
 
   it("uses a V2 low-data empty state for This Week's Pattern when no V2 patterns exist", () => {
@@ -316,12 +358,12 @@ describe('selectPremiumWeeklyDeepDive', () => {
     expect(profile.sections.length).toBeLessThanOrEqual(3);
     expect(new Set(profile.sections.map(section => section.title)).size).toBe(profile.sections.length);
     expect(profile.growthOrRecovery?.title).toBe('What Helps You Soften');
-    expect(profile.portrait).toContain('You often sense the weight of a situation before other people realize there is anything to hold');
-    expect(profile.portrait).toContain('When something feels unfinished, tense, or uncertain, your system moves into readiness');
-    expect(profile.portrait).toContain('This is not just worry or overthinking');
-    expect(profile.portrait).toContain('old form of protection');
-    expect(profile.portrait).toContain('The cost is that you may stay prepared for weight that should not have to fall on you');
-    expect(profile.portrait).toContain('repair is possible, support is real, and the heaviness is not yours to carry alone');
+    expect(profile.rootPattern?.id).toBe('catchDisconnectionBeforeItHappens');
+    expect(profile.portrait).toContain('Several patterns seem to gather around the same protective move');
+    expect(profile.portrait).toContain('trying to catch disconnection before it happens');
+    expect(profile.rootPattern?.protects).toContain('stay close');
+    expect(profile.rootPattern?.costs).toContain('neutral moments');
+    expect(profile.rootPattern?.softens).toContain('repair has a real path back');
     expect(profile.portrait).not.toContain('Right now, the clearest shape is around');
     expect(profile.portrait).not.toMatch(/clearest shape is around|give this profile|gives this profile/i);
     expect(profile.portrait).not.toMatch(/invisible responsibility.*relief.*bracing/i);
@@ -342,14 +384,83 @@ describe('selectPremiumWeeklyDeepDive', () => {
       profile.reflectionPrompt,
     ].join(' ');
 
-    expect(copy).toContain('There is a clear pattern around invisible load');
-    expect(copy).toContain('Tone, repair, support, distance, and being understood carry real weight for you');
-    expect(copy).toContain('For you, this is the cost of carrying things that are hard for others to see');
-    expect(copy).toContain('It has shown up across relationship reflections and journal entries');
+    expect(copy).toContain('With invisible load');
+    expect(copy).toContain('Tone, repair, support, distance, and being understood are not background details for you');
+    expect(copy).toContain('This is the cost of carrying things that are hard for others to see');
+    expect(copy).toContain('Watch for it when you are holding more than the visible task');
+    expect(copy).not.toMatch(/It has repeated for roughly|Seen across|body maps|trigger logs/i);
     expect(copy).not.toContain('The strongest threads right now are');
     expect(copy).not.toMatch(/Dreams and symbols carry emotional residue|Capacity has a rhythm|Boundaries and self-trust/i);
     expect(profile.sections.every(section => /\byou\b|\byour\b|\byour system\b|For you\b/i.test(section.body))).toBe(true);
     expect(copy).not.toMatch(/Your archive|MySky noticed|MySky is noticing|The data suggests|This pattern indicates|This may point to/i);
+  });
+
+  it('adds a root-pattern layer when several visible patterns share a protective move', () => {
+    const profile = selectPremiumPatternProfile([
+      item({
+        title: 'Tone Shift Sensitivity',
+        patternKey: 'relationships_toneShiftSensitivity',
+        category: 'relationships',
+        archiveSectionTitle: 'Relationships',
+        score: 96,
+        confidence: 'veryStrong',
+        relatedSignals: ['tone_sensitivity', 'repair_need', 'sharp_connection_awareness'],
+        sourceCoverage: ['relationship reflections', 'trigger logs'],
+      }),
+      item({
+        title: 'Over-Explaining',
+        patternKey: 'communicationVoice_overExplaining',
+        category: 'communicationVoice',
+        archiveSectionTitle: 'Communication',
+        score: 92,
+        confidence: 'strong',
+        relatedSignals: ['overexplaining', 'more_explanation_connection', 'contained_until_understood'],
+        sourceCoverage: ['journal entries', 'relationship reflections'],
+      }),
+      item({
+        title: 'Body Bracing',
+        patternKey: 'bodySignals_bracing',
+        category: 'bodySignals',
+        archiveSectionTitle: 'Body Signals',
+        score: 88,
+        confidence: 'strong',
+        relatedSignals: ['body_signal_interpretation', 'calm_bracing', 'chest_pressure'],
+        sourceCoverage: ['body maps', 'trigger logs'],
+      }),
+      item({
+        title: 'Receiving Support',
+        patternKey: 'selfWorthReceiving_support',
+        category: 'selfWorthReceiving',
+        archiveSectionTitle: 'Receiving Support',
+        patternType: 'pushPull',
+        score: 84,
+        confidence: 'strong',
+        relatedSignals: ['support_need', 'receiving_care_difficulty', 'support_reaches_inside'],
+        sourceCoverage: ['reflection answers', 'relationship reflections'],
+      }),
+    ]);
+
+    expect(profile.rootPattern?.id).toBe('catchDisconnectionBeforeItHappens');
+    expect(profile.subtitle).toContain('protective move underneath several patterns');
+    expect(profile.portrait).toContain('Several patterns seem to gather around the same protective move');
+    expect(profile.portrait).toContain('trying to catch disconnection before it happens');
+    expect(profile.rootPattern?.protects).toContain('stay close');
+    expect(profile.rootPattern?.costs).toContain('neutral moments');
+    expect(profile.rootPattern?.softens).toContain('repair has a real path back');
+    expect(profile.areaLabels).toContain('Catching disconnection before it happens');
+    expect(profile.sourcePatternKeys).toEqual(expect.arrayContaining([
+      'relationships_toneShiftSensitivity',
+      'communicationVoice_overExplaining',
+      'bodySignals_bracing',
+    ]));
+
+    const copy = [
+      profile.portrait,
+      profile.rootPattern?.protects ?? '',
+      profile.rootPattern?.costs ?? '',
+      profile.rootPattern?.softens ?? '',
+    ].join(' ');
+    expect(copy).not.toMatch(/attachment theory|repair\/rupture|the user|based on|detected in|seen across/i);
   });
 
   it('returns a polished low-data Pattern Profile when prominent areas are not ready', () => {

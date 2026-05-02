@@ -1,6 +1,10 @@
 import { adaptPremiumPatterns } from '../adapters/premiumPatterns';
 import type { ArchivePatternScore } from '../types';
 
+const sentenceCount = (text: string): number => (
+  text.match(/[.!?](?=\s|$)/g)?.length ?? 0
+);
+
 const baseScore = (overrides: Partial<ArchivePatternScore>): ArchivePatternScore => ({
   patternKey: 'responsibilityCare_invisibleLoad',
   title: 'Invisible Load',
@@ -42,9 +46,22 @@ describe('adaptPremiumPatterns', () => {
     expect(items[0].patternKey).toBe('responsibilityCare_invisibleLoad');
     expect(items[0].isV2Derived).toBe(true);
     expect(items[0].librarySectionTitle).toBe('Responsibility & Care');
-    expect(items[0].body).toContain('This does not read as');
-    expect(items[0].body).toContain('Seen across journal entries and body maps');
+    expect(items[0].paragraphId).toMatch(/^moralResponsibilityFairness_responsibilityQuestion_/);
+    expect(items[0].weeklyParagraphId).toMatch(/^responsibilityCare_weekly_/);
+    expect([4, 5]).toContain(sentenceCount(items[0].body));
+    expect(items[0].body).toMatch(/care|responsibility|support|load|held|weight|pick it up/i);
+    expect(items[0].body.split(/\n{2,}/)).toHaveLength(1);
     expect(items[0].body).not.toContain('Naomi');
+    expect(items[0].body).not.toContain('journal');
+    expect(items[0].body).not.toContain('bodyMap');
+    expect(items[0].body).not.toContain('This does not read as');
+    expect(items[0].body).not.toContain('It reads as');
+    expect(items[0].body).not.toContain('Seen across');
+    expect(items[0].body).not.toContain('Detected in');
+    expect(items[0].body).not.toContain('Based on');
+    expect(items[0].body).not.toMatch(/\bthe user\b/i);
+    expect(items[0].evidenceSummary).toContain('It has repeated for roughly 30 days');
+    expect(items[0].evidenceSummary).toContain('journaling and body check-ins');
   });
 
   it('dedupes duplicate V2 pattern keys and ignores weak scores', () => {
@@ -64,5 +81,38 @@ describe('adaptPremiumPatterns', () => {
     expect(items).toHaveLength(1);
     expect(items[0].patternKey).toBe('responsibilityCare_invisibleLoad');
     expect(items.some(item => item.patternKey === 'unknown')).toBe(false);
+  });
+
+  it('excludes dream paragraph patterns from the pattern screen engine', () => {
+    const dreamScore: ArchivePatternScore = {
+      patternKey: 'dreams_001_unfinished_processing',
+      title: 'When Dreams Continue the Conversation',
+      category: 'dreamsSymbols',
+      score: 0.9,
+      confidence: 'veryStrong',
+      movement: 'repeating',
+      timeframeDays: 90,
+      sources: ['dream'],
+      evidence: [
+        {
+          source: 'dream',
+          date: '2026-04-24',
+          label: 'Dream',
+          signal: 'dream_unfinished_processing',
+          strength: 0.9,
+        },
+      ],
+      lastSeenAt: '2026-04-24',
+    };
+
+    const items = adaptPremiumPatterns([
+      dreamScore,
+      baseScore({}),
+    ]);
+
+    expect(items).toHaveLength(1);
+    expect(items[0].category).toBe('responsibilityCare');
+    expect(items.some(item => item.category === 'dreamsSymbols')).toBe(false);
+    expect(items.some(item => item.paragraphId?.startsWith('dreamsSymbols_'))).toBe(false);
   });
 });

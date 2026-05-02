@@ -1,9 +1,39 @@
 import { ARCHIVE_PATTERNS } from '../patternPacks';
+import {
+  patternParagraphBodyKey,
+  type PatternParagraphVariant,
+  type PatternParagraphIntensity,
+  type PatternParagraphTone,
+  type PremiumPatternType,
+  type PremiumPatternWriterShape,
+} from './premiumPatternParagraphLibrary';
+import {
+  buildPatternSearchText,
+  selectArchivePatternParagraph,
+  selectArchiveWeeklyPatternParagraph,
+} from '../engine/patternParagraphSelection';
+import {
+  isArchivePatternAllowedOnSurface,
+  isInsightCategoryAllowedOnSurface,
+  isPatternScoreAllowedOnSurface,
+  sanitizePatternScoreForSurface,
+} from '../insightSurfacePolicy';
+import {
+  archivePatternScoreToInsightCandidate,
+  isCandidateAllowedOnSurface,
+} from '../candidates/insightCandidates';
+import type { InsightFeedbackProfile } from '../feedback/insightOutcomeFeedback';
+import {
+  selectRootPatternConstellation,
+  type RootPatternConstellation,
+  type RootPatternEvidence,
+} from '../rootPatterns/rootPatternDetection';
 import type {
   ArchivePattern,
   ArchivePatternScore,
   EvidenceAnchor,
   InsightCategory,
+  InsightDataSource,
   PatternConfidence,
   PatternMovement,
   SignalKey,
@@ -37,6 +67,21 @@ export interface PremiumPatternItem {
   body: string;
   lens?: PremiumPatternLens;
   concept?: PremiumPatternConcept;
+  writerShape?: PremiumPatternWriterShape;
+  patternType?: PremiumPatternType;
+  paragraphTone?: PatternParagraphTone;
+  paragraphIntensity?: PatternParagraphIntensity;
+  majorDomain?: string;
+  theoryLens?: readonly string[];
+  insightSubcategory?: string;
+  isCuratedParagraph?: boolean;
+  paragraphSource?: PatternParagraphVariant['source'];
+  paragraphId?: string;
+  weeklyParagraphId?: string;
+  weeklyBody?: string;
+  specificityAnchor?: string;
+  matchedAnchors?: string[];
+  matchedSignals?: string[];
   fingerprint?: string;
   score?: number;
   patternKey: string;
@@ -101,6 +146,7 @@ export interface PremiumPatternProfile {
   title: string;
   subtitle: string;
   portrait: string;
+  rootPattern?: RootPatternConstellation;
   sections: PremiumPatternProfileSection[];
   growthOrRecovery?: {
     title: string;
@@ -116,6 +162,19 @@ export interface PremiumPatternProfile {
 interface AdaptPremiumPatternsOptions {
   includeLowConfidence?: boolean;
   maxItems?: number;
+  surface?: 'patterns' | 'weeklyDeepDive' | 'thisWeek';
+  excludeParagraphIds?: string[];
+  excludeBodyKeys?: string[];
+  feedbackProfile?: InsightFeedbackProfile | null;
+}
+
+interface SelectPremiumWeeklyDeepDiveOptions {
+  excludeBodyKeys?: string[];
+}
+
+interface SelectThisWeeksV2PatternOptions {
+  avoidPatternKeys?: string[];
+  excludeBodyKeys?: string[];
 }
 
 const MIN_PREMIUM_PATTERN_SCORE = 0.5;
@@ -128,12 +187,12 @@ const MAX_PROFILE_PATTERN_AREAS = 3;
 
 const SOURCE_LABELS: Partial<Record<EvidenceAnchor['source'], string>> = {
   dailyCheckIn: 'daily check-ins',
-  journal: 'journal entries',
-  dream: 'dream material',
-  sleep: 'sleep logs',
-  triggerLog: 'trigger logs',
-  glimmerLog: 'glimmer logs',
-  bodyMap: 'body maps',
+  journal: 'journaling',
+  dream: 'dream notes',
+  sleep: 'sleep tracking',
+  triggerLog: 'trigger moments',
+  glimmerLog: 'glimmer notes',
+  bodyMap: 'body check-ins',
   relationshipMirror: 'relationship reflections',
   natalChart: 'natal chart themes',
   reflectionBank: 'reflection answers',
@@ -225,25 +284,25 @@ const CATEGORY_CONCEPT: Record<InsightCategory, PremiumPatternConcept> = {
 
 const WHY_IT_MAY_MATTER: Record<PremiumPatternConcept, string> = {
   core_synthesis:
-    'This matters because it is organizing more than one part of your week. A core pattern becomes useful when you can recognize it before it decides the whole moment for you.',
+    'When one thread organizes several parts of your week, naming it earlier gives you more choice before it decides the whole moment for you.',
   body_awareness:
-    'This matters because your body gives information before your thoughts have finished explaining it. The signal is not an enemy; it is an early doorway into regulation.',
+    'Your body often gives information before your thoughts finish explaining it. The signal is not the enemy; it is an early doorway into regulation.',
   protective_behavior:
-    'This matters because protective patterns often begin as care, survival, or responsibility. Seeing the protection clearly gives you more choice about when it helps and when it starts costing too much.',
+    'Protection often begins as care, survival, or responsibility. Seeing the protection clearly gives you more choice about when it helps and when it starts costing too much.',
   relational_dynamic:
-    'This matters because connection can change your nervous system quickly. Tone, repair, distance, and support are not small details when your body is trying to decide whether closeness is safe.',
+    'Connection can change your nervous system quickly. Tone, repair, distance, and support are not small details when your body is deciding whether closeness is safe.',
   processing_style:
-    'This matters because the way you make sense of things affects how quickly you can move. Your system needs clarity, language, or a smaller next step before action feels honest.',
+    'The way you make sense of things affects how quickly you can move. Your system may need clarity, language, or one smaller next step before action feels honest.',
   emotional_theme:
-    'This matters because repeated emotion is often information, not noise. When the same feeling keeps returning, something still wants care, closure, or space.',
+    'A repeated feeling is usually information, not noise. When the same feeling keeps returning, something still wants care, closure, or space.',
   recovery_pattern:
-    'This matters because recovery is easier to protect when you know what actually helps you come back. Small relief becomes useful when it is recognizable and repeatable.',
+    'Recovery is easier to protect when you know what actually helps you come back. Small relief becomes useful when it is recognizable and repeatable.',
   dream_archive_contrast:
-    'This matters because dream material can carry emotional residue that waking life has not fully organized. It does not have to predict anything to show what your system is still processing.',
+    'Dream material can carry emotional residue waking life has not fully organized. It does not have to predict anything to show what your system is still processing.',
   values_pattern:
-    'This matters because values often show up first as friction. The discomfort helps you protect something honest, even before the next choice is fully clear.',
+    'Values often show up first as friction. The discomfort helps you protect something honest, even before the next choice is fully clear.',
   statistical_trend:
-    'This matters because rhythm is data. Repeated capacity, sleep, mood, or timing patterns help you plan with your system instead of judging it from the outside.',
+    'Rhythm is data. Repeated capacity, sleep, mood, or timing patterns help you plan with your system instead of judging it from the outside.',
 };
 
 const REFLECTION_PROMPTS: Record<PremiumPatternConcept, string> = {
@@ -277,27 +336,227 @@ function formatList(values: string[]): string {
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`;
 }
 
-function movementSentence(score: ArchivePatternScore): string {
-  if (score.movement === 'intensifying') {
-    return 'This has been louder than it was recently.';
-  }
-  if (score.movement === 'softening') {
-    return 'This is still present, and it is softening.';
-  }
-  if (score.movement === 'returning') {
-    return 'This is returning after being quieter.';
-  }
-  if (score.movement === 'repeating') {
-    return 'This repeats enough to belong in the map.';
-  }
-  return 'This is clear enough to track now.';
+function lowerFirst(text: string): string {
+  if (!text) return '';
+  return text.charAt(0).toLowerCase() + text.slice(1);
 }
 
-function confidenceSentence(confidence: PatternConfidence): string {
-  if (confidence === 'veryStrong') return 'The pattern is clear now.';
-  if (confidence === 'strong') return 'There is enough consistency to name it.';
-  if (confidence === 'moderate') return 'This is still forming, so hold it spaciously.';
-  return 'This is early, so hold it lightly.';
+function capitalizeFirst(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+function sentence(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
+function stableIndex(key: string, modulo: number): number {
+  if (modulo <= 1) return 0;
+  const total = key.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return total % modulo;
+}
+
+const USER_VERB_REPLACEMENTS: Record<string, string> = {
+  is: 'are',
+  has: 'have',
+  does: 'do',
+  appears: 'appear',
+  handles: 'handle',
+  notices: 'notice',
+  values: 'value',
+  adjusts: 'adjust',
+  communicates: 'communicate',
+  replays: 'replay',
+  continues: 'continue',
+  benefits: 'benefit',
+  tries: 'try',
+  wants: 'want',
+  prefers: 'prefer',
+  feels: 'feel',
+  recognizes: 'recognize',
+  shows: 'show',
+  places: 'place',
+  prioritizes: 'prioritize',
+  becomes: 'become',
+  learns: 'learn',
+  uses: 'use',
+  moves: 'move',
+  spends: 'spend',
+  relates: 'relate',
+  interprets: 'interpret',
+  seeks: 'seek',
+  looks: 'look',
+  reaches: 'reach',
+};
+
+function cleanUserFacingText(text: string): string {
+  const verbPattern = Object.keys(USER_VERB_REPLACEMENTS).join('|');
+  return text
+    .replace(/\bthe user(?:'|’)s\b/gi, 'your')
+    .replace(/\buser(?:'|’)s\b/gi, 'your')
+    .replace(new RegExp(`\\bthe user (${verbPattern})\\b`, 'gi'), (_match, verb: string) => (
+      `you ${USER_VERB_REPLACEMENTS[verb.toLowerCase()] ?? verb}`
+    ))
+    .replace(/\bthe user may\b/gi, 'you may')
+    .replace(/\bthe user can\b/gi, 'you can')
+    .replace(/\bthe user\b/gi, 'you')
+    .replace(/\bThe archive may show\b/g, 'This may involve')
+    .replace(/\bthe archive may show\b/gi, 'this may involve')
+    .replace(/\bThe archive shows\b/g, 'This shows')
+    .replace(/\bthe archive shows\b/gi, 'this shows')
+    .replace(/\bYour archive\b/g, 'Your recent entries')
+    .replace(/\byour archive\b/gi, 'your recent entries')
+    .replace(/\bthe archive\b/gi, 'recent entries')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function patternDescription(pattern: ArchivePattern): string {
+  return sentence(capitalizeFirst(cleanUserFacingText(pattern.description)));
+}
+
+const LIVED_MOMENT_MATCHERS: Array<{ matcher: RegExp; moment: string }> = [
+  {
+    matcher: /\b(low sleep|poor sleep|sleep mood|morning|overnight|fatigue|tired|rest quality)\b/,
+    moment: 'on low-sleep days or mornings when recovery did not fully land',
+  },
+  {
+    matcher: /\b(repair|rupture|conflict|tone|misunderstood|conversation|relationship safety|sharp connection|presence|responsiveness)\b/,
+    moment: 'after hard conversations, unclear tone, or repair that has not fully landed',
+  },
+  {
+    matcher: /\b(mental load|responsibility|invisible labor|caretaking|overfunctioning|need not assignment|emotional labor)\b/,
+    moment: 'when you are holding more than the visible task',
+  },
+  {
+    matcher: /\b(rest resistance|rest guilt|capacity|depletion|overextension|burnout|pause|recovery gap|one more thing|unfinished)\b/,
+    moment: 'when your body is asking to stop before everything feels handled',
+  },
+  {
+    matcher: /\b(chest|jaw|gut|throat|shoulder|breath|head pressure|body heaviness|somatic|body knows|body signal)\b/,
+    moment: 'before the feeling has found words',
+  },
+  {
+    matcher: /\b(dream|symbol|subconscious|image|night|sleep story)\b/,
+    moment: 'after dream material follows you into the day',
+  },
+  {
+    matcher: /\b(boundary|limit|autonomy|truth telling|say no|saying no|alignment|integrity|preference)\b/,
+    moment: 'when a no, limit, or honest preference is trying to form',
+  },
+  {
+    matcher: /\b(standard|excellence|ambition|output|productivity|progress|performance|success|work)\b/,
+    moment: 'when progress starts standing in for safety',
+  },
+  {
+    matcher: /\b(support|receiving|belonging|mutuality|scarcity|enoughness|care earned|help)\b/,
+    moment: 'when support is offered, missing, or hard to receive',
+  },
+  {
+    matcher: /\b(grief|loss|ending|longing|sadness|transition|attachment)\b/,
+    moment: 'when something meaningful feels unfinished',
+  },
+  {
+    matcher: /\b(glimmer|joy|play|beauty|relief|aliveness|laughter|pleasure)\b/,
+    moment: 'in the small moments where your body can unclench',
+  },
+  {
+    matcher: /\b(meaning|faith|purpose|sacred|values|larger questions|truth)\b/,
+    moment: 'when the practical answer is not enough to feel honest',
+  },
+  {
+    matcher: /\b(language|context|analysis|deep processing|precision|clarity|overexplaining|understood)\b/,
+    moment: 'when you are trying to make the feeling accurate enough to trust',
+  },
+];
+
+function livedMomentFromText(searchText: string): string {
+  return LIVED_MOMENT_MATCHERS.find(({ matcher }) => matcher.test(searchText))?.moment
+    ?? 'when something still feels emotionally unresolved';
+}
+
+function anchorLead(anchor: string): string {
+  return capitalizeFirst(anchor.replace(/\.$/, ''));
+}
+
+function anchoredObservation(
+  pattern: ArchivePattern,
+  score: ArchivePatternScore,
+  anchor: string,
+): string {
+  const description = lowerFirst(trimTerminalPunctuation(patternDescription(pattern)));
+  return sentence(`${anchorLead(anchor)}, ${description}`);
+}
+
+function confidentReframeText(text: string, confidence: PatternConfidence): string {
+  const trimmed = trimTerminalPunctuation(text)
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!trimmed) return '';
+
+  if (confidence === 'moderate' || confidence === 'emerging') return trimmed;
+
+  return trimmed
+    .replace(/\bThis may not be\b/gi, 'This is not')
+    .replace(/\bThis may be\b/gi, 'This is')
+    .replace(/\bIt may not be\b/gi, 'It is not')
+    .replace(/\bIt may be\b/gi, 'It is')
+    .replace(/\bmay create\b/gi, 'can create')
+    .replace(/\bmay need\b/gi, 'needs')
+    .replace(/\bmay show\b/gi, 'shows')
+    .replace(/\bmay help\b/gi, 'helps');
+}
+
+function splitSentences(text: string): string[] {
+  return text.split(/(?<=[.!?])\s+/).map(part => part.trim()).filter(Boolean);
+}
+
+function positiveTruthFragment(text: string): string {
+  const parts = splitSentences(text);
+  if (
+    parts.length > 1 &&
+    /^(this|it)\s+(?:is|may be)\s+not\b/i.test(parts[0])
+  ) {
+    return trimTerminalPunctuation(parts.slice(1).join(' '));
+  }
+  return trimTerminalPunctuation(text);
+}
+
+function personalizeTruthFragment(text: string): string {
+  let truth = cleanUserFacingText(text)
+    .replace(/^body intelligence\b/i, 'your body')
+    .replace(/\bthe body\b/gi, 'your body')
+    .replace(/\ba body\b/gi, 'your body')
+    .replace(/\bthe mind\b/gi, 'your mind')
+    .replace(/\ba mind\b/gi, 'your mind')
+    .replace(/\bthe system\b/gi, 'your system')
+    .replace(/\ba system\b/gi, 'your system')
+    .replace(/\bthe senses\b/gi, 'your senses')
+    .replace(/\bthe inner world\b/gi, 'your inner world')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const gerund = truth.match(/^(.+?)\s+(becoming|asking|speaking|recognizing|learning|trying|holding|making|finding|protecting|showing|tracking|searching|moving|looking|giving|pressing)\b(.+)$/i);
+  if (gerund) {
+    const [, subject, verb, rest] = gerund;
+    truth = `${capitalizeFirst(subject)} is ${verb.toLowerCase()}${rest}`;
+  } else if (/^(the|a|an)\s+/i.test(truth) || /^[a-z]/.test(truth)) {
+    truth = `This is ${lowerFirst(truth)}`;
+  }
+
+  return sentence(capitalizeFirst(truth));
+}
+
+function claritySentenceForPattern(
+  pattern: ArchivePattern,
+  score: ArchivePatternScore,
+): string {
+  return personalizeTruthFragment(
+    positiveTruthFragment(confidentReframeText(pattern.clarityReframe, score.confidence)),
+  );
 }
 
 function buildSourceCoverage(score: ArchivePatternScore): string[] {
@@ -309,31 +568,9 @@ function buildSourceCoverage(score: ArchivePatternScore): string[] {
 function buildEvidenceSummary(score: ArchivePatternScore): string {
   const sources = buildSourceCoverage(score).slice(0, 3);
   const sourceText = sources.length
-    ? `Seen across ${formatList(sources)}`
-    : 'Seen in recent signals';
-  return `${sourceText} over roughly ${score.timeframeDays} days.`;
-}
-
-function buildBody(
-  pattern: ArchivePattern,
-  score: ArchivePatternScore,
-): string {
-  const signalNames = unique([
-    ...pattern.requiredSignals,
-    ...pattern.supportingSignals,
-  ].map(humanizeKey)).slice(0, 3);
-  const signalSentence = signalNames.length
-    ? `It shows up around ${formatList(signalNames)}.`
-    : '';
-  const clarity = trimTerminalPunctuation(pattern.clarityReframe);
-  const shame = trimTerminalPunctuation(pattern.shameLabel);
-
-  return [
-    pattern.description,
-    `${movementSentence(score)} ${confidenceSentence(score.confidence)}`,
-    `This does not read as ${shame}. It reads as ${clarity}.`,
-    `${buildEvidenceSummary(score)}${signalSentence ? ` ${signalSentence}` : ''}`,
-  ].join('\n\n');
+    ? `especially in ${formatList(sources)}`
+    : 'in recent entries';
+  return `It has repeated for roughly ${score.timeframeDays} days, ${sourceText}.`;
 }
 
 function patternByKey(key: string): ArchivePattern | null {
@@ -355,41 +592,111 @@ export function adaptPremiumPatterns(
   patternScores: ArchivePatternScore[],
   options: AdaptPremiumPatternsOptions = {},
 ): PremiumPatternItem[] {
-  const items = patternScores
+  const sortedScores = patternScores
+    .filter(score => isPatternScoreAllowedOnSurface(score, 'patternScreen'))
+    .map(score => sanitizePatternScoreForSurface(score, 'patternScreen'))
     .filter(score => shouldIncludeScore(score, options))
-    .sort((a, b) => b.score - a.score)
-    .map((score): PremiumPatternItem | null => {
-      const pattern = patternByKey(score.patternKey);
-      if (!pattern) return null;
+    .sort((a, b) => b.score - a.score);
+  const items: PremiumPatternItem[] = [];
+  const recentParagraphIds: string[] = [];
+  const recentWeeklyParagraphIds: string[] = [];
+  const excludeParagraphIds = new Set(options.excludeParagraphIds ?? []);
+  const excludeBodyKeys = new Set(options.excludeBodyKeys ?? []);
+  const surface = options.surface ?? 'patterns';
+  const recentWriterShapes: PremiumPatternWriterShape[] = [];
+  const recentPatternTypes: PremiumPatternType[] = [];
 
-      const sourceCoverage = buildSourceCoverage(score);
-      return {
-        title: score.title,
-        body: buildBody(pattern, score),
-        lens: CATEGORY_LENS[score.category],
-        concept: CATEGORY_CONCEPT[score.category],
-        fingerprint: `v2:${score.patternKey}`,
-        score: Math.round(score.score * 100),
-        patternKey: score.patternKey,
-        category: score.category,
-        confidence: score.confidence,
-        movement: score.movement,
-        evidenceSummary: buildEvidenceSummary(score),
-        sourceCoverage,
-        lastSeenAt: score.lastSeenAt,
-        observedAcrossDays: score.timeframeDays,
-        relatedSignals: unique([
-          ...pattern.requiredSignals,
-          ...pattern.supportingSignals,
-        ]),
-        shameLabel: pattern.shameLabel,
-        clarityReframe: pattern.clarityReframe,
-        librarySectionTitle: CATEGORY_DISPLAY[score.category],
-        archiveSectionTitle: CATEGORY_DISPLAY[score.category],
-        isV2Derived: true,
-      };
-    })
-    .filter((item): item is PremiumPatternItem => !!item);
+  for (const score of sortedScores) {
+    const pattern = patternByKey(score.patternKey);
+    if (!pattern) continue;
+    if (!isArchivePatternAllowedOnSurface(pattern, 'patternScreen')) continue;
+    const insightCandidate = archivePatternScoreToInsightCandidate(pattern, score);
+    if (!isCandidateAllowedOnSurface(insightCandidate, surface)) continue;
+
+    const sourceCoverage = buildSourceCoverage(score);
+    const searchText = buildPatternSearchText(pattern, score);
+    let paragraph: ReturnType<typeof selectArchivePatternParagraph>;
+    let weeklyParagraph: ReturnType<typeof selectArchiveWeeklyPatternParagraph>;
+    try {
+      paragraph = selectArchivePatternParagraph({
+        pattern,
+        score,
+        candidate: insightCandidate,
+        surface,
+        recentParagraphIds,
+        excludeParagraphIds: Array.from(excludeParagraphIds),
+        excludeBodyKeys: Array.from(excludeBodyKeys),
+        avoidWriterShapes: recentWriterShapes.slice(-2),
+        avoidPatternTypes: recentPatternTypes.slice(-2),
+        feedbackProfile: options.feedbackProfile,
+      });
+      weeklyParagraph = selectArchiveWeeklyPatternParagraph({
+        pattern,
+        score,
+        candidate: insightCandidate,
+        surface: surface === 'patterns' ? 'weeklyDeepDive' : surface,
+        recentParagraphIds: recentWeeklyParagraphIds,
+        excludeParagraphIds: Array.from(excludeParagraphIds),
+        excludeBodyKeys: Array.from(excludeBodyKeys),
+        avoidWriterShapes: [paragraph.writerShape, ...recentWriterShapes.slice(-1)],
+        avoidPatternTypes: [paragraph.patternType, ...recentPatternTypes.slice(-1)],
+        feedbackProfile: options.feedbackProfile,
+      });
+    } catch {
+      continue;
+    }
+    const relatedSignals = unique([
+      ...pattern.requiredSignals,
+      ...pattern.supportingSignals,
+    ]);
+
+    items.push({
+      title: score.title,
+      body: paragraph.body,
+      lens: CATEGORY_LENS[score.category],
+      concept: CATEGORY_CONCEPT[score.category],
+      writerShape: paragraph.writerShape,
+      patternType: paragraph.patternType,
+      paragraphTone: paragraph.tone,
+      paragraphIntensity: paragraph.intensity,
+      majorDomain: paragraph.majorDomain,
+      theoryLens: paragraph.theoryLens,
+      insightSubcategory: paragraph.insightSubcategory,
+      isCuratedParagraph: paragraph.isCurated,
+      paragraphSource: paragraph.source,
+      paragraphId: paragraph.id,
+      weeklyParagraphId: weeklyParagraph.id,
+      weeklyBody: weeklyParagraph.body,
+      specificityAnchor: paragraph.matchedAnchors[0] ?? paragraph.anchors[0] ?? livedMomentFromText(searchText),
+      matchedAnchors: paragraph.matchedAnchors,
+      matchedSignals: paragraph.matchedSignals,
+      fingerprint: `v2:${score.patternKey}`,
+      score: Math.round(score.score * 100),
+      patternKey: score.patternKey,
+      category: score.category,
+      confidence: score.confidence,
+      movement: score.movement,
+      evidenceSummary: buildEvidenceSummary(score),
+      sourceCoverage,
+      lastSeenAt: score.lastSeenAt,
+      observedAcrossDays: score.timeframeDays,
+      relatedSignals,
+      shameLabel: pattern.shameLabel,
+      clarityReframe: claritySentenceForPattern(pattern, score),
+      librarySectionTitle: CATEGORY_DISPLAY[score.category],
+      archiveSectionTitle: CATEGORY_DISPLAY[score.category],
+      isV2Derived: true,
+    });
+
+    recentParagraphIds.push(paragraph.id);
+    recentWeeklyParagraphIds.push(weeklyParagraph.id);
+    excludeParagraphIds.add(paragraph.id);
+    excludeParagraphIds.add(weeklyParagraph.id);
+    excludeBodyKeys.add(patternParagraphBodyKey(paragraph.body));
+    excludeBodyKeys.add(patternParagraphBodyKey(weeklyParagraph.body));
+    recentWriterShapes.push(paragraph.writerShape);
+    recentPatternTypes.push(paragraph.patternType);
+  }
 
   const seen = new Set<string>();
   return items
@@ -402,19 +709,6 @@ export function adaptPremiumPatterns(
       return true;
     })
     .slice(0, options.maxItems ?? MAX_PREMIUM_PATTERN_ITEMS);
-}
-
-function splitBodyParts(body: string): {
-  description: string;
-  movement: string;
-  reframe: string;
-} {
-  const parts = body.split(/\n{2,}/).map(part => part.trim()).filter(Boolean);
-  return {
-    description: parts[0] ?? body,
-    movement: parts[1] ?? '',
-    reframe: parts[2] ?? '',
-  };
 }
 
 function normalizeTitle(title: string): string {
@@ -480,15 +774,54 @@ function selectDistinctProfilePatterns(
   return selected;
 }
 
-function lowerFirst(text: string): string {
-  if (!text) return '';
-  return text.charAt(0).toLowerCase() + text.slice(1);
+function rootPatternSourcesFromItem(item: PremiumPatternItem): InsightDataSource[] {
+  const text = [
+    ...item.sourceCoverage,
+    ...item.relatedSignals,
+    item.evidenceSummary,
+    item.patternKey,
+    item.category,
+  ].join(' ').toLowerCase();
+  const sources: InsightDataSource[] = [];
+
+  if (/\bdream\b/.test(text)) sources.push('dream');
+  if (/\bjournal\b|\bentry\b|\bentries\b/.test(text)) sources.push('journal');
+  if (/\bbody\b|\bsomatic\b|\bchest\b|\bbreath\b|\btension\b/.test(text)) sources.push('bodyMap');
+  if (/\btrigger\b|\bdrain\b|\bconflict\b|\bstress\b/.test(text)) sources.push('triggerLog');
+  if (/\brelationship\b|\btone\b|\brepair\b|\bconnection\b/.test(text)) sources.push('relationshipMirror');
+  if (/\breflection\b|\banswer\b|\bself knowledge\b/.test(text)) sources.push('reflectionBank');
+  if (/\bsleep\b|\bfatigue\b|\brest\b|\brecovery\b/.test(text)) sources.push('sleep');
+  if (/\bcheck.?in\b|\bmood\b|\bstress\b|\benergy\b/.test(text)) sources.push('dailyCheckIn');
+  if (/\bglimmer\b|\bjoy\b|\brelief\b|\bplay\b/.test(text)) sources.push('glimmerLog');
+  if (/\bnatal\b|\bchart\b|\bastrology\b/.test(text)) sources.push('natalChart');
+
+  return unique(sources) as InsightDataSource[];
 }
 
-function sentence(text: string): string {
-  const trimmed = text.trim();
-  if (!trimmed) return '';
-  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+function rootPatternEvidenceFromPremiumItem(item: PremiumPatternItem): RootPatternEvidence {
+  return {
+    patternKey: item.patternKey,
+    title: item.title,
+    category: item.category,
+    majorDomain: item.majorDomain,
+    insightSubcategory: item.insightSubcategory,
+    patternType: item.patternType,
+    anchors: unique([
+      ...(item.matchedAnchors ?? []),
+      ...(item.specificityAnchor ? [item.specificityAnchor] : []),
+      ...item.relatedSignals,
+    ]),
+    signalTypes: unique([
+      ...item.relatedSignals,
+      ...(item.matchedSignals ?? []),
+      item.clarityReframe ?? '',
+      item.shameLabel ?? '',
+      item.evidenceSummary,
+    ]),
+    sources: rootPatternSourcesFromItem(item),
+    strength: item.score ?? confidenceRank(item.confidence) * 20,
+    confidence: item.confidence,
+  };
 }
 
 function titleAsPhrase(title: string): string {
@@ -498,43 +831,11 @@ function titleAsPhrase(title: string): string {
     .toLowerCase();
 }
 
-function confidentReframeText(text: string, confidence: PatternConfidence): string {
-  const trimmed = trimTerminalPunctuation(text)
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!trimmed) return '';
-
-  if (confidence === 'moderate' || confidence === 'emerging') return trimmed;
-
-  return trimmed
-    .replace(/\bThis may not be\b/gi, 'This is not')
-    .replace(/\bThis may be\b/gi, 'This is')
-    .replace(/\bIt may not be\b/gi, 'It is not')
-    .replace(/\bIt may be\b/gi, 'It is')
-    .replace(/\bmay create\b/gi, 'can create')
-    .replace(/\bmay need\b/gi, 'needs')
-    .replace(/\bmay show\b/gi, 'shows')
-    .replace(/\bmay help\b/gi, 'helps');
-}
-
 function personalReframeSentence(item: PremiumPatternItem): string {
   const raw = item.clarityReframe ?? '';
   const reframe = confidentReframeText(raw, item.confidence);
   if (!reframe) return '';
-
-  if (/\byou\b|\byour\b|\byourself\b/i.test(reframe)) {
-    return sentence(reframe);
-  }
-
-  if (/^this\b/i.test(reframe)) {
-    return sentence(reframe.replace(/^this\b/i, 'For you, this'));
-  }
-
-  if (/^it\b/i.test(reframe)) {
-    return sentence(reframe.replace(/^it\b/i, 'For you, it'));
-  }
-
-  return sentence(`For you, ${lowerFirst(reframe)}`);
+  return sentence(reframe);
 }
 
 function secondPersonPressure(text: string): string {
@@ -562,35 +863,19 @@ function pressureReframeSentence(item: PremiumPatternItem): string {
   if (!pressure) return '';
 
   if (/^if you\b/i.test(pressure)) {
-    return sentence(`The old fear that ${lowerFirst(pressure)} does not have to run the whole story`);
+    return sentence(`When that pressure says ${lowerFirst(pressure)}, it is asking for attention, not obedience`);
   }
 
   if (/\bshould\b|\bhave to\b|\bmust\b|\bcannot\b/i.test(pressure)) {
-    return sentence(`The old expectation that ${lowerFirst(pressure)} does not have to run the whole story`);
+    return sentence(`The pressure to believe ${lowerFirst(pressure)} can be loud without being true`);
   }
 
-  return sentence(`The old belief that ${lowerFirst(pressure)} does not get to define who you are`);
-}
-
-function evidenceAsPersonalSentence(item: PremiumPatternItem): string {
-  const summary = item.evidenceSummary.trim();
-  if (!summary) return '';
-
-  const rewritten = summary
-    .replace(/^Seen across\b/i, 'It has shown up across')
-    .replace(/^Seen in\b/i, 'It has shown up in')
-    .replace(/^Emerging:\s*/i, 'It is still emerging, but ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return sentence(rewritten);
+  return sentence(`Let ${lowerFirst(pressure)} be a signal, not a verdict`);
 }
 
 function relatedSignalSentence(item: PremiumPatternItem): string {
-  const signals = unique(item.relatedSignals.map(humanizeKey)).slice(0, 3);
-  if (!signals.length) return '';
-
-  return sentence(`For you, it tends to gather around ${formatList(signals)}`);
+  const moment = livedMomentFromText(patternSearchText(item));
+  return sentence(`Watch for it ${moment}`);
 }
 
 function personalLeadForPattern(item: PremiumPatternItem): string {
@@ -598,55 +883,58 @@ function personalLeadForPattern(item: PremiumPatternItem): string {
 
   switch (item.category) {
     case 'responsibilityCare':
-      return `There is a clear pattern around ${title}. You often notice what needs to be held before you notice what it is costing you.`;
+      return `With ${title}, you often notice what needs to be held before you notice what it is costing you.`;
     case 'relationships':
     case 'supportBelonging':
     case 'communicationVoice':
     case 'familyHome':
-      return `${item.title} is active in how you read connection. Tone, repair, support, distance, and being understood carry real weight for you.`;
+      return 'Tone, repair, support, distance, and being understood are not background details for you.';
     case 'bodySignals':
-      return `${item.title} is active in your body. Your body often joins the conversation before your mind has finished explaining what happened.`;
+      return 'Your body enters early, often before your mind has finished explaining what happened.';
     case 'safetyRegulation':
-      return `${item.title} is active in how your system tracks safety. Part of you notices what feels steady, what feels uncertain, and what needs more evidence before it can settle.`;
+      return 'Your system keeps score of what feels steady, what feels uncertain, and what still needs proof.';
     case 'restCapacity':
     case 'timeRhythms':
-      return `${item.title} is active around capacity. Rest is not simple when part of you is still tracking what needs to be handled.`;
+      return 'Rest is not simple when part of you is still tracking what needs to be handled.';
     case 'selfWorthReceiving':
     case 'scarcityAbundance':
-      return `${item.title} is active around receiving and enoughness. Support can feel meaningful and exposed at the same time when being cared for touches the part of you that learned to stay useful.`;
+      return 'Support can feel meaningful and exposed at the same time, especially where being cared for touches the part of you that learned to stay useful.';
     case 'workAmbition':
-      return `${item.title} is active around ambition. Progress, standards, and output can become ways your system tries to create safety.`;
+      return 'Progress, standards, and output can become ways your system tries to create safety.';
     case 'lifeDirection':
     case 'identityGrowth':
-      return `${item.title} is active around becoming. For you, the question is not only what comes next; it is who you are becoming and what kind of stability that becoming needs.`;
+      return 'The question is not only what comes next; it is who you are becoming and what kind of stability that becoming needs.';
     case 'cognitiveStyle':
-      return `${item.title} is active in how your mind organizes experience. You look for language, context, and structure so the feeling becomes less shapeless and the next step becomes honest.`;
+      return 'You look for language, context, and structure so the feeling becomes less shapeless and the next step becomes honest.';
     case 'valuesIntegrity':
     case 'spiritualMeaning':
     case 'natalChartReflection':
-      return `${item.title} is active around meaning. You rely on inner truth more than surface answers when something does not feel honest or aligned.`;
+      return 'You rely on inner truth more than surface answers when something does not feel honest or aligned.';
     case 'emotionalWeather':
     case 'griefTransitions':
-      return `${item.title} is active in your emotional world. You can hold more than one truth at once, and the slower feeling often needs room after the practical situation has already moved on.`;
+      return 'You can hold more than one truth at once, and the slower feeling often needs room after the practical situation has already moved on.';
     case 'dreamsSymbols':
-      return `${item.title} is active in your dream life. Your dreams seem to hold material your waking life has not finished organizing.`;
+      return 'Your dreams seem to hold material your waking life has not finished organizing.';
     case 'creativityExpression':
-      return `${item.title} is active in how your inner world moves outward. Making, naming, designing, or speaking can turn what is internal into something your system can work with.`;
+      return 'Making, naming, designing, or speaking can turn what is internal into something your system can work with.';
     case 'pleasurePlay':
     case 'glimmersRegulation':
-      return `${item.title} is active around aliveness. Joy, beauty, relief, and small glimmers are part of how your system finds its way back to itself.`;
+      return 'Joy, beauty, relief, and small glimmers are part of how your system finds its way back to itself.';
     default:
-      return `${item.title} is one of the clearer patterns here. You keep returning to it because something in it still needs protection, clarity, or care.`;
+      return `${item.title} keeps returning because something in it still needs protection, clarity, or care.`;
   }
 }
 
 function sectionBodyForPattern(item: PremiumPatternItem): string {
+  const pressure = stableIndex(item.patternKey, 3) === 0
+    ? pressureReframeSentence(item)
+    : '';
+
   return [
     personalLeadForPattern(item),
     personalReframeSentence(item),
-    pressureReframeSentence(item),
     relatedSignalSentence(item),
-    evidenceAsPersonalSentence(item),
+    pressure,
   ].filter(Boolean).join(' ');
 }
 
@@ -667,7 +955,7 @@ function lowDataPatternProfile(): PremiumPatternProfile {
     title: 'Pattern Profile Is Still Forming',
     subtitle: 'A deeper read will appear when enough distinct patterns repeat.',
     portrait:
-      'This profile is still forming. As more check-ins, journals, dreams, body signals, and relationship reflections are added, this space becomes a clearer read of the patterns that keep returning.',
+      'This profile is still forming. As more check-ins, journals, body signals, and relationship reflections are added, this space becomes a clearer read of the patterns that keep returning.',
     sections: [],
     reflectionPrompt:
       'What has repeated lately, even if it only feels like a small signal right now?',
@@ -680,7 +968,7 @@ function lowDataPatternProfile(): PremiumPatternProfile {
 function portraitLeadForPattern(item: PremiumPatternItem): string {
   switch (item.category) {
     case 'dreamsSymbols':
-      return 'You seem to process life by looking for the deeper shape underneath what happened.';
+      return 'You look for the deeper shape underneath what happened.';
     case 'responsibilityCare':
       return 'You often sense the weight of a situation before other people realize there is anything to hold.';
     case 'relationships':
@@ -698,7 +986,7 @@ function portraitLeadForPattern(item: PremiumPatternItem): string {
     case 'natalChartReflection':
       return 'Meaning matters because it helps you stay oriented when the obvious answer is not the honest one.';
     default:
-      return 'You seem to track what stays emotionally unfinished until it has enough language, support, or choice around it.';
+      return 'You track what stays emotionally unfinished until it has enough language, support, or choice around it.';
   }
 }
 
@@ -819,7 +1107,7 @@ function portraitProtectiveAction(patterns: PremiumPatternItem[]): string {
 
 function portraitProtectivePurpose(patterns: PremiumPatternItem[]): string {
   if (hasPortraitSignal(patterns, /\brepair\b|\brupture\b|\bbracing\b|\bprepared\b|\balways on\b|\binvisible\b|\bmental load\b|\bresponsibility\b|\bcarrying\b/)) {
-    return 'This is not just worry or overthinking. It is an old form of protection: trying to prevent the moment from becoming heavier than you can carry alone.';
+    return 'The protection is old and practical: trying to prevent the moment from becoming heavier than you can carry alone.';
   }
 
   if (hasPortraitSignal(patterns, /\bdream\b|\bsymbol\b|\bmeaning\b|\bunfinished\b|\bemotional residue\b/)) {
@@ -883,14 +1171,14 @@ function buildProfilePortrait(selectedPatterns: PremiumPatternItem[]): string {
   const hasMultipleIngredients = selectedPatterns.length > 1;
   const primaryLead = primary
     ? portraitLeadForPattern(primary)
-    : 'You seem to track what stays emotionally unfinished until it has enough language, support, or choice around it.';
+    : 'You track what stays emotionally unfinished until it has enough language, support, or choice around it.';
   const actionSentence = portraitProtectiveAction(rolePatterns(roles, 'protectiveAction', selectedPatterns));
   const purposeSentence = portraitProtectivePurpose(rolePatterns(roles, 'protectivePurpose', selectedPatterns));
   const costSentence = portraitCost(rolePatterns(roles, 'cost', selectedPatterns));
   const recoverySentence = portraitRecovery(rolePatterns(roles, 'recoveryOrSoftening', selectedPatterns));
   const identitySentence = hasMultipleIngredients
-    ? 'This is not a fixed identity; it is the pattern asking for the most attention right now.'
-    : 'This is not a fixed identity; it is the pattern asking for support right now.';
+    ? 'Right now, this deserves support, not a permanent label.'
+    : 'Right now, this is asking for support, not a permanent label.';
 
   return [
     primaryLead,
@@ -911,15 +1199,11 @@ function growthOrRecoveryForProfile(
   const recovery = candidates.find(item => !selectedKeys.has(item.patternKey) && isRecoveryOrHelpfulPattern(item));
 
   if (recovery) {
-    const signals = unique(recovery.relatedSignals.map(humanizeKey)).slice(0, 3);
-    const signalPhrase = signals.length
-      ? ` For you, softening gathers around ${formatList(signals)}.`
-      : '';
+    const signalPhrase = ` It tends to arrive ${livedMomentFromText(patternSearchText(recovery))}.`;
     const reframe = personalReframeSentence(recovery);
     return {
       title: 'What Helps You Soften',
       body: [
-        'Recovery is not about one dramatic breakthrough.',
         `${recovery.title} shows what lowers the pressure without asking you to abandon what you care about.${signalPhrase}`,
         reframe,
       ].filter(Boolean).join(' '),
@@ -931,7 +1215,7 @@ function growthOrRecoveryForProfile(
   return {
     title: 'Growth Edge',
     body:
-      'The growth edge is choice. The pattern does not need to disappear; it needs more room around it, so you can notice when it is protecting you and when it is costing too much.',
+      'The growth edge is choice. Give the pattern more room around it, so you can notice when it is protecting you and when it is costing too much.',
     patternKey: growth?.patternKey,
   };
 }
@@ -939,28 +1223,40 @@ function growthOrRecoveryForProfile(
 export function selectPremiumPatternProfile(
   premiumPatterns: PremiumPatternItem[],
 ): PremiumPatternProfile {
-  const selectedPatterns = selectDistinctProfilePatterns(premiumPatterns);
+  const eligiblePatterns = premiumPatterns.filter(item =>
+    isInsightCategoryAllowedOnSurface(item.category, 'patternScreen'),
+  );
+  const selectedPatterns = selectDistinctProfilePatterns(eligiblePatterns);
   if (selectedPatterns.length < MIN_PROFILE_PATTERN_AREAS) {
     return lowDataPatternProfile();
   }
 
+  const rootPattern = selectRootPatternConstellation(
+    eligiblePatterns.map(rootPatternEvidenceFromPremiumItem),
+  );
   const sections = selectedPatterns.map(sectionForPattern);
-  const growthOrRecovery = growthOrRecoveryForProfile(premiumPatterns, selectedPatterns);
+  const growthOrRecovery = growthOrRecoveryForProfile(eligiblePatterns, selectedPatterns);
   const areaLabels = unique([
+    ...(rootPattern ? [rootPattern.name] : []),
     ...sections.map(section => section.title),
     ...(growthOrRecovery ? [growthOrRecovery.title] : []),
   ]).slice(0, 4);
 
   return {
     title: 'Your Pattern Profile',
-    subtitle: 'A deeper read of the patterns that keep returning.',
-    portrait: buildProfilePortrait(selectedPatterns),
+    subtitle: rootPattern
+      ? 'A deeper read of the protective move underneath several patterns.'
+      : 'A deeper read of the patterns that keep returning.',
+    portrait: rootPattern?.body ?? buildProfilePortrait(selectedPatterns),
+    rootPattern: rootPattern ?? undefined,
     sections,
     growthOrRecovery,
     reflectionPrompt:
+      rootPattern?.reflectionPrompt ??
       'What would change if you treated the strongest pattern as information about what needs support, not proof of who you have to be?',
     areaLabels,
     sourcePatternKeys: unique([
+      ...(rootPattern?.matchedPatternKeys ?? []),
       ...sections.map(section => section.patternKey),
       ...(growthOrRecovery?.patternKey ? [growthOrRecovery.patternKey] : []),
     ]),
@@ -988,40 +1284,57 @@ function sortPatternsForWeeklySurface(
 
 function chooseWeeklySurfacePattern(
   candidates: PremiumPatternItem[],
-  avoidPatternKey?: string,
+  avoidPatternKeys: Iterable<string> = [],
+  excludeBodyKeys: Iterable<string> = [],
 ): PremiumPatternItem | null {
   const sorted = sortPatternsForWeeklySurface(candidates);
   if (!sorted.length) return null;
+  const avoided = new Set(avoidPatternKeys);
+  const excludedBodies = new Set(excludeBodyKeys);
 
-  if (avoidPatternKey && sorted.length > 1) {
-    return sorted.find(candidate => candidate.patternKey !== avoidPatternKey) ?? sorted[0];
-  }
+  const preferred = sorted.find(candidate =>
+    !avoided.has(candidate.patternKey) &&
+    !!thisWeekBodyForPattern(candidate, excludedBodies),
+  );
+  if (preferred) return preferred;
 
-  return sorted[0];
+  return sorted.find(candidate => !!thisWeekBodyForPattern(candidate, excludedBodies)) ?? null;
+}
+
+function firstSentence(text: string): string {
+  return text.match(/[^.!?]+[.!?]+|[^.!?]+$/)?.[0]?.trim() ?? text.trim();
+}
+
+function firstParagraph(text: string | undefined): string | null {
+  const paragraph = text?.split('\n\n').find(part => part.trim().length > 0)?.trim();
+  return paragraph || null;
+}
+
+function displayBodyKey(text: string | undefined): string {
+  return patternParagraphBodyKey(text ?? '');
+}
+
+function weeklyReadBodyForPattern(item: PremiumPatternItem): string {
+  return item.weeklyBody ?? item.body;
 }
 
 function weeklyReadForPattern(item: PremiumPatternItem): PremiumWeeklyDeepDiveItem {
   const concept = item.concept ?? CATEGORY_CONCEPT[item.category];
-  const { description, movement, reframe } = splitBodyParts(item.body);
   const isLowConfidenceFallback = isLowConfidenceWeeklyCandidate(item);
-  const body = isLowConfidenceFallback
-    ? [
-        `A light signal is forming around ${item.title.toLowerCase()}. It is not enough for a firm read yet, but it is worth holding gently as an emerging thread.`,
-        description,
-      ].join('\n\n')
-    : [description, movement].filter(Boolean).join('\n\n');
+  const preview = firstSentence(item.body);
+  const body = weeklyReadBodyForPattern(item);
 
   return {
     id: `weekly-v2-${item.patternKey}`,
     patternKey: item.patternKey,
     category: item.category,
     title: item.title,
-    preview: description,
+    preview,
     body,
     whyItMayMatter: WHY_IT_MAY_MATTER[concept],
     reframe: isLowConfidenceFallback
-      ? 'This is not a conclusion yet. It is a possible thread to track softly until more evidence gathers around it.'
-      : reframe || (item.clarityReframe ?? ''),
+      ? 'Keep it as a possible thread, not a verdict.'
+      : item.clarityReframe ?? '',
     evidenceSummary: isLowConfidenceFallback
       ? `Emerging: ${item.evidenceSummary}`
       : item.evidenceSummary,
@@ -1041,9 +1354,9 @@ function weeklyLowDataEmptyState(): PremiumWeeklyDeepDiveItem {
     title: 'Weekly Deep Dive Is Still Gathering Signal',
     preview: 'There is not enough pattern evidence for a firm weekly read yet.',
     body:
-      'There is not enough repeating signal for a firm weekly read yet. Rather than forcing a pattern too early, the next few check-ins can help the pattern become clearer across moods, body signals, dreams, relationships, rest, and recovery.',
+      'There is not enough repeating signal for a firm weekly read yet. Rather than forcing a pattern too early, the next few check-ins can help the pattern become clearer across moods, body signals, relationships, rest, and recovery.',
     whyItMayMatter:
-      'This matters because weak evidence should stay spacious. The read is more useful when it can name a real pattern instead of turning a thin signal into a story.',
+      'Weak evidence should stay spacious. The read is more useful when it can name a real pattern instead of turning a thin signal into a story.',
     reframe:
       'Not having a deep read yet does not mean nothing is happening. It means the pattern needs more evidence before it can be named responsibly.',
     evidenceSummary: 'No pattern has enough recent evidence for a responsible weekly read yet.',
@@ -1057,8 +1370,11 @@ function weeklyLowDataEmptyState(): PremiumWeeklyDeepDiveItem {
 
 export function adaptWeeklyPremiumPatternCandidates(
   patternScores: ArchivePatternScore[],
+  options: Omit<AdaptPremiumPatternsOptions, 'includeLowConfidence' | 'maxItems'> = {},
 ): PremiumPatternItem[] {
   return adaptPremiumPatterns(patternScores, {
+    ...options,
+    surface: options.surface ?? 'weeklyDeepDive',
     includeLowConfidence: true,
     maxItems: MAX_WEEKLY_PATTERN_CANDIDATES,
   });
@@ -1066,10 +1382,14 @@ export function adaptWeeklyPremiumPatternCandidates(
 
 export function selectPremiumWeeklyDeepDive(
   premiumPatterns: PremiumPatternItem[],
+  options: SelectPremiumWeeklyDeepDiveOptions = {},
 ): PremiumWeeklyDeepDiveItem[] {
-  if (premiumPatterns.length === 0) return [weeklyLowDataEmptyState()];
+  const eligiblePatterns = premiumPatterns.filter(item =>
+    isInsightCategoryAllowedOnSurface(item.category, 'patternScreen'),
+  );
+  if (eligiblePatterns.length === 0) return [weeklyLowDataEmptyState()];
 
-  const sorted = [...premiumPatterns].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  const sorted = [...eligiblePatterns].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
   const archiveCorePatternKey = sorted[0]?.patternKey;
   const candidates = sorted.length >= 3
     ? sorted.filter(pattern => pattern.patternKey !== archiveCorePatternKey)
@@ -1078,16 +1398,20 @@ export function selectPremiumWeeklyDeepDive(
   const seenPatternKeys = new Set<string>();
   const seenTitles = new Set<string>();
   const seenCategories = new Set<InsightCategory>();
+  const seenBodyKeys = new Set(options.excludeBodyKeys ?? []);
 
   const add = (item: PremiumPatternItem, strictCategory = true) => {
     if (selected.length >= MAX_WEEKLY_DEEP_READS) return;
     const titleKey = normalizeTitle(item.title);
+    const bodyKey = displayBodyKey(weeklyReadBodyForPattern(item));
     if (seenPatternKeys.has(item.patternKey) || seenTitles.has(titleKey)) return;
     if (strictCategory && seenCategories.has(item.category)) return;
+    if (seenBodyKeys.has(bodyKey)) return;
     selected.push(item);
     seenPatternKeys.add(item.patternKey);
     seenTitles.add(titleKey);
     seenCategories.add(item.category);
+    seenBodyKeys.add(bodyKey);
   };
 
   const recoveryPattern = candidates.find(isRecoveryOrHelpfulPattern);
@@ -1121,7 +1445,7 @@ function thisWeekLowDataEmptyState(): PremiumThisWeekPatternItem {
     body:
       'There is not enough repetition to name a weekly pattern responsibly. A thin signal can matter, but it should not be forced into a story before more evidence gathers.',
     reframe:
-      'This is not a lack of progress. It means your pattern map is waiting for something real enough to name.',
+      'Your pattern map is waiting for something real enough to name.',
     confidence: 'emerging',
     movement: 'new',
     evidenceSummary: 'No pattern has enough recent evidence for a responsible weekly card yet.',
@@ -1130,21 +1454,36 @@ function thisWeekLowDataEmptyState(): PremiumThisWeekPatternItem {
   };
 }
 
-function thisWeekPatternForPattern(item: PremiumPatternItem): PremiumThisWeekPatternItem {
-  const { description, movement, reframe } = splitBodyParts(item.body);
+function thisWeekBodyForPattern(
+  item: PremiumPatternItem,
+  excludeBodyKeys: Iterable<string> = [],
+): string | null {
+  const excluded = new Set(excludeBodyKeys);
+  const candidates = [
+    firstParagraph(item.weeklyBody),
+    item.body,
+  ].filter((body): body is string => !!body && body.trim().length > 0);
+
+  return candidates.find(body => !excluded.has(displayBodyKey(body))) ?? null;
+}
+
+function thisWeekPatternForPattern(
+  item: PremiumPatternItem,
+  excludeBodyKeys: Iterable<string> = [],
+): PremiumThisWeekPatternItem | null {
   const isLowConfidenceFallback = isLowConfidenceWeeklyCandidate(item);
+  const body = thisWeekBodyForPattern(item, excludeBodyKeys);
+  if (!body) return null;
 
   return {
     id: `this-week-v2-${item.patternKey}`,
     patternKey: item.patternKey,
     category: item.category,
     title: item.title,
-    body: isLowConfidenceFallback
-      ? `An early thread is forming around ${item.title.toLowerCase()}. It is not a firm read yet, but it is worth noticing gently this week.`
-      : [description, movement].filter(Boolean).join(' '),
+    body,
     reframe: isLowConfidenceFallback
-      ? 'This is an emerging signal, not a conclusion. Let it stay spacious while more evidence gathers.'
-      : reframe || (item.clarityReframe ?? ''),
+      ? 'Let it stay spacious while more evidence gathers.'
+      : item.clarityReframe ?? '',
     confidence: item.confidence,
     movement: item.movement,
     evidenceSummary: isLowConfidenceFallback
@@ -1159,23 +1498,47 @@ export function selectThisWeeksV2Pattern(
   patternScores: ArchivePatternScore[],
   premiumPatterns: PremiumPatternItem[],
   premiumWeeklyDeepDive: PremiumWeeklyDeepDiveItem[],
+  options: SelectThisWeeksV2PatternOptions = {},
 ): PremiumThisWeekPatternItem {
-  const weeklyTopPatternKey = premiumWeeklyDeepDive.find(read => !read.isEmptyState)?.patternKey;
-  const strongCandidates = premiumPatterns.filter(pattern => pattern.confidence !== 'emerging');
-  const selectedStrong = chooseWeeklySurfacePattern(strongCandidates, weeklyTopPatternKey);
+  const eligiblePremiumPatterns = premiumPatterns.filter(item =>
+    isInsightCategoryAllowedOnSurface(item.category, 'patternScreen'),
+  );
+  const eligibleWeeklyDeepDive = premiumWeeklyDeepDive.filter(item =>
+    isInsightCategoryAllowedOnSurface(item.category, 'patternScreen'),
+  );
+  const avoidPatternKeys = new Set([
+    ...eligibleWeeklyDeepDive
+      .filter(read => !read.isEmptyState)
+      .map(read => read.patternKey),
+    ...(options.avoidPatternKeys ?? []),
+  ]);
+  const excludeBodyKeys = new Set([
+    ...(options.excludeBodyKeys ?? []),
+    ...eligibleWeeklyDeepDive
+      .filter(read => !read.isEmptyState)
+      .map(read => displayBodyKey(read.body)),
+  ]);
+  const strongCandidates = eligiblePremiumPatterns.filter(pattern => pattern.confidence !== 'emerging');
+  const selectedStrong = chooseWeeklySurfacePattern(strongCandidates, avoidPatternKeys, excludeBodyKeys);
 
   if (selectedStrong) {
-    return thisWeekPatternForPattern(selectedStrong);
+    const selected = thisWeekPatternForPattern(selectedStrong, excludeBodyKeys);
+    if (selected) return selected;
   }
 
-  const lowConfidenceCandidates = adaptWeeklyPremiumPatternCandidates(patternScores);
+  const lowConfidenceCandidates = adaptWeeklyPremiumPatternCandidates(patternScores, {
+    surface: 'thisWeek',
+    excludeBodyKeys: Array.from(excludeBodyKeys),
+  });
   const selectedLowConfidence = chooseWeeklySurfacePattern(
     lowConfidenceCandidates,
-    weeklyTopPatternKey,
+    avoidPatternKeys,
+    excludeBodyKeys,
   );
 
   if (selectedLowConfidence) {
-    return thisWeekPatternForPattern(selectedLowConfidence);
+    const selected = thisWeekPatternForPattern(selectedLowConfidence, excludeBodyKeys);
+    if (selected) return selected;
   }
 
   return thisWeekLowDataEmptyState();

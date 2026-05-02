@@ -19,6 +19,13 @@ import { selectPrimaryPersona } from './engine/selectPrimaryPersona';
 import { normalizeInsightInputsV2 } from './normalizers';
 import { hasSignalRole } from './signalTaxonomy';
 import { generateId } from '../storage/models';
+import {
+  filterSignalsForInsightSurface,
+  isArchivePatternAllowedOnSurface,
+} from './insightSurfacePolicy';
+import { selectArchivePatternParagraph } from './engine/patternParagraphSelection';
+import { archivePatternScoreToInsightCandidate } from './candidates/insightCandidates';
+import type { SelectedPatternParagraph } from './adapters/premiumPatternParagraphLibrary';
 
 const MAX_TODAY_INSIGHTS = 4;
 const SLOT_PRIORITY: Record<InsightSlot, number> = {
@@ -49,6 +56,28 @@ function dedupeSentences(text: string): string {
   });
 
   return deduped.join(' ');
+}
+
+function sentenceCount(text: string): number {
+  return text.match(/[.!?](?=\s|$)/g)?.length ?? 0;
+}
+
+function paragraphMetadata(paragraph: SelectedPatternParagraph) {
+  return {
+    paragraphId: paragraph.id,
+    category: paragraph.category,
+    writerShape: paragraph.writerShape,
+    patternType: paragraph.patternType,
+    majorDomain: paragraph.majorDomain,
+    theoryLens: paragraph.theoryLens,
+    insightSubcategory: paragraph.insightSubcategory,
+    paragraphTone: paragraph.tone,
+    paragraphIntensity: paragraph.intensity,
+    paragraphSource: paragraph.source,
+    isCuratedParagraph: paragraph.isCurated,
+    sentenceCount: sentenceCount(paragraph.body),
+    hasPracticalPrompt: paragraph.writerShape === 'practicalCapacity' || paragraph.tone === 'practical',
+  };
 }
 
 function dedupeInsights(insights: GeneratedInsight[]): GeneratedInsight[] {
@@ -126,7 +155,48 @@ function ensureSentence(text: string): string {
 }
 
 function patternReframe(pattern: { shameLabel: string; clarityReframe: string }): string {
-  return `This does not read as ${trimTerminalPunctuation(pattern.shameLabel)}. It reads as ${trimTerminalPunctuation(pattern.clarityReframe)}.`;
+  return `The cleaner read: ${lowerFirst(trimTerminalPunctuation(pattern.clarityReframe))}.`;
+}
+
+function lowerFirst(text: string): string {
+  if (!text) return '';
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+function shameForContrast(text: string): string {
+  const raw = trimTerminalPunctuation(text).toLowerCase();
+  if (/\boverthinking\b/.test(raw)) return 'overthinking';
+  if (/\bdramatic|drama\b/.test(raw)) return 'drama';
+  if (/\bweakness|weak\b/.test(raw)) return 'weakness';
+  if (/\blazy|laziness\b/.test(raw)) return 'laziness';
+  if (/\bfailure|failing\b/.test(raw)) return 'failure';
+  if (/\bselfish|selfishness\b/.test(raw)) return 'selfishness';
+  if (/\bneedy|neediness\b/.test(raw)) return 'neediness';
+  if (/\btoo sensitive|overly sensitive\b/.test(raw)) return 'too much sensitivity';
+  if (/\bshould\b|\bhave to\b|\bmust\b|\bcannot\b|\bif i\b/.test(raw)) return 'failure';
+  return raw.replace(/^being\s+/, '');
+}
+
+function polishReframeText(text: string): string {
+  const trimmed = text.trim();
+  const shameMatch = trimmed.match(/this does not read as\s+(.+?)(?:\.|$)/i);
+  const clarityMatch = trimmed.match(/it reads as\s+(.+?)(?:\.|$)/i);
+
+  if (shameMatch && clarityMatch) {
+    const shame = shameForContrast(shameMatch[1]);
+    const clarity = trimTerminalPunctuation(clarityMatch[1]);
+    return `That is not ${shame}; it is ${lowerFirst(clarity)}.`;
+  }
+
+  if (clarityMatch) {
+    return `The cleaner read: ${lowerFirst(trimTerminalPunctuation(clarityMatch[1]))}.`;
+  }
+
+  if (shameMatch) {
+    return `That is not ${shameForContrast(shameMatch[1])}.`;
+  }
+
+  return trimmed;
 }
 
 const GENERIC_EVIDENCE_LABELS = new Set([
@@ -231,20 +301,6 @@ function relationshipThreadSubject(signal: UserSignal): string {
   return cueSubject(cue);
 }
 
-function dreamThreadSubject(signal: UserSignal): string {
-  const cue = signalCue(signal);
-  if (signal.key === 'dream_loss') return 'Loss';
-  if (signal.key === 'dream_conflict') return 'Conflict';
-  if (signal.key === 'dream_home') return 'Home';
-  if (signal.key === 'dream_protection') return 'Protection';
-  if (signal.key === 'dream_relief') return 'Relief';
-  if (signal.key === 'dream_searching') return 'Searching';
-  if (signal.key === 'dream_repeated_symbol') return 'A repeated symbol';
-  if (signal.key === 'dream_after_relationship_theme') return 'A relationship thread';
-  if (signal.key === 'dream_unfinished_processing') return 'Unfinished processing';
-  return cueSubject(cue);
-}
-
 function signalBodyForSentiment(signal: UserSignal): string {
   const subject = cueSubject(signalCue(signal));
 
@@ -305,11 +361,6 @@ function bodySignalBody(signal: UserSignal): string {
 function relationshipSignalBody(signal: UserSignal): string {
   const subject = relationshipThreadSubject(signal);
   return `${subject} is carrying relational weight today. Tone, closeness, distance, repair, support, and being understood shape whether your system can soften or stays on alert.`;
-}
-
-function dreamSignalBody(signal: UserSignal): string {
-  const subject = dreamThreadSubject(signal);
-  return `${subject} stayed with the day. Dream material can hold emotional residue, symbolic meaning, or unfinished processing that waking life has not fully organized yet.`;
 }
 
 function growthEdgeBody(pattern: ArchivePattern | undefined): string {
@@ -413,6 +464,7 @@ export async function buildTodayInsights({
   rawInputs,
   history = [],
   previousPatternScores = [],
+  feedbackProfile = null,
 }: BuildTodayInsightsArgs): Promise<BuildTodayInsightsResult> {
   const createdAtDate = new Date(date);
   const createdAt = Number.isFinite(createdAtDate.getTime())
@@ -421,28 +473,31 @@ export async function buildTodayInsights({
 
   // 1. Normalize
   const signals = normalizeInsightInputsV2(rawInputs, date);
+  const insightSignals = filterSignalsForInsightSurface(signals, 'today');
 
   // 2. Score Archive Patterns
-  const patternScores = ARCHIVE_PATTERNS.map(pattern => {
-    const prev = previousPatternScores.find(p => p.patternKey === pattern.key);
-    return scoreArchivePattern(pattern, signals, date, prev);
-  });
+  const patternScores = ARCHIVE_PATTERNS
+    .filter(pattern => isArchivePatternAllowedOnSurface(pattern, 'today'))
+    .map(pattern => {
+      const prev = previousPatternScores.find(p => p.patternKey === pattern.key);
+      return scoreArchivePattern(pattern, insightSignals, date, prev);
+    });
   const primaryPersona = selectPrimaryPersona({
     archivePatterns: patternScores,
-    recentSignals: signals,
+    recentSignals: insightSignals,
   });
 
   // 3. Extract Today's Signals
   const todayDateStr = date.slice(0, 10);
-  const todaySignals = signals.filter(s => s.date === todayDateStr);
-  const primaryFeeling = selectPrimaryFeeling(todaySignals.length ? todaySignals : signals);
+  const todaySignals = insightSignals.filter(s => s.date === todayDateStr);
+  const primaryFeeling = selectPrimaryFeeling(todaySignals.length ? todaySignals : insightSignals);
 
   // 4. Select Primary Insight
   const candidate = selectFreshInsight(
     {
       date,
       todaySignals,
-      recentSignals: signals, // Simplified for now
+      recentSignals: insightSignals,
       archivePatterns: patternScores,
       history,
     },
@@ -453,33 +508,34 @@ export async function buildTodayInsights({
   const insights: GeneratedInsight[] = [];
   const usedSignalKeys = new Set<string>();
   const usedPatternKeys = new Set<string>();
+  const recentParagraphIds: string[] = [];
   let primaryPatternKey: string | undefined;
 
   if (candidate) {
     const { pattern, angle, patternScore } = candidate;
     primaryPatternKey = pattern.key;
     usedPatternKeys.add(pattern.key);
+    const insightCandidate = archivePatternScoreToInsightCandidate(pattern, patternScore);
 
-    // Build movement language intro
-    let bodyIntro = '';
-    if (patternScore.movement === 'intensifying') {
-      bodyIntro = 'This pattern appears louder than it has been recently. ';
-    } else if (patternScore.movement === 'softening') {
-      bodyIntro = 'This pattern is still present, but it seems to be softening. ';
-    } else if (patternScore.movement === 'returning') {
-      bodyIntro = 'This pattern appears to be returning. ';
-    }
+    const paragraph = selectArchivePatternParagraph({
+      pattern,
+      score: patternScore,
+      candidate: insightCandidate,
+      surface: 'today',
+      recentParagraphIds,
+      feedbackProfile,
+    });
+    recentParagraphIds.push(paragraph.id);
 
-    const body = `${bodyIntro}${angle.observation} ${angle.pattern}`;
-
-    const reframe = angle.reframe?.trim() || patternReframe(pattern);
+    const reframe = polishReframeText(angle.reframe?.trim() || patternReframe(pattern));
 
     insights.push({
       id: generateId(),
       slot: 'whatMySkyNoticed' as const,
       surface: 'today' as const,
       title: angle.title,
-      body,
+      body: paragraph.body,
+      ...paragraphMetadata(paragraph),
       reframe,
       reflectionPrompt: angle.question,
       patternKey: pattern.key,
@@ -634,43 +690,29 @@ export async function buildTodayInsights({
     });
   }
 
-  const dreamSignal = strongestSignalWhere(
-    signals,
-    signal => signal.source === 'dream' || signal.key.includes('dream'),
-    usedSignalKeys,
-  );
-  if (dreamSignal) {
-    usedSignalKeys.add(signalDedupeKey(dreamSignal));
-    const patternKey = patternKeyForSignal(dreamSignal);
-    usedPatternKeys.add(patternKey);
-
-    insights.push({
-      id: generateId(),
-      slot: 'dreamPattern' as const,
-      surface: 'today' as const,
-      title: 'A dream thread',
-      body: dreamSignalBody(dreamSignal),
-      reframe: 'A dream does not have to predict anything to matter. It shows what your mind or body is still working through.',
-      reflectionPrompt: 'What feeling from the dream stayed with you after waking?',
-      patternKey,
-      confidence: confidenceFromSignalStrength(dreamSignal.strength),
-      movement: 'new',
-      evidence: evidenceForSignal(dreamSignal),
-      createdAt,
-    });
-  }
-
   const growthPattern = growthEdgeScore(patternScores, usedPatternKeys, primaryPatternKey, primaryPersona);
   if (growthPattern) {
     usedPatternKeys.add(growthPattern.patternKey);
     const pattern = ARCHIVE_PATTERNS.find(item => item.key === growthPattern.patternKey);
+    const paragraph = pattern
+      ? selectArchivePatternParagraph({
+          pattern,
+          score: growthPattern,
+          candidate: archivePatternScoreToInsightCandidate(pattern, growthPattern),
+          surface: 'today',
+          recentParagraphIds,
+          feedbackProfile,
+        })
+      : null;
+    if (paragraph) recentParagraphIds.push(paragraph.id);
 
     insights.push({
       id: generateId(),
       slot: 'growthEdge' as const,
       surface: 'today' as const,
       title: 'A growth edge',
-      body: growthEdgeBody(pattern),
+      body: paragraph?.body ?? growthEdgeBody(pattern),
+      ...(paragraph ? paragraphMetadata(paragraph) : { category: growthPattern.category }),
       reframe: pattern?.clarityReframe ?? 'This pattern is ready to meet with a little more choice.',
       reflectionPrompt: 'What would it look like to meet this pattern with a little more choice today?',
       patternKey: growthPattern.patternKey,

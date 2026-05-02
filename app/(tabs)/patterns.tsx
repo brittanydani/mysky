@@ -45,6 +45,18 @@ import { normalizeDisplayText } from '../../utils/textLayout';
 import { getPersonalizedPremiumTeaser, type ArchiveDepthCounts } from '../../utils/archiveDepth';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 import { getUserPreference } from '../../services/storage/userProfileService';
+import {
+  getInsightFeedbackProfile,
+  recordInsightOutcome,
+  type InsightOutcomeType,
+} from '../../services/insightsV2/feedback/insightOutcomeFeedback';
+import {
+  getInsightMemoryProfile,
+  insightMemorySnapshotFromPremiumPattern,
+  insightMemorySnapshotFromThisWeekPattern,
+  insightMemorySnapshotFromWeeklyDeepDive,
+  recordInsightMemorySnapshots,
+} from '../../services/insightsV2/memory/insightMemory';
 import { usePremium } from '../../context/PremiumContext';
 import { useRouter, Href } from 'expo-router';
 import { logger } from '../../utils/logger';
@@ -70,13 +82,16 @@ const WRAP_AT_WORD_PROPS = {
   textBreakStrategy: 'simple' as const,
 };
 
+const sentenceCount = (text: string): number => (
+  text.match(/[.!?](?=\s|$)/g)?.length ?? 0
+);
+
 type WeeklyDeepDiveDisplayItem = {
   id: string;
   title: string;
   body: string;
   whyItMayMatter?: string;
   reframe?: string;
-  evidenceSummary?: string;
   reflectionPrompt?: string;
   patternKey?: string;
 };
@@ -137,6 +152,29 @@ export default function PatternsScreen() {
   const [loadError, setLoadError] = useState(false);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
 
+  const recordPatternOutcome = useCallback((
+    item: PatternLibraryItem,
+    outcome: InsightOutcomeType,
+  ) => {
+    recordInsightOutcome({
+      outcome,
+      paragraphId: item.paragraphId,
+      patternKey: item.patternKey,
+      category: item.category as any,
+      majorDomain: item.majorDomain,
+      subcategory: item.insightSubcategory,
+      patternType: item.patternType as any,
+      writerShape: item.writerShape as any,
+      tone: item.paragraphTone as any,
+      intensity: item.paragraphIntensity as any,
+      surface: 'patterns',
+      sentenceCount: sentenceCount(item.body),
+      hasPracticalPrompt: item.writerShape === 'practicalCapacity' || item.paragraphTone === 'practical',
+    }).catch((error) => {
+      logger.warn('[Patterns] Failed to record insight outcome:', error);
+    });
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -146,12 +184,18 @@ export default function PatternsScreen() {
       trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
       (async () => {
         try {
-          const moodInsightPref = await getUserPreference<string | null>('pref_mood_insights', null).catch(() => null);
+          const [moodInsightPref, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
+            getUserPreference<string | null>('pref_mood_insights', null).catch(() => null),
+            getInsightFeedbackProfile().catch(() => null),
+            getInsightMemoryProfile().catch(() => null),
+          ]);
           const insightsEnabled = moodInsightPref !== '0';
           const surface = await buildInsightSurface({
             rangeDays: 90,
             insightsEnabled,
             includeKnowledgeInsight: insightsEnabled,
+            insightFeedbackProfile,
+            insightMemoryProfile,
           });
           if (!active) return;
 
@@ -166,6 +210,23 @@ export default function PatternsScreen() {
           setPremiumPatternProfile(surface.premiumPatternProfile);
           setThisWeeksV2Pattern(surface.thisWeeksV2Pattern);
           setPremiumWeeklyDeepDive(surface.premiumWeeklyDeepDive);
+          recordInsightMemorySnapshots([
+            ...surface.premiumPatterns.map((item, index) =>
+              insightMemorySnapshotFromPremiumPattern(item, {
+                surface: 'patterns',
+                rank: index,
+                isPrimary: index === 0,
+              }),
+            ),
+            ...(surface.thisWeeksV2Pattern
+              ? [insightMemorySnapshotFromThisWeekPattern(surface.thisWeeksV2Pattern)]
+              : []),
+            ...surface.premiumWeeklyDeepDive.map((item, index) =>
+              insightMemorySnapshotFromWeeklyDeepDive(item, { rank: index }),
+            ),
+          ]).catch((error) => {
+            logger.warn('[Patterns] Failed to record insight memory:', error);
+          });
 
         } catch (e) {
           logger.error('[Patterns] Pipeline error:', e);
@@ -218,7 +279,6 @@ export default function PatternsScreen() {
       body: insight.body,
       whyItMayMatter: insight.whyItMayMatter,
       reframe: insight.reframe,
-      evidenceSummary: insight.evidenceSummary,
       reflectionPrompt: insight.reflectionPrompt,
       patternKey: insight.patternKey,
     }));
@@ -261,14 +321,8 @@ export default function PatternsScreen() {
                 <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>{compactDisplayText(item.body, 720)}</Text>
                 {item.reframe ? (
                   <View style={[styles.supportCallout, { marginTop: 14 }]}>
-                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Clarity reframe</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Clearer read</Text>
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(item.reframe)}</Text>
-                  </View>
-                ) : null}
-                {item.evidenceSummary ? (
-                  <View style={[styles.supportCallout, { marginTop: 12 }]}>
-                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Where it showed up</Text>
-                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(item.evidenceSummary)}</Text>
                   </View>
                 ) : null}
               </VelvetGlassSurface>
@@ -287,7 +341,7 @@ export default function PatternsScreen() {
                   <LinearGradient colors={['rgba(168,139,235,0.25)', 'rgba(168,139,235,0.08)']} style={StyleSheet.absoluteFill} />
                   <View style={{ alignItems: 'center', flex: 1 }}>
                     <MetallicText style={[styles.deepDiveButtonTitle, { textAlign: 'center' }]} variant="gold">Open Weekly Deep Dive</MetallicText>
-                    <Text {...WRAP_AT_WORD_PROPS} style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>Curated cross-source reads from recent signals</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={[styles.deepDiveButtonSub, { textAlign: 'center' }]}>Deeper reads from what kept showing up</Text>
                   </View>
                 </Pressable>
               ) : (
@@ -481,17 +535,11 @@ export default function PatternsScreen() {
                       ) : null}
                       {insight.reframe ? (
                         <View style={styles.deepReadSection}>
-                          <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>Shame-to-clarity reframe</Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>Clearer read</Text>
                           <Text {...WRAP_AT_WORD_PROPS} style={[styles.insightBody, { fontSize: 14 }]}>{normalizeDisplayText(insight.reframe)}</Text>
                         </View>
                       ) : null}
                     </View>
-                    {insight.evidenceSummary ? (
-                      <View style={[styles.supportCallout, { marginTop: 12 }]}>
-                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Where it showed up</Text>
-                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(insight.evidenceSummary)}</Text>
-                      </View>
-                    ) : null}
                     {insight.reflectionPrompt ? (
                       <View style={[styles.supportCallout, { marginTop: 12 }]}>
                         <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Question to keep</Text>
@@ -593,6 +641,29 @@ export default function PatternsScreen() {
                         </Text>
                       </View>
 
+                      {premiumPatternProfile.rootPattern ? (
+                        <View style={styles.profileGrowthBlock}>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.profileSectionTitle}>
+                            What this protects
+                          </Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.profileSectionBody}>
+                            {normalizeDisplayText(premiumPatternProfile.rootPattern.protects)}
+                          </Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={[styles.profileSectionTitle, { marginTop: 14 }]}>
+                            What it costs
+                          </Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.profileSectionBody}>
+                            {normalizeDisplayText(premiumPatternProfile.rootPattern.costs)}
+                          </Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={[styles.profileSectionTitle, { marginTop: 14 }]}>
+                            What helps it soften
+                          </Text>
+                          <Text {...WRAP_AT_WORD_PROPS} style={styles.profileSectionBody}>
+                            {normalizeDisplayText(premiumPatternProfile.rootPattern.softens)}
+                          </Text>
+                        </View>
+                      ) : null}
+
                       {premiumPatternProfile.sections.map(section => (
                         <View key={section.key} style={styles.profileSection}>
                           <Text {...WRAP_AT_WORD_PROPS} style={styles.profileSectionTitle}>{section.title}</Text>
@@ -625,9 +696,9 @@ export default function PatternsScreen() {
                         }}
                         style={styles.profileLibraryLink}
                         accessibilityRole="button"
-                        accessibilityLabel="Open individual pattern library"
+                        accessibilityLabel="Browse individual pattern reads"
                       >
-                        <Text style={styles.profileLibraryLinkText}>Open individual pattern library</Text>
+                        <Text style={styles.profileLibraryLinkText}>Browse individual reads</Text>
                       </Pressable>
                     </View>
                   ) : (
@@ -639,7 +710,7 @@ export default function PatternsScreen() {
               ) : (
                 <>
                   <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBody}>
-                    {normalizeDisplayText('A browsable library of the longer-term threads taking shape across your entries. Cards stay compact here; open the weekly deep dive when you want a fuller read.')}
+                    {normalizeDisplayText('Short reads from the threads that keep returning. Open the ones that feel uncomfortably familiar.')}
                   </Text>
                   {fullLibrarySections.length > 0 ? (
                     <View style={styles.libraryList}>
@@ -651,6 +722,7 @@ export default function PatternsScreen() {
                               key={`${section.title}-${buildInsightDuplicateKey(item)}-${itemIndex}`}
                               onPress={() => {
                                 Haptics.selectionAsync().catch(() => {});
+                                recordPatternOutcome(item, 'expanded');
                                 setSelectedPatternItem(item);
                               }}
                               style={styles.libraryItem}
@@ -723,15 +795,9 @@ export default function PatternsScreen() {
                 <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBody}>
                   {normalizeDisplayText(selectedPatternItem.body)}
                 </Text>
-                {selectedPatternItem.evidenceSummary ? (
-                  <View style={styles.supportCallout}>
-                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Where it showed up</Text>
-                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(selectedPatternItem.evidenceSummary)}</Text>
-                  </View>
-                ) : null}
                 {selectedPatternItem.clarityReframe ? (
                   <View style={[styles.supportCallout, { marginTop: 12 }]}>
-                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Clarity reframe</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Clearer read</Text>
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(selectedPatternItem.clarityReframe)}</Text>
                   </View>
                 ) : null}
@@ -797,10 +863,6 @@ const PersonaProfileCard = ({ profile }: { profile: PremiumPersonaProfile }) => 
       </View>
 
       <View style={styles.supportCallout}>
-        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Where it showed up</Text>
-        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(profile.evidenceSummary)}</Text>
-      </View>
-      <View style={[styles.supportCallout, { marginTop: 12 }]}>
         <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Reflection prompt</Text>
         <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(profile.reflectionPrompt)}</Text>
       </View>
