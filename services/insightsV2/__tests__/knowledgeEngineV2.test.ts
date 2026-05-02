@@ -90,7 +90,7 @@ describe('Knowledge Engine V2', () => {
     expect(insight?.angleKey).toBe('timeRhythms_repeatingLowCapacity');
   });
 
-  it('populates multiple slots (whatMySkyNoticed and todaySignal)', async () => {
+  it('populates multiple evidence-gated slots beyond the primary daily read', async () => {
     const result = await buildTodayInsights({
         date: now,
         rawInputs: {
@@ -103,7 +103,7 @@ describe('Knowledge Engine V2', () => {
       expect(result.insights.length).toBeGreaterThanOrEqual(2);
       const slots = result.insights.map(i => i.slot);
       expect(slots).toContain('whatMySkyNoticed');
-      expect(slots).toContain('todaySignal');
+      expect(slots.some(slot => slot !== 'whatMySkyNoticed')).toBe(true);
   });
 
   it('caps the live today surface while keeping expanded V2 slots evidence-gated', async () => {

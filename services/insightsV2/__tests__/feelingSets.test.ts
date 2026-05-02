@@ -1,5 +1,33 @@
-import { FEELING_SET_BY_KEY, FEELING_SETS } from '../feelingSets';
-import { selectPrimaryFeeling } from '../engine/selectPrimaryFeeling';
+import fs from 'fs';
+import path from 'path';
+import { FEELING_SET_BY_KEY, FEELING_SETS, type FeelingSetKey } from '../feelingSets';
+import {
+  SIGNAL_TO_FEELING_SET_KEY,
+  selectPrimaryFeeling,
+} from '../engine/selectPrimaryFeeling';
+import { buildTodayInsights } from '../knowledgeEngineV2';
+import type { SignalKey, UserSignal } from '../types';
+
+function signalKeysFromTypes(): Set<string> {
+  const typesPath = path.join(__dirname, '..', 'types.ts');
+  const source = fs.readFileSync(typesPath, 'utf8');
+  const signalBlock = source.slice(
+    source.indexOf('export type SignalKey'),
+    source.indexOf('export interface EvidenceAnchor'),
+  );
+
+  return new Set(Array.from(signalBlock.matchAll(/\| '([^']+)'/g), match => match[1]));
+}
+
+function signalFor(key: SignalKey, strength = 0.9): UserSignal {
+  return {
+    key,
+    source: 'journal',
+    date: '2026-04-24',
+    strength,
+    sentiment: 'neutral',
+  };
+}
 
 describe('insightsV2 feeling sets', () => {
   it('keeps the provided feeling-set copy as the canonical list', () => {
@@ -1454,5 +1482,69 @@ describe('insightsV2 feeling sets', () => {
 
     expect(selected?.key).toBe('anxiety');
     expect(selected?.selectedSentence).toBe(FEELING_SET_BY_KEY.anxiety.sentences[0]);
+  });
+
+  it('keeps every feeling set reachable through a direct SignalKey or explicit alias', () => {
+    const signalKeys = signalKeysFromTypes();
+    const aliasedFeelingKeys = new Set(Object.values(SIGNAL_TO_FEELING_SET_KEY));
+
+    const unreachable = FEELING_SETS
+      .map(set => set.key)
+      .filter(key => !signalKeys.has(key) && !aliasedFeelingKeys.has(key));
+
+    expect(unreachable).toEqual([]);
+  });
+
+  it('lets obvious aliases win primaryFeeling when they are the strongest signal', () => {
+    const cases: Array<[SignalKey, FeelingSetKey]> = [
+      ['future_preoccupation', 'anxiety'],
+      ['creative_block', 'frustration'],
+      ['compliment_lands', 'appreciated'],
+      ['permission_shift', 'acceptance'],
+      ['open_receiving', 'awkward'],
+      ['success_not_constant_output', 'pride'],
+      ['protective_care', 'compassion'],
+      ['conversation_replay', 'embarrassment'],
+      ['repair_need', 'bitterness'],
+      ['consistency_need', 'rejected'],
+      ['connection_glimmer', 'seen'],
+      ['preparedness', 'anticipation'],
+      ['relationship_safety_testing', 'suspicious'],
+    ];
+
+    for (const [signalKey, feelingKey] of cases) {
+      const selected = selectPrimaryFeeling([
+        signalFor('mental_load', 0.99),
+        signalFor(signalKey, 1),
+      ]);
+
+      expect(selected?.key).toBe(feelingKey);
+      expect(selected?.selectedSentence).toBe(FEELING_SET_BY_KEY[feelingKey].sentences[0]);
+    }
+  });
+
+  it('does not select primaryFeeling from unrelated signals', () => {
+    const selected = selectPrimaryFeeling([
+      signalFor('mental_load', 1),
+      signalFor('invisible_labor', 0.95),
+    ]);
+
+    expect(selected).toBeNull();
+  });
+
+  it('returns primaryFeeling from buildTodayInsights when matching normalized signals exist', async () => {
+    const result = await buildTodayInsights({
+      date: '2026-04-24T12:00:00Z',
+      rawInputs: {
+        journals: [{
+          date: '2026-04-24',
+          text: 'I hit a creative block and felt stuck creatively with a blank page.',
+        }],
+      },
+      history: [],
+    });
+
+    expect(result.primaryFeeling?.key).toBe('frustration');
+    expect(result.primaryFeeling?.signalKey).toBe('creative_block');
   });
 });
