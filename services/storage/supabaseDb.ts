@@ -312,6 +312,31 @@ export async function getJournalEntries(): Promise<JournalEntry[]> {
   return Promise.all((data as Row[]).map(mapJournalRow));
 }
 
+export async function getJournalEntriesInRange(
+  startDate: string,
+  endDate: string,
+): Promise<JournalEntry[]> {
+  const userId = await getUserId();
+
+  const { data, error } = await supabase
+    .from('journal_entries')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_deleted', false)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    logger.warn('[SupabaseDb] Failed to load journal entries range from Supabase.', error);
+    return [];
+  }
+
+  if (!data?.length) return [];
+  return Promise.all((data as Row[]).map(mapJournalRow));
+}
+
 export async function getJournalEntriesPaginated(
   pageSize: number,
   afterDate?: string,
@@ -1245,6 +1270,7 @@ export const supabaseDb = {
 
   // Journal
   getJournalEntries,
+  getJournalEntriesInRange,
   getJournalEntriesPaginated,
   getJournalEntryCount,
   saveJournalEntry,

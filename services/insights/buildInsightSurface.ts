@@ -125,11 +125,11 @@ export async function buildInsightSurface({
   const [checkIns, sleepEntries, journalEntries, selfKnowledgeContext] = await Promise.all([
     supabaseDb.getCheckInsInRange(chartId, fromDate, today),
     supabaseDb.getSleepEntriesInRange(chartId, fromDate, today),
-    supabaseDb.getJournalEntries(),
+    supabaseDb.getJournalEntriesInRange(fromDate, today),
     loadSelfKnowledgeContext({ includeDailyReflections }),
   ]);
 
-  const recentJournalEntries = journalEntries.filter((entry) => entry.date >= fromDate && entry.date <= today);
+  const recentJournalEntries = journalEntries;
   const enrichedContext = enrichSelfKnowledgeContext(selfKnowledgeContext, recentJournalEntries, sleepEntries);
 
   const moods = checkIns.map((c) => c.moodScore).filter((v): v is number => v != null);

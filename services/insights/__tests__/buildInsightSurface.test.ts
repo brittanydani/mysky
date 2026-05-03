@@ -3,7 +3,7 @@ jest.mock('../../storage/supabaseDb', () => ({
     getCharts: jest.fn(),
     getCheckInsInRange: jest.fn(),
     getSleepEntriesInRange: jest.fn(),
-    getJournalEntries: jest.fn(),
+    getJournalEntriesInRange: jest.fn(),
   },
 }));
 
@@ -164,7 +164,7 @@ describe('buildInsightSurface knowledge insights', () => {
     jest.clearAllMocks();
     mockDb.getCheckInsInRange.mockResolvedValue(checkIns);
     mockDb.getSleepEntriesInRange.mockResolvedValue(sleepEntries);
-    mockDb.getJournalEntries.mockResolvedValue(journalEntries);
+    mockDb.getJournalEntriesInRange.mockResolvedValue(journalEntries);
     mockLoadSelfKnowledgeContext.mockResolvedValue(selfKnowledgeContext);
   });
 
