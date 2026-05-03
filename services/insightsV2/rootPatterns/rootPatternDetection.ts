@@ -6,6 +6,11 @@ import type {
   PatternType,
 } from '../types';
 import { isDreamInsightCategory } from '../taxonomy/insightTaxonomy';
+import {
+  protectiveStrategyInputFromInsightCandidate,
+  selectProtectiveStrategy,
+  type ProtectiveStrategy,
+} from './protectiveStrategyMapping';
 
 export interface RootPatternEvidence {
   patternKey: string;
@@ -19,6 +24,7 @@ export interface RootPatternEvidence {
   sources: InsightDataSource[];
   strength: number;
   confidence?: PatternConfidence;
+  protectiveStrategy?: ProtectiveStrategy | null;
 }
 
 export interface RootPatternConstellation {
@@ -37,6 +43,7 @@ export interface RootPatternConstellation {
   matchedDomains: string[];
   matchedSubcategories: string[];
   matchedPatternTypes: PatternType[];
+  matchedProtectiveStrategies: string[];
   anchors: string[];
   signalTypes: string[];
   sources: InsightDataSource[];
@@ -407,6 +414,12 @@ function evidenceText(evidence: RootPatternEvidence): string {
     ...evidence.anchors,
     ...evidence.signalTypes,
     ...evidence.sources,
+    evidence.protectiveStrategy?.key,
+    evidence.protectiveStrategy?.name,
+    evidence.protectiveStrategy?.protectiveMove,
+    evidence.protectiveStrategy?.protects,
+    evidence.protectiveStrategy?.costs,
+    evidence.protectiveStrategy?.softens,
   ].filter(Boolean).join(' '));
 }
 
@@ -486,6 +499,7 @@ function toConstellation(
     matchedDomains: unique(evidence.map(item => item.majorDomain)),
     matchedSubcategories: unique(evidence.map(item => item.insightSubcategory)),
     matchedPatternTypes: unique(evidence.map(item => item.patternType)) as PatternType[],
+    matchedProtectiveStrategies: unique(evidence.map(item => item.protectiveStrategy?.key)),
     anchors: unique(evidence.flatMap(item => item.anchors)).slice(0, 16),
     signalTypes: unique(evidence.flatMap(item => item.signalTypes)).slice(0, 24),
     sources: safeSources(evidence.flatMap(item => item.sources)),
@@ -503,6 +517,10 @@ export function rootPatternEvidenceFromInsightCandidate(
     title?: string;
   } = {},
 ): RootPatternEvidence {
+  const protectiveStrategy = selectProtectiveStrategy(
+    protectiveStrategyInputFromInsightCandidate(candidate, options),
+  );
+
   return {
     patternKey: options.patternKey ?? `${candidate.majorDomain}:${candidate.subcategory}`,
     title: options.title ?? candidate.subcategory,
@@ -515,6 +533,7 @@ export function rootPatternEvidenceFromInsightCandidate(
     sources: candidate.sources,
     strength: candidate.strength,
     confidence: confidenceForStrength(normalizeStrength(candidate.strength)),
+    protectiveStrategy,
   };
 }
 

@@ -16,6 +16,7 @@ import {
   type SelectedPatternParagraph,
 } from '../adapters/premiumPatternParagraphLibrary';
 import type { InsightFeedbackProfile } from '../feedback/insightOutcomeFeedback';
+import type { CurrentInsightStateProfile } from '../state/insightState';
 
 function unique<T extends string>(values: T[]): T[] {
   return Array.from(new Set(values.filter(Boolean)));
@@ -69,6 +70,7 @@ export interface ArchivePatternParagraphSelectionOptions {
   avoidWriterShapes?: PremiumPatternWriterShape[];
   avoidPatternTypes?: PremiumPatternType[];
   feedbackProfile?: InsightFeedbackProfile | null;
+  stateProfile?: CurrentInsightStateProfile | null;
 }
 
 export function selectArchivePatternParagraph({
@@ -82,6 +84,7 @@ export function selectArchivePatternParagraph({
   avoidWriterShapes,
   avoidPatternTypes,
   feedbackProfile,
+  stateProfile,
 }: ArchivePatternParagraphSelectionOptions): SelectedPatternParagraph {
   const candidate = providedCandidate ?? archivePatternScoreToInsightCandidate(pattern, score);
   if (surface && !isCandidateAllowedOnSurface(candidate, surface)) {
@@ -110,7 +113,10 @@ export function selectArchivePatternParagraph({
     ].join(' '),
     signals,
     sourceTypes: candidate.sources,
-    tags: pattern.tags,
+    tags: unique([
+      ...(pattern.tags ?? []),
+      ...candidate.tags,
+    ]),
     confidence: score.confidence,
     patternType: candidate.selectedPatternType,
     recentParagraphIds,
@@ -119,6 +125,7 @@ export function selectArchivePatternParagraph({
     avoidWriterShapes,
     avoidPatternTypes,
     feedbackProfile,
+    stateProfile,
   });
 }
 
@@ -133,6 +140,7 @@ export function selectArchiveWeeklyPatternParagraph({
   avoidWriterShapes,
   avoidPatternTypes,
   feedbackProfile,
+  stateProfile,
 }: ArchivePatternParagraphSelectionOptions): SelectedPatternParagraph {
   const candidate = providedCandidate ?? archivePatternScoreToInsightCandidate(pattern, score);
   if (surface && !isCandidateAllowedOnSurface(candidate, surface)) {
@@ -161,7 +169,10 @@ export function selectArchiveWeeklyPatternParagraph({
     ].join(' '),
     signals,
     sourceTypes: candidate.sources,
-    tags: pattern.tags,
+    tags: unique([
+      ...(pattern.tags ?? []),
+      ...candidate.tags,
+    ]),
     confidence: score.confidence,
     patternType: candidate.selectedPatternType,
     recentParagraphIds,
@@ -170,6 +181,7 @@ export function selectArchiveWeeklyPatternParagraph({
     avoidWriterShapes,
     avoidPatternTypes,
     feedbackProfile,
+    stateProfile,
   });
 }
 

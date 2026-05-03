@@ -1,8 +1,9 @@
 import {
   GENERATED_INSIGHT_DOMAINS,
+  GENERATED_INSIGHT_PARAGRAPHS,
   GENERATED_INSIGHT_TAXONOMY,
   type GeneratedInsightDomain,
-} from '../../insights/generatedInsightParagraphs';
+} from '../../insights/generated/generatedInsightParagraphs';
 import type {
   InsightCandidateSurface,
   InsightCategory,
@@ -20,9 +21,30 @@ export interface InsightTaxonomyCategory {
   patternTypes: PatternType[];
   patternTypeRules: Record<PatternType, string>;
   allowedSurfaces: InsightCandidateSurface[];
+  blockedSurfaces: InsightCandidateSurface[];
+  microMoments: Record<PatternType, string[]>;
+  actions: Record<PatternType, string[]>;
+  validationStyle: Record<PatternType, string[]>;
+  landings: Record<PatternType, string[]>;
 }
 
 const DREAM_CATEGORY: InsightCategory = 'dreamsSymbols';
+const PATTERN_TYPES: PatternType[] = [
+  'highTracking',
+  'lowAccess',
+  'pushPull',
+  'delayedActivation',
+];
+const NORMAL_INSIGHT_SURFACES: InsightCandidateSurface[] = [
+  'today',
+  'patterns',
+  'weeklyDeepDive',
+  'thisWeek',
+];
+const ALL_CANDIDATE_SURFACES: InsightCandidateSurface[] = [
+  ...NORMAL_INSIGHT_SURFACES,
+  'dreamInterpretation',
+];
 
 const DOMAIN_BY_KEY = new Map<string, GeneratedInsightDomain>(
   GENERATED_INSIGHT_DOMAINS.map(domain => [domain.key, domain]),
@@ -41,8 +63,73 @@ function patternTypeRulesForDomain(
   };
 }
 
+function copyPatternTypeBank(
+  values: Readonly<Record<PatternType, readonly string[]>>,
+): Record<PatternType, string[]> {
+  return {
+    highTracking: [...values.highTracking],
+    lowAccess: [...values.lowAccess],
+    pushPull: [...values.pushPull],
+    delayedActivation: [...values.delayedActivation],
+  };
+}
+
+function blockedSurfacesFor(
+  allowedSurfaces: readonly InsightCandidateSurface[],
+): InsightCandidateSurface[] {
+  const allowed = new Set(allowedSurfaces);
+  return ALL_CANDIDATE_SURFACES.filter(surface => !allowed.has(surface));
+}
+
+const DREAM_TAXONOMY_CATEGORY: InsightTaxonomyCategory = {
+  category: DREAM_CATEGORY,
+  majorDomain: 'dreamInterpretation',
+  domainName: 'Dream Interpretation',
+  subcategory: 'dreamOnly',
+  theoryLens: ['dreamEngine'],
+  anchors: ['dream', 'dream-symbol', 'dream-image', 'dream-atmosphere'],
+  signalTypes: ['dream'],
+  patternTypes: PATTERN_TYPES,
+  patternTypeRules: {
+    highTracking: 'Dream interpretation is handled by the separate dream engine.',
+    lowAccess: 'Dream interpretation is handled by the separate dream engine.',
+    pushPull: 'Dream interpretation is handled by the separate dream engine.',
+    delayedActivation: 'Dream interpretation is handled by the separate dream engine.',
+  },
+  allowedSurfaces: ['dreamInterpretation'],
+  blockedSurfaces: NORMAL_INSIGHT_SURFACES,
+  microMoments: {
+    highTracking: [],
+    lowAccess: [],
+    pushPull: [],
+    delayedActivation: [],
+  },
+  actions: {
+    highTracking: [],
+    lowAccess: [],
+    pushPull: [],
+    delayedActivation: [],
+  },
+  validationStyle: {
+    highTracking: [],
+    lowAccess: [],
+    pushPull: [],
+    delayedActivation: [],
+  },
+  landings: {
+    highTracking: [],
+    lowAccess: [],
+    pushPull: [],
+    delayedActivation: [],
+  },
+};
+
 const CATEGORY_TAXONOMY = new Map<InsightCategory, InsightTaxonomyCategory>();
 const SUBCATEGORY_TAXONOMY = new Map<string, InsightTaxonomyCategory>();
+
+function unique(values: string[]): string[] {
+  return Array.from(new Set(values.filter(Boolean)));
+}
 
 for (const entry of GENERATED_INSIGHT_TAXONOMY) {
   const domain = DOMAIN_BY_KEY.get(entry.majorDomain);
@@ -59,12 +146,64 @@ for (const entry of GENERATED_INSIGHT_TAXONOMY) {
     patternTypes: [...domain.patternTypes],
     patternTypeRules: patternTypeRulesForDomain(domain, entry.subcategory),
     allowedSurfaces: [...entry.allowedSurfaces],
+    blockedSurfaces: blockedSurfacesFor(entry.allowedSurfaces),
+    microMoments: copyPatternTypeBank(domain.microMoments),
+    actions: copyPatternTypeBank(domain.actions),
+    validationStyle: copyPatternTypeBank(domain.validationStyle),
+    landings: copyPatternTypeBank(domain.landings),
   };
 
   SUBCATEGORY_TAXONOMY.set(`${entry.majorDomain}:${entry.subcategory}`, taxonomyEntry);
   if (entry.isLegacyDefault || !CATEGORY_TAXONOMY.has(entry.category)) {
     CATEGORY_TAXONOMY.set(entry.category, taxonomyEntry);
   }
+}
+
+for (const paragraph of GENERATED_INSIGHT_PARAGRAPHS) {
+  if (paragraph.category === DREAM_CATEGORY) {
+    continue;
+  }
+
+  const domain = DOMAIN_BY_KEY.get(paragraph.majorDomain);
+  if (!domain) continue;
+
+  const subcategoryKey = `${paragraph.majorDomain}:${paragraph.insightSubcategory}`;
+  const existingTaxonomy = SUBCATEGORY_TAXONOMY.get(subcategoryKey);
+  if (existingTaxonomy) {
+    existingTaxonomy.anchors = unique([...existingTaxonomy.anchors, ...paragraph.anchors]);
+    existingTaxonomy.signalTypes = unique([...existingTaxonomy.signalTypes, ...paragraph.signalTypes]);
+
+    if (!CATEGORY_TAXONOMY.has(paragraph.category)) {
+      CATEGORY_TAXONOMY.set(paragraph.category, {
+        ...existingTaxonomy,
+        category: paragraph.category,
+        allowedSurfaces: unique([...existingTaxonomy.allowedSurfaces, ...paragraph.allowedSurfaces]) as InsightCandidateSurface[],
+        blockedSurfaces: blockedSurfacesFor(unique([...existingTaxonomy.allowedSurfaces, ...paragraph.allowedSurfaces]) as InsightCandidateSurface[]),
+      });
+    }
+    continue;
+  }
+
+  const taxonomyEntry: InsightTaxonomyCategory = {
+    category: paragraph.category,
+    majorDomain: domain.key,
+    domainName: domain.domainName,
+    subcategory: paragraph.insightSubcategory,
+    theoryLens: [...domain.theoryLens],
+    anchors: [...paragraph.anchors],
+    signalTypes: [...paragraph.signalTypes],
+    patternTypes: [...domain.patternTypes],
+    patternTypeRules: patternTypeRulesForDomain(domain, paragraph.insightSubcategory),
+    allowedSurfaces: [...paragraph.allowedSurfaces],
+    blockedSurfaces: blockedSurfacesFor(paragraph.allowedSurfaces),
+    microMoments: copyPatternTypeBank(domain.microMoments),
+    actions: copyPatternTypeBank(domain.actions),
+    validationStyle: copyPatternTypeBank(domain.validationStyle),
+    landings: copyPatternTypeBank(domain.landings),
+  };
+
+  CATEGORY_TAXONOMY.set(paragraph.category, taxonomyEntry);
+  SUBCATEGORY_TAXONOMY.set(subcategoryKey, taxonomyEntry);
 }
 
 export const INSIGHT_TAXONOMY_DOMAINS = GENERATED_INSIGHT_DOMAINS;
@@ -80,6 +219,7 @@ export function insightTaxonomyDomainForKey(
 export function insightTaxonomyForCategory(
   category: InsightCategory,
 ): InsightTaxonomyCategory | undefined {
+  if (category === DREAM_CATEGORY) return DREAM_TAXONOMY_CATEGORY;
   return CATEGORY_TAXONOMY.get(category);
 }
 
@@ -102,6 +242,15 @@ export function isInsightCategoryAllowedOnCandidateSurface(
 ): boolean {
   const taxonomy = insightTaxonomyForCategory(category);
   if (!taxonomy) return false;
+  if (category === DREAM_CATEGORY) return surface === 'dreamInterpretation';
+  if (surface === 'weeklyDeepDive' || surface === 'thisWeek') {
+    return taxonomy.allowedSurfaces.some(allowedSurface =>
+      allowedSurface === 'today' ||
+      allowedSurface === 'patterns' ||
+      allowedSurface === surface,
+    );
+  }
+  if (taxonomy.blockedSurfaces.includes(surface)) return false;
   return taxonomy.allowedSurfaces.includes(surface);
 }
 

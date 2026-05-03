@@ -136,6 +136,13 @@ export interface GeneratedInsight {
   isCuratedParagraph?: boolean;
   sentenceCount?: number;
   hasPracticalPrompt?: boolean;
+  currentState?: string;
+  stateConfidence?: number;
+  deliveryMode?: string;
+  depthLevel?: number;
+  activeWeeklyTheme?: string;
+  narrativeThreadId?: string;
+  narrativeRole?: string;
   reframe: {
     shame: string;
     clarity: string;

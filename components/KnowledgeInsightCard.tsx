@@ -129,6 +129,12 @@ export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insi
         </View>
 
         <Text style={styles.title}>{insight.title}</Text>
+        {insight.activeWeeklyTheme ? (
+          <View style={styles.activeThemeContainer}>
+            <Text style={styles.activeThemeLabel}>ACTIVE WEEKLY THEME</Text>
+            <Text style={styles.activeThemeText}>{insight.activeWeeklyTheme}</Text>
+          </View>
+        ) : null}
         <Text style={styles.body}>{`${insight.observation} ${insight.pattern}`}</Text>
 
         <View style={styles.reframeContainer}>
@@ -197,6 +203,27 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     lineHeight: 22,
     marginBottom: 20,
+  },
+  activeThemeContainer: {
+    backgroundColor: 'rgba(168,139,235,0.10)',
+    padding: 14,
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(168,139,235,0.22)',
+  },
+  activeThemeLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: 'rgba(212,175,55,0.72)',
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  activeThemeText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.86)',
+    lineHeight: 20,
+    fontWeight: '600',
   },
   reframeContainer: {
     backgroundColor: 'rgba(255,255,255,0.04)',

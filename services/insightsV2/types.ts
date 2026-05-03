@@ -4,7 +4,8 @@ import type { InsightFeedbackProfile } from './feedback/insightOutcomeFeedback';
 /**
  * MySky Insights V2
  *
- * Core type definitions for the archive-pattern insight engine.
+ * Core type definitions for the canonical insight candidate and paragraph
+ * routing system.
  */
 
 export type InsightDataSource =
@@ -92,9 +93,27 @@ export type InsightCandidateSurface =
   | 'today'
   | 'patterns'
   | 'weeklyDeepDive'
-  | 'thisWeek';
+  | 'thisWeek'
+  | 'dreamInterpretation';
+
+export type InsightCurrentState =
+  | 'calm'
+  | 'activated'
+  | 'overwhelmed'
+  | 'shutdown'
+  | 'tired'
+  | 'openReceptive';
+
+export type InsightDeliveryMode =
+  | 'novelty'
+  | 'reinforcement'
+  | 'gentleEcho'
+  | 'space';
+
+export type InsightDepthLevel = 1 | 2 | 3 | 4;
 
 export interface InsightCandidate {
+  id: string;
   majorDomain: string;
   theoryLens: string[];
   subcategory: string;
@@ -103,9 +122,16 @@ export interface InsightCandidate {
   selectedPatternType: PatternType;
   anchors: string[];
   signalTypes: string[];
+  tags: string[];
   strength: number;
   confidence: number;
   sources: InsightDataSource[];
+  allowedSurfaces: InsightCandidateSurface[];
+  blockedSurfaces: InsightCandidateSurface[];
+  /**
+   * Backward-compatible alias for older V2 callers. New routing should read
+   * allowedSurfaces / blockedSurfaces.
+   */
   surfaces: InsightCandidateSurface[];
 }
 
@@ -1163,6 +1189,10 @@ export interface GeneratedInsight {
   isCuratedParagraph?: boolean;
   sentenceCount?: number;
   hasPracticalPrompt?: boolean;
+  currentState?: InsightCurrentState;
+  stateConfidence?: number;
+  deliveryMode?: InsightDeliveryMode;
+  depthLevel?: InsightDepthLevel;
   reframe: string;
   reflectionPrompt?: string;
   patternKey: string;
@@ -1359,6 +1389,9 @@ export interface BuildTodayInsightsResult {
   insights: GeneratedInsight[];
   primaryFeeling: SelectedFeelingSet | null;
   primaryPersona: SelectedPersonaProfile | null;
+  currentState?: InsightCurrentState;
+  deliveryMode?: InsightDeliveryMode;
+  timingReasonCodes?: string[];
 }
 
 export interface InsightRawInputs {

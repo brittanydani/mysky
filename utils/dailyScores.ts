@@ -1,8 +1,8 @@
 /**
- * Daily Scores — Layer 2 of the Narrative Insights Pipeline
+ * Daily Scores
  *
  * Transforms raw DailyAggregate rows into normalized composite scores
- * that make pattern detection meaningful and consistent.
+ * used by personal profile summaries and trend views.
  *
  * Scores computed per day (all 0–100 scale):
  *  - stability:  overall regulation and steadiness

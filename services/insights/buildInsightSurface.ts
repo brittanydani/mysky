@@ -1,5 +1,5 @@
 import { supabaseDb } from '../storage/supabaseDb';
-import { runPipeline } from './pipeline';
+import { buildDailyAggregation } from './dailyAggregates';
 import type { DailyAggregate } from './types';
 import {
   loadSelfKnowledgeContext,
@@ -21,9 +21,14 @@ import type { PremiumPersonaProfile } from '../insightsV2/adapters/premiumPerson
 import type {
   PremiumPatternItem,
   PremiumPatternProfile,
+} from './selection/selectPatternCards';
+import type {
   PremiumThisWeekPatternItem,
+} from './selection/selectThisWeek';
+import type {
   PremiumWeeklyDeepDiveItem,
-} from '../insightsV2/adapters/premiumPatterns';
+} from './selection/selectWeeklyDeepDive';
+import type { WeeklyNarrativeThread } from '../insightsV2/narrative/weeklyNarrative';
 import type { InsightFeedbackProfile } from '../insightsV2/feedback/insightOutcomeFeedback';
 import {
   previousPatternScoresFromInsightMemory,
@@ -53,6 +58,7 @@ export interface InsightSurfaceResult {
   premiumPatternProfile: PremiumPatternProfile | null;
   thisWeeksV2Pattern: PremiumThisWeekPatternItem | null;
   premiumWeeklyDeepDive: PremiumWeeklyDeepDiveItem[];
+  weeklyNarrative: WeeklyNarrativeThread | null;
   insightMemory: InsightMemoryProfile | null;
 }
 
@@ -112,6 +118,7 @@ export async function buildInsightSurface({
       premiumPatternProfile: null,
       thisWeeksV2Pattern: null,
       premiumWeeklyDeepDive: [],
+      weeklyNarrative: null,
       insightMemory: null,
     };
   }
@@ -138,7 +145,7 @@ export async function buildInsightSurface({
     ? stressValues.reduce((sum, value) => sum + value, 0) / stressValues.length
     : 0;
 
-  const pipelineResult = runPipeline({
+  const aggregationResult = buildDailyAggregation({
     checkIns,
     journalEntries: recentJournalEntries,
     sleepEntries,
@@ -147,7 +154,7 @@ export async function buildInsightSurface({
   });
 
   const refs = insightsEnabled
-    ? computeSelfKnowledgeCrossRef(enrichedContext, checkIns, pipelineResult.dailyAggregates)
+    ? computeSelfKnowledgeCrossRef(enrichedContext, checkIns, aggregationResult.dailyAggregates)
     : [];
   const crossRefs = refs;
   const insightMemory = insightsEnabled ? insightMemoryProfile : null;
@@ -175,12 +182,14 @@ export async function buildInsightSurface({
         premiumPatternProfile: null,
         thisWeeksV2Pattern: null,
         premiumWeeklyDeepDive: [],
+        weeklyNarrative: null,
       };
   const premiumPersonaProfile = knowledgeInsightResult.premiumPersonaProfile;
   const premiumPatterns = knowledgeInsightResult.premiumPatterns;
   const premiumPatternProfile = knowledgeInsightResult.premiumPatternProfile;
   const thisWeeksV2Pattern = knowledgeInsightResult.thisWeeksV2Pattern;
   const premiumWeeklyDeepDive = knowledgeInsightResult.premiumWeeklyDeepDive;
+  const weeklyNarrative = knowledgeInsightResult.weeklyNarrative;
   const knowledgeInsight = knowledgeInsightResult.primaryInsight;
   const knowledgeInsights = knowledgeInsightResult.dailyInsights;
 
@@ -220,7 +229,7 @@ export async function buildInsightSurface({
       ? new Date().toISOString()
       : null,
     crossRefs,
-    dailyAggregates: pipelineResult.dailyAggregates,
+    dailyAggregates: aggregationResult.dailyAggregates,
     knowledgeInsight,
     knowledgeInsights,
     premiumPersonaProfile,
@@ -228,6 +237,7 @@ export async function buildInsightSurface({
     premiumPatternProfile,
     thisWeeksV2Pattern,
     premiumWeeklyDeepDive,
+    weeklyNarrative,
     insightMemory,
   };
 }

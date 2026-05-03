@@ -53,7 +53,12 @@ describe('Knowledge Engine V2', () => {
         expect(insight.insightSubcategory).toBeDefined();
         expect(insight.patternType).toMatch(/highTracking|lowAccess|pushPull|delayedActivation/);
         expect(insight.writerShape).toBeDefined();
+        expect(insight.currentState).toBeDefined();
+        expect(insight.deliveryMode).toBeDefined();
+        expect(insight.depthLevel).toBeGreaterThanOrEqual(1);
     }
+    expect(result.currentState).toBeDefined();
+    expect(result.deliveryMode).toBeDefined();
   });
 
   it('detects intensifying movement', async () => {

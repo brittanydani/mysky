@@ -10,7 +10,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-LIBRARY_PATH = ROOT / "services" / "insights" / "generatedInsightParagraphs.ts"
+LIBRARY_PATH = ROOT / "services" / "insights" / "generated" / "generatedInsightParagraphs.ts"
 
 BLOCKED_PHRASES = [
     "This is clear enough to track now",
@@ -245,6 +245,7 @@ REQUIRED_FIELDS = {
     "intensity",
     "signalTypes",
     "tags",
+    "allowedSurfaces",
     "isCurated",
     "source",
     "body",
@@ -444,6 +445,10 @@ def validate_metadata(item: dict[str, Any], seen_ids: set[str], label: str) -> l
     tags = item.get("tags")
     if not isinstance(tags, list) or not tags or not all(isinstance(value, str) and value for value in tags):
         errors.append(f"{label}: tags must be a non-empty string array")
+
+    surfaces = item.get("allowedSurfaces")
+    if not isinstance(surfaces, list) or not surfaces or not set(surfaces).issubset(VALID_TAXONOMY_SURFACES):
+        errors.append(f"{label}: allowedSurfaces must be a non-empty valid surface array")
 
     return errors
 

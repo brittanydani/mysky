@@ -6,7 +6,7 @@ import {
   type GeneratedInsightParagraph,
   type GeneratedInsightTone,
   type GeneratedInsightWriterShape,
-} from '../../insights/generatedInsightParagraphs';
+} from '../../insights/generated/generatedInsightParagraphs';
 import type {
   InsightCategory,
   InsightDataSource,
@@ -22,6 +22,10 @@ import {
   personalizedStyleRouteScore,
   type PersonalizedInsightStyleRoute,
 } from '../selection/personalizedStyleRouting';
+import {
+  stateAwareParagraphScore,
+  type CurrentInsightStateProfile,
+} from '../state/insightState';
 
 export type PremiumPatternWriterShape = GeneratedInsightWriterShape;
 export type PatternParagraphTone = GeneratedInsightTone;
@@ -50,6 +54,7 @@ export interface PatternParagraphSelectionInput {
   avoidPatternTypes?: PremiumPatternType[];
   feedbackProfile?: InsightFeedbackProfile | null;
   styleRoute?: PersonalizedInsightStyleRoute | null;
+  stateProfile?: CurrentInsightStateProfile | null;
 }
 
 export interface SelectedPatternParagraph extends PatternParagraphVariant {
@@ -174,6 +179,7 @@ function scoreVariant(
   const patternTypePenalty = !input.patternType && avoidPatternTypes.has(variant.patternType) ? 16 : 0;
   const feedbackBonus = insightFeedbackScoreForParagraph(variant, input.feedbackProfile);
   const styleRouteBonus = personalizedStyleRouteScore(variant, styleRoute, input.surface);
+  const stateBonus = stateAwareParagraphScore(variant, input.stateProfile);
   const curatedBonus = variant.isCurated
     ? (matchedAnchors.length > 0 || matchedSignals.length > 0 || matchedTags.length > 0 ? 32 : 6)
     : 0;
@@ -197,6 +203,7 @@ function scoreVariant(
       patternTypePenalty +
       feedbackBonus +
       styleRouteBonus +
+      stateBonus +
       curatedBonus +
       tieBreak,
   };
@@ -226,9 +233,16 @@ function selectFromLibrary(
   if (!candidates.length) {
     throw new Error(`No unused generated insight paragraph is available for ${input.category}`);
   }
+  const requestedSurface = input.surface;
+  const surfaceCandidates = requestedSurface
+    ? candidates.filter(variant => (variant.allowedSurfaces as readonly string[]).includes(requestedSurface))
+    : candidates;
+  if (!surfaceCandidates.length) {
+    throw new Error(`No generated insight paragraph is available for ${input.category} on ${input.surface}`);
+  }
 
   const styleRoute = input.styleRoute ?? buildPersonalizedInsightStyleRoute(input.feedbackProfile);
-  const selected = candidates
+  const selected = surfaceCandidates
     .map(variant => scoreVariant(variant, input, anchors, styleRoute))
     .sort((a, b) => b.score - a.score)[0];
 

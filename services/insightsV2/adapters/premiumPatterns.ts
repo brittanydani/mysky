@@ -28,6 +28,10 @@ import {
   type RootPatternConstellation,
   type RootPatternEvidence,
 } from '../rootPatterns/rootPatternDetection';
+import {
+  selectProtectiveStrategy,
+  type ProtectiveStrategy,
+} from '../rootPatterns/protectiveStrategyMapping';
 import type {
   ArchivePattern,
   ArchivePatternScore,
@@ -82,6 +86,10 @@ export interface PremiumPatternItem {
   specificityAnchor?: string;
   matchedAnchors?: string[];
   matchedSignals?: string[];
+  protectiveStrategy?: ProtectiveStrategy | null;
+  activeWeeklyTheme?: string;
+  narrativeThreadId?: string;
+  narrativeRole?: 'patternCard' | 'supporting';
   fingerprint?: string;
   score?: number;
   patternKey: string;
@@ -113,6 +121,10 @@ export interface PremiumWeeklyDeepDiveItem {
   reflectionPrompt: string;
   confidence: PatternConfidence;
   movement: PatternMovement;
+  activeWeeklyTheme?: string;
+  narrativeThreadId?: string;
+  narrativeRole?: 'weeklyDeepDive' | 'supporting';
+  connectedPatternKeys?: string[];
   isV2Derived: true;
   isLowConfidenceFallback?: boolean;
   isEmptyState?: boolean;
@@ -128,6 +140,12 @@ export interface PremiumThisWeekPatternItem {
   confidence: PatternConfidence;
   movement: PatternMovement;
   evidenceSummary: string;
+  activeWeeklyTheme?: string;
+  narrativeThreadId?: string;
+  narrativeRole?: 'thisWeek';
+  narrativeForward?: string;
+  narrativeQuestion?: string;
+  connectedPatternKeys?: string[];
   isV2Derived: true;
   isLowConfidenceFallback?: boolean;
   isEmptyState?: boolean;
@@ -137,6 +155,7 @@ export interface PremiumPatternProfileSection {
   key: string;
   title: string;
   body: string;
+  protectiveStrategy?: ProtectiveStrategy | null;
   category: InsightCategory;
   patternKey: string;
   confidence: PatternConfidence;
@@ -165,6 +184,7 @@ interface AdaptPremiumPatternsOptions {
   surface?: 'patterns' | 'weeklyDeepDive' | 'thisWeek';
   excludeParagraphIds?: string[];
   excludeBodyKeys?: string[];
+  avoidPatternKeys?: Iterable<string>;
   feedbackProfile?: InsightFeedbackProfile | null;
 }
 
@@ -602,11 +622,13 @@ export function adaptPremiumPatterns(
   const recentWeeklyParagraphIds: string[] = [];
   const excludeParagraphIds = new Set(options.excludeParagraphIds ?? []);
   const excludeBodyKeys = new Set(options.excludeBodyKeys ?? []);
+  const avoidPatternKeys = new Set(options.avoidPatternKeys ?? []);
   const surface = options.surface ?? 'patterns';
   const recentWriterShapes: PremiumPatternWriterShape[] = [];
   const recentPatternTypes: PremiumPatternType[] = [];
 
   for (const score of sortedScores) {
+    if (avoidPatternKeys.has(score.patternKey)) continue;
     const pattern = patternByKey(score.patternKey);
     if (!pattern) continue;
     if (!isArchivePatternAllowedOnSurface(pattern, 'patternScreen')) continue;
@@ -617,12 +639,13 @@ export function adaptPremiumPatterns(
     const searchText = buildPatternSearchText(pattern, score);
     let paragraph: ReturnType<typeof selectArchivePatternParagraph>;
     let weeklyParagraph: ReturnType<typeof selectArchiveWeeklyPatternParagraph>;
+    const primaryParagraphSurface = surface === 'patterns' ? surface : 'patterns';
     try {
       paragraph = selectArchivePatternParagraph({
         pattern,
         score,
         candidate: insightCandidate,
-        surface,
+        surface: primaryParagraphSurface,
         recentParagraphIds,
         excludeParagraphIds: Array.from(excludeParagraphIds),
         excludeBodyKeys: Array.from(excludeBodyKeys),
@@ -649,6 +672,28 @@ export function adaptPremiumPatterns(
       ...pattern.requiredSignals,
       ...pattern.supportingSignals,
     ]);
+    const protectiveStrategy = selectProtectiveStrategy({
+      patternKey: score.patternKey,
+      title: score.title,
+      category: score.category,
+      majorDomain: insightCandidate.majorDomain,
+      insightSubcategory: insightCandidate.subcategory,
+      patternType: insightCandidate.selectedPatternType,
+      anchors: unique([
+        ...insightCandidate.anchors,
+        ...paragraph.anchors,
+        ...paragraph.matchedAnchors,
+      ]),
+      signalTypes: unique([
+        ...insightCandidate.signalTypes,
+        ...paragraph.signalTypes,
+        ...paragraph.matchedSignals,
+        ...relatedSignals,
+      ]),
+      sources: insightCandidate.sources,
+      strength: score.score,
+      confidence: score.confidence,
+    });
 
     items.push({
       title: score.title,
@@ -670,6 +715,7 @@ export function adaptPremiumPatterns(
       specificityAnchor: paragraph.matchedAnchors[0] ?? paragraph.anchors[0] ?? livedMomentFromText(searchText),
       matchedAnchors: paragraph.matchedAnchors,
       matchedSignals: paragraph.matchedSignals,
+      protectiveStrategy,
       fingerprint: `v2:${score.patternKey}`,
       score: Math.round(score.score * 100),
       patternKey: score.patternKey,
@@ -814,6 +860,12 @@ function rootPatternEvidenceFromPremiumItem(item: PremiumPatternItem): RootPatte
     signalTypes: unique([
       ...item.relatedSignals,
       ...(item.matchedSignals ?? []),
+      item.protectiveStrategy?.key ?? '',
+      item.protectiveStrategy?.name ?? '',
+      item.protectiveStrategy?.protectiveMove ?? '',
+      item.protectiveStrategy?.protects ?? '',
+      item.protectiveStrategy?.costs ?? '',
+      item.protectiveStrategy?.softens ?? '',
       item.clarityReframe ?? '',
       item.shameLabel ?? '',
       item.evidenceSummary,
@@ -821,6 +873,7 @@ function rootPatternEvidenceFromPremiumItem(item: PremiumPatternItem): RootPatte
     sources: rootPatternSourcesFromItem(item),
     strength: item.score ?? confidenceRank(item.confidence) * 20,
     confidence: item.confidence,
+    protectiveStrategy: item.protectiveStrategy,
   };
 }
 
@@ -929,9 +982,17 @@ function sectionBodyForPattern(item: PremiumPatternItem): string {
   const pressure = stableIndex(item.patternKey, 3) === 0
     ? pressureReframeSentence(item)
     : '';
+  const strategy = item.protectiveStrategy
+    ? [
+        `Underneath it, the move may be ${item.protectiveStrategy.protectiveMove}.`,
+        `The protective move here is ${item.protectiveStrategy.protectiveMove}.`,
+        `At its core, this may be about ${item.protectiveStrategy.protectiveMove}.`,
+      ][stableIndex(item.patternKey, 3)]
+    : '';
 
   return [
     personalLeadForPattern(item),
+    strategy,
     personalReframeSentence(item),
     relatedSignalSentence(item),
     pressure,
@@ -944,6 +1005,7 @@ function sectionForPattern(item: PremiumPatternItem): PremiumPatternProfileSecti
     key: `profile-section-${item.patternKey}`,
     title,
     body: sectionBodyForPattern(item),
+    protectiveStrategy: item.protectiveStrategy,
     category: item.category,
     patternKey: item.patternKey,
     confidence: item.confidence,

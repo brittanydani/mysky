@@ -1,6 +1,6 @@
 import type { DailyCheckIn } from '../patterns/types';
 import type { JournalEntry, SleepEntry } from '../storage/models';
-import { buildTodayInsights } from '../insightsV2/knowledgeEngineV2';
+import { buildTodayInsights } from './selection/selectTodayInsight';
 import {
   adaptPremiumPersonaProfile,
   type PremiumPersonaProfile,
@@ -8,15 +8,27 @@ import {
 import {
   adaptWeeklyPremiumPatternCandidates,
   adaptPremiumPatterns,
-  selectThisWeeksV2Pattern,
-  selectPremiumWeeklyDeepDive,
   selectPremiumPatternProfile,
   type PremiumPatternItem,
   type PremiumPatternProfile,
+} from './selection/selectPatternCards';
+import {
+  selectThisWeeksV2Pattern,
   type PremiumThisWeekPatternItem,
+} from './selection/selectThisWeek';
+import {
+  selectPremiumWeeklyDeepDive,
   type PremiumWeeklyDeepDiveItem,
-} from '../insightsV2/adapters/premiumPatterns';
-import { patternParagraphBodyKey } from '../insightsV2/adapters/premiumPatternParagraphLibrary';
+} from './selection/selectWeeklyDeepDive';
+import {
+  applyWeeklyNarrativeToDailyInsights,
+  applyWeeklyNarrativeToPatterns,
+  applyWeeklyNarrativeToThisWeekPattern,
+  applyWeeklyNarrativeToWeeklyDeepDive,
+  selectWeeklyNarrativeThread,
+  type WeeklyNarrativeThread,
+} from '../insightsV2/narrative/weeklyNarrative';
+import { patternParagraphBodyKey } from './generated/premiumPatternParagraphLibrary';
 import type {
   ArchivePatternScore as V2ArchivePatternScore,
   EvidenceAnchor as V2EvidenceAnchor,
@@ -53,6 +65,7 @@ export interface ActiveKnowledgeInsightResult {
   premiumPatternProfile: PremiumPatternProfile | null;
   thisWeeksV2Pattern: PremiumThisWeekPatternItem | null;
   premiumWeeklyDeepDive: PremiumWeeklyDeepDiveItem[];
+  weeklyNarrative: WeeklyNarrativeThread | null;
 }
 
 const MAX_DAILY_INSIGHT_CARDS = 2;
@@ -263,22 +276,6 @@ function selectPrimaryV2Insight(insights: V2GeneratedInsight[]): V2GeneratedInsi
   return insights.find((insight) => insight.slot === 'whatMySkyNoticed') ?? insights[0] ?? null;
 }
 
-function patternScoreKeySet(patternScores: { patternKey: string }[]): Set<string> {
-  return new Set(patternScores.map(score => score.patternKey));
-}
-
-function selectedArchivePatternKeys(
-  insights: V2GeneratedInsight[],
-  patternScores: { patternKey: string }[],
-): Set<string> {
-  const archiveKeys = patternScoreKeySet(patternScores);
-  return new Set(
-    insights
-      .map(insight => insight.patternKey)
-      .filter(patternKey => archiveKeys.has(patternKey)),
-  );
-}
-
 export function adaptV2Insight(insight: V2GeneratedInsight): GeneratedInsight {
   const { observation, pattern } = splitBody(insight.body);
 
@@ -302,6 +299,10 @@ export function adaptV2Insight(insight: V2GeneratedInsight): GeneratedInsight {
     isCuratedParagraph: insight.isCuratedParagraph,
     sentenceCount: insight.sentenceCount,
     hasPracticalPrompt: insight.hasPracticalPrompt,
+    currentState: insight.currentState,
+    stateConfidence: insight.stateConfidence,
+    deliveryMode: insight.deliveryMode,
+    depthLevel: insight.depthLevel,
     reframe: adaptReframe(insight.reframe),
     prompt: insight.reflectionPrompt ?? 'What feels most useful to notice about this pattern today?',
     patternKey: insight.patternKey,
@@ -336,14 +337,14 @@ async function runV2KnowledgeInsights({
   });
 
   const selectedDailyV2Insights = selectDailyV2Insights(result.insights);
-  const dailyPatternKeys = selectedArchivePatternKeys(selectedDailyV2Insights, result.patternScores);
-  const premiumPatternScores = result.patternScores.filter(
-    score => !dailyPatternKeys.has(score.patternKey),
-  );
+  const premiumPatternScores = result.patternScores;
   const selectedDailyParagraphIds = unique(
     selectedDailyV2Insights
       .map(insight => insight.paragraphId)
       .filter((id): id is string => !!id),
+  );
+  const selectedDailyPatternKeys = unique(
+    selectedDailyV2Insights.map(insight => insight.patternKey),
   );
   const usedParagraphIds = new Set(selectedDailyParagraphIds);
   const usedBodyKeys = new Set(
@@ -351,16 +352,17 @@ async function runV2KnowledgeInsights({
       .map(insight => patternParagraphBodyKey(insight.body))
       .filter(Boolean),
   );
-  const dailyInsights = selectedDailyV2Insights.map(adaptV2Insight);
+  let dailyInsights = selectedDailyV2Insights.map(adaptV2Insight);
   const fallbackPrimary = selectPrimaryV2Insight(result.insights);
-  const primaryInsight = dailyInsights[0] ?? (fallbackPrimary ? adaptV2Insight(fallbackPrimary) : null);
+  let primaryInsight = dailyInsights[0] ?? (fallbackPrimary ? adaptV2Insight(fallbackPrimary) : null);
   const dailyShowsPrimaryPersona = selectedDailyV2Insights.some(insight => insight.slot === 'primaryPersona');
   const premiumPersonaProfile = dailyShowsPrimaryPersona
     ? null
     : adaptPremiumPersonaProfile(result.primaryPersona);
-  const premiumPatterns = adaptPremiumPatterns(premiumPatternScores, {
+  let premiumPatterns = adaptPremiumPatterns(premiumPatternScores, {
     excludeParagraphIds: Array.from(usedParagraphIds),
     excludeBodyKeys: Array.from(usedBodyKeys),
+    avoidPatternKeys: selectedDailyPatternKeys,
     feedbackProfile,
   });
   for (const pattern of premiumPatterns) {
@@ -372,21 +374,37 @@ async function runV2KnowledgeInsights({
   const weeklyCandidates = adaptWeeklyPremiumPatternCandidates(premiumPatternScores, {
     excludeParagraphIds: Array.from(usedParagraphIds),
     excludeBodyKeys: Array.from(usedBodyKeys),
+    avoidPatternKeys: selectedDailyPatternKeys,
     feedbackProfile,
   });
-  const premiumWeeklyDeepDive = selectPremiumWeeklyDeepDive(
+  let premiumWeeklyDeepDive = selectPremiumWeeklyDeepDive(
     weeklyCandidates,
     { excludeBodyKeys: Array.from(usedBodyKeys) },
   );
   for (const read of premiumWeeklyDeepDive) {
     if (!read.isEmptyState) usedBodyKeys.add(patternParagraphBodyKey(read.body));
   }
-  const thisWeeksV2Pattern = selectThisWeeksV2Pattern(
+  let thisWeeksV2Pattern: PremiumThisWeekPatternItem | null = selectThisWeeksV2Pattern(
     premiumPatternScores,
     premiumPatterns,
     premiumWeeklyDeepDive,
-    { excludeBodyKeys: Array.from(usedBodyKeys) },
+    {
+      avoidPatternKeys: selectedDailyPatternKeys,
+      excludeBodyKeys: Array.from(usedBodyKeys),
+    },
   );
+  const weeklyNarrative = selectWeeklyNarrativeThread({
+    dailyInsights,
+    premiumPatterns,
+    premiumPatternProfile,
+    thisWeeksV2Pattern,
+    premiumWeeklyDeepDive,
+  });
+  dailyInsights = applyWeeklyNarrativeToDailyInsights(dailyInsights, weeklyNarrative);
+  primaryInsight = dailyInsights[0] ?? primaryInsight;
+  premiumPatterns = applyWeeklyNarrativeToPatterns(premiumPatterns, weeklyNarrative);
+  premiumWeeklyDeepDive = applyWeeklyNarrativeToWeeklyDeepDive(premiumWeeklyDeepDive, weeklyNarrative);
+  thisWeeksV2Pattern = applyWeeklyNarrativeToThisWeekPattern(thisWeeksV2Pattern, weeklyNarrative);
 
   return {
     primaryInsight,
@@ -396,6 +414,7 @@ async function runV2KnowledgeInsights({
     premiumPatternProfile,
     thisWeeksV2Pattern,
     premiumWeeklyDeepDive,
+    weeklyNarrative,
   };
 }
 
@@ -414,6 +433,7 @@ export async function runActiveKnowledgeInsights(
       premiumPatternProfile: null,
       thisWeeksV2Pattern: null,
       premiumWeeklyDeepDive: [],
+      weeklyNarrative: null,
     };
   }
 }

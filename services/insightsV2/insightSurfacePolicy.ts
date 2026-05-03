@@ -21,12 +21,13 @@ export function insightDomainForCategory(
   return taxonomy ? insightTaxonomyDomainForKey(taxonomy.majorDomain) : undefined;
 }
 
-export function isDreamSignalKey(key: SignalKey | string): boolean {
+export function isDreamSignalKey(key: SignalKey | string | null | undefined): boolean {
+  if (typeof key !== 'string') return false;
   return key === 'dream' || key.startsWith('dream_') || key.includes('_dream');
 }
 
-export function isDreamSignal(signal: UserSignal): boolean {
-  return signal.source === 'dream' || isDreamSignalKey(signal.key);
+export function isDreamSignal(signal: UserSignal | null | undefined): boolean {
+  return signal?.source === 'dream' || isDreamSignalKey(signal?.key);
 }
 
 export function isDreamInsightCategory(category: InsightCategory): boolean {
@@ -58,11 +59,12 @@ export function isArchivePatternAllowedOnSurface(
 }
 
 export function filterSignalsForInsightSurface(
-  signals: UserSignal[],
+  signals: UserSignal[] | null | undefined,
   surface: InsightSurfacePolicyTarget,
 ): UserSignal[] {
-  if (surface !== 'today' && surface !== 'patternScreen') return signals;
-  return signals.filter(signal => !isDreamSignal(signal));
+  const safeSignals = Array.isArray(signals) ? signals : [];
+  if (surface !== 'today' && surface !== 'patternScreen') return safeSignals;
+  return safeSignals.filter(signal => !isDreamSignal(signal));
 }
 
 export function sanitizePatternScoreForSurface(

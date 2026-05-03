@@ -1,8 +1,8 @@
 /**
- * Insights Pipeline — Types
+ * Insight data aggregation types.
  *
- * Core types for the data pipeline that transforms raw check-ins,
- * journal entries, natal chart, and daily context into insight-ready data.
+ * These types support raw time-series aggregation only. The active insight
+ * system lives in the canonical candidate -> paragraph router.
  */
 
 import { NatalChart } from '../astrology/types';
@@ -134,10 +134,10 @@ export interface TodayContext {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Pipeline Input / Output
+// Daily Aggregation Input / Output
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface PipelineInput {
+export interface DailyAggregationInput {
   /** Raw check-ins (all or last 90 days) */
   checkIns: import('../patterns/types').DailyCheckIn[];
   /** Raw journal entries (all or last 90 days) */
@@ -150,7 +150,7 @@ export interface PipelineInput {
   todayContext: TodayContext | null;
 }
 
-export interface PipelineResult {
+export interface DailyAggregationResult {
   /** The aggregated daily time series */
   dailyAggregates: DailyAggregate[];
   /** Derived chart profile (null if no chart) */
@@ -177,6 +177,6 @@ export interface CacheKey {
 
 export interface CachedInsightBundle {
   key: string;
-  bundle: import('../../utils/insightsEngine').InsightBundle;
+  bundle: unknown;
   createdAt: string;
 }

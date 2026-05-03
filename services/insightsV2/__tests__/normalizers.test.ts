@@ -1353,7 +1353,7 @@ describe('insightsV2 normalizers', () => {
     expect(insight?.angleKey).toBe('context_005_security_pressure');
   });
 
-  it('can produce an active dream-symbol insight from repeated dream material', async () => {
+  it('keeps dream-symbol material out of Today insights because dreams use the separate dream engine', async () => {
     const result = await buildTodayInsights({
       date: now,
       rawInputs: {
@@ -1367,9 +1367,9 @@ describe('insightsV2 normalizers', () => {
     });
 
     const insight = result.insights.find(item => item.slot === 'whatMySkyNoticed');
-    expect(insight).toBeDefined();
-    expect(insight?.patternKey).toBe('dreams_003_repeated_symbol');
-    expect(insight?.angleKey).toBe('symbolic_002_repeated_dream_symbol');
+    expect(insight).toBeUndefined();
+    expect(result.insights.some(item => item.category === 'dreamsSymbols')).toBe(false);
+    expect(result.patternScores.some(score => score.category === 'dreamsSymbols')).toBe(false);
   });
 
   it('can produce an active chart insight when symbolic themes meet lived signals', async () => {

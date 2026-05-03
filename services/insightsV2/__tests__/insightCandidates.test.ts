@@ -1,5 +1,6 @@
 import {
   archivePatternScoreToInsightCandidate,
+  isCandidateAllowedOnSurface,
 } from '../candidates/insightCandidates';
 import {
   selectArchivePatternParagraph,
@@ -46,6 +47,7 @@ describe('canonical insight candidates', () => {
     const taxonomy = insightTaxonomyForCategory(score.category);
 
     expect(candidate).toEqual(expect.objectContaining({
+      id: 'responsibilityCare_invisibleLoad',
       majorDomain: 'moralResponsibilityFairness',
       subcategory: 'responsibilityQuestion',
       category: 'responsibilityCare',
@@ -55,9 +57,12 @@ describe('canonical insight candidates', () => {
     }));
     expect(candidate.theoryLens.length).toBeGreaterThan(0);
     expect(candidate.anchors.length).toBeGreaterThan(0);
+    expect(candidate.tags).toEqual(expect.arrayContaining(['moralResponsibilityFairness', 'responsibilityQuestion']));
     expect(candidate.signalTypes).toEqual(expect.arrayContaining(['mental_load']));
     expect(candidate.sources).toEqual(['journal', 'bodyMap']);
+    expect(candidate.allowedSurfaces).toEqual(taxonomy?.allowedSurfaces);
     expect(candidate.surfaces).toEqual(taxonomy?.allowedSurfaces);
+    expect(candidate.blockedSurfaces).toContain('dreamInterpretation');
     expect(new Set(Object.keys(candidate.patternTypeScores))).toEqual(new Set(PATTERN_TYPES));
   });
 
@@ -96,7 +101,7 @@ describe('canonical insight candidates', () => {
     }
   });
 
-  it('keeps dream archive scores out of visible candidate surfaces', () => {
+  it('routes dream archive scores only to the separate dream interpretation surface', () => {
     const dreamPattern = ARCHIVE_PATTERNS.find(item => item.category === 'dreamsSymbols')!;
     const dreamScore: ArchivePatternScore = {
       patternKey: dreamPattern.key,
@@ -113,6 +118,16 @@ describe('canonical insight candidates', () => {
 
     const candidate = archivePatternScoreToInsightCandidate(dreamPattern, dreamScore);
 
-    expect(candidate.surfaces).toEqual([]);
+    expect(candidate.allowedSurfaces).toEqual(['dreamInterpretation']);
+    expect(candidate.surfaces).toEqual(['dreamInterpretation']);
+    expect(candidate.blockedSurfaces).toEqual(expect.arrayContaining([
+      'today',
+      'patterns',
+      'weeklyDeepDive',
+      'thisWeek',
+    ]));
+    expect(isCandidateAllowedOnSurface(candidate, 'today')).toBe(false);
+    expect(isCandidateAllowedOnSurface(candidate, 'patterns')).toBe(false);
+    expect(isCandidateAllowedOnSurface(candidate, 'dreamInterpretation')).toBe(true);
   });
 });

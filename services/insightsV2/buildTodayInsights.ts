@@ -4,6 +4,8 @@ import type {
   BuildTodayInsightsArgs,
   BuildTodayInsightsResult,
   GeneratedInsight,
+  InsightDeliveryMode,
+  InsightDepthLevel,
   InsightSlot,
   PatternConfidence,
   SelectedPersonaProfile,
@@ -26,6 +28,14 @@ import {
 import { selectArchivePatternParagraph } from './engine/patternParagraphSelection';
 import { archivePatternScoreToInsightCandidate } from './candidates/insightCandidates';
 import type { SelectedPatternParagraph } from './adapters/premiumPatternParagraphLibrary';
+import {
+  detectCurrentInsightState,
+  type CurrentInsightStateProfile,
+} from './state/insightState';
+import {
+  buildInsightTimingDecision,
+  type InsightTimingDecision,
+} from './timing/insightTiming';
 
 const MAX_TODAY_INSIGHTS = 4;
 const SLOT_PRIORITY: Record<InsightSlot, number> = {
@@ -112,10 +122,23 @@ function dedupeInsights(insights: GeneratedInsight[]): GeneratedInsight[] {
     });
 }
 
-function capTodayInsights(insights: GeneratedInsight[]): GeneratedInsight[] {
+function capTodayInsights(insights: GeneratedInsight[], maxInsights = MAX_TODAY_INSIGHTS): GeneratedInsight[] {
   return [...insights]
     .sort((a, b) => SLOT_PRIORITY[a.slot] - SLOT_PRIORITY[b.slot])
-    .slice(0, MAX_TODAY_INSIGHTS);
+    .slice(0, Math.max(0, maxInsights));
+}
+
+function deliveryMetadata(
+  stateProfile: CurrentInsightStateProfile,
+  timingDecision: InsightTimingDecision,
+  depthLevel: InsightDepthLevel,
+): Pick<GeneratedInsight, 'currentState' | 'stateConfidence' | 'deliveryMode' | 'depthLevel'> {
+  return {
+    currentState: stateProfile.primaryState,
+    stateConfidence: stateProfile.confidence,
+    deliveryMode: timingDecision.deliveryMode as InsightDeliveryMode,
+    depthLevel,
+  };
 }
 
 function trimTerminalPunctuation(text: string): string {
@@ -466,21 +489,29 @@ export async function buildTodayInsights({
   previousPatternScores = [],
   feedbackProfile = null,
 }: BuildTodayInsightsArgs): Promise<BuildTodayInsightsResult> {
-  const createdAtDate = new Date(date);
+  const safeHistory = Array.isArray(history) ? history : [];
+  const safePreviousPatternScores = Array.isArray(previousPatternScores)
+    ? previousPatternScores
+    : [];
+  const safeRawInputs = rawInputs ?? {};
+  const requestedDate = typeof date === 'string' && date.trim()
+    ? date
+    : new Date().toISOString();
+  const createdAtDate = new Date(requestedDate);
   const createdAt = Number.isFinite(createdAtDate.getTime())
     ? createdAtDate.toISOString()
     : new Date().toISOString();
 
   // 1. Normalize
-  const signals = normalizeInsightInputsV2(rawInputs, date);
+  const signals = normalizeInsightInputsV2(safeRawInputs, requestedDate);
   const insightSignals = filterSignalsForInsightSurface(signals, 'today');
 
   // 2. Score Archive Patterns
   const patternScores = ARCHIVE_PATTERNS
     .filter(pattern => isArchivePatternAllowedOnSurface(pattern, 'today'))
     .map(pattern => {
-      const prev = previousPatternScores.find(p => p.patternKey === pattern.key);
-      return scoreArchivePattern(pattern, insightSignals, date, prev);
+      const prev = safePreviousPatternScores.find(p => p.patternKey === pattern.key);
+      return scoreArchivePattern(pattern, insightSignals, requestedDate, prev);
     });
   const primaryPersona = selectPrimaryPersona({
     archivePatterns: patternScores,
@@ -488,18 +519,24 @@ export async function buildTodayInsights({
   });
 
   // 3. Extract Today's Signals
-  const todayDateStr = date.slice(0, 10);
+  const todayDateStr = requestedDate.slice(0, 10);
   const todaySignals = insightSignals.filter(s => s.date === todayDateStr);
   const primaryFeeling = selectPrimaryFeeling(todaySignals.length ? todaySignals : insightSignals);
+  const currentStateProfile = detectCurrentInsightState(insightSignals, requestedDate);
+  const timingDecision = buildInsightTimingDecision({
+    stateProfile: currentStateProfile,
+    history: safeHistory,
+    date: requestedDate,
+  });
 
   // 4. Select Primary Insight
   const candidate = selectFreshInsight(
     {
-      date,
+      date: requestedDate,
       todaySignals,
       recentSignals: insightSignals,
       archivePatterns: patternScores,
-      history,
+      history: safeHistory,
     },
     'whatMySkyNoticed',
     'today',
@@ -524,6 +561,7 @@ export async function buildTodayInsights({
       surface: 'today',
       recentParagraphIds,
       feedbackProfile,
+      stateProfile: currentStateProfile,
     });
     recentParagraphIds.push(paragraph.id);
 
@@ -536,6 +574,7 @@ export async function buildTodayInsights({
       title: angle.title,
       body: paragraph.body,
       ...paragraphMetadata(paragraph),
+      ...deliveryMetadata(currentStateProfile, timingDecision, 2),
       reframe,
       reflectionPrompt: angle.question,
       patternKey: pattern.key,
@@ -581,6 +620,7 @@ export async function buildTodayInsights({
       surface: 'today' as const,
       title,
       body,
+      ...deliveryMetadata(currentStateProfile, timingDecision, 1),
       reframe,
       reflectionPrompt: primaryFeelingMatchesStrongest
         ? `What does ${primaryFeeling.title.toLowerCase()} need from you today?`
@@ -593,13 +633,14 @@ export async function buildTodayInsights({
     });
   }
 
-  if (primaryPersona && isAtLeastModerate(primaryPersona.confidence)) {
+  if (primaryPersona && isAtLeastModerate(primaryPersona.confidence) && !timingDecision.suppressDeepContext) {
     insights.push({
       id: generateId(),
       slot: 'primaryPersona' as const,
       surface: 'today' as const,
       title: primaryPersona.title,
       body: personaBody(primaryPersona),
+      ...deliveryMetadata(currentStateProfile, timingDecision, 2),
       reframe: personaReframe(primaryPersona),
       patternKey: primaryPersona.key,
       confidence: primaryPersona.confidence,
@@ -628,6 +669,7 @@ export async function buildTodayInsights({
       surface: 'today' as const,
       title: 'What helped',
       body: whatHelpedBody(whatHelpedSignal),
+      ...deliveryMetadata(currentStateProfile, timingDecision, 1),
       reframe: 'Small relief still counts. A shift does not have to be dramatic to be real.',
       reflectionPrompt: 'What helped even slightly today?',
       patternKey,
@@ -654,6 +696,7 @@ export async function buildTodayInsights({
       surface: 'today' as const,
       title: 'What your body noticed',
       body: bodySignalBody(bodySignal),
+      ...deliveryMetadata(currentStateProfile, timingDecision, 1),
       reframe: 'This does not mean your body is against you. It is trying to get your attention in the language it knows.',
       reflectionPrompt: 'What sensation felt most noticeable today, and what was it asking for?',
       patternKey,
@@ -680,6 +723,7 @@ export async function buildTodayInsights({
       surface: 'today' as const,
       title: 'A relationship thread',
       body: relationshipSignalBody(relationshipSignal),
+      ...deliveryMetadata(currentStateProfile, timingDecision, 1),
       reframe: 'Noticing relational shifts does not mean you are too sensitive. Connection carries meaningful information for you.',
       reflectionPrompt: 'Did this relationship moment make you want closeness, distance, clarity, repair, or reassurance?',
       patternKey,
@@ -690,7 +734,9 @@ export async function buildTodayInsights({
     });
   }
 
-  const growthPattern = growthEdgeScore(patternScores, usedPatternKeys, primaryPatternKey, primaryPersona);
+  const growthPattern = timingDecision.suppressNovelty || timingDecision.suppressDeepContext
+    ? null
+    : growthEdgeScore(patternScores, usedPatternKeys, primaryPatternKey, primaryPersona);
   if (growthPattern) {
     usedPatternKeys.add(growthPattern.patternKey);
     const pattern = ARCHIVE_PATTERNS.find(item => item.key === growthPattern.patternKey);
@@ -702,6 +748,7 @@ export async function buildTodayInsights({
           surface: 'today',
           recentParagraphIds,
           feedbackProfile,
+          stateProfile: currentStateProfile,
         })
       : null;
     if (paragraph) recentParagraphIds.push(paragraph.id);
@@ -713,6 +760,7 @@ export async function buildTodayInsights({
       title: 'A growth edge',
       body: paragraph?.body ?? growthEdgeBody(pattern),
       ...(paragraph ? paragraphMetadata(paragraph) : { category: growthPattern.category }),
+      ...deliveryMetadata(currentStateProfile, timingDecision, 2),
       reframe: pattern?.clarityReframe ?? 'This pattern is ready to meet with a little more choice.',
       reflectionPrompt: 'What would it look like to meet this pattern with a little more choice today?',
       patternKey: growthPattern.patternKey,
@@ -726,8 +774,11 @@ export async function buildTodayInsights({
   return {
     signals,
     patternScores,
-    insights: capTodayInsights(dedupeInsights(insights)),
+    insights: capTodayInsights(dedupeInsights(insights), timingDecision.maxDailyInsights),
     primaryFeeling,
     primaryPersona,
+    currentState: currentStateProfile.primaryState,
+    deliveryMode: timingDecision.deliveryMode,
+    timingReasonCodes: timingDecision.reasonCodes,
   };
 }

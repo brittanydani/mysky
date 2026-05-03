@@ -8,12 +8,70 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 
 import { DailyAggregate, ChartProfile } from '../insights/types';
-import { EnhancedInsightBundle } from '../../utils/journalInsights';
 import { CircadianGrid } from '../../store/circadianStore';
 import { CorrelationPair } from '../../store/correlationStore';
 import { CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+type PdfTrendDirection = 'up' | 'down' | 'stable';
+type PdfConfidenceLevel = 'low' | 'medium' | 'high';
+
+export interface EnhancedInsightBundleForPdf {
+  trends: Array<{
+    metric: string;
+    direction: PdfTrendDirection;
+    displayChange: string;
+  }>;
+  volatility: Array<{
+    metric: string;
+    stddev: number;
+    level: 'low' | 'moderate' | 'high';
+  }>;
+  keywordLift: {
+    hasData: boolean;
+    restores: Array<{ label: string; lift: number }>;
+    drains: Array<{ label: string; lift: number }>;
+  };
+  emotionToneShift: {
+    rising: Array<{ category: string }>;
+    falling: Array<{ category: string }>;
+    insight: string;
+    stat: string;
+  } | null;
+  timePatterns: Array<{
+    type: 'time_of_day' | 'day_of_week' | string;
+    insight: string;
+    stat: string;
+    buckets?: Array<{
+      label: string;
+      avgMood: number;
+      avgStress: number;
+      avgEnergy: number;
+      count: number;
+    }>;
+    dayData?: Array<{
+      day: string;
+      avgMood: number;
+      avgStress: number;
+    }>;
+  }>;
+  blended: Array<{
+    title: string;
+    body: string;
+    stat: string;
+    confidence: PdfConfidenceLevel;
+    journalPrompt?: string;
+  }>;
+  chartBaselines: Array<{
+    label: string;
+    body: string;
+  }>;
+  journalImpact: Array<{
+    insight: string;
+    stat: string;
+  }>;
+}
 
 export interface InsightsPdfInput {
   /** User display name or chart name */
@@ -29,8 +87,8 @@ export interface InsightsPdfInput {
   dailyAggregates: DailyAggregate[];
   /** Chart profile (natal baseline) */
   chartProfile: ChartProfile | null;
-  /** Enhanced insight bundle */
-  enhanced: EnhancedInsightBundle | null;
+  /** Optional report-only enhanced aggregate sections. */
+  enhanced: EnhancedInsightBundleForPdf | null;
   /** Circadian 7×24 grid */
   circadianGrid: CircadianGrid | null;
   /** Correlation pairs */

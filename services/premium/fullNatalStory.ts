@@ -1,5 +1,5 @@
 import { NatalChart } from '../astrology/types';
-import { ordinal } from '../../utils/insightsEngine';
+import { ordinal } from '../../utils/stats';
 
 // Pluto House Insight Expansion (Chapter 10)
 const PLUTO_HOUSE_INSIGHT: Record<number, string> = {

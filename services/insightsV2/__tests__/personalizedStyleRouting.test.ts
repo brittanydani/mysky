@@ -31,6 +31,7 @@ const paragraph = (overrides: Partial<GeneratedInsightParagraph>): GeneratedInsi
   theoryLens: overrides.theoryLens ?? ['attachmentTheory'],
   insightSubcategory: overrides.insightSubcategory ?? 'toneShiftSensitivity',
   anchors: overrides.anchors ?? ['tone-shift', 'body-before-words'],
+  allowedSurfaces: overrides.allowedSurfaces ?? ['today', 'patterns'],
   tone: overrides.tone ?? 'grounded',
   intensity: overrides.intensity ?? 'medium',
   signalTypes: overrides.signalTypes ?? ['relationshipMirror'],

@@ -3,6 +3,8 @@ import type {
   ArchivePatternScore,
   DailyAngle,
   DailyInsightContext,
+  InsightCategory,
+  InsightDataSource,
   InsightSlot,
   InsightSurface,
   UserSignal,
@@ -21,6 +23,61 @@ export type FreshInsightCandidate = {
   crossSourceScore: number;
   noveltyScore: number;
 };
+
+const CATEGORY_SOURCE_PREFERENCES: Partial<Record<InsightCategory, InsightDataSource[]>> = {
+  bodySignals: ['bodyMap', 'triggerLog'],
+  glimmersRegulation: ['glimmerLog'],
+  natalChartReflection: ['natalChart'],
+  relationships: ['relationshipMirror', 'triggerLog'],
+  timeRhythms: ['dailyCheckIn', 'sleep', 'journal'],
+};
+
+function normalizeText(value: string): string {
+  return value.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function angleSourcePriorityScore(
+  angle: DailyAngle,
+  matchingSignals: UserSignal[],
+): number {
+  if (!angle.sourcePriority?.length || matchingSignals.length === 0) return 0;
+  const matchingSources = new Set(matchingSignals.map(signal => signal.source));
+  const bestIndex = angle.sourcePriority.findIndex(source => matchingSources.has(source));
+  if (bestIndex < 0) return 0;
+  return (angle.sourcePriority.length - bestIndex) / angle.sourcePriority.length;
+}
+
+function categorySourceFitScore(
+  category: InsightCategory,
+  matchingSignals: UserSignal[],
+): number {
+  const preferredSources = CATEGORY_SOURCE_PREFERENCES[category];
+  if (!preferredSources?.length) return 0;
+  return matchingSignals.some(signal => preferredSources.includes(signal.source)) ? 1 : 0;
+}
+
+function angleEvidencePhraseScore(
+  angle: DailyAngle,
+  matchingSignals: UserSignal[],
+): number {
+  const angleText = normalizeText([
+    angle.key,
+    angle.title,
+    angle.observation,
+    angle.pattern,
+    angle.question,
+  ].join(' '));
+  const phrases = matchingSignals
+    .flatMap(signal => [
+      signal.evidence?.label,
+      signal.evidence?.phrase,
+      signal.evidence?.signal,
+    ])
+    .filter((value): value is string => typeof value === 'string' && value.trim().length >= 4)
+    .map(normalizeText);
+
+  return phrases.some(phrase => angleText.includes(phrase)) ? 1 : 0;
+}
 
 /**
  * Selects the best fresh insight candidates for a given slot.
@@ -70,15 +127,26 @@ export function selectFreshInsight(
 
       // 4. Scoring
       const todaySignalMatch = matchingSignals.length > 0 ? 1 : 0;
+      const triggerCoverageScore = Math.min(
+        matchingSignals.length / Math.max(angle.triggerSignals.length, 1),
+        1,
+      );
       const crossSourceCount = new Set(matchingSignals.map(s => s.source)).size;
       const crossSourceScore = Math.min(crossSourceCount / 2, 1);
+      const sourcePriorityScore = angleSourcePriorityScore(angle, matchingSignals);
+      const sourceFitScore = categorySourceFitScore(pattern.category, matchingSignals);
+      const evidencePhraseScore = angleEvidencePhraseScore(angle, matchingSignals);
       const noveltyScore = 1 - freshness.penalty;
 
       const finalScore =
         patternScore.score * 0.3 +
-        todaySignalMatch * 0.25 +
-        crossSourceScore * 0.2 +
-        noveltyScore * 0.15 +
+        todaySignalMatch * 0.12 +
+        triggerCoverageScore * 0.13 +
+        crossSourceScore * 0.18 +
+        sourcePriorityScore * 0.09 +
+        sourceFitScore * 0.28 +
+        evidencePhraseScore * 0.06 +
+        noveltyScore * 0.1 +
         0.1; // Baseline utility
 
       candidates.push({

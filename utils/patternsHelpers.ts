@@ -1,4 +1,5 @@
 import { dedupeExactInsights } from './insightDedupe';
+import type { ProtectiveStrategy } from '../services/insightsV2/rootPatterns/protectiveStrategyMapping';
 
 export type PatternLibraryItem = {
   title: string;
@@ -26,6 +27,7 @@ export type PatternLibraryItem = {
   lastSeenAt?: string;
   observedAcrossDays?: number;
   relatedSignals?: string[];
+  protectiveStrategy?: ProtectiveStrategy | null;
   shameLabel?: string;
   clarityReframe?: string;
   librarySectionTitle?: string;

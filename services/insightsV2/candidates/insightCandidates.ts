@@ -1,9 +1,11 @@
 import {
   isArchivePatternAllowedOnSurface,
+  isDreamSignalKey,
 } from '../insightSurfacePolicy';
 import {
   insightTaxonomyForCategory,
   isInsightCategoryAllowedOnCandidateSurface,
+  type InsightTaxonomyCategory,
 } from '../taxonomy/insightTaxonomy';
 import type {
   ArchivePattern,
@@ -20,8 +22,15 @@ const PATTERN_TYPES: readonly PatternType[] = [
   'pushPull',
   'delayedActivation',
 ];
+const ALL_CANDIDATE_SURFACES: readonly InsightCandidateSurface[] = [
+  'today',
+  'patterns',
+  'weeklyDeepDive',
+  'thisWeek',
+  'dreamInterpretation',
+];
 
-function unique(values: string[]): string[] {
+function unique<T extends string>(values: T[]): T[] {
   return Array.from(new Set(values.filter(Boolean)));
 }
 
@@ -100,13 +109,48 @@ function selectedPatternType(scores: Record<PatternType, number>): PatternType {
   return [...PATTERN_TYPES].sort((a, b) => scores[b] - scores[a])[0];
 }
 
-function surfacesForPattern(pattern: ArchivePattern): InsightCandidateSurface[] {
-  const surfaces: InsightCandidateSurface[] = [];
-  if (isArchivePatternAllowedOnSurface(pattern, 'today')) surfaces.push('today');
-  if (isArchivePatternAllowedOnSurface(pattern, 'patternScreen')) {
-    surfaces.push('patterns', 'weeklyDeepDive', 'thisWeek');
+function isPatternDreamRouted(pattern: ArchivePattern): boolean {
+  if (pattern.category === 'dreamsSymbols') return true;
+  const requiredSignals = pattern.requiredSignals ?? [];
+  return requiredSignals.length > 0 && requiredSignals.every(signal => isDreamSignalKey(signal));
+}
+
+function isPatternAllowedForCandidateSurface(
+  pattern: ArchivePattern,
+  surface: InsightCandidateSurface,
+): boolean {
+  if (surface === 'dreamInterpretation') return isPatternDreamRouted(pattern);
+  if (surface === 'today') return isArchivePatternAllowedOnSurface(pattern, 'today');
+  if (surface === 'weeklyDeepDive' || surface === 'thisWeek') {
+    return !isPatternDreamRouted(pattern) && isArchivePatternAllowedOnSurface(pattern, 'patternScreen');
   }
-  return surfaces;
+  return isArchivePatternAllowedOnSurface(pattern, 'patternScreen');
+}
+
+function candidateAllowedSurfacesForPattern(
+  pattern: ArchivePattern,
+  taxonomy: InsightTaxonomyCategory | undefined,
+): InsightCandidateSurface[] {
+  const taxonomyAllowedSurfaces = taxonomy?.allowedSurfaces ?? [];
+  const candidateSurfaces = unique([
+    ...taxonomyAllowedSurfaces,
+    ...(!isPatternDreamRouted(pattern) ? ['weeklyDeepDive', 'thisWeek'] as InsightCandidateSurface[] : []),
+  ] as InsightCandidateSurface[]);
+
+  return candidateSurfaces.filter(surface =>
+    isPatternAllowedForCandidateSurface(pattern, surface),
+  );
+}
+
+function candidateBlockedSurfacesFor(
+  allowedSurfaces: readonly InsightCandidateSurface[],
+  taxonomy: InsightTaxonomyCategory | undefined,
+): InsightCandidateSurface[] {
+  const allowed = new Set(allowedSurfaces);
+  return unique([
+    ...(taxonomy?.blockedSurfaces ?? []),
+    ...ALL_CANDIDATE_SURFACES.filter(surface => !allowed.has(surface)),
+  ] as InsightCandidateSurface[]);
 }
 
 function candidateAnchors(
@@ -132,15 +176,19 @@ export function archivePatternScoreToInsightCandidate(
 ): InsightCandidate {
   const taxonomy = insightTaxonomyForCategory(score.category);
   const patternTypeScores = scorePatternTypesForArchivePattern(pattern, score);
+  const anchors = candidateAnchors(pattern, score, taxonomy?.anchors ?? []);
+  const allowedSurfaces = candidateAllowedSurfacesForPattern(pattern, taxonomy);
+  const blockedSurfaces = candidateBlockedSurfacesFor(allowedSurfaces, taxonomy);
 
   return {
+    id: score.patternKey,
     majorDomain: taxonomy?.majorDomain ?? score.category,
     theoryLens: taxonomy?.theoryLens ?? [],
     subcategory: taxonomy?.subcategory ?? score.category,
     category: score.category,
     patternTypeScores,
     selectedPatternType: selectedPatternType(patternTypeScores),
-    anchors: candidateAnchors(pattern, score, taxonomy?.anchors ?? []),
+    anchors,
     signalTypes: unique([
       ...(taxonomy?.signalTypes ?? []),
       ...pattern.requiredSignals,
@@ -149,10 +197,18 @@ export function archivePatternScoreToInsightCandidate(
       ...score.evidence.map(evidence => evidence.signal ?? ''),
       ...score.evidence.map(evidence => evidence.label ?? ''),
     ]),
+    tags: unique([
+      ...(pattern.tags ?? []),
+      ...anchors,
+      taxonomy?.majorDomain ?? '',
+      taxonomy?.subcategory ?? '',
+    ]),
     strength: Number(score.score.toFixed(3)),
     confidence: confidenceScore(score.confidence),
     sources: score.sources,
-    surfaces: surfacesForPattern(pattern),
+    allowedSurfaces,
+    blockedSurfaces,
+    surfaces: allowedSurfaces,
   };
 }
 
@@ -160,6 +216,7 @@ export function isCandidateAllowedOnSurface(
   candidate: InsightCandidate,
   surface: InsightCandidateSurface,
 ): boolean {
-  if (!candidate.surfaces.includes(surface)) return false;
+  if (candidate.blockedSurfaces.includes(surface)) return false;
+  if (!candidate.allowedSurfaces.includes(surface)) return false;
   return isInsightCategoryAllowedOnCandidateSurface(candidate.category, surface);
 }

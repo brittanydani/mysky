@@ -102,6 +102,7 @@ describe('rootPatternDetection', () => {
 
   it('adapts InsightCandidate metadata into root-pattern evidence', () => {
     const candidate: InsightCandidate = {
+      id: 'relationships_toneShift',
       majorDomain: 'attachmentConnection',
       theoryLens: ['attachmentTheory', 'repairRuptureTheory'],
       subcategory: 'toneShiftSensitivity',
@@ -115,9 +116,12 @@ describe('rootPatternDetection', () => {
       selectedPatternType: 'highTracking',
       anchors: ['tone-shift', 'repair-need'],
       signalTypes: ['relationshipMirror', 'triggerLog', 'tone_sensitivity'],
+      tags: ['relationship', 'repair'],
       strength: 0.84,
       confidence: 0.72,
       sources: ['relationshipMirror', 'triggerLog'],
+      allowedSurfaces: ['today', 'patterns'],
+      blockedSurfaces: ['weeklyDeepDive', 'thisWeek', 'dreamInterpretation'],
       surfaces: ['today', 'patterns'],
     };
 
@@ -159,4 +163,3 @@ describe('rootPatternDetection', () => {
     expect(copy).not.toMatch(/the user|based on|detected in|seen across|this pattern indicates/i);
   });
 });
-

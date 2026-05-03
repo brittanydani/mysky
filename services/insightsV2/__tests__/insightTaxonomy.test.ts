@@ -34,6 +34,11 @@ describe('canonical insight taxonomy', () => {
       ],
       allowedSurfaces: ['today', 'patterns', 'weeklyDeepDive', 'thisWeek'],
     }));
+    expect(taxonomy?.blockedSurfaces).toContain('dreamInterpretation');
+    expect(taxonomy?.microMoments.highTracking.length).toBeGreaterThan(0);
+    expect(taxonomy?.actions.lowAccess.length).toBeGreaterThan(0);
+    expect(taxonomy?.validationStyle.pushPull.length).toBeGreaterThan(0);
+    expect(taxonomy?.landings.delayedActivation.length).toBeGreaterThan(0);
     expect(new Set(taxonomy?.patternTypes)).toEqual(new Set(PATTERN_TYPES));
     expect(taxonomy?.patternTypeRules.highTracking).toBe(
       'When someone’s tone shifts, you notice immediately and start looking for what changed.',
@@ -61,7 +66,7 @@ describe('canonical insight taxonomy', () => {
     }
   });
 
-  it('uses taxonomy surface routing for normal insight screens and excludes dreams', () => {
+  it('uses taxonomy surface routing for normal insight screens and isolates dreams to the dream engine', () => {
     expect(INSIGHT_TAXONOMY_DOMAINS).toHaveLength(50);
     expect(INSIGHT_TAXONOMY_CATEGORIES.some(item => item.category === 'dreamsSymbols')).toBe(false);
 
@@ -71,8 +76,15 @@ describe('canonical insight taxonomy', () => {
       'weeklyDeepDive',
       'thisWeek',
     ]);
-    expect(allowedCandidateSurfacesForCategory('dreamsSymbols')).toEqual([]);
+    expect(allowedCandidateSurfacesForCategory('dreamsSymbols')).toEqual(['dreamInterpretation']);
+    expect(insightTaxonomyForCategory('dreamsSymbols')?.blockedSurfaces).toEqual([
+      'today',
+      'patterns',
+      'weeklyDeepDive',
+      'thisWeek',
+    ]);
     expect(isInsightCategoryAllowedOnCandidateSurface('dreamsSymbols', 'today')).toBe(false);
+    expect(isInsightCategoryAllowedOnCandidateSurface('dreamsSymbols', 'dreamInterpretation')).toBe(true);
     expect(isInsightCategoryAllowedOnSurface('dreamsSymbols', 'patternScreen')).toBe(false);
     expect(isInsightCategoryAllowedOnSurface('relationships', 'today')).toBe(true);
   });

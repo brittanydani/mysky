@@ -57,6 +57,7 @@ import {
   insightMemorySnapshotFromWeeklyDeepDive,
   recordInsightMemorySnapshots,
 } from '../../services/insightsV2/memory/insightMemory';
+import { type WeeklyNarrativeThread } from '../../services/insightsV2/narrative/weeklyNarrative';
 import { usePremium } from '../../context/PremiumContext';
 import { useRouter, Href } from 'expo-router';
 import { logger } from '../../utils/logger';
@@ -144,6 +145,7 @@ export default function PatternsScreen() {
   const [premiumPatternProfile, setPremiumPatternProfile] = useState<PremiumPatternProfile | null>(null);
   const [thisWeeksV2Pattern, setThisWeeksV2Pattern] = useState<PremiumThisWeekPatternItem | null>(null);
   const [premiumWeeklyDeepDive, setPremiumWeeklyDeepDive] = useState<PremiumWeeklyDeepDiveItem[]>([]);
+  const [weeklyNarrative, setWeeklyNarrative] = useState<WeeklyNarrativeThread | null>(null);
   const [selectedPatternItem, setSelectedPatternItem] = useState<PatternLibraryItem | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [patternModalView, setPatternModalView] = useState<'profile' | 'library'>('profile');
@@ -210,6 +212,7 @@ export default function PatternsScreen() {
           setPremiumPatternProfile(surface.premiumPatternProfile);
           setThisWeeksV2Pattern(surface.thisWeeksV2Pattern);
           setPremiumWeeklyDeepDive(surface.premiumWeeklyDeepDive);
+          setWeeklyNarrative(surface.weeklyNarrative);
           recordInsightMemorySnapshots([
             ...surface.premiumPatterns.map((item, index) =>
               insightMemorySnapshotFromPremiumPattern(item, {
@@ -237,6 +240,7 @@ export default function PatternsScreen() {
             setPremiumPatternProfile(null);
             setThisWeeksV2Pattern(null);
             setPremiumWeeklyDeepDive([]);
+            setWeeklyNarrative(null);
             setSelectedPatternItem(null);
           }
         } finally {
@@ -273,16 +277,29 @@ export default function PatternsScreen() {
       .filter(section => section.items.length > 0);
   }, [libraryState.librarySections]);
   const deepDiveInsights = useMemo<WeeklyDeepDiveDisplayItem[]>(() => {
-    return premiumWeeklyDeepDive.map(insight => ({
-      id: insight.id,
-      title: insight.title,
-      body: insight.body,
-      whyItMayMatter: insight.whyItMayMatter,
-      reframe: insight.reframe,
-      reflectionPrompt: insight.reflectionPrompt,
-      patternKey: insight.patternKey,
-    }));
-  }, [premiumWeeklyDeepDive]);
+    const narrativeRead = weeklyNarrative
+      ? [{
+          id: weeklyNarrative.id,
+          title: weeklyNarrative.deepDiveTitle,
+          body: weeklyNarrative.deepDiveBody,
+          reflectionPrompt: weeklyNarrative.questionToKeep,
+          patternKey: weeklyNarrative.id,
+        }]
+      : [];
+
+    return [
+      ...narrativeRead,
+      ...premiumWeeklyDeepDive.map(insight => ({
+        id: insight.id,
+        title: insight.title,
+        body: insight.body,
+        whyItMayMatter: insight.whyItMayMatter,
+        reframe: insight.reframe,
+        reflectionPrompt: insight.reflectionPrompt,
+        patternKey: insight.patternKey,
+      })),
+    ];
+  }, [premiumWeeklyDeepDive, weeklyNarrative]);
   const patternRows = useMemo(
     () => (thisWeeksV2Pattern ? [thisWeeksV2Pattern] : []),
     [thisWeeksV2Pattern],
@@ -317,8 +334,8 @@ export default function PatternsScreen() {
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.confirmedText}>{weeklyPatternBadgeLabel(item)}</Text>
                   </View>
                 </View>
-                <Text {...WRAP_AT_WORD_PROPS} style={styles.patternTitle}>{normalizeDisplayText(item.title)}</Text>
-                <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>{compactDisplayText(item.body, 720)}</Text>
+                <Text {...WRAP_AT_WORD_PROPS} style={styles.patternTitle}>{normalizeDisplayText(item.narrativeForward ? 'This Week Forward' : item.title)}</Text>
+                <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>{compactDisplayText(item.narrativeForward ?? item.body, 720)}</Text>
                 {item.reframe ? (
                   <View style={[styles.supportCallout, { marginTop: 14 }]}>
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Clearer read</Text>
@@ -393,6 +410,22 @@ export default function PatternsScreen() {
                 <>
                   <SectionHeader label="A PART OF YOU" icon="person-circle-outline" />
                   <PersonaProfileCard profile={premiumPersonaProfile} />
+                </>
+              ) : null}
+
+              {isPremium && weeklyNarrative ? (
+                <>
+                  <SectionHeader label="ACTIVE WEEKLY THEME" icon="git-network-outline" />
+                  <VelvetGlassSurface style={styles.activeThemeCard} intensity={25}>
+                    <LinearGradient colors={['rgba(168,139,235,0.16)', 'rgba(162,194,225,0.05)']} style={StyleSheet.absoluteFill} />
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.activeThemeText}>
+                      {normalizeDisplayText(weeklyNarrative.activeTheme)}
+                    </Text>
+                    <View style={[styles.supportCallout, { marginTop: 14 }]}>
+                      <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Question to keep</Text>
+                      <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(weeklyNarrative.questionToKeep)}</Text>
+                    </View>
+                  </VelvetGlassSurface>
                 </>
               ) : null}
 
@@ -795,6 +828,22 @@ export default function PatternsScreen() {
                 <Text {...WRAP_AT_WORD_PROPS} style={styles.modalBody}>
                   {normalizeDisplayText(selectedPatternItem.body)}
                 </Text>
+                {selectedPatternItem.protectiveStrategy ? (
+                  <View style={[styles.supportCallout, { marginTop: 12 }]}>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Protective move</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>
+                      {normalizeDisplayText(selectedPatternItem.protectiveStrategy.insightLine)}
+                    </Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={[styles.supportCalloutLabel, { marginTop: 12 }]}>What it protects</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>
+                      {normalizeDisplayText(selectedPatternItem.protectiveStrategy.protects)}
+                    </Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={[styles.supportCalloutLabel, { marginTop: 12 }]}>What helps</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>
+                      {normalizeDisplayText(selectedPatternItem.protectiveStrategy.whatHelps[0] ?? selectedPatternItem.protectiveStrategy.softens)}
+                    </Text>
+                  </View>
+                ) : null}
                 {selectedPatternItem.clarityReframe ? (
                   <View style={[styles.supportCallout, { marginTop: 12 }]}>
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Clearer read</Text>
@@ -916,6 +965,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   lockedText: { fontSize: 8, fontWeight: '800', color: '#D4AF37' },
   patternTitle: { width: '100%', flexShrink: 1, fontSize: 18, fontWeight: '700', color: theme.textPrimary, marginBottom: 12 },
   insightBody: { width: '100%', flexShrink: 1, fontSize: 15, color: 'rgba(255,255,255,0.7)', lineHeight: 24 },
+  activeThemeCard: { padding: 24, borderRadius: 24, marginBottom: 28, overflow: 'hidden' },
+  activeThemeText: { width: '100%', flexShrink: 1, fontSize: 18, lineHeight: 27, fontWeight: '700', color: theme.textPrimary },
 
   personaProfileCard: { padding: 28, borderRadius: 24, marginBottom: 28, overflow: 'hidden' },
   personaBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(168,139,235,0.15)', borderWidth: 1, borderColor: 'rgba(168,139,235,0.30)' },
