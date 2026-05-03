@@ -20,7 +20,6 @@ import { toLocalDateString, getCheckInDateString } from '../../utils/dateUtils';
 import { mean } from '../../utils/stats';
 import { logger } from '../../utils/logger';
 import type { SelfKnowledgeContext } from '../insights/selfKnowledgeContext';
-import { DRAIN_TAG_MAP, RESTORE_TAG_MAP } from '../../utils/selfKnowledgeCrossRef';
 import { generateWeeklySynthesis, type WeeklySynthesisContext } from './weeklySynthesisLibrary';
 import type { DailyCheckIn } from '../patterns/types';
 import {
@@ -1028,66 +1027,6 @@ function buildReturnNudge(streak: StreakStatus): ReturnNudge | null {
   return null;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Trigger × Tag Cross-Reference Insight  (self-knowledge informed)
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function getTriggerCrossRefInsight(
-  chartId: string,
-  triggers: NonNullable<SelfKnowledgeContext['triggers']>,
-): Promise<DailyInsight | null> {
-  try {
-    const checkIns = await supabaseDb.getCheckIns(chartId, 30);
-    if (checkIns.length < 5) return null;
-
-    const allMoods = checkIns.map(c => c.moodScore).filter((v): v is number => v != null);
-    if (!allMoods.length) return null;
-    const overallAvg = mean(allMoods);
-
-    const resolveTag = (text: string, map: Record<string, string>): string | null =>
-      map[text.toLowerCase()] ?? null;
-
-    // Try restores first — positive framing for the home screen daily insight
-    for (const item of triggers.restores) {
-      const tag = resolveTag(item, RESTORE_TAG_MAP);
-      if (!tag) continue;
-      const tagged = checkIns.filter(c => c.tags?.includes(tag as any) && c.moodScore != null);
-      if (tagged.length < 3) continue;
-      const tagAvg = mean(tagged.map(c => c.moodScore as number));
-      if (tagAvg - overallAvg < 0.4) continue;
-      return {
-        text: `"${item}" is in your restores, and the pattern backs that up. Mood averages ${tagAvg.toFixed(1)} on those days vs ${overallAvg.toFixed(1)} overall.`,
-        type: 'pattern',
-        accentColor: 'emerald',
-        icon: 'sparkles-outline',
-        theme: 'growth',
-      };
-    }
-
-    // Then drains — informative framing
-    for (const item of triggers.drains) {
-      const tag = resolveTag(item, DRAIN_TAG_MAP);
-      if (!tag) continue;
-      const tagged = checkIns.filter(c => c.tags?.includes(tag as any) && c.moodScore != null);
-      if (tagged.length < 3) continue;
-      const tagAvg = mean(tagged.map(c => c.moodScore as number));
-      if (overallAvg - tagAvg < 0.4) continue;
-      return {
-        text: `You listed "${item}" as a drain, and your check-ins reflect this. Mood on "${tag.replace(/_/g, ' ')}" days averages ${tagAvg.toFixed(1)} vs ${overallAvg.toFixed(1)} overall.`,
-        type: 'pattern',
-        accentColor: 'copper',
-        icon: 'leaf-outline',
-        theme: 'focus',
-      };
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-
 function getPremiumInsightCategoryFromCheckIn(checkIn: DailyCheckIn | any):
   | 'restCapacity'
   | 'supportBelonging'
@@ -1332,7 +1271,6 @@ async function getPremiumDraftInsight(chartId: string): Promise<DailyInsight | n
 async function getTodayInsight(
   chartId: string,
   streak: StreakStatus,
-  selfKnowledge?: SelfKnowledgeContext,
 ): Promise<DailyInsight> {
   // 1. Milestone celebration (highest priority)
   const milestoneInsight = getConsistencyInsight(streak);
@@ -1351,17 +1289,11 @@ async function getTodayInsight(
   const sleepInsight = await getSleepMoodInsight(chartId);
   if (sleepInsight) return sleepInsight;
 
-  // 5. Trigger cross-reference (self-knowledge confirmed by behavioral data)
-  if (selfKnowledge?.triggers) {
-    const triggerInsight = await getTriggerCrossRefInsight(chartId, selfKnowledge.triggers);
-    if (triggerInsight) return triggerInsight;
-  }
-
-  // 6. Pattern-based insight (tag lift, trend changes)
+  // 5. Pattern-based insight (tag lift, trend changes)
   const patternInsight = await getPatternInsight(chartId);
   if (patternInsight) return patternInsight;
 
-  // 7. Fallback: daily encouragement
+  // 6. Fallback: daily encouragement
   return getDailyEncouragement();
 }
 
@@ -1373,16 +1305,15 @@ async function getTodayInsight(
  * Compute all daily loop data for the Home dashboard.
  * Call this once on screen focus.
  *
- * Pass selfKnowledge to unlock trigger cross-reference insights that
- * confirm the user's self-reported drains/restores against their behavioral data.
+ * selfKnowledge is kept in the signature for callers that already pass it.
  */
 export async function getDailyLoopData(
   chartId: string,
-  selfKnowledge?: SelfKnowledgeContext,
+  _selfKnowledge?: SelfKnowledgeContext,
 ): Promise<DailyLoopData> {
   const streak = await getStreakStatus(chartId);
   const weeklyReflection = await getWeeklyReflection(chartId);
-  const todayInsight = await getTodayInsight(chartId, streak, selfKnowledge);
+  const todayInsight = await getTodayInsight(chartId, streak);
   const returnNudge = buildReturnNudge(streak);
   const weeklySynthesis = await getWeeklySynthesis(chartId);
 

@@ -1,5 +1,6 @@
 import { ARCHIVE_PATTERNS } from '../patternPacks';
 import {
+  hasEnoughPatternEvidence,
   patternParagraphBodyKey,
   type PatternParagraphVariant,
   type PatternParagraphIntensity,
@@ -593,6 +594,14 @@ function buildEvidenceSummary(score: ArchivePatternScore): string {
   return `It has repeated for roughly ${score.timeframeDays} days, ${sourceText}.`;
 }
 
+function evidenceDistinctDays(score: ArchivePatternScore): number {
+  return new Set(
+    score.evidence
+      .map(evidence => evidence.date.slice(0, 10))
+      .filter(Boolean),
+  ).size;
+}
+
 function patternByKey(key: string): ArchivePattern | null {
   return ARCHIVE_PATTERNS.find(pattern => pattern.key === key) ?? null;
 }
@@ -601,6 +610,20 @@ function shouldIncludeScore(
   score: ArchivePatternScore,
   options: AdaptPremiumPatternsOptions = {},
 ): boolean {
+  const surface = options.surface ?? 'patterns';
+  if (
+    surface === 'patterns' &&
+    !options.includeLowConfidence &&
+    !hasEnoughPatternEvidence({
+      surface: 'patterns',
+      categoryScore: score.score,
+      entryCount: score.evidence.length,
+      distinctDays: evidenceDistinctDays(score),
+    })
+  ) {
+    return false;
+  }
+
   if (options.includeLowConfidence) {
     return score.score > 0 || score.evidence.length > 0 || score.sources.length > 0;
   }

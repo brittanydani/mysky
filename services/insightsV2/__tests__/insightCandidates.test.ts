@@ -7,6 +7,7 @@ import {
   selectArchiveWeeklyPatternParagraph,
 } from '../engine/patternParagraphSelection';
 import { ARCHIVE_PATTERNS } from '../patternPacks';
+import { detectCurrentInsightState } from '../state/insightState';
 import { insightTaxonomyForCategory } from '../taxonomy/insightTaxonomy';
 import type { ArchivePatternScore, PatternType } from '../types';
 
@@ -81,6 +82,78 @@ describe('canonical insight candidates', () => {
     expect(paragraph.patternType).toBe(candidate.selectedPatternType);
     expect(paragraph.body).not.toContain('Seen across');
     expect(paragraph.body).not.toContain('This does not read as');
+  });
+
+  it('lets Today use high-intensity paragraphs when current user signals are highly activated', () => {
+    const pattern = ARCHIVE_PATTERNS.find(item => item.key === score.patternKey)!;
+    const highChargeScore: ArchivePatternScore = {
+      ...score,
+      score: 0.9,
+      confidence: 'veryStrong',
+      evidence: [
+        ...score.evidence,
+        {
+          source: 'triggerLog',
+          date: '2026-04-24',
+          label: 'conflict',
+          signal: 'capacity_strain',
+          strength: 0.95,
+        },
+      ],
+    };
+    const candidate = archivePatternScoreToInsightCandidate(pattern, highChargeScore);
+    const stateProfile = detectCurrentInsightState([
+      {
+        key: 'high_stress',
+        source: 'dailyCheckIn',
+        date: '2026-04-24',
+        strength: 0.95,
+      },
+      {
+        key: 'overwhelm',
+        source: 'journal',
+        date: '2026-04-24',
+        strength: 0.95,
+      },
+      {
+        key: 'capacity_strain',
+        source: 'bodyMap',
+        date: '2026-04-24',
+        strength: 0.9,
+      },
+    ], '2026-04-24T12:00:00Z');
+    const paragraph = selectArchivePatternParagraph({
+      pattern,
+      score: highChargeScore,
+      candidate,
+      surface: 'today',
+      stateProfile,
+    });
+
+    expect(stateProfile.primaryState).toBe('overwhelmed');
+    expect(paragraph.intensity).toBe('high');
+    expect(['poetic', 'questionLed']).not.toContain(paragraph.writerShape);
+  });
+
+  it('prefers durable pattern-surface phrasing for very strong cross-entry patterns', () => {
+    const pattern = ARCHIVE_PATTERNS.find(item => item.key === score.patternKey)!;
+    const veryStrongScore: ArchivePatternScore = {
+      ...score,
+      score: 0.94,
+      confidence: 'veryStrong',
+      timeframeDays: 90,
+    };
+    const candidate = archivePatternScoreToInsightCandidate(pattern, veryStrongScore);
+    const paragraph = selectArchivePatternParagraph({
+      pattern,
+      score: veryStrongScore,
+      candidate,
+      surface: 'patterns',
+    });
+
+    expect(paragraph.intensity).toBe('high');
+    expect(['patternAnalysis', 'practicalCapacity', 'contrast', 'threshold'])
+      .toContain(paragraph.writerShape);
   });
 
   it('routes every visible insight surface through candidate metadata', () => {

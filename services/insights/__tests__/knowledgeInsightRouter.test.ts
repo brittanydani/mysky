@@ -1,4 +1,5 @@
 import {
+  buildV2History,
   buildV2RawInputs,
   runActiveKnowledgeInsight,
   runActiveKnowledgeInsights,
@@ -269,5 +270,48 @@ describe('knowledgeInsightRouter', () => {
     expect(rawInputs.glimmerLogs).toHaveLength(1);
     expect(rawInputs.relationshipMirrors).toHaveLength(1);
     expect(rawInputs.reflectionAnswers).toHaveLength(1);
+  });
+
+  it('preserves rich recent history when adapting legacy insight history for V2 freshness', () => {
+    const history = buildV2History(
+      {
+        recentInsights: [
+          {
+            insightId: 'insight-1',
+            patternKey: 'rest_capacity_001_rest_resistance',
+            angleKey: 'rest_resistance_001_rest_without_earning',
+            slot: 'bodySignal',
+            surface: 'today',
+            title: 'Rest Without Earning It',
+            shownAt: '2026-04-22T12:00:00Z',
+            sourceSignals: ['rest_guilt'],
+            evidenceHash: 'evidence-1',
+            copyHash: 'copy-1',
+          },
+        ],
+        recentlyShownPatternKeys: [
+          'rest_capacity_001_rest_resistance',
+          'timeRhythms_lowCapacityPatterns',
+        ],
+        recentlyShownCopyHashes: ['copy-1', 'copy-2'],
+      },
+      now,
+    );
+
+    expect(history[0]).toMatchObject({
+      id: 'insight-1',
+      patternKey: 'rest_capacity_001_rest_resistance',
+      angleKey: 'rest_resistance_001_rest_without_earning',
+      slot: 'bodySignal',
+      surface: 'today',
+      title: 'Rest Without Earning It',
+      shownAt: '2026-04-22T12:00:00Z',
+      evidenceHash: 'evidence-1',
+      copyHash: 'copy-1',
+    });
+    expect(history.filter(item => item.patternKey === 'rest_capacity_001_rest_resistance')).toHaveLength(1);
+    expect(history.some(item => item.patternKey === 'timeRhythms_lowCapacityPatterns')).toBe(true);
+    expect(history.filter(item => item.copyHash === 'copy-1')).toHaveLength(1);
+    expect(history.some(item => item.copyHash === 'copy-2')).toBe(true);
   });
 });

@@ -36,6 +36,15 @@ describe('buildReframeText', () => {
       }),
     ).toBe('This may need rhythm-aware planning, not more self-criticism.');
   });
+
+  it('uses clearer read wording when the compact reframe variant is selected', () => {
+    expect(
+      buildReframeText({
+        shame: 'being lazy.',
+        clarity: 'rest needs a route back into the day.',
+      }),
+    ).toBe('The clearer read: rest needs a route back into the day.');
+  });
 });
 
 describe('KnowledgeInsightCard', () => {
@@ -68,7 +77,9 @@ describe('KnowledgeInsightCard', () => {
     expect(getByText('Low-Capacity Windows')).toBeTruthy();
     expect(getByText('What Stands Out')).toBeTruthy();
     expect(getByText('Low capacity is showing up today. Sleep and energy may be shaping what feels possible.')).toBeTruthy();
+    expect(getByText('CLEARER READ')).toBeTruthy();
     expect(getByText('Low capacity may be a timing signal, not a character flaw.')).toBeTruthy();
+    expect(getByText('QUESTION TO KEEP')).toBeTruthy();
     expect(getByText('What keeps landing in your lowest-capacity window?')).toBeTruthy();
   });
 });

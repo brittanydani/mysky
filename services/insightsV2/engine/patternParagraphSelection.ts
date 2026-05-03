@@ -1,6 +1,7 @@
 import type {
   ArchivePattern,
   ArchivePatternScore,
+  EvidenceAnchor,
   InsightCandidate,
   InsightCandidateSurface,
 } from '../types';
@@ -57,6 +58,57 @@ function paragraphSelectionSignals(
     ...score.evidence.map(evidence => evidence.signal ?? ''),
     ...score.evidence.map(evidence => evidence.label ?? ''),
   ]);
+}
+
+function evidenceDateKey(evidence: EvidenceAnchor): string | null {
+  return /^\d{4}-\d{2}-\d{2}/.test(evidence.date)
+    ? evidence.date.slice(0, 10)
+    : null;
+}
+
+function evidenceStrengths(score: ArchivePatternScore): number[] {
+  return score.evidence
+    .map(evidence => evidence.strength)
+    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+}
+
+function distinctEvidenceDays(score: ArchivePatternScore): number {
+  return new Set(score.evidence.map(evidenceDateKey).filter(Boolean)).size;
+}
+
+function signalIntensityFromScore(
+  score: ArchivePatternScore,
+  surface: InsightCandidateSurface | undefined,
+): {
+  stress?: number;
+  triggerIntensity?: number;
+  emotionTags: string[];
+  somaticCues: string[];
+} | undefined {
+  const textValues = score.evidence.flatMap(evidence => [
+    evidence.label,
+    evidence.phrase,
+    evidence.signal,
+    evidence.value != null ? String(evidence.value) : undefined,
+  ]).filter((value): value is string => !!value);
+  const normalizedText = textValues.join(' ').toLowerCase().replace(/[_-]+/g, ' ');
+  const maxStrength = Math.max(0, ...evidenceStrengths(score));
+  const scaledStrength = Math.round(maxStrength * 5 * 100) / 100;
+  const hasStress = /\b(stress|overwhelm|capacity|pressure|burnout|unsafe|fear|panic)\b/.test(normalizedText);
+  const hasTrigger = surface === 'today' && score.sources.includes('triggerLog');
+  const hasHighEmotion = /\b(ashamed|shame|panicked|afraid|rejected|abandoned|trapped|grieving|hopeless|guilty|unsafe|despair|powerlessness)\b/.test(normalizedText);
+  const hasSomaticCue = /\b(tight chest|stomach drop|racing heart|shaking|frozen|numb|holding breath|jaw clenched|chest pressure|throat tightness)\b/.test(normalizedText);
+
+  if (!hasStress && !hasTrigger && !hasHighEmotion && !hasSomaticCue) {
+    return undefined;
+  }
+
+  return {
+    stress: hasStress ? scaledStrength : undefined,
+    triggerIntensity: hasTrigger ? scaledStrength : undefined,
+    emotionTags: textValues,
+    somaticCues: textValues,
+  };
 }
 
 export interface ArchivePatternParagraphSelectionOptions {
@@ -126,6 +178,11 @@ export function selectArchivePatternParagraph({
     avoidPatternTypes,
     feedbackProfile,
     stateProfile,
+    categoryScore: score.score,
+    entryCount: score.evidence.length,
+    distinctDays: distinctEvidenceDays(score),
+    evidenceStrengths: evidenceStrengths(score),
+    signalIntensity: signalIntensityFromScore(score, surface),
   });
 }
 
@@ -182,6 +239,11 @@ export function selectArchiveWeeklyPatternParagraph({
     avoidPatternTypes,
     feedbackProfile,
     stateProfile,
+    categoryScore: score.score,
+    entryCount: score.evidence.length,
+    distinctDays: distinctEvidenceDays(score),
+    evidenceStrengths: evidenceStrengths(score),
+    signalIntensity: signalIntensityFromScore(score, surface),
   });
 }
 

@@ -75,6 +75,7 @@ dist/
 scripts/*
 !scripts/generateInsightParagraphLibrary.py
 !scripts/validateInsightParagraphLibrary.py
+!scripts/validateInsightTaxonomy.py
 !scripts/insights/
 scripts/insights/*
 !scripts/insights/generate_weighted_insights.py

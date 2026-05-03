@@ -342,6 +342,12 @@ export default function PatternsScreen() {
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(item.reframe)}</Text>
                   </View>
                 ) : null}
+                {item.narrativeQuestion ? (
+                  <View style={[styles.supportCallout, { marginTop: 12 }]}>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Question to keep</Text>
+                    <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(item.narrativeQuestion)}</Text>
+                  </View>
+                ) : null}
               </VelvetGlassSurface>
 
               {/* Premium: Full Analysis CTA */}
@@ -421,10 +427,12 @@ export default function PatternsScreen() {
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.activeThemeText}>
                       {normalizeDisplayText(weeklyNarrative.activeTheme)}
                     </Text>
-                    <View style={[styles.supportCallout, { marginTop: 14 }]}>
-                      <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Question to keep</Text>
-                      <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(weeklyNarrative.questionToKeep)}</Text>
-                    </View>
+                    {!thisWeeksV2Pattern?.narrativeQuestion ? (
+                      <View style={[styles.supportCallout, { marginTop: 14 }]}>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Question to keep</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(weeklyNarrative.questionToKeep)}</Text>
+                      </View>
+                    ) : null}
                   </VelvetGlassSurface>
                 </>
               ) : null}

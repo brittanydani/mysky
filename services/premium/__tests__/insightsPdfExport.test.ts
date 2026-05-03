@@ -35,7 +35,6 @@ const minimalInput: InsightsPdfInput = {
   enhanced: null,
   circadianGrid: null,
   correlations: [],
-  crossRefs: [],
   windowDays: 30,
   totalCheckIns: 14,
   totalJournalEntries: 5,

@@ -90,7 +90,7 @@ export function buildReframeText(reframe: GeneratedInsight['reframe']): string {
   if (variant === 1) {
     return clarity;
   }
-  return ensureSentence(`The cleaner read: ${inlineClarity(clarityText)}`);
+  return ensureSentence(`The clearer read: ${inlineClarity(clarityText)}`);
 }
 
 export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insight }) => {
@@ -138,6 +138,10 @@ export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insi
         <Text style={styles.body}>{`${insight.observation} ${insight.pattern}`}</Text>
 
         <View style={styles.reframeContainer}>
+          <View style={styles.reframeHeader}>
+            <Ionicons name="sparkles-outline" size={14} color="rgba(212,175,55,0.72)" />
+            <Text style={styles.reframeLabel}>CLEARER READ</Text>
+          </View>
           <Text style={styles.reframeText}>{buildReframeText(insight.reframe)}</Text>
         </View>
 
@@ -232,6 +236,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderLeftWidth: 2,
     borderLeftColor: 'rgba(212,175,55,0.3)',
+  },
+  reframeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  reframeLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: 'rgba(212,175,55,0.72)',
+    letterSpacing: 1,
   },
   reframeText: {
     fontSize: 14,

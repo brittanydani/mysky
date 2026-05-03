@@ -1,4 +1,4 @@
-import type { GeneratedInsightParagraph } from '../../insights/generatedInsightParagraphs';
+import type { GeneratedInsightParagraph } from '../generated/generatedInsightParagraphs';
 import { buildInsightFeedbackProfile, type InsightOutcomeEvent } from '../feedback/insightOutcomeFeedback';
 import {
   buildPersonalizedInsightStyleRoute,

@@ -149,6 +149,7 @@ export interface GeneratedInsight {
   };
   prompt: string;
   patternKey: string;
+  angleKey?: string;
   confidence: ConfidenceLevel;
   movement: PatternMovement | DailyMovement;
   evidence: EvidenceAnchor[];
@@ -159,6 +160,8 @@ export interface InsightHistoryEntry {
   insightId: string;
   patternKey: string;
   angleKey?: string;
+  slot?: string;
+  surface?: string;
   title: string;
   shownAt: string;
   sourceSignals: SignalKey[];

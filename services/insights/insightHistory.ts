@@ -8,6 +8,7 @@ const MAX_HISTORY = 50;
 const DEFAULT_RECENT_DAYS = 14;
 
 export type KnowledgeEngineHistoryInput = {
+  recentInsights?: InsightHistoryEntry[];
   recentlyShownPatternKeys: string[];
   recentlyShownCopyHashes: string[];
 };
@@ -33,6 +34,7 @@ export function buildRecentlyShownKnowledgeHistory(
   });
 
   return {
+    recentInsights: recent,
     recentlyShownPatternKeys: Array.from(new Set(recent.map((item) => item.patternKey))),
     recentlyShownCopyHashes: Array.from(new Set(recent.map((item) => item.copyHash))),
   };
@@ -55,6 +57,9 @@ export async function recordInsight(insight: GeneratedInsight): Promise<void> {
     const entry: InsightHistoryEntry = {
       insightId: insight.id,
       patternKey: insight.patternKey,
+      angleKey: insight.angleKey,
+      slot: insight.slot,
+      surface: 'today',
       title: insight.title,
       shownAt: insight.createdAt,
       sourceSignals: insight.evidence.map((e) => e.signal).filter((s): s is string => !!s),

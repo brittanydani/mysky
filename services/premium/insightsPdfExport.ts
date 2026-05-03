@@ -10,7 +10,6 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { DailyAggregate, ChartProfile } from '../insights/types';
 import { CircadianGrid } from '../../store/circadianStore';
 import { CorrelationPair } from '../../store/correlationStore';
-import { CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -93,8 +92,6 @@ export interface InsightsPdfInput {
   circadianGrid: CircadianGrid | null;
   /** Correlation pairs */
   correlations: CorrelationPair[];
-  /** Self-knowledge cross-reference insights */
-  crossRefs: CrossRefInsight[];
   /** Pipeline metadata */
   windowDays: number;
   totalCheckIns: number;
@@ -302,7 +299,6 @@ function buildInsightsPdfHtml(input: InsightsPdfInput): string {
     enhanced,
     circadianGrid,
     correlations,
-    crossRefs,
     windowDays,
     totalCheckIns,
     totalJournalEntries,
@@ -455,26 +451,6 @@ function buildInsightsPdfHtml(input: InsightsPdfInput): string {
         <h2 class="section-title">Emotional Correlations</h2>
         <p class="section-desc">How your emotional metrics relate to each other.</p>
         ${correlationGaugeSvg(correlations)}
-      </div>`;
-  }
-
-  // ── Personal Patterns (Cross-Refs) ──
-  let crossRefHtml = '';
-  if (crossRefs.length > 0) {
-    const cards = crossRefs.map(cr =>
-      `<div class="crossref-card">
-        <div class="crossref-header">
-          <span class="crossref-source">${esc(cr.source.toUpperCase())}</span>
-          ${cr.isConfirmed ? '<span class="crossref-badge">DATA CONFIRMED</span>' : ''}
-        </div>
-        <h3 class="crossref-title">${esc(cr.title)}</h3>
-        <p class="crossref-body">${esc(cr.body)}</p>
-      </div>`
-    ).join('');
-    crossRefHtml = `
-      <div class="section">
-        <h2 class="section-title">Personal Patterns</h2>
-        ${cards}
       </div>`;
   }
 
@@ -807,27 +783,6 @@ body {
   margin-bottom: 8px;
 }
 
-/* ── Cross-Reference Cards ── */
-.crossref-card {
-  padding: 18px 20px;
-  border-radius: 14px;
-  background: rgba(20,30,50,0.5);
-  border: 1px solid rgba(212,175,55,0.1);
-  margin-bottom: 8px;
-}
-.crossref-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.crossref-source {
-  font-size: 9px; letter-spacing: 2px; color: rgba(212,175,55,0.6);
-  font-family: -apple-system, sans-serif; font-weight: 700;
-}
-.crossref-badge {
-  font-size: 8px; letter-spacing: 1px; color: rgba(212,175,55,0.5);
-  padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(212,175,55,0.2);
-  font-family: -apple-system, sans-serif;
-}
-.crossref-title { font-size: 15px; color: #FFFFFF; margin-bottom: 6px; }
-.crossref-body { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.7; }
-
 /* ── Blended Insights ── */
 .blended-card {
   padding: 20px;
@@ -967,7 +922,6 @@ ${moodValues.length >= 2 ? `
 ${trendsHtml}
 ${volatilityHtml}
 ${profileHtml}
-${crossRefHtml}
 ${keywordLiftHtml}
 ${emotionToneHtml}
 ${timePatternHtml}

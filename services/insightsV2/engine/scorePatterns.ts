@@ -11,6 +11,17 @@ import {
   sourcePriorityScore,
 } from '../sourcePriority';
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function dateKeyToTime(value: string): number {
+  const key = value.slice(0, 10);
+  const parsed = new Date(`${key}T00:00:00Z`).getTime();
+  if (Number.isFinite(parsed)) return parsed;
+
+  const fallback = new Date(value).getTime();
+  return Number.isFinite(fallback) ? fallback : Number.NaN;
+}
+
 /**
  * Scores an ArchivePattern based on normalized UserSignals.
  */
@@ -20,12 +31,14 @@ export function scoreArchivePattern(
   now: string,
   previousScore?: ArchivePatternScore,
 ): ArchivePatternScore {
-  const nowTime = new Date(now).getTime();
-  const cutoff = nowTime - pattern.lookbackDays * 24 * 60 * 60 * 1000;
+  const nowTime = dateKeyToTime(now);
+  const safeNowTime = Number.isFinite(nowTime) ? nowTime : Date.now();
+  const cutoff = safeNowTime - Math.max(pattern.lookbackDays - 1, 0) * DAY_MS;
 
   const relevantSignals = signals.filter(s => {
-    const sTime = new Date(s.date).getTime();
+    const sTime = dateKeyToTime(s.date);
     return (
+      Number.isFinite(sTime) &&
       sTime >= cutoff &&
       [...pattern.requiredSignals, ...pattern.supportingSignals].includes(s.key)
     );
@@ -39,9 +52,14 @@ export function scoreArchivePattern(
     pattern.supportingSignals.includes(s.key),
   );
 
-  const conflictingMatches = signals.filter(s =>
-    pattern.conflictingSignals?.includes(s.key),
-  );
+  const conflictingMatches = signals.filter(s => {
+    const sTime = dateKeyToTime(s.date);
+    return (
+      Number.isFinite(sTime) &&
+      sTime >= cutoff &&
+      pattern.conflictingSignals?.includes(s.key)
+    );
+  });
 
   const sourceCount = new Set(relevantSignals.map(s => s.source)).size;
 
@@ -85,7 +103,9 @@ export function scoreArchivePattern(
     .sort(compareEvidenceByPrimarySource)
     .slice(0, 6);
 
-  const lastSeenAt = relevantSignals.length > 0 ? relevantSignals[0].date : now;
+  const lastSeenAt = relevantSignals.length > 0
+    ? [...relevantSignals].sort((a, b) => dateKeyToTime(b.date) - dateKeyToTime(a.date))[0].date
+    : now;
 
   return {
     patternKey: pattern.key,

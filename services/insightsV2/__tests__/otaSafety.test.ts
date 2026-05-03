@@ -1,3 +1,5 @@
+import { existsSync } from 'fs';
+import path from 'path';
 import { buildTodayInsights } from '../knowledgeEngineV2';
 import { detectCurrentInsightState, stateAwareParagraphScore } from '../state/insightState';
 import { buildInsightTimingDecision } from '../timing/insightTiming';
@@ -32,6 +34,24 @@ const profile = (
 });
 
 describe('insight OTA safety', () => {
+  it('keeps deleted insight engine paths out of the OTA bundle', () => {
+    const repoRoot = path.resolve(__dirname, '../../..');
+    const deletedEnginePaths = [
+      'services/insights/extraction',
+      'services/insights/scoring',
+      'services/insights/selection',
+      'services/insights/taxonomy',
+      'services/insights/legacy',
+      'services/insights/generated',
+      'services/insights/generatedInsightParagraphs.ts',
+      'utils/selfKnowledgeCrossRef.ts',
+    ];
+
+    expect(
+      deletedEnginePaths.filter(relativePath => existsSync(path.join(repoRoot, relativePath))),
+    ).toEqual([]);
+  });
+
   it('ignores malformed persisted history entries in timing decisions', () => {
     const malformedHistory = [
       null,

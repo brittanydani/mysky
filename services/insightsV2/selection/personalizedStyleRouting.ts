@@ -2,7 +2,7 @@ import type {
   GeneratedInsightParagraph,
   GeneratedInsightTone,
   GeneratedInsightWriterShape,
-} from '../../insights/generatedInsightParagraphs';
+} from '../generated/generatedInsightParagraphs';
 import type { InsightFeedbackProfile } from '../feedback/insightOutcomeFeedback';
 import type { InsightCandidateSurface, PatternType } from '../types';
 

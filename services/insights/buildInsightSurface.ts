@@ -6,10 +6,6 @@ import {
   enrichSelfKnowledgeContext,
   type SelfKnowledgeContext,
 } from './selfKnowledgeContext';
-import {
-  computeSelfKnowledgeCrossRef,
-  type CrossRefInsight,
-} from '../../utils/selfKnowledgeCrossRef';
 import { toLocalDateString } from '../../utils/dateUtils';
 import type { DailyCheckIn } from '../patterns/types';
 import type { JournalEntry, SleepEntry } from '../storage/models';
@@ -21,14 +17,12 @@ import type { PremiumPersonaProfile } from '../insightsV2/adapters/premiumPerson
 import type {
   PremiumPatternItem,
   PremiumPatternProfile,
-} from './selection/selectPatternCards';
-import type {
   PremiumThisWeekPatternItem,
-} from './selection/selectThisWeek';
-import type {
   PremiumWeeklyDeepDiveItem,
-} from './selection/selectWeeklyDeepDive';
-import type { WeeklyNarrativeThread } from '../insightsV2/narrative/weeklyNarrative';
+} from '../insightsV2/adapters/premiumPatterns';
+import type {
+  WeeklyNarrativeThread,
+} from '../insightsV2/narrative/weeklyNarrative';
 import type { InsightFeedbackProfile } from '../insightsV2/feedback/insightOutcomeFeedback';
 import {
   previousPatternScoresFromInsightMemory,
@@ -49,7 +43,6 @@ export interface InsightSurfaceResult {
   };
   archiveDepthCounts: ArchiveDepthCounts;
   lastUpdated: string | null;
-  crossRefs: CrossRefInsight[];
   dailyAggregates: DailyAggregate[];
   knowledgeInsight: GeneratedInsight | null;
   knowledgeInsights: GeneratedInsight[];
@@ -109,7 +102,6 @@ export async function buildInsightSurface({
       snapshot: { avgMood: 0, avgStress: 0, checkInCount: 0 },
       archiveDepthCounts: {},
       lastUpdated: null,
-      crossRefs: [],
       dailyAggregates: [],
       knowledgeInsight: null,
       knowledgeInsights: [],
@@ -153,10 +145,6 @@ export async function buildInsightSurface({
     todayContext: null,
   });
 
-  const refs = insightsEnabled
-    ? computeSelfKnowledgeCrossRef(enrichedContext, checkIns, aggregationResult.dailyAggregates)
-    : [];
-  const crossRefs = refs;
   const insightMemory = insightsEnabled ? insightMemoryProfile : null;
   const previousPatternScores = previousPatternScoresFromInsightMemory(
     insightMemory,
@@ -228,7 +216,6 @@ export async function buildInsightSurface({
     lastUpdated: checkIns.length || recentJournalEntries.length || sleepEntries.length || selfKnowledgeSignalCount
       ? new Date().toISOString()
       : null,
-    crossRefs,
     dailyAggregates: aggregationResult.dailyAggregates,
     knowledgeInsight,
     knowledgeInsights,

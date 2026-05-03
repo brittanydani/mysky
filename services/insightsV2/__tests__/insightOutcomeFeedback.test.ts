@@ -4,7 +4,7 @@ import {
   insightOutcomeFromGeneratedInsight,
   type InsightOutcomeEvent,
 } from '../feedback/insightOutcomeFeedback';
-import type { GeneratedInsightParagraph } from '../../insights/generatedInsightParagraphs';
+import type { GeneratedInsightParagraph } from '../generated/generatedInsightParagraphs';
 import type { GeneratedInsight } from '../../insights/types/knowledgeEngine';
 
 const baseEvent = (overrides: Partial<InsightOutcomeEvent>): InsightOutcomeEvent => ({

@@ -10,7 +10,7 @@ from typing import Callable
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_PATH = ROOT / "services" / "insights" / "generated" / "generatedInsightParagraphs.ts"
+OUTPUT_PATH = ROOT / "services" / "insightsV2" / "generated" / "generatedInsightParagraphs.ts"
 
 BLOCKED_PHRASES = [
     "This is clear enough to track now",
@@ -173,6 +173,7 @@ FLOW_NAMES = [
     "livedProtectionCost",
     "goldStandard",
     "microMoment",
+    "weeklyDeepDive",
 ]
 
 SHAPE_TONES = {
@@ -197,6 +198,103 @@ SHAPE_INTENSITIES = {
     "questionLed": "low",
     "contrast": "medium",
     "threshold": "medium",
+}
+
+HIGH_INTENSITY_CATEGORIES = {
+    "emotionalWeather",
+    "bodySignals",
+    "relationships",
+    "familyHome",
+    "scarcityAbundance",
+    "responsibilityCare",
+    "griefTransitions",
+    "selfWorthReceiving",
+    "supportBelonging",
+    "safetyRegulation",
+}
+
+HIGH_INTENSITY_DOMAINS = {
+    "attachmentConnection",
+    "safetyThreatDetection",
+    "stressCoping",
+    "learnedAgency",
+    "shameSelfEvaluation",
+    "innerCriticSuperego",
+    "defensePatterns",
+    "emotionalRegulation",
+    "familyRolesEarlyScripts",
+    "moralResponsibilityFairness",
+    "conditionalWorth",
+    "humanisticNeeds",
+    "clientCenteredSelfTrust",
+    "psychosocialTransitions",
+    "embodimentSomaticSignals",
+}
+
+HIGH_INTENSITY_SUBCATEGORIES = {
+    "abandonmentAlarm",
+    "conflictConnectionThreat",
+    "repairSeeking",
+    "connectionWorth",
+    "earlyThreatDetection",
+    "bodyBracing",
+    "hypervigilance",
+    "unpredictabilityResponse",
+    "safetyRecovery",
+    "pressureBuild",
+    "overloadResponse",
+    "shutdownUnderDemand",
+    "stressCarryover",
+    "stuckness",
+    "powerlessHabit",
+    "selfCriticismSpike",
+    "feelingWrong",
+    "innerCriticPressure",
+    "visibilityShame",
+    "worthQuestioning",
+    "guiltMonitoring",
+    "moralResponsibility",
+    "selfPunishment",
+    "emotionalEscalation",
+    "emotionalFlooding",
+    "containment",
+    "emotionalControl",
+    "unmetNeedRecognition",
+    "safetyNeed",
+    "unconditionalWorth",
+    "earningCare",
+    "performanceWorth",
+    "provingEnough",
+    "beingEnough",
+    "parentifiedRole",
+    "scapegoatRole",
+    "peacekeeperRole",
+    "emotionalCaretaker",
+    "fairnessSensitivity",
+    "moralOverload",
+    "justiceAnger",
+    "selfForgiveness",
+    "oldLifeGrief",
+    "lifeStageShift",
+    "roleTransition",
+    "thresholdAnxiety",
+    "newResponsibility",
+}
+
+HIGH_INTENSITY_SHAPES = {
+    "punch",
+    "tender",
+    "body",
+    "patternAnalysis",
+    "practicalCapacity",
+    "contrast",
+    "threshold",
+}
+
+HIGH_INTENSITY_PATTERN_TYPES = {
+    "highTracking",
+    "pushPull",
+    "delayedActivation",
 }
 
 
@@ -235,6 +333,224 @@ PATTERN_TYPES = [
 ]
 
 PARAGRAPHS_PER_TAXONOMY_PATTERN = 3
+
+SUBCATEGORY_COPY_OVERRIDES: dict[str, dict[str, str]] = {
+    "pressureBuild": {
+        "label": "the pressure starting to build",
+        "active": "pressure starts building before you have named it",
+        "short": "that pressure",
+    },
+    "copingStyle": {
+        "label": "the way you try to get through pressure",
+        "active": "your coping pattern starts taking over",
+        "short": "that coping pattern",
+    },
+    "overloadResponse": {
+        "label": "what happens when demand passes your limit",
+        "active": "demand starts passing your limit",
+        "short": "that overload point",
+    },
+    "functioningUnderStress": {
+        "label": "how you keep functioning under stress",
+        "active": "you keep functioning while stress keeps rising",
+        "short": "that functioning pattern",
+    },
+    "resourceTracking": {
+        "label": "the enoughness scan",
+        "active": "you start checking whether there is enough to handle this",
+    },
+    "shutdownUnderDemand": {
+        "label": "the point where demand turns into shutdown",
+        "active": "demand starts turning into shutdown",
+        "short": "that shutdown point",
+    },
+    "adaptivePacing": {
+        "label": "the attempt to pace yourself before pressure takes over",
+        "active": "you start adjusting pace to stay with the moment",
+        "short": "that pacing attempt",
+    },
+    "stressCarryover": {
+        "label": "leftover stress",
+        "active": "stress follows you after the moment passes",
+    },
+    "rebuildingConfidence": {
+        "label": "steady confidence",
+        "active": "you start trying to feel steady again after a setback",
+    },
+    "stuckness": {
+        "label": "the stuck place",
+        "active": "movement starts to feel blocked",
+    },
+    "agencyReturn": {
+        "label": "choice coming back",
+        "active": "choice starts coming back in a small way",
+    },
+    "choiceNarrowing": {
+        "label": "narrowed choice",
+        "active": "your options start to feel narrower than they are",
+    },
+    "effortDoubt": {
+        "label": "doubt about whether effort will change anything",
+        "active": "effort starts to feel unlikely to matter",
+        "short": "that doubt",
+    },
+    "reversibleStep": {
+        "label": "one small step that can still be changed",
+        "active": "one small reversible step becomes possible",
+        "short": "that reversible step",
+    },
+    "powerlessHabit": {
+        "label": "the old habit of feeling powerless",
+        "active": "the old powerless habit starts leading",
+        "short": "that powerless habit",
+    },
+    "actionRecovery": {
+        "label": "the return of movement after a stuck place",
+        "active": "movement begins returning after a stuck place",
+        "short": "that returning movement",
+    },
+    "controlAfterUncertainty": {
+        "label": "control returning after uncertainty",
+        "active": "control starts returning after uncertainty",
+        "short": "that returning control",
+    },
+    "causeSearching": {
+        "label": "the search for why this happened",
+        "active": "you start searching for why this happened",
+        "short": "that search",
+    },
+    "storyMaking": {
+        "label": "the story your mind builds around the moment",
+        "active": "your mind starts building a story around the moment",
+        "short": "that story",
+    },
+    "selfBlame": {
+        "label": "the pull to make it your fault",
+        "active": "the moment starts turning toward self-blame",
+        "short": "that self-blame pull",
+    },
+    "interpretationLoops": {
+        "label": "the loop of trying to interpret every detail",
+        "active": "your mind starts circling the meaning of every detail",
+        "short": "that interpretation loop",
+    },
+    "meaningGap": {
+        "label": "the meaning gap",
+        "active": "the gap between function and meaning opens",
+    },
+    "explanationNeed": {
+        "label": "the need for a clear explanation",
+        "active": "the need for an explanation starts to take over",
+        "short": "that need for an explanation",
+    },
+    "symbolUse": {
+        "label": "the symbol that gives the feeling a shape",
+        "active": "a symbol gives the feeling a clearer shape",
+        "short": "that symbol",
+    },
+    "narrativeRepair": {
+        "label": "the attempt to make the story livable again",
+        "active": "you start trying to make the story livable again",
+        "short": "that repair attempt",
+    },
+    "motivationDip": {
+        "label": "the dip where motivation leaves faster than expected",
+        "active": "motivation leaves faster than expected",
+        "short": "that motivation dip",
+    },
+    "expectedCost": {
+        "label": "the cost you expect before starting",
+        "active": "the expected cost starts growing before you begin",
+        "short": "that expected cost",
+    },
+    "startFriction": {
+        "label": "the friction around starting",
+        "active": "starting begins to feel heavier than the task itself",
+        "short": "that starting friction",
+    },
+    "rewardDistance": {
+        "label": "the distance between effort and reward",
+        "active": "the reward feels too far from the effort",
+        "short": "that reward gap",
+    },
+    "effortOutcomeGap": {
+        "label": "the gap between effort and outcome",
+        "active": "the gap between effort and outcome starts to matter",
+        "short": "that effort-outcome gap",
+    },
+    "futurePull": {
+        "label": "the pull of a future outcome",
+        "active": "a future outcome starts pulling the present",
+        "short": "that future pull",
+    },
+    "desirePermission": {
+        "label": "permission to want what you want",
+        "active": "wanting something starts asking for permission",
+        "short": "that permission",
+    },
+    "activationEnergy": {
+        "label": "the energy needed to begin",
+        "active": "the energy to begin becomes the hardest part",
+        "short": "that starting energy",
+    },
+    "controlAppraisal": {
+        "label": "the control question",
+        "active": "you start sorting what belongs to you and what does not",
+    },
+    "habitLoop": {
+        "label": "the loop your behavior knows by repetition",
+        "active": "the familiar loop starts running again",
+        "short": "that habit loop",
+    },
+    "rewardHistory": {
+        "label": "the history of what once felt rewarding",
+        "active": "old reward history starts steering the moment",
+        "short": "that reward history",
+    },
+    "avoidanceReward": {
+        "label": "the relief that comes from avoiding",
+        "active": "avoiding starts to feel rewarding",
+        "short": "that avoidance relief",
+    },
+    "responsePattern": {
+        "label": "the response pattern your body already knows",
+        "active": "the familiar response pattern comes online",
+        "short": "that response pattern",
+    },
+    "cueRoutine": {
+        "label": "the cue that pulls the routine forward",
+        "active": "a cue starts pulling the routine forward",
+        "short": "that cue",
+    },
+    "reliefLearning": {
+        "label": "the lesson that relief can come from backing away",
+        "active": "relief starts teaching you to back away",
+        "short": "that relief lesson",
+    },
+    "repeatBehavior": {
+        "label": "the behavior that repeats before you choose it",
+        "active": "the repeated behavior starts before you choose it",
+        "short": "that repeated behavior",
+    },
+    "behaviorMomentum": {
+        "label": "the momentum that keeps a behavior going",
+        "active": "the behavior keeps moving because momentum has built",
+        "short": "that momentum",
+    },
+    "adaptiveStrategy": {
+        "label": "the familiar strategy",
+        "active": "the familiar response shows up before the new one can",
+    },
+    "influenceAwareness": {
+        "label": "your sense of influence",
+        "active": "you are not sure your voice will actually change anything",
+    },
+    "calmingStrategies": {
+        "label": "the move back toward steadiness",
+        "active": "your system starts looking for a way back toward steadiness",
+        "short": "that move toward steadiness",
+    },
+}
 
 
 def make_subcategory_guidance(
@@ -3794,6 +4110,13 @@ DOMAIN_LEGACY_CATEGORY_MAP = {
     "hopeFuturePossibility": "lifeDirection",
 }
 
+CATEGORY_TAXONOMY_ALIAS_ENTRIES = {
+    category: pair
+    for category, pair in CATEGORY_DOMAIN_MAP.items()
+    if category not in EXCLUDED_PARAGRAPH_CATEGORIES
+    and DOMAIN_LEGACY_CATEGORY_MAP[pair[0]] != category
+}
+
 DOMAIN_SOURCE_BANKS = {
     "attachmentConnection": ["relationshipMirror", "triggerLog", "journal"],
     "autonomySelfDetermination": ["journal", "reflectionBank", "triggerLog"],
@@ -6009,60 +6332,6 @@ def generate_weekly_paragraphs() -> list[dict[str, object]]:
     return items
 
 
-def ts_string(items: list[dict[str, object]], weekly_items: list[dict[str, object]]) -> str:
-    domain_json = json.dumps(generated_domain_definitions(), indent=2, ensure_ascii=False)
-    taxonomy_json = json.dumps(generated_taxonomy_entries(), indent=2, ensure_ascii=False)
-    card_json = json.dumps(items, indent=2, ensure_ascii=False)
-    weekly_json = json.dumps(weekly_items, indent=2, ensure_ascii=False)
-    card_json_literal = json.dumps(card_json, ensure_ascii=False)
-    card_json_literal = json.dumps(card_json, ensure_ascii=False)
-    domain_json = json.dumps(generated_domain_definitions(), indent=2, ensure_ascii=False)
-    return f"""// AUTO-GENERATED by scripts/generateInsightParagraphLibrary.py.
-// Do not edit by hand. Run `python3 scripts/generateInsightParagraphLibrary.py`.
-
-import type {{ InsightCategory }} from '../../insightsV2/types';
-
-export type GeneratedInsightWriterShape =
-  | 'punch'
-  | 'tender'
-  | 'body'
-  | 'patternAnalysis'
-  | 'practicalCapacity'
-  | 'poetic'
-  | 'questionLed'
-  | 'contrast'
-  | 'threshold';
-
-export type GeneratedInsightTone =
-  | 'direct'
-  | 'tender'
-  | 'grounded'
-  | 'practical'
-  | 'poetic'
-  | 'reflective';
-
-export type GeneratedInsightIntensity = 'low' | 'medium' | 'high';
-
-export interface GeneratedInsightParagraph {{
-  id: string;
-  category: InsightCategory;
-  writerShape: GeneratedInsightWriterShape;
-  anchors: readonly string[];
-  tone: GeneratedInsightTone;
-  intensity: GeneratedInsightIntensity;
-  signalTypes: readonly string[];
-  tags: readonly string[];
-  allowedSurfaces: readonly GeneratedInsightSurface[];
-  avoidIfRecentlyUsed: boolean;
-  body: string;
-}}
-
-export const GENERATED_INSIGHT_PARAGRAPHS = {card_json} as const satisfies readonly GeneratedInsightParagraph[];
-
-export const GENERATED_WEEKLY_INSIGHT_PARAGRAPHS = {weekly_json} as const satisfies readonly GeneratedInsightParagraph[];
-"""
-
-
 def normalize_key(text: str, words: int = 6) -> str:
     tokens = re.findall(r"[a-z0-9]+", text.lower())
     return " ".join(tokens[:words])
@@ -6106,6 +6375,9 @@ def token_set(text: str) -> set[str]:
 
 
 def theme_without_article(bank: CategoryBank) -> str:
+    base_bank = CATEGORY_BANKS.get(bank.category)
+    if base_bank and bank.theme != base_bank.theme:
+        return bank.theme
     return re.sub(r"^(the|your)\s+", "", bank.theme, flags=re.I)
 
 
@@ -6168,20 +6440,83 @@ def with_full_metadata(item: dict[str, object]) -> dict[str, object]:
     return next_item
 
 
+def stable_template_index(value: str, count: int) -> int:
+    if count <= 0:
+        return 0
+    return sum((index + 1) * ord(char) for index, char in enumerate(value)) % count
+
+
+def shorten_later_label_references(sentences: list[str], label: str, short: str) -> list[str]:
+    if not label or not short or label == short:
+        return sentences
+
+    seen = False
+    pattern = re.compile(re.escape(label), re.I)
+
+    def replace(match: re.Match[str]) -> str:
+        nonlocal seen
+        if not seen:
+            seen = True
+            return match.group(0)
+        if match.group(0)[:1].isupper():
+            return capitalize_sentence(short)
+        return short
+
+    return [pattern.sub(replace, sentence) for sentence in sentences]
+
+
+def default_pattern_type_templates(label: str, active: str, short: str, key: str) -> dict[str, str]:
+    index = stable_template_index(key, 4)
+    high_tracking = [
+        f"You notice {label} before the rest of the moment has caught up.",
+        f"Your attention turns toward {label} early, even before you can explain why it matters.",
+        f"{capitalize_sentence(label)} starts taking up space before there is language for it.",
+        f"You catch the first edge of {label} before it becomes obvious.",
+    ]
+    low_access = [
+        f"You let {label} stay at the edge of awareness when naming it would make the moment heavier.",
+        f"It can feel safer to keep some distance from {label} than to meet it directly.",
+        f"{capitalize_sentence(label)} stays quieter when the moment already feels full.",
+        f"You give yourself distance from {label} when direct contact would ask too much.",
+    ]
+    push_pull = [
+        f"One part of you wants to name {label}, while another part protects the distance.",
+        f"You may want to understand {label} while also needing distance from it.",
+        f"You may reach toward clarity around {label}, then pull back when it asks for more access.",
+        f"Both the pull toward {label} and the guard around it are trying to help.",
+    ]
+    delayed_activation = [
+        f"{capitalize_sentence(label)} becomes easier to see after the pressure has lowered.",
+        f"The shape of {label} may arrive later, once the moment is no longer asking so much.",
+        f"You may only recognize {label} once there is enough quiet to look back.",
+        f"{capitalize_sentence(active)} after the room has settled.",
+    ]
+    pattern_types = ["highTracking", "lowAccess", "pushPull", "delayedActivation"]
+    selected = shorten_later_label_references(
+        [
+            high_tracking[index],
+            low_access[(index + 1) % len(low_access)],
+            push_pull[(index + 2) % len(push_pull)],
+            delayed_activation[(index + 3) % len(delayed_activation)],
+        ],
+        label,
+        short,
+    )
+    return dict(zip(pattern_types, selected, strict=True))
+
+
 def default_subcategory_guidance(domain: dict[str, object]) -> dict[str, object]:
-    domain_name = str(domain["domainName"])
+    domain_name = user_facing_taxonomy_phrase(str(domain["domainName"]))
     guidance: dict[str, object] = {}
     for subcategory in domain["subcategories"]:
         key = str(subcategory)
-        readable = user_facing_taxonomy_phrase(key)
+        language = subcategory_language(key)
+        label = language["label"]
+        active = language["active"]
+        short = language["short"]
         guidance[key] = {
-            "covers": f"How {readable} shows up inside {domain_name}.",
-            "patternTypes": {
-                "highTracking": f"You track early signs around {readable} and respond quickly.",
-                "lowAccess": f"You distance from {readable} or keep it less named.",
-                "pushPull": f"You want what {readable} offers while also protecting against its cost.",
-                "delayedActivation": f"You register {readable} after the moment has already passed.",
-            },
+            "covers": f"{capitalize_sentence(label)} as it shows up through {domain_name}.",
+            "patternTypes": default_pattern_type_templates(label, active, short, key),
         }
     return guidance
 
@@ -6212,7 +6547,14 @@ def humanize_key(value: str) -> str:
     return re.sub(r"\s+", " ", spaced).strip().lower()
 
 
+def capitalize_sentence(value: str) -> str:
+    return value[:1].upper() + value[1:] if value else value
+
+
 def user_facing_taxonomy_phrase(value: str) -> str:
+    if value in SUBCATEGORY_COPY_OVERRIDES:
+        return SUBCATEGORY_COPY_OVERRIDES[value]["label"]
+
     phrase = humanize_key(value)
     replacements = {
         "threat detection": "early risk sensing",
@@ -6238,6 +6580,23 @@ def user_facing_taxonomy_phrase(value: str) -> str:
         phrase = phrase.replace(blocked, replacement)
     phrase = phrase.replace("early early risk sensing", "early risk sensing")
     return phrase
+
+
+def subcategory_language(value: str) -> dict[str, str]:
+    override = SUBCATEGORY_COPY_OVERRIDES.get(value)
+    if override:
+        label = override["label"]
+        active = override["active"]
+        short = override.get("short", label)
+    else:
+        label = user_facing_taxonomy_phrase(value)
+        active = f"{label} becomes active"
+        short = label
+    return {
+        "label": label,
+        "active": active,
+        "short": short,
+    }
 
 
 def subcategory_guidance(domain: dict[str, object], subcategory: str) -> dict[str, object]:
@@ -6289,29 +6648,41 @@ def generated_taxonomy_entries() -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     legacy_defaults = {value: key for key, value in CATEGORY_DOMAIN_MAP.items()}
 
+    def build_entry(domain: dict[str, object], subcategory: str, category: str, entry_id: str) -> dict[str, object]:
+        guidance = subcategory_guidance(domain, subcategory)
+        pattern_type_rules = dict(guidance["patternTypes"])  # type: ignore[index]
+        domain_key = str(domain["key"])
+        return {
+            "id": entry_id,
+            "category": category,
+            "majorDomain": domain_key,
+            "domainName": domain["domainName"],
+            "subcategory": subcategory,
+            "theoryLens": domain["theoryLens"],
+            "anchors": taxonomy_anchor_bank(domain, subcategory),
+            "signalTypes": taxonomy_signal_types(domain, subcategory),
+            "allowedSurfaces": taxonomy_allowed_surfaces(domain),
+            "patternTypes": PATTERN_TYPES,
+            "patternTypeRules": pattern_type_rules,
+            "isLegacyDefault": legacy_defaults.get((domain_key, subcategory)) == category,
+        }
+
     for domain in DOMAIN_DEFINITIONS:
         domain_key = str(domain["key"])
         category = DOMAIN_LEGACY_CATEGORY_MAP[domain_key]
         subcategories = [str(value) for value in domain["subcategories"]]
         for subcategory in subcategories:
-            guidance = subcategory_guidance(domain, subcategory)
-            pattern_type_rules = dict(guidance["patternTypes"])  # type: ignore[index]
-            entries.append(
-                {
-                    "id": f"{domain_key}_{subcategory}",
-                    "category": category,
-                    "majorDomain": domain_key,
-                    "domainName": domain["domainName"],
-                    "subcategory": subcategory,
-                    "theoryLens": domain["theoryLens"],
-                    "anchors": taxonomy_anchor_bank(domain, subcategory),
-                    "signalTypes": taxonomy_signal_types(domain, subcategory),
-                    "allowedSurfaces": taxonomy_allowed_surfaces(domain),
-                    "patternTypes": PATTERN_TYPES,
-                    "patternTypeRules": pattern_type_rules,
-                    "isLegacyDefault": legacy_defaults.get((domain_key, subcategory)) == category,
-                }
-            )
+            entries.append(build_entry(domain, subcategory, category, f"{domain_key}_{subcategory}"))
+
+    for category, (domain_key, subcategory) in CATEGORY_TAXONOMY_ALIAS_ENTRIES.items():
+        domain = DOMAIN_BY_KEY[domain_key]
+        entries.append(build_entry(
+            domain,
+            subcategory,
+            category,
+            f"{domain_key}_{subcategory}_{category}",
+        ))
+
     return entries
 
 
@@ -6803,12 +7174,14 @@ def taxonomy_bank(entry: dict[str, object]) -> CategoryBank:
     category = str(entry["category"])
     base = CATEGORY_BANKS[category]
     subcategory = str(entry["subcategory"])
-    readable = user_facing_taxonomy_phrase(subcategory)
+    language = subcategory_language(subcategory)
+    readable = language["label"]
+    active = language["active"]
     return CategoryBank(
         category=category,
         theme=readable,
-        pattern=f"{readable} starts shaping the moment before it is fully named",
-        moment=f"when {readable} becomes active in ordinary life",
+        pattern=f"{active} before it is fully named",
+        moment=f"when {active}",
         meaning=f"{readable} asking for attention in a specific moment",
         need=base.need,
         reframe=f"There is a reason {readable} takes this shape; it is trying to protect something that mattered before.",
@@ -6819,7 +7192,7 @@ def taxonomy_bank(entry: dict[str, object]) -> CategoryBank:
         signal_types=[str(value) for value in entry["signalTypes"]],
         anchors=[str(value) for value in entry["anchors"]],
         anchor_phrases=[
-            f"when {readable} shows up",
+            f"when {active}",
             f"after {readable} has been quietly active",
             f"when something around {readable} feels unresolved",
         ],
@@ -6833,13 +7206,15 @@ def taxonomy_rule(entry: dict[str, object], pattern_type: str) -> str:
 
 
 def taxonomy_micro_moment(entry: dict[str, object], pattern_type: str, i: int) -> str:
-    readable = user_facing_taxonomy_phrase(str(entry["subcategory"]))
+    language = subcategory_language(str(entry["subcategory"]))
+    readable = language["label"]
+    active = language["active"]
     options = {
         "highTracking": [
+            f"when {active}",
             f"when the first sign of {readable} appears",
             f"when {readable} starts before anyone names it",
             f"when a small cue around {readable} changes the room",
-            f"when {readable} begins to ask for attention",
         ],
         "lowAccess": [
             f"when {readable} asks for more access than you have",
@@ -6865,7 +7240,7 @@ def taxonomy_micro_moment(entry: dict[str, object], pattern_type: str, i: int) -
 
 def taxonomy_action_sentence(entry: dict[str, object], pattern_type: str, i: int) -> str:
     rule = taxonomy_rule(entry, pattern_type)
-    readable = user_facing_taxonomy_phrase(str(entry["subcategory"]))
+    readable = subcategory_language(str(entry["subcategory"]))["label"]
     rule = rule.replace("The person ", "You ").replace("the person ", "you ")
     rule = rule.replace("evidence", "new information").replace("Evidence", "New information")
     rule = rule.replace("based on", "from").replace("Based on", "From")
@@ -6908,7 +7283,7 @@ def taxonomy_bridge_sentence(bank: CategoryBank, pattern_type: str, i: int) -> s
 
 
 def taxonomy_landing_sentence(entry: dict[str, object], bank: CategoryBank, pattern_type: str, i: int) -> str:
-    readable = user_facing_taxonomy_phrase(str(entry["subcategory"]))
+    readable = subcategory_language(str(entry["subcategory"]))["label"]
     options = {
         "highTracking": [
             "You do not have to pick it up every time you notice it.",
@@ -6941,7 +7316,9 @@ def render_taxonomy_pattern(entry: dict[str, object], pattern_type: str, shape: 
     validation = human_validation(pattern_type, i + 2)
     bridge = taxonomy_bridge_sentence(bank, pattern_type, i + 3)
     landing = taxonomy_landing_sentence(entry, bank, pattern_type, i + 4)
-    readable = user_facing_taxonomy_phrase(str(entry["subcategory"]))
+    language = subcategory_language(str(entry["subcategory"]))
+    readable = language["label"]
+    short = language["short"]
     questions = {
         "highTracking": f"Where does {readable} first become real for you?",
         "lowAccess": f"What makes {readable} go quiet first?",
@@ -6978,7 +7355,7 @@ def render_taxonomy_pattern(entry: dict[str, object], pattern_type: str, shape: 
             landing,
         ],
     ]
-    return choose(variants, i + len(shape))
+    return shorten_later_label_references(choose(variants, i + len(shape)), readable, short)
 
 
 def direct_naming_flow(bank: CategoryBank, anchor: str, shape: str, i: int) -> list[str]:
@@ -7219,17 +7596,45 @@ class GenerationState:
         self.body_tokens.append(token_set(body))
 
 
+def generated_intensity(
+    shape: str,
+    category: str,
+    pattern_type: str,
+    major_domain: str | None = None,
+    subcategory: str | None = None,
+) -> str:
+    base = SHAPE_INTENSITIES[shape]
+    if shape not in HIGH_INTENSITY_SHAPES:
+        return base
+    if pattern_type not in HIGH_INTENSITY_PATTERN_TYPES:
+        return base
+    if (
+        category in HIGH_INTENSITY_CATEGORIES
+        or major_domain in HIGH_INTENSITY_DOMAINS
+        or subcategory in HIGH_INTENSITY_SUBCATEGORIES
+    ):
+        return "high"
+    return base
+
+
 def paragraph_metadata(bank: CategoryBank, body: str, shape: str, flow: str, pattern_type: str, index: int, anchor: str) -> dict[str, object]:
+    metadata = domain_metadata_for_category(bank.category)
     return {
         "id": f"{bank.category}_{pattern_type}_{shape}_{flow}_{index + 1:03d}",
         "category": bank.category,
         "writerShape": shape,
         "flowName": flow,
         "patternType": pattern_type,
-        **domain_metadata_for_category(bank.category),
+        **metadata,
         "anchors": sorted(set([*bank.anchors, slug(anchor)])),
         "tone": SHAPE_TONES[shape],
-        "intensity": SHAPE_INTENSITIES[shape],
+        "intensity": generated_intensity(
+            shape,
+            bank.category,
+            pattern_type,
+            str(metadata["majorDomain"]),
+            str(metadata["insightSubcategory"]),
+        ),
         "signalTypes": bank.signal_types,
         "tags": bank.tags,
         "allowedSurfaces": paragraph_allowed_surfaces_for_category(bank.category, ["today", "patterns"]),
@@ -7259,7 +7664,13 @@ def taxonomy_paragraph_metadata(
         "insightSubcategory": entry["subcategory"],
         "anchors": entry["anchors"],
         "tone": SHAPE_TONES[shape],
-        "intensity": SHAPE_INTENSITIES[shape],
+        "intensity": generated_intensity(
+            shape,
+            str(entry["category"]),
+            pattern_type,
+            str(entry["majorDomain"]),
+            str(entry["subcategory"]),
+        ),
         "signalTypes": entry["signalTypes"],
         "tags": sorted(set([*bank.tags, slug(str(entry["subcategory"])), slug(str(entry["majorDomain"]))])),
         "allowedSurfaces": [surface for surface in entry["allowedSurfaces"] if surface in {"today", "patterns"}],
@@ -7438,6 +7849,108 @@ def generate_weekly_paragraphs() -> list[dict[str, object]]:
     return items
 
 
+def validate_generated_output(cards: list[dict[str, object]], weekly: list[dict[str, object]]) -> None:
+    all_items = [*cards, *weekly]
+    ids = [str(item["id"]) for item in all_items]
+    duplicate_ids = sorted(item_id for item_id, count in Counter(ids).items() if count > 1)
+    if duplicate_ids:
+        raise RuntimeError(f"Duplicate generated insight ids: {duplicate_ids[:20]}")
+
+    generated_texts = [str(item["body"]) for item in all_items]
+    for domain in generated_domain_definitions():
+        for guidance in dict(domain["subcategoryGuidance"]).values():  # type: ignore[arg-type]
+            pattern_rules = dict(guidance["patternTypes"])  # type: ignore[index]
+            generated_texts.extend(str(value) for value in pattern_rules.values())
+    for entry in generated_taxonomy_entries():
+        generated_texts.extend(str(value) for value in dict(entry["patternTypeRules"]).values())  # type: ignore[arg-type]
+    for text in generated_texts:
+        if "pull to face the pull" in text.lower():
+            raise RuntimeError("Awkward push-pull template phrase generated: pull to face the pull")
+
+    taxonomy_pairs = {
+        (str(entry["category"]), str(entry["majorDomain"]), str(entry["subcategory"]))
+        for entry in generated_taxonomy_entries()
+    }
+    paragraph_pairs = {
+        (str(item["category"]), str(item["majorDomain"]), str(item["insightSubcategory"]))
+        for item in all_items
+    }
+    missing_taxonomy_pairs = sorted(paragraph_pairs - taxonomy_pairs)
+    if missing_taxonomy_pairs:
+        raise RuntimeError(f"Paragraphs missing matching taxonomy rows: {missing_taxonomy_pairs[:20]}")
+
+    missing_paragraph_pairs = sorted(taxonomy_pairs - paragraph_pairs)
+    if missing_paragraph_pairs:
+        raise RuntimeError(f"Taxonomy rows missing matching paragraphs: {missing_paragraph_pairs[:20]}")
+
+    valid_surfaces = {"today", "patterns", "weeklyDeepDive", "thisWeek"}
+    for item in all_items:
+        surfaces = item.get("allowedSurfaces")
+        if not isinstance(surfaces, list) or not surfaces:
+            raise RuntimeError(f"{item['id']} has no allowedSurfaces")
+        invalid_surfaces = [surface for surface in surfaces if surface not in valid_surfaces]
+        if invalid_surfaces:
+            raise RuntimeError(f"{item['id']} has invalid surfaces: {invalid_surfaces}")
+
+    card_weekly_leaks = [
+        str(item["id"])
+        for item in cards
+        if any(surface in item["allowedSurfaces"] for surface in ["weeklyDeepDive", "thisWeek"])
+    ]
+    if card_weekly_leaks:
+        raise RuntimeError(f"Card paragraphs leaked weekly surfaces: {card_weekly_leaks[:20]}")
+
+    weekly_daily_leaks = [
+        str(item["id"])
+        for item in weekly
+        if any(surface in item["allowedSurfaces"] for surface in ["today", "patterns"])
+    ]
+    if weekly_daily_leaks:
+        raise RuntimeError(f"Weekly paragraphs leaked daily surfaces: {weekly_daily_leaks[:20]}")
+
+    intensity_counts = Counter(str(item["intensity"]) for item in all_items)
+    if intensity_counts.get("high", 0) == 0:
+        raise RuntimeError("No high-intensity paragraphs were generated.")
+
+    calm_high_categories = {
+        "pleasurePlay",
+        "timeRhythms",
+        "creativityExpression",
+        "valuesIntegrity",
+        "natalChartReflection",
+        "spiritualMeaning",
+    }
+    high_by_category = Counter(
+        str(item["category"])
+        for item in cards
+        if item.get("intensity") == "high"
+    )
+    high_count = sum(high_by_category.values())
+    if not 1200 <= high_count <= 1600:
+        raise RuntimeError(f"High-intensity count out of range: {high_count}")
+
+    calm_leaks = {
+        category: count
+        for category, count in high_by_category.items()
+        if category in calm_high_categories
+    }
+    if calm_leaks:
+        raise RuntimeError(f"High-intensity leaked into calm categories: {calm_leaks}")
+
+    glimmer_high_count = high_by_category.get("glimmersRegulation", 0)
+    if glimmer_high_count > 12:
+        raise RuntimeError(f"glimmersRegulation high-intensity count is too high: {glimmer_high_count}")
+
+    bad_high_shapes = Counter(
+        str(item["writerShape"])
+        for item in cards
+        if item.get("intensity") == "high"
+        and item.get("writerShape") in {"poetic", "questionLed"}
+    )
+    if bad_high_shapes:
+        raise RuntimeError(f"High-intensity used excluded writer shapes: {bad_high_shapes}")
+
+
 def ts_string(items: list[dict[str, object]], weekly_items: list[dict[str, object]]) -> str:
     domain_json = json.dumps(generated_domain_definitions(), indent=2, ensure_ascii=False)
     taxonomy_json = json.dumps(generated_taxonomy_entries(), indent=2, ensure_ascii=False)
@@ -7574,6 +8087,7 @@ export const GENERATED_WEEKLY_INSIGHT_PARAGRAPHS: readonly GeneratedInsightParag
 def main() -> None:
     cards = generate_card_paragraphs()
     weekly = generate_weekly_paragraphs()
+    validate_generated_output(cards, weekly)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(ts_string(cards, weekly), encoding="utf-8")
     print(f"Wrote {len(cards)} card paragraphs and {len(weekly)} weekly paragraphs to {OUTPUT_PATH.relative_to(ROOT)}")

@@ -178,7 +178,7 @@ function ensureSentence(text: string): string {
 }
 
 function patternReframe(pattern: { shameLabel: string; clarityReframe: string }): string {
-  return `The cleaner read: ${lowerFirst(trimTerminalPunctuation(pattern.clarityReframe))}.`;
+  return `The clearer read: ${lowerFirst(trimTerminalPunctuation(pattern.clarityReframe))}.`;
 }
 
 function lowerFirst(text: string): string {
@@ -212,7 +212,7 @@ function polishReframeText(text: string): string {
   }
 
   if (clarityMatch) {
-    return `The cleaner read: ${lowerFirst(trimTerminalPunctuation(clarityMatch[1]))}.`;
+    return `The clearer read: ${lowerFirst(trimTerminalPunctuation(clarityMatch[1]))}.`;
   }
 
   if (shameMatch) {

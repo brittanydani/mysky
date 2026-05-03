@@ -8,7 +8,7 @@ import type {
   GeneratedInsightTone,
   GeneratedInsightWriterShape,
   GeneratedInsightParagraph,
-} from '../../insights/generatedInsightParagraphs';
+} from '../generated/generatedInsightParagraphs';
 import type { GeneratedInsight as KnowledgeGeneratedInsight } from '../../insights/types/knowledgeEngine';
 import type {
   InsightCandidateSurface,

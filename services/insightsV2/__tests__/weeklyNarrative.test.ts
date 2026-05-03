@@ -168,6 +168,7 @@ describe('weekly narrative coherence', () => {
     expect(weekly.activeWeeklyTheme).toBe(thread?.activeTheme);
     expect(thisWeek?.activeWeeklyTheme).toBe(thread?.activeTheme);
     expect(thisWeek?.narrativeForward).toBe(thread?.forwardBody);
+    expect(thisWeek?.narrativeQuestion).toBe(thread?.questionToKeep);
 
     const bodyKeys = new Set([
       `${daily.observation} ${daily.pattern}`,

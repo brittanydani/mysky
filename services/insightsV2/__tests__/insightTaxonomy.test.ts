@@ -11,7 +11,7 @@ import {
 } from '../insightSurfacePolicy';
 import {
   GENERATED_INSIGHT_PARAGRAPHS,
-} from '../../insights/generatedInsightParagraphs';
+} from '../generated/generatedInsightParagraphs';
 
 const PATTERN_TYPES = ['highTracking', 'lowAccess', 'pushPull', 'delayedActivation'] as const;
 
@@ -87,5 +87,18 @@ describe('canonical insight taxonomy', () => {
     expect(isInsightCategoryAllowedOnCandidateSurface('dreamsSymbols', 'dreamInterpretation')).toBe(true);
     expect(isInsightCategoryAllowedOnSurface('dreamsSymbols', 'patternScreen')).toBe(false);
     expect(isInsightCategoryAllowedOnSurface('relationships', 'today')).toBe(true);
+  });
+
+  it('exposes category-specific taxonomy aliases for generated paragraph categories', () => {
+    expect(insightTaxonomyForCategory('glimmersRegulation')).toEqual(expect.objectContaining({
+      category: 'glimmersRegulation',
+      majorDomain: 'emotionalRegulation',
+      subcategory: 'calmingStrategies',
+    }));
+    expect(insightTaxonomyForCategory('natalChartReflection')).toEqual(expect.objectContaining({
+      category: 'natalChartReflection',
+      majorDomain: 'meaningPurposeCalling',
+      subcategory: 'meaningGap',
+    }));
   });
 });

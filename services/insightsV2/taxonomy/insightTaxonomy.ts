@@ -3,7 +3,7 @@ import {
   GENERATED_INSIGHT_PARAGRAPHS,
   GENERATED_INSIGHT_TAXONOMY,
   type GeneratedInsightDomain,
-} from '../../insights/generated/generatedInsightParagraphs';
+} from '../generated/generatedInsightParagraphs';
 import type {
   InsightCandidateSurface,
   InsightCategory,
@@ -153,7 +153,10 @@ for (const entry of GENERATED_INSIGHT_TAXONOMY) {
     landings: copyPatternTypeBank(domain.landings),
   };
 
-  SUBCATEGORY_TAXONOMY.set(`${entry.majorDomain}:${entry.subcategory}`, taxonomyEntry);
+  const subcategoryKey = `${entry.majorDomain}:${entry.subcategory}`;
+  if (!SUBCATEGORY_TAXONOMY.has(subcategoryKey)) {
+    SUBCATEGORY_TAXONOMY.set(subcategoryKey, taxonomyEntry);
+  }
   if (entry.isLegacyDefault || !CATEGORY_TAXONOMY.has(entry.category)) {
     CATEGORY_TAXONOMY.set(entry.category, taxonomyEntry);
   }

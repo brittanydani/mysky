@@ -22,6 +22,7 @@ describe('insight surface wiring', () => {
     expect(patternsSource).toContain('setPremiumPatternProfile(surface.premiumPatternProfile)');
     expect(patternsSource).toContain('setPremiumWeeklyDeepDive(surface.premiumWeeklyDeepDive)');
     expect(patternsSource).toContain('setThisWeeksV2Pattern(surface.thisWeeksV2Pattern)');
+    expect(patternsSource).toContain('item.narrativeQuestion');
     expect(patternsSource).toContain('premiumPatternProfile.sections.map');
     expect(patternsSource).toContain('buildPatternLibraryState(premiumPatterns)');
     expect(patternsSource).toContain('fullLibrarySections.map');

@@ -3,7 +3,7 @@ import type {
   GeneratedInsightParagraph,
   GeneratedInsightTone,
   GeneratedInsightWriterShape,
-} from '../../insights/generatedInsightParagraphs';
+} from '../generated/generatedInsightParagraphs';
 import type {
   InsightCurrentState,
   InsightDepthLevel,
@@ -81,8 +81,8 @@ const STATE_PREFERENCES: Record<InsightCurrentState, Pick<
     avoidedWriterShapes: [],
     preferredTones: ['grounded', 'reflective', 'poetic'],
     avoidedTones: [],
-    preferredIntensities: ['medium', 'high'],
-    avoidedIntensities: [],
+    preferredIntensities: ['low', 'medium'],
+    avoidedIntensities: ['high'],
     preferredSentenceCounts: [5],
     maxDepthLevel: 3,
   },
@@ -91,8 +91,8 @@ const STATE_PREFERENCES: Record<InsightCurrentState, Pick<
     avoidedWriterShapes: ['poetic', 'questionLed'],
     preferredTones: ['grounded', 'direct', 'practical'],
     avoidedTones: ['poetic'],
-    preferredIntensities: ['low', 'medium'],
-    avoidedIntensities: ['high'],
+    preferredIntensities: ['medium', 'high'],
+    avoidedIntensities: [],
     preferredSentenceCounts: [4],
     maxDepthLevel: 2,
   },
@@ -101,8 +101,8 @@ const STATE_PREFERENCES: Record<InsightCurrentState, Pick<
     avoidedWriterShapes: ['poetic', 'questionLed', 'patternAnalysis', 'contrast'],
     preferredTones: ['tender', 'grounded', 'practical'],
     avoidedTones: ['poetic', 'reflective'],
-    preferredIntensities: ['low', 'medium'],
-    avoidedIntensities: ['high'],
+    preferredIntensities: ['medium', 'high'],
+    avoidedIntensities: [],
     preferredSentenceCounts: [4],
     maxDepthLevel: 1,
   },
@@ -111,8 +111,8 @@ const STATE_PREFERENCES: Record<InsightCurrentState, Pick<
     avoidedWriterShapes: ['contrast', 'poetic', 'questionLed'],
     preferredTones: ['tender', 'grounded'],
     avoidedTones: ['direct', 'poetic'],
-    preferredIntensities: ['low'],
-    avoidedIntensities: ['high'],
+    preferredIntensities: ['low', 'medium'],
+    avoidedIntensities: [],
     preferredSentenceCounts: [4],
     maxDepthLevel: 1,
   },
@@ -282,6 +282,33 @@ function sentenceCount(text: string): number {
   return text.match(/[.!?](?=\s|$)/g)?.length ?? 0;
 }
 
+const HIGH_CHARGE_STATES: readonly InsightCurrentState[] = [
+  'activated',
+  'overwhelmed',
+  'shutdown',
+];
+
+const HIGH_CHARGE_WRITER_SHAPES: readonly GeneratedInsightWriterShape[] = [
+  'body',
+  'practicalCapacity',
+  'punch',
+  'tender',
+  'threshold',
+];
+
+const HIGH_CHARGE_TONES: readonly GeneratedInsightTone[] = [
+  'grounded',
+  'direct',
+  'practical',
+  'tender',
+];
+
+function safeStateIntensity(stateProfile: CurrentInsightStateProfile): number {
+  return typeof stateProfile.intensity === 'number' && Number.isFinite(stateProfile.intensity)
+    ? clamp(stateProfile.intensity, 0, 1)
+    : 0;
+}
+
 export function stateAwareParagraphScore(
   paragraph: Pick<
     GeneratedInsightParagraph,
@@ -313,6 +340,22 @@ export function stateAwareParagraphScore(
   if (stateProfile.maxDepthLevel <= 2 && paragraph.writerShape === 'poetic') score -= 5;
   if (stateProfile.primaryState === 'openReceptive' && paragraph.writerShape === 'poetic') score += 4;
   if (stateProfile.primaryState === 'calm' && paragraph.writerShape === 'patternAnalysis') score += 4;
+
+  const stateIntensity = safeStateIntensity(stateProfile);
+  const isHighChargeState = HIGH_CHARGE_STATES.includes(stateProfile.primaryState);
+  const isHighChargeMoment = isHighChargeState && stateIntensity >= 0.62;
+  if (isHighChargeMoment) {
+    if (paragraph.intensity === 'high') score += 10;
+    if (paragraph.intensity === 'low') score -= 4;
+    if (HIGH_CHARGE_WRITER_SHAPES.includes(paragraph.writerShape)) score += 3;
+    if (HIGH_CHARGE_TONES.includes(paragraph.tone)) score += 2;
+  }
+
+  if (paragraph.intensity === 'high') {
+    if (stateIntensity <= 0.35) score -= 10;
+    if (stateProfile.primaryState === 'calm') score -= 8;
+    if (stateProfile.primaryState === 'tired') score -= 6;
+  }
 
   const confidence = typeof stateProfile.confidence === 'number' && Number.isFinite(stateProfile.confidence)
     ? stateProfile.confidence

@@ -1,6 +1,6 @@
 import type { DailyCheckIn } from '../patterns/types';
 import type { JournalEntry, SleepEntry } from '../storage/models';
-import { buildTodayInsights } from './selection/selectTodayInsight';
+import { buildTodayInsights } from '../insightsV2/buildTodayInsights';
 import {
   adaptPremiumPersonaProfile,
   type PremiumPersonaProfile,
@@ -11,15 +11,15 @@ import {
   selectPremiumPatternProfile,
   type PremiumPatternItem,
   type PremiumPatternProfile,
-} from './selection/selectPatternCards';
+} from '../insightsV2/adapters/premiumPatterns';
 import {
   selectThisWeeksV2Pattern,
   type PremiumThisWeekPatternItem,
-} from './selection/selectThisWeek';
+} from '../insightsV2/adapters/premiumPatterns';
 import {
   selectPremiumWeeklyDeepDive,
   type PremiumWeeklyDeepDiveItem,
-} from './selection/selectWeeklyDeepDive';
+} from '../insightsV2/adapters/premiumPatterns';
 import {
   applyWeeklyNarrativeToDailyInsights,
   applyWeeklyNarrativeToPatterns,
@@ -28,7 +28,7 @@ import {
   selectWeeklyNarrativeThread,
   type WeeklyNarrativeThread,
 } from '../insightsV2/narrative/weeklyNarrative';
-import { patternParagraphBodyKey } from './generated/premiumPatternParagraphLibrary';
+import { patternParagraphBodyKey } from '../insightsV2/adapters/premiumPatternParagraphLibrary';
 import type {
   ArchivePatternScore as V2ArchivePatternScore,
   EvidenceAnchor as V2EvidenceAnchor,
@@ -147,7 +147,40 @@ export function buildV2RawInputs({
   };
 }
 
-function buildV2History(
+function normalizeV2Slot(slot: string | null | undefined): V2InsightHistoryItem['slot'] {
+  const knownSlots: readonly V2InsightHistoryItem['slot'][] = [
+    'todaySignal',
+    'whatMySkyNoticed',
+    'primaryPersona',
+    'dailyAffirmation',
+    'weeklyStory',
+    'archivePattern',
+    'bodySignal',
+    'relationshipMirror',
+    'dreamPattern',
+    'monthlyTheme',
+    'growthEdge',
+    'whatHelped',
+  ];
+  return knownSlots.includes(slot as V2InsightHistoryItem['slot'])
+    ? slot as V2InsightHistoryItem['slot']
+    : 'whatMySkyNoticed';
+}
+
+function normalizeV2Surface(surface: string | null | undefined): V2InsightHistoryItem['surface'] {
+  const knownSurfaces: readonly V2InsightHistoryItem['surface'][] = [
+    'today',
+    'insightsTab',
+    'weeklyReport',
+    'monthlyReport',
+    'archiveMap',
+  ];
+  return knownSurfaces.includes(surface as V2InsightHistoryItem['surface'])
+    ? surface as V2InsightHistoryItem['surface']
+    : 'today';
+}
+
+export function buildV2History(
   history: KnowledgeEngineHistoryInput,
   date: string,
 ): V2InsightHistoryItem[] {
@@ -155,28 +188,45 @@ function buildV2History(
   const shownAt = Number.isFinite(now.getTime())
     ? new Date(now.getTime() - 86_400_000).toISOString()
     : new Date(Date.now() - 86_400_000).toISOString();
-
-  const patternItems = history.recentlyShownPatternKeys.map((patternKey, index) => ({
-    id: `recent-pattern-${index}`,
-    patternKey,
-    slot: 'whatMySkyNoticed' as const,
-    surface: 'today' as const,
-    title: 'Recently shown insight',
-    shownAt,
-    copyHash: `pattern-${patternKey}`,
+  const recentInsightItems = (history.recentInsights ?? []).map((item, index) => ({
+    id: item.insightId || `recent-insight-${index}`,
+    patternKey: item.patternKey,
+    angleKey: item.angleKey,
+    slot: normalizeV2Slot(item.slot),
+    surface: normalizeV2Surface(item.surface),
+    title: item.title || 'Recently shown insight',
+    shownAt: item.shownAt || shownAt,
+    copyHash: item.copyHash,
+    evidenceHash: item.evidenceHash,
   }));
+  const knownPatternKeys = new Set(recentInsightItems.map(item => item.patternKey));
+  const knownCopyHashes = new Set(recentInsightItems.map(item => item.copyHash));
 
-  const copyItems = history.recentlyShownCopyHashes.map((copyHash, index) => ({
-    id: `recent-copy-${index}`,
-    patternKey: `recent-copy-${index}`,
-    slot: 'whatMySkyNoticed' as const,
-    surface: 'today' as const,
-    title: 'Recently shown copy',
-    shownAt,
-    copyHash,
-  }));
+  const patternItems = history.recentlyShownPatternKeys
+    .filter(patternKey => !knownPatternKeys.has(patternKey))
+    .map((patternKey, index) => ({
+      id: `recent-pattern-${index}`,
+      patternKey,
+      slot: 'whatMySkyNoticed' as const,
+      surface: 'today' as const,
+      title: 'Recently shown insight',
+      shownAt,
+      copyHash: `pattern-${patternKey}`,
+    }));
 
-  return [...patternItems, ...copyItems];
+  const copyItems = history.recentlyShownCopyHashes
+    .filter(copyHash => !knownCopyHashes.has(copyHash))
+    .map((copyHash, index) => ({
+      id: `recent-copy-${index}`,
+      patternKey: `recent-copy-${index}`,
+      slot: 'whatMySkyNoticed' as const,
+      surface: 'today' as const,
+      title: 'Recently shown copy',
+      shownAt,
+      copyHash,
+    }));
+
+  return [...recentInsightItems, ...patternItems, ...copyItems];
 }
 
 function splitBody(body: string): { observation: string; pattern: string } {
@@ -306,6 +356,7 @@ export function adaptV2Insight(insight: V2GeneratedInsight): GeneratedInsight {
     reframe: adaptReframe(insight.reframe),
     prompt: insight.reflectionPrompt ?? 'What feels most useful to notice about this pattern today?',
     patternKey: insight.patternKey,
+    angleKey: insight.angleKey,
     confidence: insight.confidence,
     movement: adaptMovement(insight.movement),
     evidence: insight.evidence.map(adaptEvidence),

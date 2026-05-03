@@ -23,6 +23,22 @@ const baseScore = (overrides: Partial<ArchivePatternScore>): ArchivePatternScore
       signal: 'mental_load',
       strength: 0.8,
     },
+    {
+      source: 'bodyMap',
+      date: '2026-04-22',
+      label: 'Shoulder tension',
+      phrase: 'I felt the load in my shoulders after helping.',
+      signal: 'responsibility_weight',
+      strength: 0.72,
+    },
+    {
+      source: 'journal',
+      date: '2026-04-20',
+      label: 'Shared responsibility',
+      phrase: 'I noticed I picked it up before checking capacity.',
+      signal: 'invisible_labor',
+      strength: 0.68,
+    },
   ],
   lastSeenAt: '2026-04-24',
   ...overrides,
@@ -81,6 +97,27 @@ describe('adaptPremiumPatterns', () => {
     expect(items).toHaveLength(1);
     expect(items[0].patternKey).toBe('responsibilityCare_invisibleLoad');
     expect(items.some(item => item.patternKey === 'unknown')).toBe(false);
+  });
+
+  it('does not surface confident pattern-screen copy from a single-entry signal', () => {
+    const items = adaptPremiumPatterns([
+      baseScore({
+        score: 0.86,
+        confidence: 'veryStrong',
+        evidence: [
+          {
+            source: 'journal',
+            date: '2026-04-24',
+            label: 'One intense journal entry',
+            phrase: 'Today felt like too much to carry.',
+            signal: 'mental_load',
+            strength: 0.95,
+          },
+        ],
+      }),
+    ]);
+
+    expect(items).toHaveLength(0);
   });
 
   it('excludes dream paragraph patterns from the pattern screen engine', () => {

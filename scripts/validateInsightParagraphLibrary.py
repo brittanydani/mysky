@@ -10,7 +10,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-LIBRARY_PATH = ROOT / "services" / "insights" / "generated" / "generatedInsightParagraphs.ts"
+LIBRARY_PATH = ROOT / "services" / "insightsV2" / "generated" / "generatedInsightParagraphs.ts"
 
 BLOCKED_PHRASES = [
     "This is clear enough to track now",
@@ -191,6 +191,7 @@ VALID_CATEGORIES = {
 }
 
 EXCLUDED_PARAGRAPH_CATEGORIES = {"dreamsSymbols"}
+EXPECTED_TAXONOMY_ENTRY_COUNT = 402
 
 VALID_WRITER_SHAPES = {
     "punch",
@@ -229,6 +230,12 @@ VALID_PATTERN_TYPES = {
 VALID_SOURCES = {
     "goldStandard",
     "pythonGenerated",
+}
+
+VALID_INTENSITIES = {
+    "low",
+    "medium",
+    "high",
 }
 
 REQUIRED_FIELDS = {
@@ -406,6 +413,10 @@ def validate_metadata(item: dict[str, Any], seen_ids: set[str], label: str) -> l
     if flow_name not in VALID_FLOW_NAMES:
         errors.append(f"{label}: invalid flowName {flow_name!r}")
 
+    intensity = item.get("intensity")
+    if intensity not in VALID_INTENSITIES:
+        errors.append(f"{label}: invalid intensity {intensity!r}")
+
     pattern_type = item.get("patternType")
     if pattern_type not in VALID_PATTERN_TYPES:
         errors.append(f"{label}: invalid patternType {pattern_type!r}")
@@ -469,6 +480,39 @@ def validate_blocked_phrases(body: str, label: str) -> list[str]:
         errors.append(f"{label}: body says 'the user'")
     if "{" in body or "}" in body:
         errors.append(f"{label}: body contains unresolved template braces")
+    return errors
+
+
+def validate_repeated_long_phrases(body: str, label: str) -> list[str]:
+    errors: list[str] = []
+    lowered = body.lower()
+
+    # Catches phrases that become awkward when repeated inside one generated paragraph.
+    long_phrase_patterns = [
+        r"\bdoubt about whether effort will change anything\b",
+        r"\bone small step that can still be changed\b",
+        r"\bthe loop of trying to interpret every detail\b",
+        r"\bthe story your mind builds around the moment\b",
+        r"\bthe symbol that gives the feeling a shape\b",
+        r"\bthe attempt to make the story livable again\b",
+        r"\bthe point where demand turns into shutdown\b",
+        r"\bthe attempt to pace yourself before pressure takes over\b",
+        r"\bthe old habit of feeling powerless\b",
+        r"\bthe return of movement after a stuck place\b",
+        r"\bcontrol returning after uncertainty\b",
+    ]
+
+    for pattern in long_phrase_patterns:
+        matches = re.findall(pattern, lowered)
+        if len(matches) > 1:
+            readable = pattern.replace(r"\b", "").replace("\\", "")
+            errors.append(
+                f"{label}: long generated phrase repeats {len(matches)} times: {readable}"
+            )
+
+    if "pull to face the pull" in lowered:
+        errors.append(f"{label}: awkward repeated pull phrasing appears")
+
     return errors
 
 
@@ -569,8 +613,10 @@ def validate_taxonomy_entries(
         if isinstance(domain.get("key"), str)
     }
 
-    if len(entries) != 400:
-        errors.append(f"GENERATED_INSIGHT_TAXONOMY: expected 400 entries, got {len(entries)}")
+    if len(entries) != EXPECTED_TAXONOMY_ENTRY_COUNT:
+        errors.append(
+            f"GENERATED_INSIGHT_TAXONOMY: expected {EXPECTED_TAXONOMY_ENTRY_COUNT} entries, got {len(entries)}"
+        )
 
     coverage: dict[tuple[str, str], set[str]] = defaultdict(set)
     legacy_defaults: Counter[str] = Counter()
@@ -664,6 +710,7 @@ def validate_card_body(item: dict[str, Any], label: str) -> list[str]:
     if count not in {4, 5}:
         errors.append(f"{label}: card body must be 4 or 5 sentences, got {count}")
     errors.extend(validate_blocked_phrases(body, label))
+    errors.extend(validate_repeated_long_phrases(body, label))
     if not item.get("isCurated") and "based on" in body.lower():
         errors.append(f"{label}: generated body contains blocked generic phrase: based on")
     if not item.get("isCurated") and not contains_micro_or_action(body):
@@ -684,6 +731,7 @@ def validate_weekly_body(item: dict[str, Any], label: str) -> list[str]:
         if count not in {4, 5}:
             errors.append(f"{label}: weekly paragraph {index} must be 4 or 5 sentences, got {count}")
     errors.extend(validate_blocked_phrases(body, label))
+    errors.extend(validate_repeated_long_phrases(body, label))
     return errors
 
 
@@ -815,6 +863,86 @@ def validate_paragraph_coverage(
     return errors
 
 
+def validate_intensity_distribution(cards: list[dict[str, Any]]) -> list[str]:
+    errors: list[str] = []
+    calm_high_categories = {
+        "pleasurePlay",
+        "timeRhythms",
+        "creativityExpression",
+        "valuesIntegrity",
+        "natalChartReflection",
+        "spiritualMeaning",
+    }
+
+    high_by_category: Counter[str] = Counter(
+        str(item.get("category"))
+        for item in cards
+        if item.get("intensity") == "high"
+    )
+    high_count = sum(high_by_category.values())
+    if not 1200 <= high_count <= 1600:
+        errors.append(f"high-intensity count should stay between 1200 and 1600, got {high_count}")
+
+    calm_leaks = {
+        category: count
+        for category, count in high_by_category.items()
+        if category in calm_high_categories and count > 0
+    }
+    if calm_leaks:
+        errors.append(f"high-intensity leaked into calm categories: {calm_leaks}")
+
+    glimmers_high = high_by_category.get("glimmersRegulation", 0)
+    if glimmers_high > 12:
+        errors.append(f"glimmersRegulation high-intensity count should stay capped at 12, got {glimmers_high}")
+
+    bad_high_shapes: Counter[str] = Counter(
+        str(item.get("writerShape"))
+        for item in cards
+        if item.get("intensity") == "high"
+        and item.get("writerShape") in {"poetic", "questionLed"}
+    )
+    if bad_high_shapes:
+        errors.append(f"high-intensity used excluded writer shapes: {dict(bad_high_shapes)}")
+
+    return errors
+
+
+def validate_paragraph_taxonomy_alignment(
+    paragraphs: list[dict[str, Any]],
+    taxonomy: list[dict[str, Any]],
+) -> list[str]:
+    errors: list[str] = []
+    taxonomy_pairs = {
+        (entry.get("category"), entry.get("majorDomain"), entry.get("subcategory"))
+        for entry in taxonomy
+    }
+    paragraph_pairs = {
+        (item.get("category"), item.get("majorDomain"), item.get("insightSubcategory"))
+        for item in paragraphs
+        if item.get("category") not in EXCLUDED_PARAGRAPH_CATEGORIES
+    }
+
+    missing_taxonomy = sorted(
+        pair
+        for pair in paragraph_pairs
+        if pair not in taxonomy_pairs
+    )
+    if missing_taxonomy:
+        formatted = ", ".join(f"{category}/{domain}/{subcategory}" for category, domain, subcategory in missing_taxonomy[:12])
+        errors.append(f"paragraph category/domain/subcategory pairs missing taxonomy rows: {formatted}")
+
+    missing_paragraphs = sorted(
+        pair
+        for pair in taxonomy_pairs
+        if pair[0] not in EXCLUDED_PARAGRAPH_CATEGORIES and pair not in paragraph_pairs
+    )
+    if missing_paragraphs:
+        formatted = ", ".join(f"{category}/{domain}/{subcategory}" for category, domain, subcategory in missing_paragraphs[:12])
+        errors.append(f"taxonomy category/domain/subcategory rows missing paragraphs: {formatted}")
+
+    return errors
+
+
 def main() -> int:
     if not LIBRARY_PATH.exists():
         print(f"Missing generated library: {LIBRARY_PATH.relative_to(ROOT)}", file=sys.stderr)
@@ -860,7 +988,9 @@ def main() -> int:
         errors.extend(validate_weekly_body(item, label))
 
     errors.extend(validate_variety(cards))
+    errors.extend(validate_intensity_distribution(cards))
     errors.extend(validate_paragraph_coverage(cards, taxonomy))
+    errors.extend(validate_paragraph_taxonomy_alignment([*cards, *weekly], taxonomy))
 
     if errors:
         print("Insight paragraph library validation failed:", file=sys.stderr)
@@ -869,7 +999,7 @@ def main() -> int:
         return 1
 
     print(
-        f"Validated {len(cards)} card paragraphs, {len(weekly)} weekly paragraph sets, "
+        f"Validated {len(cards)} card paragraphs, {len(weekly)} weekly paragraphs, "
         f"{len(domains)} domains, and {len(taxonomy)} taxonomy entries."
     )
     return 0

@@ -29,7 +29,7 @@
     "insights:generate": "python3 scripts/generateInsightParagraphLibrary.py",
     "insights:validate": "python3 scripts/validateInsightParagraphLibrary.py",
     "insights:taxonomy": "python3 scripts/validateInsightTaxonomy.py",
-    "insights:sweep": "! grep -R \"This is clear enough to track now\\|The pattern is clear now\\|This does not read as\\|It reads as\\|Seen across\\|Detected in\\|Based on\\|The user\" services/insights/generated/generatedInsightParagraphs.ts services/insightsV2/adapters services/insightsV2/narrative services/insightsV2/buildTodayInsights.ts components/KnowledgeInsightCard.tsx 'app/(tabs)/patterns.tsx' --exclude-dir=node_modules --exclude-dir=coverage",
+    "insights:sweep": "! grep -R \"This is clear enough to track now\\|The pattern is clear now\\|This does not read as\\|It reads as\\|Seen across\\|Detected in\\|Based on\\|The user\" services/insightsV2/generated/generatedInsightParagraphs.ts services/insightsV2/adapters services/insightsV2/narrative services/insightsV2/buildTodayInsights.ts components/KnowledgeInsightCard.tsx 'app/(tabs)/patterns.tsx' --exclude-dir=node_modules --exclude-dir=coverage",
     "insights:check": "npm run insights:validate && npm run insights:taxonomy && npx tsc --noEmit",
     "postinstall": "patch-package",
     "android": "expo run:android"

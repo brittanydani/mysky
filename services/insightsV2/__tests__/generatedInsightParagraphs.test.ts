@@ -3,7 +3,7 @@ import {
   GENERATED_INSIGHT_PARAGRAPHS,
   GENERATED_INSIGHT_TAXONOMY,
   GENERATED_WEEKLY_INSIGHT_PARAGRAPHS,
-} from '../../insights/generatedInsightParagraphs';
+} from '../generated/generatedInsightParagraphs';
 import { selectPatternParagraph } from '../adapters/premiumPatternParagraphLibrary';
 
 const BLOCKED_PHRASES = [
@@ -1027,7 +1027,7 @@ describe('generated insight paragraph library', () => {
   });
 
   it('exports full taxonomy and paragraph coverage for every domain subcategory pattern type', () => {
-    expect(GENERATED_INSIGHT_TAXONOMY).toHaveLength(400);
+    expect(GENERATED_INSIGHT_TAXONOMY).toHaveLength(402);
 
     const paragraphCounts = new Map<string, number>();
     for (const item of GENERATED_INSIGHT_PARAGRAPHS) {
@@ -1045,6 +1045,63 @@ describe('generated insight paragraph library', () => {
         expect(paragraphCounts.get(key) ?? 0).toBeGreaterThanOrEqual(3);
       }
     }
+  });
+
+  it('keeps every paragraph category/domain/subcategory wired to taxonomy', () => {
+    const allParagraphs = [
+      ...GENERATED_INSIGHT_PARAGRAPHS,
+      ...GENERATED_WEEKLY_INSIGHT_PARAGRAPHS,
+    ];
+    const taxonomyPairs = new Set(
+      GENERATED_INSIGHT_TAXONOMY.map(entry =>
+        `${entry.category}::${entry.majorDomain}::${entry.subcategory}`,
+      ),
+    );
+    const paragraphPairs = new Set(
+      allParagraphs.map(item =>
+        `${item.category}::${item.majorDomain}::${item.insightSubcategory}`,
+      ),
+    );
+
+    expect([...paragraphPairs].filter(pair => !taxonomyPairs.has(pair))).toEqual([]);
+    expect([...taxonomyPairs].filter(pair => !paragraphPairs.has(pair))).toEqual([]);
+  });
+
+  it('includes high-intensity metadata for stronger charge categories', () => {
+    const highIntensityParagraphs = GENERATED_INSIGHT_PARAGRAPHS.filter(item => item.intensity === 'high');
+    const highIntensityCategories = new Set(highIntensityParagraphs.map(item => item.category));
+    const highIntensityShapes = new Set(highIntensityParagraphs.map(item => item.writerShape));
+    const highIntensityCountByCategory = highIntensityParagraphs.reduce<Record<string, number>>((counts, item) => {
+      counts[item.category] = (counts[item.category] ?? 0) + 1;
+      return counts;
+    }, {});
+
+    expect(highIntensityParagraphs.length).toBeGreaterThanOrEqual(1200);
+    expect(highIntensityParagraphs.length).toBeLessThanOrEqual(1600);
+    expect([...highIntensityCategories]).toEqual(expect.arrayContaining([
+      'bodySignals',
+      'emotionalWeather',
+      'familyHome',
+      'griefTransitions',
+      'relationships',
+      'responsibilityCare',
+      'safetyRegulation',
+      'selfWorthReceiving',
+      'supportBelonging',
+    ]));
+    for (const calmCategory of [
+      'pleasurePlay',
+      'timeRhythms',
+      'creativityExpression',
+      'valuesIntegrity',
+      'natalChartReflection',
+      'spiritualMeaning',
+    ]) {
+      expect(highIntensityCountByCategory[calmCategory] ?? 0).toBe(0);
+    }
+    expect(highIntensityCountByCategory.glimmersRegulation ?? 0).toBeLessThanOrEqual(12);
+    expect(highIntensityShapes.has('poetic')).toBe(false);
+    expect(highIntensityShapes.has('questionLed')).toBe(false);
   });
 
   it('includes curated gold-standard paragraphs exactly as authored', () => {
@@ -1098,11 +1155,11 @@ describe('generated insight paragraph library', () => {
       expect(PATTERN_TYPES).toContain(item.patternType);
       expect(domainKeys.has(item.majorDomain)).toBe(true);
       expect(item.theoryLens.length).toBeGreaterThan(0);
-	      expect(item.insightSubcategory).toBeTruthy();
-	      expect(item.allowedSurfaces).toEqual(expect.arrayContaining(['weeklyDeepDive', 'thisWeek']));
-	      expect(item.allowedSurfaces).not.toContain('today');
-	      expect(item.allowedSurfaces).not.toContain('patterns');
-	      expect(item.isCurated).toBe(false);
+      expect(item.insightSubcategory).toBeTruthy();
+      expect(item.allowedSurfaces).toEqual(expect.arrayContaining(['weeklyDeepDive', 'thisWeek']));
+      expect(item.allowedSurfaces).not.toContain('today');
+      expect(item.allowedSurfaces).not.toContain('patterns');
+      expect(item.isCurated).toBe(false);
       expect(item.source).toBe('pythonGenerated');
       expect(paragraphs.length).toBeGreaterThanOrEqual(2);
       expect(paragraphs.length).toBeLessThanOrEqual(4);
