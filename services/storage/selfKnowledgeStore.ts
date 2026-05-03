@@ -48,6 +48,26 @@ const EMPTY_REFLECTION_DATA: DailyReflectionData = {
   startedAt: null,
 };
 
+const REFLECTION_CATEGORIES = new Set<ReflectionAnswer['category']>([
+  'values',
+  'archetypes',
+  'cognitive',
+  'intelligence',
+]);
+
+type DailyReflectionRow = {
+  id?: string | null;
+  question_id?: number | null;
+  category?: string | null;
+  question_text?: string | null;
+  answer?: string | null;
+  scale_value?: number | null;
+  date?: string | null;
+  sealed_at?: string | null;
+  notes?: string | null;
+  is_deleted?: boolean | null;
+};
+
 async function getUserId(): Promise<string | null> {
   const { data, error } = await supabase.auth.getSession();
   if (error) {
@@ -73,15 +93,51 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function buildReflectionAnswerKey(
+  answer: Pick<ReflectionAnswer, 'category' | 'date' | 'questionId'>,
+): string {
+  return `${answer.date}:${answer.category}:${answer.questionId}`;
+}
+
+function buildUserScopedReflectionRowId(
+  userId: string,
+  answer: Pick<ReflectionAnswer, 'category' | 'date' | 'questionId'>,
+): string {
+  return `${userId}:${answer.date}:${answer.questionId}:${answer.category}`;
+}
+
+function getReflectionSortTime(answer: ReflectionAnswer): number {
+  const parsed = Date.parse(answer.sealedAt);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function mergeReflectionAnswers(...answerSets: ReflectionAnswer[][]): ReflectionAnswer[] {
+  const byKey = new Map<string, ReflectionAnswer>();
+
+  for (const answer of answerSets.flat()) {
+    const key = buildReflectionAnswerKey(answer);
+    const existing = byKey.get(key);
+    if (!existing || getReflectionSortTime(answer) >= getReflectionSortTime(existing)) {
+      byKey.set(key, answer);
+    }
+  }
+
+  return [...byKey.values()].sort((left, right) => {
+    const timeDiff = getReflectionSortTime(left) - getReflectionSortTime(right);
+    return timeDiff !== 0 ? timeDiff : buildReflectionAnswerKey(left).localeCompare(buildReflectionAnswerKey(right));
+  });
+}
+
 function buildReflectionData(answers: ReflectionAnswer[]): DailyReflectionData {
-  const reflectionDates = [...new Set(answers.map((answer) => answer.date))];
-  const startedAt = answers.length > 0
-    ? [...answers]
+  const normalizedAnswers = mergeReflectionAnswers(answers);
+  const reflectionDates = [...new Set(normalizedAnswers.map((answer) => answer.date))];
+  const startedAt = normalizedAnswers.length > 0
+    ? [...normalizedAnswers]
       .sort((left, right) => left.sealedAt.localeCompare(right.sealedAt))[0]?.sealedAt ?? null
     : null;
 
   return {
-    answers,
+    answers: normalizedAnswers,
     totalDaysCompleted: reflectionDates.length,
     startedAt,
   };
@@ -99,13 +155,54 @@ export async function savePlainAccountScopedJson<T>(key: string, value: T): Prom
   await saveUserPreference(key, value);
 }
 
+async function loadExistingReflectionRowIds(
+  userId: string,
+  answers: ReflectionAnswer[],
+): Promise<Map<string, string>> {
+  if (answers.length === 0) return new Map();
+
+  const dates = [...new Set(answers.map((answer) => answer.date))];
+  const categories = [...new Set(answers.map((answer) => answer.category))];
+  const questionIds = [...new Set(answers.map((answer) => answer.questionId))];
+
+  const { data, error } = await supabase
+    .from('daily_reflections')
+    .select('id,date,category,question_id')
+    .eq('user_id', userId)
+    .eq('is_deleted', false)
+    .in('date', dates)
+    .in('category', categories)
+    .in('question_id', questionIds);
+
+  if (error) throw error;
+
+  const idsByAnswerKey = new Map<string, string>();
+  for (const row of (data ?? []) as DailyReflectionRow[]) {
+    if (!row.id || !row.date || !row.category || row.question_id == null) continue;
+    if (!REFLECTION_CATEGORIES.has(row.category as ReflectionAnswer['category'])) continue;
+
+    idsByAnswerKey.set(
+      buildReflectionAnswerKey({
+        date: row.date,
+        category: row.category as ReflectionAnswer['category'],
+        questionId: row.question_id,
+      }),
+      row.id,
+    );
+  }
+
+  return idsByAnswerKey;
+}
+
 async function upsertReflectionRows(answers: ReflectionAnswer[]): Promise<void> {
   const userId = await getUserId();
   if (!userId || answers.length === 0) return;
 
   const now = new Date().toISOString();
+  const existingIdsByAnswerKey = await loadExistingReflectionRowIds(userId, answers);
   const rows = answers.map((answer) => ({
-    id: `${answer.date}:${answer.questionId}:${answer.category}`,
+    id: existingIdsByAnswerKey.get(buildReflectionAnswerKey(answer))
+      ?? buildUserScopedReflectionRowId(userId, answer),
     user_id: userId,
     question_id: answer.questionId,
     category: answer.category,
@@ -161,16 +258,26 @@ export async function loadDailyReflectionData(): Promise<DailyReflectionData> {
     if (error) throw error;
 
     const answers: ReflectionAnswer[] = [];
-    for (const row of data ?? []) {
+    for (const row of (data ?? []) as DailyReflectionRow[]) {
       const questionText = row.question_text;
       const answerText = row.answer;
       const notes = row.notes;
+      const category = row.category as ReflectionAnswer['category'];
+      const questionId = row.question_id;
 
-      if (!questionText || !answerText) continue;
+      if (
+        !questionText ||
+        !answerText ||
+        !category ||
+        !REFLECTION_CATEGORIES.has(category) ||
+        questionId == null ||
+        !row.date ||
+        !row.sealed_at
+      ) continue;
 
       answers.push({
-        questionId: row.question_id,
-        category: row.category,
+        questionId,
+        category,
         questionText,
         answer: answerText,
         scaleValue: row.scale_value ?? undefined,
@@ -187,7 +294,7 @@ export async function loadDailyReflectionData(): Promise<DailyReflectionData> {
       return fallback;
     }
 
-    const resolved = buildReflectionData(answers);
+    const resolved = buildReflectionData(mergeReflectionAnswers(answers, fallback.answers));
     await savePlainAccountScopedJson(CACHE_KEYS.dailyReflections, resolved);
     return resolved;
   } catch (error) {

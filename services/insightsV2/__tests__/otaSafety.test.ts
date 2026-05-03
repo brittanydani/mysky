@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import path from 'path';
 import { buildTodayInsights } from '../knowledgeEngineV2';
 import { detectCurrentInsightState, stateAwareParagraphScore } from '../state/insightState';
@@ -33,23 +33,202 @@ const profile = (
   ...overrides,
 });
 
+const repoRoot = path.resolve(__dirname, '../../..');
+
+const deletedInsightEnginePaths = [
+  'generated/insights',
+  'lib/insights',
+  'services/astrology/dailyInsightEngine.ts',
+  'services/astrology/humanGuidance.ts',
+  'services/insights/archivePatterns.ts',
+  'services/insights/engine',
+  'services/insights/extraction',
+  'services/insights/geminiInsightsService.ts',
+  'services/insights/generated',
+  'services/insights/generatedInsightParagraphs.ts',
+  'services/insights/generator',
+  'services/insights/legacy',
+  'services/insights/normalizers',
+  'services/insights/pipeline.ts',
+  'services/insights/premium',
+  'services/insights/premiumPipeline',
+  'services/insights/scoring',
+  'services/insights/selection',
+  'services/insightsV2/selectPremiumInsightDraft.ts',
+  'services/storage/insightHistory.ts',
+  'scripts/insights',
+  'utils/deepInsights.ts',
+  'utils/insightsEngine.ts',
+  'utils/journalInsights.ts',
+  'utils/microInsights.ts',
+  'utils/narrativeInsights.ts',
+  'utils/patternFeed.ts',
+  'utils/selfKnowledgeCrossRef.ts',
+];
+
+const runtimeSourceRoots = [
+  'app',
+  'components',
+  'constants',
+  'context',
+  'hooks',
+  'lib',
+  'services',
+  'store',
+  'utils',
+];
+
+const toolingSourceRoots = [
+  'scripts',
+];
+
+const ignoredSourceDirs = new Set([
+  '__tests__',
+  '__pycache__',
+  'coverage',
+  'node_modules',
+]);
+
+const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx']);
+const toolingExtensions = new Set([...sourceExtensions, '.json', '.py']);
+
+const forbiddenLegacyImportFragments = [
+  'astrology/dailyInsightEngine',
+  'astrology/humanGuidance',
+  'insights/archivePatterns',
+  'insights/engine',
+  'insights/extraction',
+  'insights/geminiInsightsService',
+  'insights/generated',
+  'insights/generator',
+  'insights/legacy',
+  'insights/normalizers',
+  'insights/pipeline',
+  'insights/premium',
+  'insights/premiumPipeline',
+  'insights/scoring',
+  'insights/selection',
+  'insightsV2/selectPremiumInsightDraft',
+  'lib/insights',
+  'storage/insightHistory',
+  'utils/deepInsights',
+  'utils/insightsEngine',
+  'utils/journalInsights',
+  'utils/microInsights',
+  'utils/narrativeInsights',
+  'utils/patternFeed',
+  'utils/selfKnowledgeCrossRef',
+];
+
+const forbiddenLegacyToolingFragments = [
+  ...forbiddenLegacyImportFragments,
+  'dailyInsightDrafts',
+  'daily_insight_drafts',
+  'daily_insight_drafts_premium_final',
+  'generated/insights',
+  'weighted_insight_drafts',
+];
+
+const forbiddenLegacyImportSymbols = [
+  'DailyInsightEngine',
+  'HumanDailyGuidance',
+  'buildPatternFeedInsights',
+  'computeEnhancedInsights',
+  'runPremiumInsightPipeline',
+  'selectPremiumInsightDraft',
+];
+
+function walkSourceFiles(dir: string, extensions = sourceExtensions): string[] {
+  if (!existsSync(dir)) return [];
+
+  const files: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name.startsWith('.') || ignoredSourceDirs.has(entry.name)) continue;
+
+    const absolutePath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...walkSourceFiles(absolutePath, extensions));
+    } else if (entry.isFile() && extensions.has(path.extname(entry.name))) {
+      files.push(absolutePath);
+    }
+  }
+
+  return files;
+}
+
+function sourceMentionsForbiddenLegacyToolingPath(source: string): boolean {
+  const normalizedSource = normalizeImportPath(source);
+  return forbiddenLegacyToolingFragments.some(fragment => normalizedSource.includes(fragment));
+}
+
+function normalizeImportPath(value: string): string {
+  return value.replace(/\\/g, '/').replace(/\.(tsx?|jsx?)$/, '');
+}
+
+function importSpecifiers(source: string): string[] {
+  const specs: string[] = [];
+  const importFromPattern = /import\s+(?:type\s+)?[\s\S]*?\s+from\s+['"]([^'"]+)['"]/g;
+  const sideEffectImportPattern = /import\s+['"]([^'"]+)['"]/g;
+  const requirePattern = /require\(\s*['"]([^'"]+)['"]\s*\)/g;
+
+  for (const pattern of [importFromPattern, sideEffectImportPattern, requirePattern]) {
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(source)) !== null) {
+      specs.push(normalizeImportPath(match[1]));
+    }
+  }
+
+  return specs;
+}
+
+function sourceImportsForbiddenLegacyPath(source: string): boolean {
+  return importSpecifiers(source).some((specifier) =>
+    forbiddenLegacyImportFragments.some(fragment => specifier.includes(fragment)),
+  );
+}
+
+function sourceImportsForbiddenLegacySymbol(source: string): boolean {
+  const importStatementPattern = /import\s+(?:type\s+)?[\s\S]*?\s+from\s+['"][^'"]+['"]/g;
+  const importStatements = source.match(importStatementPattern) ?? [];
+
+  return importStatements.some(statement =>
+    forbiddenLegacyImportSymbols.some(symbol => new RegExp(`\\b${symbol}\\b`).test(statement)),
+  );
+}
+
 describe('insight OTA safety', () => {
   it('keeps deleted insight engine paths out of the OTA bundle', () => {
-    const repoRoot = path.resolve(__dirname, '../../..');
-    const deletedEnginePaths = [
-      'services/insights/extraction',
-      'services/insights/scoring',
-      'services/insights/selection',
-      'services/insights/taxonomy',
-      'services/insights/legacy',
-      'services/insights/generated',
-      'services/insights/generatedInsightParagraphs.ts',
-      'utils/selfKnowledgeCrossRef.ts',
-    ];
-
     expect(
-      deletedEnginePaths.filter(relativePath => existsSync(path.join(repoRoot, relativePath))),
+      deletedInsightEnginePaths.filter(relativePath => existsSync(path.join(repoRoot, relativePath))),
     ).toEqual([]);
+  });
+
+  it('keeps runtime source from importing deleted insight systems', () => {
+    const offendingFiles = runtimeSourceRoots
+      .flatMap(relativeRoot => walkSourceFiles(path.join(repoRoot, relativeRoot)))
+      .filter((absolutePath) => {
+        if (!statSync(absolutePath).isFile()) return false;
+
+        const source = readFileSync(absolutePath, 'utf8');
+        return sourceImportsForbiddenLegacyPath(source) || sourceImportsForbiddenLegacySymbol(source);
+      })
+      .map(absolutePath => path.relative(repoRoot, absolutePath));
+
+    expect(offendingFiles).toEqual([]);
+  });
+
+  it('keeps tooling from regenerating deleted insight systems', () => {
+    const offendingFiles = toolingSourceRoots
+      .flatMap(relativeRoot => walkSourceFiles(path.join(repoRoot, relativeRoot), toolingExtensions))
+      .filter((absolutePath) => {
+        if (!statSync(absolutePath).isFile()) return false;
+
+        const source = readFileSync(absolutePath, 'utf8');
+        return sourceMentionsForbiddenLegacyToolingPath(source);
+      })
+      .map(absolutePath => path.relative(repoRoot, absolutePath));
+
+    expect(offendingFiles).toEqual([]);
   });
 
   it('ignores malformed persisted history entries in timing decisions', () => {

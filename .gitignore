@@ -18,6 +18,7 @@ node_modules
 
 # Build outputs
 ios/build/
+coverage/
 
 # Logs
 *.log
@@ -76,10 +77,3 @@ scripts/*
 !scripts/generateInsightParagraphLibrary.py
 !scripts/validateInsightParagraphLibrary.py
 !scripts/validateInsightTaxonomy.py
-!scripts/insights/
-scripts/insights/*
-!scripts/insights/generate_weighted_insights.py
-!scripts/insights/favorite_tone_examples.json
-!scripts/insights/profile_lens_examples.json
-!scripts/insights/profile_lenses.json
-!scripts/insights/weighted_insight_specs.example.json
