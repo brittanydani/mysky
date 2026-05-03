@@ -15,21 +15,30 @@
  *   - Lapse re-engagement after 7+ days absence
  */
 
-import { getUserPreference, saveUserPreference, deleteUserPreference } from '../storage/userProfileService';
+import { getUserPreference, saveUserPreference } from '../storage/userProfileService';
 import { supabaseDb } from '../storage/supabaseDb';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { logger } from '../../utils/logger';
+import {
+  cancelMySkyNotification,
+  hasNotificationPermission,
+  scheduleMySkyNotification,
+} from '../notifications/mySkyNotifications';
+import type { MySkyNotificationKind } from '../notifications/notificationTheme';
 
 const LAST_INSIGHT_NOTIF_KEY = '@mysky:last_insight_notif_date';
 const FIRST_PATTERN_NOTIF_KEY = '@mysky:first_pattern_notif_sent';
 const LAST_STREAK_MILESTONE_KEY = '@mysky:last_streak_milestone_notif';
-const STREAK_AT_RISK_NOTIF_ID_KEY = '@mysky:streak_at_risk_notif_id';
-const REENGAGEMENT_NOTIF_ID_KEY = '@mysky:reengagement_notif_id';
+const LAST_WEEKLY_PATTERN_NOTIF_KEY = '@mysky:last_weekly_pattern_notif';
+const LAST_LOW_REST_NOTIF_KEY = '@mysky:last_low_rest_notif_date';
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 interface InsightNotification {
   title: string;
   body: string;
   route: string;
+  kind: MySkyNotificationKind;
+  type: string;
 }
 
 /**
@@ -61,15 +70,19 @@ function detectMoodTrend(
       title: 'Mood Shift Detected',
       body: 'Your mood has been dipping for a few days. A quick check-in might help you see what\u2019s underneath.',
       route: '/(tabs)/internal-weather',
+      kind: 'moodShift',
+      type: 'mood_shift',
     };
   }
 
   // 3-day rise
   if (last3[0] < last3[1] && last3[1] < last3[2] && last3[2] - last3[0] >= 1.5) {
     return {
-      title: 'Positive Momentum ✧',
+      title: 'Positive Momentum',
       body: 'Your mood has been rising — something in your rhythm seems to be working. Take a moment to notice what.',
       route: '/(tabs)/patterns',
+      kind: 'moodShift',
+      type: 'mood_shift',
     };
   }
 
@@ -101,10 +114,134 @@ function detectSleepDrop(
       title: 'Sleep Pattern Shift',
       body: `Your sleep has dropped to ${recentAvg.toFixed(1)}h lately. Rest patterns often show up in mood before you feel them.`,
       route: '/(tabs)/sleep',
+      kind: 'sleepShift',
+      type: 'sleep_shift',
     };
   }
 
   return null;
+}
+
+function stressScore(stressLevel?: string): number {
+  if (stressLevel === 'high') return 3;
+  if (stressLevel === 'medium') return 2;
+  if (stressLevel === 'low') return 1;
+  return 0;
+}
+
+function energyScore(energyLevel?: string): number {
+  if (energyLevel === 'high') return 3;
+  if (energyLevel === 'medium') return 2;
+  if (energyLevel === 'low') return 1;
+  return 0;
+}
+
+function detectLowRestSupport(
+  checkIns: { date: string; stressLevel?: string; energyLevel?: string }[],
+): InsightNotification | null {
+  const byDate = new Map<string, { stress: number[]; energy: number[] }>();
+  for (const checkIn of checkIns) {
+    const stress = stressScore(checkIn.stressLevel);
+    const energy = energyScore(checkIn.energyLevel);
+    if (stress === 0 || energy === 0) continue;
+    const day = byDate.get(checkIn.date) ?? { stress: [], energy: [] };
+    day.stress.push(stress);
+    day.energy.push(energy);
+    byDate.set(checkIn.date, day);
+  }
+
+  const daily = Array.from(byDate.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, values]) => ({
+      date,
+      avgStress: values.stress.reduce((sum, value) => sum + value, 0) / values.stress.length,
+      avgEnergy: values.energy.reduce((sum, value) => sum + value, 0) / values.energy.length,
+    }));
+
+  if (daily.length < 3) return null;
+
+  const recent3 = daily.slice(-3);
+  const strainedDays = recent3.filter(day => day.avgStress >= 2.5 && day.avgEnergy <= 1.5);
+  if (strainedDays.length < 2) return null;
+
+  return {
+    title: 'A Softer Pace May Help',
+    body: 'Your recent check-ins show more strain and lower energy. A small reset may help before you push further.',
+    route: '/(tabs)/healing',
+    kind: 'lowRestSupport',
+    type: 'low_rest_support',
+  };
+}
+
+function weekKey(date: Date): string {
+  const weekStart = new Date(date);
+  const daysSinceMonday = (weekStart.getDay() + 6) % 7;
+  weekStart.setDate(weekStart.getDate() - daysSinceMonday);
+  return toLocalDateString(weekStart);
+}
+
+function daysSinceDateKey(dateKey: string, now = new Date()): number {
+  const then = new Date(`${dateKey}T00:00:00`);
+  if (Number.isNaN(then.getTime())) return Number.POSITIVE_INFINITY;
+  return Math.floor((now.getTime() - then.getTime()) / DAY_MS);
+}
+
+function detectWeeklyPattern(
+  checkIns: { date: string; moodScore?: number; tags?: string[] }[],
+  now = new Date(),
+): InsightNotification | null {
+  const dayOfWeek = now.getDay();
+  if (dayOfWeek !== 0 && dayOfWeek !== 1) return null;
+
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgoKey = toLocalDateString(sevenDaysAgo);
+  const recent = checkIns.filter(checkIn => checkIn.date >= sevenDaysAgoKey);
+  const uniqueDays = new Set(recent.map(checkIn => checkIn.date));
+  if (uniqueDays.size < 3) return null;
+
+  const byDate = new Map<string, number[]>();
+  const tagCounts = new Map<string, number>();
+  for (const checkIn of recent) {
+    if (typeof checkIn.moodScore === 'number') {
+      const values = byDate.get(checkIn.date) ?? [];
+      values.push(checkIn.moodScore);
+      byDate.set(checkIn.date, values);
+    }
+    for (const tag of checkIn.tags ?? []) {
+      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    }
+  }
+
+  const dailyMood = Array.from(byDate.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, values]) => values.reduce((sum, value) => sum + value, 0) / values.length);
+  if (dailyMood.length < 3) return null;
+
+  const midpoint = Math.ceil(dailyMood.length / 2);
+  const early = dailyMood.slice(0, midpoint);
+  const late = dailyMood.slice(midpoint);
+  const earlyAvg = early.reduce((sum, value) => sum + value, 0) / early.length;
+  const lateAvg = late.length > 0
+    ? late.reduce((sum, value) => sum + value, 0) / late.length
+    : earlyAvg;
+  const topTag = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const tagText = topTag ? ` ${topTag.replace(/_/g, ' ')} has been showing up often.` : '';
+
+  const direction = lateAvg - earlyAvg;
+  const body = direction >= 0.75
+    ? `Your mood has been lifting across recent check-ins.${tagText} There may be a support worth noticing.`
+    : direction <= -0.75
+      ? `Your mood has been heavier across recent check-ins.${tagText} A pattern may be asking for care.`
+      : `Your recent check-ins have enough signal for a weekly pattern.${tagText} Take a look while it is fresh.`;
+
+  return {
+    title: 'This Week Has a Pattern',
+    body,
+    route: '/(tabs)/patterns',
+    kind: 'weeklyPattern',
+    type: 'weekly_pattern',
+  };
 }
 
 const STREAK_MILESTONES = [7, 14, 30, 60, 90, 180, 365];
@@ -114,12 +251,7 @@ const STREAK_MILESTONES = [7, 14, 30, 60, 90, 180, 365];
  */
 export async function cancelStreakAtRiskNotification(): Promise<void> {
   try {
-    const id = await getUserPreference<string | null>(STREAK_AT_RISK_NOTIF_ID_KEY, null);
-    if (id) {
-      const Notifications = await import('expo-notifications');
-      await Notifications.cancelScheduledNotificationAsync(id);
-      await deleteUserPreference(STREAK_AT_RISK_NOTIF_ID_KEY);
-    }
+    await cancelMySkyNotification('streakAtRisk');
   } catch {
     // ignore
   }
@@ -130,12 +262,7 @@ export async function cancelStreakAtRiskNotification(): Promise<void> {
  */
 export async function cancelReengagementNotification(): Promise<void> {
   try {
-    const id = await getUserPreference<string | null>(REENGAGEMENT_NOTIF_ID_KEY, null);
-    if (id) {
-      const Notifications = await import('expo-notifications');
-      await Notifications.cancelScheduledNotificationAsync(id);
-      await deleteUserPreference(REENGAGEMENT_NOTIF_ID_KEY);
-    }
+    await cancelMySkyNotification('reengagement');
   } catch {
     // ignore
   }
@@ -171,6 +298,12 @@ async function scheduleStreakAndReengagementNotifications(
       return;
     }
 
+    const canSchedule = await hasNotificationPermission();
+    if (!canSchedule) {
+      await cancelStreakAtRiskNotification();
+      return;
+    }
+
     // Compute days since last check-in
     let daysSinceLast = -1;
     for (let i = 0; i < 14; i++) {
@@ -199,19 +332,16 @@ async function scheduleStreakAndReengagementNotifications(
       tonight9pm.setHours(21, 0, 0, 0);
       // Only schedule if 9 PM is still in the future today
       if (tonight9pm > new Date()) {
-        const id = await Notifications.scheduleNotificationAsync({
-          content: {
-            title: 'Keep your streak going',
-            body: '',
-            data: { route: '/checkin', type: 'streak_at_risk' },
-            color: '#D98C8C',
-          },
+        await scheduleMySkyNotification('streakAtRisk', {
+          title: 'Keep Your Streak Going',
+          body: 'A quick check-in keeps today connected to the pattern you have been building.',
+          route: '/checkin',
+          data: { type: 'streak_at_risk' },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DATE,
             date: tonight9pm,
           },
         });
-        await saveUserPreference(STREAK_AT_RISK_NOTIF_ID_KEY, id);
         logger.info('[InsightNotif] Streak-at-risk notification scheduled for 9 PM');
       }
       return;
@@ -222,16 +352,13 @@ async function scheduleStreakAndReengagementNotifications(
       const tomorrow10am = new Date(now);
       tomorrow10am.setDate(tomorrow10am.getDate() + 1);
       tomorrow10am.setHours(10, 0, 0, 0);
-      const id = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Your inner world is waiting ✧',
-          body: `It's been ${daysSinceLast} days since your last check-in. Even a quick entry keeps your patterns meaningful.`,
-          data: { route: '/checkin', type: 'reengagement_short' },
-          color: '#A88BEB',
-        },
+      await scheduleMySkyNotification('reengagement', {
+        title: 'Your Inner World Is Waiting',
+        body: `It's been ${daysSinceLast} days since your last check-in. Even a quick entry keeps your patterns meaningful.`,
+        route: '/checkin',
+        data: { type: 'reengagement_short' },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: tomorrow10am },
       });
-      await saveUserPreference(REENGAGEMENT_NOTIF_ID_KEY, id);
       logger.info('[InsightNotif] Short re-engagement notification scheduled');
       return;
     }
@@ -241,16 +368,13 @@ async function scheduleStreakAndReengagementNotifications(
       const tomorrow10am = new Date(now);
       tomorrow10am.setDate(tomorrow10am.getDate() + 1);
       tomorrow10am.setHours(10, 0, 0, 0);
-      const id = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'We miss you ✦',
-          body: "Your reflection space has been quiet. Come back — even one check-in reconnects you to your pattern.",
-          data: { route: '/(tabs)/internal-weather', type: 'reengagement_long' },
-          color: '#D4AF37',
-        },
+      await scheduleMySkyNotification('reengagement', {
+        title: 'Your Reflection Space Is Waiting',
+        body: 'Your reflection space has been quiet. One check-in can reconnect you to your pattern.',
+        route: '/(tabs)/internal-weather',
+        data: { type: 'reengagement_long' },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: tomorrow10am },
       });
-      await saveUserPreference(REENGAGEMENT_NOTIF_ID_KEY, id);
       logger.info('[InsightNotif] Long re-engagement notification scheduled');
     }
   } catch (err) {
@@ -271,6 +395,9 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
     const today = toLocalDateString(new Date());
     const lastDate = await getUserPreference<string | null>(LAST_INSIGHT_NOTIF_KEY, null);
     if (lastDate === today) return; // Already scheduled today
+
+    const canSchedule = await hasNotificationPermission();
+    if (!canSchedule) return;
 
     const [checkIns, sleepEntries] = await Promise.all([
       supabaseDb.getCheckIns(chartId, 14),
@@ -293,17 +420,15 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
       const lastMilestoneRaw = await getUserPreference<string | null>(LAST_STREAK_MILESTONE_KEY, null);
       const lastMilestone = lastMilestoneRaw ? Number(lastMilestoneRaw) : 0;
       if (lastMilestone !== currentStreak) {
-        await saveUserPreference(LAST_STREAK_MILESTONE_KEY, String(currentStreak));
         const Notifications = await import('expo-notifications');
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: `${currentStreak}-Day Milestone ✦`,
-            body: `You've checked in for ${currentStreak} days in a row. That kind of consistency is rare — your patterns are becoming genuinely meaningful.`,
-            data: { route: '/(tabs)/patterns', type: 'streak_milestone' },
-            color: '#D4AF37',
-          },
+        await scheduleMySkyNotification('streakMilestone', {
+          title: `${currentStreak}-Day Milestone`,
+          body: `You've checked in for ${currentStreak} days in a row. That kind of consistency is rare — your patterns are becoming genuinely meaningful.`,
+          route: '/(tabs)/patterns',
+          data: { type: 'streak_milestone' },
           trigger: { seconds: 10, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
         });
+        await saveUserPreference(LAST_STREAK_MILESTONE_KEY, String(currentStreak));
         await saveUserPreference(LAST_INSIGHT_NOTIF_KEY, today);
         logger.info('[InsightNotif] Streak milestone notification scheduled:', currentStreak);
         return;
@@ -314,23 +439,52 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
     const uniqueDays = new Set(checkIns.map((c) => c.date)).size;
     const alreadySentFirstPattern = await getUserPreference<string | null>(FIRST_PATTERN_NOTIF_KEY, null);
     if (!alreadySentFirstPattern && uniqueDays >= 7) {
-      await saveUserPreference(FIRST_PATTERN_NOTIF_KEY, 'true');
       const Notifications = await import('expo-notifications');
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Your first pattern is forming ✧',
-          body: "You've logged 7 days of check-ins. We've started to see patterns in your mood and energy — tap to uncover what your data is telling you.",
-          data: { route: '/(tabs)/patterns', type: 'first_pattern' },
-          color: '#A88BEB',
-        },
+      await scheduleMySkyNotification('firstPattern', {
+        title: 'Your First Pattern Is Forming',
+        body: "You've logged 7 days of check-ins. We've started to see patterns in your mood and energy — tap to uncover what your data is telling you.",
+        route: '/(tabs)/patterns',
+        data: { type: 'first_pattern' },
         trigger: { seconds: 30, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
       });
+      await saveUserPreference(FIRST_PATTERN_NOTIF_KEY, 'true');
       await saveUserPreference(LAST_INSIGHT_NOTIF_KEY, today);
       return;
     }
 
+    const weeklyPattern = detectWeeklyPattern(checkIns, now);
+    if (weeklyPattern) {
+      const currentWeekKey = weekKey(now);
+      const lastWeeklyKey = await getUserPreference<string | null>(LAST_WEEKLY_PATTERN_NOTIF_KEY, null);
+      if (lastWeeklyKey !== currentWeekKey) {
+        const deliveryAt = new Date(now);
+        if (deliveryAt.getHours() >= 10) {
+          deliveryAt.setDate(deliveryAt.getDate() + 1);
+        }
+        deliveryAt.setHours(10, 0, 0, 0);
+        const Notifications = await import('expo-notifications');
+        await scheduleMySkyNotification(weeklyPattern.kind, {
+          title: weeklyPattern.title,
+          body: weeklyPattern.body,
+          route: weeklyPattern.route,
+          data: { type: weeklyPattern.type },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: deliveryAt },
+        });
+        await saveUserPreference(LAST_WEEKLY_PATTERN_NOTIF_KEY, currentWeekKey);
+        await saveUserPreference(LAST_INSIGHT_NOTIF_KEY, today);
+        logger.info('[InsightNotif] Weekly pattern notification scheduled');
+        return;
+      }
+    }
+
+    const lastLowRestDate = await getUserPreference<string | null>(LAST_LOW_REST_NOTIF_KEY, null);
+    const lowRestInsight = lastLowRestDate && daysSinceDateKey(lastLowRestDate, now) < 3
+      ? null
+      : detectLowRestSupport(checkIns);
+
     // Try each trigger in priority order
     const insight =
+      lowRestInsight ??
       detectMoodTrend(checkIns) ??
       detectSleepDrop(sleepEntries);
 
@@ -340,21 +494,21 @@ export async function scheduleInsightNotification(chartId: string): Promise<void
     const tomorrow10am = new Date(now);
     tomorrow10am.setDate(tomorrow10am.getDate() + 1);
     tomorrow10am.setHours(10, 0, 0, 0);
-    
     const Notifications = await import('expo-notifications');
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: insight.title,
-        body: insight.body,
-        data: { route: insight.route, type: 'insight' },
-        color: '#D4AF37',
-      },
+    await scheduleMySkyNotification(insight.kind, {
+      title: insight.title,
+      body: insight.body,
+      route: insight.route,
+      data: { type: insight.type },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
         date: tomorrow10am,
       },
     });
 
+    if (insight.kind === 'lowRestSupport') {
+      await saveUserPreference(LAST_LOW_REST_NOTIF_KEY, today);
+    }
     await saveUserPreference(LAST_INSIGHT_NOTIF_KEY, today);
     logger.info('[InsightNotif] Scheduled:', insight.title);
   } catch (err) {

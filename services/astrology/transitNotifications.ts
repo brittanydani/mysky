@@ -11,11 +11,16 @@
  *   3. A meaningful transit aspect is found
  */
 
-import { getUserPreference, saveUserPreference, deleteUserPreference } from '../storage/userProfileService';
+import { getUserPreference, saveUserPreference } from '../storage/userProfileService';
 import { getTransitInfo, computeTransitAspectsToNatal } from '../astrology/transits';
 import { NatalChart } from '../astrology/types';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { logger } from '../../utils/logger';
+import {
+  cancelMySkyNotification,
+  hasNotificationPermission,
+  scheduleMySkyNotification,
+} from '../notifications/mySkyNotifications';
 
 const LAST_TRANSIT_NOTIF_KEY = '@mysky:last_transit_notif_date';
 const TRANSIT_NOTIF_HOUR = 7;
@@ -73,6 +78,9 @@ export async function scheduleTransitNotification(
     const lastDate = await getUserPreference<string | null>(LAST_TRANSIT_NOTIF_KEY, null);
     if (lastDate === today) return; // Already checked today
 
+    const canSchedule = await hasNotificationPermission();
+    if (!canSchedule) return;
+
     // Compute tomorrow's transits
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -99,24 +107,19 @@ export async function scheduleTransitNotification(
     const Notifications = await import('expo-notifications');
 
     // Cancel previous transit notification if any
-    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    for (const notif of scheduled) {
-      if (notif.content.data?.type === 'transit') {
-        await Notifications.cancelScheduledNotificationAsync(notif.identifier);
-      }
-    }
+    await cancelMySkyNotification('transit');
 
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: message.title,
-        body: message.body,
-        data: { route: '/(tabs)/chart', type: 'transit' },
-        color: '#A88BEB',
-      },
+    const triggerDate = new Date(tomorrow);
+    triggerDate.setHours(TRANSIT_NOTIF_HOUR, TRANSIT_NOTIF_MINUTE, 0, 0);
+
+    await scheduleMySkyNotification('transit', {
+      title: message.title,
+      body: message.body,
+      route: '/(tabs)/chart',
+      data: { type: 'transit' },
       trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: TRANSIT_NOTIF_HOUR,
-        minute: TRANSIT_NOTIF_MINUTE,
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: triggerDate,
       },
     });
 

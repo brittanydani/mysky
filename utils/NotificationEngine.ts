@@ -1,9 +1,28 @@
 // File: utils/NotificationEngine.ts
 
-import { getUserPreference, saveUserPreference, deleteUserPreference } from '../services/storage/userProfileService';
+import {
+  cancelMySkyNotification,
+  cancelMySkyNotifications,
+  rescheduleUserControlledNotificationsFromPrefs,
+  scheduleMySkyNotification,
+} from '../services/notifications/mySkyNotifications';
+import type { MySkyNotificationKind } from '../services/notifications/notificationTheme';
 
-const CHECK_IN_ID_KEY = 'notif_checkin_reminder_id';
-const REFLECTION_ID_KEY = 'notif_reflection_reminder_id';
+const ALL_KNOWN_NOTIFICATION_KINDS: MySkyNotificationKind[] = [
+  'morningRhythm',
+  'eveningRhythm',
+  'reflectionReminder',
+  'transit',
+  'streakAtRisk',
+  'reengagement',
+  'streakMilestone',
+  'firstPattern',
+  'moodShift',
+  'sleepShift',
+  'weeklyPattern',
+  'lowRestSupport',
+  'insight',
+];
 
 export class NotificationEngine {
   /**
@@ -42,12 +61,21 @@ export class NotificationEngine {
   }
 
   /**
-   * Cancels all scheduled notifications to prevent duplicate triggers.
+   * Cancels all known MySky schedules. This intentionally avoids Expo's
+   * cancelAllScheduledNotificationsAsync so one settings toggle cannot erase
+   * unrelated notification types.
    */
   static async clearAllSchedules(): Promise<void> {
     try {
-      const Notifications = await import('expo-notifications');
-      await Notifications.cancelAllScheduledNotificationsAsync();
+      await cancelMySkyNotifications(ALL_KNOWN_NOTIFICATION_KINDS);
+    } catch {
+      // Notifications native module unavailable — skip
+    }
+  }
+
+  static async rescheduleUserControlledFromPreferences(): Promise<void> {
+    try {
+      await rescheduleUserControlledNotificationsFromPrefs();
     } catch {
       // Notifications native module unavailable — skip
     }
@@ -59,19 +87,25 @@ export class NotificationEngine {
   static async scheduleMorningRhythm(hour: number = 8, minute: number = 0): Promise<void> {
     try {
       const Notifications = await import('expo-notifications');
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Subconscious Recall ✧',
-          body: 'What was revealed in the dark? Log your rest and dream patterns.',
-          data: { route: '/(tabs)/patterns' },
-          color: '#6E8CB4',
-        },
+      await scheduleMySkyNotification('morningRhythm', {
+        title: 'Subconscious Recall',
+        body: 'What surfaced overnight? Log your rest and dream patterns.',
+        route: '/(tabs)/sleep',
+        data: { type: 'morning_rhythm' },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
           minute,
         },
       });
+    } catch {
+      // Notifications native module unavailable — skip
+    }
+  }
+
+  static async cancelMorningRhythm(): Promise<void> {
+    try {
+      await cancelMySkyNotification('morningRhythm');
     } catch {
       // Notifications native module unavailable — skip
     }
@@ -83,13 +117,11 @@ export class NotificationEngine {
   static async scheduleEveningRhythm(hour: number = 20, minute: number = 0): Promise<void> {
     try {
       const Notifications = await import('expo-notifications');
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Internal Weather ☀',
-          body: 'The day is settling. Seal your mood, energy, and stress markers.',
-          data: { route: '/checkin' },
-          color: '#D9BF8C',
-        },
+      await scheduleMySkyNotification('eveningRhythm', {
+        title: 'Internal Weather',
+        body: 'The day is settling. Seal your mood, energy, and stress markers.',
+        route: '/checkin',
+        data: { type: 'evening_rhythm' },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
@@ -101,31 +133,39 @@ export class NotificationEngine {
     }
   }
 
+  static async cancelEveningRhythm(): Promise<void> {
+    try {
+      await cancelMySkyNotification('eveningRhythm');
+    } catch {
+      // Notifications native module unavailable — skip
+    }
+  }
+
+  static async cancelDailyRhythm(): Promise<void> {
+    await Promise.all([
+      NotificationEngine.cancelMorningRhythm(),
+      NotificationEngine.cancelEveningRhythm(),
+    ]);
+  }
+
   /**
    * Schedules the daily check-in reminder with a tracked identifier so it
    * can be canceled independently of other schedules.
    */
   static async scheduleCheckInReminder(hour: number = 20, minute: number = 0): Promise<void> {
     try {
-      // Cancel any existing check-in reminder first
-      await NotificationEngine.cancelCheckInReminder();
-
       const Notifications = await import('expo-notifications');
-      const id = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Internal Weather ☀',
-          body: 'The day is settling. Seal your mood, energy, and stress markers.',
-          data: { route: '/checkin' },
-          color: '#D9BF8C',
-        },
+      await scheduleMySkyNotification('eveningRhythm', {
+        title: 'Internal Weather',
+        body: 'The day is settling. Seal your mood, energy, and stress markers.',
+        route: '/checkin',
+        data: { type: 'checkin_reminder' },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
           minute,
         },
       });
-
-      await saveUserPreference(CHECK_IN_ID_KEY, id);
     } catch {
       // Notifications native module unavailable — skip
     }
@@ -136,12 +176,7 @@ export class NotificationEngine {
    */
   static async cancelCheckInReminder(): Promise<void> {
     try {
-      const id = await getUserPreference<string | null>(CHECK_IN_ID_KEY, null);
-      if (id) {
-        const Notifications = await import('expo-notifications');
-        await Notifications.cancelScheduledNotificationAsync(id);
-        await deleteUserPreference(CHECK_IN_ID_KEY);
-      }
+      await cancelMySkyNotification('eveningRhythm');
     } catch {
       // Notifications native module unavailable — skip
     }
@@ -153,24 +188,18 @@ export class NotificationEngine {
    */
   static async scheduleReflectionReminder(hour: number = 19, minute: number = 0): Promise<void> {
     try {
-      await NotificationEngine.cancelReflectionReminder();
-
       const Notifications = await import('expo-notifications');
-      const id = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Inner World ✦',
-          body: 'Your daily reflection questions are ready. A few minutes of honest self-inquiry goes a long way.',
-          data: { route: '/(tabs)/identity', type: 'reflection_reminder' },
-          color: '#A88BEB',
-        },
+      await scheduleMySkyNotification('reflectionReminder', {
+        title: 'Inner World',
+        body: 'Your daily reflection questions are ready. A few minutes of honest self-inquiry goes a long way.',
+        route: '/(tabs)/identity',
+        data: { type: 'reflection_reminder' },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
           minute,
         },
       });
-
-      await saveUserPreference(REFLECTION_ID_KEY, id);
     } catch {
       // Notifications native module unavailable — skip
     }
@@ -181,12 +210,7 @@ export class NotificationEngine {
    */
   static async cancelReflectionReminder(): Promise<void> {
     try {
-      const id = await getUserPreference<string | null>(REFLECTION_ID_KEY, null);
-      if (id) {
-        const Notifications = await import('expo-notifications');
-        await Notifications.cancelScheduledNotificationAsync(id);
-        await deleteUserPreference(REFLECTION_ID_KEY);
-      }
+      await cancelMySkyNotification('reflectionReminder');
     } catch {
       // Notifications native module unavailable — skip
     }

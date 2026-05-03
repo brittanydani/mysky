@@ -102,21 +102,17 @@ export default function NotificationSettings() {
   const reschedule = useCallback(async (
     mt: Date, et: Date, mu: boolean, eu: boolean,
   ) => {
-    await NotificationEngine.clearAllSchedules();
-    if (!mu) await NotificationEngine.scheduleMorningRhythm(mt.getHours(), mt.getMinutes());
-    if (!eu) await NotificationEngine.scheduleEveningRhythm(et.getHours(), et.getMinutes());
-    // Re-apply reflection reminder if it was enabled
-    const reflEnabled = await getUserPreference<string | null>(KEYS.reflectionEnabled, null);
-    if (reflEnabled === 'true') {
-      const rh = await getUserPreference<string | null>(KEYS.reflectionHour, null);
-      const rm = await getUserPreference<string | null>(KEYS.reflectionMinute, null);
-      const h = rh !== null ? Number(rh) : 19;
-      const m = rm !== null ? Number(rm) : 0;
-      await NotificationEngine.scheduleReflectionReminder(h, m);
-    }
     await Promise.all([
       savePrefs(mt, et, mu, eu),
       saveUserPreference(KEYS.enabled, 'true'),
+    ]);
+    await Promise.all([
+      mu
+        ? NotificationEngine.cancelMorningRhythm()
+        : NotificationEngine.scheduleMorningRhythm(mt.getHours(), mt.getMinutes()),
+      eu
+        ? NotificationEngine.cancelEveningRhythm()
+        : NotificationEngine.scheduleEveningRhythm(et.getHours(), et.getMinutes()),
     ]);
   }, [savePrefs]);
 
@@ -135,7 +131,7 @@ export default function NotificationSettings() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       await Promise.all([
-        NotificationEngine.clearAllSchedules(),
+        NotificationEngine.cancelDailyRhythm(),
         saveUserPreference(KEYS.enabled, 'false'),
       ]);
     }

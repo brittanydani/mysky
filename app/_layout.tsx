@@ -39,6 +39,7 @@ import { ThemeProvider, useAppTheme, useThemedStyles } from '../context/ThemeCon
 import { RLSVerificationService } from '../services/security/rlsVerification';
 import { setupNetworkSyncHandler } from '../services/offline/networkSync';
 import { useNetworkRecoverySync } from '../hooks/useNetworkStatus';
+import { migrateNotificationSchedulesIfNeeded } from '../services/notifications/mySkyNotifications';
 
 // Keep splash visible until the app finishes initializing
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -803,6 +804,16 @@ function AppShell() {
 
     return () => sub?.remove();
   }, [router]);
+
+  useEffect(() => {
+    if (authLoading || !session) return;
+
+    migrateNotificationSchedulesIfNeeded().catch((error) => {
+      logger.warn('[notifications] Failed to migrate scheduled notifications', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
+  }, [authLoading, session]);
 
   const handlePrivacyConsent = async (granted: boolean) => {
     try {
