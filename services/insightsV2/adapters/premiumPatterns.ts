@@ -676,6 +676,10 @@ export function adaptPremiumPatterns(
         avoidPatternTypes: recentPatternTypes.slice(-2),
         feedbackProfile: options.feedbackProfile,
       });
+    } catch {
+      continue;
+    }
+    try {
       weeklyParagraph = selectArchiveWeeklyPatternParagraph({
         pattern,
         score,
@@ -689,7 +693,7 @@ export function adaptPremiumPatterns(
         feedbackProfile: options.feedbackProfile,
       });
     } catch {
-      continue;
+      weeklyParagraph = paragraph;
     }
     const relatedSignals = unique([
       ...pattern.requiredSignals,

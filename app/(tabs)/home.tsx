@@ -178,11 +178,15 @@ export default function HomeScreen() {
   const { isPremium } = usePremium();
   const warpRef = useRef<WarpRef>(null);
   const isScreenActiveRef = useRef(false);
+  const loadSequenceRef = useRef(0);
+  const hasRenderedChartRef = useRef(false);
 
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [showEditBirth, setShowEditBirth] = useState(false);
 
   const [loading, setLoading] = useState(true);
+  const [todayDataReady, setTodayDataReady] = useState(false);
+  const recordedTodayInsightKeysRef = useRef<Set<string>>(new Set());
 
   // Check-in data — used by insight engine
   const [mood, setMood] = useState(7);
@@ -203,7 +207,7 @@ export default function HomeScreen() {
   const todayCheckInCount = todayCheckIns.length;
 
   // True only when a check-in exists for today's date
-  const hasDataToday = todayCheckInCount > 0;
+  const hasDataToday = todayDataReady && todayCheckInCount > 0;
 
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
@@ -248,17 +252,179 @@ export default function HomeScreen() {
   const loadUserChart = useCallback(
     async (opts?: { silent?: boolean }) => {
       const silent = opts?.silent ?? false;
-      if (!silent && isScreenActiveRef.current) setLoading(true);
+      const loadId = loadSequenceRef.current + 1;
+      loadSequenceRef.current = loadId;
+      if (!silent && isScreenActiveRef.current) {
+        if (!hasRenderedChartRef.current) {
+          setLoading(true);
+        }
+        setTodayDataReady(false);
+      }
+
+      const isCurrentLoad = () => isScreenActiveRef.current && loadSequenceRef.current === loadId;
 
       const setIfActive = <T,>(setter: (value: T) => void, value: T) => {
-        if (isScreenActiveRef.current) {
+        if (isCurrentLoad()) {
           setter(value);
+        }
+      };
+
+      type SurfaceLoad = {
+        surface: Awaited<ReturnType<typeof buildInsightSurface>>;
+        moodInsightsEnabled: boolean;
+        todayKey: string;
+        nowForInsights: string;
+      };
+
+      const loadTodaySurface = async (
+        chartId: string,
+        includeDailyReflections: boolean,
+      ): Promise<SurfaceLoad> => {
+        const todayKey = getLogicalToday();
+        const [moodInsightPref, knowledgeHistory, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
+          getUserPreference<string | null>('pref_mood_insights', null).catch(() => null),
+          getInsightHistory(),
+          getInsightFeedbackProfile().catch(() => null),
+          getInsightMemoryProfile().catch(() => null),
+        ]);
+        const moodInsightsEnabled = moodInsightPref !== '0';
+        const nowForInsights = `${todayKey}T12:00:00`;
+        const historyInput = buildRecentlyShownKnowledgeHistory(knowledgeHistory, nowForInsights);
+        const surface = await buildInsightSurface({
+          chartId,
+          rangeDays: 90,
+          insightsEnabled: moodInsightsEnabled,
+          includeKnowledgeInsight: moodInsightsEnabled,
+          knowledgeInsightDate: nowForInsights,
+          knowledgeHistory: historyInput,
+          insightFeedbackProfile,
+          insightMemoryProfile,
+          includeDailyReflections,
+        });
+
+        return {
+          surface,
+          moodInsightsEnabled,
+          todayKey,
+          nowForInsights,
+        };
+      };
+
+      const applySurface = async (
+        chart: NatalChart,
+        load: SurfaceLoad,
+        opts: { refreshDailyLoop: boolean; markReady: boolean },
+      ) => {
+        if (!isCurrentLoad()) return;
+
+        const { surface, moodInsightsEnabled, todayKey, nowForInsights } = load;
+        const checkins = surface.checkIns;
+        const sleepEntries = surface.sleepEntries;
+
+        setIfActive(setWeeklyCheckIns, checkins);
+        setIfActive(setSelfKnowledge, surface.selfKnowledgeContext);
+
+        // Knowledge Engine Integration
+        if (moodInsightsEnabled) {
+          const kInsights = surface.knowledgeInsights.length
+            ? surface.knowledgeInsights
+            : surface.knowledgeInsight
+              ? [surface.knowledgeInsight]
+              : [];
+          const shownKnowledgeInsights = isPremium ? kInsights : kInsights.slice(0, 1);
+          setIfActive(setKnowledgeInsight, kInsights[0] ?? null);
+          setIfActive(setKnowledgeInsights, kInsights);
+          if (shownKnowledgeInsights.length && checkins.some((entry) => entry.date === todayKey)) {
+            const unrecordedInsights = shownKnowledgeInsights
+              .map((insight, index) => ({ insight, index }))
+              .filter(({ insight }) => {
+                const key = `${todayKey}:${insight.slot}:${insight.patternKey}:${insight.id}`;
+                if (recordedTodayInsightKeysRef.current.has(key)) return false;
+                recordedTodayInsightKeysRef.current.add(key);
+                return true;
+              });
+
+            unrecordedInsights.forEach(({ insight }) => {
+              recordInsight(insight).catch((err) => {
+                logger.warn('[Home] Failed to record knowledge insight history:', err);
+              });
+              recordGeneratedInsightOutcome(insight, 'shown', { surface: 'today' }).catch((err) => {
+                logger.warn('[Home] Failed to record insight outcome:', err);
+              });
+            });
+
+            if (unrecordedInsights.length) {
+              recordInsightMemorySnapshots(
+                unrecordedInsights.map(({ insight, index }) =>
+                  insightMemorySnapshotFromGeneratedInsight(insight, {
+                    surface: 'today',
+                    rank: index,
+                    observedAt: nowForInsights,
+                  }),
+                ),
+                nowForInsights,
+              ).catch((err) => {
+                logger.warn('[Home] Failed to record insight memory:', err);
+              });
+            }
+          }
+        } else {
+          setIfActive(setKnowledgeInsight, null);
+          setIfActive(setKnowledgeInsights, []);
+        }
+
+        if (checkins.length > 0) {
+          const latest = checkins[0];
+          if (latest.moodScore != null) {
+            setIfActive(setMood, latest.moodScore);
+          }
+          const energyMap: Record<string, number> = { low: 3, medium: 5, high: 8 };
+          if (latest.energyLevel) {
+            setIfActive(setEnergy, energyMap[latest.energyLevel] ?? 5);
+          }
+        }
+
+        if (sleepEntries.length > 0 && sleepEntries[0].durationHours != null) {
+          setIfActive(setLatestSleep, sleepEntries[0].durationHours);
+        }
+        setIfActive(
+          setSleepSignalCount,
+          sleepEntries.filter((entry) => (entry.quality != null || entry.durationHours != null) && !hasDreamContent(entry)).length,
+        );
+        setIfActive(
+          setDreamSignalCount,
+          sleepEntries.filter(hasDreamContent).length,
+        );
+
+        if (opts.refreshDailyLoop) {
+          try {
+            const loopData = await getDailyLoopData(chart.id, surface.selfKnowledgeContext);
+            if (!isCurrentLoad()) return;
+            setIfActive(setDailyLoop, loopData);
+
+            // Fire haptic celebration on fresh milestone
+            if (loopData.streak.milestone && loopData.streak.milestone !== prevMilestoneRef.current) {
+              prevMilestoneRef.current = loopData.streak.milestone;
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+            }
+
+            // Schedule personalized transit notification for tomorrow
+            scheduleTransitNotification(chart).catch(() => {});
+            // Schedule data-driven insight notification
+            if (chart?.id) scheduleInsightNotification(chart.id).catch(() => {});
+          } catch (err) {
+            logger.error('Daily loop data failed:', err);
+          }
+        }
+
+        if (opts.markReady) {
+          setIfActive(setTodayDataReady, true);
         }
       };
 
       try {
         const charts = await supabaseDb.getCharts();
-        if (!isScreenActiveRef.current) return;
+        if (!isCurrentLoad()) return;
 
         if (charts.length > 0) {
           const savedChart = charts[0];
@@ -286,137 +452,52 @@ export default function HomeScreen() {
           if (storedName) chart.name = storedName;
           chart.updatedAt = savedChart.updatedAt;
 
+          if (!isCurrentLoad()) return;
+          hasRenderedChartRef.current = true;
           setIfActive(setUserChart, chart);
+          if (!silent) setIfActive(setLoading, false);
 
-          // Hydrate data in parallel — checkins, sleep, and self-knowledge are independent
+          // Hydrate Today without daily reflections first so the screen does not
+          // wait on reflection history before showing current signals.
           try {
-            const todayKey = getLogicalToday();
-            const [moodInsightPref, knowledgeHistory, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
-              getUserPreference<string | null>('pref_mood_insights', null).catch(() => null),
-              getInsightHistory(),
-              getInsightFeedbackProfile().catch(() => null),
-              getInsightMemoryProfile().catch(() => null),
-            ]);
-            const moodInsightsEnabled = moodInsightPref !== '0';
-            const nowForInsights = `${todayKey}T12:00:00`;
-            const historyInput = buildRecentlyShownKnowledgeHistory(knowledgeHistory, nowForInsights);
-            const surface = await buildInsightSurface({
-              chartId: chart.id,
-              rangeDays: 90,
-              insightsEnabled: moodInsightsEnabled,
-              includeKnowledgeInsight: moodInsightsEnabled,
-              knowledgeInsightDate: nowForInsights,
-              knowledgeHistory: historyInput,
-              insightFeedbackProfile,
-              insightMemoryProfile,
-            });
-            if (!isScreenActiveRef.current) return;
+            const immediateLoad = await loadTodaySurface(chart.id, false);
+            await applySurface(chart, immediateLoad, { refreshDailyLoop: true, markReady: true });
 
-            const checkins = surface.checkIns;
-            const sleepEntries = surface.sleepEntries;
-
-            setIfActive(setWeeklyCheckIns, checkins);
-            setIfActive(setSelfKnowledge, surface.selfKnowledgeContext);
-
-            // Knowledge Engine Integration
-            if (moodInsightsEnabled) {
-              const kInsights = surface.knowledgeInsights.length
-                ? surface.knowledgeInsights
-                : surface.knowledgeInsight
-                  ? [surface.knowledgeInsight]
-                  : [];
-              const shownKnowledgeInsights = isPremium ? kInsights : kInsights.slice(0, 1);
-              setIfActive(setKnowledgeInsight, kInsights[0] ?? null);
-              setIfActive(setKnowledgeInsights, kInsights);
-              if (shownKnowledgeInsights.length && checkins.some((entry) => entry.date === todayKey)) {
-                shownKnowledgeInsights.forEach((insight) => {
-                  recordInsight(insight).catch((err) => {
-                    logger.warn('[Home] Failed to record knowledge insight history:', err);
-                  });
-                  recordGeneratedInsightOutcome(insight, 'shown', { surface: 'today' }).catch((err) => {
-                    logger.warn('[Home] Failed to record insight outcome:', err);
-                  });
-                });
-                recordInsightMemorySnapshots(
-                  shownKnowledgeInsights.map((insight, index) =>
-                    insightMemorySnapshotFromGeneratedInsight(insight, {
-                      surface: 'today',
-                      rank: index,
-                      observedAt: nowForInsights,
-                    }),
-                  ),
-                  nowForInsights,
-                ).catch((err) => {
-                  logger.warn('[Home] Failed to record insight memory:', err);
-                });
+            void (async () => {
+              try {
+                const reflectionLoad = await loadTodaySurface(chart.id, true);
+                await applySurface(chart, reflectionLoad, { refreshDailyLoop: false, markReady: false });
+              } catch (err) {
+                logger.warn('[Home] Reflection-backed Today refresh failed:', err);
               }
-            } else {
-              setIfActive(setKnowledgeInsight, null);
-              setIfActive(setKnowledgeInsights, []);
-            }
-
-            if (checkins.length > 0) {
-              const latest = checkins[0];
-              if (latest.moodScore != null) {
-                setIfActive(setMood, latest.moodScore);
-              }
-              const energyMap: Record<string, number> = { low: 3, medium: 5, high: 8 };
-              if (latest.energyLevel) {
-                setIfActive(setEnergy, energyMap[latest.energyLevel] ?? 5);
-              }
-            }
-
-            if (sleepEntries.length > 0 && sleepEntries[0].durationHours != null) {
-              setIfActive(setLatestSleep, sleepEntries[0].durationHours);
-            }
-            setIfActive(
-              setSleepSignalCount,
-              sleepEntries.filter((entry) => (entry.quality != null || entry.durationHours != null) && !hasDreamContent(entry)).length,
-            );
-            setIfActive(
-              setDreamSignalCount,
-              sleepEntries.filter(hasDreamContent).length,
-            );
-
-            try {
-              const loopData = await getDailyLoopData(chart.id, surface.selfKnowledgeContext);
-              if (!isScreenActiveRef.current) return;
-              setIfActive(setDailyLoop, loopData);
-
-              // Fire haptic celebration on fresh milestone
-              if (loopData.streak.milestone && loopData.streak.milestone !== prevMilestoneRef.current) {
-                prevMilestoneRef.current = loopData.streak.milestone;
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-              }
-
-              // Schedule personalized transit notification for tomorrow
-              scheduleTransitNotification(chart).catch(() => {});
-              // Schedule data-driven insight notification
-              if (chart?.id) scheduleInsightNotification(chart.id).catch(() => {});
-
-            } catch (err) {
-              logger.error('Daily loop data failed:', err);
-            }
+            })();
           } catch (err) {
             logger.error('Failed to load check-ins, sleep, or self-knowledge:', err);
+            setIfActive(setTodayDataReady, true);
           }
         } else {
+          hasRenderedChartRef.current = false;
           setIfActive(setUserChart, null);
           setIfActive(setKnowledgeInsight, null);
           setIfActive(setKnowledgeInsights, []);
           setIfActive(setSleepSignalCount, 0);
           setIfActive(setDreamSignalCount, 0);
+          setIfActive(setTodayDataReady, false);
 
         }
       } catch (error) {
         logger.error('Failed to load user chart:', error);
+        if (isCurrentLoad()) {
+          hasRenderedChartRef.current = false;
+        }
         setIfActive(setUserChart, null);
         setIfActive(setKnowledgeInsight, null);
         setIfActive(setKnowledgeInsights, []);
         setIfActive(setSleepSignalCount, 0);
         setIfActive(setDreamSignalCount, 0);
+        setIfActive(setTodayDataReady, false);
       } finally {
-        if (!silent && isScreenActiveRef.current) setLoading(false);
+        if (!silent && isCurrentLoad()) setLoading(false);
       }
     },
     [isPremium],
@@ -543,6 +624,14 @@ export default function HomeScreen() {
   }, [mood, energy, latestSleep]);
 
   const insightMeta = useMemo(() => {
+    if (!todayDataReady) {
+      return {
+        icon: 'sync-outline',
+        label: 'TODAY',
+        text: "Loading today's signals...",
+      };
+    }
+
     return {
       icon: hasDataToday ? dailyLoop?.todayInsight?.icon ?? 'analytics' : 'create-outline',
       label: hasDataToday ? dailyLoop?.todayInsight?.type?.toUpperCase() || 'REFLECTION' : 'REFLECTION',
@@ -550,7 +639,7 @@ export default function HomeScreen() {
         ? dailyLoop?.todayInsight?.text ?? generateInsight(Math.round(balanceScore * 10), mood, energy, latestSleep)
         : 'Log a check-in today to see your personalized daily reflection.',
     };
-  }, [dailyLoop, hasDataToday, balanceScore, mood, energy, latestSleep]);
+  }, [dailyLoop, hasDataToday, balanceScore, mood, energy, latestSleep, todayDataReady]);
 
   const availableKnowledgeInsights = useMemo(
     () => knowledgeInsights.length ? knowledgeInsights : knowledgeInsight ? [knowledgeInsight] : [],
@@ -591,7 +680,7 @@ export default function HomeScreen() {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <SkiaDynamicCosmos />
-        <Text style={styles.loadingText}>Preparing your reflections...</Text>
+        <Text style={styles.loadingText}>Loading today's data...</Text>
       </View>
     );
   }
@@ -745,7 +834,11 @@ export default function HomeScreen() {
               <View style={styles.scoreHeader}>
                 <Text style={styles.cardLabel}>TODAY'S BALANCE</Text>
               </View>
-              {hasDataToday ? (
+              {!todayDataReady ? (
+                <View style={styles.scoreMain}>
+                  <Text style={styles.noDataText}>Loading today's signals</Text>
+                </View>
+              ) : hasDataToday ? (
                 <>
                   <View style={styles.scoreMain}>
                     <Text style={styles.scoreValue}>{balanceScore.toFixed(1)}</Text>
@@ -1112,11 +1205,17 @@ function CheckInFAB() {
         router.push('/checkin' as Href);
       }}
       style={fabStyles.container}
+      hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
       accessibilityLabel="Log check-in"
       accessibilityRole="button"
     >
       <Animated.View style={[fabStyles.glowWrapper, animatedStyle]}>
-        <BlurView intensity={60} tint={theme.blurTint} style={fabStyles.glassCircle}>
+        <BlurView
+          pointerEvents="none"
+          intensity={60}
+          tint={theme.blurTint}
+          style={fabStyles.glassCircle}
+        >
           <MetallicIcon name="add-outline" size={28} variant="gold" />
         </BlurView>
       </Animated.View>
@@ -1129,7 +1228,8 @@ const createFabStyles = (theme: AppTheme) => StyleSheet.create({
     position: 'absolute',
     bottom: 120,
     right: 24,
-    zIndex: 100,
+    zIndex: 2000,
+    elevation: 2000,
   },
   glowWrapper: {
     shadowColor: '#000',

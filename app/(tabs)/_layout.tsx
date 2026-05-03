@@ -48,8 +48,16 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const BAR_HEIGHT = 65 + safeBottom;
 
   return (
-    <View style={[styles.tabBarContainer, { height: BAR_HEIGHT, paddingBottom: safeBottom }]}>
-      <BlurView intensity={80} tint={theme.blurTint} style={StyleSheet.absoluteFill}>
+    <View
+      pointerEvents="box-none"
+      style={[styles.tabBarContainer, { height: BAR_HEIGHT, paddingBottom: safeBottom }]}
+    >
+      <BlurView
+        pointerEvents="none"
+        intensity={80}
+        tint={theme.blurTint}
+        style={StyleSheet.absoluteFill}
+      >
         <View style={styles.glassHighlight} />
       </BlurView>
 
@@ -84,6 +92,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             <Pressable 
               key={route.key} 
               onPress={onPress} 
+              hitSlop={{ top: 12, bottom: 12, left: 6, right: 6 }}
               style={[
                 styles.tabItem, 
                 { transform: [{ translateY: nudge.tabTranslateY || 0 }] }
@@ -164,6 +173,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderTopWidth: 1, 
     borderTopColor: theme.cardBorder,
     backgroundColor: theme.background,
+    zIndex: 1000,
+    elevation: 1000,
   },
   glassHighlight: {
     ...StyleSheet.absoluteFillObject, 
@@ -176,6 +187,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     flex: 1, 
     paddingHorizontal: 10,
     paddingTop: 12, 
+    zIndex: 1001,
+    elevation: 1001,
   },
   tabItem: { 
     alignItems: 'center', 

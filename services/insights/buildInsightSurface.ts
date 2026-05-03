@@ -64,6 +64,7 @@ interface BuildInsightSurfaceOptions {
   knowledgeHistory?: KnowledgeEngineHistoryInput;
   insightFeedbackProfile?: InsightFeedbackProfile | null;
   insightMemoryProfile?: InsightMemoryProfile | null;
+  includeDailyReflections?: boolean;
 }
 
 function getStressScore(checkIn: DailyCheckIn): number {
@@ -87,11 +88,12 @@ export async function buildInsightSurface({
   knowledgeHistory = { recentlyShownPatternKeys: [], recentlyShownCopyHashes: [] },
   insightFeedbackProfile = null,
   insightMemoryProfile = null,
+  includeDailyReflections = true,
 }: BuildInsightSurfaceOptions): Promise<InsightSurfaceResult> {
   const chartId = await resolveChartId(inputChartId);
 
   if (!chartId) {
-    const emptyContext = await loadSelfKnowledgeContext();
+    const emptyContext = await loadSelfKnowledgeContext({ includeDailyReflections });
     return {
       chartId: null,
       checkIns: [],
@@ -124,7 +126,7 @@ export async function buildInsightSurface({
     supabaseDb.getCheckInsInRange(chartId, fromDate, today),
     supabaseDb.getSleepEntriesInRange(chartId, fromDate, today),
     supabaseDb.getJournalEntries(),
-    loadSelfKnowledgeContext(),
+    loadSelfKnowledgeContext({ includeDailyReflections }),
   ]);
 
   const recentJournalEntries = journalEntries.filter((entry) => entry.date >= fromDate && entry.date <= today);

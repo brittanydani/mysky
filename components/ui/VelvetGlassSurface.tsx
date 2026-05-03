@@ -63,8 +63,16 @@ export function VelvetGlassSurface({
 
   return (
     <View style={[styles.outerContainer, borderRadiusStyle, shadowStyle, style]}>
-      <View style={[StyleSheet.absoluteFillObject, styles.clipContainer, borderRadiusStyle]}>
-        <BlurView intensity={intensity} tint={resolvedTint} style={StyleSheet.absoluteFillObject} />
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFillObject, styles.clipContainer, borderRadiusStyle]}
+      >
+        <BlurView
+          pointerEvents="none"
+          intensity={intensity}
+          tint={resolvedTint}
+          style={StyleSheet.absoluteFillObject}
+        />
         <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, { backgroundColor: resolvedBackgroundColor }]} />
         <LinearGradient
           pointerEvents="none"

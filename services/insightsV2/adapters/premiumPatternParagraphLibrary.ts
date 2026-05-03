@@ -578,20 +578,36 @@ function selectFromLibrary(
   if (!categoryCandidates.length) {
     throw new Error(`No generated insight paragraph is available for ${input.category}`);
   }
+  const domainCandidates = input.majorDomain
+    ? categoryCandidates.filter(variant => variant.majorDomain === input.majorDomain)
+    : categoryCandidates;
+  const subcategoryCandidates = input.insightSubcategory
+    ? domainCandidates.filter(variant => variant.insightSubcategory === input.insightSubcategory)
+    : domainCandidates;
+  const selectionPool = subcategoryCandidates.length
+    ? subcategoryCandidates
+    : domainCandidates.length
+      ? domainCandidates
+      : categoryCandidates;
   const excludedIds = new Set([
     ...(input.excludeParagraphIds ?? []),
     ...(input.recentParagraphIds ?? []),
   ]);
   const excludedBodyKeys = new Set(input.excludeBodyKeys ?? []);
-  const candidates = library.filter(variant =>
+  let candidates = selectionPool.filter(variant =>
     !excludedIds.has(variant.id) &&
     !excludedBodyKeys.has(patternParagraphBodyKey(variant.body)),
   );
-  const hasUnusedCategoryCandidate = candidates.some(variant =>
-    variant.category === input.category &&
-    variant.allowedSurfaces.includes(surface),
-  );
-  if (!candidates.length || !hasUnusedCategoryCandidate) {
+  if (!candidates.length && selectionPool !== categoryCandidates) {
+    candidates = categoryCandidates.filter(variant =>
+      !excludedIds.has(variant.id) &&
+      !excludedBodyKeys.has(patternParagraphBodyKey(variant.body)),
+    );
+  }
+  if (!candidates.length) {
+    candidates = selectionPool.filter(variant => !excludedIds.has(variant.id));
+  }
+  if (!candidates.length) {
     throw new Error(`No unused generated insight paragraph is available for ${input.category}`);
   }
 

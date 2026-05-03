@@ -132,8 +132,21 @@ export default function OtaUpdatePrompt() {
   }
 
   return (
-    <Modal visible transparent animationType="fade" presentationStyle="overFullScreen" statusBarTranslucent>
-      <View style={styles.overlay} pointerEvents="box-none">
+    <Modal
+      visible
+      transparent
+      animationType="fade"
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
+      onRequestClose={handleLater}
+    >
+      <View style={styles.overlay}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss update prompt"
+          onPress={handleLater}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.dialog} accessibilityRole="alert">
           <Text style={styles.title}>Update ready</Text>
           <Text style={styles.body}>

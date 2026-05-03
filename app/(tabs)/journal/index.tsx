@@ -1233,7 +1233,12 @@ function JournalFAB({ onPress }: { onPress: () => void }) {
       accessibilityRole="button"
     >
       <Animated.View style={[journalFabStyles.glowWrapper, animatedStyle]}>
-        <BlurView intensity={60} tint={theme.blurTint} style={journalFabStyles.glassCircle}>
+        <BlurView
+          pointerEvents="none"
+          intensity={60}
+          tint={theme.blurTint}
+          style={journalFabStyles.glassCircle}
+        >
           <MetallicIcon name="add-outline" size={28} variant="gold" />
         </BlurView>
       </Animated.View>

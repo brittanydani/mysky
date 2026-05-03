@@ -154,6 +154,10 @@ export interface SelfKnowledgeContext {
   dreamSummary?: DreamSummary | null;
 }
 
+export interface LoadSelfKnowledgeContextOptions {
+  includeDailyReflections?: boolean;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Storage keys  (must match the keys used in each screen)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -218,7 +222,10 @@ async function loadTriggerPayload(): Promise<{ events: TriggerEvent[]; summary: 
  * Load all self-knowledge profile data in parallel.
  * Safe to call on every screen focus — reads are O(1) from local storage.
  */
-export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> {
+export async function loadSelfKnowledgeContext(
+  options: LoadSelfKnowledgeContextOptions = {},
+): Promise<SelfKnowledgeContext> {
+  const includeDailyReflections = options.includeDailyReflections ?? true;
   const [
     coreValues,
     archetypeProfile,
@@ -236,7 +243,9 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     loadSomaticEntries(),
     loadTriggerPayload(),
     loadRelationshipPatterns(),
-    getReflectionSummary().catch(() => null),
+    includeDailyReflections
+      ? getReflectionSummary().catch(() => null)
+      : Promise.resolve(null),
   ]);
 
   const normalizedSomaticEntries: SomaticEntry[] = (somaticEntries ?? []).map((entry) => ({

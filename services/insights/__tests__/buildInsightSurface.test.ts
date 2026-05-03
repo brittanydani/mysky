@@ -25,6 +25,7 @@ const mockLoadSelfKnowledgeContext = loadSelfKnowledgeContext as jest.MockedFunc
 describe('buildInsightSurface knowledge insights', () => {
   const now = '2026-04-24T12:00:00Z';
   const today = '2026-04-24';
+  const yesterday = '2026-04-23';
 
   const checkIns: DailyCheckIn[] = [
     {
@@ -45,6 +46,24 @@ describe('buildInsightSurface knowledge insights', () => {
       lunarPhase: 'new',
       retrogrades: [],
     },
+    {
+      id: 'ci-2',
+      date: yesterday,
+      moodScore: 4,
+      energyLevel: 'low',
+      stressLevel: 'high',
+      tags: ['rest', 'capacity'],
+      createdAt: '2026-04-23T21:00:00Z',
+      updatedAt: '2026-04-23T21:00:00Z',
+      chartId: 'chart-1',
+      timeOfDay: 'evening',
+      moonSign: 'Pisces',
+      moonHouse: 12,
+      sunHouse: 1,
+      transitEvents: [],
+      lunarPhase: 'waning_crescent',
+      retrogrades: [],
+    },
   ];
 
   const journalEntries: JournalEntry[] = [
@@ -56,6 +75,16 @@ describe('buildInsightSurface knowledge insights', () => {
       moonPhase: 'new',
       createdAt: now,
       updatedAt: now,
+      isDeleted: false,
+    },
+    {
+      id: 'journal-2',
+      date: yesterday,
+      content: 'Another low-capacity evening. My body felt tight after a difficult conversation and I needed rest.',
+      mood: 'heavy',
+      moonPhase: 'waning',
+      createdAt: '2026-04-23T21:30:00Z',
+      updatedAt: '2026-04-23T21:30:00Z',
       isDeleted: false,
     },
   ];
@@ -72,6 +101,17 @@ describe('buildInsightSurface knowledge insights', () => {
       updatedAt: now,
       isDeleted: false,
     },
+    {
+      id: 'sleep-2',
+      date: yesterday,
+      durationHours: 5.5,
+      quality: 2,
+      dreamText: 'I kept waking from dreams about unresolved tension.',
+      chartId: 'chart-1',
+      createdAt: '2026-04-23T07:00:00Z',
+      updatedAt: '2026-04-23T07:00:00Z',
+      isDeleted: false,
+    },
   ];
 
   const selfKnowledgeContext: SelfKnowledgeContext = {
@@ -86,6 +126,14 @@ describe('buildInsightSurface knowledge insights', () => {
         emotion: 'anxiety',
         sensation: 'tight',
         intensity: 4,
+      },
+      {
+        id: 'body-2',
+        date: yesterday,
+        region: 'chest',
+        emotion: 'anxiety',
+        sensation: 'tight',
+        intensity: 3,
       },
     ],
     triggers: null,
@@ -159,5 +207,14 @@ describe('buildInsightSurface knowledge insights', () => {
     if (surface.knowledgeInsights.some(insight => insight.slot === 'primaryPersona')) {
       expect(surface.premiumPersonaProfile).toBeNull();
     }
+  });
+
+  it('can build the initial Today surface without waiting for daily reflections', async () => {
+    await buildInsightSurface({
+      chartId: 'chart-1',
+      includeDailyReflections: false,
+    });
+
+    expect(mockLoadSelfKnowledgeContext).toHaveBeenCalledWith({ includeDailyReflections: false });
   });
 });
