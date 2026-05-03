@@ -3,7 +3,7 @@ import { getUserPreference, saveUserPreference } from '../storage/userProfileSer
 import { logger } from '../../utils/logger';
 import { createKnowledgeInsightCopyHash } from './insightHash';
 
-const HISTORY_KEY = 'msky_knowledge_engine_history';
+const HISTORY_KEY = 'msky_knowledge_engine_history_v2';
 const MAX_HISTORY = 50;
 const DEFAULT_RECENT_DAYS = 14;
 

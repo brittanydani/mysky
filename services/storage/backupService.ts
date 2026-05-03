@@ -7,7 +7,6 @@ import * as DocumentPicker from 'expo-document-picker';
 import { supabaseDb } from './supabaseDb';
 import { PLAIN_ASYNC_USER_DATA_KEYS } from './userDataKeys';
 import type { AppSettings, SavedChart, JournalEntry, RelationshipChart, SleepEntry } from './models';
-import type { SavedInsight } from './insightHistory';
 import { logger } from '../../utils/logger';
 
 type BackupPayload = {
@@ -16,7 +15,7 @@ type BackupPayload = {
   charts: SavedChart[];
   journalEntries: JournalEntry[];
   relationshipCharts: RelationshipChart[];
-  insightHistory: SavedInsight[];
+  insightHistory?: unknown[];
   sleepEntries: SleepEntry[];
   checkIns?: import('../patterns/types').DailyCheckIn[];
   settings: AppSettings | null;
@@ -34,19 +33,16 @@ export class BackupService {
     ]);
 
     const relationshipCharts: RelationshipChart[] = [];
-    const insightHistory: SavedInsight[] = [];
     const sleepEntries: SleepEntry[] = [];
     const checkIns: import('../patterns/types').DailyCheckIn[] = [];
 
     await Promise.all(charts.map(async (chart) => {
-      const [rels, insights, sleep, dailyCheckIns] = await Promise.all([
+      const [rels, sleep, dailyCheckIns] = await Promise.all([
         supabaseDb.getRelationshipCharts(chart.id),
-        supabaseDb.getInsightHistory(chart.id),
         supabaseDb.getSleepEntries(chart.id, 10000),
         supabaseDb.getCheckIns(chart.id, 10000),
       ]);
       relationshipCharts.push(...rels);
-      insightHistory.push(...insights);
       sleepEntries.push(...sleep);
       checkIns.push(...dailyCheckIns);
     }));
@@ -59,7 +55,7 @@ export class BackupService {
       charts,
       journalEntries,
       relationshipCharts,
-      insightHistory,
+      insightHistory: [],
       sleepEntries,
       checkIns,
       settings,
@@ -122,8 +118,6 @@ export class BackupService {
     }
 
     await supabaseDb.clearAccountScopedData();
-    await Promise.all([
-    ]);
 
     for (const chart of payload.charts ?? []) {
       await supabaseDb.saveChart(chart);
@@ -133,9 +127,6 @@ export class BackupService {
     }
     for (const rel of payload.relationshipCharts ?? []) {
       await supabaseDb.saveRelationshipChart(rel);
-    }
-    for (const insight of payload.insightHistory ?? []) {
-      await supabaseDb.saveInsight(insight);
     }
     for (const entry of payload.sleepEntries ?? []) {
       await supabaseDb.saveSleepEntry(entry);

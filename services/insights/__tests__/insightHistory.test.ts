@@ -6,7 +6,7 @@ import { createKnowledgeInsightCopyHash } from '../insightHash';
 import type { GeneratedInsight, InsightHistoryEntry } from '../types/knowledgeEngine';
 
 describe('knowledge insight history', () => {
-  it('keeps rich recent entries for V2 freshness while preserving legacy key/hash lists', () => {
+  it('keeps rich recent entries for V2 freshness while preserving key/hash lists', () => {
     const recent: InsightHistoryEntry = {
       insightId: 'recent-1',
       patternKey: 'pattern-1',

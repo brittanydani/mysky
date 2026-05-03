@@ -21,7 +21,6 @@
 
 import { getUserPreference, saveUserPreference } from '../storage/userProfileService';
 import { NatalChart, SimpleAspect } from './types';
-import { TransitSignal } from './dailyInsightEngine';
 import { detectChartPatterns } from './chartPatterns';
 import { getTransitingLongitudes, computeTransitAspectsToNatal } from './transits';
 import { logger } from '../../utils/logger';
@@ -99,6 +98,17 @@ export interface DayActivationContext {
   stelliumHouses: number[];
   dayIntensity: ShadowIntensity;
   activeTransitSignals: TransitSignal[];
+}
+
+interface TransitSignal {
+  transitingPlanet: string;
+  natalTarget: string;
+  aspectType: SimpleAspect['type'];
+  orb: number;
+  score: number;
+  domain: string;
+  isAngle: boolean;
+  natalHouse?: number;
 }
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -139,16 +139,12 @@ export async function clearPendingIfAllSealed(): Promise<void> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Normalizes the reflection day: 6:00 AM to 5:59 AM.
- * Ensures late-night reflections are anchored to the correct chronological day.
+ * Normalizes the reflection day to the local calendar date.
+ * Question rotation should advance after midnight, even if check-ins use a
+ * different logical-day window elsewhere.
  */
 export function getReflectionDate(now: Date = new Date()): Date {
-  if (now.getHours() < 6) {
-    const prev = new Date(now);
-    prev.setDate(prev.getDate() - 1);
-    return prev;
-  }
-  return now;
+  return new Date(now);
 }
 
 /** 1-indexed day of year (1–366). Leap-year aware. */

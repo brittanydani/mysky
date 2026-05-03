@@ -12,6 +12,12 @@ describe('dailyReflectionService (pure functions)', () => {
       const d = getReflectionDate(now);
       expect(d).toBeInstanceOf(Date);
     });
+
+    it('advances questions on the calendar date after midnight', () => {
+      const afterMidnight = new Date(2025, 5, 15, 1, 30, 0);
+      const d = getReflectionDate(afterMidnight);
+      expect(getTodayKey(d)).toBe(getTodayKey(afterMidnight));
+    });
   });
 
   describe('getTodayKey()', () => {
@@ -46,6 +52,12 @@ describe('dailyReflectionService (pure functions)', () => {
       const q1 = getTodayQuestions('values', d, 'seed-a');
       const q2 = getTodayQuestions('values', d, 'seed-a');
       expect(q1).toEqual(q2);
+    });
+
+    it('rotates to a different set on consecutive calendar days', () => {
+      const today = getTodayQuestions('values', new Date(2025, 5, 15), 'seed-a').map(q => q.id);
+      const tomorrow = getTodayQuestions('values', new Date(2025, 5, 16), 'seed-a').map(q => q.id);
+      expect(tomorrow).not.toEqual(today);
     });
   });
 

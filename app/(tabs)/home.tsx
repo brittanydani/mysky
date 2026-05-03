@@ -8,7 +8,7 @@
 //   1. NebulaBackground — atmospheric shader driven by energy & transits
 //   2. SkiaUnifiedAura  — fluid Mood/Energy/Tension signature
 //   3. SkiaStabilityDashboard — 7-day Bézier coherence graph
-//   4. Actionable Insights — text engine with stability recommendations
+//   4. Reflection surface — current pattern and stability recommendations
 
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
@@ -117,35 +117,6 @@ const SLEEP_POINTS: [number, number][] = [
   [0, 0], [4, 0], [5, 2], [6, 5], [7, 8], [8, 9], [9, 10], [10, 10],
 ];
 
-// ── Insight Engine ─────────────────────────────────────────────────────────
-
-function generateInsight(
-  stabilityIndex: number,
-  mood: number,
-  energy: number,
-  sleep: number,
-): string {
-  const sleepDeficit = Math.max(0, 8 - sleep);
-
-  if (energy <= 4 && sleepDeficit >= 1) {
-    return 'Your energy is lower than your emotional load today, so ordinary things may feel heavier than usual. This may be a day for smaller expectations and earlier pauses.';
-  }
-
-  if (sleepDeficit >= 2) {
-    return 'Your stress is likely louder than your recovery today, which can make simple decisions feel sharper than they are. Gentle pacing and early rest may help your system settle.';
-  }
-
-  if (mood <= 4 && energy <= 5) {
-    return 'Your inner weather looks tender today, even if you are still showing up. Move more softly where you can and let steady be enough.';
-  }
-
-  if (stabilityIndex >= 80) {
-    return 'Today reads as relatively steady, with enough fuel to hold what matters. Keep the rhythm that is helping you feel grounded.';
-  }
-
-  return 'Your mood may look steady on the surface, but your body may still be carrying pressure underneath. Take this as a cue for gentler pacing, not self-criticism.';
-}
-
 function computeBalanceScore(mood: number, energy: number, sleep: number): number {
   const moodPts = MOOD_POINTS[Math.round(mood)] ?? mood;
   const energyPts = ENERGY_POINTS[Math.round(energy)] ?? energy;
@@ -188,7 +159,7 @@ export default function HomeScreen() {
   const [todayDataReady, setTodayDataReady] = useState(false);
   const recordedTodayInsightKeysRef = useRef<Set<string>>(new Set());
 
-  // Check-in data — used by insight engine
+  // Check-in data used by the balance and reflection surfaces.
   const [mood, setMood] = useState(7);
   const [energy, setEnergy] = useState(8);
 
@@ -612,7 +583,6 @@ export default function HomeScreen() {
       relationshipTags,
       topReflectionCategory,
       dailySignalSeed: todayCheckInCount,
-      insightTheme: dailyLoop?.todayInsight?.theme,
     };
     return getDailyAffirmation(ctx);
   }, [userChart, mood, energy, latestSleep, selfKnowledge, dailyLoop, todayCheckInCount]);
@@ -633,13 +603,13 @@ export default function HomeScreen() {
     }
 
     return {
-      icon: hasDataToday ? dailyLoop?.todayInsight?.icon ?? 'analytics' : 'create-outline',
-      label: hasDataToday ? dailyLoop?.todayInsight?.type?.toUpperCase() || 'REFLECTION' : 'REFLECTION',
+      icon: hasDataToday ? 'sparkles-outline' : 'create-outline',
+      label: hasDataToday ? 'TODAY' : 'REFLECTION',
       text: hasDataToday
-        ? dailyLoop?.todayInsight?.text ?? generateInsight(Math.round(balanceScore * 10), mood, energy, latestSleep)
+        ? 'Your signal is saved. MySky will name a pattern here once there is enough fresh evidence.'
         : 'Log a check-in today to see your personalized daily reflection.',
     };
-  }, [dailyLoop, hasDataToday, balanceScore, mood, energy, latestSleep, todayDataReady]);
+  }, [hasDataToday, todayDataReady]);
 
   const availableKnowledgeInsights = useMemo(
     () => knowledgeInsights.length ? knowledgeInsights : knowledgeInsight ? [knowledgeInsight] : [],

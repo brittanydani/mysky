@@ -28,7 +28,6 @@ import {
 } from '../validation/schemas';
 import { offlineQueue } from '../offline/offlineQueue';
 import type { HouseSystem } from '../astrology/types';
-import type { SavedInsight } from './insightHistory';
 import type { DailyCheckIn } from '../patterns/types';
 import {
   type BirthProfileSync,
@@ -912,173 +911,6 @@ export async function saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
   }
 }
 
-// ─── Insight History ─────────────────────────────────────────────────────────
-
-async function mapInsightRow(row: Row): Promise<SavedInsight> {
-  return {
-    id: asRequiredString(row.id),
-    date: asRequiredString(row.date),
-    chartId: asRequiredString(row.chart_id),
-    greeting: asRequiredString(row.greeting),
-    loveHeadline: asRequiredString(row.love_headline),
-    loveMessage: asRequiredString(row.love_message),
-    energyHeadline: asRequiredString(row.energy_headline),
-    energyMessage: asRequiredString(row.energy_message),
-    growthHeadline: asRequiredString(row.growth_headline),
-    growthMessage: asRequiredString(row.growth_message),
-    gentleReminder: asRequiredString(row.gentle_reminder),
-    journalPrompt: asRequiredString(row.journal_prompt),
-    moonSign: asOptionalString(row.moon_sign),
-    moonPhase: asOptionalString(row.moon_phase),
-    signals: asOptionalString(row.signals),
-    isFavorite: Boolean(row.is_favorite),
-    viewedAt: asOptionalString(row.viewed_at),
-    createdAt: asRequiredString(row.created_at),
-    updatedAt: asRequiredString(row.updated_at),
-  };
-}
-
-export async function saveInsight(insight: SavedInsight): Promise<void> {
-  const userId = await getUserId();
-
-  const { error } = await supabase.from('insight_history').upsert(
-    {
-      id: insight.id,
-      user_id: userId,
-      date: insight.date,
-      chart_id: insight.chartId,
-      greeting: insight.greeting,
-      love_headline: insight.loveHeadline,
-      love_message: insight.loveMessage,
-      energy_headline: insight.energyHeadline,
-      energy_message: insight.energyMessage,
-      growth_headline: insight.growthHeadline,
-      growth_message: insight.growthMessage,
-      gentle_reminder: insight.gentleReminder,
-      journal_prompt: insight.journalPrompt,
-      moon_sign: insight.moonSign ?? null,
-      moon_phase: insight.moonPhase ?? null,
-      signals: insight.signals ?? null,
-      is_favorite: insight.isFavorite,
-      viewed_at: insight.viewedAt ?? null,
-      created_at: insight.createdAt,
-      updated_at: insight.updatedAt,
-    },
-    { onConflict: 'id' },
-  );
-
-  if (error) {
-    logger.warn('[SupabaseDb] Failed to save insight to Supabase.', error);
-    throw error;
-  }
-}
-
-export async function getInsightByDate(
-  date: string,
-  chartId: string,
-): Promise<SavedInsight | null> {
-  const userId = await getUserId();
-
-  const { data, error } = await supabase
-    .from('insight_history')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('chart_id', chartId)
-    .eq('date', date)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    logger.warn('[SupabaseDb] Failed to load insight by date from Supabase.', error);
-    return null;
-  }
-
-  return data ? mapInsightRow(data as Row) : null;
-}
-
-export async function getInsightById(id: string): Promise<SavedInsight | null> {
-  const userId = await getUserId();
-
-  const { data, error } = await supabase
-    .from('insight_history')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('id', id)
-    .maybeSingle();
-
-  if (error) {
-    logger.warn('[SupabaseDb] Failed to load insight by id from Supabase.', error);
-    return null;
-  }
-
-  return data ? mapInsightRow(data as Row) : null;
-}
-
-export async function getInsightHistory(
-  chartId: string,
-  options: { limit?: number; offset?: number } = {},
-): Promise<SavedInsight[]> {
-  const userId = await getUserId();
-  const limit = options.limit ?? 50;
-  const offset = options.offset ?? 0;
-
-  const { data, error } = await supabase
-    .from('insight_history')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('chart_id', chartId)
-    .order('date', { ascending: false })
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (error) {
-    logger.warn('[SupabaseDb] Failed to load insight history from Supabase.', error);
-    return [];
-  }
-
-  if (!data?.length) return [];
-  return Promise.all((data as Row[]).map(mapInsightRow));
-}
-
-export async function updateInsightFavorite(
-  id: string,
-  isFavorite: boolean,
-): Promise<void> {
-  const userId = await getUserId();
-  const now = new Date().toISOString();
-
-  const { error } = await supabase
-    .from('insight_history')
-    .update({ is_favorite: isFavorite, updated_at: now })
-    .eq('id', id)
-    .eq('user_id', userId);
-
-  if (error) {
-    logger.warn('[SupabaseDb] Failed to update insight favorite in Supabase.', error);
-    throw error;
-  }
-}
-
-export async function updateInsightViewedAt(
-  id: string,
-  viewedAt: string,
-): Promise<void> {
-  const userId = await getUserId();
-  const now = new Date().toISOString();
-
-  const { error } = await supabase
-    .from('insight_history')
-    .update({ viewed_at: viewedAt, updated_at: now })
-    .eq('id', id)
-    .eq('user_id', userId);
-
-  if (error) {
-    logger.warn('[SupabaseDb] Failed to update insight viewed state in Supabase.', error);
-    throw error;
-  }
-}
-
 // ─── Relationship Charts ─────────────────────────────────────────────────────
 
 async function mapRelationshipRow(row: Row): Promise<RelationshipChart> {
@@ -1299,14 +1131,6 @@ export const supabaseDb = {
   getCheckInCount,
   getTotalCheckInCount,
   saveCheckIn,
-
-  // Insights
-  saveInsight,
-  getInsightByDate,
-  getInsightById,
-  getInsightHistory,
-  updateInsightFavorite,
-  updateInsightViewedAt,
 
   // Relationships
   getRelationshipCharts,

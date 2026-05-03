@@ -16,8 +16,8 @@
  */
 
 import { NatalChart } from '../astrology/types';
-import { DailyInsightEngine } from '../astrology/dailyInsightEngine';
 import { detectChartPatterns } from '../astrology/chartPatterns';
+import { computeTransitAspectsToNatal, getTransitInfo } from '../astrology/transits';
 import {
   PROMPT_LIBRARY,
   GENTLE_CLOSES,
@@ -90,25 +90,24 @@ function getActiveTriggers(chart: NatalChart, date: Date = new Date()): ActiveTr
     dominantElement: null,
   };
 
-  // 1. Detect tight transits via DailyInsightEngine
+  // 1. Detect tight transits via the shared transit utility.
   try {
-    const insight = DailyInsightEngine.generateDailyInsight(chart, date);
-    if (insight.signals) {
-      for (const signal of insight.signals) {
-        const orb = parseFloat(signal.orb);
-        if (isNaN(orb)) continue;
-
-        // Map transiting planet to trigger tag
-        const transitTag = mapPlanetToTransitTrigger(signal.description);
-        if (transitTag && orb < 1.0) {
-          triggers.tightTransits.push(transitTag);
-        }
-        if (transitTag) {
-          // Map transit to activation type
-          const activation = mapTransitToActivation(transitTag);
-          if (activation && !triggers.transitActivations.includes(activation)) {
-            triggers.transitActivations.push(activation);
-          }
+    const transitInfo = getTransitInfo(
+      date,
+      chart.birthData.latitude,
+      chart.birthData.longitude,
+      chart.houseSystem || chart.birthData.houseSystem || 'whole-sign',
+    );
+    const aspects = computeTransitAspectsToNatal(chart, transitInfo.longitudes);
+    for (const aspect of aspects) {
+      const transitTag = mapPlanetToTransitTrigger(aspect.pointA);
+      if (transitTag && aspect.orb < 1.0) {
+        triggers.tightTransits.push(transitTag);
+      }
+      if (transitTag) {
+        const activation = mapTransitToActivation(transitTag);
+        if (activation && !triggers.transitActivations.includes(activation)) {
+          triggers.transitActivations.push(activation);
         }
       }
     }
