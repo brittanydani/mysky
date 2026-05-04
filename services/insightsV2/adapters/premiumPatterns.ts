@@ -33,6 +33,7 @@ import {
   selectProtectiveStrategy,
   type ProtectiveStrategy,
 } from '../rootPatterns/protectiveStrategyMapping';
+import { anchorToNaturalPhrase } from '../generated/insightSupportAlignment';
 import type {
   ArchivePattern,
   ArchivePatternScore,
@@ -500,7 +501,7 @@ function livedMomentFromText(searchText: string): string {
 }
 
 function anchorLead(anchor: string): string {
-  return capitalizeFirst(anchor.replace(/\.$/, ''));
+  return capitalizeFirst(anchorToNaturalPhrase(anchor).replace(/\.$/, ''));
 }
 
 function anchoredObservation(

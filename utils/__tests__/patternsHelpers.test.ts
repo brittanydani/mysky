@@ -115,4 +115,41 @@ describe('patternsHelpers', () => {
     );
     expect(state.sections.flatMap(section => section.items).some(item => item.patternKey === 'unknown')).toBe(false);
   });
+
+  it('only selects supporting archive cards that deepen the core pattern', () => {
+    const state = buildPatternLibraryState([
+      v2Pattern({
+        title: 'Invisible Load',
+        patternKey: 'responsibilityCare_invisibleLoad',
+        category: 'responsibilityCare',
+        relatedSignals: ['mental_load', 'responsibility_weight'],
+        score: 92,
+      }),
+      v2Pattern({
+        title: 'Care Before Consent',
+        body: 'Care keeps becoming private labor before support enters.',
+        patternKey: 'responsibilityCare_careBeforeConsent',
+        category: 'responsibilityCare',
+        relatedSignals: ['mental_load', 'shared_load'],
+        fingerprint: 'v2:responsibilityCare_careBeforeConsent',
+        score: 84,
+      }),
+      v2Pattern({
+        title: 'Repair After Distance',
+        body: 'Repair becomes important after distance in a relationship.',
+        patternKey: 'relationships_repairAfterDistance',
+        category: 'relationships',
+        relatedSignals: ['repair_need', 'tone_sensitivity'],
+        archiveSectionTitle: 'Relationships',
+        librarySectionTitle: 'Relationships',
+        fingerprint: 'v2:relationships_repairAfterDistance',
+        score: 82,
+      }),
+    ]);
+
+    const supportTitles = state.sections.slice(1).flatMap(section => section.items.map(item => item.title));
+
+    expect(supportTitles).toContain('Care Before Consent');
+    expect(supportTitles).not.toContain('Repair After Distance');
+  });
 });

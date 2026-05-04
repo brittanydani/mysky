@@ -28,6 +28,7 @@ import {
   stateAwareParagraphScore,
   type CurrentInsightStateProfile,
 } from '../state/insightState';
+import { humanizeInsightParagraphBody } from '../generated/insightSupportAlignment';
 
 export type PremiumPatternWriterShape = GeneratedInsightWriterShape;
 export type PatternParagraphTone = GeneratedInsightTone;
@@ -331,7 +332,7 @@ function intensityFitScore(
 }
 
 export function patternParagraphBodyKey(body: string): string {
-  return normalizeToken(body)
+  return normalizeToken(humanizeInsightParagraphBody(body))
     .replace(/[^a-z0-9 ]+/g, '')
     .trim();
 }
@@ -486,7 +487,13 @@ export function selectGeneratedInsightForSurface({
     .filter(item => Number.isFinite(item.score))
     .sort((a, b) => b.score - a.score);
 
-  return scored[0]?.paragraph ?? null;
+  const selected = scored[0]?.paragraph;
+  if (!selected) return null;
+
+  return {
+    ...selected,
+    body: humanizeInsightParagraphBody(selected.body, selected),
+  };
 }
 
 function scoreVariant(
@@ -540,9 +547,11 @@ function scoreVariant(
     ? 24
     : 0;
   const tieBreak = (stableHash(`${input.patternKey}:${variant.id}`) % 1000) / 10000;
+  const body = humanizeInsightParagraphBody(variant.body, variant);
 
   return {
     ...variant,
+    body,
     matchedAnchors,
     matchedSignals,
     score:

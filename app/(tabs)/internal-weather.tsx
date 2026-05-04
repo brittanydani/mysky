@@ -28,6 +28,7 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { CheckInService, getLogicalToday } from '../../services/patterns/checkInService';
 import { cancelStreakAtRiskNotification } from '../../services/today/insightNotifications';
+import { markTodayInsightsStale } from '../../services/today/todayInsightRefresh';
 import type { DailyCheckIn, EnergyLevel, StressLevel, ThemeTag, CheckInInput } from '../../services/patterns/types';
 import type { NatalChart } from '../../services/astrology/types';
 import { usePremium } from '../../context/PremiumContext';
@@ -759,6 +760,9 @@ export default function MoodCheckIn() {
         }),
       };
       await CheckInService.saveCheckIn(input, natalChart, chartId);
+      if (selectedDate === getLogicalToday()) {
+        markTodayInsightsStale('dailyCheckIn');
+      }
       // Cancel any pending streak-at-risk notification now that user has checked in
       cancelStreakAtRiskNotification().catch(() => {});
 

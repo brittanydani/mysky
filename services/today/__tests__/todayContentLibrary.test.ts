@@ -1,4 +1,5 @@
 import { AFFIRMATION_LIBRARY, getDailyAffirmation } from '../todayContentLibrary';
+import { isSupportTextAligned } from '../../insightsV2/generated/insightSupportAlignment';
 
 describe('todayContentLibrary', () => {
   describe('AFFIRMATION_LIBRARY', () => {
@@ -31,6 +32,30 @@ describe('todayContentLibrary', () => {
       const afterCheckIn = getDailyAffirmation({ mood: 8, dailySignalSeed: 1 });
 
       expect(afterCheckIn.text).not.toBe(beforeCheckIn.text);
+    });
+
+    it('subordinates Daily Affirmation to the selected knowledge insight when present', () => {
+      const insightAlignment = {
+        category: 'lifeDirection',
+        majorDomain: 'learnedAgency',
+        insightSubcategory: 'effortDoubt',
+        patternType: 'pushPull',
+        anchors: ['future-pressure', 'clarity-before-movement'],
+        tags: ['direction', 'future', 'choice'],
+        signalTypes: ['journal', 'reflectionBank', 'next_step'],
+        title: 'The Effort Doubt',
+        body: 'Part of you wants movement but does not trust the effort will matter.',
+      };
+      const affirmation = getDailyAffirmation({
+        mood: 8,
+        energy: 'high',
+        dailySignalSeed: 1,
+        insightAlignment,
+      });
+
+      expect(affirmation.text).toMatch(/effort|movement|step|change|stuck/i);
+      expect(affirmation.text).not.toMatch(/intuition|inner light|closeness/i);
+      expect(isSupportTextAligned(affirmation.text, insightAlignment)).toBe(true);
     });
   });
 });

@@ -32,6 +32,7 @@ import SkiaRestorationInsight from '../../components/ui/SkiaRestorationInsight';
 import { getUserPreference } from '../../services/storage/userProfileService';
 import { supabaseDb } from '../../services/storage/supabaseDb';
 import { SleepEntry, generateId } from '../../services/storage/models';
+import { markTodayInsightsStale } from '../../services/today/todayInsightRefresh';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { usePremium } from '../../context/PremiumContext';
@@ -618,6 +619,9 @@ export default function SleepScreen() {
         createdAt: existingCreatedAt, updatedAt: now, isDeleted: false,
       };
       await supabaseDb.saveSleepEntry(entry);
+      if (entry.date === today) {
+        markTodayInsightsStale('sleep');
+      }
       const updated = await supabaseDb.getSleepEntries(chartId, 30);
       setEntries(updated);
       const savedEntry = updated.find(e => e.id === entry.id);

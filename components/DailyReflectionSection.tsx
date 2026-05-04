@@ -58,6 +58,7 @@ import {
   syncCoreValuesFromReflections,
   syncIntelligenceFromReflections,
 } from '../services/insights/reflectionProfileSync';
+import { markTodayInsightsStale } from '../services/today/todayInsightRefresh';
 import {
   ANSWER_SCALES,
   CATEGORY_ICONS,
@@ -204,6 +205,7 @@ export default function DailyReflectionSection({
 
     try {
       const result = await sealCategoryAnswers(category, batch, categoryNotes[category] || undefined);
+      markTodayInsightsStale('dailyReflection');
       setCategorySealed(prev => ({ ...prev, [category]: true }));
       setTotalDays(result.totalDaysCompleted);
       setStreak(await getCurrentStreak());

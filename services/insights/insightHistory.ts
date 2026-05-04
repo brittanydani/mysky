@@ -13,10 +13,15 @@ export type KnowledgeEngineHistoryInput = {
   recentlyShownCopyHashes: string[];
 };
 
+interface RecentlyShownKnowledgeHistoryOptions {
+  includeSameDay?: boolean;
+}
+
 export function buildRecentlyShownKnowledgeHistory(
   history: InsightHistoryEntry[],
   now: string | Date = new Date(),
   recentDays = DEFAULT_RECENT_DAYS,
+  options: RecentlyShownKnowledgeHistoryOptions = {},
 ): KnowledgeEngineHistoryInput {
   const nowDate = typeof now === 'string' ? new Date(now) : now;
   const nowTime = Number.isFinite(nowDate.getTime()) ? nowDate.getTime() : Date.now();
@@ -29,7 +34,7 @@ export function buildRecentlyShownKnowledgeHistory(
     if (!Number.isFinite(shownTime)) return false;
 
     // Keep the daily card stable during repeated same-day Home focuses.
-    if (shownAt.toISOString().slice(0, 10) === todayKey) return false;
+    if (!options.includeSameDay && shownAt.toISOString().slice(0, 10) === todayKey) return false;
     return shownTime >= cutoff && shownTime <= nowTime;
   });
 

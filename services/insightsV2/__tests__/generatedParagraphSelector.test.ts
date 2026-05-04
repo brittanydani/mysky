@@ -108,4 +108,50 @@ describe('generated paragraph selector', () => {
       distinctDays: 2,
     })).toBe(true);
   });
+
+  it('does not leak attachment push-pull support into life direction action recovery', () => {
+    const selected = selectGeneratedInsightForSurface({
+      surface: 'today',
+      targetCategory: 'lifeDirection',
+      targetSubcategory: 'actionRecovery',
+      targetPatternType: 'pushPull',
+      targetIntensity: 'medium',
+      signalTypes: ['journal', 'reflectionBank', 'next_step', 'action_recovery'],
+      recentlyUsedIds: [],
+    });
+
+    expect(selected).toBeTruthy();
+    expect(selected?.category).toBe('lifeDirection');
+    expect(selected?.insightSubcategory).toBe('actionRecovery');
+    expect(selected?.body).not.toMatch(/wanting closeness|needing space|relationship/i);
+    expect(selected?.body).toMatch(/movement|step|effort|stuck|choice|future/i);
+  });
+
+  it('keeps attachment-only support text out of non-attachment generated bodies', () => {
+    const nonAttachmentBodies = GENERATED_INSIGHT_PARAGRAPHS
+      .filter(paragraph =>
+        paragraph.majorDomain !== 'attachmentConnection' &&
+        paragraph.category !== 'relationships',
+      )
+      .map(paragraph => paragraph.body);
+
+    expect(nonAttachmentBodies.join('\n')).not.toMatch(/Wanting closeness and needing space can exist at the same time/i);
+  });
+
+  it('does not repeat raw body taxonomy labels in body signal paragraph bodies', () => {
+    const bodyText = GENERATED_INSIGHT_PARAGRAPHS
+      .filter(paragraph => paragraph.category === 'bodySignals')
+      .map(paragraph => paragraph.body)
+      .join('\n')
+      .toLowerCase();
+
+    const embodiedKnowingCount = bodyText.match(/embodied knowing/g)?.length ?? 0;
+    expect(embodiedKnowingCount).toBeLessThanOrEqual(1);
+  });
+
+  it('keeps vague values support phrases out of weekly paragraphs', () => {
+    expect(
+      GENERATED_WEEKLY_INSIGHT_PARAGRAPHS.map(paragraph => paragraph.body).join('\n'),
+    ).not.toMatch(/protection for the deeper value/i);
+  });
 });

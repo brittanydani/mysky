@@ -67,6 +67,7 @@ import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { trackGrowthEvent } from '../../services/growth/localAnalytics';
 import { scheduleTransitNotification } from '../../services/astrology/transitNotifications';
 import { scheduleInsightNotification } from '../../services/today/insightNotifications';
+import { getTodayInsightRefreshState } from '../../services/today/todayInsightRefresh';
 import { buildInsightSurface } from '../../services/insights/buildInsightSurface';
 import {
   buildRecentlyShownKnowledgeHistory,
@@ -117,6 +118,17 @@ const SLEEP_POINTS: [number, number][] = [
   [0, 0], [4, 0], [5, 2], [6, 5], [7, 8], [8, 9], [9, 10], [10, 10],
 ];
 
+function buildLogicalDayInsightTimestamp(dayKey: string): string {
+  const now = new Date();
+  const time = [
+    String(now.getHours()).padStart(2, '0'),
+    String(now.getMinutes()).padStart(2, '0'),
+    String(now.getSeconds()).padStart(2, '0'),
+  ].join(':');
+
+  return `${dayKey}T${time}`;
+}
+
 function computeBalanceScore(mood: number, energy: number, sleep: number): number {
   const moodPts = MOOD_POINTS[Math.round(mood)] ?? mood;
   const energyPts = ENERGY_POINTS[Math.round(energy)] ?? energy;
@@ -158,6 +170,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [todayDataReady, setTodayDataReady] = useState(false);
   const recordedTodayInsightKeysRef = useRef<Set<string>>(new Set());
+  const consumedTodayInsightRefreshRevisionRef = useRef(0);
 
   // Check-in data used by the balance and reflection surfaces.
   const [mood, setMood] = useState(7);
@@ -245,6 +258,7 @@ export default function HomeScreen() {
         moodInsightsEnabled: boolean;
         todayKey: string;
         nowForInsights: string;
+        consumedRefreshRevision: number | null;
       };
 
       const loadTodaySurface = async (
@@ -252,6 +266,13 @@ export default function HomeScreen() {
         includeDailyReflections: boolean,
       ): Promise<SurfaceLoad> => {
         const todayKey = getLogicalToday();
+        const refreshState = getTodayInsightRefreshState();
+        const hasUnconsumedRefresh = refreshState.revision > consumedTodayInsightRefreshRevisionRef.current;
+        const shouldUseSameDayHistory = hasUnconsumedRefresh &&
+          (refreshState.reason !== 'dailyReflection' || includeDailyReflections);
+        const nowForInsights = shouldUseSameDayHistory
+          ? buildLogicalDayInsightTimestamp(todayKey)
+          : `${todayKey}T12:00:00`;
         const [moodInsightPref, aiInsightPref, knowledgeHistory, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
           getUserPreference<string | null>('pref_mood_insights', null).catch(() => null),
           getUserPreference<string | null>('pref_ai_insight_refinement', null).catch(() => null),
@@ -261,8 +282,12 @@ export default function HomeScreen() {
         ]);
         const moodInsightsEnabled = moodInsightPref !== '0';
         const aiInsightRefinementEnabled = moodInsightsEnabled && aiInsightPref !== '0';
-        const nowForInsights = `${todayKey}T12:00:00`;
-        const historyInput = buildRecentlyShownKnowledgeHistory(knowledgeHistory, nowForInsights);
+        const historyInput = buildRecentlyShownKnowledgeHistory(
+          knowledgeHistory,
+          nowForInsights,
+          undefined,
+          { includeSameDay: shouldUseSameDayHistory },
+        );
         const surface = await buildInsightSurface({
           chartId,
           rangeDays: 90,
@@ -283,6 +308,7 @@ export default function HomeScreen() {
           moodInsightsEnabled,
           todayKey,
           nowForInsights,
+          consumedRefreshRevision: shouldUseSameDayHistory ? refreshState.revision : null,
         };
       };
 
@@ -391,6 +417,13 @@ export default function HomeScreen() {
           } catch (err) {
             logger.error('Daily loop data failed:', err);
           }
+        }
+
+        if (load.consumedRefreshRevision != null) {
+          consumedTodayInsightRefreshRevisionRef.current = Math.max(
+            consumedTodayInsightRefreshRevisionRef.current,
+            load.consumedRefreshRevision,
+          );
         }
 
         if (opts.markReady) {
@@ -588,9 +621,34 @@ export default function HomeScreen() {
       relationshipTags,
       topReflectionCategory,
       dailySignalSeed: todayCheckInCount,
+      insightAlignment: knowledgeInsight
+        ? {
+            category: knowledgeInsight.category,
+            majorDomain: knowledgeInsight.majorDomain,
+            insightSubcategory: knowledgeInsight.insightSubcategory,
+            patternType: knowledgeInsight.patternType,
+            title: knowledgeInsight.title,
+            observation: knowledgeInsight.observation,
+            pattern: knowledgeInsight.pattern,
+            body: [knowledgeInsight.observation, knowledgeInsight.pattern, knowledgeInsight.reframe.clarity]
+              .filter(Boolean)
+              .join(' '),
+            tags: [
+              knowledgeInsight.patternKey,
+              knowledgeInsight.angleKey ?? '',
+              knowledgeInsight.currentState ?? '',
+            ].filter(Boolean),
+            anchors: knowledgeInsight.evidence
+              .flatMap(anchor => [anchor.label, anchor.phrase])
+              .filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
+            signalTypes: knowledgeInsight.evidence
+              .flatMap(anchor => [anchor.signal, anchor.source])
+              .filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
+          }
+        : null,
     };
     return getDailyAffirmation(ctx);
-  }, [userChart, mood, energy, latestSleep, selfKnowledge, dailyLoop, todayCheckInCount]);
+  }, [userChart, mood, energy, latestSleep, selfKnowledge, dailyLoop, todayCheckInCount, knowledgeInsight]);
 
   // ── Balance Score + Stability Map ──
 

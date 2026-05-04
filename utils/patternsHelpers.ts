@@ -173,7 +173,6 @@ function dedupeLibraryCandidates(candidates: LibraryCandidate[]): LibraryCandida
   for (const candidate of candidates) {
     const fingerprint = candidate.item.fingerprint ?? normalizeConceptKey(candidate.item.title);
     const normalizedTitle = normalizeConceptKey(candidate.item.title);
-    const lens = candidate.item.lens ?? sectionTitleForLens(candidate.item.lens);
     const patternKey = candidate.item.patternKey;
     const category = candidate.item.category;
     const keys = [
@@ -181,9 +180,6 @@ function dedupeLibraryCandidates(candidates: LibraryCandidate[]): LibraryCandida
       `fingerprint:${fingerprint}`,
       `title:${normalizedTitle}`,
       `section-title:${candidate.sectionTitle}:${normalizedTitle}`,
-      category
-        ? `lens-category:${lens}:${category}`
-        : `lens-concept:${lens}:${candidate.item.concept ?? 'unknown'}`,
       category ? `category-title:${category}:${normalizedTitle}` : '',
     ].filter(Boolean);
     const existing = keys.map(key => bestByKey.get(key)).find(Boolean);
@@ -259,31 +255,103 @@ function buildFullLibrarySections(candidates: LibraryCandidate[]): PatternLibrar
     .sort((a, b) => (LIBRARY_SECTION_ORDER[a.title] ?? 99) - (LIBRARY_SECTION_ORDER[b.title] ?? 99));
 }
 
+function splitRelatedTerms(value: string | undefined | null): string[] {
+  if (!value) return [];
+  return cleanText(value.toLowerCase())
+    .replace(/[_-]+/g, ' ')
+    .replace(/[^a-z0-9\s]+/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length >= 4);
+}
+
+function supportRelationTerms(item: PatternLibraryItem): Set<string> {
+  const fingerprint = item.conceptFingerprint;
+  const strategy = item.protectiveStrategy;
+  const values = [
+    item.patternKey,
+    item.majorDomain,
+    item.insightSubcategory,
+    item.shameLabel,
+    item.clarityReframe,
+    ...(item.relatedSignals ?? []),
+    fingerprint?.coreMeaning,
+    fingerprint?.emotionalFunction,
+    fingerprint?.oppositeNeed,
+    ...(fingerprint?.relatedTerms ?? []),
+    strategy?.key,
+    strategy?.name,
+    strategy?.protectiveMove,
+    strategy?.protects,
+    strategy?.costs,
+    strategy?.softens,
+    strategy?.insightLine,
+  ];
+
+  return new Set(values.flatMap(splitRelatedTerms));
+}
+
+function supportRelatednessScore(item: PatternLibraryItem, coreItem: PatternLibraryItem | null): number {
+  if (!coreItem) return 1;
+  if (item.patternKey && item.patternKey === coreItem.patternKey) return 0;
+
+  const itemTerms = supportRelationTerms(item);
+  const coreTerms = supportRelationTerms(coreItem);
+  let score = 0;
+
+  for (const term of itemTerms) {
+    if (coreTerms.has(term)) score += 1;
+  }
+
+  if (item.protectiveStrategy?.key && item.protectiveStrategy.key === coreItem.protectiveStrategy?.key) {
+    score += 8;
+  }
+
+  const itemSignals = new Set((item.relatedSignals ?? []).map(normalizeConceptKey));
+  const coreSignals = new Set((coreItem.relatedSignals ?? []).map(normalizeConceptKey));
+  for (const signal of itemSignals) {
+    if (coreSignals.has(signal)) score += 6;
+  }
+
+  const fingerprint = item.conceptFingerprint;
+  const coreFingerprint = coreItem.conceptFingerprint;
+  if (fingerprint && coreFingerprint) {
+    if (fingerprint.emotionalFunction === coreFingerprint.emotionalFunction) score += 8;
+    if (fingerprint.oppositeNeed === coreFingerprint.oppositeNeed) score += 6;
+    if (fingerprint.coreMeaning === coreFingerprint.coreMeaning) score += 4;
+  }
+
+  if (item.majorDomain && item.majorDomain === coreItem.majorDomain) score += 4;
+  if (item.insightSubcategory && item.insightSubcategory === coreItem.insightSubcategory) score += 4;
+
+  return score;
+}
+
 function selectSupportingArchiveCandidates(
   candidates: LibraryCandidate[],
   coreItem: PatternLibraryItem | null,
 ): LibraryCandidate[] {
   const selected: LibraryCandidate[] = [];
-  const seenSections = new Set<string>();
   const seenTitles = new Set<string>(coreItem ? [normalizeConceptKey(coreItem.title)] : []);
-  const seenLenses = new Set<PatternLens>(coreItem?.lens ? [coreItem.lens] : []);
-  const seenCategories = new Set<string>(coreItem?.category ? [coreItem.category] : []);
+  const relatedCandidates = candidates
+    .map(candidate => ({
+      ...candidate,
+      relatednessScore: supportRelatednessScore(candidate.item, coreItem),
+    }))
+    .filter(candidate => candidate.relatednessScore >= 2)
+    .sort((a, b) =>
+      b.relatednessScore - a.relatednessScore ||
+      b.score - a.score ||
+      a.originalIndex - b.originalIndex,
+    );
 
-  for (const candidate of candidates) {
+  for (const candidate of relatedCandidates) {
     const titleKey = normalizeConceptKey(candidate.item.title);
     const lens = candidate.item.lens;
     const sectionTitle = candidate.item.archiveSectionTitle ?? sectionTitleForLens(lens);
-    const category = candidate.item.category;
     if (!titleKey || seenTitles.has(titleKey)) continue;
-    if (seenSections.has(sectionTitle)) continue;
-    if (lens && seenLenses.has(lens)) continue;
-    if (category && seenCategories.has(category)) continue;
 
     selected.push({ ...candidate, sectionTitle });
     seenTitles.add(titleKey);
-    seenSections.add(sectionTitle);
-    if (lens) seenLenses.add(lens);
-    if (category) seenCategories.add(category);
     if (selected.length >= 2) break;
   }
 
@@ -335,7 +403,7 @@ export function buildPatternLibraryState(
   return {
     statusLine: 'Pattern read refreshed today',
     helperText:
-      'One core pattern sits first. Supporting sections only appear when they answer a different question.',
+      'One core pattern sits first. Supporting sections only appear when they deepen the same pattern from a different angle.',
     items,
     sections: [...coreSection, ...supportSections],
     librarySections,

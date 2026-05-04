@@ -390,9 +390,11 @@ SUBCATEGORY_COPY_OVERRIDES: dict[str, dict[str, str]] = {
         "active": "your options start to feel narrower than they are",
     },
     "effortDoubt": {
-        "label": "doubt about whether effort will change anything",
-        "active": "effort starts to feel unlikely to matter",
-        "short": "that doubt",
+        "label": "the doubt that trying will change anything",
+        "active": "part of you wants movement but does not trust the effort will matter",
+        "short": "that doubt about effort",
+        "moment": "when part of you wants movement but does not trust the effort will matter",
+        "reframe": "The doubt is not laziness. It is protection around effort that has cost you before.",
     },
     "reversibleStep": {
         "label": "one small step that can still be changed",
@@ -405,9 +407,11 @@ SUBCATEGORY_COPY_OVERRIDES: dict[str, dict[str, str]] = {
         "short": "that powerless habit",
     },
     "actionRecovery": {
-        "label": "the return of movement after a stuck place",
+        "label": "movement returning after feeling stuck",
         "active": "movement begins returning after a stuck place",
         "short": "that returning movement",
+        "moment": "when movement begins returning after a stuck place",
+        "reframe": "The return of movement can feel fragile at first, especially after a stuck place.",
     },
     "controlAfterUncertainty": {
         "label": "control returning after uncertainty",
@@ -435,8 +439,10 @@ SUBCATEGORY_COPY_OVERRIDES: dict[str, dict[str, str]] = {
         "short": "that interpretation loop",
     },
     "meaningGap": {
-        "label": "the meaning gap",
-        "active": "the gap between function and meaning opens",
+        "label": "the gap between what works and what feels meaningful",
+        "active": "the practical answer stops feeling like enough",
+        "short": "that deeper question",
+        "moment": "when the practical answer stops feeling like enough",
     },
     "explanationNeed": {
         "label": "the need for a clear explanation",
@@ -513,9 +519,11 @@ SUBCATEGORY_COPY_OVERRIDES: dict[str, dict[str, str]] = {
         "short": "that avoidance relief",
     },
     "responsePattern": {
-        "label": "the response pattern your body already knows",
-        "active": "the familiar response pattern comes online",
-        "short": "that response pattern",
+        "label": "a familiar response",
+        "active": "your body reaches for an old response before your mind has language for it",
+        "short": "that familiar response",
+        "moment": "when your body reaches for an old response before your mind has language for it",
+        "reframe": "The response is familiar because it once helped you get through something.",
     },
     "cueRoutine": {
         "label": "the cue that pulls the routine forward",
@@ -549,6 +557,50 @@ SUBCATEGORY_COPY_OVERRIDES: dict[str, dict[str, str]] = {
         "label": "the move back toward steadiness",
         "active": "your system starts looking for a way back toward steadiness",
         "short": "that move toward steadiness",
+    },
+    "embodiedKnowing": {
+        "label": "body knowing before words",
+        "active": "your body recognizes the moment before your mind has clean language",
+        "short": "that body signal",
+        "moment": "when your body recognizes the moment before your mind has clean language",
+        "reframe": "Your body may recognize the truth of the moment before your mind has clean language for it.",
+    },
+    "tensionPattern": {
+        "label": "the tension in your body",
+        "active": "tension shows up in your body before the meaning is clear",
+        "short": "that body tension",
+        "moment": "when tension shows up in your body before the meaning is clear",
+    },
+    "sensationAvoidance": {
+        "label": "moving around what your body is feeling",
+        "active": "you move around what your body is feeling before you name it",
+        "short": "what your body is feeling",
+        "moment": "when you move around what your body is feeling before you name it",
+    },
+    "usefulnessWorth": {
+        "label": "your worth feeling tied to being useful",
+        "active": "your worth starts feeling tied to being useful",
+        "short": "that usefulness bind",
+        "moment": "when your worth starts feeling tied to being useful",
+    },
+    "beliefAboutWorth": {
+        "label": "the question of being enough",
+        "active": "the question of being enough starts pulling at the moment",
+        "short": "being enough",
+        "moment": "when the question of being enough starts pulling at the moment",
+    },
+    "beliefAboutChange": {
+        "label": "the belief that change may not hold",
+        "active": "wanting change brings up doubt about whether it can last",
+        "short": "that doubt about change",
+        "moment": "when wanting change brings up doubt about whether it can last",
+        "reframe": "Distrusting change can be a way of protecting hope from disappointment.",
+    },
+    "safetyChecking": {
+        "label": "checking whether safety is real",
+        "active": "you start checking whether safety is real",
+        "short": "that safety check",
+        "moment": "when you start checking whether safety is real",
     },
 }
 
@@ -2877,7 +2929,7 @@ PLEASURE_DESIRE_PERMISSION_SUBCATEGORY_GUIDANCE = make_subcategory_guidance(
 
 
 EMBODIMENT_SOMATIC_SIGNALS_SUBCATEGORY_GUIDANCE = make_subcategory_guidance(
-    "Body awareness, sensation, body memory, tension, breath, gut feelings, embodied knowing.",
+    "Body awareness, sensation, body memory, tension, breath, gut feelings, and body knowing before words.",
     {
         "chestSignal": (
             "You notice chest tightness as soon as it arrives.",
@@ -4451,14 +4503,14 @@ HUMAN_VALIDATION_BANKS = {
     "pushPull": [
         "Of course it feels confusing when both needs are real.",
         "Both parts are trying to protect something important.",
-        "Wanting closeness and needing space can exist at the same time.",
-        "The push and pull makes sense when being close has not always felt simple.",
+        "The push and pull makes sense when both needs have a reason.",
+        "You can respect both directions before deciding what comes next.",
     ],
     "delayedActivation": [
         "Delayed feeling is still feeling.",
         "Some reactions wait until there is enough quiet to arrive.",
         "You did not miss it; it caught up later.",
-        "Your body may need distance before it can tell the truth.",
+        "Later clarity can matter without becoming self-blame.",
     ],
 }
 
@@ -4477,10 +4529,10 @@ STRONG_LANDING_BANKS = {
         "You can move slowly without pretending nothing is there.",
     ],
     "pushPull": [
-        "You do not have to choose between connection and self-protection all at once.",
-        "The goal is not to force closeness; it is to notice what makes closeness feel safer.",
+        "You do not have to choose one need and exile the other all at once.",
+        "The goal is not to force a decision; it is to notice what each side is protecting.",
         "Both needs deserve room before one gets blamed for ruining the other.",
-        "You can want the relationship and still need a slower doorway into it.",
+        "You can move toward the next honest step without making the whole answer happen today.",
     ],
     "delayedActivation": [
         "Some things only become clear after the moment stops asking you to perform.",
@@ -4488,6 +4540,98 @@ STRONG_LANDING_BANKS = {
         "What comes up later still counts.",
         "The quiet afterward may be where the truth finally catches up.",
     ],
+}
+
+DOMAIN_VALIDATION_OVERRIDES: dict[str, dict[str, list[str]]] = {
+    "attachmentConnection": {
+        "pushPull": [
+            "Wanting closeness and needing space can exist at the same time.",
+            "The push and pull makes sense when being close has not always felt simple.",
+            "You can want the relationship and still need a slower doorway into it.",
+        ],
+    },
+    "learnedAgency": {
+        "pushPull": [
+            "Part of you wants to try, and another part is protecting you from the pain of trying hard and still not seeing change.",
+            "The hesitation is not laziness; it is protection around effort that has cost you before.",
+            "Wanting movement and distrusting the effort can exist in the same moment.",
+        ],
+        "delayedActivation": [
+            "Movement can return after the stuck place has already taken up space.",
+            "Later willingness still counts, even if it arrives after the pressure passes.",
+        ],
+    },
+    "hopeFuturePossibility": {
+        "pushPull": [
+            "Part of you wants the next step, and another part wants proof it will not cost too much.",
+            "The hesitation may be protecting the part of you that still needs the move to stay reversible.",
+        ],
+    },
+    "valuesIntegrity": {
+        "pushPull": [
+            "One part of you can see the practical answer while another keeps listening for what still feels true.",
+            "The split may be about staying close to integrity without making the whole choice heavier than it is.",
+        ],
+        "highTracking": [
+            "The pressure is not just about the choice; it is about staying close to what still feels true.",
+            "A quiet misalignment can matter before the outside situation looks serious.",
+        ],
+    },
+    "embodimentSomaticSignals": {
+        "highTracking": [
+            "Your body may recognize the truth of the moment before your mind has clean language for it.",
+            "The early body read deserves attention before it becomes self-blame.",
+        ],
+        "delayedActivation": [
+            "The later clarity matters, but it does not need to become self-blame.",
+            "Your body may report the moment after there is enough quiet to hear it.",
+        ],
+    },
+    "safetyThreatDetection": {
+        "pushPull": [
+            "Part of you wants to soften, and another part still wants proof that softening is safe enough.",
+            "The guard and the wish for steadiness can both be telling the truth.",
+        ],
+    },
+}
+
+DOMAIN_LANDING_OVERRIDES: dict[str, dict[str, list[str]]] = {
+    "learnedAgency": {
+        "pushPull": [
+            "You do not have to turn one small step into a full life decision.",
+            "One small effort is allowed to count before you know whether it changes everything.",
+        ],
+        "delayedActivation": [
+            "The return of movement can feel fragile at first, especially after a stuck place.",
+            "A small reversible step is enough to begin with.",
+        ],
+    },
+    "hopeFuturePossibility": {
+        "pushPull": [
+            "You do not have to turn one small step into a full life decision.",
+            "The next honest step can stay small enough to test.",
+        ],
+    },
+    "valuesIntegrity": {
+        "highTracking": [
+            "The practical answer may solve one problem while still leaving a deeper misalignment untouched.",
+            "Let what feels true have a vote before the easier answer takes over.",
+        ],
+        "pushPull": [
+            "The pressure is not just about the choice; it is about staying close to what still feels true.",
+            "You can move slowly enough for integrity to stay in the room.",
+        ],
+    },
+    "embodimentSomaticSignals": {
+        "highTracking": [
+            "The body signal can be honored without becoming the whole story.",
+            "Your body may know early; your next step can still be gentle.",
+        ],
+        "delayedActivation": [
+            "The later clarity matters, but it does not need to become self-blame.",
+            "What your body reports later still deserves care.",
+        ],
+    },
 }
 
 
@@ -5488,7 +5632,7 @@ CATEGORY_BANKS: dict[str, CategoryBank] = {
         pattern="friction rises when a practical answer starts pulling you away from what is true",
         moment="when a choice makes sense on paper but not in your body",
         meaning="integrity asking to be included",
-        need="protection for the deeper value",
+        need="staying close to what feels true",
         reframe="The discomfort is not inconvenience; it is a value asking not to be negotiated away.",
         landing="Let the deeper value have a vote before the easier answer takes over.",
         body_cue="tension, hesitation, or a feeling that something is off",
@@ -6535,8 +6679,8 @@ def generated_domain_definitions() -> list[dict[str, object]]:
                 "subcategoryGuidance": domain.get("subcategoryGuidance") or default_subcategory_guidance(domain),
                 "microMoments": GENERIC_MICRO_MOMENTS,
                 "actions": GENERIC_ACTIONS,
-                "validationStyle": HUMAN_VALIDATION_BANKS,
-                "landings": STRONG_LANDING_BANKS,
+                "validationStyle": domain_validation_bank(str(domain["key"])),
+                "landings": domain_landing_bank(str(domain["key"])),
             }
         )
     return domains
@@ -6588,14 +6732,20 @@ def subcategory_language(value: str) -> dict[str, str]:
         label = override["label"]
         active = override["active"]
         short = override.get("short", label)
+        moment = override.get("moment", f"when {active}")
+        reframe = override.get("reframe", "")
     else:
         label = user_facing_taxonomy_phrase(value)
         active = f"{label} becomes active"
         short = label
+        moment = f"when {active}"
+        reframe = ""
     return {
         "label": label,
         "active": active,
         "short": short,
+        "moment": moment,
+        "reframe": reframe,
     }
 
 
@@ -7050,12 +7200,68 @@ def micro_action(bank: CategoryBank, pattern_type: str, i: int) -> str:
     return choose(action_values(bank, pattern_type), i)
 
 
-def human_validation(pattern_type: str, i: int) -> str:
-    return choose(HUMAN_VALIDATION_BANKS[pattern_type], i)
+def domain_key_for_bank(bank: CategoryBank | None) -> str | None:
+    if bank is None:
+        return None
+    return str(domain_metadata_for_category(bank.category)["majorDomain"])
 
 
-def strong_landing(pattern_type: str, i: int) -> str:
-    return choose(STRONG_LANDING_BANKS[pattern_type], i)
+def domain_support_lines(
+    source: dict[str, dict[str, list[str]]],
+    pattern_type: str,
+    bank: CategoryBank | None = None,
+    domain_key: str | None = None,
+) -> list[str]:
+    key = domain_key or domain_key_for_bank(bank)
+    if key and source.get(key, {}).get(pattern_type):
+        return source[key][pattern_type]
+    return []
+
+
+def domain_validation_bank(domain_key: str) -> dict[str, list[str]]:
+    return {
+        pattern_type: [
+            *DOMAIN_VALIDATION_OVERRIDES.get(domain_key, {}).get(pattern_type, []),
+            *HUMAN_VALIDATION_BANKS[pattern_type],
+        ]
+        for pattern_type in PATTERN_TYPES
+    }
+
+
+def domain_landing_bank(domain_key: str) -> dict[str, list[str]]:
+    return {
+        pattern_type: [
+            *DOMAIN_LANDING_OVERRIDES.get(domain_key, {}).get(pattern_type, []),
+            *STRONG_LANDING_BANKS[pattern_type],
+        ]
+        for pattern_type in PATTERN_TYPES
+    }
+
+
+def human_validation(
+    pattern_type: str,
+    i: int,
+    bank: CategoryBank | None = None,
+    domain_key: str | None = None,
+) -> str:
+    options = [
+        *domain_support_lines(DOMAIN_VALIDATION_OVERRIDES, pattern_type, bank, domain_key),
+        *HUMAN_VALIDATION_BANKS[pattern_type],
+    ]
+    return choose(options, i)
+
+
+def strong_landing(
+    pattern_type: str,
+    i: int,
+    bank: CategoryBank | None = None,
+    domain_key: str | None = None,
+) -> str:
+    options = [
+        *domain_support_lines(DOMAIN_LANDING_OVERRIDES, pattern_type, bank, domain_key),
+        *STRONG_LANDING_BANKS[pattern_type],
+    ]
+    return choose(options, i)
 
 
 def ensure_sentence(text: str) -> str:
@@ -7078,8 +7284,13 @@ def render_micro_pattern(bank: CategoryBank, pattern_type: str, shape: str, i: i
     category_offset = len(bank.category) + len(shape)
     moment = micro_moment(bank, pattern_type, i + category_offset)
     action = micro_action(bank, pattern_type, i + 1 + category_offset)
-    validation = human_validation(pattern_type, i + 2 + category_offset)
-    landing = contextual_landing(bank, strong_landing(pattern_type, i + 3 + category_offset), shape, i + category_offset)
+    validation = human_validation(pattern_type, i + 2 + category_offset, bank)
+    landing = contextual_landing(
+        bank,
+        strong_landing(pattern_type, i + 3 + category_offset, bank),
+        shape,
+        i + category_offset,
+    )
     theme = category_phrase(bank)
 
     setups = {
@@ -7209,30 +7420,32 @@ def taxonomy_micro_moment(entry: dict[str, object], pattern_type: str, i: int) -
     language = subcategory_language(str(entry["subcategory"]))
     readable = language["label"]
     active = language["active"]
+    short = language["short"]
+    moment = language["moment"]
     options = {
         "highTracking": [
+            moment,
+            f"when the first sign of {short} appears",
             f"when {active}",
-            f"when the first sign of {readable} appears",
-            f"when {readable} starts before anyone names it",
-            f"when a small cue around {readable} changes the room",
+            f"when a small cue around {short} changes the room",
         ],
         "lowAccess": [
-            f"when {readable} asks for more access than you have",
-            f"when it feels easier to stay outside {readable}",
-            f"when {readable} stays quiet under the surface",
-            f"when {readable} would make the moment too complicated",
+            f"when staying with {short} asks for more access than you have",
+            f"when it feels easier to stay outside {short}",
+            f"when {short} stays quiet under the surface",
+            f"when naming {short} would make the moment too complicated",
         ],
         "pushPull": [
-            f"when you want {readable} and also want distance from it",
-            f"when {readable} pulls you closer and asks for protection",
-            f"when one part of you moves toward {readable} while another holds back",
-            f"when {readable} feels wanted and risky at the same time",
+            f"when you want to stay with {short} and also want distance from it",
+            f"when {short} pulls you closer and asks for protection",
+            f"when one part of you moves toward {short} while another holds back",
+            f"when {short} feels wanted and risky at the same time",
         ],
         "delayedActivation": [
-            f"after {readable} seemed smaller than it was",
-            f"when {readable} returns later in the quiet",
-            f"after the moment has passed and {readable} starts making sense",
-            f"when the truth of {readable} arrives after the room settles",
+            f"after {short} seemed smaller than it was",
+            f"when {short} returns later in the quiet",
+            f"after the moment has passed and {short} starts making sense",
+            f"when the truth of {short} arrives after the room settles",
         ],
     }
     return choose(options[pattern_type], i)
@@ -7313,12 +7526,14 @@ def render_taxonomy_pattern(entry: dict[str, object], pattern_type: str, shape: 
     bank = taxonomy_bank(entry)
     moment = taxonomy_micro_moment(entry, pattern_type, i)
     action = taxonomy_action_sentence(entry, pattern_type, i + 1)
-    validation = human_validation(pattern_type, i + 2)
+    validation = human_validation(pattern_type, i + 2, bank, str(entry["majorDomain"]))
     bridge = taxonomy_bridge_sentence(bank, pattern_type, i + 3)
     landing = taxonomy_landing_sentence(entry, bank, pattern_type, i + 4)
     language = subcategory_language(str(entry["subcategory"]))
     readable = language["label"]
     short = language["short"]
+    if language.get("reframe"):
+        validation = choose([language["reframe"], validation], i + 5)
     questions = {
         "highTracking": f"Where does {readable} first become real for you?",
         "lowAccess": f"What makes {readable} go quiet first?",
@@ -7472,8 +7687,175 @@ SHAPE_FLOW_PREFERENCES = {
     "threshold": ["thresholdFlow", "bodyFirst", "livedProtectionCost", "livedMomentFirst", "unfinishedEnding"],
 }
 
+GENERIC_VALIDATION_SENTENCES = {
+    "that distance has protected you before",
+    "there is a reason your attention goes there first",
+    "the mixed signal makes sense",
+    "both parts are trying to protect something important",
+    "some things only become clear after the moment stops asking you to perform",
+    "that kind of awareness didn't come from nowhere",
+    "that kind of awareness didn’t come from nowhere",
+    "that kind of bracing makes sense",
+}
 
-def validate_card_body(body: str) -> list[str]:
+RAW_TAXONOMY_PHRASES = [
+    "embodied knowing",
+    "usefulness worth",
+    "belief about worth",
+    "belief about change",
+    "response pattern",
+    "tension pattern",
+    "sensation avoidance",
+    "return of movement after a stuck place",
+    "protection for the deeper value",
+]
+
+RELATIONSHIP_ONLY_TERMS = [
+    "closeness",
+    "relationship",
+    "being chosen",
+    "wanting closeness",
+]
+
+BODY_ONLY_TERMS = [
+    "nervous system",
+    "somatic",
+    "sensation",
+    "body reacts",
+    "body may",
+]
+
+MEANING_ONLY_TERMS = [
+    "sacred",
+    "faith",
+    "symbol",
+    "larger question",
+]
+
+
+def normalized_sentence(text: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9\s]+", " ", text.lower())).strip()
+
+
+def alignment_terms_for_bank(bank: CategoryBank | None, extra_terms: list[str] | None = None) -> list[str]:
+    if bank is None:
+        return [term.lower() for term in (extra_terms or []) if term]
+
+    values = [
+        bank.category,
+        bank.theme,
+        bank.pattern,
+        bank.moment,
+        bank.meaning,
+        bank.need,
+        bank.reframe,
+        bank.landing,
+        bank.body_cue,
+        bank.metaphor,
+        *bank.tags,
+        *bank.signal_types,
+        *bank.anchors,
+        *bank.anchor_phrases,
+        *bank.vocabulary,
+        *(extra_terms or []),
+    ]
+    terms: list[str] = []
+    for value in values:
+        for part in re.split(r"[_\-/,]|\s+", value.lower()):
+            cleaned = re.sub(r"[^a-z0-9]+", "", part)
+            if len(cleaned) >= 4:
+                terms.append(cleaned)
+        phrase = normalized_sentence(value)
+        if len(phrase) >= 4:
+            terms.append(phrase)
+    return sorted(set(terms))
+
+
+def sentence_has_alignment_term(sentence: str, terms: list[str]) -> bool:
+    normalized = normalized_sentence(sentence)
+    tokens = set(re.findall(r"[a-z0-9]+", normalized))
+    for term in terms:
+        if " " in term and term in normalized:
+            return True
+        if term in tokens:
+            return True
+    return False
+
+
+def has_any_term(terms: list[str], needles: list[str]) -> bool:
+    haystack = " ".join(terms)
+    return any(normalized_sentence(needle) in haystack for needle in needles)
+
+
+def validate_sentence_alignment(
+    body: str,
+    bank: CategoryBank | None = None,
+    extra_terms: list[str] | None = None,
+) -> list[str]:
+    if bank is None and not extra_terms:
+        return []
+
+    errors: list[str] = []
+    terms = alignment_terms_for_bank(bank, extra_terms)
+    sentences = split_sentences(body)
+    specific_sentence_count = sum(1 for sentence in sentences if sentence_has_alignment_term(sentence, terms))
+    normalized_body = normalized_sentence(body)
+
+    for raw in RAW_TAXONOMY_PHRASES:
+        if normalized_sentence(raw) in normalized_body:
+            errors.append(f"raw taxonomy phrase leaked: {raw}")
+
+    generic_count = sum(
+        1
+        for sentence in sentences
+        if normalized_sentence(sentence).rstrip(".!?") in GENERIC_VALIDATION_SENTENCES
+    )
+    if generic_count > 1:
+        errors.append("too many generic validation sentences")
+    if generic_count == 1 and specific_sentence_count < 3:
+        errors.append("generic validation sentence needs at least 3 category-specific companion sentences")
+
+    category = bank.category if bank else ""
+    relational_context = category in {
+        "relationships",
+        "supportBelonging",
+        "selfWorthReceiving",
+        "communicationVoice",
+        "familyHome",
+    } or has_any_term(terms, ["relationship", "connection", "repair", "tone", "receiving care", "belonging"])
+    body_context = category in {
+        "bodySignals",
+        "safetyRegulation",
+        "restCapacity",
+        "glimmersRegulation",
+        "pleasurePlay",
+    } or has_any_term(terms, ["body", "somatic", "sensation", "safety", "bracing", "sleep", "rest"])
+    meaning_context = category in {
+        "spiritualMeaning",
+        "dreamsSymbols",
+        "natalChartReflection",
+        "valuesIntegrity",
+        "lifeDirection",
+        "creativityExpression",
+    } or has_any_term(terms, ["meaning", "purpose", "symbol", "values", "truth", "direction"])
+
+    for sentence in sentences:
+        normalized = normalized_sentence(sentence)
+        if not relational_context and any(normalized_sentence(term) in normalized for term in RELATIONSHIP_ONLY_TERMS):
+            errors.append(f"unrelated relationship language: {sentence}")
+        if not body_context and any(normalized_sentence(term) in normalized for term in BODY_ONLY_TERMS):
+            errors.append(f"unrelated body language: {sentence}")
+        if not meaning_context and any(normalized_sentence(term) in normalized for term in MEANING_ONLY_TERMS):
+            errors.append(f"unrelated meaning language: {sentence}")
+
+    return errors
+
+
+def validate_card_body(
+    body: str,
+    bank: CategoryBank | None = None,
+    extra_terms: list[str] | None = None,
+) -> list[str]:
     errors: list[str] = []
     if not isinstance(body, str):
         return ["body must be a string"]
@@ -7496,10 +7878,15 @@ def validate_card_body(body: str) -> list[str]:
         errors.append("body contains unresolved template braces")
     if "  " in body:
         errors.append("body contains double spaces")
+    errors.extend(validate_sentence_alignment(body, bank, extra_terms))
     return errors
 
 
-def validate_weekly_body(body: str) -> list[str]:
+def validate_weekly_body(
+    body: str,
+    bank: CategoryBank | None = None,
+    extra_terms: list[str] | None = None,
+) -> list[str]:
     errors: list[str] = []
     paragraphs = [part.strip() for part in body.split("\n\n") if part.strip()]
     if len(paragraphs) not in {2, 3, 4}:
@@ -7520,6 +7907,7 @@ def validate_weekly_body(body: str) -> list[str]:
             errors.append(f"blocked scaffold regex: {regex.pattern}")
     if "{" in body or "}" in body:
         errors.append("body contains unresolved template braces")
+    errors.extend(validate_sentence_alignment(body, bank, extra_terms))
     return errors
 
 
@@ -7692,7 +8080,7 @@ def generate_card_paragraphs() -> list[dict[str, object]]:
         if curated.get("category") in EXCLUDED_PARAGRAPH_CATEGORIES:
             continue
         curated_with_type = with_full_metadata(curated)
-        errors = validate_card_body(str(curated["body"]))
+        errors = validate_card_body(str(curated["body"]), CATEGORY_BANKS[str(curated["category"])])
         if errors:
             raise RuntimeError(f"Invalid curated paragraph {curated['id']}: {errors}")
         state.record(
@@ -7717,7 +8105,7 @@ def generate_card_paragraphs() -> list[dict[str, object]]:
                 render_index = category_index * 19 + shape_index + pattern_repeat_index + attempt
                 sentences = render_micro_pattern(bank, pattern_type, shape, render_index)
                 body = join_body(sentences)
-                errors = validate_card_body(body)
+                errors = validate_card_body(body, bank)
                 if errors:
                     continue
                 if state.too_repetitive(body, bank, anchor, shape, flow, attempt):
@@ -7745,7 +8133,17 @@ def generate_card_paragraphs() -> list[dict[str, object]]:
                     )
                     render_index = entry_index * 31 + pattern_type_index * 7 + variant_index + attempt
                     body = join_body(render_taxonomy_pattern(entry, pattern_type, shape, render_index))
-                    errors = validate_card_body(body)
+                    errors = validate_card_body(
+                        body,
+                        bank,
+                        [
+                            str(entry["majorDomain"]),
+                            str(entry["domainName"]),
+                            str(entry["subcategory"]),
+                            *[str(value) for value in entry["anchors"]],
+                            *[str(value) for value in entry["signalTypes"]],
+                        ],
+                    )
                     if errors:
                         continue
                     body_key = normalize_key(body, 32)
@@ -7820,7 +8218,7 @@ def generate_weekly_paragraphs() -> list[dict[str, object]]:
             continue
         for variant_index, shape in enumerate(["patternAnalysis", "tender"]):
             body = render_weekly(bank, category_index + variant_index)
-            errors = validate_weekly_body(body)
+            errors = validate_weekly_body(body, bank)
             if errors:
                 raise RuntimeError(f"Invalid weekly body for {bank.category}/{variant_index}: {errors}")
 

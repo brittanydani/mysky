@@ -5,6 +5,12 @@
 // Hundreds of entries per category — users see fresh content daily.
 // ─────────────────────────────────────────────────────────────
 
+import {
+  isSupportTextAligned,
+  scoreSupportAlignment,
+  type InsightSupportAlignmentInput,
+} from '../insightsV2/generated/insightSupportAlignment';
+
 // ═══════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════
@@ -126,6 +132,13 @@ export interface PersonalAffirmationContext {
    * calm | energy | growth | focus | reflect | milestone
    */
   insightTheme?: 'calm' | 'energy' | 'growth' | 'focus' | 'reflect' | 'milestone';
+
+  /**
+   * The selected Today insight. When present, the affirmation becomes an
+   * integration sentence subordinate to that insight instead of a separate
+   * personalized-but-unrelated line.
+   */
+  insightAlignment?: InsightSupportAlignmentInput | null;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3398,6 +3411,90 @@ function buildAttunedAffirmationPool(context: PersonalAffirmationContext): strin
   return [];
 }
 
+function insightText(insight: InsightSupportAlignmentInput): string {
+  return [
+    insight.category,
+    insight.majorDomain,
+    insight.insightSubcategory,
+    insight.patternType,
+    ...(insight.anchors ?? []),
+    ...(insight.tags ?? []),
+    ...(insight.signalTypes ?? []),
+    insight.title,
+    insight.body,
+    insight.observation,
+    insight.pattern,
+  ]
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .join(' ')
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ');
+}
+
+function buildInsightAlignedAffirmationPool(context: PersonalAffirmationContext): string[] {
+  const insight = context.insightAlignment;
+  if (!insight) return [];
+
+  const text = insightText(insight);
+  const candidates: string[] = [];
+
+  if (/\blearned agency\b|\baction recovery\b|\beffort doubt\b|\bagency\b|\bstuck\b|\bmovement\b|\bnext step\b|\blife direction\b/.test(text)) {
+    candidates.push(
+      'One small effort is allowed to count, even before you know whether it will change everything.',
+      'You do not have to turn one small step into a full life decision.',
+      'Movement can return gently after a stuck place.',
+    );
+  }
+
+  if (/\bresponsibility\b|\bcare\b|\bmental load\b|\binvisible load\b|\bshared load\b|\bprivate labor\b/.test(text)) {
+    candidates.push(
+      'Care does not have to become private labor before it becomes real.',
+      'Not every loose end has to land in your hands before support is allowed to exist.',
+      'You can care without becoming the only place the weight goes.',
+    );
+  }
+
+  if (/\btone\b|\brepair\b|\bconnection\b|\battachment\b|\brelationship\b|\bclosure\b|\breassurance\b/.test(text)) {
+    candidates.push(
+      'Noticing the shift does not mean you are responsible for carrying the whole repair.',
+      'You are allowed to need reassurance without making the whole connection your job.',
+      'Repair can matter without every pause becoming proof that something is wrong.',
+    );
+  }
+
+  if (/\bbody\b|\bsomatic\b|\bsensation\b|\bembodied\b|\bbracing\b|\bsafety\b|\bnervous system\b|\bbreath\b|\bchest\b/.test(text)) {
+    candidates.push(
+      'Your body is allowed to ask for safety before your mind has perfect language.',
+      'Softening can start with one real cue of safety, not a complete explanation.',
+      'A body signal can be honored without becoming self-blame.',
+    );
+  }
+
+  if (/\bvalue\b|\bintegrity\b|\balignment\b|\btruth\b|\bmisaligned\b/.test(text)) {
+    candidates.push(
+      'The practical answer is allowed to leave room for what still feels true.',
+      'Staying close to your values can begin with one honest hesitation.',
+      'A quiet misalignment is still information worth respecting.',
+    );
+  }
+
+  if (/\bworth\b|\breceiving\b|\bdeserving\b|\buseful\b|\benough\b|\bcare earned\b/.test(text)) {
+    candidates.push(
+      'Care is allowed to land before you prove you have earned it.',
+      'Your worth does not have to become useful before it becomes real.',
+      'Receiving can be a practice, not a debt.',
+    );
+  }
+
+  const aligned = candidates
+    .filter(candidate => isSupportTextAligned(candidate, insight))
+    .sort((a, b) => scoreSupportAlignment(b, insight) - scoreSupportAlignment(a, insight));
+
+  return aligned.length > 0
+    ? aligned
+    : ['One small honest signal is enough to stay with today.'];
+}
+
 /**
  * Select an affirmation for today, personalized using full user context.
  * Uses day-of-year as a stable seed so the affirmation stays consistent all day.
@@ -3430,6 +3527,16 @@ export function getDailyAffirmation(context: PersonalAffirmationContext = {}): T
   const now = new Date();
   const startOfYear = new Date(now.getFullYear(), 0, 0);
   const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86_400_000);
+
+  const insightAlignedPool = buildInsightAlignedAffirmationPool(context);
+  if (insightAlignedPool.length > 0) {
+    const index = getDailyPoolIndex(insightAlignedPool.length, dayOfYear, context.dailySignalSeed);
+    return {
+      id: -2000 - index,
+      text: insightAlignedPool[index],
+      tags: ['universal'],
+    };
+  }
 
   const attunedPool = buildAttunedAffirmationPool(context);
   if (attunedPool.length > 0) {
