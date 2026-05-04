@@ -112,12 +112,12 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Is my journal private?',
     answer:
-      'Completely. Journal entries are private to your account, stored in MySky\'s Supabase backend with row-level access controls so only you can access them. They are not sold or shared for advertising, and journal entries are not sent to AI for reflection insights.',
+      'Journal entries are private to your account, stored in MySky\'s Supabase backend with row-level access controls so only you can access them. They are not sold or shared for advertising. When AI insight refinement is enabled, MySky may send a selected local insight card and short evidence snippets to Google Gemini to improve the wording; you can turn this off in Personalization.',
   },
   {
     question: 'How do symbolic dream reflections work?',
     answer:
-      'Anyone can log a dream narrative — just open the Sleep tab and type in the Dream Memory field. MySky first scans your dream text for recurring symbols (water, falling, doors, etc.) and builds context from your selected dream feelings and recent patterns on-device, then sends only the dream text and selected feelings to Google Gemini for the narrative interpretation. Free users get the standard model, while Deeper Sky uses a richer model for more nuance.',
+      'Anyone can log a dream narrative - just open the Sleep tab and type in the Dream Memory field. MySky first scans your dream text for recurring symbols and builds context from your selected dream feelings on-device, then sends the dream text, selected feelings, and minimal symbolic context to Google Gemini for the narrative interpretation. Free users get the standard model, while Deeper Sky uses a richer model for more nuance.',
   },
 ];
 
@@ -151,6 +151,7 @@ export default function SettingsScreen() {
   const [hapticEnabled, setHapticEnabled] = useState(true);
   const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
+  const [aiInsightRefinementEnabled, setAiInsightRefinementEnabled] = useState(true);
   const [dreamLoggingEnabled, setDreamLoggingEnabled] = useState(true);
 
   // ── Identity state ──
@@ -182,15 +183,17 @@ export default function SettingsScreen() {
       setLastBackupAt(settings.lastBackupAt || null);
 
       // Calibration preferences
-      const [haptic, reminder, mood, dream] = await Promise.all([
+      const [haptic, reminder, mood, aiInsights, dream] = await Promise.all([
         getUserPreference<string | null>('pref_haptic', null),
         getUserPreference<string | null>('pref_daily_reminder', null),
         getUserPreference<string | null>('pref_mood_insights', null),
+        getUserPreference<string | null>('pref_ai_insight_refinement', null),
         getUserPreference<string | null>('pref_dream_logging', null),
       ]);
       if (haptic !== null) setHapticEnabled(haptic === '1');
       if (reminder !== null) setDailyReminderEnabled(reminder === '1');
       if (mood !== null) setMoodInsightsEnabled(mood === '1');
+      if (aiInsights !== null) setAiInsightRefinementEnabled(aiInsights === '1');
       if (dream !== null) setDreamLoggingEnabled(dream === '1');
 
       // Load identity
@@ -818,6 +821,13 @@ export default function SettingsScreen() {
                 onToggle={(v) => togglePref('pref_mood_insights', v, setMoodInsightsEnabled)}
                 label="Mood Pattern Insights"
                 description="Surface recurring patterns in your daily check-ins"
+              />
+              <ObsidianDivider />
+              <GlassToggle
+                value={aiInsightRefinementEnabled}
+                onToggle={(v) => togglePref('pref_ai_insight_refinement', v, setAiInsightRefinementEnabled)}
+                label="AI Insight Refinement"
+                description="Use AI to refine selected insight cards after local pattern detection"
               />
               <ObsidianDivider />
               <GlassToggle

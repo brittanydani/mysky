@@ -147,7 +147,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
 
               <View style={styles.dataBlock}>
                 <Text style={styles.subSectionTitle}>Google Gemini</Text>
-                <Text style={styles.paragraph}>Used only for AI dream interpretation. When you request a dream interpretation, only your dream text, selected feelings, and minimal symbolic context are transmitted. No birth data, location, somatic logs, journal entries, reflection data, or account identity is included. Reflection insights are generated without AI. Google's data processing terms apply.</Text>
+                <Text style={styles.paragraph}>Used for AI dream interpretation and optional AI refinement of selected daily insight cards. Dream interpretation sends your dream text, selected feelings, and minimal symbolic context. Insight refinement sends the selected local insight card, pattern keys, and short evidence snippets. No birth data, location, email, or account identity is included. You can turn AI Insight Refinement off in Settings. Google's data processing terms apply.</Text>
               </View>
 
               <View style={styles.dataBlock}>
@@ -219,7 +219,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
               </View>
               <View style={[styles.dataBlock, { marginBottom: 0 }]}>
                 <Text style={styles.subSectionTitle}>Right to Opt Out of AI Features</Text>
-                <Text style={styles.paragraph}>AI is limited to dream interpretation and only triggers for that feature. You can use MySky without activating an AI dream interpretation; reflection insights and pattern reads do not use AI.</Text>
+                <Text style={styles.paragraph}>AI is used for dream interpretation and, when enabled, to refine selected daily insight cards after local pattern detection. You can turn AI Insight Refinement off in Settings and still use local insight generation.</Text>
               </View>
             </View>
           </View>

@@ -252,13 +252,15 @@ export default function HomeScreen() {
         includeDailyReflections: boolean,
       ): Promise<SurfaceLoad> => {
         const todayKey = getLogicalToday();
-        const [moodInsightPref, knowledgeHistory, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
+        const [moodInsightPref, aiInsightPref, knowledgeHistory, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
           getUserPreference<string | null>('pref_mood_insights', null).catch(() => null),
+          getUserPreference<string | null>('pref_ai_insight_refinement', null).catch(() => null),
           getInsightHistory(),
           getInsightFeedbackProfile().catch(() => null),
           getInsightMemoryProfile().catch(() => null),
         ]);
         const moodInsightsEnabled = moodInsightPref !== '0';
+        const aiInsightRefinementEnabled = moodInsightsEnabled && aiInsightPref !== '0';
         const nowForInsights = `${todayKey}T12:00:00`;
         const historyInput = buildRecentlyShownKnowledgeHistory(knowledgeHistory, nowForInsights);
         const surface = await buildInsightSurface({
@@ -271,6 +273,9 @@ export default function HomeScreen() {
           insightFeedbackProfile,
           insightMemoryProfile,
           includeDailyReflections,
+          knowledgeAiEnabled: aiInsightRefinementEnabled && includeDailyReflections,
+          knowledgeAiModelTier: isPremium ? 'premium' : 'free',
+          knowledgeAiSurface: 'today',
         });
 
         return {

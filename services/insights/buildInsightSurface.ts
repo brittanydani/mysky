@@ -28,6 +28,7 @@ import {
   previousPatternScoresFromInsightMemory,
   type InsightMemoryProfile,
 } from '../insightsV2/memory/insightMemory';
+import type { KnowledgeInsightModelTier, KnowledgeInsightSurface } from './aiInsightRefinement';
 
 export interface InsightSurfaceResult {
   chartId: string | null;
@@ -65,6 +66,9 @@ interface BuildInsightSurfaceOptions {
   insightFeedbackProfile?: InsightFeedbackProfile | null;
   insightMemoryProfile?: InsightMemoryProfile | null;
   includeDailyReflections?: boolean;
+  knowledgeAiEnabled?: boolean;
+  knowledgeAiModelTier?: KnowledgeInsightModelTier;
+  knowledgeAiSurface?: KnowledgeInsightSurface;
 }
 
 function getStressScore(checkIn: DailyCheckIn): number {
@@ -89,6 +93,9 @@ export async function buildInsightSurface({
   insightFeedbackProfile = null,
   insightMemoryProfile = null,
   includeDailyReflections = true,
+  knowledgeAiEnabled = false,
+  knowledgeAiModelTier = 'free',
+  knowledgeAiSurface = 'today',
 }: BuildInsightSurfaceOptions): Promise<InsightSurfaceResult> {
   const chartId = await resolveChartId(inputChartId);
 
@@ -163,6 +170,11 @@ export async function buildInsightSurface({
         history: knowledgeHistory,
         feedbackProfile: insightFeedbackProfile,
         previousPatternScores,
+        aiRefinement: {
+          enabled: knowledgeAiEnabled,
+          modelTier: knowledgeAiModelTier,
+          surface: knowledgeAiSurface,
+        },
       })
     : {
         primaryInsight: null,

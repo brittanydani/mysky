@@ -45,6 +45,11 @@ import type {
 import type { InsightFeedbackProfile } from '../insightsV2/feedback/insightOutcomeFeedback';
 import type { SelfKnowledgeContext, SomaticEntry } from './selfKnowledgeContext';
 import { logger } from '../../utils/logger';
+import {
+  enhanceKnowledgeInsightsWithAi,
+  type KnowledgeInsightModelTier,
+  type KnowledgeInsightSurface,
+} from './aiInsightRefinement';
 
 interface RunActiveKnowledgeInsightInput {
   checkIns: DailyCheckIn[];
@@ -55,6 +60,11 @@ interface RunActiveKnowledgeInsightInput {
   history: KnowledgeEngineHistoryInput;
   feedbackProfile?: InsightFeedbackProfile | null;
   previousPatternScores?: V2ArchivePatternScore[];
+  aiRefinement?: {
+    enabled?: boolean;
+    modelTier?: KnowledgeInsightModelTier;
+    surface?: KnowledgeInsightSurface;
+  };
 }
 
 export interface ActiveKnowledgeInsightResult {
@@ -373,6 +383,7 @@ async function runV2KnowledgeInsights({
   history,
   feedbackProfile,
   previousPatternScores,
+  aiRefinement,
 }: RunActiveKnowledgeInsightInput): Promise<ActiveKnowledgeInsightResult> {
   const result = await buildTodayInsights({
     date,
@@ -456,6 +467,15 @@ async function runV2KnowledgeInsights({
   premiumPatterns = applyWeeklyNarrativeToPatterns(premiumPatterns, weeklyNarrative);
   premiumWeeklyDeepDive = applyWeeklyNarrativeToWeeklyDeepDive(premiumWeeklyDeepDive, weeklyNarrative);
   thisWeeksV2Pattern = applyWeeklyNarrativeToThisWeekPattern(thisWeeksV2Pattern, weeklyNarrative);
+  if (aiRefinement?.enabled) {
+    dailyInsights = await enhanceKnowledgeInsightsWithAi(dailyInsights, {
+      enabled: true,
+      modelTier: aiRefinement.modelTier,
+      surface: aiRefinement.surface,
+      date,
+    });
+    primaryInsight = dailyInsights[0] ?? primaryInsight;
+  }
 
   return {
     primaryInsight,

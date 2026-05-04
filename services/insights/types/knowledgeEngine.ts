@@ -154,6 +154,9 @@ export interface GeneratedInsight {
   movement: PatternMovement | DailyMovement;
   evidence: EvidenceAnchor[];
   createdAt: string;
+  aiEnhanced?: boolean;
+  aiGeneratedAt?: string;
+  insightSource?: 'local' | 'aiRefined';
 }
 
 export interface InsightHistoryEntry {
