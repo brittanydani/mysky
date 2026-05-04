@@ -591,7 +591,21 @@ function buildEvidenceSummary(score: ArchivePatternScore): string {
   const sourceText = sources.length
     ? `especially in ${formatList(sources)}`
     : 'in recent entries';
-  return `It has repeated for roughly ${score.timeframeDays} days, ${sourceText}.`;
+  const evidenceCount = score.evidence.length;
+  const distinctDays = evidenceDistinctDays(score);
+
+  if (evidenceCount <= 0) {
+    return 'No usable recent evidence is attached yet.';
+  }
+
+  if (distinctDays >= 2) {
+    return `It showed up across ${distinctDays} days in the last ${score.timeframeDays} days, ${sourceText}.`;
+  }
+
+  const countText = evidenceCount === 1
+    ? 'one recent signal'
+    : `${evidenceCount} recent signals`;
+  return `It has ${countText}, ${sourceText}.`;
 }
 
 function evidenceDistinctDays(score: ArchivePatternScore): number {
@@ -625,7 +639,7 @@ function shouldIncludeScore(
   }
 
   if (options.includeLowConfidence) {
-    return score.score > 0 || score.evidence.length > 0 || score.sources.length > 0;
+    return score.evidence.length > 0 && (score.score > 0 || score.sources.length > 0);
   }
   if (score.score >= MIN_PREMIUM_PATTERN_SCORE) return true;
   return score.confidence !== 'emerging' && score.evidence.length >= 2;
@@ -752,7 +766,7 @@ export function adaptPremiumPatterns(
       evidenceSummary: buildEvidenceSummary(score),
       sourceCoverage,
       lastSeenAt: score.lastSeenAt,
-      observedAcrossDays: score.timeframeDays,
+      observedAcrossDays: evidenceDistinctDays(score),
       relatedSignals,
       shameLabel: pattern.shameLabel,
       clarityReframe: claritySentenceForPattern(pattern, score),

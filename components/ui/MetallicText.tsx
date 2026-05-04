@@ -15,6 +15,8 @@ interface MetallicTextProps {
   /** Override gradient colors directly. */
   colors?: readonly string[];
   numberOfLines?: number;
+  maxFontSizeMultiplier?: number;
+  allowFontScaling?: boolean;
 }
 
 /**
@@ -28,6 +30,8 @@ export const MetallicText: React.FC<MetallicTextProps> = ({
   color,
   colors: colorsProp,
   numberOfLines,
+  maxFontSizeMultiplier = 1.15,
+  allowFontScaling,
 }) => {
   const theme = useAppTheme();
   const gradientColors = [
@@ -46,6 +50,8 @@ export const MetallicText: React.FC<MetallicTextProps> = ({
       maskElement={
         <Text
           numberOfLines={numberOfLines}
+          maxFontSizeMultiplier={maxFontSizeMultiplier}
+          allowFontScaling={allowFontScaling}
           style={[mergedStyle, { color: 'white', backgroundColor: 'transparent' }]}
         >
           {children}
@@ -59,6 +65,8 @@ export const MetallicText: React.FC<MetallicTextProps> = ({
       >
         <Text
           numberOfLines={numberOfLines}
+          maxFontSizeMultiplier={maxFontSizeMultiplier}
+          allowFontScaling={allowFontScaling}
           style={[mergedStyle, { color: 'transparent' }]}
         >
           {children}

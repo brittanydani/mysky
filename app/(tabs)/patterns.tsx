@@ -81,6 +81,7 @@ const WRAP_AT_WORD_PROPS = {
   android_hyphenationFrequency: 'none' as const,
   lineBreakStrategyIOS: 'none' as const,
   textBreakStrategy: 'simple' as const,
+  maxFontSizeMultiplier: 1.15,
 };
 
 const sentenceCount = (text: string): number => (
@@ -335,7 +336,7 @@ export default function PatternsScreen() {
                   </View>
                 </View>
                 <Text {...WRAP_AT_WORD_PROPS} style={styles.patternTitle}>{normalizeDisplayText(item.narrativeForward ? 'This Week Forward' : item.title)}</Text>
-                <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>{compactDisplayText(item.narrativeForward ?? item.body, 720)}</Text>
+                <Text {...WRAP_AT_WORD_PROPS} style={styles.insightBody}>{compactDisplayText(item.narrativeForward ?? item.body, 460)}</Text>
                 {item.reframe ? (
                   <View style={[styles.supportCallout, { marginTop: 14 }]}>
                     <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Clearer read</Text>
@@ -555,41 +556,44 @@ export default function PatternsScreen() {
             <Text {...WRAP_AT_WORD_PROPS} style={styles.modalIntro}>
               A few deeper reads from your recent signals, chosen for what feels most useful to notice right now.
             </Text>
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: '85%' }}>
-              <View style={{ gap: 16, paddingBottom: 32 }}>
-                {deepDiveInsights.map((insight) => (
-                  <View key={`${insight.patternKey ?? buildInsightDuplicateKey(insight)}:${insight.id}`} style={styles.deepDiveInsightCard}>
-                    <LinearGradient colors={['rgba(162, 194, 225, 0.15)', 'rgba(162, 194, 225, 0.03)']} style={StyleSheet.absoluteFill} />
-                    <Text {...WRAP_AT_WORD_PROPS} style={styles.deepDiveInsightTitle}>{insight.title}</Text>
-                    <View style={styles.deepReadSections}>
-                      {splitDeepReadSections(insight.body).map(section => (
-                        <View key={section.label} style={styles.deepReadSection}>
-                          <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>{section.label}</Text>
-                          <Text {...WRAP_AT_WORD_PROPS} style={[styles.insightBody, { fontSize: 14 }]}>{compactDisplayText(section.body, 540)}</Text>
-                        </View>
-                      ))}
-                      {insight.whyItMayMatter ? (
-                        <View style={styles.deepReadSection}>
-                          <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>Why it matters</Text>
-                          <Text {...WRAP_AT_WORD_PROPS} style={[styles.insightBody, { fontSize: 14 }]}>{normalizeDisplayText(insight.whyItMayMatter)}</Text>
-                        </View>
-                      ) : null}
-                      {insight.reframe ? (
-                        <View style={styles.deepReadSection}>
-                          <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>Clearer read</Text>
-                          <Text {...WRAP_AT_WORD_PROPS} style={[styles.insightBody, { fontSize: 14 }]}>{normalizeDisplayText(insight.reframe)}</Text>
-                        </View>
-                      ) : null}
-                    </View>
-                    {insight.reflectionPrompt ? (
-                      <View style={[styles.supportCallout, { marginTop: 12 }]}>
-                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Question to keep</Text>
-                        <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(insight.reflectionPrompt)}</Text>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={styles.deepDiveScroll}
+              contentContainerStyle={styles.deepDiveScrollContent}
+              nestedScrollEnabled
+            >
+              {deepDiveInsights.map((insight) => (
+                <View key={`${insight.patternKey ?? buildInsightDuplicateKey(insight)}:${insight.id}`} style={styles.deepDiveInsightCard}>
+                  <LinearGradient colors={['rgba(162, 194, 225, 0.13)', 'rgba(162, 194, 225, 0.03)']} style={StyleSheet.absoluteFill} />
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.deepDiveInsightTitle}>{insight.title}</Text>
+                  <View style={styles.deepReadSections}>
+                    {splitDeepReadSections(insight.body).map(section => (
+                      <View key={section.label} style={styles.deepReadSection}>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>{section.label}</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.deepDiveBody}>{compactDisplayText(section.body, 430)}</Text>
+                      </View>
+                    ))}
+                    {insight.whyItMayMatter ? (
+                      <View style={styles.deepReadSection}>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>Why it matters</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.deepDiveBody}>{compactDisplayText(insight.whyItMayMatter, 360)}</Text>
+                      </View>
+                    ) : null}
+                    {insight.reframe ? (
+                      <View style={styles.deepReadSection}>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.deepReadSectionLabel}>Clearer read</Text>
+                        <Text {...WRAP_AT_WORD_PROPS} style={styles.deepDiveBody}>{normalizeDisplayText(insight.reframe)}</Text>
                       </View>
                     ) : null}
                   </View>
-                ))}
-              </View>
+                  {insight.reflectionPrompt ? (
+                    <View style={styles.deepDivePrompt}>
+                      <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutLabel}>Question to keep</Text>
+                      <Text {...WRAP_AT_WORD_PROPS} style={styles.supportCalloutBody}>{normalizeDisplayText(insight.reflectionPrompt)}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              ))}
             </ScrollView>
           </VelvetGlassSurface>
         </View>
@@ -942,7 +946,7 @@ const PersonaProfileSection = ({ label, body }: { label: string; body: string })
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 156 },
   header: { marginBottom: 32 },
   title: { fontSize: 32, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.5 },
   subtitle: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' },
@@ -964,17 +968,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   sectionHeaderLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },
 
-  insightCard: { padding: 32, borderRadius: 24, marginBottom: 24, overflow: 'hidden' },
+  insightCard: { padding: 24, borderRadius: 22, marginBottom: 22, overflow: 'hidden' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   cardLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   confirmedBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(107,144,128,0.15)', borderWidth: 1, borderColor: 'rgba(107,144,128,0.3)' },
   confirmedText: { flexShrink: 1, fontSize: 8, fontWeight: '800', color: '#6B9080' },
   lockedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(212,175,55,0.12)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.25)' },
   lockedText: { fontSize: 8, fontWeight: '800', color: '#D4AF37' },
-  patternTitle: { width: '100%', flexShrink: 1, fontSize: 18, fontWeight: '700', color: theme.textPrimary, marginBottom: 12 },
-  insightBody: { width: '100%', flexShrink: 1, fontSize: 15, color: 'rgba(255,255,255,0.7)', lineHeight: 24 },
-  activeThemeCard: { padding: 24, borderRadius: 24, marginBottom: 28, overflow: 'hidden' },
-  activeThemeText: { width: '100%', flexShrink: 1, fontSize: 18, lineHeight: 27, fontWeight: '700', color: theme.textPrimary },
+  patternTitle: { width: '100%', flexShrink: 1, fontSize: 17, lineHeight: 22, fontWeight: '800', color: theme.textPrimary, marginBottom: 10 },
+  insightBody: { width: '100%', flexShrink: 1, fontSize: 14, color: 'rgba(255,255,255,0.68)', lineHeight: 22 },
+  activeThemeCard: { padding: 20, borderRadius: 22, marginBottom: 24, overflow: 'hidden' },
+  activeThemeText: { width: '100%', flexShrink: 1, fontSize: 16, lineHeight: 23, fontWeight: '700', color: theme.textPrimary },
 
   personaProfileCard: { padding: 28, borderRadius: 24, marginBottom: 28, overflow: 'hidden' },
   personaBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(168,139,235,0.15)', borderWidth: 1, borderColor: 'rgba(168,139,235,0.30)' },
@@ -987,7 +991,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   blurredInsightPreview: { padding: 32, gap: 10 },
   blurredInsightLine: { height: 14, borderRadius: 7, width: '95%', backgroundColor: 'rgba(255,255,255,0.25)' },
 
-  supportCallout: { marginTop: 24, padding: 16, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  supportCallout: { marginTop: 16, padding: 14, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.055)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   supportCalloutHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   supportCalloutLabel: { flexShrink: 1, fontSize: 11, fontWeight: '800', color: theme.textPrimary, textTransform: 'uppercase' },
   supportCalloutBody: { width: '100%', flexShrink: 1, fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 20 },
@@ -995,9 +999,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   libraryButton: { height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   libraryButtonText: { fontSize: 15, fontWeight: '700' },
 
-  modalBackdrop: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
+  modalBackdrop: { flex: 1, justifyContent: 'center', paddingHorizontal: 20 },
   libraryModalBackdrop: { justifyContent: 'flex-end', paddingBottom: 42 },
-  modalCard: { borderRadius: 24, padding: 24, overflow: 'hidden' },
+  modalCard: { borderRadius: 24, padding: 22, overflow: 'hidden' },
   libraryModalCard: { maxHeight: '86%' },
   patternReadModalCard: { maxHeight: '82%' },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
@@ -1030,7 +1034,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   modalTabTextActive: {
     color: 'rgba(212,175,55,0.92)',
   },
-  modalIntro: { width: '100%', flexShrink: 1, fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.72)', marginBottom: 16 },
+  modalIntro: { width: '100%', flexShrink: 1, fontSize: 14, lineHeight: 21, color: 'rgba(255,255,255,0.72)', marginBottom: 14 },
   modalBody: { width: '100%', flexShrink: 1, fontSize: 15, lineHeight: 24, color: theme.textPrimary, marginBottom: 12 },
   modalStatus: { width: '100%', flexShrink: 1, fontSize: 12, fontWeight: '700', color: 'rgba(212,175,55,0.9)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8 },
   modalBodyMuted: { width: '100%', flexShrink: 1, fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.62)' },
@@ -1073,7 +1077,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   deepDiveButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12,
-    borderRadius: 24, padding: 20, marginBottom: 24, overflow: 'hidden',
+    borderRadius: 22, padding: 18, marginBottom: 24, overflow: 'hidden',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
   deepDiveButtonTitle: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
@@ -1120,10 +1124,20 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     textAlign: 'left',
   },
 
-  deepDiveModalCard: { maxHeight: '90%', paddingBottom: 24 },
-  deepDiveInsightCard: { borderRadius: 20, padding: 24, overflow: 'hidden' },
-  deepDiveInsightTitle: { width: '100%', flexShrink: 1, fontSize: 16, fontWeight: '700', color: theme.textPrimary, marginBottom: 10 },
-  deepReadSections: { gap: 14 },
+  deepDiveModalCard: { maxHeight: '88%', paddingBottom: 18 },
+  deepDiveScroll: { flexShrink: 1 },
+  deepDiveScrollContent: { gap: 14, paddingTop: 2, paddingBottom: 20 },
+  deepDiveInsightCard: {
+    borderRadius: 18,
+    padding: 18,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  deepDiveInsightTitle: { width: '100%', flexShrink: 1, fontSize: 17, lineHeight: 22, fontWeight: '800', color: theme.textPrimary, marginBottom: 12 },
+  deepDiveBody: { width: '100%', flexShrink: 1, fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.68)' },
+  deepDivePrompt: { marginTop: 14, padding: 14, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.045)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)' },
+  deepReadSections: { gap: 13 },
   deepReadSection: { gap: 6 },
   deepReadSectionLabel: {
     width: '100%',

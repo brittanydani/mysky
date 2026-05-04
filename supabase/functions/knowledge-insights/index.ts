@@ -37,7 +37,10 @@ The app has already selected the pattern using a local deterministic engine. You
 
 Rules:
 - Preserve the original psychological meaning, pattern, evidence, and level of certainty.
+- Every changed sentence must be inferable from the provided local card or evidence list.
 - Do not invent events, memories, causes, diagnoses, trauma history, predictions, or advice.
+- Do not add new relationships, family history, clinical labels, attachment styles, childhood claims, or future certainty.
+- If evidence is thin, keep the language provisional instead of making the read sound more certain.
 - Do not mention therapy, clinical language, AI, models, algorithms, or the local engine.
 - Write in second person.
 - Keep the tone warm, precise, emotionally intelligent, and non-mystical.

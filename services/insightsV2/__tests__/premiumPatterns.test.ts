@@ -76,7 +76,7 @@ describe('adaptPremiumPatterns', () => {
     expect(items[0].body).not.toContain('Detected in');
     expect(items[0].body).not.toContain('Based on');
     expect(items[0].body).not.toMatch(/\bthe user\b/i);
-    expect(items[0].evidenceSummary).toContain('It has repeated for roughly 30 days');
+    expect(items[0].evidenceSummary).toContain('It showed up across 3 days in the last 30 days');
     expect(items[0].evidenceSummary).toContain('journaling and body check-ins');
   });
 

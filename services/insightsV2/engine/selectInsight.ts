@@ -104,6 +104,7 @@ export function selectFreshInsight(
       const matchingSignals = context.todaySignals.filter(s =>
         angle.triggerSignals.includes(s.key),
       );
+      if (surface === 'today' && matchingSignals.length === 0) continue;
 
       // 2. Check Avoid Signals
       const hasAvoidSignals = angle.avoidIfSignals?.some(key =>

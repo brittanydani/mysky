@@ -199,6 +199,28 @@ describe('Knowledge Engine V2', () => {
     expect(result.insights.some(insight => insight.patternKey.startsWith('dreams_'))).toBe(false);
   });
 
+  it("does not promote a primary Today read when no matching trigger signal happened today", async () => {
+    const result = await buildTodayInsights({
+      date: now,
+      rawInputs: {
+        dailyCheckIns: [
+          { date: '2026-04-20', mood: 2, energy: 1, stress: 4, tags: ['rest'] },
+          { date: '2026-04-21', mood: 2, energy: 2, stress: 4, tags: ['rest'] },
+          { date: '2026-04-22', mood: 2, energy: 1, stress: 5, tags: ['rest'] },
+        ],
+        journals: [
+          { date: '2026-04-20', text: 'I feel guilty for resting.' },
+          { date: '2026-04-21', text: 'Rest feels hard to allow.' },
+          { date: '2026-04-22', text: 'I keep thinking I should do more before stopping.' },
+        ],
+      },
+      history: [],
+    });
+
+    expect(result.patternScores.some(score => score.score >= 0.55)).toBe(true);
+    expect(result.insights.some(insight => insight.slot === 'whatMySkyNoticed')).toBe(false);
+  });
+
   it('uses feeling set copy for the primary daily feeling', async () => {
     const result = await buildTodayInsights({
       date: now,

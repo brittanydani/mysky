@@ -111,6 +111,154 @@ function validText(value: unknown, maxLength: number): string | null {
   return trimmed;
 }
 
+const GROUNDING_STOPWORDS = new Set([
+  'about',
+  'after',
+  'again',
+  'against',
+  'already',
+  'also',
+  'because',
+  'before',
+  'being',
+  'card',
+  'clear',
+  'could',
+  'does',
+  'doing',
+  'enough',
+  'every',
+  'feel',
+  'feeling',
+  'feels',
+  'from',
+  'have',
+  'into',
+  'like',
+  'more',
+  'need',
+  'needs',
+  'only',
+  'pattern',
+  'proof',
+  'read',
+  'real',
+  'reframe',
+  'signal',
+  'still',
+  'system',
+  'that',
+  'this',
+  'today',
+  'what',
+  'when',
+  'where',
+  'with',
+  'without',
+  'would',
+  'your',
+]);
+
+const FORBIDDEN_UNSUPPORTED_AI_PATTERNS = [
+  /\bchildhood\b/i,
+  /\btrauma(?:tic)?\b/i,
+  /\bdiagnos(?:is|e|ed|tic)\b/i,
+  /\battachment wound\b/i,
+  /\b(?:anxious|avoidant|disorganized) attachment\b/i,
+  /\bcodependent\b/i,
+  /\bptsd\b/i,
+  /\badhd\b/i,
+  /\bautis(?:m|tic)\b/i,
+  /\bclinical\b/i,
+  /\btherapy\b|\btherapist\b/i,
+  /\byour (?:mother|father|parent|parents|partner|boss|family) (?:made|taught|caused)\b/i,
+  /\bthis means you (?:will|always|never)\b/i,
+  /\byou (?:will|always|never) (?:be|feel|need|have|struggle)\b/i,
+];
+
+function normalizeGroundingToken(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+    .replace(/ies$/, 'y')
+    .replace(/s$/, '');
+}
+
+function significantTokens(text: string): Set<string> {
+  const tokens = text
+    .split(/[^A-Za-z0-9]+/)
+    .map(normalizeGroundingToken)
+    .filter(token => token.length >= 4 && !GROUNDING_STOPWORDS.has(token));
+
+  return new Set(tokens);
+}
+
+function originalGroundingText(insight: GeneratedInsight): string {
+  return [
+    insight.title,
+    insight.observation,
+    insight.pattern,
+    insight.reframe.shame,
+    insight.reframe.clarity,
+    insight.prompt,
+    insight.patternKey,
+    insight.angleKey,
+    insight.category,
+    insight.majorDomain,
+    insight.insightSubcategory,
+    ...insight.evidence.flatMap(anchor => [
+      anchor.label,
+      anchor.phrase,
+      anchor.signal,
+      anchor.source,
+    ]),
+  ].filter((value): value is string => typeof value === 'string' && value.trim().length > 0).join(' ');
+}
+
+function refinedGroundingText(ai: {
+  title: string;
+  observation: string;
+  pattern: string;
+  shame: string;
+  clarity: string;
+  prompt: string;
+}): string {
+  return [
+    ai.title,
+    ai.observation,
+    ai.pattern,
+    ai.shame,
+    ai.clarity,
+    ai.prompt,
+  ].join(' ');
+}
+
+function aiRefinementStaysGrounded(
+  original: GeneratedInsight,
+  ai: {
+    title: string;
+    observation: string;
+    pattern: string;
+    shame: string;
+    clarity: string;
+    prompt: string;
+  },
+): boolean {
+  const refinedText = refinedGroundingText(ai);
+  if (FORBIDDEN_UNSUPPORTED_AI_PATTERNS.some(pattern => pattern.test(refinedText))) {
+    return false;
+  }
+
+  const groundingTokens = significantTokens(originalGroundingText(original));
+  if (groundingTokens.size === 0) return false;
+
+  const refinedTokens = significantTokens(refinedText);
+  const overlap = Array.from(refinedTokens).filter(token => groundingTokens.has(token)).length;
+  const requiredOverlap = groundingTokens.size >= 4 ? 2 : 1;
+
+  return overlap >= requiredOverlap;
+}
+
 function mergeAiInsight(
   original: GeneratedInsight,
   ai: KnowledgeInsightAiResponseItem | undefined,
@@ -124,17 +272,33 @@ function mergeAiInsight(
   const shame = validText(ai.reframe?.shame, 220) ?? original.reframe.shame;
   const clarity = validText(ai.reframe?.clarity, 260) ?? original.reframe.clarity;
   const prompt = validText(ai.prompt, 220) ?? original.prompt;
-
-  return {
-    ...original,
+  const candidate = {
     title,
     observation,
     pattern,
-    reframe: {
-      shame,
-      clarity,
-    },
+    shame,
+    clarity,
     prompt,
+  };
+
+  if (!aiRefinementStaysGrounded(original, candidate)) {
+    logger.warn('[KnowledgeAI] Rejected ungrounded insight refinement; using local insight.', {
+      insightId: original.id,
+      patternKey: original.patternKey,
+    });
+    return original;
+  }
+
+  return {
+    ...original,
+    title: candidate.title,
+    observation: candidate.observation,
+    pattern: candidate.pattern,
+    reframe: {
+      shame: candidate.shame,
+      clarity: candidate.clarity,
+    },
+    prompt: candidate.prompt,
     aiEnhanced: true,
     aiGeneratedAt: generatedAt,
     insightSource: 'aiRefined',

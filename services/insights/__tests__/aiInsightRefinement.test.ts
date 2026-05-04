@@ -143,6 +143,74 @@ describe('aiInsightRefinement', () => {
     }));
   });
 
+  it('rejects AI refinements that add unsupported causal or clinical claims', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: 'token' } },
+      error: null,
+    });
+    mockInvoke.mockResolvedValue({
+      data: {
+        generatedAt: '2026-04-24T12:01:00Z',
+        insights: [
+          {
+            id: 'insight-1',
+            title: 'Rest And Old Fear',
+            observation: 'Rest guilt is asking for attention today.',
+            pattern: 'Your childhood taught you that rest is unsafe, so your body treats stopping like danger.',
+            reframe: {
+              shame: 'This is not laziness.',
+              clarity: 'This is a trauma response around rest.',
+            },
+            prompt: 'What childhood rule is rest challenging?',
+          },
+        ],
+      },
+      error: null,
+    });
+
+    const result = await enhanceKnowledgeInsightsWithAi([baseInsight], { enabled: true });
+
+    expect(result).toEqual([baseInsight]);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      '[KnowledgeAI] Rejected ungrounded insight refinement; using local insight.',
+      expect.objectContaining({
+        insightId: 'insight-1',
+        patternKey: 'rest_capacity_001_rest_resistance',
+      }),
+    );
+  });
+
+  it('rejects AI refinements that no longer overlap the selected pattern evidence', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: 'token' } },
+      error: null,
+    });
+    mockInvoke.mockResolvedValue({
+      data: {
+        generatedAt: '2026-04-24T12:01:00Z',
+        insights: [
+          {
+            id: 'insight-1',
+            title: 'Repair After Tone Shift',
+            observation: 'Tone shifts are asking for repair today.',
+            pattern: 'A relationship thread is asking for direct reassurance before closeness can feel settled.',
+            reframe: {
+              shame: 'This is not being needy.',
+              clarity: 'This is connection asking for repair.',
+            },
+            prompt: 'What repair cue would help closeness feel safer?',
+          },
+        ],
+      },
+      error: null,
+    });
+
+    const result = await enhanceKnowledgeInsightsWithAi([baseInsight], { enabled: true });
+
+    expect(result).toEqual([baseInsight]);
+    expect(mockLogger.warn).toHaveBeenCalled();
+  });
+
   it('falls back to local insights when the edge function fails', async () => {
     mockGetSession.mockResolvedValue({
       data: { session: { access_token: 'token' } },

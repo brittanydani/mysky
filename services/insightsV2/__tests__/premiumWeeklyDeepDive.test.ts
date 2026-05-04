@@ -169,7 +169,15 @@ describe('selectPremiumWeeklyDeepDive', () => {
       movement: 'new',
       timeframeDays: 30,
       sources: ['journal'],
-      evidence: [],
+      evidence: [
+        {
+          source: 'journal',
+          date: '2026-04-24',
+          label: 'Invisible load',
+          signal: 'mental_load',
+          strength: 0.4,
+        },
+      ],
       lastSeenAt: '2026-04-24',
     };
 
@@ -177,6 +185,23 @@ describe('selectPremiumWeeklyDeepDive', () => {
     const weeklyCandidates = adaptWeeklyPremiumPatternCandidates([lowScore]);
     expect(weeklyCandidates).toHaveLength(1);
     expect(weeklyCandidates[0].patternKey).toBe('responsibilityCare_invisibleLoad');
+  });
+
+  it('does not adapt low-score weekly candidates without evidence anchors', () => {
+    const lowScoreWithoutEvidence: ArchivePatternScore = {
+      patternKey: 'responsibilityCare_invisibleLoad',
+      title: 'Invisible Load',
+      category: 'responsibilityCare',
+      score: 0.24,
+      confidence: 'emerging',
+      movement: 'new',
+      timeframeDays: 30,
+      sources: ['journal'],
+      evidence: [],
+      lastSeenAt: '2026-04-24',
+    };
+
+    expect(adaptWeeklyPremiumPatternCandidates([lowScoreWithoutEvidence])).toHaveLength(0);
   });
 
   it('does not adapt dream-only scores into Weekly or This Week pattern reads', () => {
@@ -281,7 +306,15 @@ describe('selectPremiumWeeklyDeepDive', () => {
       movement: 'new',
       timeframeDays: 30,
       sources: ['journal'],
-      evidence: [],
+      evidence: [
+        {
+          source: 'journal',
+          date: '2026-04-24',
+          label: 'Invisible load',
+          signal: 'mental_load',
+          strength: 0.4,
+        },
+      ],
       lastSeenAt: '2026-04-24',
     };
 

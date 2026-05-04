@@ -12,6 +12,13 @@ interface KnowledgeInsightCardProps {
   insight: GeneratedInsight;
 }
 
+const TEXT_SCALE_PROPS = {
+  maxFontSizeMultiplier: 1.15,
+  android_hyphenationFrequency: 'none' as const,
+  lineBreakStrategyIOS: 'none' as const,
+  textBreakStrategy: 'simple' as const,
+};
+
 function ensureSentence(text: string): string {
   const trimmed = text.trim();
   if (!trimmed) return '';
@@ -124,33 +131,33 @@ export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insi
             </MetallicText>
           </View>
           <View style={styles.confidenceBadge}>
-            <Text style={styles.confidenceText}>{insight.confidence.toUpperCase()}</Text>
+            <Text {...TEXT_SCALE_PROPS} style={styles.confidenceText}>{insight.confidence.toUpperCase()}</Text>
           </View>
         </View>
 
-        <Text style={styles.title}>{insight.title}</Text>
+        <Text {...TEXT_SCALE_PROPS} style={styles.title}>{insight.title}</Text>
         {insight.activeWeeklyTheme ? (
           <View style={styles.activeThemeContainer}>
-            <Text style={styles.activeThemeLabel}>ACTIVE WEEKLY THEME</Text>
-            <Text style={styles.activeThemeText}>{insight.activeWeeklyTheme}</Text>
+            <Text {...TEXT_SCALE_PROPS} style={styles.activeThemeLabel}>ACTIVE WEEKLY THEME</Text>
+            <Text {...TEXT_SCALE_PROPS} style={styles.activeThemeText}>{insight.activeWeeklyTheme}</Text>
           </View>
         ) : null}
-        <Text style={styles.body}>{`${insight.observation} ${insight.pattern}`}</Text>
+        <Text {...TEXT_SCALE_PROPS} style={styles.body}>{`${insight.observation} ${insight.pattern}`}</Text>
 
         <View style={styles.reframeContainer}>
           <View style={styles.reframeHeader}>
             <Ionicons name="sparkles-outline" size={14} color="rgba(212,175,55,0.72)" />
-            <Text style={styles.reframeLabel}>CLEARER READ</Text>
+            <Text {...TEXT_SCALE_PROPS} style={styles.reframeLabel}>CLEARER READ</Text>
           </View>
-          <Text style={styles.reframeText}>{buildReframeText(insight.reframe)}</Text>
+          <Text {...TEXT_SCALE_PROPS} style={styles.reframeText}>{buildReframeText(insight.reframe)}</Text>
         </View>
 
         <View style={styles.promptContainer}>
           <View style={styles.promptHeader}>
             <Ionicons name="help-circle-outline" size={14} color="rgba(212,175,55,0.6)" />
-            <Text style={styles.promptLabel}>QUESTION TO KEEP</Text>
+            <Text {...TEXT_SCALE_PROPS} style={styles.promptLabel}>QUESTION TO KEEP</Text>
           </View>
-          <Text style={styles.promptText}>{insight.prompt}</Text>
+          <Text {...TEXT_SCALE_PROPS} style={styles.promptText}>{insight.prompt}</Text>
         </View>
       </View>
     </VelvetGlassSurface>
@@ -164,7 +171,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   padding: {
-    padding: 24,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
@@ -197,22 +204,23 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: '800',
     color: '#FFFFFF',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   body: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.8)',
-    lineHeight: 22,
-    marginBottom: 20,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.76)',
+    lineHeight: 21,
+    marginBottom: 16,
   },
   activeThemeContainer: {
     backgroundColor: 'rgba(168,139,235,0.10)',
-    padding: 14,
-    borderRadius: 16,
-    marginBottom: 16,
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: 'rgba(168,139,235,0.22)',
   },
@@ -224,16 +232,16 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   activeThemeText: {
-    fontSize: 14,
+    fontSize: 13,
     color: 'rgba(255,255,255,0.86)',
-    lineHeight: 20,
+    lineHeight: 18,
     fontWeight: '600',
   },
   reframeContainer: {
     backgroundColor: 'rgba(255,255,255,0.04)',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 20,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 16,
     borderLeftWidth: 2,
     borderLeftColor: 'rgba(212,175,55,0.3)',
   },
@@ -250,9 +258,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   reframeText: {
-    fontSize: 14,
+    fontSize: 13,
     color: 'rgba(255,255,255,0.9)',
-    lineHeight: 20,
+    lineHeight: 19,
     fontWeight: '600',
   },
   promptContainer: {

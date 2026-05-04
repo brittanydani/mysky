@@ -13,15 +13,19 @@ const CHAMPAGNE_GOLD = ['#FFF4D6', '#E9D9B8', '#D4AF37', '#E9D9B8', '#FFF4D6'];
 interface GoldSubtitleProps {
   children: React.ReactNode;
   style?: TextStyle;
+  maxFontSizeMultiplier?: number;
 }
 
-export const GoldSubtitle: React.FC<GoldSubtitleProps> = ({ children, style }) => {
+export const GoldSubtitle: React.FC<GoldSubtitleProps> = ({ children, style, maxFontSizeMultiplier = 1.15 }) => {
   const mergedStyle = StyleSheet.flatten([styles.base, style]) as TextStyle;
 
   return (
     <MaskedView
       maskElement={
-        <Text style={[mergedStyle, { color: 'white', backgroundColor: 'transparent' }]}>
+        <Text
+          maxFontSizeMultiplier={maxFontSizeMultiplier}
+          style={[mergedStyle, { color: 'white', backgroundColor: 'transparent' }]}
+        >
           {children}
         </Text>
       }
@@ -31,7 +35,10 @@ export const GoldSubtitle: React.FC<GoldSubtitleProps> = ({ children, style }) =
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
       >
-        <Text style={[mergedStyle, { color: 'transparent' }]}>
+        <Text
+          maxFontSizeMultiplier={maxFontSizeMultiplier}
+          style={[mergedStyle, { color: 'transparent' }]}
+        >
           {children}
         </Text>
       </SkiaGradient>
