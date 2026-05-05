@@ -29,6 +29,59 @@ const PALETTE = {
 type PlanType = 'monthly' | 'yearly';
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
+const PREMIUM_UNLOCKS: { icon: IoniconName; title: string; desc: string }[] = [
+  {
+    icon: 'sparkles-outline',
+    title: 'More daily insight depth',
+    desc: 'Expanded daily insight cards, clearer reflection prompts, weekly shifts, and recurring themes based on your own history.',
+  },
+  {
+    icon: 'analytics-outline',
+    title: 'Mood, sleep, and pattern trends',
+    desc: 'Trend charts for mood and sleep, plus what restores you, drains you, and keeps repeating across check-ins and reflections.',
+  },
+  {
+    icon: 'journal-outline',
+    title: 'Journal pattern analysis',
+    desc: 'Keyword lift, emotional tone shifts, writing patterns, and correlations between your journal history and lived signals.',
+  },
+  {
+    icon: 'moon-outline',
+    title: 'Richer dream interpretation',
+    desc: 'AI dream interpretation with the richer model, recurring symbol clusters, sleep quality trends, and dream-history context.',
+  },
+  {
+    icon: 'people-outline',
+    title: 'Unlimited relationship charts',
+    desc: 'Add partner, ex, friend, parent, child, or other relationship charts with deeper emotional breakdowns.',
+  },
+  {
+    icon: 'book-outline',
+    title: 'Full personal story',
+    desc: 'All 10 story chapters, including love style, conflict patterns, inner child themes, shadow work, and reflection questions.',
+  },
+  {
+    icon: 'heart-half-outline',
+    title: 'Healing and attachment reflections',
+    desc: 'Attachment themes, fear patterns, safety patterns, shadow work, and chart-tied inner-work prompts.',
+  },
+  {
+    icon: 'compass-outline',
+    title: 'Chiron, Nodes, and chart depth',
+    desc: 'Chiron sensitivity mapping, Node-axis depth, extended stellium narratives, element analysis, and chart pattern details.',
+  },
+  {
+    icon: 'document-text-outline',
+    title: 'PDF chart export',
+    desc: 'Export your birth chart, placements, house cusps, aspects, and all 10 personal story chapters as a PDF.',
+  },
+  {
+    icon: 'shield-checkmark-outline',
+    title: 'Backup and restore',
+    desc: 'Export a portable .msky backup file and restore your profile data on another device.',
+  },
+];
+
 interface PremiumScreenProps {
   onClose?: () => void;
   analyticsSource?: string;
@@ -185,7 +238,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
             </Pressable>
             <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
               <Text style={styles.premiumBadge}>{"✦ DEEPER SKY ACTIVE"}</Text>
-              <Text style={styles.title}>{"You're a member."}</Text>
+              <Text style={styles.title}>{"You're a Deeper Sky member."}</Text>
               <Text style={styles.heroSubtitle}>
                 {"All premium features are unlocked. Thank you for supporting MySky."}
               </Text>
@@ -246,23 +299,24 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
             <Text style={styles.title}>{"See your patterns."}</Text>
             <Text style={styles.title}>{"More clearly."}</Text>
             <Text style={styles.heroSubtitle}>
-              {"Deeper Sky turns your sleep, mood, dreams, and journal history into weekly shifts, recurring themes, and reflection prompts grounded in your own data."}
+              {"Deeper Sky turns your sleep, mood, dreams, relationships, chart, and journal history into weekly shifts, recurring themes, and reflection prompts grounded in your own data."}
             </Text>
           </Animated.View>
 
-          {/* ── Naked Value Propositions ── */}
-          <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.valueSection}>
-            {[
-              { icon: 'calendar-outline', title: 'Track change over time', desc: 'Weekly shifts, recurring themes, and longitudinal pattern insight' },
-              { icon: 'analytics-outline', title: 'Understand what helps or hurts', desc: 'See what restores you, drains you, and repeats in your reflections' },
-              { icon: 'sparkles-outline', title: 'Get more reflective guidance', desc: 'Reflection prompts shaped by your history, not just today\'s mood' },
-              { icon: 'shield-checkmark-outline', title: 'Private by design', desc: 'Core reflections stay encrypted on-device and are not sold for ads' },
-            ].map((item, idx) => (
-              <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
-                <Ionicons name={item.icon as IoniconName} size={32} color={PALETTE.pureWhite} style={styles.valueIcon} />
-                <View style={styles.valueText}>
-                  <Text style={styles.valueTitle}>{item.title}</Text>
-                  <Text style={styles.valueDesc}>{item.desc}</Text>
+          {/* ── Exact Premium Unlocks ── */}
+          <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.unlockSection}>
+            <Text style={styles.sectionLabel}>{"WHAT PREMIUM UNLOCKS"}</Text>
+            <Text style={styles.sectionIntro}>
+              {"Deeper Sky includes every premium feature below. No separate add-ons."}
+            </Text>
+            {PREMIUM_UNLOCKS.map((item, idx) => (
+              <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 40).duration(500)} style={styles.unlockRow}>
+                <View style={styles.unlockIconBox}>
+                  <Ionicons name={item.icon} size={20} color={PALETTE.pureWhite} />
+                </View>
+                <View style={styles.unlockText}>
+                  <Text style={styles.unlockTitle}>{item.title}</Text>
+                  <Text style={styles.unlockDesc}>{item.desc}</Text>
                 </View>
               </Animated.View>
             ))}
@@ -275,7 +329,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
               {"The value compounds as you log more. Deeper Sky highlights what changed this week, what keeps repeating, and what your private history is teaching you."}
             </Text>
             <Text style={styles.trustFootnote}>
-              {"Core analysis stays local whenever possible. Subscription verification and optional external features are clearly separated."}
+              {"Core analysis stays local whenever possible. AI dream interpretation and optional AI insight refinement are separate, clearly labeled features."}
             </Text>
           </Animated.View>
 
@@ -474,34 +528,57 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: 24,
   },
 
-  // ── Value Propositions (Naked & Breathable) ──
-  valueSection: {
-    marginBottom: 64,
+  // ── Exact Premium Unlocks ──
+  unlockSection: {
+    marginBottom: 56,
   },
-  valueRow: {
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: PALETTE.pureWhite,
+    letterSpacing: 0,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  sectionIntro: {
+    fontSize: 16,
+    color: PALETTE.textMuted,
+    lineHeight: 24,
+    marginBottom: 24,
+    fontWeight: '500',
+  },
+  unlockRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 40,
-    paddingRight: 16,
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: PALETTE.glassBorder,
   },
-  valueIcon: {
-    marginTop: 4, 
-    marginRight: 24,
+  unlockIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: PALETTE.glassSurface,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
-  valueText: {
+  unlockText: {
     flex: 1,
   },
-  valueTitle: {
-    fontSize: 22,
+  unlockTitle: {
+    fontSize: 18,
     fontWeight: '700',
     color: PALETTE.pureWhite,
-    marginBottom: 8,
-    letterSpacing: -0.5,
+    marginBottom: 6,
+    letterSpacing: 0,
   },
-  valueDesc: {
-    fontSize: 17,
+  unlockDesc: {
+    fontSize: 15,
     color: PALETTE.textMuted,
-    lineHeight: 26,
+    lineHeight: 22,
   },
 
   // ── Editorial Trust Block ──

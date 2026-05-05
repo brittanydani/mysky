@@ -1683,6 +1683,46 @@ export function normalizeGlimmerLogsV2(glimmerLogs: any[] = []): UserSignal[] {
 export function normalizeRelationshipMirrorsV2(relationshipMirrors: any[] = []): UserSignal[] {
   const signals: UserSignal[] = [];
 
+  const relationshipTagLabels: Record<string, string> = {
+    t1: 'People-pleasing',
+    t2: 'Fear of abandonment',
+    t3: 'Rushing intimacy',
+    t4: 'Caretaking others',
+    t5: 'Over-explaining',
+    t6: 'Pulling away',
+    t7: 'Going quiet',
+    t8: 'Minimizing needs',
+    t9: 'Shutting down',
+    t10: 'Needing space',
+    t11: 'Trying to manage the outcome',
+    t12: 'Difficulty with boundaries',
+    t13: 'Testing the connection',
+    t14: 'Perfectionism in love',
+    t15: 'Seeking reassurance',
+    t16: 'Feeling too much',
+    t17: 'Scanning for rejection',
+    t18: 'Defensiveness',
+    t19: 'Feeling trapped',
+    t20: 'Distracting yourself',
+    t21: 'Avoiding repair',
+    t22: 'Needing certainty',
+    t23: 'Pushing for answers',
+    t24: 'Emotional monitoring',
+    t25: 'Assuming the worst',
+    t26: 'Fixing instead of feeling',
+    t27: 'Holding resentment',
+    s1: 'Asking directly',
+    s2: 'Naming needs clearly',
+    s3: 'Letting myself be seen',
+    s4: 'Staying present',
+    s5: 'Receiving care without deflecting',
+    s6: 'Respecting space',
+    s7: 'Offering repair',
+    s8: 'Feeling grounded',
+    s9: 'Trusting the connection',
+    s10: 'Letting things unfold',
+  };
+
   const tagSignalMap: Record<string, SignalKey[]> = {
     t1: ['responsibility_weight', 'boundary_rebuilding'],
     t2: ['relationship_safety_testing', 'consistency_need', 'support_scarcity'],
@@ -1698,6 +1738,19 @@ export function normalizeRelationshipMirrorsV2(relationshipMirrors: any[] = []):
     t12: ['boundary_rebuilding'],
     t13: ['consistency_need', 'emotional_availability_need'],
     t14: ['self_blame', 'guilt'],
+    t15: ['consistency_need', 'emotional_availability_need', 'support_need'],
+    t16: ['fear_of_being_too_much', 'vulnerability'],
+    t17: ['relationship_safety_testing', 'tone_sensitivity', 'rupture_sensitivity'],
+    t18: ['truth_over_harmony', 'selective_vulnerability'],
+    t19: ['trapped', 'distance_for_safety', 'autonomy_need'],
+    t20: ['avoidance', 'distance_for_safety'],
+    t21: ['avoidance', 'repair_need', 'avoids_clear_boundary_for_comfort'],
+    t22: ['control_for_uncertainty', 'consistency_need'],
+    t23: ['control_for_uncertainty', 'decision_uncertainty', 'need_for_exact_words'],
+    t24: ['relationship_safety_testing', 'tone_sensitivity'],
+    t25: ['worst_case_preparation', 'rupture_sensitivity'],
+    t26: ['caretaking_pressure', 'avoidance'],
+    t27: ['anger', 'repair_need', 'truth_over_harmony'],
     s1: ['consistency_need', 'self_trust_growth'],
     s2: ['support_need', 'self_trust_growth'],
     s3: ['mutuality_need', 'receiving_openness'],
@@ -1708,6 +1761,44 @@ export function normalizeRelationshipMirrorsV2(relationshipMirrors: any[] = []):
     s8: ['quiet_safety', 'restorative_moment'],
     s9: ['calm_bracing', 'self_trust_growth'],
     s10: ['self_trust_growth', 'inner_authority'],
+  };
+
+  const activatedEmotionSignalMap: Record<string, SignalKey[]> = {
+    anger: ['anger', 'truth_over_harmony'],
+    confusion: ['confusion', 'decision_uncertainty'],
+    fear: ['fear', 'relationship_safety_testing'],
+    grief: ['grief', 'rupture_sensitivity'],
+    hope: ['hope', 'connection_glimmer'],
+    loneliness: ['loneliness', 'belonging_ache'],
+    pressure: ['high_stress', 'caretaking_pressure'],
+    rejection: ['relationship_safety_testing', 'belonging_ache'],
+    shame: ['shame', 'self_blame'],
+    tenderness: ['vulnerability', 'hope'],
+  };
+
+  const needSignalMap: Record<string, SignalKey[]> = {
+    boundaries: ['boundary_rebuilding', 'autonomy_need'],
+    clarity: ['need_for_exact_words', 'truth_telling'],
+    comfort: ['support_need', 'receiving_openness'],
+    honesty: ['truth_telling', 'truth_over_harmony'],
+    presence: ['emotional_availability_need', 'connection_glimmer'],
+    reassurance: ['consistency_need', 'emotional_availability_need'],
+    repair: ['repair_need', 'rupture_sensitivity'],
+    softness: ['emotional_availability_need', 'support_need'],
+    space: ['distance_for_safety', 'needs_pause'],
+    time: ['needs_pause', 'trust_builds_slowly'],
+  };
+
+  const stateBeforeSignalMap: Record<string, SignalKey[]> = {
+    fawn: ['caretaking_pressure', 'boundary_rebuilding'],
+    fight: ['anger', 'truth_over_harmony'],
+    flight: ['distance_for_safety', 'avoidance'],
+    freeze: ['shutdown', 'low_capacity'],
+    secure: ['quiet_safety'],
+  };
+
+  const stateAfterSignalMap: Record<string, SignalKey[]> = {
+    secure: ['quiet_safety', 'connection_glimmer'],
   };
 
   const noteSignals: KeywordSignal[] = [
@@ -1757,11 +1848,50 @@ export function normalizeRelationshipMirrorsV2(relationshipMirrors: any[] = []):
 
     for (const tag of entry.tags ?? []) {
       for (const key of tagSignalMap[String(tag)] ?? []) {
-        addSignal(signals, key, 'relationshipMirror', date, 0.75, { label: String(tag) });
+        addSignal(signals, key, 'relationshipMirror', date, 0.75, {
+          label: relationshipTagLabels[String(tag)] ?? String(tag),
+        });
       }
     }
 
-    const searchable = asSearchText([entry.note, entry.context, entry.relationshipType]);
+    const activatedEmotions = Array.isArray(entry.activatedEmotions)
+      ? entry.activatedEmotions
+      : [entry.activatedEmotions].filter(Boolean);
+    const needs = Array.isArray(entry.needs)
+      ? entry.needs
+      : [entry.needs].filter(Boolean);
+
+    for (const emotion of activatedEmotions) {
+      const normalized = String(emotion).toLowerCase();
+      for (const key of activatedEmotionSignalMap[normalized] ?? []) {
+        addSignal(signals, key, 'relationshipMirror', date, 0.68, { label: normalized });
+      }
+    }
+
+    for (const need of needs) {
+      const normalized = String(need).toLowerCase();
+      for (const key of needSignalMap[normalized] ?? []) {
+        addSignal(signals, key, 'relationshipMirror', date, 0.7, { label: normalized });
+      }
+    }
+
+    for (const key of stateBeforeSignalMap[String(entry.stateBefore ?? '').toLowerCase()] ?? []) {
+      addSignal(signals, key, 'relationshipMirror', date, 0.64, { label: 'state before' });
+    }
+
+    for (const key of stateAfterSignalMap[String(entry.stateAfter ?? '').toLowerCase()] ?? []) {
+      addSignal(signals, key, 'relationshipMirror', date, 0.6, { label: 'state after' });
+    }
+
+    const searchable = asSearchText([
+      entry.note,
+      entry.context,
+      entry.relationshipType,
+      entry.activatedEmotions,
+      entry.needs,
+      entry.stateBefore,
+      entry.stateAfter,
+    ]);
     addKeywordSignals(signals, 'relationshipMirror', date, searchable, noteSignals, 0.68);
   }
 

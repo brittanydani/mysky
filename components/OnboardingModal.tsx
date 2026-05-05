@@ -78,6 +78,12 @@ const LIQUID_GOLD: string[] = [
   '#936B16',   // 2 — Shadow
 ];
 
+const APP_EXPLAINER_POINTS = [
+  'Track mood, sleep, dreams, journal entries, and relationship reflections in one private map.',
+  'Use your birth chart as symbolic context while your own logs decide what patterns surface.',
+  'Get reflective guidance, not diagnosis, therapy, medical advice, or prediction.',
+];
+
 // ── Nominatim location search ──
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const _bundleId = Constants.expoConfig?.ios?.bundleIdentifier ?? 'com.mysky.app';
@@ -1005,9 +1011,22 @@ export default function OnboardingModal({
 
               {/* ══════ NAME ══════ */}
               {step === 'name' && (
-                <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
+                <Pressable style={[st.centeredFlex, st.nameIntroStep]} onPress={Keyboard.dismiss} accessible={false}>
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
-                    <Text style={st.etherealQuestion}>What should we call you?</Text>
+                    <Text style={st.onboardingKicker}>MYSKY</Text>
+                    <Text style={st.etherealQuestion}>Understand your patterns over time.</Text>
+                    <Text style={[st.etherealSubtext, st.appIntroSubtext]}>
+                      MySky is a private self-reflection app for daily guidance, symbolic chart context, and long-term pattern awareness.
+                    </Text>
+                    <View style={st.appExplainerList}>
+                      {APP_EXPLAINER_POINTS.map((point) => (
+                        <View key={point} style={st.appExplainerRow}>
+                          <Ionicons name="sparkles-outline" size={15} color={PREMIUM.titanium} style={st.appExplainerIcon} />
+                          <Text style={st.appExplainerText}>{point}</Text>
+                        </View>
+                      ))}
+                    </View>
+                    <Text style={st.nameQuestion}>What should we call you?</Text>
                     <View style={st.nameInputWrapper}>
                       <TextInput
                         style={st.nameInput}
@@ -1368,6 +1387,10 @@ const st = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
   },
+  nameIntroStep: {
+    justifyContent: 'flex-start',
+    paddingTop: 28,
+  },
   birthDetailsStep: {
     justifyContent: 'flex-start',
     paddingTop: 56,
@@ -1554,6 +1577,13 @@ const st = StyleSheet.create({
     alignItems: 'center', // Centered for the input flow
     width: '100%',
   },
+  onboardingKicker: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: PREMIUM.titanium,
+    letterSpacing: 0,
+    marginBottom: 10,
+  },
   etherealQuestion: { fontSize: 32, fontWeight: '800', color: PREMIUM.textMain, letterSpacing: -1, marginBottom: 8 },
   etherealSubtext: {
     fontSize: 15,
@@ -1562,6 +1592,38 @@ const st = StyleSheet.create({
     lineHeight: 22,
     textAlign: 'center',
     fontWeight: '400',
+  },
+  appIntroSubtext: {
+    marginBottom: 24,
+  },
+  appExplainerList: {
+    width: '92%',
+    gap: 12,
+    marginBottom: 30,
+  },
+  appExplainerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  appExplainerIcon: {
+    width: 22,
+    marginTop: 2,
+    marginRight: 10,
+  },
+  appExplainerText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 21,
+    color: PREMIUM.textMuted,
+    textAlign: 'left',
+    fontWeight: '500',
+  },
+  nameQuestion: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: PREMIUM.textMain,
+    letterSpacing: 0,
+    marginBottom: 12,
   },
 
   // ── Centered Name Input ──

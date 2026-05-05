@@ -82,4 +82,35 @@ describe('KnowledgeInsightCard', () => {
     expect(getByText('QUESTION TO KEEP')).toBeTruthy();
     expect(getByText('What keeps landing in your lowest-capacity window?')).toBeTruthy();
   });
+
+  it('can suppress a repeated weekly theme when the feed has already shown it', () => {
+    const insight: GeneratedInsight = {
+      id: 'insight-1',
+      slot: 'relationshipMirror',
+      slotLabel: 'Relationship Thread',
+      title: 'Safety in Connection',
+      observation: 'Consistency mattered in connection today.',
+      pattern: 'The moment asked for clarity before you decided what it meant.',
+      activeWeeklyTheme: 'Connection feels safest when the shift is understandable.',
+      reframe: {
+        shame: '',
+        clarity: 'Connection carries meaningful information for you.',
+      },
+      prompt: 'What would make this moment easier to hold?',
+      patternKey: 'relationships_001_safety_testing',
+      confidence: 'moderate',
+      movement: 'new',
+      evidence: [],
+      createdAt: '2026-04-24T12:00:00Z',
+    };
+
+    const { queryByText } = render(
+      <ThemeProvider>
+        <KnowledgeInsightCard insight={insight} showActiveWeeklyTheme={false} />
+      </ThemeProvider>,
+    );
+
+    expect(queryByText('ACTIVE WEEKLY THEME')).toBeNull();
+    expect(queryByText('Connection feels safest when the shift is understandable.')).toBeNull();
+  });
 });

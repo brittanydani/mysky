@@ -10,6 +10,7 @@ import { useAppTheme } from '../context/ThemeContext';
 
 interface KnowledgeInsightCardProps {
   insight: GeneratedInsight;
+  showActiveWeeklyTheme?: boolean;
 }
 
 const TEXT_SCALE_PROPS = {
@@ -100,7 +101,10 @@ export function buildReframeText(reframe: GeneratedInsight['reframe']): string {
   return ensureSentence(`The clearer read: ${inlineClarity(clarityText)}`);
 }
 
-export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insight }) => {
+export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({
+  insight,
+  showActiveWeeklyTheme = true,
+}) => {
   useAppTheme();
 
   const movementLabelMap: Record<string, string> = {
@@ -114,6 +118,7 @@ export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insi
 
   const movementLabel = movementLabelMap[insight.movement] || 'ARCHIVE ECHO';
   const eyebrowLabel = insight.slotLabel ?? movementLabel;
+  const activeWeeklyTheme = insight.activeWeeklyTheme?.trim();
 
   return (
     <VelvetGlassSurface style={styles.card} intensity={20}>
@@ -136,10 +141,10 @@ export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({ insi
         </View>
 
         <Text {...TEXT_SCALE_PROPS} style={styles.title}>{insight.title}</Text>
-        {insight.activeWeeklyTheme ? (
+        {showActiveWeeklyTheme && activeWeeklyTheme ? (
           <View style={styles.activeThemeContainer}>
             <Text {...TEXT_SCALE_PROPS} style={styles.activeThemeLabel}>ACTIVE WEEKLY THEME</Text>
-            <Text {...TEXT_SCALE_PROPS} style={styles.activeThemeText}>{insight.activeWeeklyTheme}</Text>
+            <Text {...TEXT_SCALE_PROPS} style={styles.activeThemeText}>{activeWeeklyTheme}</Text>
           </View>
         ) : null}
         <Text {...TEXT_SCALE_PROPS} style={styles.body}>{`${insight.observation} ${insight.pattern}`}</Text>

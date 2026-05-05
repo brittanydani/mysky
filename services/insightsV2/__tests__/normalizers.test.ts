@@ -77,6 +77,27 @@ describe('insightsV2 normalizers', () => {
     expect(signals.some(signal => signal.source === 'relationshipMirror' && signal.key === 'repair_need')).toBe(true);
   });
 
+  it('normalizes newer relationship tags, needs, and regulation state fields', () => {
+    const signals = normalizeRelationshipMirrorsV2([
+      {
+        date: today,
+        tags: ['t15', 't22', 't25'],
+        activatedEmotions: ['rejection', 'pressure'],
+        needs: ['reassurance', 'space', 'repair'],
+        stateBefore: 'freeze',
+        stateAfter: 'secure',
+      },
+    ]);
+
+    expect(signals.some(signal => signal.source === 'relationshipMirror' && signal.key === 'emotional_availability_need')).toBe(true);
+    expect(signals.some(signal => signal.source === 'relationshipMirror' && signal.key === 'control_for_uncertainty')).toBe(true);
+    expect(signals.some(signal => signal.source === 'relationshipMirror' && signal.key === 'worst_case_preparation')).toBe(true);
+    expect(signals.some(signal => signal.source === 'relationshipMirror' && signal.key === 'distance_for_safety')).toBe(true);
+    expect(signals.some(signal => signal.source === 'relationshipMirror' && signal.key === 'repair_need')).toBe(true);
+    expect(signals.some(signal => signal.source === 'relationshipMirror' && signal.key === 'shutdown')).toBe(true);
+    expect(signals.some(signal => signal.source === 'relationshipMirror' && signal.key === 'connection_glimmer')).toBe(true);
+  });
+
   it('normalizes dreams from text, feelings, and metadata', () => {
     const signals = normalizeDreamsV2([
       {
@@ -1230,6 +1251,10 @@ describe('insightsV2 normalizers', () => {
     const insight = result.insights.find(item => item.slot === 'whatMySkyNoticed');
     expect(insight).toBeDefined();
     expect(insight?.patternKey).toBe('relationships_001_safety_testing');
+    const relationshipThread = result.insights.find(item => item.slot === 'relationshipMirror');
+    expect(relationshipThread?.title).toBeTruthy();
+    expect(relationshipThread?.title).not.toBe('A relationship thread');
+    expect(relationshipThread?.body).toContain('mattered');
   });
 
   it('can produce an active practical insight from time pressure data', async () => {

@@ -96,6 +96,10 @@ jest.mock('../../components/ui/GoldSubtitle', () => ({
   GoldSubtitle: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+jest.mock('../../services/growth/localAnalytics', () => ({
+  trackGrowthEvent: jest.fn(() => Promise.resolve()),
+}));
+
 jest.mock('../../utils/logger', () => ({
   logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
@@ -113,19 +117,28 @@ describe('PremiumScreen', () => {
   describe('paywall state', () => {
     it('renders pricing tiers when not premium', () => {
       const { getAllByText } = render(<PremiumScreen />);
-      expect(getAllByText(/monthly/i).length).toBeGreaterThan(0);
-      expect(getAllByText(/yearly|annual/i).length).toBeGreaterThan(0);
+      expect(getAllByText(/1 month/i).length).toBeGreaterThan(0);
+      expect(getAllByText(/12 months/i).length).toBeGreaterThan(0);
     });
 
     it('defaults to yearly plan selection', () => {
       const { getAllByText } = render(<PremiumScreen />);
       // Yearly should be visually selected (popular)
-      expect(getAllByText(/yearly|annual/i).length).toBeGreaterThan(0);
+      expect(getAllByText(/12 months/i).length).toBeGreaterThan(0);
     });
 
     it('shows restore purchases button', () => {
       const { getAllByText } = render(<PremiumScreen />);
       expect(getAllByText(/restore/i).length).toBeGreaterThan(0);
+    });
+
+    it('explains the concrete premium unlocks', () => {
+      const { getByText } = render(<PremiumScreen />);
+      expect(getByText('WHAT PREMIUM UNLOCKS')).toBeTruthy();
+      expect(getByText('Richer dream interpretation')).toBeTruthy();
+      expect(getByText('Unlimited relationship charts')).toBeTruthy();
+      expect(getByText('PDF chart export')).toBeTruthy();
+      expect(getByText('Backup and restore')).toBeTruthy();
     });
   });
 

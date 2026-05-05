@@ -289,12 +289,28 @@ function normalizeInsightText(text: string): string {
     .trim();
 }
 
+function normalizePatternFamily(patternKey: string): string {
+  return patternKey
+    .replace(/^feeling_/, 'feeling:')
+    .replace(/([a-z])([A-Z])/g, '$1_$2')
+    .split(/[_:]/)[0]
+    .toLowerCase();
+}
+
 function v2InsightConceptKeys(insight: V2GeneratedInsight): string[] {
+  const category = insight.category ? normalizeInsightText(insight.category) : '';
+  const majorDomain = insight.majorDomain ? normalizeInsightText(insight.majorDomain) : '';
+  const subcategory = insight.insightSubcategory ? normalizeInsightText(insight.insightSubcategory) : '';
+  const patternFamily = normalizePatternFamily(insight.patternKey);
+
   return [
-    `slot:${insight.slot}`,
+    `family:${patternFamily}`,
+    category ? `category:${category}` : '',
+    majorDomain ? `domain:${majorDomain}` : '',
+    subcategory ? `subcategory:${subcategory}` : '',
     `pattern:${insight.patternKey}`,
     `title:${normalizeInsightText(insight.title)}`,
-  ];
+  ].filter(Boolean);
 }
 
 function selectDailyV2Insights(insights: V2GeneratedInsight[]): V2GeneratedInsight[] {

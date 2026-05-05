@@ -54,8 +54,9 @@ const SLOT_PRIORITY: Record<InsightSlot, number> = {
 };
 
 function dedupeSentences(text: string): string {
-  const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map(part => part.trim()) ?? [];
-  if (sentences.length <= 1) return text;
+  const polished = polishGeneratedRepetition(text);
+  const sentences = polished.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map(part => part.trim()) ?? [];
+  if (sentences.length <= 1) return polished;
 
   const seen = new Set<string>();
   const deduped = sentences.filter((sentence) => {
@@ -66,6 +67,14 @@ function dedupeSentences(text: string): string {
   });
 
   return deduped.join(' ');
+}
+
+function polishGeneratedRepetition(text: string): string {
+  return text.replace(
+    /Where does ([^?]{8,90}?) first become real for you\? Often, it is when the first sign of \1 appears\./gi,
+    (_match, topic: string) =>
+      `Where does ${topic} first become real for you? Often, it starts with a small cue your system notices early.`,
+  );
 }
 
 function sentenceCount(text: string): number {
@@ -311,17 +320,68 @@ function bodySignalSubject(signal: UserSignal): string {
 
 function relationshipThreadSubject(signal: UserSignal): string {
   const cue = signalCue(signal);
-  if (signal.key === 'repair_need') return 'Repair';
-  if (signal.key === 'tone_sensitivity') return 'Tone';
-  if (signal.key === 'rupture_sensitivity') return 'Rupture and repair';
-  if (signal.key === 'consistency_need') return 'Consistency';
-  if (signal.key === 'relationship_safety_testing') return 'Trust and safety';
-  if (signal.key === 'support_need' || signal.key === 'support_scarcity') return 'Support';
-  if (signal.key === 'wants_to_be_seen') return 'Being understood';
-  if (signal.key === 'belonging_ache') return 'Belonging';
-  if (signal.key === 'distance_for_safety') return 'Distance';
-  if (signal.key === 'closeness_uncertainty') return 'Closeness';
-  return cueSubject(cue);
+  const subjectByKey: Partial<Record<SignalKey, string>> = {
+    asks_for_support: 'Asking for support',
+    belonging_ache: 'Belonging',
+    boundary_rebuilding: 'Boundaries',
+    caretaking_pressure: 'Caretaking',
+    closeness_uncertainty: 'Closeness',
+    consistency_need: 'Consistency',
+    distance_for_safety: 'Distance',
+    emotional_availability_need: 'Availability',
+    fear_of_being_too_much: 'Being too much',
+    loneliness: 'Loneliness',
+    minimizes_need: 'Minimized needs',
+    mutuality_need: 'Mutuality',
+    need_for_exact_words: 'Exact words',
+    overexplaining: 'Explaining clearly',
+    repair_need: 'Repair',
+    relationship_safety_testing: 'Safety in connection',
+    rupture_sensitivity: 'Rupture and repair',
+    support_need: 'Support',
+    support_scarcity: 'Support',
+    tone_sensitivity: 'Tone',
+    trust_builds_slowly: 'Trust',
+    wants_to_be_seen: 'Being understood',
+  };
+
+  const mappedSubject = subjectByKey[signal.key];
+  if (mappedSubject) return mappedSubject;
+
+  const fallbackSubject = cueSubject(cue);
+  if (/^(cognitive|relationship|relationships|relational|reflection|anxious|avoidant|control|secure)$/i.test(fallbackSubject)) {
+    return 'This connection';
+  }
+  return fallbackSubject;
+}
+
+function relationshipThreadTitle(signal: UserSignal): string {
+  const titleByKey: Partial<Record<SignalKey, string>> = {
+    asks_for_support: 'Asking for Support',
+    belonging_ache: 'Belonging Wants Care',
+    boundary_rebuilding: 'A Boundary Signal',
+    caretaking_pressure: 'Care Is Carrying Too Much',
+    closeness_uncertainty: 'Closeness Needs Steadiness',
+    consistency_need: 'Consistency Is the Cue',
+    distance_for_safety: 'Distance Is Asking for Safety',
+    emotional_availability_need: 'Presence Matters Here',
+    fear_of_being_too_much: 'The Too-Much Fear',
+    loneliness: 'A Belonging Ache',
+    minimizes_need: 'A Need Got Minimized',
+    mutuality_need: 'Mutuality Wants Attention',
+    need_for_exact_words: 'Clarity Wants Exact Words',
+    overexplaining: 'Explaining to Protect Connection',
+    repair_need: 'Repair Wants a Path',
+    relationship_safety_testing: 'Safety in Connection',
+    rupture_sensitivity: 'A Rupture Signal',
+    support_need: 'Support Is the Signal',
+    support_scarcity: 'Support Feels Scarce',
+    tone_sensitivity: 'A Tone Shift Landed',
+    trust_builds_slowly: 'Trust Builds Through Evidence',
+    wants_to_be_seen: 'Being Understood Matters',
+  };
+
+  return titleByKey[signal.key] ?? 'A Relationship Signal';
 }
 
 function signalBodyForSentiment(signal: UserSignal): string {
@@ -383,7 +443,8 @@ function bodySignalBody(signal: UserSignal): string {
 
 function relationshipSignalBody(signal: UserSignal): string {
   const subject = relationshipThreadSubject(signal);
-  return `${subject} is carrying relational weight today. Tone, closeness, distance, repair, support, and being understood shape whether your system can soften or stays on alert.`;
+  const setting = /\bconnection\b/i.test(subject) ? 'today' : 'in connection today';
+  return `${subject} mattered ${setting}. Notice whether the moment asked for closeness, space, clarity, repair, support, or reassurance before deciding what it means.`;
 }
 
 function growthEdgeBody(pattern: ArchivePattern | undefined): string {
@@ -626,6 +687,7 @@ export async function buildTodayInsights({
         ? `What does ${primaryFeeling.title.toLowerCase()} need from you today?`
         : undefined,
       patternKey: relatedPattern?.key || (primaryFeelingMatchesStrongest ? `feeling_${primaryFeeling.key}` : strongestTodaySignal.key),
+      category: relatedPattern?.category,
       confidence: 'moderate',
       movement: 'new',
       evidence: todaySignalEvidence ? [todaySignalEvidence] : [],
@@ -660,7 +722,8 @@ export async function buildTodayInsights({
   );
   if (whatHelpedSignal) {
     usedSignalKeys.add(signalDedupeKey(whatHelpedSignal));
-    const patternKey = patternKeyForSignal(whatHelpedSignal);
+    const relatedPattern = relatedPatternForSignal(whatHelpedSignal.key);
+    const patternKey = relatedPattern?.key ?? whatHelpedSignal.key;
     usedPatternKeys.add(patternKey);
 
     insights.push({
@@ -673,6 +736,7 @@ export async function buildTodayInsights({
       reframe: 'Small relief still counts. A shift does not have to be dramatic to be real.',
       reflectionPrompt: 'What helped even slightly today?',
       patternKey,
+      category: relatedPattern?.category,
       confidence: confidenceFromSignalStrength(whatHelpedSignal.strength),
       movement: 'softening',
       evidence: evidenceForSignal(whatHelpedSignal),
@@ -687,7 +751,8 @@ export async function buildTodayInsights({
   );
   if (bodySignal) {
     usedSignalKeys.add(signalDedupeKey(bodySignal));
-    const patternKey = patternKeyForSignal(bodySignal);
+    const relatedPattern = relatedPatternForSignal(bodySignal.key);
+    const patternKey = relatedPattern?.key ?? bodySignal.key;
     usedPatternKeys.add(patternKey);
 
     insights.push({
@@ -700,6 +765,7 @@ export async function buildTodayInsights({
       reframe: 'This does not mean your body is against you. It is trying to get your attention in the language it knows.',
       reflectionPrompt: 'What sensation felt most noticeable today, and what was it asking for?',
       patternKey,
+      category: relatedPattern?.category,
       confidence: confidenceFromSignalStrength(bodySignal.strength),
       movement: 'new',
       evidence: evidenceForSignal(bodySignal),
@@ -714,19 +780,21 @@ export async function buildTodayInsights({
   );
   if (relationshipSignal) {
     usedSignalKeys.add(signalDedupeKey(relationshipSignal));
-    const patternKey = patternKeyForSignal(relationshipSignal);
+    const relatedPattern = relatedPatternForSignal(relationshipSignal.key);
+    const patternKey = relatedPattern?.key ?? relationshipSignal.key;
     usedPatternKeys.add(patternKey);
 
     insights.push({
       id: generateId(),
       slot: 'relationshipMirror' as const,
       surface: 'today' as const,
-      title: 'A relationship thread',
+      title: relationshipThreadTitle(relationshipSignal),
       body: relationshipSignalBody(relationshipSignal),
       ...deliveryMetadata(currentStateProfile, timingDecision, 1),
       reframe: 'Noticing relational shifts does not mean you are too sensitive. Connection carries meaningful information for you.',
       reflectionPrompt: 'Did this relationship moment make you want closeness, distance, clarity, repair, or reassurance?',
       patternKey,
+      category: relatedPattern?.category,
       confidence: confidenceFromSignalStrength(relationshipSignal.strength),
       movement: 'new',
       evidence: evidenceForSignal(relationshipSignal),

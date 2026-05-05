@@ -682,6 +682,16 @@ export default function HomeScreen() {
     () => availableKnowledgeInsights.slice(0, isPremium ? 2 : 1),
     [availableKnowledgeInsights, isPremium],
   );
+  const visibleKnowledgeInsightItems = useMemo(() => {
+    const seenThemes = new Set<string>();
+
+    return visibleKnowledgeInsights.map((insight) => {
+      const theme = insight.activeWeeklyTheme?.trim();
+      const showActiveWeeklyTheme = !!theme && !seenThemes.has(theme);
+      if (theme) seenThemes.add(theme);
+      return { insight, showActiveWeeklyTheme };
+    });
+  }, [visibleKnowledgeInsights]);
 
   /** Pixel heights (max ~120px) for each of the past 7 days, oldest → today */
   const stabilityBars = useMemo(() => {
@@ -910,10 +920,11 @@ export default function HomeScreen() {
           <Animated.View entering={FadeInDown.delay(700).duration(600)}>
             {hasDataToday && visibleKnowledgeInsights.length > 0 ? (
               <View style={styles.dailyInsightList}>
-                {visibleKnowledgeInsights.map((insight) => (
+                {visibleKnowledgeInsightItems.map(({ insight, showActiveWeeklyTheme }) => (
                   <KnowledgeInsightCard
                     key={`${insight.slot}-${insight.patternKey}-${insight.id}`}
                     insight={insight}
+                    showActiveWeeklyTheme={showActiveWeeklyTheme}
                   />
                 ))}
               </View>
