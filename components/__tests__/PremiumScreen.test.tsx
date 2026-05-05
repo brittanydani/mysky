@@ -136,7 +136,7 @@ describe('PremiumScreen', () => {
       const { getByText } = render(<PremiumScreen />);
       expect(getByText('WHAT PREMIUM UNLOCKS')).toBeTruthy();
       expect(getByText('Richer dream interpretation')).toBeTruthy();
-      expect(getByText('Unlimited relationship charts')).toBeTruthy();
+      expect(getByText('Up to 10 relationship charts')).toBeTruthy();
       expect(getByText('PDF chart export')).toBeTruthy();
       expect(getByText('Backup and restore')).toBeTruthy();
     });

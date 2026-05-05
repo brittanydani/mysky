@@ -78,10 +78,14 @@ const LIQUID_GOLD: string[] = [
   '#936B16',   // 2 — Shadow
 ];
 
-const APP_EXPLAINER_POINTS = [
-  'Track mood, sleep, dreams, journal entries, and relationship reflections in one private map.',
-  'Use your birth chart as symbolic context while your own logs decide what patterns surface.',
-  'Get reflective guidance, not diagnosis, therapy, medical advice, or prediction.',
+const FREE_FEATURES = [
+  'Daily check-ins, sleep, dreams, journal, relationships, and core chart context.',
+  'Today insights, daily prompts, affirmations, basic patterns, and your private archive.',
+];
+
+const PREMIUM_FEATURES = [
+  'Deeper weekly pattern readings across sleep, mood, journal, dreams, and relationships.',
+  'Up to 10 relationship charts, richer dream reflections, Full Personal Story, PDF export, and backup.',
 ];
 
 // ── Nominatim location search ──
@@ -1016,15 +1020,28 @@ export default function OnboardingModal({
                     <Text style={st.onboardingKicker}>MYSKY</Text>
                     <Text style={st.etherealQuestion}>Understand your patterns over time.</Text>
                     <Text style={[st.etherealSubtext, st.appIntroSubtext]}>
-                      MySky is a private self-reflection app for daily guidance, symbolic chart context, and long-term pattern awareness.
+                      MySky is private self-reflection you can use for free. Premium adds deeper analysis when you want more context from your history.
                     </Text>
-                    <View style={st.appExplainerList}>
-                      {APP_EXPLAINER_POINTS.map((point) => (
-                        <View key={point} style={st.appExplainerRow}>
-                          <Ionicons name="sparkles-outline" size={15} color={PREMIUM.titanium} style={st.appExplainerIcon} />
-                          <Text style={st.appExplainerText}>{point}</Text>
-                        </View>
-                      ))}
+                    <View style={st.appPlanList}>
+                      <View style={st.appPlanSection}>
+                        <Text style={st.appPlanLabel}>Included free</Text>
+                        {FREE_FEATURES.map((point) => (
+                          <View key={point} style={st.appPlanRow}>
+                            <Ionicons name="checkmark-circle-outline" size={15} color="rgba(255,255,255,0.52)" style={st.appPlanIcon} />
+                            <Text style={st.appPlanText}>{point}</Text>
+                          </View>
+                        ))}
+                      </View>
+
+                      <View style={[st.appPlanSection, st.appPremiumSection]}>
+                        <Text style={[st.appPlanLabel, st.appPremiumLabel]}>Premium adds</Text>
+                        {PREMIUM_FEATURES.map((point) => (
+                          <View key={point} style={st.appPlanRow}>
+                            <Ionicons name="sparkles-outline" size={15} color={PREMIUM.titanium} style={st.appPlanIcon} />
+                            <Text style={st.appPlanText}>{point}</Text>
+                          </View>
+                        ))}
+                      </View>
                     </View>
                     <Text style={st.nameQuestion}>What should we call you?</Text>
                     <View style={st.nameInputWrapper}>
@@ -1596,24 +1613,48 @@ const st = StyleSheet.create({
   appIntroSubtext: {
     marginBottom: 24,
   },
-  appExplainerList: {
-    width: '92%',
-    gap: 12,
-    marginBottom: 30,
+  appPlanList: {
+    width: '100%',
+    gap: 10,
+    marginBottom: 24,
   },
-  appExplainerRow: {
+  appPlanSection: {
+    gap: 8,
+    padding: 13,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  appPremiumSection: {
+    borderColor: 'rgba(212,175,55,0.20)',
+    backgroundColor: 'rgba(212,175,55,0.05)',
+  },
+  appPlanLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0,
+    textTransform: 'uppercase' as const,
+    color: 'rgba(255,255,255,0.58)',
+    marginBottom: 1,
+    textAlign: 'left',
+  },
+  appPremiumLabel: {
+    color: PREMIUM.titanium,
+  },
+  appPlanRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
-  appExplainerIcon: {
+  appPlanIcon: {
     width: 22,
     marginTop: 2,
     marginRight: 10,
   },
-  appExplainerText: {
+  appPlanText: {
     flex: 1,
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 13,
+    lineHeight: 19,
     color: PREMIUM.textMuted,
     textAlign: 'left',
     fontWeight: '500',

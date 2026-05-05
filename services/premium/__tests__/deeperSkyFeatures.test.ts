@@ -1,4 +1,5 @@
 import { DeeperSkyGate, DEEPER_SKY_FEATURES } from '../deeperSkyFeatures';
+import { FREE_RELATIONSHIP_CHART_LIMIT, PREMIUM_RELATIONSHIP_CHART_LIMIT } from '../relationshipCharts';
 
 describe('deeperSkyFeatures', () => {
   describe('DEEPER_SKY_FEATURES', () => {
@@ -51,10 +52,11 @@ describe('deeperSkyFeatures', () => {
     });
 
     describe('getMaxRelationshipCharts()', () => {
-      it('returns higher limit for premium', () => {
+      it('returns the configured relationship chart limits', () => {
         const free = DeeperSkyGate.getMaxRelationshipCharts(false);
         const premium = DeeperSkyGate.getMaxRelationshipCharts(true);
-        expect(premium).toBeGreaterThanOrEqual(free);
+        expect(free).toBe(FREE_RELATIONSHIP_CHART_LIMIT);
+        expect(premium).toBe(PREMIUM_RELATIONSHIP_CHART_LIMIT);
       });
     });
 

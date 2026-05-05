@@ -1,10 +1,14 @@
-import { PremiumRelationshipService } from '../relationshipCharts';
+import {
+  FREE_RELATIONSHIP_CHART_LIMIT,
+  PREMIUM_RELATIONSHIP_CHART_LIMIT,
+  PremiumRelationshipService,
+} from '../relationshipCharts';
 
 describe('PremiumRelationshipService.canAddChart', () => {
-  it('returns true for premium users regardless of chart count', () => {
+  it('allows premium users until they reach the premium chart limit', () => {
     expect(PremiumRelationshipService.canAddChart(0, true)).toBe(true);
-    expect(PremiumRelationshipService.canAddChart(5, true)).toBe(true);
-    expect(PremiumRelationshipService.canAddChart(100, true)).toBe(true);
+    expect(PremiumRelationshipService.canAddChart(PREMIUM_RELATIONSHIP_CHART_LIMIT - 1, true)).toBe(true);
+    expect(PremiumRelationshipService.canAddChart(PREMIUM_RELATIONSHIP_CHART_LIMIT, true)).toBe(false);
   });
 
   it('returns true for free users when they have 0 charts', () => {
@@ -18,12 +22,12 @@ describe('PremiumRelationshipService.canAddChart', () => {
 });
 
 describe('PremiumRelationshipService.getChartsAllowed', () => {
-  it('returns "unlimited" for premium users', () => {
-    expect(PremiumRelationshipService.getChartsAllowed(true)).toBe('unlimited');
+  it('returns the premium chart limit for premium users', () => {
+    expect(PremiumRelationshipService.getChartsAllowed(true)).toBe(PREMIUM_RELATIONSHIP_CHART_LIMIT);
   });
 
-  it('returns 1 for free users', () => {
-    expect(PremiumRelationshipService.getChartsAllowed(false)).toBe(1);
+  it('returns the free chart limit for free users', () => {
+    expect(PremiumRelationshipService.getChartsAllowed(false)).toBe(FREE_RELATIONSHIP_CHART_LIMIT);
   });
 });
 

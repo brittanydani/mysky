@@ -7,10 +7,12 @@
  * Philosophy: Premium users get DEPTH, not just MORE.
  * - Longer, more nuanced interpretations
  * - Trauma-informed healing insights
- * - Unlimited connections with people they care about
+ * - Up to 10 relationship charts for people they care about
  * - Daily guidance that feels personal
  * - Journal patterns that reveal their story over time
  */
+
+import { FREE_RELATIONSHIP_CHART_LIMIT, PREMIUM_RELATIONSHIP_CHART_LIMIT } from './relationshipCharts';
 
 export interface DeeperSkyFeature {
   id: string;
@@ -83,16 +85,16 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   },
   {
     id: 'relationships',
-    name: 'Unlimited Relationships',
+    name: 'Up to 10 Relationships',
     icon: 'people-outline',
-    description: 'Partner, ex, child, friend — full emotional breakdowns',
+    description: 'Up to 10 charts with deeper emotional breakdowns',
     freeVersion: '1 relationship with limited insight',
-    premiumVersion: 'Unlimited charts: partner, ex, child, friend — each with full emotional breakdown of how you connect',
+    premiumVersion: 'Up to 10 relationship charts for partners, exes, children, friends, family, or other important connections, each with deeper emotional breakdowns of how you connect',
     isPremium: true,
     bullets: [
-      'Unlimited relationship comparisons',
-      'Partner, ex, child, friend, parent charts',
-      'Understand how you truly connect',
+      'Up to 10 relationship comparisons',
+      'Partner, ex, child, friend, and family chart context',
+      'Understand how you connect in important relationships',
     ],
   },
   {
@@ -207,7 +209,7 @@ export class DeeperSkyGate {
    * Get max relationship charts allowed
    */
   static getMaxRelationshipCharts(isPremium: boolean): number {
-    return isPremium ? Infinity : 1;
+    return isPremium ? PREMIUM_RELATIONSHIP_CHART_LIMIT : FREE_RELATIONSHIP_CHART_LIMIT;
   }
 
   /**
@@ -254,8 +256,8 @@ export const DEEPER_SKY_MARKETING = {
     },
     {
       emoji: '💞',
-      title: 'Unlimited Relationships',
-      brief: 'Partner, ex, child, friend — full emotional breakdowns',
+      title: 'Up to 10 Relationships',
+      brief: 'Partner, ex, child, friend — deeper emotional breakdowns',
     },
     {
       emoji: '🧭',

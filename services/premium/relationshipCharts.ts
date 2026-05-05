@@ -2,7 +2,7 @@
  * Premium Relationship Charts
  * 
  * Free users: 1 relationship with limited insight
- * Premium: Unlimited charts with full emotional breakdown
+ * Premium: Up to 10 charts with full emotional breakdown
  * 
  * This isn't about compatibility scores — it's about UNDERSTANDING.
  * How do you two connect? Where do you clash? What does each person need?
@@ -10,6 +10,9 @@
 
 import { NatalChart } from '../astrology/types';
 import { SynastryReport } from '../astrology/synastryEngine';
+
+export const FREE_RELATIONSHIP_CHART_LIMIT = 1;
+export const PREMIUM_RELATIONSHIP_CHART_LIMIT = 10;
 
 export interface RelationshipComparison {
   person1Name: string;
@@ -160,15 +163,14 @@ export class PremiumRelationshipService {
    * Check if user can add more relationship charts
    */
   static canAddChart(currentChartCount: number, isPremium: boolean): boolean {
-    if (isPremium) return true;
-    return currentChartCount < 1; // Free users get 1
+    return currentChartCount < this.getChartsAllowed(isPremium);
   }
   
   /**
    * Get the number of charts allowed
    */
-  static getChartsAllowed(isPremium: boolean): number | 'unlimited' {
-    return isPremium ? 'unlimited' : 1;
+  static getChartsAllowed(isPremium: boolean): number {
+    return isPremium ? PREMIUM_RELATIONSHIP_CHART_LIMIT : FREE_RELATIONSHIP_CHART_LIMIT;
   }
   
   /**

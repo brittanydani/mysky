@@ -52,8 +52,8 @@ const PREMIUM_UNLOCKS: { icon: IoniconName; title: string; desc: string }[] = [
   },
   {
     icon: 'people-outline',
-    title: 'Unlimited relationship charts',
-    desc: 'Add partner, ex, friend, parent, child, or other relationship charts with deeper emotional breakdowns.',
+    title: 'Up to 10 relationship charts',
+    desc: 'Save up to 10 relationship charts with deeper emotional breakdowns for partners, friends, family, or other important connections.',
   },
   {
     icon: 'book-outline',

@@ -92,7 +92,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
               <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>
               <Text style={styles.answer}>
                 <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>Free:</MetallicText> Personal birth chart, Big Three, daily mood/energy/stress check-ins, basic journaling, and standard AI dream interpretation.{"\n\n"}
-                <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>Deeper Sky:</MetallicText> A richer dream interpretation model, extended reflection trends, unlimited charts, full chakra Energy system, backup & restore, and more reflective guidance grounded in your own history.
+                <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>Deeper Sky:</MetallicText> A richer dream interpretation model, extended reflection trends, up to 10 relationship charts, full chakra Energy system, backup & restore, and more reflective guidance grounded in your own history.
               </Text>
 
               <Text style={styles.question}>What data does MySky store and where?</Text>

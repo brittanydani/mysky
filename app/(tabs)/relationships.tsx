@@ -28,7 +28,11 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { SynastryEngine, SynastryReport, SynastryAspect } from '../../services/astrology/synastryEngine';
 import { RelationshipInsightGenerator, RelationshipInsight } from '../../services/astrology/relationshipInsights';
-import { PremiumRelationshipService, RelationshipComparison } from '../../services/premium/relationshipCharts';
+import {
+  PREMIUM_RELATIONSHIP_CHART_LIMIT,
+  PremiumRelationshipService,
+  RelationshipComparison,
+} from '../../services/premium/relationshipCharts';
 import { exportChartToPdf } from '../../services/premium/pdfExport';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
@@ -189,9 +193,18 @@ export default function RelationshipsScreen() {
 
   const handleAddRelationship = (type: RelationshipType) => {
     if (!canAddMore()) {
+      if (isPremium) {
+        Alert.alert(
+          'Relationship chart limit reached',
+          `Deeper Sky includes up to ${PREMIUM_RELATIONSHIP_CHART_LIMIT} relationship charts. Delete an older chart before adding another one.`,
+          [{ text: 'OK', style: 'cancel' }]
+        );
+        return;
+      }
+
       Alert.alert(
         'You want to understand them better',
-        'That curiosity matters. Deeper Sky lets you explore unlimited relationship charts — partners, family, friends — so you can see the patterns that shape how you connect.',
+        `That curiosity matters. Deeper Sky lets you explore up to ${PREMIUM_RELATIONSHIP_CHART_LIMIT} relationship charts — partners, family, friends — so you can see the patterns that shape how you connect.`,
 
         [
           { text: 'Not now', style: 'cancel' },
@@ -792,7 +805,7 @@ export default function RelationshipsScreen() {
                 <View style={styles.limitIndicator}>
                   <Ionicons name="sparkles-outline" size={14} color={theme.textGold} />
                   <Text style={styles.limitText}>
-                    {relationships.length === 0 ? 'Free includes 1 relationship chart · Deeper Sky unlocks unlimited' : 'Deeper Sky unlocks unlimited charts'}
+                    {relationships.length === 0 ? `Free includes 1 relationship chart · Deeper Sky includes up to ${PREMIUM_RELATIONSHIP_CHART_LIMIT}` : `Deeper Sky includes up to ${PREMIUM_RELATIONSHIP_CHART_LIMIT} relationship charts`}
                   </Text>
                 </View>
               </Pressable>

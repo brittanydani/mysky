@@ -35,7 +35,7 @@ const PREVIEW_PERKS = [
   { icon: 'moon-outline' as const, text: 'Encrypted dream journal & sleep cycles' },
   { icon: 'analytics-outline' as const, text: 'Deep mood & behavioral trend mapping' },
   { icon: 'sparkles-outline' as const, text: 'Reflective guidance & action prompts' },
-  { icon: 'people-outline' as const, text: 'Unlimited relationship depth mapping' },
+  { icon: 'people-outline' as const, text: 'Up to 10 relationship depth maps' },
 ];
 
 export default function PremiumRequiredScreen({

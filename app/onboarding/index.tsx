@@ -9,10 +9,16 @@ import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
-const APP_EXPLAINER_POINTS = [
-  'Daily check-ins, journal entries, sleep, dreams, and relationship reflections become one private self-knowledge map.',
-  'Your birth chart gives symbolic context, but the app is grounded in what you actually log over time.',
-  'MySky is for reflection and pattern awareness. It is not therapy, diagnosis, medical advice, or prediction.',
+const FREE_FEATURES = [
+  'Daily mood, energy, sleep, dream, journal, and relationship logging.',
+  'Core birth chart context, daily reflection prompts, affirmations, and Today insights.',
+  'A private archive with basic patterns, weekly averages, and your saved entries.',
+];
+
+const PREMIUM_FEATURES = [
+  'Deeper pattern readings across sleep, mood, journal, dreams, relationships, and your chart.',
+  'Up to 10 relationship charts, richer dream reflections, weekly threads, and advanced journal patterns.',
+  'Full Personal Story chapters, PDF export, backup and restore, and deeper healing/chart layers.',
 ];
 
 export default function OnboardingIndex() {
@@ -57,16 +63,29 @@ export default function OnboardingIndex() {
             <Text style={styles.brandLabel}>MYSKY</Text>
             <Text style={styles.title}>Understand your patterns over time.</Text>
             <Text style={styles.subtitle}>
-              MySky is a private self-reflection app that turns your moods, sleep, dreams, journal entries, relationships, and birth chart into daily guidance and long-term pattern insight.
+              MySky is a private self-reflection app you can use for free. Premium adds deeper analysis when you want more context from your history.
             </Text>
 
-            <View style={styles.explainerList}>
-              {APP_EXPLAINER_POINTS.map((point) => (
-                <View key={point} style={styles.explainerRow}>
-                  <View style={styles.explainerDot} />
-                  <Text style={styles.explainerText}>{point}</Text>
-                </View>
-              ))}
+            <View style={styles.planList}>
+              <View style={styles.planSection}>
+                <Text style={styles.planLabel}>Included free</Text>
+                {FREE_FEATURES.map((point) => (
+                  <View key={point} style={styles.planRow}>
+                    <View style={styles.planDot} />
+                    <Text style={styles.planText}>{point}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View style={[styles.planSection, styles.premiumSection]}>
+                <Text style={[styles.planLabel, styles.premiumLabel]}>Premium adds</Text>
+                {PREMIUM_FEATURES.map((point) => (
+                  <View key={point} style={styles.planRow}>
+                    <View style={[styles.planDot, styles.premiumDot]} />
+                    <Text style={styles.planText}>{point}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
 
             <Text style={styles.nameLabel}>What should we call you?</Text>
@@ -137,27 +156,53 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     lineHeight: 24,
     marginBottom: 24,
   },
-  explainerList: {
+  planList: {
     gap: 14,
-    marginBottom: 34,
+    marginBottom: 30,
   },
-  explainerRow: {
+  planSection: {
+    gap: 10,
+    padding: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  premiumSection: {
+    borderColor: 'rgba(212,175,55,0.20)',
+    backgroundColor: 'rgba(212,175,55,0.05)',
+  },
+  planLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: theme.textSecondary,
+    letterSpacing: 0,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  premiumLabel: {
+    color: theme.textGold,
+  },
+  planRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
   },
-  explainerDot: {
+  planDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     marginTop: 9,
+    backgroundColor: theme.textSecondary,
+  },
+  premiumDot: {
     backgroundColor: theme.textGold,
   },
-  explainerText: {
+  planText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     color: theme.textMuted,
-    lineHeight: 21,
+    lineHeight: 19,
   },
   nameLabel: {
     fontSize: 20,

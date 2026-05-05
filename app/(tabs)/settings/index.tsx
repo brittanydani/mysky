@@ -72,7 +72,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'What does Deeper Sky include?',
     answer:
-      'Deeper Sky unlocks backup & restore, the full personal story (10 chapters), attachment and inner-work reflections, unlimited relationship charts, journal pattern analysis, deeper insight summaries, Chiron & Node depth mapping, reflective daily guidance with action prompts, extended pattern analysis, full energy chakra mapping, and symbolic dream reflections.',
+      'Deeper Sky unlocks backup & restore, the full personal story (10 chapters), attachment and inner-work reflections, up to 10 relationship charts, journal pattern analysis, deeper insight summaries, Chiron & Node depth mapping, reflective daily guidance with action prompts, extended pattern analysis, full energy chakra mapping, and symbolic dream reflections.',
   },
   {
     question: 'How does mood and energy tracking work?',
@@ -1082,7 +1082,7 @@ export default function SettingsScreen() {
                         <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
-                        Full personal story, deeper reflection insights, unlimited relationships, pattern analysis, backup & restore, and reflective guidance — $4.99/mo or $29.99/yr.
+                        Full personal story, deeper reflection insights, up to 10 relationships, pattern analysis, backup & restore, and reflective guidance — $4.99/mo or $29.99/yr.
                       </Text>
                     </View>
                     <Ionicons name="arrow-forward-outline" size={16} color={styles.chevronTint.color} />
