@@ -46,9 +46,10 @@ import { AstrologyCalculator } from '../services/astrology/calculator';
 import { InputValidator } from '../services/astrology/inputValidator';
 import { supabaseDb } from '../services/storage/supabaseDb';
 import { BackupService } from '../services/storage/backupService';
+import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import { toLocalDateString } from '../utils/dateUtils';
 import { useAuth } from '../context/AuthContext';
-import { logger } from     '../utils/logger';
+import { logger } from '../utils/logger';
 import Constants from 'expo-constants';
 import { supabase } from '../lib/supabase';
 import { signUpAndEnsureSession } from '../services/auth/signUpSession';
@@ -231,7 +232,7 @@ function BottomNav({
 interface OnboardingModalProps {
   visible: boolean;
   onComplete: (chart?: NatalChart) => void;
-  onPrivacyConsent?: () => void;
+  onPrivacyConsent?: () => Promise<boolean | void> | boolean | void;
   onSignInComplete?: () => Promise<boolean> | boolean;
 }
 
@@ -243,7 +244,8 @@ export default function OnboardingModal({
 }: OnboardingModalProps) {
   const theme = useAppTheme();
   const { resolvedMode } = useThemePreference();
-  const [step, setStep] = useState<OnboardingStep>('auth');
+  const { session } = useAuth();
+  const [step, setStep] = useState<OnboardingStep>(() => (session ? 'privacy' : 'auth'));
   const [legalView, setLegalView] = useState<null | 'terms' | 'privacy' | 'faq'>(null);
 
   const genericSignUpError = 'Could not create account. If you already have one, sign in or reset your password.';
@@ -260,6 +262,7 @@ export default function OnboardingModal({
   const [authRecoveryPassword, setAuthRecoveryPassword] = useState('');
   const [authRecoveryConfirmPassword, setAuthRecoveryConfirmPassword] = useState('');
   const [authShowRecoveryPassword, setAuthShowRecoveryPassword] = useState(false);
+  const [privacyAccepting, setPrivacyAccepting] = useState(false);
 
   const [userName, setUserName] = useState('');
   const [birthDate, setBirthDate] = useState<Date>(new Date());
@@ -285,17 +288,12 @@ export default function OnboardingModal({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const authSubmitInFlightRef = useRef(false);
 
-  const { session } = useAuth();
-  const previousSessionRef = useRef(!!session);
-
   useEffect(() => {
     const hasSession = !!session;
     // If they already have a session on mount or acquire one, skip auth step
     if (hasSession && step === 'auth') {
       goToStep('privacy');
     }
-    previousSessionRef.current = hasSession;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, step]);
 
   useEffect(() => {
@@ -315,6 +313,7 @@ export default function OnboardingModal({
 
   const goBack = () => {
     if (step === 'privacy') {
+      if (session) return;
       goToStep('auth');
       return;
     }
@@ -468,10 +467,24 @@ export default function OnboardingModal({
     }
   };
 
-  const handlePrivacyAccept = () => {
+  const handlePrivacyAccept = async () => {
+    if (privacyAccepting) return;
+
     Haptics.selectionAsync().catch(() => {});
-    onPrivacyConsent?.();
-    goToStep('name');
+    setPrivacyAccepting(true);
+    try {
+      const consentResult = await onPrivacyConsent?.();
+      if (consentResult === false) {
+        Alert.alert('Could not continue', 'We could not save your consent. Please try again.');
+        return;
+      }
+      goToStep('name');
+    } catch (error) {
+      logger.error('[OnboardingModal] Failed to save privacy consent:', error);
+      Alert.alert('Could not continue', 'We could not save your consent. Please try again.');
+    } finally {
+      setPrivacyAccepting(false);
+    }
   };
 
   const handleNameContinue = () => {
@@ -503,8 +516,14 @@ export default function OnboardingModal({
     goToStep('processing');
 
     try {
-      if (userName.trim()) {
-        await saveDisplayName(userName.trim());
+      const trimmedName = userName.trim();
+
+      if (trimmedName) {
+        try {
+          await saveDisplayName(trimmedName);
+        } catch (error) {
+          logger.warn('[OnboardingModal] Failed to save display name:', error);
+        }
       }
 
       const birthData: BirthData = {
@@ -529,7 +548,7 @@ export default function OnboardingModal({
 
       const savedChart = {
         id: chart.id,
-        name: chart.name,
+        name: trimmedName || chart.name,
         birthDate: chart.birthData.date,
         birthTime: chart.birthData.time,
         hasUnknownTime: chart.birthData.hasUnknownTime,
@@ -613,7 +632,14 @@ export default function OnboardingModal({
   };
 
   const handleRestoreBackup = async () => {
+    if (!session) {
+      Alert.alert('Sign in required', 'Sign in or create an account before restoring a backup.');
+      return;
+    }
+
     Haptics.selectionAsync().catch(() => {});
+    const fallbackStep: OnboardingStep = session ? 'name' : 'auth';
+
     try {
       const uri = await BackupService.pickBackupFile();
       if (!uri) return;
@@ -622,6 +648,7 @@ export default function OnboardingModal({
       await BackupService.restoreFromBackupFile(uri);
       const charts = await supabaseDb.getCharts();
       if (charts.length > 0) {
+        const astroSettings = await AstrologySettingsService.getSettings();
         const birthDataFromChart = {
           date: charts[0].birthDate,
           time: charts[0].birthTime,
@@ -629,7 +656,9 @@ export default function OnboardingModal({
           place: charts[0].birthPlace,
           latitude: charts[0].latitude,
           longitude: charts[0].longitude,
-          houseSystem: charts[0].houseSystem,
+          houseSystem: astroSettings.houseSystem ?? charts[0].houseSystem,
+          zodiacSystem: astroSettings.zodiacSystem,
+          orbPreset: astroSettings.orbPreset,
           timezone: charts[0].timezone,
         };
         const chart = await AstrologyCalculator.generateNatalChartAsync(birthDataFromChart);
@@ -639,13 +668,13 @@ export default function OnboardingModal({
         }, 900);
       } else {
         Alert.alert('No Data Found', 'The backup did not contain any profile data.', [
-          { text: 'OK', onPress: () => setStep('auth') },
+          { text: 'OK', onPress: () => setStep(fallbackStep) },
         ]);
       }
     } catch (error) {
-      logger.error('Failed to pick backup file:', error);
+      logger.error('Failed to restore backup:', error);
       Alert.alert('Restore Failed', 'Could not restore from backup. Please check the backup file and try again.', [
-        { text: 'OK', onPress: () => setStep('auth') },
+        { text: 'OK', onPress: () => setStep(fallbackStep) },
       ]);
     }
   };
@@ -878,10 +907,6 @@ export default function OnboardingModal({
                             {authMode === 'sign-in' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
                           </Text>
                         </Pressable>
-                        <Pressable style={st.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button">
-                          <Ionicons name="cloud-download-outline" size={16} color={PREMIUM.textMuted} />
-                          <Text style={st.restoreText}>Restore from Backup</Text>
-                        </Pressable>
                       </>
                     )}
                   </Animated.View>
@@ -954,7 +979,11 @@ export default function OnboardingModal({
                   <Animated.View entering={FadeInUp.delay(500).duration(600)} style={st.termsFooterActions}>
                     <Pressable
                       onPress={handlePrivacyAccept}
+                      disabled={privacyAccepting}
                       style={({ pressed }) => [st.termsAcceptBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+                      accessibilityRole="button"
+                      accessibilityLabel="I Accept and Continue"
+                      accessibilityState={{ disabled: privacyAccepting }}
                     >
                       <LinearGradient
                         colors={['#FFF4D6', '#D4AF37', '#6B532E']}
@@ -962,12 +991,14 @@ export default function OnboardingModal({
                         end={{ x: 1, y: 1 }}
                         style={st.termsBtnGradient}
                       >
-                        <Text style={st.termsAcceptBtnText}>I Accept & Continue</Text>
+                        <Text style={st.termsAcceptBtnText}>{privacyAccepting ? 'Saving...' : 'I Accept & Continue'}</Text>
                       </LinearGradient>
                     </Pressable>
-                    <Pressable style={st.restoreButton} onPress={() => goToStep('auth')}>
-                      <Text style={st.restoreText}>Go Back</Text>
-                    </Pressable>
+                    {!session && (
+                      <Pressable style={st.restoreButton} onPress={() => goToStep('auth')}>
+                        <Text style={st.restoreText}>Go Back</Text>
+                      </Pressable>
+                    )}
                   </Animated.View>
                 </ScrollView>
               )}
@@ -1009,6 +1040,17 @@ export default function OnboardingModal({
                   </Animated.View>
                   <Animated.View entering={FadeInUp.delay(400).duration(600)}>
                     <BottomNav canGoBack={false} isNextDisabled={!userName.trim()} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleNameContinue} />
+                    {session && (
+                      <Pressable
+                        style={st.restoreButton}
+                        onPress={handleRestoreBackup}
+                        accessibilityRole="button"
+                        accessibilityLabel="Restore from Backup"
+                      >
+                        <Ionicons name="cloud-download-outline" size={16} color={PREMIUM.textMuted} />
+                        <Text style={st.restoreText}>Restore from Backup</Text>
+                      </Pressable>
+                    )}
                   </Animated.View>
                 </Pressable>
               )}
@@ -1017,9 +1059,9 @@ export default function OnboardingModal({
               {step === 'birthDate' && (
                 <Pressable style={[st.centeredFlex, st.birthDetailsStep]} onPress={Keyboard.dismiss} accessible={false}>
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
-                    <Text style={st.etherealQuestion}>When did your journey begin?</Text>
+                    <Text style={st.etherealQuestion}>When were you born?</Text>
                     <Text style={st.etherealSubtext}>
-                      Used to accurately map your internal weather and profile.
+                      Your birth date anchors your chart and daily profile.
                     </Text>
 
                     <BlurView intensity={30} tint={theme.blurTint} style={st.glassCard}>
@@ -1048,9 +1090,9 @@ export default function OnboardingModal({
               {step === 'birthTime' && (
                 <View style={[st.centeredFlex, st.birthDetailsStep]}>
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
-                    <Text style={st.etherealQuestion}>What time did you arrive?</Text>
+                    <Text style={st.etherealQuestion}>What time were you born?</Text>
                     <Text style={st.etherealSubtext}>
-                      Precision helps us personalize your data patterns.
+                      Exact time helps calculate your Rising sign and houses.
                     </Text>
 
                     <View style={st.customTimeRow}>
@@ -1158,9 +1200,9 @@ export default function OnboardingModal({
                   showsVerticalScrollIndicator={false}
                 >
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
-                    <Text style={st.etherealQuestion}>Where did your journey begin?</Text>
+                    <Text style={st.etherealQuestion}>Where were you born?</Text>
                     <Text style={st.etherealSubtext}>
-                      City of birth roots your profile baseline.
+                      Search for your birth city so we can calculate timezone and coordinates.
                     </Text>
 
                     <BlurView intensity={30} tint={theme.blurTint} style={[st.locationSearchRow, st.velvetBorder]}>
@@ -1231,11 +1273,11 @@ export default function OnboardingModal({
                   <Animated.View entering={FadeIn.delay(100).duration(1000)} style={st.processingContainer}>
                     <ProcessingOrb />
                     <View style={st.processingTextGroup}>
-                      <MetallicText style={st.processingLabel} variant="gold">COMPILING DATA</MetallicText>
+                      <MetallicText style={st.processingLabel} variant="gold">CREATING PROFILE</MetallicText>
                       <Text style={st.processingMessage}>
                         {userName.trim()
-                          ? `Mapping telemetry for ${userName.trim()}`
-                          : 'Analyzing core patterns'}
+                          ? `Calculating ${userName.trim()}'s chart`
+                          : 'Calculating your chart'}
                       </Text>
                     </View>
                   </Animated.View>

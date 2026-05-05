@@ -815,12 +815,12 @@ function AppShell() {
     });
   }, [authLoading, session]);
 
-  const handlePrivacyConsent = async (granted: boolean) => {
+  const handlePrivacyConsent = async (granted: boolean): Promise<boolean> => {
     try {
       if (!granted) {
         // Keep gate up; do not initialize anything
         setNeedsPrivacyConsent(true);
-        return;
+        return false;
       }
 
       // Persist consent so it survives app restarts
@@ -853,9 +853,11 @@ function AppShell() {
         needsTermsConsent: false,
         onboardingComplete: postConsentResult.onboardingComplete ?? onboardingComplete,
       };
+      return true;
     } catch (error) {
       logger.error('Privacy consent handling failed:', error);
       setNeedsPrivacyConsent(true);
+      return false;
     }
   };
 
@@ -967,16 +969,17 @@ function AppShell() {
       let canSkip = await checkIfOnboardingCanBeSkipped();
 
       if (canSkip) {
-        authEntryIntentRef.current = 'sign-in-home';
-        setCompletingOnboarding(true);
-        setOnboardingComplete(true);
-
         if (needsPrivacyConsent) {
-          await handlePrivacyConsent(true);
+          const consentSaved = await handlePrivacyConsent(true);
+          if (!consentSaved) return false;
         } else {
           await setTermsConsent(true);
           setNeedsTermsConsent(false);
         }
+
+        authEntryIntentRef.current = 'sign-in-home';
+        setCompletingOnboarding(true);
+        setOnboardingComplete(true);
         return true;
       }
 
@@ -1086,18 +1089,18 @@ function AppShell() {
               </Stack>
 
               <React.Suspense fallback={null}>
-                {session && onboardingComplete && !sessionDataReady && (
+                {session && !sessionDataReady && (
                   <View style={styles.postAuthLoadingOverlay}>
                     <ActivityIndicator color={theme.primary} />
-                    <Text style={styles.postAuthLoadingText}>Finishing sign in...</Text>
+                    <Text style={styles.postAuthLoadingText}>Preparing your profile...</Text>
                   </View>
                 )}
 
-                {session && needsPrivacyConsent && onboardingComplete && (
+                {session && sessionDataReady && needsPrivacyConsent && onboardingComplete && (
                   <PrivacyConsentModal visible onConsent={handlePrivacyConsent} />
                 )}
 
-                {session && !onboardingComplete && (
+                {session && sessionDataReady && !onboardingComplete && (
                   <OnboardingModal
                     visible
                     onPrivacyConsent={() => handlePrivacyConsent(true)}
