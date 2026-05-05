@@ -88,6 +88,7 @@ import { type GeneratedInsight } from '../../services/insights/types/knowledgeEn
 import { KnowledgeInsightCard } from '../../components/KnowledgeInsightCard';
 
 const { width } = Dimensions.get('window');
+const HOME_FOCUS_REFRESH_CACHE_MS = 60 * 1000;
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -164,6 +165,9 @@ export default function HomeScreen() {
   const isScreenActiveRef = useRef(false);
   const loadSequenceRef = useRef(0);
   const hasRenderedChartRef = useRef(false);
+  const todayDataReadyRef = useRef(false);
+  const lastSuccessfulLoadAtRef = useRef(0);
+  const lastLoadedDayRef = useRef<string | null>(null);
 
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [showEditBirth, setShowEditBirth] = useState(false);
@@ -203,6 +207,10 @@ export default function HomeScreen() {
   // Self-knowledge context — used to personalize affirmations
   const [selfKnowledge, setSelfKnowledge] = useState<SelfKnowledgeContext | null>(null);
 
+  useEffect(() => {
+    todayDataReadyRef.current = todayDataReady;
+  }, [todayDataReady]);
+
   const archiveDepthCounts = useMemo(() => ({
     checkIns: dailyLoop?.streak.totalCheckIns ?? weeklyCheckIns.length,
     journalEntries: dailyLoop?.weeklyReflection.journalCount ?? 0,
@@ -235,8 +243,22 @@ export default function HomeScreen() {
   // ── Chart Loading ──
 
   const loadUserChart = useCallback(
-    async (opts?: { silent?: boolean }) => {
+    async (opts?: { silent?: boolean; force?: boolean }) => {
       const silent = opts?.silent ?? false;
+      const currentDayKey = getLogicalToday();
+      const refreshState = getTodayInsightRefreshState();
+      const canUseFocusCache =
+        !opts?.force &&
+        hasRenderedChartRef.current &&
+        todayDataReadyRef.current &&
+        lastLoadedDayRef.current === currentDayKey &&
+        refreshState.revision <= consumedTodayInsightRefreshRevisionRef.current &&
+        Date.now() - lastSuccessfulLoadAtRef.current < HOME_FOCUS_REFRESH_CACHE_MS;
+
+      if (canUseFocusCache) {
+        return;
+      }
+
       const loadId = loadSequenceRef.current + 1;
       loadSequenceRef.current = loadId;
       if (!silent && isScreenActiveRef.current) {
@@ -429,6 +451,9 @@ export default function HomeScreen() {
 
         if (opts.markReady) {
           setIfActive(setTodayDataReady, true);
+          todayDataReadyRef.current = true;
+          lastLoadedDayRef.current = todayKey;
+          lastSuccessfulLoadAtRef.current = Date.now();
         }
       };
 
@@ -487,18 +512,23 @@ export default function HomeScreen() {
           }
         } else {
           hasRenderedChartRef.current = false;
+          lastSuccessfulLoadAtRef.current = 0;
+          lastLoadedDayRef.current = null;
           setIfActive(setUserChart, null);
           setIfActive(setKnowledgeInsight, null);
           setIfActive(setKnowledgeInsights, []);
           setIfActive(setSleepSignalCount, 0);
           setIfActive(setDreamSignalCount, 0);
           setIfActive(setTodayDataReady, false);
+          todayDataReadyRef.current = false;
 
         }
       } catch (error) {
         logger.error('Failed to load user chart:', error);
         if (isCurrentLoad()) {
           hasRenderedChartRef.current = false;
+          lastSuccessfulLoadAtRef.current = 0;
+          lastLoadedDayRef.current = null;
         }
         setIfActive(setUserChart, null);
         setIfActive(setKnowledgeInsight, null);
@@ -506,6 +536,7 @@ export default function HomeScreen() {
         setIfActive(setSleepSignalCount, 0);
         setIfActive(setDreamSignalCount, 0);
         setIfActive(setTodayDataReady, false);
+        todayDataReadyRef.current = false;
       } finally {
         if (!silent && isCurrentLoad()) setLoading(false);
       }
@@ -570,6 +601,8 @@ export default function HomeScreen() {
       chart.createdAt = savedChart.createdAt;
       chart.updatedAt = savedChart.updatedAt;
       setUserChart(chart);
+      lastSuccessfulLoadAtRef.current = 0;
+      lastLoadedDayRef.current = null;
     } catch (error) {
       logger.error('Failed to update chart:', error);
     }

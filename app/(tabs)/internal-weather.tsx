@@ -52,6 +52,7 @@ const CARD_INNER_W = width - 88;
 const APPLE_SPRING = { damping: 20, stiffness: 90, mass: 1 } as const;
 const SLIDER_THUMB_WIDTH = 20;
 const SLIDER_THUMB_HEIGHT = 40;
+const CHECKIN_FOCUS_REFRESH_CACHE_MS = 60 * 1000;
 
 type PillPolarity = 'neutral' | 'pos' | 'neg';
 
@@ -371,6 +372,8 @@ export default function MoodCheckIn() {
   // auto-slot selection so the user lands on the current time slot with a
   // fresh (empty) form rather than being jumped to a previously filled slot.
   const isFocusResetRef = useRef(true);
+  const hasLoadedCheckInContextRef = useRef(false);
+  const lastCheckInContextLoadedAtRef = useRef(0);
 
   // Ref that always holds the latest form values so handleSeal can be a stable
   // callback (empty deps). A stable onSeal means the LongPress gesture inside
@@ -434,9 +437,16 @@ export default function MoodCheckIn() {
       setSelectedDate(getLogicalToday());
       setSelectedSlot(CheckInService.getCurrentTimeSlot());
 
+      if (
+        hasLoadedCheckInContextRef.current &&
+        Date.now() - lastCheckInContextLoadedAtRef.current < CHECKIN_FOCUS_REFRESH_CACHE_MS
+      ) {
+        return undefined;
+      }
+
       const load = async () => {
         try {
-          setIsLoading(true);
+          if (!hasLoadedCheckInContextRef.current) setIsLoading(true);
           const charts = await supabaseDb.getCharts();
           if (canceled || !charts || charts.length === 0) {
             setIsLoading(false);
@@ -463,6 +473,8 @@ export default function MoodCheckIn() {
             setChartId(saved.id);
             setNatalChart(natal);
             setRecentCheckIns(recent);
+            hasLoadedCheckInContextRef.current = true;
+            lastCheckInContextLoadedAtRef.current = Date.now();
           }
         } catch (e) {
           logger.error('[MoodCheckIn] Load failed:', e);
@@ -773,6 +785,8 @@ export default function MoodCheckIn() {
       const recent = await supabaseDb.getCheckInsInRange(chartId, sevenDaysAgo, today);
       setCompletedSlots(slots);
       setRecentCheckIns(recent);
+      hasLoadedCheckInContextRef.current = true;
+      lastCheckInContextLoadedAtRef.current = Date.now();
       setIsEditingExisting(true);
       setIsSaving(false);
 

@@ -80,6 +80,7 @@ function normalizeCustomFeelingId(value: string): string {
 
 const SCREEN_W = Dimensions.get('window').width;
 const DREAM_TEXT_MAX_LENGTH = 10000;
+const SLEEP_FOCUS_REFRESH_CACHE_MS = 60 * 1000;
 
 // ── Cinematic Palette (Obsidian & Gold) ──
 const PALETTE = {
@@ -394,6 +395,9 @@ export default function SleepScreen() {
   const [editingDate, setEditingDate] = useState<string | null>(null);
   const [natalChart, setNatalChart] = useState<NatalChart | null>(null);
   const [recentCheckIns, setRecentCheckIns] = useState<DailyCheckIn[]>([]);
+  const hasLoadedSleepRef = useRef(false);
+  const lastSleepLoadedAtRef = useRef(0);
+  const lastSleepEntryParamRef = useRef<string | null>(null);
   const [interpretations, setInterpretations] = useState<Record<string, DreamInterpretation>>({});
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
   const [saveReflection, setSaveReflection] = useState<SaveReflection | null>(null);
@@ -562,38 +566,56 @@ export default function SleepScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      const requestedEntryId = Array.isArray(entryId) ? entryId[0] ?? null : entryId ?? null;
+      if (
+        hasLoadedSleepRef.current &&
+        lastSleepEntryParamRef.current === requestedEntryId &&
+        Date.now() - lastSleepLoadedAtRef.current < SLEEP_FOCUS_REFRESH_CACHE_MS
+      ) {
+        return;
+      }
+
+      let active = true;
       (async () => {
         try {
-          setLoading(true);
+          if (!hasLoadedSleepRef.current) setLoading(true);
           const dreamPref = await getUserPreference<string | null>('pref_dream_logging', null);
+          if (!active) return;
           setDreamLoggingEnabled(dreamPref === null || dreamPref === '1');
           const charts = await supabaseDb.getCharts();
-          if (charts.length === 0) return;
+          if (!active || charts.length === 0) return;
           const savedChart = charts[0];
           setChartId(savedChart.id);
           const [data, checkIns] = await Promise.all([
             supabaseDb.getSleepEntries(savedChart.id, 30),
             supabaseDb.getCheckIns(savedChart.id, 30),
           ]);
+          if (!active) return;
           setEntries(data); setRecentCheckIns(checkIns);
-          const requestedEntryId = Array.isArray(entryId) ? entryId[0] : entryId;
           const requestedEntry = requestedEntryId ? data.find((entry) => entry.id === requestedEntryId) : undefined;
           applyEntryToForm(requestedEntry ?? data.find(e => e.date === today));
           setIsEditingUnlocked(!!requestedEntry);
           try {
             const astroSettings = await AstrologySettingsService.getSettings();
-            setNatalChart(await AstrologyCalculator.generateNatalChartAsync({
+            const chart = await AstrologyCalculator.generateNatalChartAsync({
               date: savedChart.birthDate, time: savedChart.birthTime, hasUnknownTime: savedChart.hasUnknownTime,
               place: savedChart.birthPlace, latitude: savedChart.latitude, longitude: savedChart.longitude,
               timezone: savedChart.timezone, houseSystem: savedChart.houseSystem,
               zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset,
-            }));
+            });
+            if (active) setNatalChart(chart);
           } catch {}
+          if (active) {
+            hasLoadedSleepRef.current = true;
+            lastSleepLoadedAtRef.current = Date.now();
+            lastSleepEntryParamRef.current = requestedEntryId;
+          }
         } catch (e) {
           logger.error('Sleep load failed:', e);
           setLoadError('Could not load your sleep data.');
-        } finally { setLoading(false); }
+        } finally { if (active) setLoading(false); }
       })();
+      return () => { active = false; };
     }, [applyEntryToForm, entryId, today])
   );
 
@@ -624,6 +646,9 @@ export default function SleepScreen() {
       }
       const updated = await supabaseDb.getSleepEntries(chartId, 30);
       setEntries(updated);
+      hasLoadedSleepRef.current = true;
+      lastSleepLoadedAtRef.current = Date.now();
+      lastSleepEntryParamRef.current = null;
       const savedEntry = updated.find(e => e.id === entry.id);
       const savedId = entry.id;
       const nextSaveReflection = savedEntry ? buildSaveReflection(savedEntry, updated) : null;

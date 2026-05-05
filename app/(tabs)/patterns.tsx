@@ -7,7 +7,7 @@
 // 3. Integrated "Velvet Glass" 1px directional light-catch borders globally.
 // 4. Enhanced Typography: Pure White data hero numbers and crisp Metallic Gold headers.
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -75,6 +75,8 @@ const WRAP_AT_WORD_PROPS = {
   textBreakStrategy: 'simple' as const,
   maxFontSizeMultiplier: 1.15,
 };
+
+const PATTERNS_FOCUS_REFRESH_CACHE_MS = 60 * 1000;
 
 const sentenceCount = (text: string): number => (
   text.match(/[.!?](?=\s|$)/g)?.length ?? 0
@@ -144,6 +146,9 @@ export default function PatternsScreen() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
+  const hasLoadedSurfaceRef = useRef(false);
+  const lastSurfaceLoadedAtRef = useRef(0);
+  const lastSurfacePremiumRef = useRef<boolean | null>(null);
 
   const recordPatternOutcome = useCallback((
     item: PatternLibraryItem,
@@ -173,7 +178,19 @@ export default function PatternsScreen() {
       let active = true;
       const focusTask = InteractionManager.runAfterInteractions(() => {
         if (!active) return;
-        setLoading(true);
+        const canUseFocusCache =
+          hasLoadedSurfaceRef.current &&
+          lastSurfacePremiumRef.current === isPremium &&
+          Date.now() - lastSurfaceLoadedAtRef.current < PATTERNS_FOCUS_REFRESH_CACHE_MS;
+
+        if (canUseFocusCache) {
+          trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
+          return;
+        }
+
+        if (!hasLoadedSurfaceRef.current) {
+          setLoading(true);
+        }
         setLoadError(false);
         trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
         (async () => {
@@ -208,6 +225,9 @@ export default function PatternsScreen() {
             setThisWeeksV2Pattern(surface.thisWeeksV2Pattern);
             setPremiumWeeklyDeepDive(surface.premiumWeeklyDeepDive);
             setWeeklyNarrative(surface.weeklyNarrative);
+            hasLoadedSurfaceRef.current = true;
+            lastSurfaceLoadedAtRef.current = Date.now();
+            lastSurfacePremiumRef.current = isPremium;
             recordInsightMemorySnapshots([
               ...surface.premiumPatterns.map((item, index) =>
                 insightMemorySnapshotFromPremiumPattern(item, {

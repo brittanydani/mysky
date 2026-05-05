@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, InteractionManager, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Updates from 'expo-updates';
 
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
@@ -7,6 +7,7 @@ import { type AppTheme } from '../constants/theme';
 import { logger } from '../utils/logger';
 
 const CHECK_THROTTLE_MS = 5 * 60 * 1000;
+const INITIAL_CHECK_DELAY_MS = 30 * 1000;
 
 function updateKey(update?: { type?: string; updateId?: string }) {
   if (!update) return 'downloaded-update';
@@ -30,6 +31,7 @@ export default function OtaUpdatePrompt() {
   const checkingRef = useRef(false);
   const lastCheckAtRef = useRef(0);
   const appStateRef = useRef(AppState.currentState);
+  const initialCheckTaskRef = useRef<ReturnType<typeof InteractionManager.runAfterInteractions> | null>(null);
 
   const checkAndFetchUpdate = useCallback(async (force = false) => {
     if (__DEV__ || !Updates.isEnabled || checkingRef.current || isRestarting) {
@@ -85,8 +87,10 @@ export default function OtaUpdatePrompt() {
     }
 
     const timer = setTimeout(() => {
-      void checkAndFetchUpdate(true);
-    }, 2500);
+      initialCheckTaskRef.current = InteractionManager.runAfterInteractions(() => {
+        void checkAndFetchUpdate(true);
+      });
+    }, INITIAL_CHECK_DELAY_MS);
 
     const subscription = AppState.addEventListener('change', (nextState) => {
       const wasInactive = appStateRef.current === 'inactive' || appStateRef.current === 'background';
@@ -99,6 +103,8 @@ export default function OtaUpdatePrompt() {
 
     return () => {
       clearTimeout(timer);
+      initialCheckTaskRef.current?.cancel?.();
+      initialCheckTaskRef.current = null;
       subscription.remove();
     };
   }, [checkAndFetchUpdate]);
@@ -109,8 +115,10 @@ export default function OtaUpdatePrompt() {
   };
 
   const handleRestart = async () => {
+    setVisible(false);
     setRestartFailed(false);
     try {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       await Updates.reloadAsync({
         reloadScreenOptions: {
           backgroundColor: theme.background,

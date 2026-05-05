@@ -83,6 +83,7 @@ function sanitizeJournalEntryForEdit(entry: JournalEntry): JournalEntry {
 
 const PAGE_SIZE = 30;
 const DAY_MS = 86_400_000;
+const JOURNAL_FOCUS_REFRESH_CACHE_MS = 60 * 1000;
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -261,6 +262,8 @@ function JournalContent() {
   const entriesRef = useRef<JournalEntry[]>([]);
   const hasMoreRef = useRef(true);
   const loadingMoreRef = useRef(false);
+  const hasLoadedJournalRef = useRef(false);
+  const lastJournalLoadedAtRef = useRef(0);
 
   const [showPremiumRequired] = useState(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -538,6 +541,8 @@ function JournalContent() {
         const more = page.length >= PAGE_SIZE;
         hasMoreRef.current = more;
         setHasMore(more);
+        hasLoadedJournalRef.current = true;
+        lastJournalLoadedAtRef.current = Date.now();
       } else {
         if (loadingMoreRef.current || !hasMoreRef.current) return;
         loadingMoreRef.current = true;
@@ -583,6 +588,12 @@ function JournalContent() {
 
   useFocusEffect(
     useCallback(() => {
+      if (
+        hasLoadedJournalRef.current &&
+        Date.now() - lastJournalLoadedAtRef.current < JOURNAL_FOCUS_REFRESH_CACHE_MS
+      ) {
+        return;
+      }
       void loadEntries(true);
       void loadSleepEntries();
     }, [loadEntries, loadSleepEntries])

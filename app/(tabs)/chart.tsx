@@ -12,7 +12,7 @@
 import { ChartBigThreeSection } from '../../components/screens/ChartBigThreeSection';
 import { ChartDignitiesSection } from '../../components/screens/ChartDignitiesSection';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -106,6 +106,8 @@ import {
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 import { personalizeLifeThemeSummary } from '../../utils/chartHelpers';
 import { ChartStorySection } from '../../components/ui/editorial/ChartStorySection';
+
+const CHART_FOCUS_REFRESH_CACHE_MS = 60 * 1000;
 
 // ── Advanced System Configurations ──────────────────────────────────────────
 
@@ -499,6 +501,9 @@ export default function ChartScreen() {
   const [, setOrbPresetLabel] = useState<string>('Normal');
   const [zodiacSystemLabel, setZodiacSystemLabel] = useState<string>('Tropical');
   const [chartOrientation, setChartOrientation] = useState<any>('standard-natal');
+  const hasLoadedChartRef = useRef(false);
+  const lastChartLoadedAtRef = useRef(0);
+  const lastChartPremiumRef = useRef<boolean | null>(null);
 
   /**
    * loadChart: Primary Synchronization Engine
@@ -552,6 +557,9 @@ export default function ChartScreen() {
         setUserChart(null);
         setSavedUserChartId(null);
       }
+      hasLoadedChartRef.current = true;
+      lastChartLoadedAtRef.current = Date.now();
+      lastChartPremiumRef.current = isPremium;
     } catch (error) {
       logger.error('Master blueprint load error', error);
       setUserChart(null);
@@ -564,8 +572,15 @@ export default function ChartScreen() {
   useFocusEffect(
     useCallback(() => {
       trackGrowthEvent('analytics_screen_viewed', { screen: 'chart' }).catch(() => {});
+      if (
+        hasLoadedChartRef.current &&
+        lastChartPremiumRef.current === isPremium &&
+        Date.now() - lastChartLoadedAtRef.current < CHART_FOCUS_REFRESH_CACHE_MS
+      ) {
+        return;
+      }
       void loadChart();
-    }, [loadChart])
+    }, [isPremium, loadChart])
   );
 
   /**
