@@ -29,6 +29,9 @@ import {
   type CurrentInsightStateProfile,
 } from '../state/insightState';
 import { humanizeInsightParagraphBody } from '../generated/insightSupportAlignment';
+import { patternParagraphBodyKey } from '../paragraphBodyKey';
+
+export { patternParagraphBodyKey } from '../paragraphBodyKey';
 
 export type PremiumPatternWriterShape = GeneratedInsightWriterShape;
 export type PatternParagraphTone = GeneratedInsightTone;
@@ -329,12 +332,6 @@ function intensityFitScore(
   if (targetIntensity === 'low' && paragraphIntensity === 'medium') return -5;
   if (targetIntensity === 'medium') return -4;
   return -15;
-}
-
-export function patternParagraphBodyKey(body: string): string {
-  return normalizeToken(humanizeInsightParagraphBody(body))
-    .replace(/[^a-z0-9 ]+/g, '')
-    .trim();
 }
 
 function inferredAnchors(input: PatternParagraphSelectionInput): string[] {

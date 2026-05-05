@@ -14,10 +14,10 @@ export interface RetryOptions {
 }
 
 const DEFAULT_OPTIONS: Required<RetryOptions> = {
-  maxRetries: 3,
-  baseDelayMs: 1000,
-  maxDelayMs: 10000,
-  timeoutMs: 30000,
+  maxRetries: 1,
+  baseDelayMs: 750,
+  maxDelayMs: 2000,
+  timeoutMs: 10000,
   onRetry: () => {},
 };
 
@@ -124,21 +124,21 @@ export async function withRetry<T>(
 
 export const RETRY_PRESETS = {
   fast: {
-    maxRetries: 2,
-    baseDelayMs: 500,
-    maxDelayMs: 3000,
-    timeoutMs: 10000,
+    maxRetries: 1,
+    baseDelayMs: 300,
+    maxDelayMs: 1000,
+    timeoutMs: 6000,
   },
   standard: {
-    maxRetries: 3,
-    baseDelayMs: 1000,
-    maxDelayMs: 10000,
-    timeoutMs: 30000,
+    maxRetries: 1,
+    baseDelayMs: 750,
+    maxDelayMs: 2000,
+    timeoutMs: 10000,
   },
   long: {
     maxRetries: 2,
-    baseDelayMs: 2000,
-    maxDelayMs: 15000,
-    timeoutMs: 60000,
+    baseDelayMs: 1000,
+    maxDelayMs: 5000,
+    timeoutMs: 20000,
   },
 } satisfies Record<string, RetryOptions>;

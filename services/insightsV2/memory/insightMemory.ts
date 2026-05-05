@@ -8,7 +8,7 @@ import type {
   PremiumThisWeekPatternItem,
   PremiumWeeklyDeepDiveItem,
 } from '../adapters/premiumPatterns';
-import { patternParagraphBodyKey } from '../adapters/premiumPatternParagraphLibrary';
+import { patternParagraphBodyKey } from '../paragraphBodyKey';
 import type {
   ArchivePatternScore,
   InsightCategory,

@@ -26,18 +26,43 @@ const FALLBACK_SUPABASE_URL = 'http://localhost:54321';
 const FALLBACK_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder.placeholder';
 
+const SUPABASE_FETCH_TIMEOUT_MS = 10_000;
+
 const fetchWithTimeout: typeof fetch = (url, options = {}) => {
-  const timeoutMs = 30_000;
+  const controller = new AbortController();
+  const externalSignal = options.signal;
+  let didTimeout = false;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  return Promise.race([
-    fetch(url, options),
-    new Promise<Response>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error('Fetch timeout')), timeoutMs);
-    }),
-  ]).finally(() => {
-    if (timeoutId) clearTimeout(timeoutId);
-  }) as ReturnType<typeof fetch>;
+  const abortFromParent = () => controller.abort();
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      controller.abort();
+    } else {
+      externalSignal.addEventListener?.('abort', abortFromParent, { once: true });
+    }
+  }
+
+  const timeout = new Promise<Response>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      didTimeout = true;
+      controller.abort();
+      reject(new Error(`Fetch timeout after ${SUPABASE_FETCH_TIMEOUT_MS}ms`));
+    }, SUPABASE_FETCH_TIMEOUT_MS);
+  });
+
+  const request = fetch(url, { ...options, signal: controller.signal }).catch((error) => {
+    if (didTimeout) {
+      throw new Error(`Fetch timeout after ${SUPABASE_FETCH_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  });
+
+  return Promise.race([request, timeout])
+    .finally(() => {
+      if (timeoutId) clearTimeout(timeoutId);
+      externalSignal?.removeEventListener?.('abort', abortFromParent);
+    }) as ReturnType<typeof fetch>;
 };
 
 export const supabase = createClient(

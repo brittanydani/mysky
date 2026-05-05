@@ -1,13 +1,13 @@
 import { ARCHIVE_PATTERNS } from '../patternPacks';
 import {
   hasEnoughPatternEvidence,
-  patternParagraphBodyKey,
   type PatternParagraphVariant,
   type PatternParagraphIntensity,
   type PatternParagraphTone,
   type PremiumPatternType,
   type PremiumPatternWriterShape,
 } from './premiumPatternParagraphLibrary';
+import { patternParagraphBodyKey } from '../paragraphBodyKey';
 import {
   buildPatternSearchText,
   selectArchivePatternParagraph,

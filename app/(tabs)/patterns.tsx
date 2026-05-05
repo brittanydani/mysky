@@ -8,7 +8,7 @@
 // 4. Enhanced Typography: Pure White data hero numbers and crisp Metallic Gold headers.
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Dimensions, ActivityIndicator, Modal, ScrollView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, Modal, ScrollView } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -25,8 +25,6 @@ import {
   type PremiumThisWeekPatternItem,
   type PremiumWeeklyDeepDiveItem,
 } from '../../services/insightsV2/adapters/premiumPatterns';
-import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
-import { DailyCheckIn } from '../../services/patterns/types';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
@@ -61,21 +59,6 @@ import { type WeeklyNarrativeThread } from '../../services/insightsV2/narrative/
 import { usePremium } from '../../context/PremiumContext';
 import { useRouter, Href } from 'expo-router';
 import { logger } from '../../utils/logger';
-
-const SCREEN_W = Dimensions.get('window').width;
-const ORBIT_SIZE = SCREEN_W - 48;
-
-// ─── Semantic Palette ─────────────────────────────────────────────────────────
-const PALETTE = {
-  gold: '#D4AF37',       // Metallic hardware elements
-  atmosphere: '#A2C2E1', // Icy Blue for dashboard glass
-  slateMid: '#2C3645',   // Anchor Slate Top
-  slateDeep: '#1A1E29',  // Anchor Slate Bottom
-  nebula: '#A88BEB',     // Dreams/Subconscious
-  sage: '#6B9080',       // Growth/Somatic
-  ember: '#DC5050',      // Stress/Tension
-  bg: '#0A0A0F',
-};
 
 const WRAP_AT_WORD_PROPS = {
   android_hyphenationFrequency: 'none' as const,
@@ -138,9 +121,7 @@ export default function PatternsScreen() {
   const router = useRouter();
   const [snapshot, setSnapshot] = useState({ avgMood: 0, avgStress: 0, checkInCount: 0 });
   const [archiveDepthCounts, setArchiveDepthCounts] = useState<ArchiveDepthCounts>({});
-  const [trendCheckIns, setTrendCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
-  const [orbitLoading, setOrbitLoading] = useState(true);
   const [premiumPersonaProfile, setPremiumPersonaProfile] = useState<PremiumPersonaProfile | null>(null);
   const [premiumPatterns, setPremiumPatterns] = useState<PremiumPatternItem[]>([]);
   const [premiumPatternProfile, setPremiumPatternProfile] = useState<PremiumPatternProfile | null>(null);
@@ -182,7 +163,6 @@ export default function PatternsScreen() {
     useCallback(() => {
       let active = true;
       setLoading(true);
-      setOrbitLoading(true);
       setLoadError(false);
       trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
       (async () => {
@@ -208,11 +188,9 @@ export default function PatternsScreen() {
           if (!active) return;
 
           setMoodInsightsEnabled(insightsEnabled);
-          setTrendCheckIns(surface.checkIns);
           setSnapshot(surface.snapshot);
           setArchiveDepthCounts(surface.archiveDepthCounts);
           setLastUpdated(surface.lastUpdated);
-          setOrbitLoading(false);
           setPremiumPersonaProfile(surface.premiumPersonaProfile);
           setPremiumPatterns(surface.premiumPatterns);
           setPremiumPatternProfile(surface.premiumPatternProfile);
@@ -407,15 +385,6 @@ export default function PatternsScreen() {
                 <MetricCard label="Mood" value={snapshot.avgMood.toFixed(1)} wash={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} />
                 <MetricCard label="Stress" value={snapshot.avgStress.toFixed(1)} wash={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} />
                 <MetricCard label="Logged" value={snapshot.checkInCount.toString()} wash={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} />
-              </View>
-
-              <View style={[styles.orbitCard, theme.velvetBorder]}>
-                <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
-                <View style={styles.orbitCardHeader}>
-                  <MetallicIcon name="planet-outline" size={14} variant="gold" />
-                  <MetallicText style={styles.orbitCardEyebrow} variant="gold">PATTERN ORBIT MAP</MetallicText>
-                </View>
-                {orbitLoading ? <ActivityIndicator size="large" color={PALETTE.gold} /> : <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />}
               </View>
 
               {isPremium && premiumPersonaProfile ? (
@@ -963,12 +932,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   metricLabel: { width: '100%', fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.2, marginBottom: 8, textAlign: 'center' },
   metricValue: { width: '100%', fontSize: 32, fontWeight: '700', color: theme.textPrimary, textAlign: 'center' },
 
-  orbitCard: { height: ORBIT_SIZE + 80, borderRadius: 24, marginBottom: 40, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   emptyCard: { borderRadius: 24, padding: 24, marginBottom: 24, overflow: 'hidden' },
   emptyTitle: { width: '100%', flexShrink: 1, color: theme.textPrimary, fontSize: 18, fontWeight: '700', marginBottom: 8 },
   emptyBody: { width: '100%', flexShrink: 1, color: theme.textSecondary, fontSize: 14, lineHeight: 20 },
-  orbitCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, position: 'absolute', top: 24, left: 24 },
-  orbitCardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
 
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   sectionHeaderLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },

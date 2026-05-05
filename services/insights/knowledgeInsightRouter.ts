@@ -9,16 +9,12 @@ import {
   adaptWeeklyPremiumPatternCandidates,
   adaptPremiumPatterns,
   selectPremiumPatternProfile,
+  selectThisWeeksV2Pattern,
+  selectPremiumWeeklyDeepDive,
   type PremiumPatternItem,
   type PremiumPatternProfile,
-} from '../insightsV2/adapters/premiumPatterns';
-import {
-  selectThisWeeksV2Pattern,
-  type PremiumThisWeekPatternItem,
-} from '../insightsV2/adapters/premiumPatterns';
-import {
-  selectPremiumWeeklyDeepDive,
   type PremiumWeeklyDeepDiveItem,
+  type PremiumThisWeekPatternItem,
 } from '../insightsV2/adapters/premiumPatterns';
 import {
   applyWeeklyNarrativeToDailyInsights,
@@ -28,7 +24,7 @@ import {
   selectWeeklyNarrativeThread,
   type WeeklyNarrativeThread,
 } from '../insightsV2/narrative/weeklyNarrative';
-import { patternParagraphBodyKey } from '../insightsV2/adapters/premiumPatternParagraphLibrary';
+import { patternParagraphBodyKey } from '../insightsV2/paragraphBodyKey';
 import type {
   ArchivePatternScore as V2ArchivePatternScore,
   EvidenceAnchor as V2EvidenceAnchor,

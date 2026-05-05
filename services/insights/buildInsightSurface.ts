@@ -10,7 +10,6 @@ import { toLocalDateString } from '../../utils/dateUtils';
 import type { DailyCheckIn } from '../patterns/types';
 import type { JournalEntry, SleepEntry } from '../storage/models';
 import type { ArchiveDepthCounts } from '../../utils/archiveDepth';
-import { runActiveKnowledgeInsights } from './knowledgeInsightRouter';
 import type { GeneratedInsight } from './types/knowledgeEngine';
 import {
   buildKnowledgeHistoryFromInsightMemory,
@@ -170,21 +169,23 @@ export async function buildInsightSurface({
   );
 
   const knowledgeInsightResult = insightsEnabled && includeKnowledgeInsight
-    ? await runActiveKnowledgeInsights({
-        checkIns,
-        journalEntries: recentJournalEntries,
-        sleepEntries,
-        selfKnowledgeContext: enrichedContext,
-        date: insightDate,
-        history: combinedKnowledgeHistory,
-        feedbackProfile: insightFeedbackProfile,
-        previousPatternScores,
-        aiRefinement: {
-          enabled: knowledgeAiEnabled,
-          modelTier: knowledgeAiModelTier,
-          surface: knowledgeAiSurface,
-        },
-      })
+    ? await import('./knowledgeInsightRouter').then(({ runActiveKnowledgeInsights }) =>
+        runActiveKnowledgeInsights({
+          checkIns,
+          journalEntries: recentJournalEntries,
+          sleepEntries,
+          selfKnowledgeContext: enrichedContext,
+          date: insightDate,
+          history: combinedKnowledgeHistory,
+          feedbackProfile: insightFeedbackProfile,
+          previousPatternScores,
+          aiRefinement: {
+            enabled: knowledgeAiEnabled,
+            modelTier: knowledgeAiModelTier,
+            surface: knowledgeAiSurface,
+          },
+        })
+      )
     : {
         primaryInsight: null,
         dailyInsights: [],
