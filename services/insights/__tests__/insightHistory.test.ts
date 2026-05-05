@@ -1,9 +1,12 @@
 import { createCopyHash } from '../../insightsV2/insightFreshness';
 import {
+  buildKnowledgeHistoryFromInsightMemory,
   buildRecentlyShownKnowledgeHistory,
+  mergeKnowledgeHistoryInputs,
 } from '../insightHistory';
 import { createKnowledgeInsightCopyHash } from '../insightHash';
 import type { GeneratedInsight, InsightHistoryEntry } from '../types/knowledgeEngine';
+import type { InsightMemoryProfile } from '../../insightsV2/memory/insightMemory';
 
 describe('knowledge insight history', () => {
   it('keeps rich recent entries for V2 freshness while preserving key/hash lists', () => {
@@ -66,6 +69,63 @@ describe('knowledge insight history', () => {
     expect(result.recentInsights).toEqual([sameDay]);
     expect(result.recentlyShownPatternKeys).toEqual(['pattern-1']);
     expect(result.recentlyShownCopyHashes).toEqual(['copy-same-day']);
+  });
+
+  it('converts longitudinal insight memory into no-repeat history', () => {
+    const memory: InsightMemoryProfile = {
+      version: 1,
+      updatedAt: '2026-04-24T12:00:00Z',
+      snapshots: [{
+        id: 'snapshot-1',
+        observedAt: '2026-04-23T12:00:00Z',
+        weekKey: '2026-W17',
+        surface: 'patterns',
+        rank: 0,
+        isPrimary: true,
+        patternKey: 'pattern-1',
+        title: 'Already Seen',
+        category: 'relationships',
+        score: 72,
+        confidence: 'strong',
+        movement: 'repeating',
+        paragraphId: 'paragraph-1',
+        sources: ['relationshipMirror'],
+        relatedSignals: ['tone_sensitivity'],
+        anchors: ['tone-shift'],
+        bodyKey: 'body-key-1',
+      }],
+      trends: [],
+      whatChangedSinceLastWeek: [],
+    };
+
+    const result = buildKnowledgeHistoryFromInsightMemory(memory, '2026-04-24T12:00:00Z');
+
+    expect(result.recentInsights?.[0]).toEqual(expect.objectContaining({
+      insightId: 'snapshot-1',
+      patternKey: 'pattern-1',
+      copyHash: 'body-key-1',
+      surface: 'patterns',
+    }));
+    expect(result.recentlyShownPatternKeys).toEqual(['pattern-1']);
+    expect(result.recentlyShownCopyHashes).toEqual(['body-key-1']);
+  });
+
+  it('merges explicit history with memory-derived history without dropping no-repeat keys', () => {
+    const merged = mergeKnowledgeHistoryInputs(
+      {
+        recentInsights: [],
+        recentlyShownPatternKeys: ['pattern-1'],
+        recentlyShownCopyHashes: ['copy-1'],
+      },
+      {
+        recentInsights: [],
+        recentlyShownPatternKeys: ['pattern-1', 'pattern-2'],
+        recentlyShownCopyHashes: ['copy-2'],
+      },
+    );
+
+    expect(merged.recentlyShownPatternKeys).toEqual(['pattern-1', 'pattern-2']);
+    expect(merged.recentlyShownCopyHashes).toEqual(['copy-1', 'copy-2']);
   });
 
   it('uses the V2 copy hash format for newly recorded insight copy', () => {

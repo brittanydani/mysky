@@ -747,6 +747,8 @@ export async function getCheckInByDate(
     .eq('user_id', userId)
     .eq('chart_id', chartId)
     .eq('log_date', date)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (error) {
@@ -794,6 +796,8 @@ export async function getCheckInByDateAndTime(
     .eq('chart_id', chartId)
     .eq('log_date', date)
     .eq('time_of_day', timeOfDay)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (error) {

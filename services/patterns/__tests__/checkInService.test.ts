@@ -8,7 +8,13 @@
  *   - CheckInService.getCheckInCount — delegates to supabaseDb correctly
  */
 
-import { getLogicalToday, CheckInService, TIME_OF_DAY_LABELS, TIME_OF_DAY_ORDER } from '../checkInService';
+import {
+  getLogicalToday,
+  resolveCheckInSnapshotDate,
+  CheckInService,
+  TIME_OF_DAY_LABELS,
+  TIME_OF_DAY_ORDER,
+} from '../checkInService';
 import type { DailyCheckIn } from '../types';
 
 // ─── Mock supabaseDb so no real Supabase client is loaded ─────────────────────
@@ -143,6 +149,40 @@ describe('getLogicalToday', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// resolveCheckInSnapshotDate
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('resolveCheckInSnapshotDate', () => {
+  it('uses the actual current time for the current logical day and slot', () => {
+    const now = new Date(2026, 2, 29, 20, 14, 30);
+    expect(resolveCheckInSnapshotDate('2026-03-29', 'evening', now)).toBe(now);
+  });
+
+  it('keeps a pre-6am night check-in on the prior logical day using the real time', () => {
+    const now = new Date(2026, 2, 29, 3, 30, 0);
+    expect(resolveCheckInSnapshotDate('2026-03-28', 'night', now)).toBe(now);
+  });
+
+  it('uses the representative slot time when editing a non-current slot', () => {
+    const now = new Date(2026, 2, 29, 9, 10, 0);
+    const snapshot = resolveCheckInSnapshotDate('2026-03-29', 'evening', now);
+    expect(snapshot.getFullYear()).toBe(2026);
+    expect(snapshot.getMonth()).toBe(2);
+    expect(snapshot.getDate()).toBe(29);
+    expect(snapshot.getHours()).toBe(20);
+    expect(snapshot.getMinutes()).toBe(0);
+  });
+
+  it('uses a late-night representative time for past night entries', () => {
+    const snapshot = resolveCheckInSnapshotDate('2026-03-27', 'night', new Date(2026, 2, 29, 9, 0, 0));
+    expect(snapshot.getFullYear()).toBe(2026);
+    expect(snapshot.getMonth()).toBe(2);
+    expect(snapshot.getDate()).toBe(27);
+    expect(snapshot.getHours()).toBe(23);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CheckInService.getCurrentStreak
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -191,6 +231,15 @@ describe('CheckInService.getCurrentStreak', () => {
       makeCheckIn('2026-03-27'),
     ]);
     expect(await CheckInService.getCurrentStreak('chart-1')).toBe(0);
+  });
+
+  it('uses the logical check-in day before 6am', async () => {
+    jest.setSystemTime(new Date(2026, 2, 29, 3, 30, 0));
+    mockDb.getCheckIns.mockResolvedValue([
+      makeCheckIn('2026-03-28'),
+      makeCheckIn('2026-03-27'),
+    ]);
+    expect(await CheckInService.getCurrentStreak('chart-1')).toBe(2);
   });
 
   it('counts multiple check-ins on the same day as 1 streak day', async () => {

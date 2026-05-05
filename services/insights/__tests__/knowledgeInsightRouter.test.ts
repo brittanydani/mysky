@@ -32,6 +32,19 @@ function visibleParagraphBodies(result: Awaited<ReturnType<typeof runActiveKnowl
   ].filter(body => body.trim().length > 0);
 }
 
+function visiblePatternKeys(result: Awaited<ReturnType<typeof runActiveKnowledgeInsights>>): string[] {
+  return [
+    ...result.dailyInsights.map(insight => insight.patternKey),
+    ...result.premiumPatterns.map(pattern => pattern.patternKey),
+    ...result.premiumWeeklyDeepDive
+      .filter(read => !read.isEmptyState)
+      .map(read => read.patternKey),
+    ...(result.thisWeeksV2Pattern && !result.thisWeeksV2Pattern.isEmptyState
+      ? [result.thisWeeksV2Pattern.patternKey]
+      : []),
+  ];
+}
+
 describe('knowledgeInsightRouter', () => {
   const now = '2026-04-24T12:00:00Z';
   const today = '2026-04-24';
@@ -192,6 +205,8 @@ describe('knowledgeInsightRouter', () => {
     }
     const paragraphKeys = visibleParagraphBodies(result).map(paragraphKey);
     expect(new Set(paragraphKeys).size).toBe(paragraphKeys.length);
+    const allVisiblePatternKeys = visiblePatternKeys(result);
+    expect(new Set(allVisiblePatternKeys).size).toBe(allVisiblePatternKeys.length);
     if (result.dailyInsights.some(insight => insight.slot === 'primaryPersona')) {
       expect(result.premiumPersonaProfile).toBeNull();
     }
@@ -270,6 +285,57 @@ describe('knowledgeInsightRouter', () => {
     expect(rawInputs.glimmerLogs).toHaveLength(1);
     expect(rawInputs.relationshipMirrors).toHaveLength(1);
     expect(rawInputs.reflectionAnswers).toHaveLength(1);
+  });
+
+  it('does not reuse a pattern key that already exists in recent history', async () => {
+    const baseline = await runActiveKnowledgeInsights({
+      checkIns,
+      journalEntries: [
+        {
+          ...journalEntries[0],
+          content: 'I felt grounded after a hard conversation, but my chest was tight and I wanted repair.',
+        },
+      ],
+      sleepEntries,
+      selfKnowledgeContext: emptyContext,
+      date: now,
+      history: {
+        recentlyShownPatternKeys: [],
+        recentlyShownCopyHashes: [],
+      },
+    });
+    const alreadyShownPatternKey = visiblePatternKeys(baseline)[0];
+    expect(alreadyShownPatternKey).toBeTruthy();
+
+    const result = await runActiveKnowledgeInsights({
+      checkIns,
+      journalEntries: [
+        {
+          ...journalEntries[0],
+          content: 'I felt grounded after a hard conversation, but my chest was tight and I wanted repair.',
+        },
+      ],
+      sleepEntries,
+      selfKnowledgeContext: emptyContext,
+      date: now,
+      history: {
+        recentInsights: [{
+          insightId: 'history-1',
+          patternKey: alreadyShownPatternKey,
+          slot: 'whatMySkyNoticed',
+          surface: 'today',
+          title: 'Already shown',
+          shownAt: '2026-04-23T12:00:00Z',
+          sourceSignals: ['signal-1'],
+          evidenceHash: 'evidence-1',
+          copyHash: 'copy-1',
+        }],
+        recentlyShownPatternKeys: [alreadyShownPatternKey],
+        recentlyShownCopyHashes: ['copy-1'],
+      },
+    });
+
+    expect(visiblePatternKeys(result)).not.toContain(alreadyShownPatternKey);
   });
 
   it('preserves rich recent history when adapting legacy insight history for V2 freshness', () => {

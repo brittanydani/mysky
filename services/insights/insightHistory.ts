@@ -2,6 +2,7 @@ import { GeneratedInsight, InsightHistoryEntry } from './types/knowledgeEngine';
 import { getUserPreference, saveUserPreference } from '../storage/userProfileService';
 import { logger } from '../../utils/logger';
 import { createKnowledgeInsightCopyHash } from './insightHash';
+import type { InsightMemoryProfile } from '../insightsV2/memory/insightMemory';
 
 const HISTORY_KEY = 'msky_knowledge_engine_history_v2';
 const MAX_HISTORY = 50;
@@ -42,6 +43,80 @@ export function buildRecentlyShownKnowledgeHistory(
     recentInsights: recent,
     recentlyShownPatternKeys: Array.from(new Set(recent.map((item) => item.patternKey))),
     recentlyShownCopyHashes: Array.from(new Set(recent.map((item) => item.copyHash))),
+  };
+}
+
+function timestamp(value: string): number {
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function mergeKnowledgeHistoryInputs(
+  ...inputs: (KnowledgeEngineHistoryInput | null | undefined)[]
+): KnowledgeEngineHistoryInput {
+  const recentInsights = inputs
+    .flatMap(input => input?.recentInsights ?? [])
+    .filter(item => item.patternKey && item.copyHash)
+    .sort((a, b) => timestamp(b.shownAt) - timestamp(a.shownAt));
+
+  return {
+    recentInsights,
+    recentlyShownPatternKeys: Array.from(new Set(
+      inputs.flatMap(input => input?.recentlyShownPatternKeys ?? []).filter(Boolean),
+    )),
+    recentlyShownCopyHashes: Array.from(new Set(
+      inputs.flatMap(input => input?.recentlyShownCopyHashes ?? []).filter(Boolean),
+    )),
+  };
+}
+
+export function buildKnowledgeHistoryFromInsightMemory(
+  memory: InsightMemoryProfile | null | undefined,
+  now: string | Date = new Date(),
+  recentDays = Number.POSITIVE_INFINITY,
+): KnowledgeEngineHistoryInput {
+  if (!memory?.snapshots.length) {
+    return {
+      recentInsights: [],
+      recentlyShownPatternKeys: [],
+      recentlyShownCopyHashes: [],
+    };
+  }
+
+  const nowDate = typeof now === 'string' ? new Date(now) : now;
+  const nowTime = Number.isFinite(nowDate.getTime()) ? nowDate.getTime() : Date.now();
+  const cutoff = nowTime - recentDays * 86_400_000;
+  const snapshots = memory.snapshots.filter((snapshot) => {
+    const observedAt = timestamp(snapshot.observedAt);
+    return observedAt >= cutoff;
+  });
+
+  const recentInsights: InsightHistoryEntry[] = snapshots.map((snapshot, index) => ({
+    insightId: snapshot.id || `memory-${index}`,
+    patternKey: snapshot.patternKey,
+    slot: snapshot.surface,
+    surface: snapshot.surface,
+    title: snapshot.title,
+    shownAt: snapshot.observedAt,
+    sourceSignals: snapshot.relatedSignals,
+    evidenceHash: JSON.stringify({
+      sources: snapshot.sources,
+      anchors: snapshot.anchors,
+      relatedSignals: snapshot.relatedSignals,
+    }),
+    copyHash: snapshot.bodyKey ?? snapshot.paragraphId ?? `pattern-${snapshot.patternKey}`,
+  }));
+
+  return {
+    recentInsights,
+    recentlyShownPatternKeys: Array.from(new Set(
+      snapshots.map(snapshot => snapshot.patternKey).filter(Boolean),
+    )),
+    recentlyShownCopyHashes: Array.from(new Set(
+      snapshots
+        .map(snapshot => snapshot.bodyKey ?? snapshot.paragraphId ?? `pattern-${snapshot.patternKey}`)
+        .filter(Boolean),
+    )),
   };
 }
 

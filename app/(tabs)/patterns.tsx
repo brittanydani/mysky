@@ -105,7 +105,7 @@ function compactDisplayText(text: string, maxLength: number): string {
   return `${trimmed}...`;
 }
 
-function splitDeepReadSections(body: string): Array<{ label: string; body: string }> {
+function splitDeepReadSections(body: string): { label: string; body: string }[] {
   const sections = normalizeDisplayText(body)
     .split(/\n{2,}/)
     .map(section => section.trim())
@@ -187,18 +187,23 @@ export default function PatternsScreen() {
       trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
       (async () => {
         try {
-          const [moodInsightPref, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
+          const [moodInsightPref, aiInsightPref, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
             getUserPreference<string | null>('pref_mood_insights', null).catch(() => null),
+            getUserPreference<string | null>('pref_ai_insight_refinement', null).catch(() => null),
             getInsightFeedbackProfile().catch(() => null),
             getInsightMemoryProfile().catch(() => null),
           ]);
           const insightsEnabled = moodInsightPref !== '0';
+          const aiInsightRefinementEnabled = insightsEnabled && aiInsightPref !== '0';
           const surface = await buildInsightSurface({
             rangeDays: 90,
             insightsEnabled,
             includeKnowledgeInsight: insightsEnabled,
             insightFeedbackProfile,
             insightMemoryProfile,
+            knowledgeAiEnabled: aiInsightRefinementEnabled,
+            knowledgeAiModelTier: isPremium ? 'premium' : 'free',
+            knowledgeAiSurface: 'patterns',
           });
           if (!active) return;
 
@@ -249,7 +254,7 @@ export default function PatternsScreen() {
         }
       })();
       return () => { active = false; };
-    }, [])
+    }, [isPremium])
   );
 
   const libraryState = useMemo(

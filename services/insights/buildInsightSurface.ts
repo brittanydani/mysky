@@ -12,7 +12,11 @@ import type { JournalEntry, SleepEntry } from '../storage/models';
 import type { ArchiveDepthCounts } from '../../utils/archiveDepth';
 import { runActiveKnowledgeInsights } from './knowledgeInsightRouter';
 import type { GeneratedInsight } from './types/knowledgeEngine';
-import type { KnowledgeEngineHistoryInput } from './insightHistory';
+import {
+  buildKnowledgeHistoryFromInsightMemory,
+  mergeKnowledgeHistoryInputs,
+  type KnowledgeEngineHistoryInput,
+} from './insightHistory';
 import type { PremiumPersonaProfile } from '../insightsV2/adapters/premiumPersonaProfile';
 import type {
   PremiumPatternItem,
@@ -155,9 +159,14 @@ export async function buildInsightSurface({
   });
 
   const insightMemory = insightsEnabled ? insightMemoryProfile : null;
+  const insightDate = knowledgeInsightDate ?? `${today}T12:00:00`;
+  const combinedKnowledgeHistory = mergeKnowledgeHistoryInputs(
+    knowledgeHistory,
+    buildKnowledgeHistoryFromInsightMemory(insightMemory, insightDate),
+  );
   const previousPatternScores = previousPatternScoresFromInsightMemory(
     insightMemory,
-    knowledgeInsightDate ?? `${today}T12:00:00`,
+    insightDate,
   );
 
   const knowledgeInsightResult = insightsEnabled && includeKnowledgeInsight
@@ -166,8 +175,8 @@ export async function buildInsightSurface({
         journalEntries: recentJournalEntries,
         sleepEntries,
         selfKnowledgeContext: enrichedContext,
-        date: knowledgeInsightDate ?? `${today}T12:00:00`,
-        history: knowledgeHistory,
+        date: insightDate,
+        history: combinedKnowledgeHistory,
         feedbackProfile: insightFeedbackProfile,
         previousPatternScores,
         aiRefinement: {

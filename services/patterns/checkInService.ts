@@ -134,14 +134,36 @@ export const TIME_OF_DAY_LABELS: Record<TimeOfDay, { label: string; emoji: strin
  * Between midnight and 5:59am we're still in the previous day's night window,
  * so editing a night entry before 6am should target yesterday's date.
  */
-export function getLogicalToday(): string {
-  const now = new Date();
+export function getLogicalToday(date: Date = new Date()): string {
+  const now = new Date(date);
   if (now.getHours() < 6) {
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     return toLocalDateString(yesterday);
   }
   return toLocalDateString(now);
+}
+
+const SNAPSHOT_HOUR_BY_SLOT: Record<TimeOfDay, number> = {
+  morning: 9,
+  afternoon: 15,
+  evening: 20,
+  night: 23,
+};
+
+export function resolveCheckInSnapshotDate(
+  date: string,
+  timeOfDay: TimeOfDay,
+  now: Date = new Date(),
+): Date {
+  if (date === getLogicalToday(now) && timeOfDay === detectTimeOfDay(now)) {
+    return now;
+  }
+
+  const [year, month, day] = date.split('-').map(Number);
+  if (!year || !month || !day) return now;
+
+  return new Date(year, month - 1, day, SNAPSHOT_HOUR_BY_SLOT[timeOfDay], 0, 0, 0);
 }
 
 export const TIME_OF_DAY_ORDER: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'night'];
@@ -165,10 +187,9 @@ export class CheckInService {
     const clampedMood = Math.max(1, Math.min(10, Math.round(rawMood)));
 
     const now = new Date();
-    const date = input.date ?? toLocalDateString(now);
-    // When editing a past date, compute the sky snapshot for noon on that date
-    const snapshotDate = input.date ? new Date(input.date + 'T12:00:00') : now;
     const timeOfDay = input.timeOfDay ?? detectTimeOfDay(now);
+    const date = input.date ?? getLogicalToday(now);
+    const snapshotDate = resolveCheckInSnapshotDate(date, timeOfDay, now);
     const sky = captureSkySnapshot(chart, snapshotDate);
 
     const checkIn: DailyCheckIn = {
@@ -278,7 +299,7 @@ export class CheckInService {
     // Build a Set of unique dates for O(1) lookups
     const dateSet = new Set(all.map(c => c.date));
     let streak = 0;
-    const today = new Date();
+    const today = new Date(`${getLogicalToday()}T12:00:00`);
 
     for (let i = 0; i < 90; i++) {
       const expected = new Date(today);

@@ -18,9 +18,23 @@ import { loadSelfKnowledgeContext } from '../selfKnowledgeContext';
 import type { SelfKnowledgeContext } from '../selfKnowledgeContext';
 import type { DailyCheckIn } from '../../patterns/types';
 import type { JournalEntry, SleepEntry } from '../../storage/models';
+import type { InsightMemoryProfile } from '../../insightsV2/memory/insightMemory';
 
 const mockDb = supabaseDb as jest.Mocked<typeof supabaseDb>;
 const mockLoadSelfKnowledgeContext = loadSelfKnowledgeContext as jest.MockedFunction<typeof loadSelfKnowledgeContext>;
+
+function visiblePatternKeys(surface: Awaited<ReturnType<typeof buildInsightSurface>>): string[] {
+  return [
+    ...surface.knowledgeInsights.map(insight => insight.patternKey),
+    ...surface.premiumPatterns.map(pattern => pattern.patternKey),
+    ...surface.premiumWeeklyDeepDive
+      .filter(read => !read.isEmptyState)
+      .map(read => read.patternKey),
+    ...(surface.thisWeeksV2Pattern && !surface.thisWeeksV2Pattern.isEmptyState
+      ? [surface.thisWeeksV2Pattern.patternKey]
+      : []),
+  ];
+}
 
 describe('buildInsightSurface knowledge insights', () => {
   const now = '2026-04-24T12:00:00Z';
@@ -204,9 +218,65 @@ describe('buildInsightSurface knowledge insights', () => {
     if (surface.thisWeeksV2Pattern && !surface.thisWeeksV2Pattern.isEmptyState) {
       expect(todayPatternKeys.has(surface.thisWeeksV2Pattern.patternKey)).toBe(false);
     }
+    const allVisiblePatternKeys = visiblePatternKeys(surface);
+    expect(new Set(allVisiblePatternKeys).size).toBe(allVisiblePatternKeys.length);
     if (surface.knowledgeInsights.some(insight => insight.slot === 'primaryPersona')) {
       expect(surface.premiumPersonaProfile).toBeNull();
     }
+  });
+
+  it('treats prior insight memory as a hard no-repeat list across surfaces', async () => {
+    const initialSurface = await buildInsightSurface({
+      chartId: 'chart-1',
+      insightsEnabled: true,
+      includeKnowledgeInsight: true,
+      knowledgeInsightDate: now,
+      knowledgeHistory: {
+        recentlyShownPatternKeys: [],
+        recentlyShownCopyHashes: [],
+      },
+    });
+    const shownPatternKey = visiblePatternKeys(initialSurface)[0];
+    expect(shownPatternKey).toBeTruthy();
+
+    const insightMemoryProfile: InsightMemoryProfile = {
+      version: 1,
+      updatedAt: now,
+      snapshots: [{
+        id: `memory:${shownPatternKey}`,
+        observedAt: '2026-04-23T12:00:00Z',
+        weekKey: '2026-W17',
+        surface: 'today',
+        rank: 0,
+        isPrimary: true,
+        patternKey: shownPatternKey,
+        title: 'Already shown',
+        category: 'emotionalWeather',
+        score: 80,
+        confidence: 'strong',
+        movement: 'repeating',
+        sources: ['dailyCheckIn'],
+        relatedSignals: ['low_energy'],
+        anchors: ['already-shown'],
+        bodyKey: 'already-shown-body',
+      }],
+      trends: [],
+      whatChangedSinceLastWeek: [],
+    };
+
+    const surface = await buildInsightSurface({
+      chartId: 'chart-1',
+      insightsEnabled: true,
+      includeKnowledgeInsight: true,
+      knowledgeInsightDate: now,
+      knowledgeHistory: {
+        recentlyShownPatternKeys: [],
+        recentlyShownCopyHashes: [],
+      },
+      insightMemoryProfile,
+    });
+
+    expect(visiblePatternKeys(surface)).not.toContain(shownPatternKey);
   });
 
   it('can build the initial Today surface without waiting for daily reflections', async () => {

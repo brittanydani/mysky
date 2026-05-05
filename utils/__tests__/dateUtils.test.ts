@@ -1,11 +1,11 @@
 /**
  * dateUtils — unit tests
  *
- * Covers toLocalDateString, parseLocalDate, and dayOfYear.
+ * Covers toLocalDateString, parseLocalDate, getCheckInDateString, and dayOfYear.
  * All functions are pure, so no mocking is needed.
  */
 
-import { toLocalDateString, parseLocalDate, dayOfYear } from '../dateUtils';
+import { toLocalDateString, parseLocalDate, getCheckInDateString, dayOfYear } from '../dateUtils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // toLocalDateString
@@ -103,6 +103,24 @@ describe('parseLocalDate', () => {
   it('handles year 1900', () => {
     const d = parseLocalDate('1900-06-15');
     expect(d.getFullYear()).toBe(1900);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// getCheckInDateString
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('getCheckInDateString', () => {
+  it('keeps the prior check-in day before the 6am rollover', () => {
+    expect(getCheckInDateString(new Date(2026, 3, 3, 5, 59, 0))).toBe('2026-04-02');
+  });
+
+  it('starts the new check-in day at 6am', () => {
+    expect(getCheckInDateString(new Date(2026, 3, 3, 6, 0, 0))).toBe('2026-04-03');
+  });
+
+  it('handles month rollover before 6am', () => {
+    expect(getCheckInDateString(new Date(2026, 3, 1, 2, 0, 0))).toBe('2026-03-31');
   });
 });
 
