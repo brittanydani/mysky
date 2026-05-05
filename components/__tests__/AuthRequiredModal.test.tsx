@@ -9,7 +9,7 @@ import { Alert } from 'react-native';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockSignUp = jest.fn();
+const mockSignUpAndEnsureSession = jest.fn();
 const mockSignInWithPassword = jest.fn();
 const mockRequestPasswordRecoveryCode = jest.fn();
 const mockCompletePasswordRecovery = jest.fn();
@@ -17,10 +17,13 @@ const mockCompletePasswordRecovery = jest.fn();
 jest.mock('../../lib/supabase', () => ({
   supabase: {
     auth: {
-      signUp: (...args: unknown[]) => mockSignUp(...args),
       signInWithPassword: (...args: unknown[]) => mockSignInWithPassword(...args),
     },
   },
+}));
+
+jest.mock('../../services/auth/signUpSession', () => ({
+  signUpAndEnsureSession: (...args: unknown[]) => mockSignUpAndEnsureSession(...args),
 }));
 
 jest.mock('../../services/auth/passwordRecovery', () => ({
@@ -50,6 +53,10 @@ const alertSpy = jest.spyOn(Alert, 'alert');
 beforeEach(() => {
   jest.clearAllMocks();
 });
+
+function switchToSignUp(getByLabelText: ReturnType<typeof render>['getByLabelText']) {
+  fireEvent.press(getByLabelText("Don't have an account? Sign Up"));
+}
 
 describe('AuthRequiredModal', () => {
   it('renders nothing when visible is false', () => {
@@ -87,10 +94,11 @@ describe('AuthRequiredModal', () => {
 
     // Toggle to sign-up
     fireEvent.press(getByLabelText("Don't have an account? Sign Up"));
-    expect(getByLabelText('Sign In')).toBeTruthy();
+    expect(getByLabelText('Create Account')).toBeTruthy();
+    expect(getByLabelText('Already have an account? Sign In')).toBeTruthy();
 
     // Toggle back
-    
+    fireEvent.press(getByLabelText('Already have an account? Sign In'));
     expect(getByLabelText('Sign In')).toBeTruthy();
   });
 
@@ -98,58 +106,70 @@ describe('AuthRequiredModal', () => {
 
   it('alerts on empty fields', async () => {
     const { getByLabelText } = render(<AuthRequiredModal visible />);
+    switchToSignUp(getByLabelText);
     await act(async () => {
       fireEvent.press(getByLabelText('Create Account'));
     });
     expect(alertSpy).toHaveBeenCalledWith('Missing fields', expect.any(String));
-    expect(mockSignUp).not.toHaveBeenCalled();
+    expect(mockSignUpAndEnsureSession).not.toHaveBeenCalled();
   });
 
   it('alerts on invalid email', async () => {
     const { getByLabelText } = render(<AuthRequiredModal visible />);
+    switchToSignUp(getByLabelText);
     fireEvent.changeText(getByLabelText('Email address'), 'bademail');
     fireEvent.changeText(getByLabelText('Password'), 'password123');
     await act(async () => {
       fireEvent.press(getByLabelText('Create Account'));
     });
     expect(alertSpy).toHaveBeenCalledWith('Invalid email', expect.any(String));
-    expect(mockSignUp).not.toHaveBeenCalled();
+    expect(mockSignUpAndEnsureSession).not.toHaveBeenCalled();
   });
 
   it('alerts on short password', async () => {
     const { getByLabelText } = render(<AuthRequiredModal visible />);
+    switchToSignUp(getByLabelText);
     fireEvent.changeText(getByLabelText('Email address'), 'test@test.com');
     fireEvent.changeText(getByLabelText('Password'), '12345');
     await act(async () => {
       fireEvent.press(getByLabelText('Create Account'));
     });
     expect(alertSpy).toHaveBeenCalledWith('Password too short', expect.any(String));
-    expect(mockSignUp).not.toHaveBeenCalled();
+    expect(mockSignUpAndEnsureSession).not.toHaveBeenCalled();
   });
 
   // ── Sign-up flow ──
 
   it('calls signUp with trimmed email and password', async () => {
-    mockSignUp.mockResolvedValue({ data: { session: { user: {} } }, error: null });
+    mockSignUpAndEnsureSession.mockResolvedValue({
+      session: { access_token: 'token', user: {} },
+      user: {},
+      requiresEmailConfirmation: false,
+    });
 
     const { getByLabelText } = render(<AuthRequiredModal visible />);
+    switchToSignUp(getByLabelText);
     fireEvent.changeText(getByLabelText('Email address'), '  user@test.com  ');
     fireEvent.changeText(getByLabelText('Password'), 'securepassword');
     await act(async () => {
       fireEvent.press(getByLabelText('Create Account'));
     });
 
-    expect(mockSignUp).toHaveBeenCalledWith({
+    expect(mockSignUpAndEnsureSession).toHaveBeenCalledWith({
       email: 'user@test.com',
       password: 'securepassword',
     });
   });
 
   it('prompts email confirmation when session is null after sign-up', async () => {
-    mockSignUp.mockResolvedValue({ data: { session: null }, error: null });
-    mockSignInWithPassword.mockResolvedValue({ data: { session: null, user: null }, error: new Error('Email not confirmed') });
+    mockSignUpAndEnsureSession.mockResolvedValue({
+      session: null,
+      user: null,
+      requiresEmailConfirmation: true,
+    });
 
     const { getByLabelText } = render(<AuthRequiredModal visible />);
+    switchToSignUp(getByLabelText);
     fireEvent.changeText(getByLabelText('Email address'), 'user@test.com');
     fireEvent.changeText(getByLabelText('Password'), 'securepassword');
     await act(async () => {
@@ -157,22 +177,19 @@ describe('AuthRequiredModal', () => {
     });
 
     expect(alertSpy).toHaveBeenCalledWith('Check your email', expect.any(String));
-    expect(mockSignInWithPassword).toHaveBeenCalledWith({
-      email: 'user@test.com',
-      password: 'securepassword',
-    });
     // Mode should switch to sign-in
     expect(getByLabelText('Sign In')).toBeTruthy();
   });
 
   it('creates a live session immediately after sign-up when Supabase sign-in succeeds', async () => {
-    mockSignUp.mockResolvedValue({ data: { session: null, user: { id: 'user-1' } }, error: null });
-    mockSignInWithPassword.mockResolvedValue({
-      data: { session: { access_token: 'token', user: { id: 'user-1' } }, user: { id: 'user-1' } },
-      error: null,
+    mockSignUpAndEnsureSession.mockResolvedValue({
+      session: { access_token: 'token', user: { id: 'user-1' } },
+      user: { id: 'user-1' },
+      requiresEmailConfirmation: false,
     });
 
     const { getByLabelText } = render(<AuthRequiredModal visible />);
+    switchToSignUp(getByLabelText);
     fireEvent.changeText(getByLabelText('Email address'), 'user@test.com');
     fireEvent.changeText(getByLabelText('Password'), 'securepassword');
 
@@ -180,7 +197,7 @@ describe('AuthRequiredModal', () => {
       fireEvent.press(getByLabelText('Create Account'));
     });
 
-    expect(mockSignInWithPassword).toHaveBeenCalledWith({
+    expect(mockSignUpAndEnsureSession).toHaveBeenCalledWith({
       email: 'user@test.com',
       password: 'securepassword',
     });
@@ -188,9 +205,10 @@ describe('AuthRequiredModal', () => {
   });
 
   it('shows generic error on sign-up failure', async () => {
-    mockSignUp.mockResolvedValue({ data: {}, error: new Error('Signup failed') });
+    mockSignUpAndEnsureSession.mockRejectedValue(new Error('Signup failed'));
 
     const { getByLabelText } = render(<AuthRequiredModal visible />);
+    switchToSignUp(getByLabelText);
     fireEvent.changeText(getByLabelText('Email address'), 'user@test.com');
     fireEvent.changeText(getByLabelText('Password'), 'securepassword');
     await act(async () => {

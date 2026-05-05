@@ -1,5 +1,5 @@
 import { selectPrimaryPersona } from '../engine/selectPrimaryPersona';
-import { buildTodayInsights } from '../knowledgeEngineV2';
+import { buildTodayInsights } from '../buildTodayInsights';
 import { PERSONA_PROFILES } from '../personaProfiles';
 import type { ArchivePatternScore, UserSignal } from '../types';
 

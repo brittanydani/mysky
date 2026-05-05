@@ -1,4 +1,4 @@
-import { buildTodayInsights } from '../knowledgeEngineV2';
+import { buildTodayInsights } from '../buildTodayInsights';
 import {
   normalizeDreamsV2,
   normalizeGlimmerLogsV2,

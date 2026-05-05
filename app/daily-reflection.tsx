@@ -14,7 +14,6 @@ import * as Haptics from 'expo-haptics';
 import DailyReflectionSection from '../components/DailyReflectionSection';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { type AppTheme } from '../constants/theme';
 import { useThemedStyles } from '../context/ThemeContext';

@@ -47,7 +47,6 @@ import { supabaseDb } from '../../services/storage/supabaseDb';
 import { loadTriggerEvents } from '../../services/storage/selfKnowledgeStore';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
-import type { TriggerEvent } from '../../utils/triggerEventTypes';
 import {
   computeInnerTensions,
   type InnerTensionsData,

@@ -35,6 +35,7 @@ import {
   withRepeat,
   withTiming,
   Easing,
+  type SharedValue,
 } from 'react-native-reanimated';
 
 const { width: W, height: H } = Dimensions.get('window');
@@ -90,6 +91,7 @@ function paletteForQuality(q: number): RestorationPalette {
 // ── Ring Layer ───────────────────────────────────────────────────────────────
 
 const RING_COUNT = 5;
+const RING_INDICES = Array.from({ length: RING_COUNT }, (_, i) => i);
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -99,6 +101,50 @@ interface Props {
   /** Optional override for height */
   height?: number;
 }
+
+interface RestorationRingProps {
+  index: number;
+  quality: number;
+  palette: RestorationPalette;
+  breathValue: SharedValue<number>;
+}
+
+const RestorationRing = memo(function RestorationRing({
+  index,
+  quality,
+  palette,
+  breathValue,
+}: RestorationRingProps) {
+  const baseR = (MAX_R * (index + 1)) / (RING_COUNT + 1);
+  const baseOpacity = 0.06 + (quality / 5) * 0.08 - index * 0.015;
+
+  const radius = useDerivedValue(() => {
+    'worklet';
+    const phase = index * 0.3;
+    const pulse = Math.sin(breathValue.value * Math.PI + phase) * 15;
+    return baseR + pulse;
+  });
+
+  const opacity = useDerivedValue(() => {
+    'worklet';
+    const flicker = Math.sin(breathValue.value * Math.PI + index * 0.5) * 0.02;
+    return Math.max(0.01, baseOpacity + flicker);
+  });
+
+  return (
+    <Circle
+      cx={CX}
+      cy={CY}
+      r={radius}
+      color={index % 2 === 0 ? palette.core : palette.mid}
+      opacity={opacity}
+      style="stroke"
+      strokeWidth={1.5}
+    >
+      <BlurMask blur={8 + index * 3} style="normal" />
+    </Circle>
+  );
+});
 
 // ── Component ───────────────────────────────────────────────────────────────
 
@@ -127,28 +173,6 @@ const SkiaRestorationField = memo(function SkiaRestorationField({
     time.value = (info.timeSinceFirstFrame ?? 0) / 1000;
   });
 
-  // Ring animations — each ring breathes at slightly different phases
-  const ringRadii = Array.from({ length: RING_COUNT }, (_, i) => {
-    const baseR = (MAX_R * (i + 1)) / (RING_COUNT + 1);
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useDerivedValue(() => {
-      'worklet';
-      const phase = i * 0.3;
-      const pulse = Math.sin(breathValue.value * Math.PI + phase) * 15;
-      return baseR + pulse;
-    });
-  });
-
-  const ringOpacities = Array.from({ length: RING_COUNT }, (_, i) => {
-    const baseOpacity = 0.06 + (q / 5) * 0.08 - i * 0.015;
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useDerivedValue(() => {
-      'worklet';
-      const flicker = Math.sin(breathValue.value * Math.PI + i * 0.5) * 0.02;
-      return Math.max(0.01, baseOpacity + flicker);
-    });
-  });
-
   // Core glow intensity scales with quality
   const coreRadius = useDerivedValue(() => {
     'worklet';
@@ -164,19 +188,14 @@ const SkiaRestorationField = memo(function SkiaRestorationField({
     <Canvas style={[styles.canvas, { height }]} pointerEvents="none">
       {/* ── Restoration Rings ── */}
       <Group>
-        {ringRadii.map((r, i) => (
-          <Circle
-            key={`ring-${i}`}
-            cx={CX}
-            cy={CY}
-            r={r}
-            color={i % 2 === 0 ? palette.core : palette.mid}
-            opacity={ringOpacities[i]}
-            style="stroke"
-            strokeWidth={1.5}
-          >
-            <BlurMask blur={8 + i * 3} style="normal" />
-          </Circle>
+        {RING_INDICES.map((index) => (
+          <RestorationRing
+            key={`ring-${index}`}
+            index={index}
+            quality={q}
+            palette={palette}
+            breathValue={breathValue}
+          />
         ))}
       </Group>
 

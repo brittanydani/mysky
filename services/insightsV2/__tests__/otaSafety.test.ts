@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import path from 'path';
-import { buildTodayInsights } from '../knowledgeEngineV2';
+import { buildTodayInsights } from '../buildTodayInsights';
 import { detectCurrentInsightState, stateAwareParagraphScore } from '../state/insightState';
 import { buildInsightTimingDecision } from '../timing/insightTiming';
 import type { CurrentInsightStateProfile } from '../state/insightState';

@@ -11,7 +11,7 @@ import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { usePremium } from '../context/PremiumContext';
 import { config, LEGAL_URL } from '../constants/config';
 import { DEEPER_SKY_FEATURES, DEEPER_SKY_MARKETING } from '../services/premium/deeperSkyFeatures';
-import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import { useThemedStyles } from '../context/ThemeContext';
 import { trackGrowthEvent } from '../services/growth/localAnalytics';
 import TermsOfServiceScreen from '../app/terms';
 import PrivacyPolicyScreen from '../app/privacy';
@@ -90,7 +90,6 @@ interface PremiumScreenProps {
 }
 
 export default function PremiumScreen({ onClose, analyticsSource, analyticsExperiment, analyticsVariant }: PremiumScreenProps = {}) {
-  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -197,7 +196,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
     if (result.userCancelled) return;
 
     Alert.alert('Purchase Failed', result.error ?? 'Your purchase could not be completed.');
-  }, [findPackageForPlan, purchase, safeGoBack, selectedPlan]);
+  }, [analyticsSource, findPackageForPlan, purchase, safeGoBack, selectedPlan]);
 
   const handleRestore = useCallback(async () => {
     setRestoring(true);

@@ -47,7 +47,6 @@ import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 import { ReflectionDisclaimer } from '../components/ui/ReflectionDisclaimer';
 
-const STORAGE_KEY = '@mysky:cognitive_style';
 const RADAR_SIZE = 180;
 
 // ── Cinematic Palette ──

@@ -5,7 +5,7 @@ import {
   SIGNAL_TO_FEELING_SET_KEY,
   selectPrimaryFeeling,
 } from '../engine/selectPrimaryFeeling';
-import { buildTodayInsights } from '../knowledgeEngineV2';
+import { buildTodayInsights } from '../buildTodayInsights';
 import type { SignalKey, UserSignal } from '../types';
 
 function signalKeysFromTypes(): Set<string> {

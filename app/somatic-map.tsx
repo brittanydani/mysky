@@ -20,7 +20,6 @@ import {
 } from 'react-native';
 import Body, { Slug } from 'react-native-body-highlighter';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';

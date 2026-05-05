@@ -4,7 +4,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { saveDisplayName } from '../../services/storage/userProfileService';
-import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { type AppTheme } from '../../constants/theme';

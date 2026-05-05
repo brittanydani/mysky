@@ -18,36 +18,6 @@ export interface AspectData {
   description: string;
 }
 
-const MOCK_ASPECTS: AspectData[] = [
-  {
-    id: '1',
-    planet1: 'Moon',
-    planet2: 'Mercury',
-    aspectName: 'Trine',
-    orb: '0.9°',
-    type: 'Harmonious',
-    description: 'Feelings and comfort flow naturally with curiosity. This creates an intuitive ease between your emotional needs and your communication style.',
-  },
-  {
-    id: '2',
-    planet1: 'Ascendant',
-    planet2: 'Descendant',
-    aspectName: 'Opposition',
-    orb: '0.0°',
-    type: 'Challenging',
-    description: 'Tension between your outward persona and what you seek in partnerships. This friction drives growth through reconciling both sides of the relationship axis.',
-  },
-  {
-    id: '3',
-    planet1: 'Mars',
-    planet2: 'Midheaven',
-    aspectName: 'Sextile',
-    orb: '0.3°',
-    type: 'Harmonious',
-    description: 'Action, passion, and willpower align effortlessly with your career path and public reputation.',
-  }
-];
-
 // --- MICRO-COMPONENTS ---
 
 /**

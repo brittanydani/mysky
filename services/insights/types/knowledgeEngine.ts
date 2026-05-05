@@ -51,38 +51,6 @@ export type PatternCategory =
   | 'emotionalWeather'
   | 'identity';
 
-export interface DailyInsightAngle {
-  key: string;
-  triggerSignals: SignalKey[];
-  title: string;
-  shameFrame: string; // "This does not read as..."
-  clarityFrame: string; // "It reads as..."
-  observationOverride?: string;
-  patternOverride?: string;
-  prompt: string;
-}
-
-export interface ArchivePattern {
-  key: string;
-  title: string;
-  category: PatternCategory;
-  requiredSignals: SignalKey[];
-  supportingSignals: SignalKey[];
-  conflictingSignals?: SignalKey[];
-  minConfidence: number;
-  minEvidenceCount: number;
-  lookbackDays: 7 | 14 | 30 | 60 | 90 | 365;
-  copyFrame: {
-    observation: string;
-    pattern: string;
-    reframe: {
-      shame: string;
-      clarity: string;
-    };
-  };
-  dailyAngles: DailyInsightAngle[];
-}
-
 export type ConfidenceLevel = 'emerging' | 'moderate' | 'strong' | 'veryStrong';
 
 export type PatternMovement =

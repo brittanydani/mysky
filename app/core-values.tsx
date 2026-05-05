@@ -45,7 +45,6 @@ import {
   syncCoreValuesFromReflections,
 } from '../services/insights/reflectionProfileSync';
 
-const STORAGE_KEY = '@mysky:core_values';
 const MAX_TOP = 5;
 const MAP_TOP_ANCHOR_WEIGHTS = [4.6, 4.1, 3.6, 3.1, 2.6];
 const MAP_SELECTED_WEIGHT = 0.35;

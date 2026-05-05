@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import { processQueuedOperations } from '../services/offline/networkSync';
 import { logger } from '../utils/logger';
@@ -33,7 +33,7 @@ export function useNetworkStatus(): boolean | null {
   const failureCountRef = useRef(0);
   const currentOnlineRef = useRef<boolean | null>(null);
 
-  const check = async () => {
+  const check = useCallback(async () => {
     const result = await probe();
 
     if (result) {
@@ -49,7 +49,7 @@ export function useNetworkStatus(): boolean | null {
         setOnline(false);
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
     check();
@@ -64,8 +64,7 @@ export function useNetworkStatus(): boolean | null {
       if (intervalRef.current) clearInterval(intervalRef.current);
       sub.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [check]);
 
   return online;
 }

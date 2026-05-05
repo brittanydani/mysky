@@ -34,8 +34,6 @@ import { logger } from '../utils/logger';
 import { type AppTheme } from '../constants/theme';
 import { useThemedStyles } from '../context/ThemeContext';
 
-const STORAGE_KEY = '@mysky:archetype_profile';
-
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#D4AF37',       // The Hero

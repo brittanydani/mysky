@@ -1,4 +1,4 @@
-import { buildTodayInsights } from '../knowledgeEngineV2';
+import { buildTodayInsights } from '../buildTodayInsights';
 
 const sentenceCount = (text: string): number => (
   text.match(/[.!?](?=\s|$)/g)?.length ?? 0

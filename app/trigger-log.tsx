@@ -14,7 +14,6 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from '../components/keyboard/KeyboardControllerCompat';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
@@ -112,7 +111,6 @@ function SectionHeader({ title, icon }: { title: string; icon: string }) {
 
 function HistoryEntry({ entry }: { entry: TriggerEvent }) {
   const histStyles = useThemedStyles(createHistStyles);
-  const theme = useAppTheme();
   const isDrain = entry.mode === 'drain';
   const accentColor = isDrain ? PALETTE.coral : PALETTE.sage;
   const stateCard = NS_STATE_CARDS[entry.nsState];

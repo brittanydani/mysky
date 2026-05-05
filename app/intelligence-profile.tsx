@@ -41,8 +41,6 @@ import { type AppTheme } from '../constants/theme';
 import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 import { ReflectionDisclaimer } from '../components/ui/ReflectionDisclaimer';
 
-const STORAGE_KEY = '@mysky:intelligence_profile';
-
 const PALETTE = {
   gold: '#D4AF37',          // Hardware icons
   atmosphere: '#A2C2E1', // Icy Blue
