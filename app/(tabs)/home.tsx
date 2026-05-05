@@ -18,6 +18,7 @@ import {
   StyleSheet,
   Pressable,
   Dimensions,
+  InteractionManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -292,7 +293,7 @@ export default function HomeScreen() {
           chartId,
           rangeDays: 90,
           insightsEnabled: moodInsightsEnabled,
-          includeKnowledgeInsight: moodInsightsEnabled,
+          includeKnowledgeInsight: moodInsightsEnabled && includeDailyReflections,
           knowledgeInsightDate: nowForInsights,
           knowledgeHistory: historyInput,
           insightFeedbackProfile,
@@ -515,17 +516,21 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       isScreenActiveRef.current = true;
-      trackGrowthEvent('analytics_screen_viewed', { screen: 'home' }).catch(() => {});
-      (async () => {
-        try {
-          await loadUserChart();
-        } catch (e) {
-          logger.error('Home focus load failed:', e);
-        }
-      })();
+      const focusTask = InteractionManager.runAfterInteractions(() => {
+        if (!isScreenActiveRef.current) return;
+        trackGrowthEvent('analytics_screen_viewed', { screen: 'home' }).catch(() => {});
+        (async () => {
+          try {
+            await loadUserChart();
+          } catch (e) {
+            logger.error('Home focus load failed:', e);
+          }
+        })();
+      });
 
       return () => {
         isScreenActiveRef.current = false;
+        focusTask.cancel?.();
       };
     }, [loadUserChart]),
   );

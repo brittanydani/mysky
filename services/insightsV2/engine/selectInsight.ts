@@ -32,6 +32,13 @@ const CATEGORY_SOURCE_PREFERENCES: Partial<Record<InsightCategory, InsightDataSo
   timeRhythms: ['dailyCheckIn', 'sleep', 'journal'],
 };
 
+const DAILY_ANGLES_BY_PATTERN = DAILY_ANGLES.reduce<Record<string, DailyAngle[]>>((map, angle) => {
+  const angles = map[angle.patternKey] ?? [];
+  angles.push(angle);
+  map[angle.patternKey] = angles;
+  return map;
+}, {});
+
 function normalizeText(value: string): string {
   return value.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -94,10 +101,10 @@ export function selectFreshInsight(
 
     const patternScore = context.archivePatterns.find(p => p.patternKey === pattern.key);
     // Be lenient for tests or specific patterns
-    const minScore = pattern.minScore ?? 0.55; 
+    const minScore = pattern.minScore ?? 0.55;
     if (!patternScore || patternScore.score < minScore) continue;
 
-    const patternAngles = DAILY_ANGLES.filter(a => a.patternKey === pattern.key);
+    const patternAngles = DAILY_ANGLES_BY_PATTERN[pattern.key] ?? [];
 
     for (const angle of patternAngles) {
       // 1. Match Trigger Signals

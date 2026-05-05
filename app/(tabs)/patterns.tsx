@@ -8,7 +8,16 @@
 // 4. Enhanced Typography: Pure White data hero numbers and crisp Metallic Gold headers.
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Modal, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Pressable,
+  Modal,
+  ScrollView,
+  InteractionManager,
+} from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -162,76 +171,82 @@ export default function PatternsScreen() {
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      setLoading(true);
-      setLoadError(false);
-      trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
-      (async () => {
-        try {
-          const [moodInsightPref, aiInsightPref, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
-            getUserPreference<string | null>('pref_mood_insights', null).catch(() => null),
-            getUserPreference<string | null>('pref_ai_insight_refinement', null).catch(() => null),
-            getInsightFeedbackProfile().catch(() => null),
-            getInsightMemoryProfile().catch(() => null),
-          ]);
-          const insightsEnabled = moodInsightPref !== '0';
-          const aiInsightRefinementEnabled = insightsEnabled && aiInsightPref !== '0';
-          const surface = await buildInsightSurface({
-            rangeDays: 90,
-            insightsEnabled,
-            includeKnowledgeInsight: insightsEnabled,
-            insightFeedbackProfile,
-            insightMemoryProfile,
-            knowledgeAiEnabled: aiInsightRefinementEnabled,
-            knowledgeAiModelTier: isPremium ? 'premium' : 'free',
-            knowledgeAiSurface: 'patterns',
-          });
-          if (!active) return;
+      const focusTask = InteractionManager.runAfterInteractions(() => {
+        if (!active) return;
+        setLoading(true);
+        setLoadError(false);
+        trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
+        (async () => {
+          try {
+            const [moodInsightPref, aiInsightPref, insightFeedbackProfile, insightMemoryProfile] = await Promise.all([
+              getUserPreference<string | null>('pref_mood_insights', null).catch(() => null),
+              getUserPreference<string | null>('pref_ai_insight_refinement', null).catch(() => null),
+              getInsightFeedbackProfile().catch(() => null),
+              getInsightMemoryProfile().catch(() => null),
+            ]);
+            const insightsEnabled = moodInsightPref !== '0';
+            const aiInsightRefinementEnabled = insightsEnabled && aiInsightPref !== '0';
+            const surface = await buildInsightSurface({
+              rangeDays: 90,
+              insightsEnabled,
+              includeKnowledgeInsight: insightsEnabled,
+              insightFeedbackProfile,
+              insightMemoryProfile,
+              knowledgeAiEnabled: aiInsightRefinementEnabled,
+              knowledgeAiModelTier: isPremium ? 'premium' : 'free',
+              knowledgeAiSurface: 'patterns',
+            });
+            if (!active) return;
 
-          setMoodInsightsEnabled(insightsEnabled);
-          setSnapshot(surface.snapshot);
-          setArchiveDepthCounts(surface.archiveDepthCounts);
-          setLastUpdated(surface.lastUpdated);
-          setPremiumPersonaProfile(surface.premiumPersonaProfile);
-          setPremiumPatterns(surface.premiumPatterns);
-          setPremiumPatternProfile(surface.premiumPatternProfile);
-          setThisWeeksV2Pattern(surface.thisWeeksV2Pattern);
-          setPremiumWeeklyDeepDive(surface.premiumWeeklyDeepDive);
-          setWeeklyNarrative(surface.weeklyNarrative);
-          recordInsightMemorySnapshots([
-            ...surface.premiumPatterns.map((item, index) =>
-              insightMemorySnapshotFromPremiumPattern(item, {
-                surface: 'patterns',
-                rank: index,
-                isPrimary: index === 0,
-              }),
-            ),
-            ...(surface.thisWeeksV2Pattern
-              ? [insightMemorySnapshotFromThisWeekPattern(surface.thisWeeksV2Pattern)]
-              : []),
-            ...surface.premiumWeeklyDeepDive.map((item, index) =>
-              insightMemorySnapshotFromWeeklyDeepDive(item, { rank: index }),
-            ),
-          ]).catch((error) => {
-            logger.warn('[Patterns] Failed to record insight memory:', error);
-          });
+            setMoodInsightsEnabled(insightsEnabled);
+            setSnapshot(surface.snapshot);
+            setArchiveDepthCounts(surface.archiveDepthCounts);
+            setLastUpdated(surface.lastUpdated);
+            setPremiumPersonaProfile(surface.premiumPersonaProfile);
+            setPremiumPatterns(surface.premiumPatterns);
+            setPremiumPatternProfile(surface.premiumPatternProfile);
+            setThisWeeksV2Pattern(surface.thisWeeksV2Pattern);
+            setPremiumWeeklyDeepDive(surface.premiumWeeklyDeepDive);
+            setWeeklyNarrative(surface.weeklyNarrative);
+            recordInsightMemorySnapshots([
+              ...surface.premiumPatterns.map((item, index) =>
+                insightMemorySnapshotFromPremiumPattern(item, {
+                  surface: 'patterns',
+                  rank: index,
+                  isPrimary: index === 0,
+                }),
+              ),
+              ...(surface.thisWeeksV2Pattern
+                ? [insightMemorySnapshotFromThisWeekPattern(surface.thisWeeksV2Pattern)]
+                : []),
+              ...surface.premiumWeeklyDeepDive.map((item, index) =>
+                insightMemorySnapshotFromWeeklyDeepDive(item, { rank: index }),
+              ),
+            ]).catch((error) => {
+              logger.warn('[Patterns] Failed to record insight memory:', error);
+            });
 
-        } catch (e) {
-          logger.error('[Patterns] Pipeline error:', e);
-          if (active) {
-            setLoadError(true);
-            setPremiumPersonaProfile(null);
-            setPremiumPatterns([]);
-            setPremiumPatternProfile(null);
-            setThisWeeksV2Pattern(null);
-            setPremiumWeeklyDeepDive([]);
-            setWeeklyNarrative(null);
-            setSelectedPatternItem(null);
+          } catch (e) {
+            logger.error('[Patterns] Pipeline error:', e);
+            if (active) {
+              setLoadError(true);
+              setPremiumPersonaProfile(null);
+              setPremiumPatterns([]);
+              setPremiumPatternProfile(null);
+              setThisWeeksV2Pattern(null);
+              setPremiumWeeklyDeepDive([]);
+              setWeeklyNarrative(null);
+              setSelectedPatternItem(null);
+            }
+          } finally {
+            if (active) setLoading(false);
           }
-        } finally {
-          if (active) setLoading(false);
-        }
-      })();
-      return () => { active = false; };
+        })();
+      });
+      return () => {
+        active = false;
+        focusTask.cancel?.();
+      };
     }, [isPremium])
   );
 

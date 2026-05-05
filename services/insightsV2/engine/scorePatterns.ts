@@ -34,13 +34,18 @@ export function scoreArchivePattern(
   const nowTime = dateKeyToTime(now);
   const safeNowTime = Number.isFinite(nowTime) ? nowTime : Date.now();
   const cutoff = safeNowTime - Math.max(pattern.lookbackDays - 1, 0) * DAY_MS;
+  const matchedSignalKeys = new Set([
+    ...pattern.requiredSignals,
+    ...pattern.supportingSignals,
+  ]);
+  const conflictingSignalKeys = new Set(pattern.conflictingSignals ?? []);
 
   const relevantSignals = signals.filter(s => {
     const sTime = dateKeyToTime(s.date);
     return (
       Number.isFinite(sTime) &&
       sTime >= cutoff &&
-      [...pattern.requiredSignals, ...pattern.supportingSignals].includes(s.key)
+      matchedSignalKeys.has(s.key)
     );
   });
 
@@ -57,7 +62,7 @@ export function scoreArchivePattern(
     return (
       Number.isFinite(sTime) &&
       sTime >= cutoff &&
-      pattern.conflictingSignals?.includes(s.key)
+      conflictingSignalKeys.has(s.key)
     );
   });
 

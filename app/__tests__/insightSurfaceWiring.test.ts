@@ -10,7 +10,8 @@ describe('insight surface wiring', () => {
     const homeSource = readRepoFile('app/(tabs)/home.tsx');
 
     expect(homeSource).toContain("import { buildInsightSurface } from '../../services/insights/buildInsightSurface'");
-    expect(homeSource).toContain('includeKnowledgeInsight: moodInsightsEnabled');
+    expect(homeSource).toContain('includeKnowledgeInsight: moodInsightsEnabled && includeDailyReflections');
+    expect(homeSource).toContain('InteractionManager.runAfterInteractions');
     expect(homeSource).toContain('surface.knowledgeInsights');
     expect(homeSource).toContain('visibleKnowledgeInsights.map');
     expect(homeSource).toContain('<KnowledgeInsightCard');
@@ -26,6 +27,7 @@ describe('insight surface wiring', () => {
 
     expect(patternsSource).toContain("import { buildInsightSurface } from '../../services/insights/buildInsightSurface'");
     expect(patternsSource).toContain('includeKnowledgeInsight: insightsEnabled');
+    expect(patternsSource).toContain('InteractionManager.runAfterInteractions');
     expect(patternsSource).toContain('setPremiumPatterns(surface.premiumPatterns)');
     expect(patternsSource).toContain('setPremiumPatternProfile(surface.premiumPatternProfile)');
     expect(patternsSource).toContain('setPremiumWeeklyDeepDive(surface.premiumWeeklyDeepDive)');
