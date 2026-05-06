@@ -7,6 +7,7 @@ import {
   normalizeRelationshipMirrorsV2,
   normalizeTriggerLogsV2,
 } from '../normalizers';
+import { toLocalDateString } from '../../../utils/dateUtils';
 
 describe('insightsV2 normalizers', () => {
   const now = '2026-04-24T12:00:00Z';
@@ -61,6 +62,24 @@ describe('insightsV2 normalizers', () => {
     expect(signals.some(signal => signal.source === 'glimmerLog' && signal.key === 'glimmer_softening')).toBe(true);
     expect(signals.some(signal => signal.source === 'glimmerLog' && signal.key === 'quiet_safety')).toBe(true);
     expect(signals.some(signal => signal.source === 'glimmerLog' && signal.key === 'home_as_safety')).toBe(true);
+  });
+
+  it('keeps timestamped signals on their local insight day near UTC midnight', () => {
+    const localEvening = new Date(2026, 3, 24, 23, 30);
+    const localDay = toLocalDateString(localEvening);
+    const signals = normalizeGlimmerLogsV2([
+      {
+        timestamp: localEvening.getTime(),
+        mode: 'nourish',
+        event: 'A quiet walk helped me settle and feel connected.',
+        nsState: 'ventral',
+        sensations: ['soft chest'],
+        intensity: 3,
+      },
+    ]);
+
+    expect(signals.length).toBeGreaterThan(0);
+    expect(signals.every(signal => signal.date === localDay)).toBe(true);
   });
 
   it('normalizes relationship mirrors into V2 relationship signals', () => {

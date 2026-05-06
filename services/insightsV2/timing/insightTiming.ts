@@ -3,6 +3,7 @@ import type {
   InsightHistoryItem,
 } from '../types';
 import type { CurrentInsightStateProfile } from '../state/insightState';
+import { toLocalDateString } from '../../../utils/dateUtils';
 
 export interface InsightTimingDecision {
   deliveryMode: InsightDeliveryMode;
@@ -26,10 +27,14 @@ function stringValue(value: unknown): string {
 function dateKey(value: unknown): string | null {
   const raw = stringValue(value);
   if (!raw) return null;
-  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
 
   const parsed = new Date(raw);
-  return Number.isFinite(parsed.getTime()) ? parsed.toISOString().slice(0, 10) : null;
+  return Number.isFinite(parsed.getTime())
+    ? toLocalDateString(parsed)
+    : /^\d{4}-\d{2}-\d{2}/.test(raw)
+      ? raw.slice(0, 10)
+      : null;
 }
 
 function sameDay(a: unknown, b: unknown): boolean {

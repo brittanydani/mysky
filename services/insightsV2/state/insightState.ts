@@ -9,6 +9,7 @@ import type {
   InsightDepthLevel,
   UserSignal,
 } from '../types';
+import { toLocalDateString } from '../../../utils/dateUtils';
 
 export type InsightStateScores = Record<InsightCurrentState, number>;
 
@@ -183,10 +184,14 @@ function signalText(signal: Partial<UserSignal> | null | undefined): string {
 function dateKey(value: unknown): string | null {
   const raw = stringValue(value);
   if (!raw) return null;
-  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
 
   const parsed = new Date(raw);
-  return Number.isFinite(parsed.getTime()) ? parsed.toISOString().slice(0, 10) : null;
+  return Number.isFinite(parsed.getTime())
+    ? toLocalDateString(parsed)
+    : /^\d{4}-\d{2}-\d{2}/.test(raw)
+      ? raw.slice(0, 10)
+      : null;
 }
 
 function dateWeight(signalDate: unknown, insightDate: string): number {
@@ -231,7 +236,7 @@ export function detectCurrentInsightState(
   signals: readonly UserSignal[] | null | undefined,
   date: string | null | undefined,
 ): CurrentInsightStateProfile {
-  const insightDate = dateKey(date) ?? new Date().toISOString().slice(0, 10);
+  const insightDate = dateKey(date) ?? toLocalDateString();
   const scores = emptyScores();
   const reasonSignals: string[] = [];
 

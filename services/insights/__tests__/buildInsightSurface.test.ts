@@ -187,6 +187,7 @@ describe('buildInsightSurface knowledge insights', () => {
       chartId: 'chart-1',
       insightsEnabled: true,
       includeKnowledgeInsight: true,
+      includePremiumPatterns: true,
       knowledgeInsightDate: now,
       knowledgeHistory: {
         recentlyShownPatternKeys: [],
@@ -225,11 +226,12 @@ describe('buildInsightSurface knowledge insights', () => {
     }
   });
 
-  it('treats prior insight memory as a hard no-repeat list across surfaces', async () => {
+  it('treats recent insight memory as a no-repeat list across surfaces', async () => {
     const initialSurface = await buildInsightSurface({
       chartId: 'chart-1',
       insightsEnabled: true,
       includeKnowledgeInsight: true,
+      includePremiumPatterns: true,
       knowledgeInsightDate: now,
       knowledgeHistory: {
         recentlyShownPatternKeys: [],
@@ -268,6 +270,7 @@ describe('buildInsightSurface knowledge insights', () => {
       chartId: 'chart-1',
       insightsEnabled: true,
       includeKnowledgeInsight: true,
+      includePremiumPatterns: true,
       knowledgeInsightDate: now,
       knowledgeHistory: {
         recentlyShownPatternKeys: [],
@@ -277,6 +280,28 @@ describe('buildInsightSurface knowledge insights', () => {
     });
 
     expect(visiblePatternKeys(surface)).not.toContain(shownPatternKey);
+  });
+
+  it('withholds premium pattern surfaces when premium payloads are disabled', async () => {
+    const surface = await buildInsightSurface({
+      chartId: 'chart-1',
+      insightsEnabled: true,
+      includeKnowledgeInsight: true,
+      includePremiumPatterns: false,
+      knowledgeInsightDate: now,
+      knowledgeHistory: {
+        recentlyShownPatternKeys: [],
+        recentlyShownCopyHashes: [],
+      },
+    });
+
+    expect(surface.knowledgeInsights.length).toBeGreaterThan(0);
+    expect(surface.premiumPatterns).toEqual([]);
+    expect(surface.premiumPatternProfile).toBeNull();
+    expect(surface.premiumPersonaProfile).toBeNull();
+    expect(surface.premiumWeeklyDeepDive).toEqual([]);
+    expect(surface.thisWeeksV2Pattern).toBeNull();
+    expect(surface.weeklyNarrative).toBeNull();
   });
 
   it('can build the initial Today surface without waiting for daily reflections', async () => {

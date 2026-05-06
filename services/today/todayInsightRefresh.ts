@@ -1,6 +1,7 @@
 export type TodayInsightRefreshReason =
   | 'dailyCheckIn'
   | 'dailyReflection'
+  | 'journal'
   | 'sleep';
 
 export interface TodayInsightRefreshState {

@@ -118,6 +118,13 @@ export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({
 
   const movementLabel = movementLabelMap[insight.movement] || 'ARCHIVE ECHO';
   const eyebrowLabel = insight.slotLabel ?? movementLabel;
+  const confidenceLabelMap: Record<string, string> = {
+    veryStrong: 'VERY STRONG',
+    strong: 'STRONG',
+    moderate: 'MODERATE',
+    emerging: 'EMERGING',
+  };
+  const confidenceLabel = confidenceLabelMap[insight.confidence] ?? insight.confidence.toUpperCase();
   const activeWeeklyTheme = insight.activeWeeklyTheme?.trim();
 
   return (
@@ -136,7 +143,7 @@ export const KnowledgeInsightCard: React.FC<KnowledgeInsightCardProps> = ({
             </MetallicText>
           </View>
           <View style={styles.confidenceBadge}>
-            <Text {...TEXT_SCALE_PROPS} style={styles.confidenceText}>{insight.confidence.toUpperCase()}</Text>
+            <Text {...TEXT_SCALE_PROPS} style={styles.confidenceText}>{confidenceLabel}</Text>
           </View>
         </View>
 

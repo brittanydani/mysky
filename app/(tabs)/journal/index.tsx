@@ -28,6 +28,7 @@ import PremiumRequiredScreen from '../../../components/PremiumRequiredScreen';
 import { supabaseDb } from '../../../services/storage/supabaseDb';
 import { JournalEntry, SleepEntry, generateId } from '../../../services/storage/models';
 import JournalEntryModal from '../../../components/JournalEntryModal';
+import { markTodayInsightsStale } from '../../../services/today/todayInsightRefresh';
 import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../../../services/premium/advancedJournal';
 import { usePremium } from '../../../context/PremiumContext';
 import { logger } from '../../../utils/logger';
@@ -1003,6 +1004,8 @@ function JournalContent() {
       };
       const safeTags = normalizeJournalTags(data.tags ?? editingEntry?.tags);
 
+      const savedDate = (data.date ?? editingEntry?.date ?? toLocalDateString()) as string;
+
       if (editingEntry?.id) {
         const updated: JournalEntry = {
           ...editingEntry,
@@ -1012,7 +1015,7 @@ function JournalContent() {
           id: editingEntry.id,
           createdAt: editingEntry.createdAt ?? nowIso,
           updatedAt: nowIso,
-          date: (data.date ?? editingEntry.date) as string,
+          date: savedDate,
           chartId: data.chartId ?? editingEntry.chartId,
           transitSnapshot: data.transitSnapshot ?? editingEntry.transitSnapshot,
           tags: safeTags,
@@ -1026,7 +1029,7 @@ function JournalContent() {
           content: data.content ?? '',
           mood: (data.mood ?? 'okay') as any,
           moonPhase: (data.moonPhase ?? 'new') as any,
-          date: (data.date ?? toLocalDateString()) as any,
+          date: savedDate as any,
           createdAt: nowIso,
           updatedAt: nowIso,
           isDeleted: false,
@@ -1037,6 +1040,10 @@ function JournalContent() {
         } as JournalEntry;
 
         await supabaseDb.addJournalEntry(created);
+      }
+
+      if (savedDate === toLocalDateString()) {
+        markTodayInsightsStale('journal');
       }
 
       setShowEntryModal(false);

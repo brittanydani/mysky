@@ -69,6 +69,7 @@ interface BuildInsightSurfaceOptions {
   insightFeedbackProfile?: InsightFeedbackProfile | null;
   insightMemoryProfile?: InsightMemoryProfile | null;
   includeDailyReflections?: boolean;
+  includePremiumPatterns?: boolean;
   knowledgeAiEnabled?: boolean;
   knowledgeAiModelTier?: KnowledgeInsightModelTier;
   knowledgeAiSurface?: KnowledgeInsightSurface;
@@ -96,6 +97,7 @@ export async function buildInsightSurface({
   insightFeedbackProfile = null,
   insightMemoryProfile = null,
   includeDailyReflections = true,
+  includePremiumPatterns = false,
   knowledgeAiEnabled = false,
   knowledgeAiModelTier = 'free',
   knowledgeAiSurface = 'today',
@@ -179,6 +181,7 @@ export async function buildInsightSurface({
           history: combinedKnowledgeHistory,
           feedbackProfile: insightFeedbackProfile,
           previousPatternScores,
+          includePremiumPatterns,
           aiRefinement: {
             enabled: knowledgeAiEnabled,
             modelTier: knowledgeAiModelTier,

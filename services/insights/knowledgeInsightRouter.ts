@@ -56,6 +56,7 @@ interface RunActiveKnowledgeInsightInput {
   history: KnowledgeEngineHistoryInput;
   feedbackProfile?: InsightFeedbackProfile | null;
   previousPatternScores?: V2ArchivePatternScore[];
+  includePremiumPatterns?: boolean;
   aiRefinement?: {
     enabled?: boolean;
     modelTier?: KnowledgeInsightModelTier;
@@ -404,6 +405,7 @@ async function runV2KnowledgeInsights({
   history,
   feedbackProfile,
   previousPatternScores,
+  includePremiumPatterns = false,
   aiRefinement,
 }: RunActiveKnowledgeInsightInput): Promise<ActiveKnowledgeInsightResult> {
   const v2History = buildV2History(history, date);
@@ -448,6 +450,29 @@ async function runV2KnowledgeInsights({
   let dailyInsights = selectedDailyV2Insights.map(adaptV2Insight);
   const fallbackPrimary = selectPrimaryV2Insight(eligibleDailyV2Insights);
   let primaryInsight = dailyInsights[0] ?? (fallbackPrimary ? adaptV2Insight(fallbackPrimary) : null);
+  if (!includePremiumPatterns) {
+    if (aiRefinement?.enabled) {
+      dailyInsights = await enhanceKnowledgeInsightsWithAi(dailyInsights, {
+        enabled: true,
+        modelTier: aiRefinement.modelTier,
+        surface: aiRefinement.surface,
+        date,
+      });
+      primaryInsight = dailyInsights[0] ?? primaryInsight;
+    }
+
+    return {
+      primaryInsight,
+      dailyInsights,
+      premiumPersonaProfile: null,
+      premiumPatterns: [],
+      premiumPatternProfile: null,
+      thisWeeksV2Pattern: null,
+      premiumWeeklyDeepDive: [],
+      weeklyNarrative: null,
+    };
+  }
+
   const dailyShowsPrimaryPersona = selectedDailyV2Insights.some(insight => insight.slot === 'primaryPersona');
   const premiumPersonaProfile = dailyShowsPrimaryPersona || usedPatternKeys.has(result.primaryPersona?.key ?? '')
     ? null

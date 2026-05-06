@@ -70,6 +70,7 @@ import { scheduleTransitNotification } from '../../services/astrology/transitNot
 import { scheduleInsightNotification } from '../../services/today/insightNotifications';
 import { getTodayInsightRefreshState } from '../../services/today/todayInsightRefresh';
 import { buildInsightSurface } from '../../services/insights/buildInsightSurface';
+import { countTodayInsightInputs } from '../../services/insights/todayInsightInputs';
 import {
   buildRecentlyShownKnowledgeHistory,
   getInsightHistory,
@@ -184,6 +185,7 @@ export default function HomeScreen() {
   const [latestSleep, setLatestSleep] = useState(7);
   const [sleepSignalCount, setSleepSignalCount] = useState(0);
   const [dreamSignalCount, setDreamSignalCount] = useState(0);
+  const [todayInsightSignalCount, setTodayInsightSignalCount] = useState(0);
 
   // Weekly check-ins — used by 7-day Stability Map
   const [weeklyCheckIns, setWeeklyCheckIns] = useState<DailyCheckIn[]>([]);
@@ -197,11 +199,13 @@ export default function HomeScreen() {
 
   // True only when a check-in exists for today's date
   const hasDataToday = todayDataReady && todayCheckInCount > 0;
+  const hasInsightDataToday = todayDataReady && todayInsightSignalCount > 0;
 
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
   const [knowledgeInsight, setKnowledgeInsight] = useState<GeneratedInsight | null>(null);
   const [knowledgeInsights, setKnowledgeInsights] = useState<GeneratedInsight[]>([]);
+  const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
   const prevMilestoneRef = useRef<number | null>(null);
 
   // Self-knowledge context — used to personalize affirmations
@@ -291,8 +295,7 @@ export default function HomeScreen() {
         const todayKey = getLogicalToday();
         const refreshState = getTodayInsightRefreshState();
         const hasUnconsumedRefresh = refreshState.revision > consumedTodayInsightRefreshRevisionRef.current;
-        const shouldUseSameDayHistory = hasUnconsumedRefresh &&
-          (refreshState.reason !== 'dailyReflection' || includeDailyReflections);
+        const shouldUseSameDayHistory = hasUnconsumedRefresh && includeDailyReflections;
         const nowForInsights = shouldUseSameDayHistory
           ? buildLogicalDayInsightTimestamp(todayKey)
           : `${todayKey}T12:00:00`;
@@ -321,6 +324,7 @@ export default function HomeScreen() {
           insightFeedbackProfile,
           insightMemoryProfile,
           includeDailyReflections,
+          includePremiumPatterns: isPremium,
           knowledgeAiEnabled: aiInsightRefinementEnabled && includeDailyReflections,
           knowledgeAiModelTier: isPremium ? 'premium' : 'free',
           knowledgeAiSurface: 'today',
@@ -345,9 +349,12 @@ export default function HomeScreen() {
         const { surface, moodInsightsEnabled, todayKey, nowForInsights } = load;
         const checkins = surface.checkIns;
         const sleepEntries = surface.sleepEntries;
+        const todayInsightSignals = countTodayInsightInputs(surface, todayKey);
 
         setIfActive(setWeeklyCheckIns, checkins);
         setIfActive(setSelfKnowledge, surface.selfKnowledgeContext);
+        setIfActive(setTodayInsightSignalCount, todayInsightSignals);
+        setIfActive(setMoodInsightsEnabled, moodInsightsEnabled);
 
         // Knowledge Engine Integration
         if (moodInsightsEnabled) {
@@ -359,7 +366,7 @@ export default function HomeScreen() {
           const shownKnowledgeInsights = isPremium ? kInsights : kInsights.slice(0, 1);
           setIfActive(setKnowledgeInsight, kInsights[0] ?? null);
           setIfActive(setKnowledgeInsights, kInsights);
-          if (shownKnowledgeInsights.length && checkins.some((entry) => entry.date === todayKey)) {
+          if (shownKnowledgeInsights.length && todayInsightSignals > 0) {
             const unrecordedInsights = shownKnowledgeInsights
               .map((insight, index) => ({ insight, index }))
               .filter(({ insight }) => {
@@ -517,6 +524,8 @@ export default function HomeScreen() {
           setIfActive(setUserChart, null);
           setIfActive(setKnowledgeInsight, null);
           setIfActive(setKnowledgeInsights, []);
+          setIfActive(setMoodInsightsEnabled, true);
+          setIfActive(setTodayInsightSignalCount, 0);
           setIfActive(setSleepSignalCount, 0);
           setIfActive(setDreamSignalCount, 0);
           setIfActive(setTodayDataReady, false);
@@ -533,6 +542,8 @@ export default function HomeScreen() {
         setIfActive(setUserChart, null);
         setIfActive(setKnowledgeInsight, null);
         setIfActive(setKnowledgeInsights, []);
+        setIfActive(setMoodInsightsEnabled, true);
+        setIfActive(setTodayInsightSignalCount, 0);
         setIfActive(setSleepSignalCount, 0);
         setIfActive(setDreamSignalCount, 0);
         setIfActive(setTodayDataReady, false);
@@ -658,7 +669,7 @@ export default function HomeScreen() {
       drains: selfKnowledge?.triggers?.drains,
       relationshipTags,
       topReflectionCategory,
-      dailySignalSeed: todayCheckInCount,
+      dailySignalSeed: todayInsightSignalCount,
       insightAlignment: knowledgeInsight
         ? {
             category: knowledgeInsight.category,
@@ -686,7 +697,7 @@ export default function HomeScreen() {
         : null,
     };
     return getDailyAffirmation(ctx);
-  }, [userChart, mood, energy, latestSleep, selfKnowledge, dailyLoop, todayCheckInCount, knowledgeInsight]);
+  }, [userChart, mood, energy, latestSleep, selfKnowledge, dailyLoop, todayInsightSignalCount, knowledgeInsight]);
 
   // ── Balance Score + Stability Map ──
 
@@ -703,14 +714,22 @@ export default function HomeScreen() {
       };
     }
 
+    if (!moodInsightsEnabled) {
+      return {
+        icon: 'eye-off-outline',
+        label: 'PATTERN INSIGHTS',
+        text: 'Mood pattern insights are turned off. Turn them on in Settings when you want MySky to name daily patterns.',
+      };
+    }
+
     return {
-      icon: hasDataToday ? 'sparkles-outline' : 'create-outline',
-      label: hasDataToday ? 'TODAY' : 'REFLECTION',
-      text: hasDataToday
+      icon: hasInsightDataToday ? 'sparkles-outline' : 'create-outline',
+      label: hasInsightDataToday ? 'TODAY' : 'REFLECTION',
+      text: hasInsightDataToday
         ? 'Your signal is saved. MySky will name a pattern here once there is enough fresh evidence.'
-        : 'Log a check-in today to see your personalized daily reflection.',
+        : 'Log a check-in, reflection, journal note, or sleep entry to see your personalized daily reflection.',
     };
-  }, [hasDataToday, todayDataReady]);
+  }, [hasInsightDataToday, moodInsightsEnabled, todayDataReady]);
 
   const availableKnowledgeInsights = useMemo(
     () => knowledgeInsights.length ? knowledgeInsights : knowledgeInsight ? [knowledgeInsight] : [],
@@ -956,7 +975,7 @@ export default function HomeScreen() {
           {/* ── Daily Insight ── */}
           <SectionHeader title="Daily Insight" icon="sparkles-outline" />
           <Animated.View entering={FadeInDown.delay(700).duration(600)}>
-            {hasDataToday && visibleKnowledgeInsights.length > 0 ? (
+            {hasInsightDataToday && visibleKnowledgeInsights.length > 0 ? (
               <View style={styles.dailyInsightList}>
                 {visibleKnowledgeInsightItems.map(({ insight, showActiveWeeklyTheme }) => (
                   <KnowledgeInsightCard

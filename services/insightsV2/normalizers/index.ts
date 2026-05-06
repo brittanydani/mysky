@@ -7,6 +7,7 @@ import type {
 } from '../types';
 import { compareSignalsByPrimarySource } from '../sourcePriority';
 import { getSignalRoles, getSignalSentiment } from '../signalTaxonomy';
+import { toLocalDateString } from '../../../utils/dateUtils';
 
 type KeywordSignal = {
   key: SignalKey;
@@ -16,12 +17,40 @@ type KeywordSignal = {
 };
 
 function asDateKey(value: unknown): string | null {
-  if (typeof value === 'string' && value.trim()) return value.slice(0, 10);
+  if (typeof value === 'string' && value.trim()) {
+    const trimmed = value.trim();
+    const dateOnly = trimmed.slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly) && trimmed.length <= 10) {
+      return dateOnly;
+    }
+    const date = new Date(trimmed);
+    return Number.isFinite(date.getTime())
+      ? toLocalDateString(date)
+      : /^\d{4}-\d{2}-\d{2}$/.test(dateOnly)
+        ? dateOnly
+        : null;
+  }
   if (typeof value === 'number' && Number.isFinite(value)) {
     const date = new Date(value);
-    return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : null;
+    return Number.isFinite(date.getTime()) ? toLocalDateString(date) : null;
   }
   return null;
+}
+
+function referenceDateKey(value: string | undefined): string {
+  if (!value?.trim()) return toLocalDateString();
+  const trimmed = value.trim();
+  const dateOnly = trimmed.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly) && trimmed.length <= 10) {
+    return dateOnly;
+  }
+
+  const parsed = new Date(trimmed);
+  return Number.isFinite(parsed.getTime())
+    ? toLocalDateString(parsed)
+    : /^\d{4}-\d{2}-\d{2}$/.test(dateOnly)
+      ? dateOnly
+      : toLocalDateString();
 }
 
 function asSearchText(values: unknown[]): string {
@@ -1952,7 +1981,7 @@ export function normalizeInsightInputsV2(raw: InsightRawInputs, referenceDate?: 
     ...normalizeNatalChartThemesV2(raw.natalChartThemes),
   ];
 
-  const today = (referenceDate ?? new Date().toISOString()).slice(0, 10);
+  const today = referenceDateKey(referenceDate);
   const todaySignals = signals.filter(signal => signal.date === today);
   const sources = new Set(todaySignals.map(signal => signal.source));
   const capacityTriggers: SignalKey[] = [

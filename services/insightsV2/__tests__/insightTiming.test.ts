@@ -75,6 +75,19 @@ describe('insightTiming', () => {
     expect(decision.preferReinforcement).toBe(true);
   });
 
+  it('treats late local evening history as same-day even when UTC date changes', () => {
+    const localEveningShownAt = new Date(2026, 3, 24, 21, 15).toISOString();
+    const localLateNow = new Date(2026, 3, 24, 23, 30).toISOString();
+    const decision = buildInsightTimingDecision({
+      stateProfile: profile({}),
+      history: [historyItem({ shownAt: localEveningShownAt })],
+      date: localLateNow,
+    });
+
+    expect(decision.deliveryMode).toBe('reinforcement');
+    expect(decision.suppressNovelty).toBe(true);
+  });
+
   it('allows novelty when the user appears calm and has not seen much today', () => {
     const decision = buildInsightTimingDecision({
       stateProfile: profile({}),

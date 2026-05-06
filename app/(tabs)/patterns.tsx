@@ -58,6 +58,7 @@ import {
   type InsightOutcomeType,
 } from '../../services/insightsV2/feedback/insightOutcomeFeedback';
 import {
+  type InsightMemorySnapshot,
   getInsightMemoryProfile,
   insightMemorySnapshotFromPremiumPattern,
   insightMemorySnapshotFromThisWeekPattern,
@@ -149,6 +150,8 @@ export default function PatternsScreen() {
   const hasLoadedSurfaceRef = useRef(false);
   const lastSurfaceLoadedAtRef = useRef(0);
   const lastSurfacePremiumRef = useRef<boolean | null>(null);
+  const recordedPatternMemoryFingerprintsRef = useRef<Map<string, string>>(new Map());
+  const pendingPatternMemoryFingerprintsRef = useRef<Map<string, string>>(new Map());
 
   const recordPatternOutcome = useCallback((
     item: PatternLibraryItem,
@@ -171,6 +174,50 @@ export default function PatternsScreen() {
     }).catch((error) => {
       logger.warn('[Patterns] Failed to record insight outcome:', error);
     });
+  }, []);
+
+  const recordPatternMemory = useCallback((
+    snapshots: (InsightMemorySnapshot | null | undefined)[],
+    context: string,
+  ) => {
+    const pendingFingerprints: [string, string][] = [];
+    const unrecorded = snapshots.filter((snapshot): snapshot is InsightMemorySnapshot => {
+      if (!snapshot) return false;
+      const fingerprint = [
+        snapshot.observedAt,
+        snapshot.bodyKey ?? '',
+        snapshot.paragraphId ?? '',
+        snapshot.title,
+        snapshot.score,
+        snapshot.confidence,
+        snapshot.movement,
+      ].join('|');
+      if (recordedPatternMemoryFingerprintsRef.current.get(snapshot.id) === fingerprint) return false;
+      if (pendingPatternMemoryFingerprintsRef.current.get(snapshot.id) === fingerprint) return false;
+      pendingPatternMemoryFingerprintsRef.current.set(snapshot.id, fingerprint);
+      pendingFingerprints.push([snapshot.id, fingerprint]);
+      return true;
+    });
+
+    if (!unrecorded.length) return;
+
+    recordInsightMemorySnapshots(unrecorded)
+      .then(() => {
+        pendingFingerprints.forEach(([id, fingerprint]) => {
+          if (pendingPatternMemoryFingerprintsRef.current.get(id) === fingerprint) {
+            pendingPatternMemoryFingerprintsRef.current.delete(id);
+          }
+          recordedPatternMemoryFingerprintsRef.current.set(id, fingerprint);
+        });
+      })
+      .catch((error) => {
+        pendingFingerprints.forEach(([id, fingerprint]) => {
+          if (pendingPatternMemoryFingerprintsRef.current.get(id) === fingerprint) {
+            pendingPatternMemoryFingerprintsRef.current.delete(id);
+          }
+        });
+        logger.warn(`[Patterns] Failed to record ${context} insight memory:`, error);
+      });
   }, []);
 
   useFocusEffect(
@@ -209,6 +256,7 @@ export default function PatternsScreen() {
               includeKnowledgeInsight: insightsEnabled,
               insightFeedbackProfile,
               insightMemoryProfile,
+              includePremiumPatterns: isPremium,
               knowledgeAiEnabled: aiInsightRefinementEnabled,
               knowledgeAiModelTier: isPremium ? 'premium' : 'free',
               knowledgeAiSurface: 'patterns',
@@ -228,23 +276,14 @@ export default function PatternsScreen() {
             hasLoadedSurfaceRef.current = true;
             lastSurfaceLoadedAtRef.current = Date.now();
             lastSurfacePremiumRef.current = isPremium;
-            recordInsightMemorySnapshots([
-              ...surface.premiumPatterns.map((item, index) =>
-                insightMemorySnapshotFromPremiumPattern(item, {
-                  surface: 'patterns',
-                  rank: index,
-                  isPrimary: index === 0,
-                }),
-              ),
-              ...(surface.thisWeeksV2Pattern
-                ? [insightMemorySnapshotFromThisWeekPattern(surface.thisWeeksV2Pattern)]
-                : []),
-              ...surface.premiumWeeklyDeepDive.map((item, index) =>
-                insightMemorySnapshotFromWeeklyDeepDive(item, { rank: index }),
-              ),
-            ]).catch((error) => {
-              logger.warn('[Patterns] Failed to record insight memory:', error);
-            });
+            if (isPremium) {
+              recordPatternMemory(
+                [surface.thisWeeksV2Pattern
+                  ? insightMemorySnapshotFromThisWeekPattern(surface.thisWeeksV2Pattern)
+                  : null],
+                'this-week',
+              );
+            }
 
           } catch (e) {
             logger.error('[Patterns] Pipeline error:', e);
@@ -267,7 +306,7 @@ export default function PatternsScreen() {
         active = false;
         focusTask.cancel?.();
       };
-    }, [isPremium])
+    }, [isPremium, recordPatternMemory])
   );
 
   const libraryState = useMemo(
@@ -323,6 +362,10 @@ export default function PatternsScreen() {
     () => (thisWeeksV2Pattern ? [thisWeeksV2Pattern] : []),
     [thisWeeksV2Pattern],
   );
+  const visiblePatternRows = useMemo(
+    () => (isPremium ? patternRows : []),
+    [isPremium, patternRows],
+  );
   const premiumTeaser = useMemo(
     () => getPersonalizedPremiumTeaser(archiveDepthCounts, {
       detectedPatterns: premiumPatterns.length || (thisWeeksV2Pattern && !thisWeeksV2Pattern.isEmptyState ? 1 : 0),
@@ -330,6 +373,8 @@ export default function PatternsScreen() {
     }),
     [archiveDepthCounts, premiumPatterns.length, thisWeeksV2Pattern],
   );
+  const showFreePremiumPatternTeaser = moodInsightsEnabled && !isPremium && !loading && snapshot.checkInCount >= 5;
+  const showFreeBuildingArchive = moodInsightsEnabled && !isPremium && !loading && snapshot.checkInCount >= 3 && snapshot.checkInCount < 5;
 
   return (
     <View style={styles.container}>
@@ -341,7 +386,7 @@ export default function PatternsScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <FlatList<PremiumThisWeekPatternItem>
-          data={patternRows}
+          data={visiblePatternRows}
           keyExtractor={(item) => `${item.patternKey}:${item.id}`}
           renderItem={({ item }) => (
             <>
@@ -374,6 +419,12 @@ export default function PatternsScreen() {
                 <Pressable
                   onPress={() => {
                     Haptics.selectionAsync().catch(() => {});
+                    recordPatternMemory(
+                      premiumWeeklyDeepDive.map((deepDive, index) =>
+                        insightMemorySnapshotFromWeeklyDeepDive(deepDive, { rank: index }),
+                      ),
+                      'weekly-deep-dive',
+                    );
                     setShowDeepDiveModal(true);
                   }}
                     style={styles.deepDiveButton}
@@ -448,7 +499,7 @@ export default function PatternsScreen() {
               ) : null}
 
               <SectionHeader label="THIS WEEK'S PATTERN" icon="radio-outline" />
-              {moodInsightsEnabled && !isPremium && !loading && snapshot.checkInCount >= 5 && (
+              {showFreePremiumPatternTeaser && (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                   <VelvetGlassSurface style={styles.insightCard} intensity={25}>
                     <LinearGradient colors={['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)']} style={StyleSheet.absoluteFill} />
@@ -473,7 +524,7 @@ export default function PatternsScreen() {
                   </VelvetGlassSurface>
                 </Pressable>
               )}
-              {moodInsightsEnabled && !isPremium && !loading && snapshot.checkInCount >= 3 && snapshot.checkInCount < 5 && (
+              {showFreeBuildingArchive && (
                 <VelvetGlassSurface style={styles.insightCard} intensity={25}>
                   <LinearGradient colors={['rgba(107, 144, 128, 0.15)', 'rgba(107, 144, 128, 0.05)']} style={StyleSheet.absoluteFill} />
                   <View style={styles.cardHeader}>
@@ -497,7 +548,7 @@ export default function PatternsScreen() {
                   <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyTitle}>Mood pattern insights are turned off</Text>
                   <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>Turn on Mood Pattern Insights in Settings when you want recurring patterns from your check-ins.</Text>
                 </VelvetGlassSurface>
-              ) : !loading && patternRows.length === 0 ? (
+              ) : !loading && !showFreePremiumPatternTeaser && !showFreeBuildingArchive && visiblePatternRows.length === 0 ? (
                 <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
                   <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
                   <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyTitle}>Not enough signal yet</Text>
@@ -516,17 +567,33 @@ export default function PatternsScreen() {
             <Pressable
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
+                if (!isPremium) {
+                  router.push('/(tabs)/premium' as Href);
+                  return;
+                }
                 trackGrowthEvent('pattern_library_opened').catch(() => {});
+                recordPatternMemory(
+                  premiumPatterns.map((item, index) =>
+                    insightMemorySnapshotFromPremiumPattern(item, {
+                      surface: 'patterns',
+                      rank: index,
+                      isPrimary: index === 0,
+                    }),
+                  ),
+                  'pattern-profile',
+                );
                 setPatternModalView('profile');
                 setShowLibraryModal(true);
               }}
               style={styles.libraryButton}
               accessibilityRole="button"
-              accessibilityLabel="View pattern profile"
+              accessibilityLabel={isPremium ? 'View pattern profile' : 'Unlock pattern profile'}
             >
               <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
-              <MetallicIcon name="library-outline" size={16} variant="gold" />
-              <MetallicText style={styles.libraryButtonText} variant="gold">Open Pattern Profile</MetallicText>
+              <MetallicIcon name={isPremium ? 'library-outline' : 'lock-closed-outline'} size={16} variant="gold" />
+              <MetallicText style={styles.libraryButtonText} variant="gold">
+                {isPremium ? 'Open Pattern Profile' : 'Unlock Pattern Profile'}
+              </MetallicText>
             </Pressable>
           ) : null}
           showsVerticalScrollIndicator={false}
@@ -541,7 +608,7 @@ export default function PatternsScreen() {
       <Modal
         animationType="slide"
         transparent
-        visible={showDeepDiveModal}
+        visible={isPremium && showDeepDiveModal}
         onRequestClose={() => setShowDeepDiveModal(false)}
       >
         <View style={styles.modalBackdrop}>
@@ -611,7 +678,7 @@ export default function PatternsScreen() {
       <Modal
         animationType="fade"
         transparent
-        visible={showLibraryModal}
+        visible={isPremium && showLibraryModal}
         onRequestClose={() => setShowLibraryModal(false)}
       >
         <View style={[styles.modalBackdrop, styles.libraryModalBackdrop]}>
@@ -816,7 +883,7 @@ export default function PatternsScreen() {
       <Modal
         animationType="fade"
         transparent
-        visible={!!selectedPatternItem}
+        visible={isPremium && !!selectedPatternItem}
         onRequestClose={() => setSelectedPatternItem(null)}
       >
         <View style={styles.modalBackdrop}>

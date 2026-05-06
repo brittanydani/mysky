@@ -36,6 +36,7 @@ import {
   buildInsightTimingDecision,
   type InsightTimingDecision,
 } from './timing/insightTiming';
+import { toLocalDateString } from '../../utils/dateUtils';
 
 const MAX_TODAY_INSIGHTS = 4;
 const SLOT_PRIORITY: Record<InsightSlot, number> = {
@@ -184,6 +185,21 @@ function ensureSentence(text: string): string {
   const trimmed = text.trim();
   if (!trimmed) return '';
   return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
+function insightDayKey(value: string): string {
+  const trimmed = value.trim();
+  const dateOnly = trimmed.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly) && trimmed.length <= 10) {
+    return dateOnly;
+  }
+
+  const parsed = new Date(trimmed);
+  return Number.isFinite(parsed.getTime())
+    ? toLocalDateString(parsed)
+    : /^\d{4}-\d{2}-\d{2}$/.test(dateOnly)
+      ? dateOnly
+      : toLocalDateString();
 }
 
 function patternReframe(pattern: { shameLabel: string; clarityReframe: string }): string {
@@ -580,7 +596,7 @@ export async function buildTodayInsights({
   });
 
   // 3. Extract Today's Signals
-  const todayDateStr = requestedDate.slice(0, 10);
+  const todayDateStr = insightDayKey(requestedDate);
   const todaySignals = insightSignals.filter(s => s.date === todayDateStr);
   const primaryFeeling = selectPrimaryFeeling(todaySignals.length ? todaySignals : insightSignals);
   const currentStateProfile = detectCurrentInsightState(insightSignals, requestedDate);

@@ -1,4 +1,5 @@
 import { buildTodayInsights } from '../buildTodayInsights';
+import { toLocalDateString } from '../../../utils/dateUtils';
 
 const sentenceCount = (text: string): number => (
   text.match(/[.!?](?=\s|$)/g)?.length ?? 0
@@ -240,6 +241,26 @@ describe('Knowledge Engine V2', () => {
     expect(todaySignal?.body).toBe(result.primaryFeeling?.selectedSentence);
     expect(todaySignal?.reframe).toBe(result.primaryFeeling?.reframeSentence);
     expect(todaySignal?.body).not.toMatch(/Your archive|MySky is noticing/i);
+  });
+
+  it('treats ISO timestamps as the local insight day near UTC midnight', async () => {
+    const localEvening = new Date(2026, 3, 24, 23, 30);
+    const localDay = toLocalDateString(localEvening);
+    const result = await buildTodayInsights({
+      date: localEvening.toISOString(),
+      rawInputs: {
+        glimmerLogs: [{
+          timestamp: localEvening.getTime(),
+          event: 'A quiet walk helped me settle and feel connected.',
+          sensations: ['soft chest'],
+          intensity: 4,
+        }],
+      },
+      history: [],
+    });
+
+    expect(result.signals.some(signal => signal.source === 'glimmerLog' && signal.date === localDay)).toBe(true);
+    expect(result.insights.some(insight => insight.slot === 'todaySignal' || insight.slot === 'whatHelped')).toBe(true);
   });
 
   it('normalizes app model field names against the requested insight date', async () => {

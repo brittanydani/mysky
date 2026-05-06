@@ -115,6 +115,7 @@ describe('knowledgeInsightRouter', () => {
       sleepEntries,
       selfKnowledgeContext: emptyContext,
       date: now,
+      includePremiumPatterns: true,
       history: {
         recentlyShownPatternKeys: [],
         recentlyShownCopyHashes: [],
@@ -172,6 +173,7 @@ describe('knowledgeInsightRouter', () => {
         ],
       },
       date: now,
+      includePremiumPatterns: true,
       history: {
         recentlyShownPatternKeys: [],
         recentlyShownCopyHashes: [],

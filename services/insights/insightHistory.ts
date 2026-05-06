@@ -3,10 +3,12 @@ import { getUserPreference, saveUserPreference } from '../storage/userProfileSer
 import { logger } from '../../utils/logger';
 import { createKnowledgeInsightCopyHash } from './insightHash';
 import type { InsightMemoryProfile } from '../insightsV2/memory/insightMemory';
+import { toLocalDateString } from '../../utils/dateUtils';
 
 const HISTORY_KEY = 'msky_knowledge_engine_history_v2';
 const MAX_HISTORY = 50;
 const DEFAULT_RECENT_DAYS = 14;
+const DEFAULT_MEMORY_RECENT_DAYS = 30;
 
 export type KnowledgeEngineHistoryInput = {
   recentInsights?: InsightHistoryEntry[];
@@ -26,7 +28,7 @@ export function buildRecentlyShownKnowledgeHistory(
 ): KnowledgeEngineHistoryInput {
   const nowDate = typeof now === 'string' ? new Date(now) : now;
   const nowTime = Number.isFinite(nowDate.getTime()) ? nowDate.getTime() : Date.now();
-  const todayKey = new Date(nowTime).toISOString().slice(0, 10);
+  const todayKey = toLocalDateString(new Date(nowTime));
   const cutoff = nowTime - recentDays * 86_400_000;
 
   const recent = history.filter((item) => {
@@ -35,7 +37,7 @@ export function buildRecentlyShownKnowledgeHistory(
     if (!Number.isFinite(shownTime)) return false;
 
     // Keep the daily card stable during repeated same-day Home focuses.
-    if (!options.includeSameDay && shownAt.toISOString().slice(0, 10) === todayKey) return false;
+    if (!options.includeSameDay && toLocalDateString(shownAt) === todayKey) return false;
     return shownTime >= cutoff && shownTime <= nowTime;
   });
 
@@ -73,7 +75,7 @@ export function mergeKnowledgeHistoryInputs(
 export function buildKnowledgeHistoryFromInsightMemory(
   memory: InsightMemoryProfile | null | undefined,
   now: string | Date = new Date(),
-  recentDays = Number.POSITIVE_INFINITY,
+  recentDays = DEFAULT_MEMORY_RECENT_DAYS,
 ): KnowledgeEngineHistoryInput {
   if (!memory?.snapshots.length) {
     return {
@@ -88,7 +90,7 @@ export function buildKnowledgeHistoryFromInsightMemory(
   const cutoff = nowTime - recentDays * 86_400_000;
   const snapshots = memory.snapshots.filter((snapshot) => {
     const observedAt = timestamp(snapshot.observedAt);
-    return observedAt >= cutoff;
+    return observedAt >= cutoff && observedAt <= nowTime;
   });
 
   const recentInsights: InsightHistoryEntry[] = snapshots.map((snapshot, index) => ({
@@ -147,11 +149,11 @@ export async function recordInsight(insight: GeneratedInsight): Promise<void> {
       copyHash: createKnowledgeInsightCopyHash(insight),
     };
 
-    const entryDay = entry.shownAt.slice(0, 10);
+    const entryDay = toLocalDateString(new Date(entry.shownAt));
     const newHistory = [
       entry,
       ...history.filter((item) => {
-        const sameDay = item.shownAt.slice(0, 10) === entryDay;
+        const sameDay = toLocalDateString(new Date(item.shownAt)) === entryDay;
         return !(sameDay && item.patternKey === entry.patternKey && item.title === entry.title);
       }),
     ].slice(0, MAX_HISTORY);

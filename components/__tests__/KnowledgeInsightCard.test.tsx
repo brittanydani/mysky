@@ -76,6 +76,7 @@ describe('KnowledgeInsightCard', () => {
 
     expect(getByText('Low-Capacity Windows')).toBeTruthy();
     expect(getByText('What Stands Out')).toBeTruthy();
+    expect(getByText('MODERATE')).toBeTruthy();
     expect(getByText('Low capacity is showing up today. Sleep and energy may be shaping what feels possible.')).toBeTruthy();
     expect(getByText('CLEARER READ')).toBeTruthy();
     expect(getByText('Low capacity may be a timing signal, not a character flaw.')).toBeTruthy();

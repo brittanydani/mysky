@@ -71,6 +71,34 @@ describe('knowledge insight history', () => {
     expect(result.recentlyShownCopyHashes).toEqual(['copy-same-day']);
   });
 
+  it('keeps same-day stability on local evening times that cross UTC midnight', () => {
+    const localEveningShownAt = new Date(2026, 3, 24, 21, 15).toISOString();
+    const localLateNow = new Date(2026, 3, 24, 23, 30).toISOString();
+    const sameLocalDay: InsightHistoryEntry = {
+      insightId: 'same-local-day-1',
+      patternKey: 'pattern-1',
+      angleKey: 'angle-1',
+      slot: 'whatMySkyNoticed',
+      surface: 'today',
+      title: 'Same Local Day Insight',
+      shownAt: localEveningShownAt,
+      sourceSignals: ['signal-1'],
+      evidenceHash: 'evidence-1',
+      copyHash: 'copy-same-local-day',
+    };
+
+    const stableFocus = buildRecentlyShownKnowledgeHistory([sameLocalDay], localLateNow);
+    const forcedRefresh = buildRecentlyShownKnowledgeHistory(
+      [sameLocalDay],
+      localLateNow,
+      undefined,
+      { includeSameDay: true },
+    );
+
+    expect(stableFocus.recentInsights).toEqual([]);
+    expect(forcedRefresh.recentInsights).toEqual([sameLocalDay]);
+  });
+
   it('converts longitudinal insight memory into no-repeat history', () => {
     const memory: InsightMemoryProfile = {
       version: 1,
@@ -108,6 +136,74 @@ describe('knowledge insight history', () => {
     }));
     expect(result.recentlyShownPatternKeys).toEqual(['pattern-1']);
     expect(result.recentlyShownCopyHashes).toEqual(['body-key-1']);
+  });
+
+  it('does not permanently suppress older longitudinal memory', () => {
+    const memory: InsightMemoryProfile = {
+      version: 1,
+      updatedAt: '2026-04-24T12:00:00Z',
+      snapshots: [{
+        id: 'snapshot-1',
+        observedAt: '2026-02-01T12:00:00Z',
+        weekKey: '2026-W05',
+        surface: 'patterns',
+        rank: 0,
+        isPrimary: true,
+        patternKey: 'pattern-1',
+        title: 'Recurring Pattern',
+        category: 'relationships',
+        score: 72,
+        confidence: 'strong',
+        movement: 'repeating',
+        paragraphId: 'paragraph-1',
+        sources: ['relationshipMirror'],
+        relatedSignals: ['tone_sensitivity'],
+        anchors: ['tone-shift'],
+        bodyKey: 'body-key-1',
+      }],
+      trends: [],
+      whatChangedSinceLastWeek: [],
+    };
+
+    const result = buildKnowledgeHistoryFromInsightMemory(memory, '2026-04-24T12:00:00Z');
+
+    expect(result.recentInsights).toEqual([]);
+    expect(result.recentlyShownPatternKeys).toEqual([]);
+    expect(result.recentlyShownCopyHashes).toEqual([]);
+  });
+
+  it('does not suppress insights from future-dated memory snapshots', () => {
+    const memory: InsightMemoryProfile = {
+      version: 1,
+      updatedAt: '2026-04-24T12:00:00Z',
+      snapshots: [{
+        id: 'snapshot-future',
+        observedAt: '2026-04-25T12:00:00Z',
+        weekKey: '2026-W17',
+        surface: 'patterns',
+        rank: 0,
+        isPrimary: true,
+        patternKey: 'future-pattern',
+        title: 'Future Pattern',
+        category: 'relationships',
+        score: 72,
+        confidence: 'strong',
+        movement: 'repeating',
+        paragraphId: 'paragraph-1',
+        sources: ['relationshipMirror'],
+        relatedSignals: ['tone_sensitivity'],
+        anchors: ['tone-shift'],
+        bodyKey: 'body-key-1',
+      }],
+      trends: [],
+      whatChangedSinceLastWeek: [],
+    };
+
+    const result = buildKnowledgeHistoryFromInsightMemory(memory, '2026-04-24T12:00:00Z');
+
+    expect(result.recentInsights).toEqual([]);
+    expect(result.recentlyShownPatternKeys).toEqual([]);
+    expect(result.recentlyShownCopyHashes).toEqual([]);
   });
 
   it('merges explicit history with memory-derived history without dropping no-repeat keys', () => {
