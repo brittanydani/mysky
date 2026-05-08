@@ -17,10 +17,8 @@ import { AppState, type AppStateStatus } from 'react-native';
 import type { Session, User } from '@supabase/supabase-js';
 
 import { supabase } from '../lib/supabase';
-import { isAutoDemoSeedEnabled } from '../constants/config';
 import { logger } from '../utils/logger';
 import { revenueCatService } from '../services/premium/revenuecat';
-import { DemoSeedService } from '../services/storage/demoAccountBSeedService';
 import { useDreamMapStore } from '../store/dreamMapStore';
 import { useResonanceStore } from '../store/resonanceStore';
 import { useSceneStore } from '../store/sceneStore';
@@ -37,11 +35,6 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-const demoLastSyncByKey = new Map<string, number>();
-let demoSyncInFlight: Promise<void> | null = null;
-let demoSyncedForKey: string | null = null;
-
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -62,60 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return nextSession;
     });
-  }, []);
-
-  const syncDemoArtifacts = useCallback(async (email: string | null | undefined) => {
-    if (!email) return;
-
-    const syncMode = isAutoDemoSeedEnabled() ? 'seed' : 'cleanup';
-    const syncKey = `${syncMode}:${email}`;
-    const shouldGuardDemoSync =
-      (DemoSeedService as { isDemoAccount?: (value: string | null | undefined) => boolean })
-        .isDemoAccount?.(email) === true;
-
-    if (shouldGuardDemoSync && demoSyncedForKey === syncKey) {
-      return;
-    }
-
-    if (demoSyncInFlight) {
-      return demoSyncInFlight;
-    }
-
-    const now = Date.now();
-    const lastSyncAt = demoLastSyncByKey.get(syncKey) ?? 0;
-    if (shouldGuardDemoSync && now - lastSyncAt < 30_000) {
-      return;
-    }
-
-    const run = (async () => {
-      if (shouldGuardDemoSync) {
-        demoLastSyncByKey.set(syncKey, Date.now());
-      }
-
-      if (shouldGuardDemoSync && demoSyncedForKey === syncKey) {
-        return;
-      }
-
-      if (syncMode === 'seed') {
-        await DemoSeedService.seedIfNeeded(email);
-      } else {
-        await DemoSeedService.cleanupStaleDemoArtifacts(email);
-      }
-
-      if (shouldGuardDemoSync) {
-        demoSyncedForKey = syncKey;
-      }
-    })();
-
-    demoSyncInFlight = run;
-
-    try {
-      await run;
-    } finally {
-      if (demoSyncInFlight === run) {
-        demoSyncInFlight = null;
-      }
-    }
   }, []);
 
   useEffect(() => {
@@ -139,12 +78,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             void revenueCatService
               .logIn(restored.user.id)
               .catch((e) => logger.error('[AuthContext] RC logIn failed:', e));
-
-            if (restored.user.email) {
-              void syncDemoArtifacts(restored.user.email).catch((e) =>
-                logger.warn('[AuthContext] Demo sync failed:', e),
-              );
-            }
           }
 
           break;
@@ -180,17 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void revenueCatService
           .logIn(newSession.user.id)
           .catch((e) => logger.error('[AuthContext] RC logIn failed:', e));
-
-        if (newSession.user.email) {
-          void syncDemoArtifacts(newSession.user.email).catch((e) =>
-            logger.warn('[AuthContext] Demo sync failed:', e),
-          );
-        }
       } else if (event === 'SIGNED_OUT') {
-        demoSyncedForKey = null;
-        demoLastSyncByKey.clear();
-        demoSyncInFlight = null;
-
         void revenueCatService
           .logOut()
           .catch((e) => logger.error('[AuthContext] RC logOut failed:', e));
@@ -201,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted.current = false;
       subscription.unsubscribe();
     };
-  }, [setSessionIfChanged, syncDemoArtifacts]);
+  }, [setSessionIfChanged]);
 
   useEffect(() => {
     const handleAppState = (state: AppStateStatus) => {
@@ -234,9 +157,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             setSessionIfChanged(nextSession ?? null);
-
-            // Do not re-run demo seeding every foreground activation.
-            // That work is handled once per signed-in user during auth init/sign-in.
           } catch (e) {
             logger.warn('[AuthContext] Failed to sync session on foreground:', e);
           }
@@ -257,13 +177,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useCircadianStore.getState().clearCache();
     useCorrelationStore.getState().clearCache();
     useCheckInStore.getState().resetStatus();
-
-
-
-    demoSyncedForKey = null;
-    demoLastSyncByKey.clear();
-    demoSyncInFlight = null;
-
     if (isMounted.current) {
       setSession(null);
     }
@@ -271,6 +184,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(
     async (options?: { localOnly?: boolean }) => {
+      let signOutError: unknown = null;
+
       try {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
@@ -279,14 +194,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
 
         if (error) throw error;
-
-        await clearSignedOutState();
-
-        logger.info('[AuthContext] User successfully signed out');
       } catch (err) {
+        signOutError = err;
         logger.error('[AuthContext] Sign-out failed:', err);
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       }
+
+      if (!signOutError || options?.localOnly) {
+        await clearSignedOutState();
+      }
+
+      if (signOutError) {
+        throw signOutError;
+      }
+
+      logger.info('[AuthContext] User successfully signed out');
     },
     [clearSignedOutState],
   );

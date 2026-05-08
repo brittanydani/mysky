@@ -351,7 +351,7 @@ export default function OnboardingModal({
   };
 
   const handleSendAuthRecoveryCode = async () => {
-    const trimmedEmail = authRecoveryEmail.trim();
+    const trimmedEmail = authRecoveryEmail.trim().toLowerCase();
 
     if (!trimmedEmail) {
       Alert.alert('Email required', 'Enter your email address to receive a recovery code.');
@@ -378,7 +378,7 @@ export default function OnboardingModal({
   };
 
   const handleCompleteAuthRecovery = async () => {
-    const trimmedEmail = authRecoveryEmail.trim();
+    const trimmedEmail = authRecoveryEmail.trim().toLowerCase();
 
     if (!trimmedEmail) {
       Alert.alert('Email required', 'Enter your email address to reset your password.');
@@ -448,7 +448,7 @@ export default function OnboardingModal({
     try {
       if (authMode === 'sign-up') {
         const result = await signUpAndEnsureSession({
-          email: authEmail.trim(),
+          email: authEmail.trim().toLowerCase(),
           password: authPassword,
         });
         if (result.requiresEmailConfirmation) {
@@ -459,7 +459,7 @@ export default function OnboardingModal({
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
-          email: authEmail.trim(),
+          email: authEmail.trim().toLowerCase(),
           password: authPassword,
         });
         if (error) throw error;

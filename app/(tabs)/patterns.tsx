@@ -146,10 +146,12 @@ export default function PatternsScreen() {
   const [showDeepDiveModal, setShowDeepDiveModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
   const hasLoadedSurfaceRef = useRef(false);
   const lastSurfaceLoadedAtRef = useRef(0);
   const lastSurfacePremiumRef = useRef<boolean | null>(null);
+  const handledRefreshKeyRef = useRef(0);
   const recordedPatternMemoryFingerprintsRef = useRef<Map<string, string>>(new Map());
   const pendingPatternMemoryFingerprintsRef = useRef<Map<string, string>>(new Map());
 
@@ -225,7 +227,9 @@ export default function PatternsScreen() {
       let active = true;
       const focusTask = InteractionManager.runAfterInteractions(() => {
         if (!active) return;
+        const forcedRefresh = handledRefreshKeyRef.current !== refreshKey;
         const canUseFocusCache =
+          !forcedRefresh &&
           hasLoadedSurfaceRef.current &&
           lastSurfacePremiumRef.current === isPremium &&
           Date.now() - lastSurfaceLoadedAtRef.current < PATTERNS_FOCUS_REFRESH_CACHE_MS;
@@ -298,7 +302,10 @@ export default function PatternsScreen() {
               setSelectedPatternItem(null);
             }
           } finally {
-            if (active) setLoading(false);
+            if (active) {
+              handledRefreshKeyRef.current = refreshKey;
+              setLoading(false);
+            }
           }
         })();
       });
@@ -306,7 +313,7 @@ export default function PatternsScreen() {
         active = false;
         focusTask.cancel?.();
       };
-    }, [isPremium, recordPatternMemory])
+    }, [isPremium, recordPatternMemory, refreshKey])
   );
 
   const libraryState = useMemo(
@@ -500,7 +507,11 @@ export default function PatternsScreen() {
 
               <SectionHeader label="THIS WEEK'S PATTERN" icon="radio-outline" />
               {showFreePremiumPatternTeaser && (
-                <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                <Pressable
+                  onPress={() => router.push('/(tabs)/premium' as Href)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Unlock weekly pattern insight"
+                >
                   <VelvetGlassSurface style={styles.insightCard} intensity={25}>
                     <LinearGradient colors={['rgba(168, 139, 235, 0.20)', 'rgba(168, 139, 235, 0.05)']} style={StyleSheet.absoluteFill} />
                     {/* Blurred glimpse layer — shows the shape of real content */}
@@ -540,7 +551,22 @@ export default function PatternsScreen() {
                 <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
                   <LinearGradient colors={['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)']} style={StyleSheet.absoluteFill} />
                   <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyTitle}>Couldn't load patterns right now</Text>
-                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>Something went wrong while analyzing your data. Try again in a moment.</Text>
+                  <Text {...WRAP_AT_WORD_PROPS} style={styles.emptyBody}>Something went wrong while reading your saved signals. Check your connection and try again.</Text>
+                  <Pressable
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      hasLoadedSurfaceRef.current = false;
+                      lastSurfaceLoadedAtRef.current = 0;
+                      setLoadError(false);
+                      setLoading(true);
+                      setRefreshKey((value) => value + 1);
+                    }}
+                    style={styles.emptyActionButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Try loading patterns again"
+                  >
+                    <Text style={styles.emptyActionText}>Try again</Text>
+                  </Pressable>
                 </VelvetGlassSurface>
               ) : !loading && !moodInsightsEnabled ? (
                 <VelvetGlassSurface style={styles.emptyCard} intensity={25}>
@@ -1037,6 +1063,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   emptyCard: { borderRadius: 24, padding: 24, marginBottom: 24, overflow: 'hidden' },
   emptyTitle: { width: '100%', flexShrink: 1, color: theme.textPrimary, fontSize: 18, fontWeight: '700', marginBottom: 8 },
   emptyBody: { width: '100%', flexShrink: 1, color: theme.textSecondary, fontSize: 14, lineHeight: 20 },
+  emptyActionButton: { minHeight: 44, alignSelf: 'flex-start', marginTop: 18, paddingHorizontal: 18, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.cardSurface },
+  emptyActionText: { color: theme.textPrimary, fontSize: 14, fontWeight: '700' },
 
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   sectionHeaderLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },

@@ -179,7 +179,18 @@ export default function SkiaPulseMonitor({
   return (
     <View style={styles.wrapper}>
       <GestureDetector gesture={tapGesture}>
-        <View style={styles.container} collapsable={false}>
+        <View
+          style={styles.container}
+          collapsable={false}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={complete ? 'Nightly log sealed' : 'Seal nightly log'}
+          accessibilityHint={isSaving ? 'Saving your nightly log.' : 'Double tap to save this nightly log.'}
+          accessibilityState={{ busy: isSaving, disabled: isSaving || complete, selected: complete }}
+          onAccessibilityTap={() => {
+            if (!isSaving && !complete) handleComplete();
+          }}
+        >
           <Canvas style={{ width: SIZE, height: SIZE }}>
             <Group>
               {/* 1. Ambient Bloom */}

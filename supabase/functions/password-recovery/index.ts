@@ -14,7 +14,7 @@
  */
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 
 const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") ?? "https://mysky.app";
 
@@ -143,8 +143,8 @@ async function sendRecoveryEmail(email: string, code: string): Promise<void> {
 }
 
 async function invalidateRecoveryCode(
-  supabaseAdmin: ReturnType<typeof createClient>,
-  codeId: number | null | undefined,
+  supabaseAdmin: SupabaseClient<any, "public", any>,
+  codeId: string | number | null | undefined,
 ): Promise<void> {
   if (!codeId) return;
 
@@ -266,7 +266,7 @@ serve(async (req: Request) => {
     }
 
     const consumeResult = consumeRows?.[0] as
-      | { status?: string; user_id?: string | null; code_id?: number | null }
+      | { status?: string; user_id?: string | null; code_id?: string | number | null }
       | undefined;
 
     if (!consumeResult || consumeResult.status !== "verified" || !consumeResult.user_id) {

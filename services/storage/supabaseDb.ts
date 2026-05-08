@@ -166,6 +166,14 @@ function settingsToRow(settings: AppSettings, userId: string): Row {
   };
 }
 
+async function deleteOwnedRows(table: string, userId: string): Promise<void> {
+  const { error } = await supabase.from(table).delete().eq('user_id', userId);
+  if (error) {
+    logger.warn(`[SupabaseDb] Failed to delete ${table} rows from Supabase.`, error);
+    throw error;
+  }
+}
+
 // ─── Charts ──────────────────────────────────────────────────────────────────
 
 export async function getCharts(): Promise<SavedChart[]> {
@@ -1063,26 +1071,46 @@ export async function switchToUserDb(_userId: string): Promise<void> {}
 export async function clearSyncQueue(): Promise<void> {}
 
 /**
- * Hard deletes all user data from Supabase tables.
- * Used for account deletion / GDPR erasure flows.
+ * Hard deletes user-owned app data from Supabase tables.
+ * Privacy compliance records are deleted by privacySupabaseService.
  */
 export async function hardDeleteAllData(): Promise<void> {
   const userId = await getUserId();
+  const orderedTables = [
+    'insight_feedback',
+    'shown_insights',
+    'insight_candidates',
+    'insight_signals',
+    'user_insight_memory',
+    'insight_history',
+    'user_dream_model_updates',
+    'dream_card_feedback',
+    'dream_rendered_cards',
+    'dream_engine_results',
+    'dream_text_signals',
+    'dream_selected_feelings',
+    'dream_entries',
+    'user_dream_model',
+    'relationship_daily_logs',
+    'relationship_patterns',
+    'relationship_charts',
+    'daily_reflections',
+    'somatic_entries',
+    'trigger_events',
+    'self_knowledge_profiles',
+    'user_preferences',
+    'user_profiles',
+    'journal_entries',
+    'sleep_entries',
+    'daily_check_ins',
+    'daily_logs',
+    'birth_profiles',
+    'app_settings',
+  ];
 
-  await Promise.all([
-    supabase.from('birth_profiles').delete().eq('user_id', userId),
-    supabase.from('journal_entries').delete().eq('user_id', userId),
-    supabase.from('daily_check_ins').delete().eq('user_id', userId),
-    supabase.from('insight_history').delete().eq('user_id', userId),
-    supabase.from('insight_feedback').delete().eq('user_id', userId),
-    supabase.from('shown_insights').delete().eq('user_id', userId),
-    supabase.from('insight_candidates').delete().eq('user_id', userId),
-    supabase.from('insight_signals').delete().eq('user_id', userId),
-    supabase.from('user_insight_memory').delete().eq('user_id', userId),
-    supabase.from('relationship_charts').delete().eq('user_id', userId),
-    supabase.from('sleep_entries').delete().eq('user_id', userId),
-    supabase.from('app_settings').delete().eq('user_id', userId),
-  ]);
+  for (const table of orderedTables) {
+    await deleteOwnedRows(table, userId);
+  }
 
   await clearAccountScopedData();
 }

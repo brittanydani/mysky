@@ -306,6 +306,7 @@ class RevenueCatService {
       logger.error('[RevenueCat] logIn failed', {
         error: error instanceof Error ? error.message : String(error),
       });
+      throw error;
     }
   }
 
@@ -370,8 +371,7 @@ class RevenueCatService {
       if (activeEntitlements[key]) return activeEntitlements[key];
     }
 
-    const firstActiveEntitlement = Object.values(activeEntitlements)[0];
-    return firstActiveEntitlement ?? null;
+    return null;
   }
 
   // Helper method to get package by type for easier selection

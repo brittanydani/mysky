@@ -41,7 +41,6 @@ import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/O
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 import { VelvetGlassCard } from '../../../components/ui/VelvetGlassCard';
 import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
-import { DemoSeedService } from '../../../services/storage/demoAccountBSeedService';
 
 const FAQ: { question: string; answer: string }[] = [
   {
@@ -72,7 +71,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'What does Deeper Sky include?',
     answer:
-      'Deeper Sky unlocks backup & restore, the full personal story (10 chapters), attachment and inner-work reflections, up to 10 relationship charts, journal pattern analysis, deeper insight summaries, Chiron & Node depth mapping, reflective daily guidance with action prompts, extended pattern analysis, full energy chakra mapping, and symbolic dream reflections.',
+      'Deeper Sky unlocks portable backup files, the full personal story (10 chapters), attachment and inner-work reflections, up to 10 relationship charts, journal pattern analysis, deeper insight summaries, Chiron & Node depth mapping, reflective daily guidance with action prompts, extended pattern analysis, full energy chakra mapping, and symbolic dream reflections.',
   },
   {
     question: 'How does mood and energy tracking work?',
@@ -143,7 +142,6 @@ export default function SettingsScreen() {
   const [backupInProgress, setBackupInProgress] = useState(false);
   const [restoreInProgress, setRestoreInProgress] = useState(false);
   const [pdfExporting, setPdfExporting] = useState(false);
-  const [demoSendInProgress, setDemoSendInProgress] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [showFaq, setShowFaq] = useState(false);
@@ -271,14 +269,14 @@ export default function SettingsScreen() {
     } catch {}
   }, []);
 
-  const gatePremium = async (): Promise<boolean> => {
+  const gatePremium = async (message: string): Promise<boolean> => {
     if (isPremium) return true;
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
     } catch {}
     Alert.alert(
       'Deeper Sky Feature',
-      'Backup & restore is available with a Deeper Sky subscription.',
+      message,
       [
         { text: 'Not now', style: 'cancel' },
         { text: 'Learn more', onPress: () => router.push('/(tabs)/premium' as Href) },
@@ -288,7 +286,7 @@ export default function SettingsScreen() {
   };
 
   const handleBackup = async () => {
-    if (!(await gatePremium())) return;
+    if (!(await gatePremium('Portable backup files are available with Deeper Sky. Account data export and deletion remain available to every user in Privacy & Data.'))) return;
     await performBackup();
   };
 
@@ -319,7 +317,7 @@ export default function SettingsScreen() {
   };
 
   const handleRestore = async () => {
-    if (!(await gatePremium())) return;
+    if (!(await gatePremium('Restoring portable backup files is available with Deeper Sky. Account data export and deletion remain available to every user in Privacy & Data.'))) return;
 
     Alert.alert(
       'Restore Backup',
@@ -375,7 +373,6 @@ export default function SettingsScreen() {
     });
 
   const disableActions = backupInProgress || restoreInProgress;
-  const showDemoSendButton = DemoSeedService.isDemoAccount(user?.email);
 
   const openSupportEmail = async () => {
     const url = `mailto:${SUPPORT_EMAIL}?subject=MySky%20Support`;
@@ -388,27 +385,6 @@ export default function SettingsScreen() {
       await Linking.openURL(url);
     } catch {
       Alert.alert('Unable to Open Mail', `Please email ${SUPPORT_EMAIL}.`);
-    }
-  };
-
-  const handleSendDemoData = async () => {
-    if (demoSendInProgress) return;
-
-    try {
-      setDemoSendInProgress(true);
-      await DemoSeedService.sendDemoDataToSupabase(user?.email);
-      try {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      } catch {}
-      Alert.alert('Demo Data Sent', 'Account B demo check-ins and daily logs were uploaded to Supabase.');
-    } catch (error: any) {
-      logger.error('[Settings] Demo data send failed:', error);
-      try {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-      } catch {}
-      Alert.alert('Send Failed', error?.message || 'Unable to send demo data.');
-    } finally {
-      setDemoSendInProgress(false);
     }
   };
 
@@ -505,7 +481,7 @@ export default function SettingsScreen() {
   };
 
   const handleExportChartPdf = async () => {
-    if (!(await gatePremium())) return;
+    if (!(await gatePremium('Chart PDF export is available with Deeper Sky. Account data export and deletion remain available to every user in Privacy & Data.'))) return;
     if (pdfExporting) return;
     if (!birthInitial) {
       Alert.alert('No Chart', 'Set up your birth data first.');
@@ -676,7 +652,7 @@ export default function SettingsScreen() {
               borderColor="rgba(212,175,55,0.12)"
               topEdgeColor="rgba(255,255,255,0.18)"
             >
-            <ObsidianSettingsGroup title="Export" subtitle="Download your data as a PDF" style={styles.groupInner}>
+            <ObsidianSettingsGroup title="Chart PDF" subtitle="Create a premium chart report" style={styles.groupInner}>
               <View style={{ paddingHorizontal: 20 }}>
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
@@ -839,51 +815,6 @@ export default function SettingsScreen() {
             </ObsidianSettingsGroup>
             </VelvetGlassCard>
           </Animated.View>
-
-          {showDemoSendButton && (
-            <Animated.View entering={FadeInDown.delay(325).duration(600)} style={styles.section}>
-              <VelvetGlassCard
-                interactive={false}
-                style={styles.groupShell}
-                backgroundColor={theme.isDark ? 'rgba(15, 14, 18, 0.56)' : 'rgba(255,255,255,0.78)'}
-                borderColor="rgba(212,175,55,0.12)"
-                topEdgeColor="rgba(255,255,255,0.18)"
-              >
-                <ObsidianSettingsGroup title="Demo Tools" subtitle="Dev-only Account B utilities" style={styles.groupInner}>
-                  <View style={{ paddingHorizontal: 20 }}>
-                    <View style={styles.settingRow}>
-                      <View style={styles.settingInfo}>
-                        <View style={styles.settingHeader}>
-                          <MetallicIcon name="flask-outline" size={20} color={accentGold} />
-                          <Text style={styles.settingTitle}>Send Demo Data</Text>
-                        </View>
-                        <Text style={styles.settingDescription}>
-                          Upload Account B demo check-ins and daily logs to Supabase for this signed-in demo user.
-                        </Text>
-                      </View>
-                    </View>
-
-                    <Pressable
-                      style={[styles.syncButton, demoSendInProgress && styles.syncButtonDisabled]}
-                      onPress={handleSendDemoData}
-                      disabled={demoSendInProgress}
-                      accessibilityRole="button"
-                      accessibilityLabel="Send demo data"
-                    >
-                      {demoSendInProgress ? (
-                        <ActivityIndicator size="small" color={accentGold} />
-                      ) : (
-                        <MetallicIcon name="cloud-upload-outline" size={16} color={accentGold} />
-                      )}
-                      <MetallicText color={accentGold} style={styles.syncButtonText}>
-                        {demoSendInProgress ? 'Sending...' : 'Send Demo Data'}
-                      </MetallicText>
-                    </Pressable>
-                  </View>
-                </ObsidianSettingsGroup>
-              </VelvetGlassCard>
-            </Animated.View>
-          )}
 
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
             <VelvetGlassCard
@@ -1082,7 +1013,7 @@ export default function SettingsScreen() {
                         <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
-                        Full personal story, deeper reflection insights, up to 10 relationships, pattern analysis, backup & restore, and reflective guidance — $4.99/mo or $29.99/yr.
+                        Full personal story, deeper reflection insights, up to 10 relationships, pattern analysis, portable backup files, and reflective guidance — $4.99/mo or $29.99/yr.
                       </Text>
                     </View>
                     <Ionicons name="arrow-forward-outline" size={16} color={styles.chevronTint.color} />
@@ -1146,8 +1077,15 @@ export default function SettingsScreen() {
                         {
                           text: 'Sign Out',
                           style: 'destructive',
-                          onPress: () => {
-                            void signOut();
+                          onPress: async () => {
+                            try {
+                              await signOut();
+                            } catch {
+                              Alert.alert(
+                                'Sign Out Failed',
+                                'Could not sign out right now. Check your connection and try again.',
+                              );
+                            }
                           },
                         },
                       ],
@@ -1172,7 +1110,7 @@ export default function SettingsScreen() {
                   onPress={() => {
                     Alert.alert(
                       'Delete Account',
-                      'This will permanently delete your account and synced data. Local data already on this device is not erased immediately, but it will not be reused by a different signed-in account. This cannot be undone.',
+                      'This will permanently delete your MySky account and synced Supabase app data. Your local auth session and cache will be cleared after deletion. This cannot be undone.',
                       [
                         { text: 'Cancel', style: 'cancel' },
                         {
@@ -1182,10 +1120,21 @@ export default function SettingsScreen() {
                             try {
                               const { error } = await supabase.rpc('delete_user_account');
                               if (error) throw error;
-                              await signOut({ localOnly: true });
+                              try {
+                                await signOut({ localOnly: true });
+                              } catch (signOutError) {
+                                logger.warn('Account deleted but local sign-out failed:', signOutError);
+                                Alert.alert(
+                                  'Account Deleted',
+                                  'Your account was deleted, but this device could not fully clear the local session. Close and reopen MySky before signing in again.',
+                                );
+                              }
                             } catch (err: unknown) {
                               const msg = err instanceof Error ? err.message : 'Something went wrong';
-                              Alert.alert('Error', `Could not delete account: ${msg}\n\nPlease contact ${SUPPORT_EMAIL} to request deletion.`);
+                              Alert.alert(
+                                'Error',
+                                `Could not delete account: ${msg}\n\nPlease contact ${SUPPORT_EMAIL} to request deletion.`,
+                              );
                             }
                           },
                         },
@@ -1203,7 +1152,7 @@ export default function SettingsScreen() {
                           <MetallicText color={errorColor} style={styles.settingTitle}>Delete Account</MetallicText>
                         </View>
                         <Text style={styles.settingDescription}>
-                          Permanently removes your account and synced data
+                          Permanently removes your account and synced Supabase data
                         </Text>
                       </View>
                       <Ionicons name="chevron-forward-outline" size={16} color="rgba(220,50,50,0.4)" />

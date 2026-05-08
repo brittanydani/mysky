@@ -80,6 +80,7 @@ export default function RelationshipsScreen() {
   
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [savedUserChart, setSavedUserChart] = useState<SavedChart | null>(null);
   const [relationships, setRelationships] = useState<RelationshipChart[]>([]);
@@ -118,8 +119,10 @@ export default function RelationshipsScreen() {
     }, [setActiveScene, syncData, clearScene])
   );
 
-  const loadData = async () => {
+  const loadData = async (showLoading = false) => {
     try {
+      if (showLoading) setLoading(true);
+      setLoadError(null);
       await supabaseDb.initialize();
       
       const charts = await supabaseDb.getCharts();
@@ -182,6 +185,7 @@ export default function RelationshipsScreen() {
       }
     } catch (error) {
       logger.error('Failed to load relationships data:', error);
+      setLoadError('Could not load your relationship charts. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -408,12 +412,45 @@ export default function RelationshipsScreen() {
     );
   }
 
+  if (loadError && !userChart) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <SkiaDynamicCosmos />
+        <Ionicons name="cloud-offline-outline" size={56} color={theme.textMuted} style={{ marginBottom: 16 }} />
+        <Text style={styles.emptyTitle}>Could not load relationships</Text>
+        <Text style={styles.emptySubtitle}>{loadError}</Text>
+        <Pressable
+          onPress={() => {
+            Haptics.selectionAsync().catch(() => {});
+            void loadData(true);
+          }}
+          style={styles.emptyActionButton}
+          accessibilityRole="button"
+          accessibilityLabel="Try loading relationships again"
+        >
+          <Text style={styles.emptyActionText}>Try again</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   if (!userChart) {
     return (
       <View style={[styles.container, styles.centered]}>
         <Ionicons name="people-outline" size={56} color={theme.textMuted} style={{ marginBottom: 16 }} />
-        <Text style={styles.emptyTitle}>Create Your Profile First</Text>
-        <Text style={styles.emptySubtitle}>Set up your birth data on the Home screen to explore relationship dynamics</Text>
+        <Text style={styles.emptyTitle}>Birth profile needed</Text>
+        <Text style={styles.emptySubtitle}>Set up your birth profile before comparing relationship charts.</Text>
+        <Pressable
+          onPress={() => {
+            Haptics.selectionAsync().catch(() => {});
+            router.push('/onboarding/birth' as Href);
+          }}
+          style={styles.emptyActionButton}
+          accessibilityRole="button"
+          accessibilityLabel="Set up birth profile"
+        >
+          <Text style={styles.emptyActionText}>Set up birth profile</Text>
+        </Pressable>
       </View>
     );
   }
@@ -468,6 +505,9 @@ export default function RelationshipsScreen() {
                       isActive && styles.chartViewSegmentActive,
                     ]}
                     onPress={() => { setChartViewMode(seg.key); Haptics.selectionAsync().catch(() => {}); }}
+                    accessibilityRole="tab"
+                    accessibilityLabel={`${seg.label} chart view`}
+                    accessibilityState={{ selected: isActive }}
                   >
                     <Text style={[styles.chartViewSegmentText, isActive && styles.chartViewSegmentTextActive]} numberOfLines={1}>{seg.label}</Text>
                   </Pressable>
@@ -480,6 +520,9 @@ export default function RelationshipsScreen() {
               <Pressable
                 style={[styles.personPill, summaryPerson === 'you' && { borderColor: `${theme.textGold}60`, backgroundColor: `${theme.textGold}15` }]}
                 onPress={() => { setSummaryPerson('you'); Haptics.selectionAsync().catch(() => {}); }}
+                accessibilityRole="button"
+                accessibilityLabel={`Summarize ${userName}`}
+                accessibilityState={{ selected: summaryPerson === 'you' }}
               >
                 <Ionicons name="person-outline" size={13} color={summaryPerson === 'you' ? theme.textGold : theme.textMuted} />
                 <Text style={[styles.personPillText, summaryPerson === 'you' && { color: theme.textGold }]}>{userName}</Text>
@@ -488,13 +531,21 @@ export default function RelationshipsScreen() {
               <Pressable
                 style={[styles.personPill, styles.personPillPartner, summaryPerson === 'them' && { borderColor: `${'#D4AF37'}60`, backgroundColor: `${'#D4AF37'}15` }]}
                 onPress={() => { setSummaryPerson('them'); Haptics.selectionAsync().catch(() => {}); }}
+                accessibilityRole="button"
+                accessibilityLabel={`Summarize ${selectedRelationship.name}`}
+                accessibilityState={{ selected: summaryPerson === 'them' }}
               >
                 {summaryPerson === 'them' ? <MetallicIcon name="layers-outline" size={13} color="#D4AF37" /> : <Ionicons name="layers-outline" size={13} color={theme.textMuted} />}
                 {summaryPerson === 'them' ? <MetallicText style={styles.personPillText} color="#D4AF37">{selectedRelationship.name}</MetallicText> : <Text style={styles.personPillText}>{selectedRelationship.name}</Text>}
                 <Text style={styles.personPillType}>{RELATIONSHIP_LABELS[selectedRelationship.relationship]}</Text>
               </Pressable>
 
-              <Pressable style={styles.personPillAdd} onPress={() => { setAddingRelationType('partner'); setShowAddModal(true); Haptics.selectionAsync().catch(() => {}); }}>
+              <Pressable
+                style={styles.personPillAdd}
+                onPress={() => { setAddingRelationType('partner'); setShowAddModal(true); Haptics.selectionAsync().catch(() => {}); }}
+                accessibilityRole="button"
+                accessibilityLabel="Add relationship chart"
+              >
                 <Text style={styles.personPillAddText}>+ Add</Text>
               </Pressable>
             </View>}
@@ -515,6 +566,9 @@ export default function RelationshipsScreen() {
                       setFilterMode(prev => ({ ...prev, [pill.key]: !prev[pill.key] }));
                       Haptics.selectionAsync().catch(() => {});
                     }}
+                    accessibilityRole="switch"
+                    accessibilityLabel={`Show ${pill.label}`}
+                    accessibilityState={{ checked: active }}
                   >
                     <View style={[styles.filterDot, active && { backgroundColor: pill.activeColor }]} />
                     <Text style={[styles.filterPillText, active && { color: pill.activeColor }]}>{pill.label}</Text>
@@ -575,6 +629,9 @@ export default function RelationshipsScreen() {
                   key={tab}
                   style={[styles.tab, activeTab === tab && styles.tabActive]}
                   onPress={() => { setActiveTab(tab); Haptics.selectionAsync().catch(() => {}); }}
+                  accessibilityRole="tab"
+                  accessibilityLabel={`${tab.charAt(0).toUpperCase() + tab.slice(1)} relationship tab`}
+                  accessibilityState={{ selected: activeTab === tab }}
                 >
                   <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -620,7 +677,11 @@ export default function RelationshipsScreen() {
                 )}
 
                 {!isPremium && (
-                  <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                  <Pressable
+                    onPress={() => router.push('/(tabs)/premium' as Href)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Unlock full relationship comparison"
+                  >
                     <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.upsellGradient}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                         <Ionicons name="sparkles-outline" size={18} color={theme.textGold} />
@@ -645,7 +706,11 @@ export default function RelationshipsScreen() {
                 {synastryReport.challengeAspects.slice(0, isPremium ? 10 : 2).map((a, i) => <AspectRow key={`grow-${i}`} description={`Your ${a.person1Planet.planet.name} ${a.aspectType.symbol} their ${a.person2Planet.planet.name}`} title={a.title} category={a.category} strength={a.strength} detail={a.description} />)}
 
                 {!isPremium && synastryReport.aspects.length > 6 && (
-                  <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                  <Pressable
+                    onPress={() => router.push('/(tabs)/premium' as Href)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Unlock all relationship aspects"
+                  >
                     <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.upsellGradient}>
                       <Text style={styles.upsellTitle}>+{synastryReport.aspects.length - 6} hidden connections between you</Text>
                       <Text style={styles.upsellText}>The aspects you can't see yet often explain the tensions, attractions, and unspoken dynamics that shape this relationship most.</Text>
@@ -741,13 +806,38 @@ export default function RelationshipsScreen() {
         </Animated.View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {loadError && (
+            <View style={styles.inlineErrorCard}>
+              <Ionicons name="cloud-offline-outline" size={18} color={theme.textGold} />
+              <Text style={styles.inlineErrorText}>{loadError}</Text>
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  void loadData(true);
+                }}
+                style={styles.inlineRetryButton}
+                accessibilityRole="button"
+                accessibilityLabel="Try loading relationships again"
+              >
+                <Text style={styles.inlineRetryText}>Retry</Text>
+              </Pressable>
+            </View>
+          )}
+
           {relationships.length > 0 && (
             <Animated.View entering={FadeInDown.delay(100).duration(400)}>
               <Text style={styles.listSectionTitle}>Your People</Text>
               {relationships.map(rel => {
                 const preview = synastryPreviews[rel.id];
                 return (
-                  <Pressable key={rel.id} onPress={() => handleSelectRelationship(rel)} onLongPress={() => handleLongPressRelationship(rel)}>
+                  <Pressable
+                    key={rel.id}
+                    onPress={() => handleSelectRelationship(rel)}
+                    onLongPress={() => handleLongPressRelationship(rel)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open ${rel.name}, ${RELATIONSHIP_LABELS[rel.relationship]} relationship chart`}
+                    accessibilityHint="Long press for relationship options."
+                  >
                     <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.relationshipCardGradient}>
                       <View style={styles.cardHeaderRow}>
                         <View style={styles.relationshipIcon}>
@@ -791,7 +881,13 @@ export default function RelationshipsScreen() {
 
             <View style={styles.typeGrid}>
               {(['partner', 'ex', 'parent', 'child', 'friend', 'sibling', 'other'] as RelationshipType[]).map(type => (
-                <Pressable key={type} style={styles.typeButton} onPress={() => handleAddRelationship(type)}>
+                <Pressable
+                  key={type}
+                  style={styles.typeButton}
+                  onPress={() => handleAddRelationship(type)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Add ${RELATIONSHIP_LABELS[type].toLowerCase()} relationship chart`}
+                >
                   <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']} style={styles.typeIconContainer}>
                     <MetallicIcon name={RELATIONSHIP_ICONS[type]} size={24} color="#D4AF37" />
                   </LinearGradient>
@@ -801,7 +897,11 @@ export default function RelationshipsScreen() {
             </View>
 
             {!isPremium && (
-              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+              <Pressable
+                onPress={() => router.push('/(tabs)/premium' as Href)}
+                accessibilityRole="button"
+                accessibilityLabel="View Deeper Sky relationship chart limits"
+              >
                 <View style={styles.limitIndicator}>
                   <Ionicons name="sparkles-outline" size={14} color={theme.textGold} />
                   <Text style={styles.limitText}>
@@ -877,11 +977,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   loadingText: { marginTop: 16, color: theme.textMuted, fontSize: 15,  },
   emptyTitle: { marginTop: 16, fontSize: 24, fontWeight: '700', color: theme.textPrimary },
   emptySubtitle: { marginTop: 12, fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
+  emptyActionButton: { minHeight: 44, marginTop: 20, paddingHorizontal: 22, borderRadius: 22, borderWidth: 1, borderColor: theme.cardBorder, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.cardSurface },
+  emptyActionText: { color: theme.textPrimary, fontSize: 14, fontWeight: '700' },
   
   header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12 },
   title: { fontSize: 34, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.5, marginBottom: 4 },
   subtitle: { fontSize: 14 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
+  inlineErrorCard: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.24)', backgroundColor: theme.isDark ? 'rgba(212, 175, 55, 0.08)' : theme.cardSurface, padding: 14, marginTop: 8, marginBottom: 16 },
+  inlineErrorText: { flex: 1, color: theme.textSecondary, fontSize: 13, lineHeight: 18 },
+  inlineRetryButton: { minHeight: 36, paddingHorizontal: 14, borderRadius: 18, borderWidth: 1, borderColor: theme.cardBorder, alignItems: 'center', justifyContent: 'center' },
+  inlineRetryText: { color: theme.textPrimary, fontSize: 13, fontWeight: '700' },
   
   listSectionTitle: { fontSize: 22, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 6 },
   listSectionSubtitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 20 },

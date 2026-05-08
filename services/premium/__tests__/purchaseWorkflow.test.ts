@@ -52,6 +52,7 @@ process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY = 'appl_test_key';
 
 // Must import after mocks
 import { revenueCatService } from '../revenuecat';
+import { logger } from '../../../utils/logger';
 
 // Helper: create a mock CustomerInfo with specified active entitlements
 function mockCustomerInfo(activeEntitlements: Record<string, any> = {}) {
@@ -233,11 +234,9 @@ describe('RevenueCat Service', () => {
       expect(mockLogOut).toHaveBeenCalled();
     });
 
-    it('handles logIn failure gracefully', async () => {
+    it('throws on logIn failure so callers do not check anonymous entitlements', async () => {
       mockLogIn.mockRejectedValueOnce(new Error('Network'));
-      await revenueCatService.logIn('user-123');
-      // Should not throw — error is caught
-      const { logger } = require('../../../utils/logger');
+      await expect(revenueCatService.logIn('user-123')).rejects.toThrow('Network');
       expect(logger.error).toHaveBeenCalledWith('[RevenueCat] logIn failed', {
         error: 'Network',
       });

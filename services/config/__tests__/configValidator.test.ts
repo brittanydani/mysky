@@ -29,6 +29,11 @@ describe('ConfigValidator', () => {
 
     expect(result.valid).toBe(true);
     expect(result.errors).toEqual([]);
+    expect(result.warnings).not.toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY'),
+      ]),
+    );
   });
 
   it('reports missing required values', () => {

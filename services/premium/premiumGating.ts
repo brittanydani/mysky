@@ -1,39 +1,21 @@
-import { supabase } from '../../lib/supabase';
+import { revenueCatService } from './revenuecat';
 import { logger } from '../../utils/logger';
 
 export type PremiumFeature = 'deeper_sky' | 'dream_analysis' | 'astrology_insights';
-
-type SubscriptionRow = {
-  status?: string | null;
-  entitlements?: unknown;
-};
 
 export async function verifyPremiumAccess(
   userId: string,
   feature: PremiumFeature,
 ): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('status, entitlements')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .maybeSingle();
+    await revenueCatService.initialize();
+    await revenueCatService.logIn(userId);
 
-    if (error || !data) {
-      logger.warn('[Premium] No active subscription found', {
-        userIdPrefix: userId.slice(0, 8),
-        error: error?.message,
-      });
-      return false;
-    }
+    const customerInfo = await revenueCatService.getCustomerInfo();
+    const hasAccess = customerInfo ? revenueCatService.isPremium(customerInfo) : false;
 
-    const subscription = data as SubscriptionRow;
-    const hasEntitlement = Array.isArray(subscription.entitlements)
-      && subscription.entitlements.includes(feature);
-
-    if (!hasEntitlement) {
-      logger.warn('[Premium] Missing entitlement', {
+    if (!hasAccess) {
+      logger.warn('[Premium] Missing RevenueCat entitlement', {
         userIdPrefix: userId.slice(0, 8),
         feature,
       });

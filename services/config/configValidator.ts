@@ -106,7 +106,12 @@ export class ConfigValidator {
       const value = getPublicEnvValue(key);
 
       if (!value) {
-        warnings.push(`Optional environment variable is not set: ${key}`);
+        if (key === 'EXPO_PUBLIC_REVENUECAT_IOS_API_KEY' && Platform.OS === 'ios') {
+          warnings.push(`Optional environment variable is not set: ${key}`);
+        }
+        if (key === 'EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY' && Platform.OS === 'android') {
+          warnings.push(`Optional environment variable is not set: ${key}`);
+        }
         continue;
       }
 

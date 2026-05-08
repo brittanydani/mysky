@@ -140,7 +140,7 @@ describe('AuthRequiredModal', () => {
 
   // ── Sign-up flow ──
 
-  it('calls signUp with trimmed email and password', async () => {
+  it('calls signUp with normalized email and password', async () => {
     mockSignUpAndEnsureSession.mockResolvedValue({
       session: { access_token: 'token', user: {} },
       user: {},
@@ -149,7 +149,7 @@ describe('AuthRequiredModal', () => {
 
     const { getByLabelText } = render(<AuthRequiredModal visible />);
     switchToSignUp(getByLabelText);
-    fireEvent.changeText(getByLabelText('Email address'), '  user@test.com  ');
+    fireEvent.changeText(getByLabelText('Email address'), '  USER@Test.COM  ');
     fireEvent.changeText(getByLabelText('Password'), 'securepassword');
     await act(async () => {
       fireEvent.press(getByLabelText('Create Account'));
@@ -170,7 +170,7 @@ describe('AuthRequiredModal', () => {
 
     const { getByLabelText } = render(<AuthRequiredModal visible />);
     switchToSignUp(getByLabelText);
-    fireEvent.changeText(getByLabelText('Email address'), 'user@test.com');
+    fireEvent.changeText(getByLabelText('Email address'), 'User@Test.COM');
     fireEvent.changeText(getByLabelText('Password'), 'securepassword');
     await act(async () => {
       fireEvent.press(getByLabelText('Create Account'));
@@ -269,7 +269,7 @@ describe('AuthRequiredModal', () => {
       fireEvent.press(getByLabelText('Forgot password'));
     });
 
-    fireEvent.changeText(getByLabelText('Recovery email address'), 'user@test.com');
+    fireEvent.changeText(getByLabelText('Recovery email address'), 'USER@Test.COM');
 
     await act(async () => {
       fireEvent.press(getByLabelText('Email Me a Code'));
@@ -295,7 +295,7 @@ describe('AuthRequiredModal', () => {
       fireEvent.press(getByLabelText('Forgot password'));
     });
 
-    fireEvent.changeText(getByLabelText('Recovery email address'), 'user@test.com');
+    fireEvent.changeText(getByLabelText('Recovery email address'), 'USER@Test.COM');
 
     await act(async () => {
       fireEvent.press(getByLabelText('Email Me a Code'));

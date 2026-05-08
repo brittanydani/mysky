@@ -15,6 +15,7 @@ const mockRestore = jest.fn();
 
 const mockPremiumContext = {
   isPremium: false,
+  isReady: true,
   offerings: {
     availablePackages: [
       {
@@ -71,6 +72,22 @@ jest.mock('../../services/premium/deeperSkyFeatures', () => ({
   },
 }));
 
+jest.mock('../../services/premium/revenuecat', () => ({
+  revenueCatService: {
+    getPackageByType: (offering: any, type: 'monthly' | 'annual') => {
+      const identifiers = type === 'monthly'
+        ? ['monthly', '$rc_monthly', 'mysky_monthly']
+        : ['annual', 'yearly', '$rc_annual', 'mysky_annual', 'mysky_yearly'];
+
+      return offering.availablePackages.find((pkg: any) => {
+        const packageId = String(pkg.identifier).toLowerCase();
+        const productId = String(pkg.product?.identifier ?? '').toLowerCase();
+        return identifiers.some((id) => packageId.includes(id) || productId.includes(id));
+      }) ?? null;
+    },
+  },
+}));
+
 jest.mock('../../constants/mySkyMetallic', () => ({
   metallicFillColors: ['#fff', '#000'],
   metallicFillPositions: [0, 1],
@@ -111,6 +128,19 @@ const alertSpy = jest.spyOn(Alert, 'alert');
 beforeEach(() => {
   jest.clearAllMocks();
   mockPremiumContext.isPremium = false;
+  mockPremiumContext.isReady = true;
+  mockPremiumContext.offerings = {
+    availablePackages: [
+      {
+        identifier: '$rc_monthly',
+        product: { priceString: '$4.99', price: 4.99, identifier: 'mysky_monthly' },
+      },
+      {
+        identifier: '$rc_annual',
+        product: { priceString: '$29.99', price: 29.99, identifier: 'mysky_annual' },
+      },
+    ],
+  };
 });
 
 describe('PremiumScreen', () => {

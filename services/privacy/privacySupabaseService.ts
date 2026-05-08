@@ -194,11 +194,18 @@ export async function auditPrivacyEvent(
 
 export async function deletePrivacyComplianceData(): Promise<void> {
   const userId = await getUserId();
+  const tables = [
+    'privacy_audit_events',
+    'lawful_basis_records',
+    'privacy_consent_records',
+    'privacy_policy_versions',
+  ];
 
-  await Promise.all([
-    supabase.from('privacy_audit_events').delete().eq('user_id', userId),
-    supabase.from('lawful_basis_records').delete().eq('user_id', userId),
-    supabase.from('privacy_consent_records').delete().eq('user_id', userId),
-    supabase.from('privacy_policy_versions').delete().eq('user_id', userId),
-  ]);
+  for (const table of tables) {
+    const { error } = await supabase.from(table).delete().eq('user_id', userId);
+    if (error) {
+      logger.warn(`[PrivacySupabase] Failed to delete ${table}.`, error);
+      throw error;
+    }
+  }
 }

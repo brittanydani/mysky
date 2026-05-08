@@ -82,9 +82,9 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
         return;
       }
       const exportData = JSON.stringify(result.package, null, 2);
-      await Share.share({ message: exportData, title: 'MySky Data Export' });
+      await Share.share({ message: exportData, title: 'MySky Account Data Export' });
     } catch {
-      Alert.alert('Export Failed', 'Unable to secure your data for export.');
+      Alert.alert('Export Failed', 'Unable to gather your synced account data for export.');
     } finally {
       setIsLoading(false);
     }
@@ -117,11 +117,11 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
 
   const handleDeleteAllData = () => {
     Alert.alert(
-      'Permanent Deletion',
-      'This will erase all birth data, journal entries, and personal insights. This cosmic reset cannot be reversed.',
+      'Delete App Data',
+      'This permanently deletes synced MySky app data from Supabase for this account, including birth data, journal entries, sleep and dream entries, check-ins, relationship charts, self-knowledge records, and insight history. Your sign-in account and subscription are not deleted. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete Everything', style: 'destructive', onPress: confirmDeleteAllData },
+        { text: 'Delete App Data', style: 'destructive', onPress: confirmDeleteAllData },
       ]
     );
   };
@@ -131,11 +131,11 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
       setIsLoading(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
       await compliance.handleDeletionRequest();
-      Alert.alert('Reset Complete', 'Your personal data has been erased from this device.', [
+      Alert.alert('Data Deleted', 'Your synced MySky app data has been deleted from your account.', [
         { text: 'OK', onPress: onClose },
       ]);
     } catch {
-      Alert.alert('Reset Failed', 'Process interrupted. Please try again.');
+      Alert.alert('Delete Failed', 'Could not delete your synced account data. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -225,31 +225,31 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
 
               {/* Data Actions */}
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Your Archive</Text>
-                {hasData ? (
-                  <View style={styles.actionGrid}>
-                    <Pressable style={styles.actionCard} onPress={handleExportData} disabled={isLoading} accessibilityRole="button" accessibilityLabel="Export archive">
-                      <LinearGradient colors={['rgba(212, 175, 55, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
-                        <MetallicIcon name="download-outline" size={22} color={PALETTE.silverBlue} />
-                        <Text style={styles.actionTitle}>Export Archive</Text>
-                        <Text style={styles.actionSub}>Create a readable backup of all entries.</Text>
-                      </LinearGradient>
-                    </Pressable>
+                <Text style={styles.sectionLabel}>Data Controls</Text>
+                <View style={styles.actionGrid}>
+                  <Pressable style={styles.actionCard} onPress={handleExportData} disabled={isLoading} accessibilityRole="button" accessibilityLabel="Export account data">
+                    <LinearGradient colors={['rgba(212, 175, 55, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
+                      <MetallicIcon name="download-outline" size={22} color={PALETTE.silverBlue} />
+                      <Text style={styles.actionTitle}>Export Account Data</Text>
+                      <Text style={styles.actionSub}>Share a JSON export of synced MySky account data.</Text>
+                    </LinearGradient>
+                  </Pressable>
 
-                    <Pressable style={styles.actionCard} onPress={handleDeleteAllData} disabled={isLoading} accessibilityRole="button" accessibilityLabel="Hard reset - delete all data">
-                      <LinearGradient colors={['rgba(205, 127, 93, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
-                        <MetallicIcon name="trash-outline" size={22} color={PALETTE.copper} />
-                        <Text style={styles.actionTitle}>Hard Reset</Text>
-                        <Text style={styles.actionSub}>Permanently erase all data from this device.</Text>
-                      </LinearGradient>
-                    </Pressable>
-                  </View>
-                ) : (
-                  <View style={styles.emptyCard}>
-                    <Ionicons name="cloud-offline-outline" size={32} color={theme.textMuted} />
-                    <Text style={styles.emptyText}>No personal records found</Text>
-                  </View>
-                )}
+                  <Pressable style={styles.actionCard} onPress={handleDeleteAllData} disabled={isLoading} accessibilityRole="button" accessibilityLabel="Delete synced app data">
+                    <LinearGradient colors={['rgba(205, 127, 93, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
+                      <MetallicIcon name="trash-outline" size={22} color={PALETTE.copper} />
+                      <Text style={styles.actionTitle}>Delete App Data</Text>
+                      <Text style={styles.actionSub}>Permanently delete synced MySky app data from your account.</Text>
+                    </LinearGradient>
+                  </Pressable>
+
+                  {!hasData && (
+                    <View style={styles.emptyCard}>
+                      <Ionicons name="cloud-offline-outline" size={32} color={theme.textMuted} />
+                      <Text style={styles.emptyText}>No chart or journal records found yet</Text>
+                    </View>
+                  )}
+                </View>
               </View>
 
               {/* Rights Ledger */}

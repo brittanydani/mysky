@@ -81,6 +81,7 @@ function normalizeCustomFeelingId(value: string): string {
 const SCREEN_W = Dimensions.get('window').width;
 const DREAM_TEXT_MAX_LENGTH = 10000;
 const SLEEP_FOCUS_REFRESH_CACHE_MS = 60 * 1000;
+const REST_QUALITY_LABELS = ['Exhausted', 'Restless', 'Moderate', 'Restored', 'Deeply Rested'] as const;
 
 // ── Cinematic Palette (Obsidian & Gold) ──
 const PALETTE = {
@@ -162,6 +163,9 @@ const FeelingItem = memo(function FeelingItem({
           onToggle(feel.id);
         }}
         style={[styles.dreamMoodOption, isSelected && styles.dreamMoodOptionSelected]}
+        accessibilityRole="button"
+        accessibilityLabel={`${isSelected ? 'Remove' : 'Select'} ${feel.label}`}
+        accessibilityState={{ selected: isSelected }}
       >
         {isSelected ? (
           <MetallicText color={PALETTE.amethyst} style={[styles.dreamMoodOptionText, styles.dreamMoodOptionTextSelected]}>
@@ -185,7 +189,11 @@ const FeelingItem = memo(function FeelingItem({
                   Haptics.selectionAsync().catch(() => {});
                   onIntensityChange(feel.id, n);
                 }}
+                hitSlop={6}
                 style={[styles.intensityDot, n <= intensity && styles.intensityDotActive]}
+                accessibilityRole="button"
+                accessibilityLabel={`Set ${feel.label} intensity to ${n} of 5`}
+                accessibilityState={{ selected: intensity === n }}
               >
                 {n <= intensity ? (
                   <MetallicText color={PALETTE.amethyst} style={[styles.intensityDotText, styles.intensityDotTextActive]}>{n}</MetallicText>
@@ -431,9 +439,12 @@ export default function SleepScreen() {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const handledReloadKeyRef = useRef(0);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isEditingUnlocked, setIsEditingUnlocked] = useState(false);
   const [dreamLoggingEnabled, setDreamLoggingEnabled] = useState(true);
+  const [birthProfileMissing, setBirthProfileMissing] = useState(false);
 
   const today = useMemo(() => {
     const now = new Date();
@@ -567,7 +578,9 @@ export default function SleepScreen() {
   useFocusEffect(
     useCallback(() => {
       const requestedEntryId = Array.isArray(entryId) ? entryId[0] ?? null : entryId ?? null;
+      const forcedReload = handledReloadKeyRef.current !== reloadKey;
       if (
+        !forcedReload &&
         hasLoadedSleepRef.current &&
         lastSleepEntryParamRef.current === requestedEntryId &&
         Date.now() - lastSleepLoadedAtRef.current < SLEEP_FOCUS_REFRESH_CACHE_MS
@@ -578,12 +591,21 @@ export default function SleepScreen() {
       let active = true;
       (async () => {
         try {
-          if (!hasLoadedSleepRef.current) setLoading(true);
+          if (!hasLoadedSleepRef.current || forcedReload) setLoading(true);
+          setLoadError(null);
+          setBirthProfileMissing(false);
           const dreamPref = await getUserPreference<string | null>('pref_dream_logging', null);
           if (!active) return;
           setDreamLoggingEnabled(dreamPref === null || dreamPref === '1');
           const charts = await supabaseDb.getCharts();
-          if (!active || charts.length === 0) return;
+          if (!active) return;
+          if (charts.length === 0) {
+            setChartId(null);
+            setEntries([]);
+            setRecentCheckIns([]);
+            setBirthProfileMissing(true);
+            return;
+          }
           const savedChart = charts[0];
           setChartId(savedChart.id);
           const [data, checkIns] = await Promise.all([
@@ -609,14 +631,15 @@ export default function SleepScreen() {
             hasLoadedSleepRef.current = true;
             lastSleepLoadedAtRef.current = Date.now();
             lastSleepEntryParamRef.current = requestedEntryId;
+            handledReloadKeyRef.current = reloadKey;
           }
         } catch (e) {
           logger.error('Sleep load failed:', e);
-          setLoadError('Could not load your sleep data.');
+          if (active) setLoadError('Could not load your sleep data. Check your connection and try again.');
         } finally { if (active) setLoading(false); }
       })();
       return () => { active = false; };
-    }, [applyEntryToForm, entryId, today])
+    }, [applyEntryToForm, entryId, reloadKey, today])
   );
 
   const canSave = quality > 0 || hasDuration || dreamText.trim().length > 0;
@@ -812,6 +835,59 @@ export default function SleepScreen() {
       .map(e => ({ duration: e.durationHours!, quality: e.quality!, date: e.date }));
   }, [entries]);
 
+  if (!loading && birthProfileMissing) {
+    return (
+      <View style={styles.container}>
+        <SkiaDynamicCosmos />
+        <SkiaRestorationField quality={3} />
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+          <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(212, 175, 55, 0.06)' }]} />
+        </View>
+
+        <SafeAreaView edges={['top']} style={styles.safeArea}>
+          <Pressable
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
+          </Pressable>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
+              <Text style={styles.title}>Nightly Signals</Text>
+              <GoldSubtitle style={styles.subtitle}>Birth profile needed</GoldSubtitle>
+              <Text style={styles.headerDesc}>
+                Sleep and dream entries need your birth profile so MySky can save them to the right archive.
+              </Text>
+            </Animated.View>
+            <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.emptyState}>
+              <Ionicons name="moon-outline" size={56} color={theme.textMuted} style={{ marginBottom: 12 }} />
+              <Text style={styles.emptyTitle}>Set up your birth profile first</Text>
+              <Text style={styles.emptySubtitle}>Add your birth date, time, and place before logging sleep or dreams.</Text>
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  router.push('/onboarding/birth' as Href);
+                }}
+                style={styles.emptyActionButton}
+                accessibilityRole="button"
+                accessibilityLabel="Set up birth profile"
+              >
+                <Text style={styles.emptyActionText}>Set up birth profile</Text>
+              </Pressable>
+            </Animated.View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
@@ -876,6 +952,9 @@ export default function SleepScreen() {
                         applyEntryToForm(entries.find(e => e.date === today));
                       }}
                       style={styles.cancelEditBtn}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Cancel editing sleep entry"
                     >
                       <Ionicons name="close-circle-outline" size={16} color={theme.textMuted} />
                     </Pressable>
@@ -910,6 +989,10 @@ export default function SleepScreen() {
                       <Pressable
                         key={n}
                         onPress={() => { Haptics.selectionAsync(); setQuality(n === quality ? 0 : n); }}
+                        hitSlop={4}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Set rest quality to ${n} of 5, ${REST_QUALITY_LABELS[n - 1]}`}
+                        accessibilityState={{ selected: quality === n }}
                       >
                         <VolumetricMoon active={n <= quality} />
                       </Pressable>
@@ -918,7 +1001,7 @@ export default function SleepScreen() {
                   {quality > 0 && (
                     <Animated.View entering={FadeIn.duration(300)}>
                       <MetallicText style={styles.qualityStateLabel} variant="gold">
-                        {['Exhausted', 'Restless', 'Moderate', 'Restored', 'Deeply Rested'][quality - 1]}
+                        {REST_QUALITY_LABELS[quality - 1]}
                       </MetallicText>
                     </Animated.View>
                   )}
@@ -929,12 +1012,16 @@ export default function SleepScreen() {
                     <Pressable
                       style={styles.hoursStepBtn}
                       onPress={() => { Haptics.selectionAsync(); setHasDuration(true); setDurationHours(h => Math.max(0.5, parseFloat((h - 0.5).toFixed(1)))); }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Decrease hours slept"
                     >
                       <Ionicons name="remove-outline" size={22} color={theme.textPrimary} />
                     </Pressable>
                     <Pressable
                       style={styles.hoursCircleDisplay}
                       onLongPress={() => { setHasDuration(false); setDurationHours(7.5); }}
+                      accessibilityRole="button"
+                      accessibilityLabel={hasDuration ? `Hours slept, ${formatDuration(durationHours)}. Long press to clear.` : 'Hours slept not set. Use minus or plus to begin.'}
                     >
                       <Text
                         style={[styles.hoursCircleValue, !hasDuration && { color: theme.textMuted }]}
@@ -951,6 +1038,8 @@ export default function SleepScreen() {
                     <Pressable
                       style={styles.hoursStepBtn}
                       onPress={() => { Haptics.selectionAsync(); setHasDuration(true); setDurationHours(h => Math.min(12, parseFloat((h + 0.5).toFixed(1)))); }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Increase hours slept"
                     >
                       <Ionicons name="add-outline" size={22} color={theme.textPrimary} />
                     </Pressable>
@@ -971,6 +1060,8 @@ export default function SleepScreen() {
                       multiline
                       textAlignVertical="top"
                       selectionColor={PALETTE.gold}
+                      accessibilityLabel="Dream memory"
+                      accessibilityHint="Write dream fragments, feelings, or a full narrative."
                     />
                   </View>
 
@@ -983,6 +1074,9 @@ export default function SleepScreen() {
                       }}
                       disabled={isPremium}
                       style={{ marginTop: 12 }}
+                      accessibilityRole="button"
+                      accessibilityLabel={isPremium ? 'AI dream interpretation uses the richer Deeper Sky model' : 'Learn about Deeper Sky dream interpretation'}
+                      accessibilityState={{ disabled: isPremium }}
                     >
                       <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(10, 12, 18, 0.8)']} style={styles.premiumLockCard}>
                         <View style={{ flex: 1 }}>
@@ -1019,6 +1113,9 @@ export default function SleepScreen() {
                           if (!showFeelingPicker) { setFeelingSearch(''); setDebouncedSearch(''); }
                         }}
                         style={styles.dreamMoodDropdown}
+                        accessibilityRole="button"
+                        accessibilityLabel={selectedFeelings.length > 0 ? `Dream feelings, ${selectedFeelingLabels}` : 'Select dream feelings'}
+                        accessibilityState={{ expanded: showFeelingPicker }}
                       >
                         <Text style={selectedFeelings.length > 0 ? styles.dreamMoodDropdownText : styles.dreamMoodDropdownPlaceholder}>
                           {selectedFeelings.length > 0 ? selectedFeelingLabels : 'Tap to select feelings…'}
@@ -1043,6 +1140,9 @@ export default function SleepScreen() {
                                     setFeelingSearch(''); setDebouncedSearch(''); setCustomFeelingText('');
                                   }}
                                   style={[styles.tierPill, isActive && { backgroundColor: tier.color + '22', borderColor: tier.color }]}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`Show ${tier.label.toLowerCase()} feelings`}
+                                  accessibilityState={{ selected: isActive }}
                                 >
                                   <View style={[styles.tierDot, { backgroundColor: tier.color }]} />
                                   <Text style={[styles.tierPillText, isActive && { color: tier.color }]}>{tier.label}</Text>
@@ -1066,9 +1166,15 @@ export default function SleepScreen() {
                                 placeholder="Search feelings"
                                 placeholderTextColor={theme.textMuted}
                                 autoCorrect={false}
+                                accessibilityLabel="Search dream feelings"
                               />
                               {feelingSearch.length > 0 && (
-                                <Pressable onPress={() => { setFeelingSearch(''); setDebouncedSearch(''); }}>
+                                <Pressable
+                                  onPress={() => { setFeelingSearch(''); setDebouncedSearch(''); }}
+                                  hitSlop={8}
+                                  accessibilityRole="button"
+                                  accessibilityLabel="Clear dream feeling search"
+                                >
                                   <Ionicons name="close-circle-outline" size={18} color={theme.textMuted} />
                                 </Pressable>
                               )}
@@ -1086,11 +1192,15 @@ export default function SleepScreen() {
                                 autoCorrect={false}
                                 returnKeyType="done"
                                 onSubmitEditing={handleAddCustomFeeling}
+                                accessibilityLabel="Custom dream feeling"
                               />
                               <Pressable
                                 onPress={handleAddCustomFeeling}
                                 disabled={!customFeelingText.trim()}
                                 style={[styles.customFeelingAddBtn, !customFeelingText.trim() && styles.customFeelingAddBtnDisabled]}
+                                accessibilityRole="button"
+                                accessibilityLabel="Add custom dream feeling"
+                                accessibilityState={{ disabled: !customFeelingText.trim() }}
                               >
                                 <Text style={styles.customFeelingAddText}>Add</Text>
                               </Pressable>
@@ -1126,6 +1236,9 @@ export default function SleepScreen() {
                                       handleToggleFeeling(feel.id);
                                     }}
                                     style={[styles.dreamMoodOption, styles.dreamMoodOptionSelected]}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Remove ${feel.label ?? feel.id}`}
+                                    accessibilityState={{ selected: true }}
                                   >
                                     <MetallicText color={PALETTE.amethyst} style={[styles.dreamMoodOptionText, styles.dreamMoodOptionTextSelected]}>
                                       {feel.label ?? feel.id}
@@ -1142,7 +1255,11 @@ export default function SleepScreen() {
                                             Haptics.selectionAsync().catch(() => {});
                                             handleIntensityChange(feel.id, n);
                                           }}
+                                          hitSlop={6}
                                           style={[styles.intensityDot, n <= feel.intensity && styles.intensityDotActive]}
+                                          accessibilityRole="button"
+                                          accessibilityLabel={`Set ${feel.label ?? feel.id} intensity to ${n} of 5`}
+                                          accessibilityState={{ selected: feel.intensity === n }}
                                         >
                                           {n <= feel.intensity ? (
                                             <MetallicText color={PALETTE.amethyst} style={[styles.intensityDotText, styles.intensityDotTextActive]}>{n}</MetallicText>
@@ -1303,7 +1420,12 @@ export default function SleepScreen() {
                   {editingEntryId && !isEditingUnlocked ? (
                     <View style={styles.pulseSection}>
                       <Text style={styles.pulseLabel}>Log Sealed</Text>
-                      <Pressable style={styles.unlockBtn} onPress={() => { Haptics.selectionAsync(); setIsEditingUnlocked(true); }}>
+                      <Pressable
+                        style={styles.unlockBtn}
+                        onPress={() => { Haptics.selectionAsync(); setIsEditingUnlocked(true); }}
+                        accessibilityRole="button"
+                        accessibilityLabel="Unlock sleep entry to edit"
+                      >
                         <Text style={styles.unlockText}>Unlock to Edit</Text>
                       </Pressable>
                     </View>
@@ -1319,7 +1441,12 @@ export default function SleepScreen() {
                   <View style={styles.errorBanner}>
                     <MetallicIcon name="warning-outline" size={18} variant="copper" />
                     <MetallicText color={PALETTE.copper} style={styles.errorBannerText}>{saveError}</MetallicText>
-                    <Pressable onPress={() => setSaveError(null)}>
+                    <Pressable
+                      onPress={() => setSaveError(null)}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Dismiss save error"
+                    >
                       <Ionicons name="close-outline" size={18} color={theme.textMuted} />
                     </Pressable>
                   </View>
@@ -1411,6 +1538,18 @@ export default function SleepScreen() {
               <MetallicIcon name="cloud-offline-outline" size={48} variant="copper" />
               <Text style={styles.emptyTitle}>Could not load data</Text>
               <Text style={styles.emptySubtitle}>{loadError}</Text>
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setLoadError(null);
+                  setReloadKey((value) => value + 1);
+                }}
+                style={styles.emptyActionButton}
+                accessibilityRole="button"
+                accessibilityLabel="Try loading sleep data again"
+              >
+                <Text style={styles.emptyActionText}>Try again</Text>
+              </Pressable>
             </Animated.View>
           )}
 
@@ -1439,7 +1578,12 @@ export default function SleepScreen() {
                             <Text style={styles.featuredEyebrow}>Most Recent</Text>
                             <Text style={styles.featuredDate}>{formatDate(entry.date)}</Text>
                           </View>
-                          <Pressable onPress={() => presentEntryActions(entry)} hitSlop={8}>
+                          <Pressable
+                            onPress={() => presentEntryActions(entry)}
+                            hitSlop={8}
+                            accessibilityRole="button"
+                            accessibilityLabel={`More actions for ${formatDate(entry.date)} sleep entry`}
+                          >
                             <Ionicons name="ellipsis-horizontal" size={20} color={theme.textSecondary} />
                           </Pressable>
                         </View>
@@ -1456,7 +1600,12 @@ export default function SleepScreen() {
                             <Text style={styles.featuredExpandedText}>{selectedInterpretation.paragraph}</Text>
                             {selectedAiInterpretation?.paragraph ? <Text style={styles.featuredExpandedText}>{selectedAiInterpretation.paragraph}</Text> : null}
                             {!isPremium && selectedInterpretation.extractedSymbols && selectedInterpretation.extractedSymbols.length > 0 && (
-                              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} style={styles.dreamSymbolTeaser}>
+                              <Pressable
+                                onPress={() => router.push('/(tabs)/premium' as Href)}
+                                style={styles.dreamSymbolTeaser}
+                                accessibilityRole="button"
+                                accessibilityLabel="Unlock recurring dream symbol map"
+                              >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                                   <MetallicIcon name="sparkles-outline" size={14} variant="gold" />
                                   <MetallicText style={{ fontSize: 13, fontWeight: '700' }} variant="gold">
@@ -1738,4 +1887,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   emptyState: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
   emptyTitle: { fontSize: 22, fontWeight: '700', color: theme.textPrimary, textAlign: 'center', marginBottom: 12 },
   emptySubtitle: { fontSize: 15, color: theme.textMuted, textAlign: 'center', lineHeight: 22 },
+  emptyActionButton: { minHeight: 44, marginTop: 18, paddingHorizontal: 22, borderRadius: 22, borderWidth: 1, borderColor: theme.cardBorder, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.cardSurface },
+  emptyActionText: { color: theme.textPrimary, fontSize: 14, fontWeight: '700' },
 });

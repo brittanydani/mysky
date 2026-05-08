@@ -1,4 +1,5 @@
 import { generateId } from '../storage/models';
+import { supabase } from '../../lib/supabase';
 import { LawfulBasisAuditService } from './lawfulBasisAudit';
 import {
   auditPrivacyEvent,
@@ -24,6 +25,91 @@ import {
 async function loadSupabaseDb() {
   const mod = await import('../storage/supabaseDb');
   return mod.supabaseDb;
+}
+
+type SupabaseRow = Record<string, unknown>;
+
+const ACCOUNT_EXPORT_TABLES = [
+  'birth_profiles',
+  'journal_entries',
+  'sleep_entries',
+  'daily_check_ins',
+  'daily_logs',
+  'relationship_charts',
+  'relationship_daily_logs',
+  'app_settings',
+  'daily_reflections',
+  'somatic_entries',
+  'trigger_events',
+  'relationship_patterns',
+  'self_knowledge_profiles',
+  'user_preferences',
+  'user_profiles',
+  'insight_history',
+  'insight_signals',
+  'insight_candidates',
+  'shown_insights',
+  'insight_feedback',
+  'user_insight_memory',
+  'dream_entries',
+  'dream_selected_feelings',
+  'dream_text_signals',
+  'dream_engine_results',
+  'dream_rendered_cards',
+  'dream_card_feedback',
+  'user_dream_model',
+  'user_dream_model_updates',
+  'privacy_audit_events',
+  'privacy_consent_records',
+  'privacy_policy_versions',
+  'lawful_basis_records',
+] as const;
+
+type AccountExportTable = typeof ACCOUNT_EXPORT_TABLES[number];
+type AccountSupabaseRows = Partial<Record<AccountExportTable, SupabaseRow[]>>;
+
+async function getAuthenticatedUserId(): Promise<string> {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+
+  const uid = data.session?.user?.id;
+  if (!uid) throw new Error('Not authenticated');
+  return uid;
+}
+
+async function readAccountSupabaseRows(): Promise<AccountSupabaseRows> {
+  const userId = await getAuthenticatedUserId();
+  const entries = await Promise.all(
+    ACCOUNT_EXPORT_TABLES.map(async (table) => {
+      const { data, error } = await supabase
+        .from(table)
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      return [table, (data ?? []) as SupabaseRow[]] as const;
+    }),
+  );
+
+  return Object.fromEntries(entries) as AccountSupabaseRows;
+}
+
+function rowsFor(rows: AccountSupabaseRows, table: AccountExportTable): SupabaseRow[] {
+  return rows[table] ?? [];
+}
+
+function countRows(rows: AccountSupabaseRows, table: AccountExportTable): number {
+  return rowsFor(rows, table).length;
+}
+
+function countTables(rows: AccountSupabaseRows, tables: AccountExportTable[]): number {
+  return tables.reduce((sum, table) => sum + countRows(rows, table), 0);
+}
+
+function tableCounts(rows: AccountSupabaseRows): Record<string, number> {
+  return Object.fromEntries(
+    ACCOUNT_EXPORT_TABLES.map((table) => [table, countRows(rows, table)]),
+  );
 }
 
 export class PrivacyComplianceManager {
@@ -150,7 +236,7 @@ export class PrivacyComplianceManager {
    */
   async handleAccessRequest(): Promise<AccessResult> {
     const db = await loadSupabaseDb();
-    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords, asyncStorageData] =
+    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords, asyncStorageData, supabaseRows] =
       await Promise.all([
         db.getCharts(),
         db.getJournalEntries(),
@@ -158,11 +244,13 @@ export class PrivacyComplianceManager {
         getConsentRecord(),
         getLawfulBasisRecords(),
         this.readLegacyLocalUserData(),
+        readAccountSupabaseRows(),
       ]);
 
     await auditPrivacyEvent('gdpr_access_request', {
       chartsCount: charts.length,
       entriesCount: journalEntries.length,
+      supabaseTableCounts: tableCounts(supabaseRows),
     });
 
     return {
@@ -170,9 +258,27 @@ export class PrivacyComplianceManager {
       dataInventory: {
         chartsCount: charts.length,
         journalEntriesCount: journalEntries.length,
+        relationshipChartsCount: countRows(supabaseRows, 'relationship_charts'),
+        sleepEntriesCount: countRows(supabaseRows, 'sleep_entries'),
+        checkInsCount: countRows(supabaseRows, 'daily_check_ins'),
+        selfKnowledgeProfilesCount: countRows(supabaseRows, 'self_knowledge_profiles'),
+        userPreferencesCount: countRows(supabaseRows, 'user_preferences'),
+        dailyReflectionsCount: countRows(supabaseRows, 'daily_reflections'),
+        somaticEntriesCount: countRows(supabaseRows, 'somatic_entries'),
+        triggerEventsCount: countRows(supabaseRows, 'trigger_events'),
+        relationshipPatternsCount: countRows(supabaseRows, 'relationship_patterns'),
+        insightRecordsCount: countTables(supabaseRows, [
+          'insight_history',
+          'insight_signals',
+          'insight_candidates',
+          'shown_insights',
+          'insight_feedback',
+          'user_insight_memory',
+        ]),
         settingsPresent: settings !== null,
         consentRecordPresent: consentRecord !== null,
         lawfulBasisRecordsCount: lawfulBasisRecords.length,
+        supabaseTableCounts: tableCounts(supabaseRows),
         asyncStorageKeysCount: Object.keys(asyncStorageData).length,
       },
       completedAt: new Date().toISOString(),
@@ -185,7 +291,7 @@ export class PrivacyComplianceManager {
    */
   async handleExportRequest(): Promise<ExportResult> {
     const db = await loadSupabaseDb();
-    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords, asyncStorageData] =
+    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords, asyncStorageData, supabaseRows] =
       await Promise.all([
         db.getCharts(),
         db.getJournalEntries(),
@@ -193,6 +299,7 @@ export class PrivacyComplianceManager {
         getConsentRecord(),
         getLawfulBasisRecords(),
         this.readLegacyLocalUserData(),
+        readAccountSupabaseRows(),
       ]);
 
     // Calculate full natal chart data for each chart
@@ -230,6 +337,7 @@ export class PrivacyComplianceManager {
     await auditPrivacyEvent('gdpr_export_request', {
       chartsCount: fullCharts.length,
       entriesCount: journalEntries.length,
+      supabaseTableCounts: tableCounts(supabaseRows),
     });
 
     return {
@@ -237,9 +345,37 @@ export class PrivacyComplianceManager {
       package: {
         charts: fullCharts,
         journalEntries,
+        relationshipCharts: rowsFor(supabaseRows, 'relationship_charts'),
+        sleepEntries: rowsFor(supabaseRows, 'sleep_entries'),
+        checkIns: rowsFor(supabaseRows, 'daily_check_ins'),
         settings,
         consentRecord,
         lawfulBasisRecords,
+        selfKnowledgeProfiles: rowsFor(supabaseRows, 'self_knowledge_profiles'),
+        userPreferences: rowsFor(supabaseRows, 'user_preferences'),
+        dailyReflections: rowsFor(supabaseRows, 'daily_reflections'),
+        somaticEntries: rowsFor(supabaseRows, 'somatic_entries'),
+        triggerEvents: rowsFor(supabaseRows, 'trigger_events'),
+        relationshipPatterns: rowsFor(supabaseRows, 'relationship_patterns'),
+        insightHistory: rowsFor(supabaseRows, 'insight_history'),
+        insightState: {
+          insightSignals: rowsFor(supabaseRows, 'insight_signals'),
+          insightCandidates: rowsFor(supabaseRows, 'insight_candidates'),
+          shownInsights: rowsFor(supabaseRows, 'shown_insights'),
+          insightFeedback: rowsFor(supabaseRows, 'insight_feedback'),
+          userInsightMemory: rowsFor(supabaseRows, 'user_insight_memory'),
+        },
+        dreamEngineData: {
+          dreamEntries: rowsFor(supabaseRows, 'dream_entries'),
+          selectedFeelings: rowsFor(supabaseRows, 'dream_selected_feelings'),
+          textSignals: rowsFor(supabaseRows, 'dream_text_signals'),
+          engineResults: rowsFor(supabaseRows, 'dream_engine_results'),
+          renderedCards: rowsFor(supabaseRows, 'dream_rendered_cards'),
+          cardFeedback: rowsFor(supabaseRows, 'dream_card_feedback'),
+          userDreamModel: rowsFor(supabaseRows, 'user_dream_model'),
+          userDreamModelUpdates: rowsFor(supabaseRows, 'user_dream_model_updates'),
+        },
+        rawSupabaseTables: supabaseRows,
         asyncStorageData: Object.keys(asyncStorageData).length > 0 ? asyncStorageData : undefined,
         exportedAt: new Date().toISOString(),
       },

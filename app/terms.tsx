@@ -81,7 +81,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Service Description</Text>
             <Text style={styles.paragraph}>
-              MySky provides an account-based personal framework for self-knowledge, growth, and reflection. Tools include daily wellness tracking, dream journaling, emotional pattern mapping, self-discovery exercises (values inventory, somatic body mapping, nervous system trigger logs), and optional astrological context. The app is intended for users aged 17 and older. A free account is required, and core features remain available from the device cache after initial sign-in.
+              MySky provides an account-based personal framework for self-knowledge and reflection. Tools include daily check-ins, dream journaling, pattern mapping, self-discovery exercises, and optional astrological context. The app is intended for users aged 17 and older. A free account is required, and core features remain available from the device cache after initial sign-in.
             </Text>
 
             <Text style={styles.sectionTitle}>License Grant</Text>
@@ -114,23 +114,23 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
               style={styles.disclaimerCard}
             >
               <View style={styles.disclaimerHeader}>
-                <MetallicIcon name="medical-outline" size={18} color={PALETTE.copper} />
-                <MetallicText style={[styles.subHeader, { marginBottom: 0 }]} color={PALETTE.copper}>Not Medical or Therapeutic Advice</MetallicText>
+                <MetallicIcon name="alert-circle-outline" size={18} color={PALETTE.copper} />
+                <MetallicText style={[styles.subHeader, { marginBottom: 0 }]} color={PALETTE.copper}>Reflection Tool Only</MetallicText>
               </View>
               <Text style={styles.paragraph}>
-                MySky is a self-reflection and personal growth tool, not a medical app. None of its features — including chart-based content, dream reflections, somatic body mapping, nervous system trigger logs, core values exercises, psychological archetype profiles, emotional pattern analysis, cognitive style assessments, healing path prompts, or any other content — constitute medical advice, psychological diagnosis, therapy, counseling, or treatment of any kind.
+                MySky is a self-reflection tool. None of its features — including chart-based content, dream reflections, somatic body mapping, nervous system trigger logs, core values exercises, archetype profiles, emotional pattern analysis, cognitive style assessments, healing path prompts, or any other content — constitute health care, psychological diagnosis, therapy, counseling, legal advice, financial advice, or crisis support.
               </Text>
               <Text style={styles.paragraph}>
-                These tools are designed for self-awareness and personal exploration only. They are not a substitute for professional mental health care, psychotherapy, psychiatry, or medical treatment. Do not use MySky as a replacement for professional support.
+                These tools are designed for self-awareness and personal exploration only. They are not a substitute for qualified professional support, and the app should not be used to make health, legal, financial, safety, or emergency decisions.
               </Text>
               <Text style={[styles.paragraph, { marginBottom: 0 }]}>
-                {'If you are experiencing a mental health crisis or are in danger, please reach out immediately:\n\n'}{'• Crisis & Suicide Prevention (US): call or text 988\n'}{'• Crisis Text Line: text HOME to 741741\n'}{'• International resources: findahelpline.com\n'}{'• Emergency services: 911 (US) or your local number'}
+                MySky does not monitor your entries in real time and cannot provide urgent help. If you need immediate support, contact qualified local services or a trusted professional outside the app.
               </Text>
             </LinearGradient>
 
             <Text style={styles.sectionTitle}>Intellectual Property</Text>
             <Text style={styles.paragraph}>
-              You retain full ownership of your personal data, including journal entries, check-ins, sleep logs, and dream content. MySky owns the app code, design, generalized interpretations, symbolic pattern mappings, and all generated chart-based content.
+                You retain full ownership of your personal data, including journal entries, check-ins, sleep logs, and dream content. MySky owns the app code, design, generalized reflection language, symbolic pattern mappings, and generated chart-based content.
             </Text>
 
             <Text style={styles.sectionTitle}>Data & Privacy</Text>
@@ -159,7 +159,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Termination</Text>
             <Text style={styles.paragraph}>
-              You may stop using MySky at any time by uninstalling the app. To permanently delete your online cloud footprint, you may request full deletion of your Supabase account and data directly through the app or by contacting support.
+              You may stop using MySky at any time by uninstalling the app. To permanently delete your online cloud footprint, use Delete Account in Settings or contact Brittany Apps at {SUPPORT_EMAIL}.
             </Text>
 
             <Text style={styles.sectionTitle}>Age Requirement</Text>
@@ -179,7 +179,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Indemnification</Text>
             <Text style={styles.paragraph}>
-              You agree to indemnify and hold harmless MySky and its developer from any claims, damages, losses, or expenses arising from your use of the app, your violation of these Terms, or your violation of any third-party rights.
+              You agree to indemnify and hold harmless MySky and Brittany Apps from any claims, damages, losses, or expenses arising from your use of the app, your violation of these Terms, or your violation of any third-party rights.
             </Text>
 
             <Text style={styles.sectionTitle}>Governing Law</Text>
@@ -244,7 +244,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <View style={styles.contactCard}>
               <Text style={styles.sectionTitle}>Contact</Text>
-              <Text style={styles.paragraph}>Questions regarding these terms? Reach us at:</Text>
+              <Text style={styles.paragraph}>Questions regarding these terms? Contact Brittany Apps at:</Text>
               <Text style={styles.email}>{SUPPORT_EMAIL}</Text>
             </View>
 

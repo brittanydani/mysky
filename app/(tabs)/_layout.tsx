@@ -93,6 +93,9 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               key={route.key} 
               onPress={onPress} 
               hitSlop={{ top: 12, bottom: 12, left: 6, right: 6 }}
+              accessibilityRole="tab"
+              accessibilityLabel={options.title ?? route.name}
+              accessibilityState={{ selected: isFocused }}
               style={[
                 styles.tabItem, 
                 { transform: [{ translateY: nudge.tabTranslateY || 0 }] }

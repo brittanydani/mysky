@@ -207,6 +207,7 @@ export default function BlueprintScreen() {
                 style={styles.globalAction}
                 onPress={() => nav('/inner-world' as Href)}
                 accessibilityRole="button"
+                accessibilityLabel="Open Inner World"
               >
                 <Ionicons name="finger-print-outline" size={22} color={theme.titanium || '#E8D6AE'} />
               </Pressable>
@@ -242,6 +243,9 @@ export default function BlueprintScreen() {
                         ? Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
                         : nav(card.route, card.premium)
                       }
+                      accessibilityRole="button"
+                      accessibilityLabel={locked ? `${card.title}. ${unlockLabelFor(i)}` : `Open ${card.title}`}
+                      accessibilityState={locked ? { disabled: true } : undefined}
                     >
                       <VelvetGlassSurface 
                         style={[styles.card, styles.velvetBorder, card.premium && !locked && styles.premiumCard]} 
@@ -469,4 +473,3 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   badgeText: { fontSize: 9, fontWeight: '900', color: '#E8D6AE', letterSpacing: 1.5 },
 });
-

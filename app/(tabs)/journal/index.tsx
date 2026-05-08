@@ -271,6 +271,7 @@ function JournalContent() {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
   const [showEntryModal, setShowEntryModal] = useState(false);
@@ -530,6 +531,7 @@ function JournalContent() {
     try {
       if (reset) {
         setLoading(true);
+        setLoadError(null);
         hasMoreRef.current = true;
         setHasMore(true);
         const [page, count] = await Promise.all([
@@ -568,7 +570,11 @@ function JournalContent() {
       }
     } catch (error) {
       logger.error('Failed to load journal entries:', error);
-      Alert.alert('Error', 'Failed to load journal entries');
+      if (reset) {
+        setLoadError('Could not load your journal archive. Check your connection and try again.');
+      } else {
+        Alert.alert('Could not load more entries', 'Your saved entries are still in your archive. Please try again.');
+      }
     } finally {
       loadingMoreRef.current = false;
       setLoading(false);
@@ -586,6 +592,12 @@ function JournalContent() {
       logger.error('Failed to load sleep entries:', error);
     }
   }, []);
+
+  const retryJournalLoad = useCallback(() => {
+    Haptics.selectionAsync().catch(() => {});
+    void loadEntries(true);
+    void loadSleepEntries();
+  }, [loadEntries, loadSleepEntries]);
 
   useFocusEffect(
     useCallback(() => {
@@ -764,7 +776,14 @@ function JournalContent() {
               <MetallicIcon name="library-outline" size={18} color={PALETTE.gold} />
               <Text style={styles.browseSectionTitle}>Browse</Text>
             </View>
-            <Pressable onPress={toggleBrowseSearch} style={styles.browseSearchButton} hitSlop={8}>
+            <Pressable
+              onPress={toggleBrowseSearch}
+              style={styles.browseSearchButton}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={showSearch ? 'Close archive search' : 'Search archive'}
+              accessibilityState={{ expanded: showSearch }}
+            >
               <MetallicIcon name={showSearch ? 'close-outline' : 'search-outline'} size={16} color={PALETTE.gold} />
             </Pressable>
           </View>
@@ -780,9 +799,15 @@ function JournalContent() {
                 returnKeyType="search"
                 autoCorrect={false}
                 autoFocus
+                accessibilityLabel={activeTab === 'reflections' ? 'Search journal entries' : 'Search dream entries'}
               />
               {searchQuery.length > 0 && (
-                <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
+                <Pressable
+                  onPress={() => setSearchQuery('')}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear archive search"
+                >
                   <Ionicons name="close-circle-outline" size={16} color={theme.textMuted} />
                 </Pressable>
               )}
@@ -839,7 +864,11 @@ function JournalContent() {
       {/* ── Upsell ── */}
       {activeTab === 'reflections' && !isPremium && totalCount >= 5 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
-          <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+          <Pressable
+            onPress={() => router.push('/(tabs)/premium' as Href)}
+            accessibilityRole="button"
+            accessibilityLabel="Unlock advanced journal patterns"
+          >
             <LinearGradient colors={theme.isDark ? ['rgba(162, 194, 225, 0.20)', 'rgba(162, 194, 225, 0.05)'] : ['rgba(240, 245, 252, 0.7)', 'rgba(240, 245, 252, 0.4)']} style={[styles.insightCard, theme.isDark && styles.velvetBorder]}>
               <View style={styles.insightHeader}>
                 <MetallicIcon name="analytics-outline" size={18} color={PALETTE.gold} />
@@ -934,6 +963,26 @@ function JournalContent() {
       );
     }
 
+    if (activeTab === 'reflections' && loadError) {
+      return (
+        <View style={styles.emptyContainer}>
+          <LinearGradient colors={['rgba(205, 127, 93, 0.12)', 'transparent']} style={[styles.emptyCard, theme.isDark && styles.velvetBorder]}>
+            <Ionicons name="cloud-offline-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
+            <Text style={styles.emptyTitle}>Could not load your archive</Text>
+            <Text style={styles.emptyDescription}>{loadError}</Text>
+            <Pressable
+              onPress={retryJournalLoad}
+              style={styles.emptyActionButton}
+              accessibilityRole="button"
+              accessibilityLabel="Try loading journal entries again"
+            >
+              <Text style={styles.emptyActionText}>Try again</Text>
+            </Pressable>
+          </LinearGradient>
+        </View>
+      );
+    }
+
     if (activeTab === 'dreams') {
       const hasAnyDreams = sleepEntries.some(e => !e.isDeleted);
       if (hasAnyDreams && filteredSleepEntries.length === 0) {
@@ -983,8 +1032,8 @@ function JournalContent() {
       <View style={styles.emptyContainer}>
         <LinearGradient colors={['rgba(162, 194, 225, 0.10)', 'transparent']} style={[styles.emptyCard, theme.isDark && styles.velvetBorder]}>
           <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
-          <Text style={styles.emptyTitle}>Start Your Journey</Text>
-          <Text style={styles.emptyDescription}>Begin tracking your emotional patterns and personal insights</Text>
+          <Text style={styles.emptyTitle}>No reflections saved yet</Text>
+          <Text style={styles.emptyDescription}>Write a reflection to start building a private archive you can revisit over time.</Text>
         </LinearGradient>
       </View>
     );
@@ -1135,7 +1184,13 @@ function JournalContent() {
           onRequestClose={closeEntryActions}
         >
           <View style={styles.entryActionOverlay}>
-            <Pressable style={StyleSheet.absoluteFill} onPress={closeEntryActions} />
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={closeEntryActions}
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
             <View style={styles.entryActionSheetWrap}>
               <LinearGradient
                 colors={theme.isDark ? ['rgba(44, 54, 69, 0.98)', 'rgba(26, 30, 41, 0.98)'] : [theme.cardSurfaceStrong, 'rgba(244, 238, 229, 0.98)']}
@@ -1155,7 +1210,12 @@ function JournalContent() {
                 </View>
 
                 <View style={styles.entryActionList}>
-                  <Pressable style={styles.entryActionButton} onPress={handleEditAction}>
+                  <Pressable
+                    style={styles.entryActionButton}
+                    onPress={handleEditAction}
+                    accessibilityRole="button"
+                    accessibilityLabel="Edit this reflection"
+                  >
                     <View style={styles.entryActionIconWrap}>
                       <MetallicIcon name="create-outline" size={18} variant="gold" />
                     </View>
@@ -1166,7 +1226,12 @@ function JournalContent() {
                     <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.32)" />
                   </Pressable>
 
-                  <Pressable style={[styles.entryActionButton, styles.entryActionButtonDanger]} onPress={handleDeleteAction}>
+                  <Pressable
+                    style={[styles.entryActionButton, styles.entryActionButtonDanger]}
+                    onPress={handleDeleteAction}
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete this reflection"
+                  >
                     <View style={[styles.entryActionIconWrap, styles.entryActionIconWrapDanger]}>
                       <Ionicons name="trash-outline" size={18} color="#F3A3A3" />
                     </View>
@@ -1178,7 +1243,12 @@ function JournalContent() {
                   </Pressable>
                 </View>
 
-                <Pressable style={styles.entryActionCancel} onPress={closeEntryActions}>
+                <Pressable
+                  style={styles.entryActionCancel}
+                  onPress={closeEntryActions}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel reflection options"
+                >
                   <Text style={styles.entryActionCancelText}>Cancel</Text>
                 </Pressable>
               </LinearGradient>
@@ -1449,6 +1519,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   emptyCard: { borderRadius: 24, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'transparent' : theme.cardSurfaceStrong },
   emptyTitle: { fontSize: 22, color: theme.textPrimary, marginBottom: 8, fontWeight: '700' },
   emptyDescription: { fontSize: 16, color: theme.textSecondary, textAlign: 'center', lineHeight: 26 },
+  emptyActionButton: { minHeight: 44, marginTop: 18, paddingHorizontal: 20, borderRadius: 22, borderWidth: 1, borderColor: theme.cardBorder, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.cardSurfaceStrong },
+  emptyActionText: { fontSize: 14, fontWeight: '700', color: theme.textPrimary },
 
   entryActionOverlay: {
     flex: 1,

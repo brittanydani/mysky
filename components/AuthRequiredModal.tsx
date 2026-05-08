@@ -79,7 +79,7 @@ export default function AuthRequiredModal({ visible }: Props) {
 
   const handleSendRecoveryCode = async () => {
     if (loading) return;
-    const trimmedEmail = recoveryEmail.trim();
+    const trimmedEmail = recoveryEmail.trim().toLowerCase();
 
     if (!trimmedEmail) {
       Alert.alert('Email required', 'Enter your email address to receive a recovery code.');
@@ -107,7 +107,7 @@ export default function AuthRequiredModal({ visible }: Props) {
 
   const handleCompleteRecovery = async () => {
     if (loading) return;
-    const trimmedEmail = recoveryEmail.trim();
+    const trimmedEmail = recoveryEmail.trim().toLowerCase();
 
     if (!trimmedEmail) {
       Alert.alert('Email required', 'Enter your email address to reset your password.');
@@ -168,7 +168,7 @@ export default function AuthRequiredModal({ visible }: Props) {
     try {
       if (mode === 'sign-up') {
         const result = await signUpAndEnsureSession({
-          email: email.trim(),
+          email: email.trim().toLowerCase(),
           password,
         });
         if (result.requiresEmailConfirmation) {
@@ -182,7 +182,7 @@ export default function AuthRequiredModal({ visible }: Props) {
         // If data.session exists, AuthContext SIGNED_IN fires and modal closes automatically
       } else {
         const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: email.trim().toLowerCase(),
           password,
         });
         if (error) throw error;

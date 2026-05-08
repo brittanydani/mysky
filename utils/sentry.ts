@@ -7,6 +7,7 @@
  */
 
 import * as Sentry from '@sentry/react-native';
+import { logger } from './logger';
 
 const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim() ?? '';
 
@@ -156,7 +157,7 @@ export function initSentry() {
     });
   } catch {
     // Native Sentry module not available (e.g. plugin not linked).
-    console.warn('[Sentry] Native module unavailable, error reporting disabled.');
+    logger.warn('[Sentry] Native module unavailable, error reporting disabled.');
   }
 }
 

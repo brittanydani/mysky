@@ -1028,7 +1028,11 @@ export default function HomeScreen() {
           {/* ── Engagement Nudge ── */}
           {dailyLoop && dailyLoop.streak.current >= 3 && dailyLoop.weeklyReflection.journalCount === 0 && (
             <Animated.View entering={FadeInDown.delay(900).duration(600)}>
-              <Pressable onPress={() => router.push('/(tabs)/sleep' as Href)}>
+              <Pressable
+                onPress={() => router.push('/(tabs)/sleep' as Href)}
+                accessibilityRole="button"
+                accessibilityLabel="Add sleep or dream signal"
+              >
                 <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
                   <LinearGradient
                     pointerEvents="none"
@@ -1052,7 +1056,11 @@ export default function HomeScreen() {
           {/* ── Birth Time Nudge ── */}
           {userChart?.birthData?.hasUnknownTime && dailyLoop && dailyLoop.streak.totalCheckIns >= 3 && (
             <Animated.View entering={FadeInDown.delay(920).duration(600)}>
-              <Pressable onPress={() => setShowEditBirth(true)}>
+              <Pressable
+                onPress={() => setShowEditBirth(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Edit birth time"
+              >
                 <VelvetGlassSurface style={styles.weeklyCard} intensity={20}>
                   <LinearGradient
                     pointerEvents="none"
@@ -1075,7 +1083,11 @@ export default function HomeScreen() {
 
           {!isPremium && dailyLoop?.weeklyReflection?.hasEnoughData && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
-              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+              <Pressable
+                onPress={() => router.push('/(tabs)/premium' as Href)}
+                accessibilityRole="button"
+                accessibilityLabel="View Deeper Sky"
+              >
                 <VelvetGlassSurface style={styles.premiumCard} intensity={20}>
                   <LinearGradient
                     pointerEvents="none"
@@ -1102,7 +1114,11 @@ export default function HomeScreen() {
           )}
           {!isPremium && !dailyLoop?.weeklyReflection?.hasEnoughData && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
-              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+              <Pressable
+                onPress={() => router.push('/(tabs)/premium' as Href)}
+                accessibilityRole="button"
+                accessibilityLabel="View Deeper Sky"
+              >
                 <VelvetGlassSurface style={styles.premiumCard} intensity={20}>
                   <LinearGradient
                     pointerEvents="none"

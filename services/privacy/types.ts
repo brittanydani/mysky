@@ -68,9 +68,22 @@ export interface LawfulBasisAuditReport {
 export interface ExportPackage {
   charts: any[];
   journalEntries: any[];
+  relationshipCharts: any[];
+  sleepEntries: any[];
+  checkIns: any[];
   settings: any | null;
   consentRecord: any;
   lawfulBasisRecords: LawfulBasisRecord[];
+  selfKnowledgeProfiles: any[];
+  userPreferences: any[];
+  dailyReflections: any[];
+  somaticEntries: any[];
+  triggerEvents: any[];
+  relationshipPatterns: any[];
+  insightHistory: any[];
+  insightState: Record<string, any[]>;
+  dreamEngineData: Record<string, any[]>;
+  rawSupabaseTables: Partial<Record<string, any[]>>;
   asyncStorageData?: Record<string, string>;
   exportedAt: string;
 }
@@ -91,9 +104,20 @@ export interface AccessResult {
   dataInventory: {
     chartsCount: number;
     journalEntriesCount: number;
+    relationshipChartsCount: number;
+    sleepEntriesCount: number;
+    checkInsCount: number;
+    selfKnowledgeProfilesCount: number;
+    userPreferencesCount: number;
+    dailyReflectionsCount: number;
+    somaticEntriesCount: number;
+    triggerEventsCount: number;
+    relationshipPatternsCount: number;
+    insightRecordsCount: number;
     settingsPresent: boolean;
     consentRecordPresent: boolean;
     lawfulBasisRecordsCount: number;
+    supabaseTableCounts: Record<string, number>;
     asyncStorageKeysCount: number;
   };
   completedAt: string;

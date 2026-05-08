@@ -933,18 +933,18 @@ export default function ChartScreen() {
           color={PALETTE.titanium}
           style={{ opacity: 0.3, marginBottom: 24 }}
         />
-        <Text style={styles.loadingText as TextStyle}>NO GENESIS ARCHIVE FOUND.</Text>
+        <Text style={styles.loadingText as TextStyle}>Birth profile not set up yet</Text>
         <Text style={[styles.wheelHint as TextStyle, { paddingHorizontal: 24, marginTop: 12 }]}> 
-          Set up your birth profile to unlock chart context, reflective prompts, and personalized trend views across MySky.
+          Add your birth date, time, and place to create your chart and unlock personalized context across MySky.
         </Text>
         <Pressable
           style={styles.goHomeBtn as ViewStyle}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-            router.replace('/(tabs)/home' as Href);
+            router.replace('/onboarding/birth' as Href);
           }}
           accessibilityRole="button"
-          accessibilityLabel="Initialize Genesis"
+          accessibilityLabel="Set up birth profile"
         >
           <VelvetGlassSurface style={styles.initBtnGlass as ViewStyle} intensity={25}>
             <MetallicText style={styles.goHomeText as TextStyle} color={PALETTE.titanium}>
@@ -1030,6 +1030,9 @@ export default function ChartScreen() {
                 <Pressable
                   onPress={() => { Haptics.selectionAsync().catch(() => {}); setActiveOverlays([]); }}
                   style={[styles.personChip, activeOverlays.length === 0 && styles.personChipActive]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Show your chart only"
+                  accessibilityState={{ selected: activeOverlays.length === 0 }}
                 >
                   <Text style={[styles.personChipText, activeOverlays.length === 0 && styles.personChipTextActive]}>YOU</Text>
                 </Pressable>
@@ -1041,6 +1044,10 @@ export default function ChartScreen() {
                       onPress={() => handleSelectOverlay(person)}
                       onLongPress={() => { Vibration.vibrate(50); handleDeletePerson(person); }}
                       style={[styles.personChip, isActive && styles.personChipActive]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Show synastry with ${person.name}`}
+                      accessibilityHint="Long press to delete this relationship overlay."
+                      accessibilityState={{ selected: isActive }}
                     >
                       <Text style={[styles.personChipText, isActive && styles.personChipTextActive]} numberOfLines={1}>
                         {person.name.toUpperCase()}
@@ -1051,6 +1058,8 @@ export default function ChartScreen() {
                 <Pressable
                   onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}); setShowRelTypePicker(true); }}
                   style={styles.addSynastryBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add relationship overlay"
                 >
                   <MetallicIcon name="add" size={20} color={PALETTE.gold} />
                 </Pressable>
@@ -2085,11 +2094,18 @@ export default function ChartScreen() {
                 key={type}
                 style={styles.relTypeOption}
                 onPress={() => handleAddPerson(type)}
+                accessibilityRole="button"
+                accessibilityLabel={`Add ${RELATIONSHIP_LABELS[type].toLowerCase()} chart`}
               >
                 <Text style={styles.relTypeOptionText}>{RELATIONSHIP_LABELS[type]}</Text>
               </Pressable>
             ))}
-            <Pressable style={styles.relTypeCancelBtn} onPress={() => setShowRelTypePicker(false)}>
+            <Pressable
+              style={styles.relTypeCancelBtn}
+              onPress={() => setShowRelTypePicker(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel adding relationship overlay"
+            >
               <Text style={styles.relTypeCancelText}>Cancel</Text>
             </Pressable>
           </View>

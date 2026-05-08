@@ -62,10 +62,9 @@ describe('revenueCatService.getActiveEntitlement', () => {
     expect(revenueCatService.getActiveEntitlement(makeCustomerInfo([]))).toBeNull();
   });
 
-  it('returns first active entitlement for unknown keys as fallback', () => {
+  it('returns null for unknown keys', () => {
     const info = makeCustomerInfo(['some_other_entitlement']);
-    const entitlement = revenueCatService.getActiveEntitlement(info);
-    expect(entitlement?.identifier).toBe('some_other_entitlement');
+    expect(revenueCatService.getActiveEntitlement(info)).toBeNull();
   });
 });
 

@@ -18,6 +18,7 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -46,6 +47,7 @@ import {
 } from '../services/insights/reflectionProfileSync';
 
 const MAX_TOP = 5;
+const MAX_CUSTOM_VALUE_LENGTH = 36;
 const MAP_TOP_ANCHOR_WEIGHTS = [4.6, 4.1, 3.6, 3.1, 2.6];
 const MAP_SELECTED_WEIGHT = 0.35;
 
@@ -100,6 +102,10 @@ function mergeValueReflectionAnswers(sealedAnswers: ReflectionAnswer[], draftAns
   for (const answer of sealedAnswers) { if (answer.category === 'values') merged.set(buildReflectionAnswerKey(answer), answer); }
   for (const answer of draftAnswers) { if (answer.category === 'values') merged.set(buildReflectionAnswerKey(answer), answer); }
   return [...merged.values()];
+}
+
+function normalizeCustomValue(raw: string): string {
+  return raw.trim().replace(/\s+/g, ' ');
 }
 
 function buildDynamicMapValues(allValues: string[], selected: string[], topFive: string[], answers: ValueReflectionAnswer[]): string[] {
@@ -186,6 +192,9 @@ export default function CoreValuesScreen() {
   const [state, setState] = useState<State>({ selected: [], topFive: [] });
   const [saved, setSaved] = useState(false);
   const [valueReflectionAnswers, setValueReflectionAnswers] = useState<ValueReflectionAnswer[]>([]);
+  const [isAddingCustomValue, setIsAddingCustomValue] = useState(false);
+  const [customValueDraft, setCustomValueDraft] = useState('');
+  const [customValueError, setCustomValueError] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -207,6 +216,8 @@ export default function CoreValuesScreen() {
     }, []),
   );
 
+  const allValueOptions = useMemo(() => [...ALL_VALUES, ...(state.customValues ?? []).filter(v => !ALL_VALUES.includes(v))], [state.customValues]);
+
   const handleSave = async () => {
     try {
       await saveSelfKnowledgeProfile('core_values', state);
@@ -215,7 +226,38 @@ export default function CoreValuesScreen() {
     } catch { Alert.alert('Error', 'Could not save your values. Please try again.'); }
   };
 
-  const allValueOptions = useMemo(() => [...ALL_VALUES, ...(state.customValues ?? []).filter(v => !ALL_VALUES.includes(v))], [state.customValues]);
+  const handleAddCustomValue = () => {
+    const value = normalizeCustomValue(customValueDraft);
+    if (!value) {
+      setCustomValueError('Enter a value name first.');
+      return;
+    }
+
+    const exists = allValueOptions.some((option) => option.toLowerCase() === value.toLowerCase());
+    if (exists) {
+      setCustomValueError('That value is already in your list.');
+      return;
+    }
+
+    Haptics.selectionAsync().catch(() => {});
+    setState((prev) => ({
+      ...prev,
+      customValues: [...(prev.customValues ?? []), value],
+      selected: [...prev.selected, value],
+    }));
+    setCustomValueDraft('');
+    setCustomValueError(null);
+    setIsAddingCustomValue(false);
+    setSaved(false);
+  };
+
+  const handleCancelCustomValue = () => {
+    Haptics.selectionAsync().catch(() => {});
+    setCustomValueDraft('');
+    setCustomValueError(null);
+    setIsAddingCustomValue(false);
+  };
+
   const mapValues = useMemo(() => buildDynamicMapValues(allValueOptions, state.selected, state.topFive, valueReflectionAnswers), [allValueOptions, state.selected, state.topFive, valueReflectionAnswers]);
   const activeParadoxes = useMemo(() => VALUE_PARADOXES.filter(p => mapValues.includes(p.pair[0]) && mapValues.includes(p.pair[1])), [mapValues]);
 
@@ -241,7 +283,7 @@ export default function CoreValuesScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {state.topFive.length > 0 && <Animated.View entering={FadeInDown.delay(80)}><CoreValuesConstellation mapValues={mapValues} activeParadoxes={activeParadoxes} /></Animated.View>}
 
-          <Text style={styles.sectionLabel}>TAP TO SELECT · HOLD BUILT-INS TO MARK TOP 5</Text>
+          <Text style={styles.sectionLabel}>TAP TO SELECT · HOLD SELECTED VALUES TO MARK TOP 5</Text>
 
           <Animated.View entering={FadeInDown.delay(200)} style={styles.chipsWrap}>
             {allValueOptions.map((value) => {
@@ -274,13 +316,58 @@ export default function CoreValuesScreen() {
                 </Pressable>
               );
             })}
-            <Pressable
-              style={[styles.chip, styles.addCustomChip]}
-              onPress={() => Alert.alert('Custom values', 'Custom values are not available on this screen yet.')}
-            >
-              <Ionicons name="add-outline" size={14} color={PALETTE.gold} style={{ marginRight: 6 }} />
-              <MetallicText style={styles.chipText} color={PALETTE.gold}>Custom value</MetallicText>
-            </Pressable>
+            {isAddingCustomValue ? (
+              <View style={[styles.customValueEditor, styles.velvetBorder]}>
+                <TextInput
+                  style={styles.customValueInput}
+                  value={customValueDraft}
+                  onChangeText={(value) => {
+                    setCustomValueDraft(value);
+                    if (customValueError) setCustomValueError(null);
+                  }}
+                  placeholder="Value name"
+                  placeholderTextColor="rgba(255,255,255,0.35)"
+                  maxLength={MAX_CUSTOM_VALUE_LENGTH}
+                  autoFocus
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  selectionColor={PALETTE.gold}
+                  returnKeyType="done"
+                  onSubmitEditing={handleAddCustomValue}
+                  accessibilityLabel="Custom value name"
+                />
+                <Pressable
+                  style={styles.customValueIconButton}
+                  onPress={handleAddCustomValue}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add custom value"
+                >
+                  <Ionicons name="checkmark-outline" size={18} color={PALETTE.gold} />
+                </Pressable>
+                <Pressable
+                  style={styles.customValueIconButton}
+                  onPress={handleCancelCustomValue}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel custom value"
+                >
+                  <Ionicons name="close-outline" size={18} color="rgba(255,255,255,0.55)" />
+                </Pressable>
+                {customValueError && <Text style={styles.customValueError}>{customValueError}</Text>}
+              </View>
+            ) : (
+              <Pressable
+                style={[styles.chip, styles.addCustomChip]}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setIsAddingCustomValue(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Add custom value"
+              >
+                <Ionicons name="add-outline" size={14} color={PALETTE.gold} style={{ marginRight: 6 }} />
+                <MetallicText style={styles.chipText} color={PALETTE.gold}>Custom value</MetallicText>
+              </Pressable>
+            )}
           </Animated.View>
 
           {mapValues.length > 0 && (
@@ -364,6 +451,43 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   chipText: { fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
   chipTextSelected: { color: theme.background, fontWeight: '800' },
   chipTextTop: { color: theme.background, fontWeight: '800' },
+  customValueEditor: {
+    flexBasis: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  customValueInput: {
+    flex: 1,
+    minWidth: 160,
+    minHeight: 40,
+    color: theme.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
+  customValueIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  customValueError: {
+    flexBasis: '100%',
+    color: theme.error,
+    fontSize: 12,
+    fontWeight: '600',
+  },
   constellationCard: { borderRadius: 28, padding: 24, marginBottom: 24, overflow: 'hidden' },
   constellationHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 18 },
   constellationTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },

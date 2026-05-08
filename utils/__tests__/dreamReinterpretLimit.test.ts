@@ -34,12 +34,12 @@ describe('getDreamReinterpretPerDreamLimit', () => {
   });
 
   it('returns the override limit for allowlisted emails', () => {
-    process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST = 'brithornick92@gmail.com';
-    expect(getDreamReinterpretPerDreamLimit('brithornick92@gmail.com')).toBe(5);
+    process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST = 'allowlisted@example.com';
+    expect(getDreamReinterpretPerDreamLimit('allowlisted@example.com')).toBe(5);
   });
 
   it('normalizes allowlisted emails before lookup', () => {
-    process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST = 'brithornick92@gmail.com';
-    expect(getDreamReinterpretPerDreamLimit('  Brithornick92@gmail.com  ')).toBe(5);
+    process.env.EXPO_PUBLIC_DREAM_REINTERPRET_ALLOWLIST = 'allowlisted@example.com';
+    expect(getDreamReinterpretPerDreamLimit('  Allowlisted@Example.com  ')).toBe(5);
   });
 });

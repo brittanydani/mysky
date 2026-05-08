@@ -112,12 +112,12 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>How does backup and restore work?</Text>
               <Text style={styles.answer}>
-                Premium users can create a <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>.msky</MetallicText> backup file and choose the destination with the system share sheet. Restore imports that file back onto a device and writes the data into your account-backed storage.
+                Deeper Sky includes portable <MetallicText color={PALETTE.atmosphere} style={styles.highlight}>.msky</MetallicText> backup files as a convenience feature. Separate from premium features, every user can request an account data export by contacting Brittany Apps at {SUPPORT_EMAIL}.
               </Text>
 
-              <Text style={styles.question}>Is MySky a therapy substitute?</Text>
+              <Text style={styles.question}>Is MySky professional advice or crisis support?</Text>
               <Text style={styles.answer}>
-                No. MySky is a self-reflection tool. It does not constitute therapy, counseling, or psychological diagnosis. If you are in crisis, please call or text <MetallicText color={PALETTE.gold} style={styles.highlight}>988</MetallicText> (US).
+                No. MySky is a self-reflection tool. It does not provide health care, therapy, counseling, psychological diagnosis, legal advice, financial advice, emergency monitoring, or crisis support.
               </Text>
 
               <Text style={styles.question}>Does MySky work offline?</Text>
@@ -142,7 +142,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>How do I delete my account?</Text>
               <Text style={styles.answer}>
-                {`Perform a Hard Reset first (Settings → Privacy & Data → Hard Reset) to erase all on-device data. Then email us at ${SUPPORT_EMAIL} to request deletion of your Supabase authentication account. We'll confirm deletion within 5 business days.`}
+                {`Use Delete Account in Settings to request deletion of your Supabase authentication account and synced account data. Hard Reset in Settings → Privacy & Data can also clear account-backed app data and local cache on this device. For help, contact Brittany Apps at ${SUPPORT_EMAIL}.`}
               </Text>
 
               <Text style={styles.question}>Can I use MySky on multiple devices?</Text>
@@ -182,7 +182,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>What is somatic body mapping?</Text>
               <Text style={styles.answer}>
-                Somatic body mapping lets you log where you feel emotions, stress, or tension in your body by tapping a body diagram. Over time, patterns emerge — for example, consistently feeling anxiety in your chest or tension in your shoulders. This is a self-awareness tool, not a medical or therapeutic diagnosis.
+                Somatic body mapping lets you log where you notice feelings, stress, or tension in your body by tapping a body diagram. Over time, you may see recurring self-reported patterns. This is a self-awareness tool, not a health care assessment, therapy, or diagnosis.
               </Text>
 
               <Text style={styles.question}>What is the nervous system trigger log?</Text>
@@ -197,12 +197,12 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>How do I export or share my birth chart?</Text>
               <Text style={styles.answer}>
-                Deeper Sky subscribers can export a PDF of their birth chart via the chart screen using the export button. Use your device's share sheet to send it to Files, email, AirDrop, or any app. Free users can take screenshots of their chart.
+                Deeper Sky subscribers can export a PDF of their birth chart via the chart screen using the export button. Use your device's share sheet to send it to Files, email, AirDrop, or any app. Account data export requests are available to all users by contacting {SUPPORT_EMAIL}.
               </Text>
 
               <Text style={styles.question}>What is the .msky backup file?</Text>
               <Text style={styles.answer}>
-                A .msky file is a portable backup export of your MySky data. Store it in iCloud Drive, a Files folder, or anywhere you keep important documents.
+                A .msky file is a portable backup file for supported MySky app data. Store it in iCloud Drive, a Files folder, or anywhere you keep important documents. It is separate from your right to request an account data export.
               </Text>
 
               <Text style={styles.question}>What platforms does MySky support?</Text>
@@ -217,7 +217,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>I'm having trouble signing in. What should I do?</Text>
               <Text style={styles.answer}>
-                {`Tap "Forgot Password" on the sign-in screen to receive a reset link. Make sure you're using the email address you registered with. If the issue persists, email us at ${SUPPORT_EMAIL} with your device model and iOS/Android version.`}
+                {`Tap "Forgot Password" on the sign-in screen to receive a recovery code. Make sure you're using the email address you registered with. If the issue persists, email us at ${SUPPORT_EMAIL} with your device model and iOS/Android version.`}
               </Text>
 
               <Text style={styles.question}>How do I report a bug or send feedback?</Text>

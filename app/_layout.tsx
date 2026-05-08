@@ -217,13 +217,13 @@ function RootLayout() {
 
   React.useEffect(() => {
     if (!configValidation.valid) {
-      console.error('[Config] Startup validation failed:', configValidation.errors);
+      logger.error('[Config] Startup validation failed:', configValidation.errors);
       SplashScreen.hideAsync().catch(() => {});
       return;
     }
 
     if (configValidation.warnings.length > 0) {
-      console.warn('[Config] Startup validation warnings:', configValidation.warnings);
+      logger.warn('[Config] Startup validation warnings:', configValidation.warnings);
     }
   }, [configValidation]);
 

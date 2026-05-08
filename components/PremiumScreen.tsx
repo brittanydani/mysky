@@ -11,6 +11,7 @@ import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { usePremium } from '../context/PremiumContext';
 import { config, LEGAL_URL } from '../constants/config';
 import { DEEPER_SKY_FEATURES, DEEPER_SKY_MARKETING } from '../services/premium/deeperSkyFeatures';
+import { revenueCatService } from '../services/premium/revenuecat';
 import { useThemedStyles } from '../context/ThemeContext';
 import { trackGrowthEvent } from '../services/growth/localAnalytics';
 import TermsOfServiceScreen from '../app/terms';
@@ -93,7 +94,7 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { isPremium, offerings, loading, purchase, restore } = usePremium();
+  const { isPremium, isReady, offerings, loading, purchase, restore } = usePremium();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
   const [restoring, setRestoring] = useState(false);
   const [activeLegalView, setActiveLegalView] = useState<'none' | 'terms' | 'privacy'>('none');
@@ -109,15 +110,8 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
   const findPackageForPlan = useCallback((plan: PlanType) => {
     if (!offerings) return null;
 
-    const identifiers = plan === 'monthly'
-      ? ['monthly', '$rc_monthly', 'mysky_monthly']
-      : ['annual', 'yearly', '$rc_annual', 'mysky_annual', 'mysky_yearly'];
-
-    return offerings.availablePackages.find((pkg) => {
-      const packageId = pkg.identifier.toLowerCase();
-      const productId = pkg.product.identifier.toLowerCase();
-      return identifiers.some((id) => packageId.includes(id) || productId.includes(id));
-    }) ?? null;
+    const packageType = plan === 'monthly' ? 'monthly' : 'annual';
+    return revenueCatService.getPackageByType(offerings, packageType);
   }, [offerings]);
 
   const resolvedTiers = React.useMemo(() => (
@@ -223,6 +217,16 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
 
   if (activeLegalView === 'privacy') {
     return <PrivacyPolicyScreen onBack={() => setActiveLegalView('none')} />;
+  }
+
+  if (!isReady) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <SkiaDynamicCosmos />
+        <ActivityIndicator color={PALETTE.pureWhite} />
+        <Text style={styles.loadingText}>Checking subscription...</Text>
+      </View>
+    );
   }
 
   // ── Active Premium State ──
@@ -349,7 +353,8 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
                     isSelected && styles.pricingCardSelected,
                   ]}
                   accessibilityRole="radio"
-                  accessibilityState={{ selected: isSelected }}
+                  accessibilityLabel={`${tier.name}, ${tier.price}`}
+                  accessibilityState={{ selected: isSelected, disabled: loading || restoring }}
                 >
                   {isAnnual ? (
                     <View style={[styles.bestValueBadge, !isSelected && styles.bestValueBadgeMuted]}>
@@ -424,7 +429,14 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
 
             {/* Stark Editorial Footnote Bar */}
             <View style={styles.legalBar}>
-              <Pressable onPress={handleRestore} disabled={restoring || loading} hitSlop={12}>
+              <Pressable
+                onPress={handleRestore}
+                disabled={restoring || loading}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="Restore purchases"
+                accessibilityState={{ disabled: restoring || loading, busy: restoring }}
+              >
                 {restoring ? (
                   <ActivityIndicator size="small" color={PALETTE.textMuted} />
                 ) : (
@@ -432,11 +444,25 @@ export default function PremiumScreen({ onClose, analyticsSource, analyticsExper
                 )}
               </Pressable>
               <Text style={styles.legalBarDot}>{"·"}</Text>
-              <Pressable onPress={() => navigateToLegal('/terms')} disabled={loading} hitSlop={12}>
+              <Pressable
+                onPress={() => navigateToLegal('/terms')}
+                disabled={loading}
+                hitSlop={12}
+                accessibilityRole="link"
+                accessibilityLabel="Terms of Use"
+                accessibilityState={{ disabled: loading }}
+              >
                 <Text style={styles.legalBarLink}>{"Terms"}</Text>
               </Pressable>
               <Text style={styles.legalBarDot}>{"·"}</Text>
-              <Pressable onPress={() => navigateToLegal('/privacy')} disabled={loading} hitSlop={12}>
+              <Pressable
+                onPress={() => navigateToLegal('/privacy')}
+                disabled={loading}
+                hitSlop={12}
+                accessibilityRole="link"
+                accessibilityLabel="Privacy Policy"
+                accessibilityState={{ disabled: loading }}
+              >
                 <Text style={styles.legalBarLink}>{"Privacy"}</Text>
               </Pressable>
             </View>
@@ -455,6 +481,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: PALETTE.bg,
+  },
+  centered: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 14,
+  },
+  loadingText: {
+    color: PALETTE.textMuted,
+    fontSize: 14,
+    fontWeight: '600',
   },
   safeArea: {
     flex: 1,

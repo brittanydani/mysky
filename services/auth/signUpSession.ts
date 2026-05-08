@@ -17,7 +17,7 @@ export async function signUpAndEnsureSession({
   email,
   password,
 }: SignUpAndEnsureSessionParams): Promise<SignUpAndEnsureSessionResult> {
-  const normalizedEmail = email.trim();
+  const normalizedEmail = email.trim().toLowerCase();
 
   const { data, error } = await supabase.auth.signUp({
     email: normalizedEmail,

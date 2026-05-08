@@ -36,6 +36,32 @@ describe('requestPasswordRecoveryCode', () => {
       'Password recovery is temporarily unavailable.',
     );
   });
+
+  it('throws with the response body error when invoke returns data.error', async () => {
+    mockInvoke.mockResolvedValue({ data: { error: 'Password recovery is not configured.' }, error: null });
+
+    await expect(requestPasswordRecoveryCode('a@b.com')).rejects.toThrow(
+      'Password recovery is not configured.',
+    );
+  });
+
+  it('uses response body details for generic edge function errors', async () => {
+    mockInvoke.mockResolvedValue({
+      data: null,
+      error: {
+        message: 'Edge Function returned a non-2xx status code',
+        context: {
+          clone: () => ({
+            json: async () => ({ error: 'Password recovery is temporarily unavailable.' }),
+          }),
+        },
+      },
+    });
+
+    await expect(requestPasswordRecoveryCode('a@b.com')).rejects.toThrow(
+      'Password recovery is temporarily unavailable.',
+    );
+  });
 });
 
 describe('completePasswordRecovery', () => {
@@ -66,6 +92,14 @@ describe('completePasswordRecovery', () => {
     await expect(
       completePasswordRecovery({ email: 'a@b.com', code: 'bad', newPassword: 'x' }),
     ).rejects.toThrow('Invalid code');
+  });
+
+  it('throws with verify response body error on failure', async () => {
+    mockInvoke.mockResolvedValue({ data: { error: 'That code is invalid or expired.' }, error: null });
+
+    await expect(
+      completePasswordRecovery({ email: 'a@b.com', code: 'bad', newPassword: 'x' }),
+    ).rejects.toThrow('That code is invalid or expired.');
   });
 
   it('throws fallback message when error has no readable message', async () => {

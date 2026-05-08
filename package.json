@@ -1,7 +1,7 @@
 {
   "name": "mysky",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "scripts": {
     "start": "expo start",
     "start:lowmem": "EXPO_NO_TELEMETRY=1 NODE_OPTIONS=--max-old-space-size=3072 expo start --clear",
@@ -17,7 +17,7 @@
     "web": "expo start --web",
     "update:preview": "eas update --platform ios --channel preview",
     "update:production": "eas update --platform ios --channel production",
-    "update:production:live102": "EXPO_OTA_APP_VERSION=1.0.2 EXPO_OTA_RUNTIME_VERSION=1.0.2 eas update --platform ios --channel production --message \"Insight engine update for 1.0.2\"",
+    "update:production:live103": "EXPO_OTA_APP_VERSION=1.0.3 EXPO_OTA_RUNTIME_VERSION=1.0.3 eas update --platform ios --channel production --message \"Production OTA update for 1.0.3\"",
     "lint": "expo lint",
     "spellcheck": "cspell lint . --no-progress",
     "test": "jest",

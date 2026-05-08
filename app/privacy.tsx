@@ -82,9 +82,9 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
           <View style={[styles.glassSection, styles.velvetBorder]}>
             <LinearGradient colors={[PALETTE.slateMid, PALETTE.slateDeep]} style={StyleSheet.absoluteFill} />
             <Text style={styles.sectionTitle}>Our Framework</Text>
-            <Text style={styles.paragraph}>
-              MySky is built on <MetallicText color={PALETTE.atmosphere} style={styles.boldText}>Privacy by Design</MetallicText>. We do not collect advertising IDs, perform cross-app tracking, or sell your data. Your account data belongs to you and is stored in infrastructure protected by row-level access controls.
-            </Text>
+              <Text style={styles.paragraph}>
+                MySky is operated by Brittany Apps and built on <MetallicText color={PALETTE.atmosphere} style={styles.boldText}>privacy by design</MetallicText>. We do not collect advertising IDs, perform cross-app tracking, or sell your data. Your account data belongs to you and is stored in infrastructure protected by row-level access controls.
+              </Text>
           </View>
 
           <View style={styles.section}>
@@ -181,15 +181,15 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             </View>
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Cloud Sync Data</Text>
-              <Text style={styles.paragraph}>Your data automatically syncs to Supabase to prevent data loss. You can restore your data continuously across all your personal devices just by logging in.</Text>
+              <Text style={styles.paragraph}>Your account data syncs to Supabase so it can be available across your personal devices after sign-in. Local cache and queued writes may still depend on device storage and network availability.</Text>
             </View>
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Account Deletion</Text>
-              <Text style={styles.paragraph}>You can request full deletion of your Supabase auth account through the app or by emailing us. This deletes all your cloud records and purges your email, credentials, and synced history from Supabase.</Text>
+              <Text style={styles.paragraph}>You can request deletion of your Supabase auth account through Delete Account in Settings or by contacting Brittany Apps at {SUPPORT_EMAIL}. Account deletion removes synced account records controlled by MySky, subject to any records we are required or permitted to retain for legal, security, or transaction reasons.</Text>
             </View>
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Crash & Diagnostic Logs</Text>
-              <Text style={styles.paragraph}>Sentry crash reports are retained for up to 90 days and then automatically purged. These logs contain no personally identifiable information.</Text>
+              <Text style={styles.paragraph}>Sentry crash reports are retained for up to 90 days and then automatically purged. These reports are configured to avoid journal text, birth data, location, and account identity.</Text>
             </View>
           </View>
 
@@ -207,11 +207,11 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
               </View>
               <View style={styles.dataBlock}>
                 <Text style={styles.subSectionTitle}>Right to Export</Text>
-                <Text style={styles.paragraph}>Deeper Sky subscribers can export a .msky backup via the app. Free users can export a PDF birth chart. Additional export options are in development.</Text>
+                <Text style={styles.paragraph}>All users can request an export of their account data by contacting Brittany Apps at {SUPPORT_EMAIL}. In-app premium exports, such as chart PDFs or portable backup files, are convenience features and do not limit your data portability rights.</Text>
               </View>
               <View style={styles.dataBlock}>
                 <Text style={styles.subSectionTitle}>Right to Delete</Text>
-                <Text style={styles.paragraph}>Perform a Hard Reset in Privacy Settings to permanently delete all on-device data. Email us to delete your Supabase auth account and remove your credentials from our systems.</Text>
+                <Text style={styles.paragraph}>Use Delete Account in Settings to delete your Supabase auth account and synced account data, or contact Brittany Apps at {SUPPORT_EMAIL} for help with a deletion request. Hard Reset in Privacy Settings deletes app data held in account-backed storage and local cache on this device.</Text>
               </View>
               <View style={styles.dataBlock}>
                 <Text style={styles.subSectionTitle}>Right to Correct</Text>
@@ -246,7 +246,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <Text style={styles.sectionLabel}>INTERNATIONAL USERS</Text>
             <View style={styles.dataBlock}>
               <Text style={styles.paragraph}>MySky is operated from the United States. By using the app, users outside the US acknowledge that authentication credentials and account data are processed via Supabase infrastructure, which may operate in the US.</Text>
-              <Text style={styles.paragraph}>If you are located in the European Economic Area (EEA) or United Kingdom, you have rights under GDPR — including the right to access, rectify, erase, restrict processing, and data portability. Our legal basis for processing your email and auth credentials is contractual necessity. Contact us to exercise any GDPR rights.</Text>
+              <Text style={styles.paragraph}>If you are located in the European Economic Area (EEA) or United Kingdom, you have rights under GDPR — including the right to access, rectify, erase, restrict processing, and data portability. Our legal basis for processing your email and auth credentials is contractual necessity. Contact Brittany Apps at {SUPPORT_EMAIL} to exercise any GDPR rights.</Text>
             </View>
           </View>
 

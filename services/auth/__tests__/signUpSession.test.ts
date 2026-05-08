@@ -29,10 +29,10 @@ describe('signUpAndEnsureSession', () => {
     expect(mockSignIn).not.toHaveBeenCalled();
   });
 
-  it('normalizes email (trims whitespace) before passing to supabase', async () => {
+  it('normalizes email before passing to supabase', async () => {
     mockSignUp.mockResolvedValue({ data: { session: fakeSession, user: fakeUser }, error: null });
 
-    await signUpAndEnsureSession({ email: '  test@example.com  ', password: 'pass' });
+    await signUpAndEnsureSession({ email: '  Test@Example.com  ', password: 'pass' });
 
     expect(mockSignUp).toHaveBeenCalledWith({
       email: 'test@example.com',
