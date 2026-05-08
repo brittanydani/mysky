@@ -363,17 +363,17 @@ export function generateEmotionalProfile(chart: NatalChart): EmotionalProfile {
     healingThemes = `Your reflective growth is shaped by your Moon in ${moonSign} and the house it occupies — attending to your emotional needs in that life area is where growth happens.`;
   }
 
-  // Attachment style (Moon + Venus + 4th house)
+  // Relationship safety pattern (Moon + Venus + 4th house)
   const moonVenus = hasAspectBetween(chart, 'Moon', 'Venus');
   let attachmentStyle: string;
   if (moonVenus && moonVenus.type.nature === 'Harmonious') {
-    attachmentStyle = 'Moon and Venus in harmony suggests a generally secure attachment pattern — you can both receive and give emotional warmth naturally.';
+    attachmentStyle = 'Moon and Venus in harmony suggests an easier flow between giving and receiving emotional warmth.';
   } else if (moonVenus && moonVenus.type.nature === 'Challenging') {
     attachmentStyle = 'Moon and Venus in tension may create a push-pull between emotional needs and relationship desires — you may sometimes struggle to reconcile what you need with what you want.';
   } else if (house4Planets.length > 0) {
-    attachmentStyle = `${house4Planets.join(' and ')} in your 4th house color your attachment patterns, shaping how you experienced safety and belonging in early life.`;
+    attachmentStyle = `${house4Planets.join(' and ')} in your 4th house color your relationship safety patterns, shaping how you experienced safety and belonging in early life.`;
   } else {
-    attachmentStyle = `Your attachment tendencies are rooted in your Moon in ${moonSign} — ${moonEl === 'Water' ? 'deep emotional bonding' : moonEl === 'Fire' ? 'independence with bursts of closeness' : moonEl === 'Earth' ? 'steady, loyal connection' : 'intellectual companionship'} forms the basis of how you attach.`;
+    attachmentStyle = `Your relationship safety pattern is shaped by your Moon in ${moonSign} — ${moonEl === 'Water' ? 'deep emotional bonding' : moonEl === 'Fire' ? 'independence with bursts of closeness' : moonEl === 'Earth' ? 'steady, loyal connection' : 'intellectual companionship'} may be part of how closeness feels for you.`;
   }
 
   const synthesis = [emotionalStyle, coreFears, defenseMechanisms, attachmentStyle].join(' ');

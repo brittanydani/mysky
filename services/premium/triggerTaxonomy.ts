@@ -66,7 +66,7 @@ export const TRIGGER_TAXONOMY: Record<ShadowTrigger, TriggerTaxonomyEntry> = {
   abandonment: {
     trigger: 'abandonment',
     coreDefinition:
-      'A deep fear or experience of being left behind, forgotten, or deemed unworthy of someone\'s continued presence. Often rooted in early attachment disruption.',
+      'A deep fear or experience of being left behind, forgotten, or deemed unworthy of someone\'s continued presence. Often connected to earlier experiences of unreliable support.',
     interpretationFrame:
       'Dreams involving abandonment may reflect an active or dormant fear that connection is conditional — that the people you depend on could leave without warning.',
     defaultValence: -1,
@@ -144,7 +144,7 @@ export const TRIGGER_TAXONOMY: Record<ShadowTrigger, TriggerTaxonomyEntry> = {
     coreDefinition:
       'The fear of being seen in a way that feels unsafe — of having private, vulnerable, or imperfect parts of the self revealed without consent.',
     interpretationFrame:
-      'Exposure dreams may reflect anxiety about being "found out" — that something you guard internally could become visible to others.',
+      'Exposure dreams may reflect worry about being "found out" — that something you guard internally could become visible to others.',
     defaultValence: -1,
     defaultActivation: 1,
     associatedBranches: ['freeze', 'flight'],
@@ -161,7 +161,7 @@ export const TRIGGER_TAXONOMY: Record<ShadowTrigger, TriggerTaxonomyEntry> = {
   control: {
     trigger: 'control',
     coreDefinition:
-      'The need to manage outcomes, environments, or other people\'s behavior — often driven by underlying anxiety that without control, things will fall apart.',
+      'The need to manage outcomes, environments, or other people\'s behavior — often driven by concern that without control, things may fall apart.',
     interpretationFrame:
       'Control themes in dreams may surface when something feels unpredictable or beyond your influence. The need to control often masks a deeper fear underneath.',
     defaultValence: -1,
@@ -199,7 +199,7 @@ export const TRIGGER_TAXONOMY: Record<ShadowTrigger, TriggerTaxonomyEntry> = {
   helplessness: {
     trigger: 'helplessness',
     coreDefinition:
-      'The experience of being unable to act, protect yourself, or change an outcome. A core feature of traumatic overwhelm.',
+      'The experience of being unable to act, protect yourself, or change an outcome. This can point to moments when choice or support felt unavailable.',
     interpretationFrame:
       'Helplessness in dreams may echo moments when your options felt foreclosed — when no amount of effort could change what was happening.',
     defaultValence: -1,
@@ -289,7 +289,7 @@ export const TRIGGER_TAXONOMY: Record<ShadowTrigger, TriggerTaxonomyEntry> = {
       'What support would help you hold this boundary more firmly?',
     ],
     evidenceHints: ['forced actions', 'inability to say no', 'violation', 'coercion', 'trapped with someone'],
-    cautionNote: 'This trigger may relate to trauma. Language must be especially gentle and non-prescriptive. Never minimize.',
+    cautionNote: 'This trigger may relate to sensitive experiences. Language must be especially gentle and non-prescriptive. Never minimize.',
   },
 
   worthiness: {
@@ -335,7 +335,7 @@ export const TRIGGER_TAXONOMY: Record<ShadowTrigger, TriggerTaxonomyEntry> = {
     coreDefinition:
       'The experience or fear of falling short — of not meeting a standard that feels essential to identity or survival.',
     interpretationFrame:
-      'Failure in dreams may reflect real performance anxiety — or it may point to an impossible standard you\'re holding yourself to without realizing it.',
+      'Failure in dreams may reflect performance pressure — or it may point to an impossible standard you\'re holding yourself to without realizing it.',
     defaultValence: -1,
     defaultActivation: 1,
     associatedBranches: ['flight', 'freeze'],
@@ -409,7 +409,7 @@ export const TRIGGER_TAXONOMY: Record<ShadowTrigger, TriggerTaxonomyEntry> = {
   unpredictability: {
     trigger: 'unpredictability',
     coreDefinition:
-      'The distress of not knowing what will happen next. For some nervous systems, uncertainty itself is the threat — even when the actual outcome may be neutral or positive.',
+      'The distress of not knowing what might happen next. For some nervous systems, uncertainty itself can feel threatening — even when the actual outcome may be neutral or positive.',
     interpretationFrame:
       'Unpredictability in dreams may surface when your life feels uncertain — when you can\'t plan, predict, or prepare for what\'s coming.',
     defaultValence: -1,

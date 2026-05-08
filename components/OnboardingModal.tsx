@@ -286,6 +286,7 @@ export default function OnboardingModal({
 
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
   const [searchingLocation, setSearchingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -590,6 +591,7 @@ export default function OnboardingModal({
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
 
     setLocationSelected(false);
+    setLocationError(null);
 
     const q = query.trim();
     if (q.length < 3) {
@@ -611,15 +613,26 @@ export default function OnboardingModal({
           }
         );
         if (!response.ok) {
-          throw new Error(`Nominatim error ${response.status}`);
+          setLocationSuggestions([]);
+          setLocationError('Location lookup is unavailable. Check your connection and try again.');
+          return;
         }
         const data = await response.json();
 
         if (!controller.signal.aborted) {
-          setLocationSuggestions(Array.isArray(data) ? data : []);
+          const suggestions = Array.isArray(data) ? data : [];
+          setLocationSuggestions(suggestions);
+          setLocationError(
+            suggestions.length === 0
+              ? 'No matching locations found. Try a nearby city or a more specific search.'
+              : null,
+          );
         }
       } catch {
-        setLocationSuggestions([]);
+        if (!controller.signal.aborted) {
+          setLocationSuggestions([]);
+          setLocationError('Location lookup failed. Check your connection and try again.');
+        }
       } finally {
         setSearchingLocation(false);
       }
@@ -633,6 +646,7 @@ export default function OnboardingModal({
     setLocationLat(parseFloat(suggestion.lat));
     setLocationLon(parseFloat(suggestion.lon));
     setLocationSelected(true);
+    setLocationError(null);
     setLocationSuggestions([]);
     Keyboard.dismiss();
   };
@@ -1219,6 +1233,11 @@ export default function OnboardingModal({
                     >
                       <MetallicText style={st.unknownTimeText} variant="gold">I don't know my exact birth time</MetallicText>
                     </Pressable>
+                    {hasUnknownTime && (
+                      <Text style={st.unknownTimeNote}>
+                        MySky will use solar noon. Rising sign and houses stay hidden until you add a birth time.
+                      </Text>
+                    )}
                   </Animated.View>
                   <Animated.View entering={FadeInUp.delay(400).duration(600)}>
                     <BottomNav canGoBack={true} isNextDisabled={false} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleTimeContinue} />
@@ -1285,6 +1304,9 @@ export default function OnboardingModal({
                           );
                         })}
                       </BlurView>
+                    )}
+                    {locationError && (
+                      <Text style={st.locationErrorText}>{locationError}</Text>
                     )}
 
                     {locationSelected && (
@@ -1749,6 +1771,14 @@ const st = StyleSheet.create({
     fontWeight: '600',
     color: PREMIUM.titanium,
   },
+  unknownTimeNote: {
+    color: PREMIUM.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    marginTop: 8,
+    paddingHorizontal: 20,
+  },
   timeDisplayButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1864,6 +1894,13 @@ const st = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
     color: PREMIUM.textMuted,
+  },
+  locationErrorText: {
+    color: '#FF6B6B',
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 12,
+    textAlign: 'center',
   },
   locationConfirmed: {
     flexDirection: 'row',

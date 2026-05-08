@@ -103,7 +103,7 @@ const ELEMENTAL_INSIGHT_LIBRARY: Record<string, Record<string, { label: string; 
     'core-self': {
       label: '🔥 Elemental Insight — Fire',
       signList: '(Aries · Leo · Sagittarius)',
-      text: `Fire shapes identity through vitality and expression. You experience yourself most clearly when you are actively engaged with life rather than observing it from a distance. Confidence grows through action, creativity, and taking up space authentically. When your energy is blocked or suppressed, it can feel like losing access to yourself. Feeling alive is not optional for you — it is foundational to who you are.`
+      text: `Fire shapes identity through vitality and expression. You experience yourself most clearly when you are actively engaged with life rather than observing it from a distance. Confidence grows through action, creativity, and taking up space authentically. When your energy is blocked or suppressed, it can feel like losing access to yourself. Feeling alive is foundational to how you understand yourself.`
     },
     'emotional-world': {
       label: '🔥 Elemental Insight — Fire',
@@ -273,7 +273,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     isPremium: true,
     freeContent: {
       brief: 'Your chart reveals your defense mechanisms.',
-      teaser: 'This chapter names the specific ways your nervous system learned to stay safe — the walls, the distance, the performing — and gently explores where those patterns came from. Written with a trauma-informed lens.',
+      teaser: 'This chapter names the specific ways your nervous system may have learned to stay safe — the walls, the distance, the performing — and gently explores where those patterns may have come from.',
     },
   },
   {
@@ -736,7 +736,7 @@ Your Venus also shapes how you receive love. You need someone who notices your c
   Leo: {
     content: `With Venus in Leo, you love like starlight — generously, magnificently, and with total commitment. When you love someone, they become the center of your universe, showered with attention, affection, and unwavering loyalty.
 
-You need to be adored in return. Not as a narcissistic demand, but as a genuine need for your love to be recognized and celebrated. Romance is not optional for you — it's essential. You want the grand love story, and you're willing to create it.
+You may need your love to be recognized and celebrated in return. This is not about vanity; it can reflect a genuine desire for warmth to be mutual. Romance may feel especially important to you, and you may want to participate in creating a love story that feels alive.
 
 Your Venus also reveals your relationship with receiving. When you allow yourself to be celebrated, love deepens. When you perform love without receiving it back, your heart dims.`,
     reflection: 'When was the last time you felt truly celebrated in love? What does romance mean to you?',
@@ -823,7 +823,7 @@ You're drawn to partners who feel emotionally expressive, compassionate, and sou
 
 What triggers you most is emotional disillusionment. Harsh reality, emotional neglect, or feeling unseen in your sensitivity can cause deep hurt. When love loses its softness, you may feel lost or emotionally untethered.
 
-This can show up as idealizing partners, overgiving, or blurring emotional boundaries. You may stay in relationships longer than you should, hoping love will heal what hurts. At times, you may lose yourself inside another person's needs or emotions.
+This can show up as idealizing partners, overgiving, or blurring emotional boundaries. You may stay in relationships longer than you want, hoping love can soften what hurts. At times, you may lose yourself inside another person's needs or emotions.
 
 Your growth comes from learning that love does not require self-erasure to be meaningful. Boundaries do not block love — they protect it. When you stay grounded in yourself while remaining open-hearted, love becomes nourishing rather than overwhelming. You are allowed to receive the same compassion you so freely give.`,
     reflection: 'Where do you lose yourself in love? What would it feel like to stay whole while still giving your heart?',
@@ -851,7 +851,7 @@ Your growth comes from learning to pause just long enough to identify what the a
   Taurus: {
     content: `You don't rush into conflict. Anger builds slowly for you, often after long periods of tolerance. You prefer peace and stability, and you'll try to maintain it for as long as possible. But once your limit is reached, your stance becomes firm and difficult to shift.
 
-This pattern forms through a deep need for security. You don't like emotional disruption, and conflict feels destabilizing. Because of this, you often endure more than you should before reacting. You hope situations will resolve on their own, or that your patience will be enough.
+This pattern forms through a deep need for security. You don't like emotional disruption, and conflict feels destabilizing. Because of this, you often endure more than you want before reacting. You may hope situations resolve on their own, or that your patience is enough.
 
 You're most triggered when you feel pushed, rushed, or forced into change you didn't choose. Feeling controlled or threatened in your stability activates anger quickly. When your sense of safety is compromised, resistance replaces flexibility.
 
@@ -1050,7 +1050,7 @@ This pattern forms because understanding creates safety. When emotions are named
 
 You are most likely to go into defense when feelings feel heavy, confusing, or emotionally charged without clarity. Silence, intensity, or pressure to "just feel" can trigger restlessness or detachment.
 
-This can show up as over-talking, joking, changing the subject, or intellectualizing emotions instead of experiencing them. Others may feel you're avoiding depth, when you're actually regulating anxiety.
+This can show up as over-talking, joking, changing the subject, or intellectualizing emotions instead of experiencing them. Others may feel you're avoiding depth, when you may actually be regulating worry.
 
 Your growth comes from allowing feelings to exist without immediate interpretation. You don't need to understand everything to be safe. When you let emotions move through you without analysis, protection turns into presence.`,
     reflection: 'When do you reach for words instead of feelings? What would silence feel like if you trusted it?',
@@ -1098,7 +1098,7 @@ Your growth comes from allowing imperfection — especially emotional imperfecti
   Libra: {
     content: `When emotions feel unsafe, your instinct is to restore balance. Protection, for you, looks like smoothing tension, mediating conflict, and keeping emotional harmony intact.
 
-This pattern forms through sensitivity to relational dynamics. Emotional discord feels destabilizing, so your nervous system seeks equilibrium. You protect yourself by making sure everyone else is okay — hoping that peace around you will create safety within you.
+This pattern forms through sensitivity to relational dynamics. Emotional discord feels destabilizing, so your nervous system seeks equilibrium. You protect yourself by making sure everyone else is okay — hoping that peace around you can support safety within you.
 
 You are most likely to go into defense when conflict feels intense, unfair, or emotionally charged. Raised voices, emotional volatility, or pressure to choose sides can overwhelm you. Instead of asserting your own needs, you focus on calming the situation.
 
@@ -1217,7 +1217,7 @@ This can show up now as difficulty focusing, talking to fill silence, or constan
 
 Your inner child needs their questions honored. They need to know that their curiosity is a superpower, not a disruption. They don't need to focus to be valuable — they need permission to explore.
 
-Your growth comes from giving your inner child both stimulation and stillness. When you let them be curious without anxiety driving the search, their intelligence becomes playful rather than restless.`,
+Your growth comes from giving your inner child both stimulation and stillness. When you let them be curious without worry driving the search, their intelligence becomes playful rather than restless.`,
     reflection: 'What question were you taught not to ask? What happens when you let your curiosity lead without judgment?',
     affirmation: 'My curiosity is a gift. I can explore freely and still find my center.',
   },
@@ -1258,7 +1258,7 @@ This pattern forms because your early environment rewarded correctness. Being ac
 
 When this need wasn't met — when your effort went unnoticed, your mistakes were magnified, or you were held to impossible standards — a wound formed around competence itself. You may have learned that being good enough required being perfect, and that any flaw was evidence of deeper inadequacy.
 
-This can show up now as harsh self-criticism, difficulty accepting compliments, or obsessive attention to detail that masks deeper anxiety. You may over-prepare, over-explain, or silently hold yourself to standards you'd never impose on others.
+This can show up now as harsh self-criticism, difficulty accepting compliments, or obsessive attention to detail that masks deeper worry. You may over-prepare, over-explain, or silently hold yourself to standards you'd never impose on others.
 
 Your inner child needs to hear that they're enough as they are. They need to know that mistakes are how humans learn, not evidence of failure. They don't need to be useful to deserve love.
 
@@ -1534,7 +1534,7 @@ Your purpose unfolds when you choose yourself without apology. As you learn to l
   Taurus: {
     content: `Your soul's purpose centers on grounding, simplicity, and self-worth. You are learning how to build security from within rather than living in constant emotional or external upheaval.
 
-This path can feel slow or unfamiliar if you're used to intensity, crisis, or emotional extremes. Peace may initially feel boring — but it's deeply healing for you.
+This path can feel slow or unfamiliar if you're used to intensity or emotional extremes. Peace may initially feel boring, but it can become deeply settling for you.
 
 You are meant to cultivate patience, consistency, and trust in the physical world. Building something tangible — financial security, stable relationships, or embodied practices — supports your purpose.
 
@@ -1691,9 +1691,9 @@ Your shadow work asks you to redefine strength. True power doesn't disappear whe
     affirmation: 'I can be powerful and soft at the same time. Vulnerability is not the opposite of strength.',
   },
   Taurus: {
-    content: `Your shadow work centers on attachment, control through stability, and fear of loss. At a deep level, you may equate safety with possession — of people, resources, or routines.
+    content: `Your shadow work centers on holding on, control through stability, and fear of loss. At a deep level, you may equate safety with possession — of people, resources, or routines.
 
-This pattern forms through experiences where loss felt destabilizing or traumatic. You may have learned that holding on tightly was the only way to remain safe. Change became synonymous with danger.
+This pattern may form through experiences where loss felt destabilizing or painful. You may have learned that holding on tightly was the only way to remain safe. Change may have become associated with danger.
 
 In shadow, this can show up as resistance to change, emotional stagnation, or clinging to what feels familiar even when it no longer serves you. Letting go may feel like risking collapse.
 
@@ -1717,7 +1717,7 @@ Your shadow work asks you to sit with what cannot be explained. Not everything n
     affirmation: 'I don\'t need to explain everything to be safe. Silence holds its own wisdom.',
   },
   Cancer: {
-    content: `Your shadow work centers on attachment, emotional safety, and fear of loss through vulnerability. At a deep level, you may carry an unconscious belief that emotional closeness is fragile — that it can be taken away without warning.
+    content: `Your shadow work centers on connection, emotional safety, and fear of loss through vulnerability. At a deep level, you may carry an unconscious belief that emotional closeness is fragile — that it can be taken away without warning.
 
 This pattern often forms through early experiences where emotional security felt inconsistent or conditional. You may have learned to protect yourself by becoming self-sufficient, emotionally guarded, or overly attuned to others' moods. Love became something to monitor rather than trust.
 
@@ -1725,12 +1725,12 @@ In shadow, this can show up as emotional defensiveness, withdrawal, or clinging 
 
 You may struggle to express needs directly, hoping others will sense them instead. When emotional safety feels threatened, you retreat inward, building protective walls around your heart.
 
-Your shadow work asks you to learn that vulnerability does not guarantee loss. Emotional openness doesn't invite abandonment — it invites authenticity. When you allow yourself to need without fear, attachment becomes nourishment rather than anxiety.`,
+Your shadow work asks you to learn that vulnerability does not guarantee loss. Emotional openness doesn't invite abandonment — it invites authenticity. When you allow yourself to need without fear, connection can become nourishing rather than worrying.`,
     reflection: 'When do you withdraw to protect yourself from loss? What would it feel like to trust that love can hold steady?',
     affirmation: 'Vulnerability does not invite abandonment. I can need others and still be safe.',
   },
   Leo: {
-    content: `Your shadow work centers on visibility, self-worth, and fear of insignificance. At a deep level, you may fear that without recognition, love, or admiration, you will disappear.
+    content: `Your shadow work centers on visibility, self-worth, and fear of insignificance. At a deep level, you may fear that without recognition, love, or admiration, you could disappear.
 
 This pattern forms through experiences where attention felt conditional — earned through performance, success, or emotional expression. You may have learned that being noticed equaled being valued, and that invisibility equaled loss.
 
@@ -1745,7 +1745,7 @@ Your shadow work asks you to separate being seen from being worthy. Your existen
   Virgo: {
     content: `Your shadow work centers on control through correction, self-criticism, and fear of being flawed. At a deep level, you may believe that mistakes threaten safety or belonging.
 
-This pattern often forms through environments where criticism outweighed reassurance, or where being "good" meant being precise, helpful, or correct. You learned to manage anxiety by fixing, organizing, or improving yourself and others.
+This pattern often forms through environments where criticism outweighed reassurance, or where being "good" meant being precise, helpful, or correct. You may have learned to manage worry by fixing, organizing, or improving yourself and others.
 
 In shadow, this can show up as harsh inner dialogue, obsessive self-monitoring, or difficulty resting. You may feel responsible for preventing problems before they arise, carrying pressure that never fully lifts.
 

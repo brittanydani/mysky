@@ -126,14 +126,14 @@ export class EmotionalOperatingSystemGenerator {
         primaryMode = 'Your nervous system learned to process emotions through analysis and service';
         expression = 'You may express feelings through helpful actions or by organizing your environment';
         needsToFeel = 'You need to feel useful and to understand the practical purpose of emotions';
-        overwhelmSigns = ['Over-analyzing', 'Criticism of self/others', 'Perfectionism', 'Health anxiety'];
+        overwhelmSigns = ['Over-analyzing', 'Criticism of self/others', 'Perfectionism', 'Health worry'];
         break;
         
       case 'Libra':
         primaryMode = 'Your nervous system learned to process emotions through relationships and harmony';
         expression = 'You may express feelings indirectly or by seeking balance and fairness';
         needsToFeel = 'You need harmony and to feel that your relationships are balanced';
-        overwhelmSigns = ['People-pleasing', 'Indecision', 'Conflict avoidance', 'Relationship anxiety'];
+        overwhelmSigns = ['People-pleasing', 'Indecision', 'Conflict avoidance', 'Relationship worry'];
         break;
         
       case 'Scorpio':
@@ -161,7 +161,7 @@ export class EmotionalOperatingSystemGenerator {
         primaryMode = 'Your nervous system learned to process emotions through detachment and innovation';
         expression = 'You may express feelings intellectually or by focusing on humanitarian causes';
         needsToFeel = 'You need emotional freedom and to feel accepted for your uniqueness';
-        overwhelmSigns = ['Emotional detachment', 'Rebelliousness', 'Social anxiety', 'Future worry'];
+        overwhelmSigns = ['Emotional detachment', 'Rebelliousness', 'Social unease', 'Future worry'];
         break;
         
       case 'Pisces':

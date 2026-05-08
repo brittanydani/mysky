@@ -46,7 +46,7 @@ function getGenericAspectInterpretation(p1: string, p2: string, type: string): s
     Descendant: 'relationship patterns and what you meet through other people',
     Midheaven: 'career and public role',
     IC: 'private foundations, home, and what helps you feel rooted',
-    Vertex: 'fated encounters and catalytic turning points',
+    Vertex: 'encounters and catalytic turning points that can feel significant',
     'Anti-Vertex': 'your familiar orientation and personal baseline',
   };
 
@@ -638,7 +638,7 @@ function getChironSignSummary(sign: string): string {
 function getNorthNodeSummary(sign: string): string {
   const summaries: Record<string, string> = {
     Aries: 'North Node in Aries calls you toward independence, self-assertion, and the courage to put yourself first after lifetimes of accommodating others.',
-    Taurus: 'North Node in Taurus calls you toward simplicity, stability, and trusting in what already is — moving away from crisis-driven intensity.',
+    Taurus: 'North Node in Taurus calls you toward simplicity, stability, and trusting in what already is — moving away from intensity-driven reactivity.',
     Gemini: 'North Node in Gemini calls you toward curiosity, everyday connection, and learning to ask questions instead of providing answers.',
     Cancer: 'North Node in Cancer calls you toward emotional vulnerability, nurturing, and allowing yourself to need and be needed.',
     Leo: 'North Node in Leo calls you toward creative self-expression, personal joy, and learning to take center stage in your own life.',

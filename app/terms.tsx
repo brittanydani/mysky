@@ -68,7 +68,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Acceptance of Terms of Use</Text>
             <Text style={styles.paragraph}>
-              By downloading, installing, or using MySky ("the App"), you agree to be bound by these Terms of Use (End User License Agreement), our Privacy Policy, and all applicable laws and regulations. If you do not agree to these Terms, do not download, install, or use the App. Supabase is the canonical store for your account data, and this device may keep local cache or queued offline writes for convenience.
+              By downloading, installing, or using MySky ("the App"), you agree to be bound by these Terms of Use (End User License Agreement), our Privacy Policy, and all applicable laws and regulations. If you do not agree to these Terms, do not download, install, or use the App. Supabase is the canonical store for your account data, and this device may keep local cache or unsaved drafts for convenience.
             </Text>
 
             <Text style={styles.sectionTitle}>Definitions</Text>
@@ -95,7 +95,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
                 <Text style={styles.boldText}>Free:</Text> Personal birth chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, AI dream interpretation using the standard Gemini model, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context.
               </Text>
               <Text style={styles.paragraph}>
-                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with AI interpretation using a richer Gemini model, extended personal reflection trends, up to 10 relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, reflective daily guidance with action prompts, sensitivity and growth mapping, PDF chart export, backup and restore, and extended pattern reflections.
+                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with AI interpretation using a richer Gemini model, extended personal reflection trends, up to 10 relationship charts, all 10 personal story chapters, growth and relationship reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, reflective daily guidance with action prompts, sensitivity and growth mapping, PDF chart export, backup and restore, and extended pattern reflections.
               </Text>
             </View>
 

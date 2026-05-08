@@ -20,7 +20,7 @@ export interface BirthProfileSync {
 }
 
 interface BirthProfileFunctionResponse {
-  profile: BirthProfileSync | null;
+  profile: Partial<BirthProfileSync> | null;
 }
 
 interface NamedError {
@@ -38,17 +38,7 @@ async function getSession() {
 }
 
 export function isBirthProfileSyncUnavailableError(error: unknown): boolean {
-  const candidate = error as NamedError | null;
-  const message = candidate?.message ?? '';
-
-  return candidate?.name === 'FunctionsHttpError'
-    || candidate?.name === 'FunctionsFetchError'
-    || candidate?.name === 'FunctionsRelayError'
-    || message.includes('non-2xx status code')
-    || message.includes('Network request failed')
-    || message.includes('Failed to fetch')
-    || message.includes('fetch failed')
-    || message.includes('Load failed');
+  return isRecoverableBirthProfileSyncError(error);
 }
 
 export function warnBirthProfileSyncUnavailable(error: unknown) {
@@ -81,6 +71,28 @@ function birthProfileFromRow(row: BirthProfileRow): BirthProfileSync {
   };
 }
 
+function birthProfileFromFunctionProfile(profile: Partial<BirthProfileSync> | null): BirthProfileSync | null {
+  if (!profile) return null;
+
+  return {
+    id: String(profile.id ?? profile.chartId ?? ''),
+    chartId: String(profile.chartId ?? ''),
+    name: profile.name ?? undefined,
+    birthDate: String(profile.birthDate ?? ''),
+    birthTime: profile.birthTime ?? undefined,
+    hasUnknownTime: Boolean(profile.hasUnknownTime),
+    birthPlace: String(profile.birthPlace ?? ''),
+    latitude: Number(profile.latitude ?? 0),
+    longitude: Number(profile.longitude ?? 0),
+    timezone: profile.timezone ?? undefined,
+    houseSystem: profile.houseSystem ?? undefined,
+    createdAt: profile.createdAt,
+    updatedAt: String(profile.updatedAt ?? new Date().toISOString()),
+    isDeleted: Boolean(profile.isDeleted),
+    deletedAt: profile.deletedAt,
+  };
+}
+
 function validateBirthProfilePayload(profile: unknown): BirthProfileSync {
   if (!profile || typeof profile !== 'object') {
     throw new Error('Missing profile');
@@ -90,6 +102,27 @@ function validateBirthProfilePayload(profile: unknown): BirthProfileSync {
 
   if (!candidate.chartId || !candidate.birthDate || !candidate.birthPlace) {
     throw new Error('Birth profile is missing required fields');
+  }
+
+  const match = candidate.birthDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    throw new Error('Birth date is invalid');
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const birthDate = new Date(year, month, day);
+  birthDate.setFullYear(year);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (
+    Number.isNaN(birthDate.getTime()) ||
+    birthDate.getFullYear() !== year ||
+    birthDate.getMonth() !== month ||
+    birthDate.getDate() !== day ||
+    birthDate > today
+  ) {
+    throw new Error('Birth date is invalid');
   }
 
   if (!Number.isFinite(candidate.latitude) || !Number.isFinite(candidate.longitude)) {
@@ -102,6 +135,31 @@ function validateBirthProfilePayload(profile: unknown): BirthProfileSync {
 function normalizeBirthTimeForDb(value: string | undefined): string | null {
   if (!value) return null;
   return value.length === 5 ? `${value}:00` : value;
+}
+
+function getFunctionHttpStatus(error: unknown): number | null {
+  const context = (error as { context?: { status?: unknown } } | null)?.context;
+  return typeof context?.status === 'number' ? context.status : null;
+}
+
+function isRecoverableBirthProfileSyncError(error: unknown): boolean {
+  const candidate = error as NamedError | null;
+  const status = getFunctionHttpStatus(error);
+  const message = candidate?.message ?? '';
+
+  if (candidate?.name === 'FunctionsFetchError' || candidate?.name === 'FunctionsRelayError') {
+    return true;
+  }
+
+  if (candidate?.name === 'FunctionsHttpError') {
+    return status === null || status === 404 || status >= 500;
+  }
+
+  return message.includes('Network request failed')
+    || message.includes('Failed to fetch')
+    || message.includes('fetch failed')
+    || message.includes('Load failed')
+    || message.includes('Fetch timeout');
 }
 
 async function getBirthProfileUserId(): Promise<string> {
@@ -127,10 +185,42 @@ async function readLatestBirthProfileDirect(userId: string): Promise<BirthProfil
   return data ? birthProfileFromRow(data as BirthProfileRow) : null;
 }
 
+async function invokeBirthProfileSyncRemote(
+  action: 'getLatest' | 'upsert' | 'delete',
+  payload: Record<string, unknown>,
+): Promise<{ profile: BirthProfileSync | null }> {
+  const session = await getSession();
+  const token = session?.access_token;
+
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const { data, error } = await supabase.functions.invoke<BirthProfileFunctionResponse>(
+    'birth-profile-sync',
+    {
+      body: { action, ...payload },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (error) throw error;
+
+  if (!data || typeof data !== 'object' || !('profile' in data)) {
+    throw new Error('Birth profile sync returned an invalid response');
+  }
+
+  return {
+    profile: birthProfileFromFunctionProfile(data.profile),
+  };
+}
+
 async function invokeBirthProfileSyncDirect(
   action: 'getLatest' | 'upsert' | 'delete',
   payload: Record<string, unknown>,
-): Promise<BirthProfileFunctionResponse> {
+): Promise<{ profile: BirthProfileSync | null }> {
   const userId = await getBirthProfileUserId();
 
   if (action === 'getLatest') {
@@ -227,6 +317,10 @@ async function invokeBirthProfileSyncDirect(
     deletedAt,
   };
 
+  if (!existing) {
+    return { profile: tombstone };
+  }
+
   const { error } = await supabase.from('birth_profiles').upsert(
     {
       id: userId,
@@ -257,6 +351,15 @@ async function invokeBirthProfileSyncDirect(
 export async function invokeBirthProfileSync(
   action: 'getLatest' | 'upsert' | 'delete',
   payload: Record<string, unknown> = {},
-): Promise<BirthProfileFunctionResponse> {
-  return invokeBirthProfileSyncDirect(action, payload);
+): Promise<{ profile: BirthProfileSync | null }> {
+  try {
+    return await invokeBirthProfileSyncRemote(action, payload);
+  } catch (error) {
+    if (isRecoverableBirthProfileSyncError(error)) {
+      warnBirthProfileSyncUnavailable(error);
+      return invokeBirthProfileSyncDirect(action, payload);
+    }
+
+    throw error;
+  }
 }

@@ -389,7 +389,7 @@ const GLOSSARY_TERMS: { term: string; def: string }[] = [
   { term: 'Sesquiquadrate', def: 'A tense 135° angle between two planets. It often creates a background pressure or irritation that pushes growth, adjustment, and greater self-awareness.' },
   { term: 'Lilith (Black Moon)', def: 'A calculated point representing your raw, untamed instincts and the parts of yourself society told you to suppress.' },
   { term: 'Part of Fortune', def: 'A calculated point blending your Sun, Moon, and Ascendant. It highlights where you find joy, luck, and a natural sense of flow.' },
-  { term: 'Vertex', def: 'A fated point in your chart associated with destined encounters and turning points that feel beyond your control.' },
+  { term: 'Vertex', def: 'A chart point associated with encounters and turning points that can feel especially significant.' },
   { term: 'Juno', def: 'Juno is an asteroid linked with commitment, partnership patterns, and what long-term loyalty or devotion can look like in your life. It can add nuance to how you bond and what you need from commitment.' },
   { term: 'Pholus', def: 'Pholus is a small body often associated with chain reactions and small things that open much bigger processes. In self-understanding work, it can point to places where one shift has a surprisingly wide impact.' },
   { term: 'Chart Ruler', def: 'The planet that rules your Rising sign. It acts as the CEO of your chart, coloring your entire life approach and motivation.' },
@@ -409,7 +409,7 @@ const GLOSSARY_TERMS: { term: string; def: string }[] = [
   { term: 'Interception', def: 'When a sign is completely contained within a house without touching a cusp. Intercepted energies can feel hidden or harder to access until consciously developed.' },
   { term: 'Grand Trine', def: 'Three planets forming an equilateral triangle (all 120° apart). A Grand Trine is a gift of natural talent — but can also lead to complacency.' },
   { term: 'T-Square', def: 'Two planets in opposition with a third squaring both. A T-Square creates persistent tension that drives ambition and growth through challenge.' },
-  { term: 'Yod (Finger of God)', def: "Two planets in sextile, both quincunx a third. A Yod creates a sense of fated mission — an urgent, unavoidable calling in the apex planet's domain." },
+  { term: 'Yod (Finger of God)', def: "Two planets in sextile, both quincunx a third. A Yod can describe concentrated tension and purpose around the apex planet's domain." },
   { term: 'Grand Cross', def: 'Four planets forming a cross of two oppositions and four squares. It creates intense pressure from all sides but also extraordinary resilience.' },
   { term: 'Applying vs Separating', def: 'An applying aspect is still forming and growing stronger. A separating aspect has already peaked and is fading — applying aspects have more influence.' },
 ];
@@ -1077,7 +1077,7 @@ export default function ChartScreen() {
             </View>
             <View style={styles.wheelMetaContainer}>
               <Text style={styles.wheelCaption}>
-                {zodiacSystemLabel.toUpperCase()} · {houseSystemLabel.toUpperCase()} HOUSES
+                {zodiacSystemLabel.toUpperCase()} · {userChart.birthData.hasUnknownTime ? 'HOUSES HIDDEN: BIRTH TIME UNKNOWN' : `${houseSystemLabel.toUpperCase()} HOUSES`}
               </Text>
             </View>
           </Animated.View>
@@ -1989,7 +1989,7 @@ export default function ChartScreen() {
                           <Text style={styles.themedCardDetail}>• Your emotional style tends to be: {emotionalProfile.emotionalStyle}</Text>
                           <Text style={styles.themedCardDetail}>• The fear pattern underneath it may sound like: {emotionalProfile.coreFears}</Text>
                           <Text style={styles.themedCardDetail}>• Under strain, you may protect yourself by: {emotionalProfile.defenseMechanisms}</Text>
-                          <Text style={styles.themedCardDetail}>• In attachment, this can feel like: {emotionalProfile.attachmentStyle}</Text>
+                          <Text style={styles.themedCardDetail}>• In closeness, this can feel like: {emotionalProfile.attachmentStyle}</Text>
                           <Text style={styles.themedCardDetail}>• The healing thread running through it is: {emotionalProfile.healingThemes}</Text>
                         </View>
                       )}

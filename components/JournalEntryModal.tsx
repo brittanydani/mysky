@@ -80,7 +80,7 @@ const PALETTE_LIGHT = {
 interface JournalEntryModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (data: Omit<JournalEntry, 'id' | 'createdAt' | 'updatedAt' | 'isDeleted'>) => void;
+  onSave: (data: Omit<JournalEntry, 'id' | 'createdAt' | 'updatedAt' | 'isDeleted'>) => void | Promise<void>;
   initialData?: JournalEntry;
   recentTags?: string[]; // tag IDs from recent entries, most recent first
 }
@@ -346,6 +346,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   // ── Writing-mode state ──
   const [writingMode, setWritingMode] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pulseOpacity = useSharedValue(1);
 
@@ -419,7 +420,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     };
   }, []);
 
-  // ── Debounced "pending save" indicator — fires 1.5 s after the user stops typing ──
+  // ── Debounced ready indicator — fires 1.5 s after the user stops typing ──
   useEffect(() => {
     if (!writingMode || !content.trim()) return;
     setPendingSave(false);
@@ -432,7 +433,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     };
   }, [content, writingMode]);
 
-  // ── Pulsing animation for the save indicator ──
+  // ── Pulsing animation for the ready indicator ──
   useEffect(() => {
     if (pendingSave) {
       pulseOpacity.value = withRepeat(
@@ -693,11 +694,13 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     }
   }, [initialData, updateTags, visible]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (isSubmitting) return;
     if (!content.trim()) {
       Alert.alert('Empty Reflection', 'Please share a few thoughts before saving.');
       return;
     }
+    setIsSubmitting(true);
     try {
       let transitSnapshotJson: string | undefined;
       if (userChart) {
@@ -706,7 +709,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           transitSnapshotJson = JSON.stringify(snap);
         } catch {}
       }
-      onSave({
+      await Promise.resolve(onSave({
         date: toLocalDateString(date),
         mood,
         moonPhase: ({ low: 'waning', steady: 'full', high: 'waxing' } as Record<EnergyKey, string>)[energyLevel] as any,
@@ -715,10 +718,12 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
         tags: tags.length > 0 ? tags : undefined,
         chartId: chartId || undefined,
         transitSnapshot: transitSnapshotJson,
-      });
+      }));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch {
       Alert.alert('Save Error', 'Could not save your entry. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -755,11 +760,18 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   {pendingSave && (
                     <Animated.View style={[styles.saveIndicator, pulseStyle]}>
                       <View style={styles.saveIndicatorDot} />
-                      <MetallicText style={styles.saveIndicatorText} color="#6EBF8B">Secured</MetallicText>
+                      <MetallicText style={styles.saveIndicatorText} color="#6EBF8B">Ready</MetallicText>
                     </Animated.View>
                   )}
-                  <Pressable style={styles.writingSaveBtn} onPress={handleSave} hitSlop={12} accessibilityRole="button" accessibilityLabel={initialData ? 'Save entry' : 'Secure entry'}>
-                    <Text style={styles.writingSaveBtnText}>{initialData ? 'Save' : 'Secure'}</Text>
+                  <Pressable
+                    style={[styles.writingSaveBtn, isSubmitting && styles.disabledBtn]}
+                    onPress={handleSave}
+                    disabled={isSubmitting}
+                    hitSlop={12}
+                    accessibilityRole="button"
+                    accessibilityLabel={initialData ? 'Save changes' : 'Save entry'}
+                  >
+                    <Text style={styles.writingSaveBtnText}>{isSubmitting ? 'Saving' : 'Save'}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -1038,14 +1050,20 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
                 {/* Footer / Save */}
                 <Animated.View entering={FadeInUp.delay(500)} style={styles.footer}>
-                  <Pressable style={styles.saveBtn} onPress={handleSave} accessibilityRole="button" accessibilityLabel={initialData ? 'Secure changes' : 'Secure entry'}>
+                  <Pressable
+                    style={[styles.saveBtn, isSubmitting && styles.disabledBtn]}
+                    onPress={handleSave}
+                    disabled={isSubmitting}
+                    accessibilityRole="button"
+                    accessibilityLabel={initialData ? 'Save changes' : 'Save entry'}
+                  >
                     <LinearGradient
                       colors={['#F4E6B8', '#D4B872', '#8C5A12']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.saveGradient}
                     >
-                      <Text style={styles.saveBtnText}>{initialData ? 'Secure Changes' : 'Secure Entry'}</Text>
+                      <Text style={styles.saveBtnText}>{isSubmitting ? 'Saving...' : initialData ? 'Save Changes' : 'Save Entry'}</Text>
                     </LinearGradient>
                   </Pressable>
                 </Animated.View>
@@ -1304,6 +1322,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   saveIndicatorText: { fontSize: 11, color: '#6EBF8B', fontWeight: '600', letterSpacing: 0.5 },
   writingSaveBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(212,175,55,0.32)', backgroundColor: 'rgba(212,175,55,0.12)' },
   writingSaveBtnText: { fontSize: 12, color: theme.isDark ? PALETTE_DARK.gold : PALETTE_LIGHT.gold, fontWeight: '700', letterSpacing: 0.3 },
+  disabledBtn: { opacity: 0.55 },
 
   // ── Distraction-free writing surface ──
   writingModeBody: { flex: 1 },

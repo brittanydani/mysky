@@ -649,7 +649,6 @@ export default function SleepScreen() {
     try {
       setSaving(true);
       setSaveError(null);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       const now = new Date().toISOString();
       const existingCreatedAt = editingEntryId ? entries.find(e => e.id === editingEntryId)?.createdAt ?? now : now;
       const entry: SleepEntry = {
@@ -668,6 +667,7 @@ export default function SleepScreen() {
         markTodayInsightsStale('sleep');
       }
       const updated = await supabaseDb.getSleepEntries(chartId, 30);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setEntries(updated);
       hasLoadedSleepRef.current = true;
       lastSleepLoadedAtRef.current = Date.now();

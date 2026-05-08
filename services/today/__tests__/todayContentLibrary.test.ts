@@ -27,6 +27,13 @@ describe('todayContentLibrary', () => {
       expect(allTags.size).toBeGreaterThan(10);
     });
 
+    it('avoids deterministic or medicalized reflection copy', () => {
+      AFFIRMATION_LIBRARY.forEach((entry) => {
+        expect(entry.text).not.toMatch(/Sleep will come easy|not optional|prescribes|survival notes|medicine|anxiety/i);
+        expect(entry.text).not.toMatch(/the app knows|today already knows|this will happen|guaranteed/i);
+      });
+    });
+
     it('uses the daily signal seed to select a fresh post-check-in affirmation', () => {
       const beforeCheckIn = getDailyAffirmation({ mood: 8 });
       const afterCheckIn = getDailyAffirmation({ mood: 8, dailySignalSeed: 1 });

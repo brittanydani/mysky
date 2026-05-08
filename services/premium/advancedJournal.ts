@@ -104,7 +104,7 @@ const MOOD_EMOJIS: Record<MoodLevel, string> = {
 const CATEGORY_PROMPTS: Record<MoodCategory, string> = {
   overall: 'How are you feeling overall?',
   energy: 'How is your energy level?',
-  anxiety: 'How calm or anxious are you feeling?',
+  anxiety: 'How calm or keyed up are you feeling?',
   connection: 'How connected do you feel to others?',
   clarity: 'How clear is your thinking?',
 };

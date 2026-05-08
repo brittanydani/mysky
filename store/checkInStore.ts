@@ -54,8 +54,9 @@ export const useCheckInStore = create<CheckInStore>((set) => ({
             user_id:    user.id,
             mood_value: safeMood,
             log_date:   getCheckInDateString(),
+            time_of_day: 'morning',
           },
-          { onConflict: 'user_id,log_date' }
+          { onConflict: 'user_id,log_date,time_of_day' }
         );
 
       if (error) {

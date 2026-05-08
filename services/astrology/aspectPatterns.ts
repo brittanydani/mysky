@@ -141,7 +141,7 @@ function detectAspectPatterns(chart: NatalChart): AspectPattern[] {
           patterns.push({
             name: 'Yod',
             planets: names,
-            description: `${names.join(', ')} form a Yod (Finger of God) pointing at ${apex} — a rare configuration suggesting a fated quality or sense of mission connected to the apex planet. The two sextile planets channel their combined energy toward the apex in a way that can feel like a compulsion or calling. This pattern often unfolds over time, with its significance becoming clearer through life experience.`,
+            description: `${names.join(', ')} form a Yod (Finger of God) pointing at ${apex} — a rare configuration that can feel like concentrated purpose connected to the apex planet. The two sextile planets channel their combined energy toward the apex in a way that may feel compelling or important. This pattern often unfolds over time, with its significance becoming clearer through life experience.`,
           });
         }
       }

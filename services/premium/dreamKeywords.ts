@@ -10,7 +10,7 @@
  *   - category: thematic grouping for deduplication
  *
  * Tone: "may", "could", "often reflects" — never absolute.
- * Sources: Jungian symbolism, somatic psychology, attachment theory, common dream research.
+ * Sources: Jungian symbolism, somatic psychology, relationship-pattern theory, common dream research.
  *
  * This file is intentionally large. Dream journaling is the PRIMARY input.
  */
@@ -174,7 +174,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'wolf',
     keywords: ['wolf', 'wolves', 'wolfpack'],
-    meaning: 'A wolf may represent instinct, loyalty, a perceived threat, or the wild, untamed part of your psyche.',
+    meaning: 'A wolf may represent instinct, loyalty, a perceived threat, or a wild, untamed part of your inner world.',
     category: 'animals',
   },
   {
@@ -246,7 +246,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'rabbit',
     keywords: ['rabbit', 'rabbits', 'bunny', 'hare'],
-    meaning: 'Rabbits may reflect vulnerability, fertility, anxiety, or the urge to flee from something uncomfortable.',
+    meaning: 'Rabbits may reflect vulnerability, fertility, worry, or the urge to flee from something uncomfortable.',
     category: 'animals',
   },
 
@@ -256,7 +256,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'teeth_falling',
     keywords: ['teeth falling out', 'teeth fell out', 'losing teeth', 'lost my teeth', 'tooth fell', 'teeth broke', 'crumbling teeth', 'teeth crumbled', 'teeth'],
-    meaning: 'Teeth falling out is one of the most common dream symbols — it often reflects anxiety about self-image, communication, loss of control, or fear of aging.',
+    meaning: 'Teeth falling out is one of the most common dream symbols — it often reflects worry about self-image, communication, loss of control, or fear of aging.',
     category: 'body',
   },
   {
@@ -328,7 +328,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'heart',
     keywords: ['heart', 'heartbeat', 'heart racing', 'chest pain', 'heart attack'],
-    meaning: 'The heart in dreams often connects to emotional truth, love, vulnerability, or anxiety that makes itself known through the body.',
+    meaning: 'The heart in dreams often connects to emotional truth, love, vulnerability, or worry that makes itself known through the body.',
     category: 'body',
   },
   {
@@ -392,7 +392,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'boss',
     keywords: ['boss', 'manager', 'supervisor', 'employer', 'my boss'],
-    meaning: 'A boss or authority figure may reflect your relationship with power, performance anxiety, or how you feel about being evaluated.',
+    meaning: 'A boss or authority figure may reflect your relationship with power, performance pressure, or how you feel about being evaluated.',
     category: 'people',
   },
   {
@@ -422,7 +422,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'crowd',
     keywords: ['crowd', 'people everywhere', 'lots of people', 'crowded', 'audience', 'group of people', 'mob'],
-    meaning: 'Crowds may reflect social anxiety, a sense of being lost in the collective, or pressure from others’ expectations.',
+    meaning: 'Crowds may reflect social pressure, a sense of being lost in the collective, or pressure from others’ expectations.',
     category: 'people',
   },
   {
@@ -444,7 +444,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'school',
     keywords: ['school', 'classroom', 'high school', 'middle school', 'elementary school', 'college', 'university', 'campus'],
-    meaning: 'School settings often reflect learning, testing, performance anxiety, or revisiting a period when your identity was being shaped.',
+    meaning: 'School settings often reflect learning, testing, performance pressure, or revisiting a period when your identity was being shaped.',
     category: 'places',
   },
   {
@@ -616,7 +616,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'sinking',
     keywords: ['sinking', 'sank', 'going down', 'pulled down', 'quicksand'],
-    meaning: 'Sinking may reflect feeling weighed down by emotions, responsibilities, depression, or a situation that feels inescapable.',
+    meaning: 'Sinking may reflect feeling weighed down by emotions, responsibilities, low mood, or a situation that feels inescapable.',
     category: 'movement',
   },
 
@@ -684,7 +684,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'house',
     keywords: ['house', 'my house', 'a house', 'the house', 'home', 'apartment', 'condo'],
-    meaning: 'A house often represents the self — different rooms may reflect different aspects of your psyche, memories, or emotional states.',
+    meaning: 'A house often represents the self — different rooms may reflect different aspects of your inner world, memories, or emotional states.',
     category: 'buildings',
   },
   {
@@ -772,7 +772,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'clock',
     keywords: ['clock', 'watch', 'time', 'running out of time', 'late', 'no time', 'deadline'],
-    meaning: 'Clocks and time pressure may reflect anxiety about deadlines, mortality, missed opportunities, or feeling like time is slipping away.',
+    meaning: 'Clocks and time pressure may reflect worry about deadlines, mortality, missed opportunities, or feeling like time is slipping away.',
     category: 'objects',
   },
   {
@@ -902,7 +902,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'stars',
     keywords: ['stars', 'starry', 'night sky', 'constellation', 'shooting star'],
-    meaning: 'Stars may represent hope, guidance, destiny, aspiration, or the vast unknown that holds both wonder and uncertainty.',
+    meaning: 'Stars may represent hope, guidance, aspiration, or the vast unknown that holds both wonder and uncertainty.',
     category: 'elements',
   },
   {
@@ -954,13 +954,13 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'test_unprepared',
     keywords: ['unprepared for a test', 'forgot about the test', 'exam I didn\'t study for', 'final exam', 'didn\'t study', 'pop quiz'],
-    meaning: 'Being unprepared for a test often reflects performance anxiety, self-doubt, fear of being evaluated, or a situation where you feel unready.',
+    meaning: 'Being unprepared for a test often reflects performance pressure, self-doubt, fear of being evaluated, or a situation where you feel unready.',
     category: 'scenarios',
   },
   {
     id: 'late',
     keywords: ['running late', 'going to be late', 'missed it', 'too late', 'late for', 'arrived late'],
-    meaning: 'Being late often reflects anxiety about missing an opportunity, not meeting expectations, or the pressure of time.',
+    meaning: 'Being late often reflects worry about missing an opportunity, not meeting expectations, or the pressure of time.',
     category: 'scenarios',
   },
   {
@@ -978,7 +978,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'wedding',
     keywords: ['wedding', 'getting married', 'marriage', 'bride', 'groom', 'ceremony'],
-    meaning: 'A wedding may represent commitment, union of different parts of yourself, a new beginning, or anxiety about a major life decision.',
+    meaning: 'A wedding may represent commitment, union of different parts of yourself, a new beginning, or concern about a major life decision.',
     category: 'scenarios',
   },
   {
@@ -1032,7 +1032,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'flying_airplane_crash',
     keywords: ['plane crash', 'plane falling', 'plane going down'],
-    meaning: 'A plane crash may reflect the collapse of high ambitions, losing altitude on a goal, or anxiety about something major going wrong.',
+    meaning: 'A plane crash may reflect the collapse of high ambitions, losing altitude on a goal, or fear about something major going wrong.',
     category: 'scenarios',
   },
   {
@@ -1068,7 +1068,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'losing_something',
     keywords: ['lost my', 'couldn\'t find my', 'misplaced', 'missing', 'disappeared'],
-    meaning: 'Losing something important may reflect anxiety about security, identity, competence, or the fear that something meaningful is slipping away.',
+    meaning: 'Losing something important may reflect concern about security, identity, competence, or the fear that something meaningful is slipping away.',
     category: 'scenarios',
   },
   {
@@ -1086,7 +1086,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'unresolved_ending',
     keywords: ['without resolution', 'lingering questions', 'no resolution', 'unresolved', 'left wondering', 'no answer', 'didn\'t finish', 'never found out', 'woke up before'],
-    meaning: 'A dream that ends without resolution often mirrors something in waking life that hasn’t fully settled — an open question, an unfinished conversation, or an emotional process that your psyche is still working through.',
+    meaning: 'A dream that ends without resolution often mirrors something in waking life that hasn’t fully settled — an open question, an unfinished conversation, or an emotional process that may still be working itself out.',
     category: 'scenarios',
   },
   {
@@ -1098,7 +1098,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'cant_find_way',
     keywords: ['couldn\'t find my way', 'lost my way', 'wrong turn', 'kept going in circles', 'going the wrong way', 'no sense of direction'],
-    meaning: 'Not being able to find your way often reflects uncertainty about your direction in life, a decision that feels unclear, or the anxiety of feeling off-course.',
+    meaning: 'Not being able to find your way often reflects uncertainty about your direction in life, a decision that feels unclear, or the unease of feeling off-course.',
     category: 'scenarios',
   },
   {
@@ -1200,7 +1200,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'something_wrong_with_body',
     keywords: ['something wrong with my body', 'body was changing', 'body felt different', 'body was wrong', 'swelling', 'shrinking', 'growing', 'deformed'],
-    meaning: 'Body changes in a dream often reflect shifting self-image, anxiety about health or aging, loss of control over your physical self, or a transformation that hasn’t been fully accepted.',
+    meaning: 'Body changes in a dream often reflect shifting self-image, concern about health or aging, loss of control over your physical self, or a transformation that hasn’t been fully accepted.',
     category: 'scenarios',
   },
 
@@ -1328,7 +1328,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'future',
     keywords: ['the future', 'someday', 'years from now', 'in the future', 'futuristic'],
-    meaning: 'Dreaming of the future may reflect anticipation, anxiety about what’s ahead, hopes, or the mind rehearsing possibilities.',
+    meaning: 'Dreaming of the future may reflect anticipation, concern about what’s ahead, hopes, or the mind rehearsing possibilities.',
     category: 'time',
   },
   {
@@ -1344,7 +1344,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'angel',
     keywords: ['angel', 'angels', 'guardian angel', 'wings', 'divine being'],
-    meaning: 'An angel may reflect guidance, protection, higher wisdom, or a messenger from the deeper layers of your psyche.',
+    meaning: 'An angel may reflect guidance, protection, higher wisdom, or a messenger from deeper layers of your inner world.',
     category: 'spiritual',
   },
   {
@@ -1390,7 +1390,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'pain',
     keywords: ['pain', 'painful', 'it hurt', 'aching', 'throbbing'],
-    meaning: 'Physical pain in a dream often reflects emotional pain, unprocessed trauma, or the body’s way of communicating distress.',
+    meaning: 'Physical pain in a dream often reflects emotional pain, unresolved stress, or the body’s way of communicating distress.',
     category: 'perception',
   },
   {
@@ -1442,7 +1442,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'protecting',
     keywords: ['protecting', 'protected', 'shielded', 'guarded', 'defended'],
-    meaning: 'Protecting someone may reflect your nurturing instincts, a desire to control outcomes, or anxiety about someone’s safety.',
+    meaning: 'Protecting someone may reflect your nurturing instincts, a desire to control outcomes, or concern about someone’s safety.',
     category: 'relationships',
   },
   {
@@ -1454,7 +1454,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'abandoned_feeling',
     keywords: ['left me', 'walked away', 'left alone', 'abandoned me', 'nobody came'],
-    meaning: 'Feeling abandoned may reflect attachment wounds, fear of being left, or the echo of times when support wasn’t there when you needed it.',
+    meaning: 'Feeling abandoned may reflect fear of being left, or the echo of times when support wasn’t there when you needed it.',
     category: 'relationships',
   },
   {
@@ -1466,7 +1466,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'holding',
     keywords: ['holding', 'held', 'carrying', 'carried', 'holding on', 'couldn\'t let go'],
-    meaning: 'Holding something or someone may reflect attachment, responsibility, the emotional weight you carry, or a refusal to release what no longer serves.',
+    meaning: 'Holding something or someone may reflect connection, responsibility, the emotional weight you carry, or a refusal to release what no longer serves.',
     category: 'relationships',
   },
   {

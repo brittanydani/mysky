@@ -163,7 +163,7 @@ export default function ChartRevealScreen() {
                 <MetallicText style={styles.ctaText} variant="gold">Begin My Journey</MetallicText>
               </Pressable>
               <Text style={styles.ctaHint}>
-                Your data stays on your device — always private, always yours.
+                Your profile is saved to your account and protected by user-level access controls.
               </Text>
             </Animated.View>
           )}

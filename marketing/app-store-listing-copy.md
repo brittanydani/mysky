@@ -72,7 +72,7 @@ MySky is for people who want a deeper relationship with their own patterns, not 
 2. Weekly shifts and recurring themes become visible as your history grows.
 3. Keyword lift and emotion tone shifts reveal what you couldn't see before.
 4. Dream symbols, sleep trends, and journal patterns in one picture.
-5. Core reflections stay encrypted on your device — yours alone.
+5. Core reflections stay protected in your private account.
 6. MySky gets more personal the more you use it.
 
 ## Keywords

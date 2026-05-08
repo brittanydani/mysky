@@ -63,7 +63,7 @@ const PREMIUM_UNLOCKS: { icon: IoniconName; title: string; desc: string }[] = [
   },
   {
     icon: 'heart-half-outline',
-    title: 'Healing and attachment reflections',
+    title: 'Healing and relationship reflections',
     desc: 'Attachment themes, fear patterns, safety patterns, shadow work, and chart-tied inner-work prompts.',
   },
   {

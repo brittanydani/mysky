@@ -46,7 +46,7 @@ export interface OrbConfiguration {
 }
 
 export interface AstrologySettings {
-  // House system: placidus (default), whole-sign, equal-house, koch, etc.
+  // House system: whole-sign (default), placidus, equal-house, koch, etc.
   houseSystem: HouseSystem;
   
   // Zodiac system: tropical (Western) or sidereal (Vedic/Jyotish)

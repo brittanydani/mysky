@@ -963,7 +963,7 @@ const ENDING_MEANINGS: Record<EndingType, string[]> = {
   ],
   abrupt: [
     'The dream pulled the plug on itself, and that sudden silence probably still echoes. Something surfaced that was too close, too real, too charged — and your mind decided mid-sentence that you’d gone far enough for one night.',
-    'Pay attention to what was happening right before everything cut out. That’s where the heat is — the exact moment your deeper mind reached something it wasn’t quite ready to hold. The abruptness isn’t random. It’s a boundary your psyche drew in real time.',
+    'Pay attention to what was happening right before everything cut out. That may be where the heat is: the moment the dream reached something it was not ready to hold for long. The abruptness can act like a boundary in the dream.',
     'Your nervous system has its own sense of timing, and it decided this dream had gone far enough. That cutoff point — that exact frozen frame where everything stopped — is probably the most honest image the whole dream produced.',
   ],
   escape: [
@@ -1126,7 +1126,7 @@ const PATTERN_EXPLANATIONS: Record<DreamPattern, string[]> = {
   ],
   boundary: [
     'There’s an old question buried in this dream, one you may already be circling in daylight: where do I end and where does someone else begin? The line between closeness and invasion is thinner than most people admit, and your dreaming mind is walking that edge.',
-    'The pull in this dream runs in two directions at once — toward openness and toward self-preservation. These kinds of dreams tend not to arrive during crisis. They arrive during the quieter negotiations, when you’re silently redrawing the lines of what you’ll let in and what you won’t.',
+    'The pull in this dream runs in two directions at once — toward openness and toward self-preservation. These kinds of dreams often arrive during quieter negotiations, when you’re silently redrawing the lines of what you’ll let in and what you won’t.',
     'This one is about the geography of closeness — who’s allowed where, and what happens when someone steps past a line you didn’t even know you’d drawn. It’s the kind of tension that stays invisible during the day and turns architectural at night.',
   ],
   authority: [
@@ -1136,7 +1136,7 @@ const PATTERN_EXPLANATIONS: Record<DreamPattern, string[]> = {
   ],
   pursuit: [
     'The body remembers this dream. The pounding heart, the legs that wouldn’t move fast enough, the certainty that something was closing the distance. What’s chasing you almost never has a face, because it isn’t a person — it’s the feeling, the conversation, the recognition you’ve been outrunning in daylight.',
-    'Your mind built an entire chase scene just to show you what urgency feels like from the inside. That adrenaline wasn’t random — it belongs to something that’s been building pressure quietly, patiently, waiting for you to turn around and finally look at it.',
+    'The chase scene shows what urgency felt like from the inside. That adrenaline may connect to something that has been building pressure quietly and asking for attention.',
     'Something in this dream wanted to be faced, and you chose to run. That’s not weakness — it’s honest. It tells you exactly where your threshold is right now. But the thing behind you already knows your pace, and it has no intention of giving up.',
   ],
   lost: [
@@ -1172,7 +1172,7 @@ const PATTERN_EXPLANATIONS: Record<DreamPattern, string[]> = {
   house_self: [
     'Your mind built you a house, and then it watched where you wandered. In dreams like this, every room is an interior you carry — some lived in, some locked, some you forgot existed. Whatever door caught your attention is probably the part of yourself that’s been knocking from the other side.',
     'Your inner world became architecture while you slept. The rooms you recognized are the parts of yourself you visit often — the habits, the identity, the comfortable self. But the rooms that unsettled you, the hallways that felt too long? Those are the unopened letters from yourself.',
-    'A house dream is your psyche’s self-portrait, rendered in walls and doorways. It’s mapping you — which parts feel like home, which have gone cold from disuse, and which are quietly renovating themselves in the dark, preparing to be lived in again.',
+    'A house dream can work like an inner self-portrait, rendered in walls and doorways. It may map which parts feel like home, which feel neglected, and which seem ready for renewed attention.',
   ],
   stuck: [
     'The dream gave you the physical sensation of going nowhere, and that’s because something in your life is doing exactly that. A loop. A holding pattern. Your waking mind keeps pushing forward, but your dreaming mind pulled back the curtain and showed you the treadmill underneath.',

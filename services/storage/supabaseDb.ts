@@ -26,14 +26,11 @@ import {
   JournalEntrySchema,
   ValidationError,
 } from '../validation/schemas';
-import { offlineQueue } from '../offline/offlineQueue';
 import type { HouseSystem } from '../astrology/types';
 import type { DailyCheckIn } from '../patterns/types';
 import {
   type BirthProfileSync,
   invokeBirthProfileSync,
-  isBirthProfileSyncUnavailableError,
-  warnBirthProfileSyncUnavailable,
 } from './birthProfileService';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -136,11 +133,6 @@ function chartFromBirthProfile(profile: BirthProfileSync): SavedChart {
     deletedAt: undefined,
   };
 }
-
-function isRemoteUnavailableError(error: unknown): boolean {
-  return isBirthProfileSyncUnavailableError(error);
-}
-
 
 function mapSettingsRow(row: Row): AppSettings {
   return {
@@ -312,7 +304,7 @@ export async function getJournalEntries(): Promise<JournalEntry[]> {
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load journal entries from Supabase.', error);
-    return [];
+    throw error;
   }
 
   if (!data?.length) return [];
@@ -337,7 +329,7 @@ export async function getJournalEntriesInRange(
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load journal entries range from Supabase.', error);
-    return [];
+    throw error;
   }
 
   if (!data?.length) return [];
@@ -370,7 +362,7 @@ export async function getJournalEntriesPaginated(
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load paginated journal entries from Supabase.', error);
-    return [];
+    throw error;
   }
 
   if (!data?.length) return [];
@@ -388,7 +380,7 @@ export async function getJournalEntryCount(): Promise<number> {
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to count journal entries from Supabase.', error);
-    return 0;
+    throw error;
   }
 
   return count ?? 0;
@@ -417,12 +409,7 @@ export async function saveJournalEntry(entry: JournalEntry): Promise<void> {
     );
   } catch (error) {
     if (isLikelyNetworkError(error)) {
-      await offlineQueue.enqueue({
-        type: 'journal_entry',
-        payload: { userId, entry: row },
-      });
-      logger.warn('[SupabaseDb] Journal entry queued for offline sync', { id: entry.id });
-      return;
+      logger.warn('[SupabaseDb] Journal entry was not saved because Supabase is unreachable.', { id: entry.id });
     }
 
     logger.warn('[SupabaseDb] Failed to save journal entry to Supabase.', {
@@ -541,7 +528,7 @@ export async function getSleepEntries(
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load sleep entries from Supabase.', error);
-    return [];
+    throw error;
   }
 
   if (!data?.length) return [];
@@ -567,7 +554,7 @@ export async function getSleepEntriesInRange(
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load sleep entries range from Supabase.', error);
-    return [];
+    throw error;
   }
 
   if (!data?.length) return [];
@@ -591,7 +578,7 @@ export async function getSleepEntryByDate(
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load sleep entry from Supabase.', error);
-    return null;
+    throw error;
   }
 
   return data ? mapSleepRow(data as Row) : null;
@@ -736,7 +723,7 @@ export async function getCheckIns(
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load daily check-ins from Supabase.', error);
-    return [];
+    throw error;
   }
 
   if (!data?.length) return [];
@@ -761,7 +748,7 @@ export async function getCheckInByDate(
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load daily check-in from Supabase.', error);
-    return null;
+    throw error;
   }
 
   return data ? mapCheckInRow(data as Row) : null;
@@ -783,7 +770,7 @@ export async function getCheckInsByDate(
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load daily check-ins by date from Supabase.', error);
-    return [];
+    throw error;
   }
 
   if (!data?.length) return [];
@@ -810,7 +797,7 @@ export async function getCheckInByDateAndTime(
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load daily check-in slot from Supabase.', error);
-    return null;
+    throw error;
   }
 
   return data ? mapCheckInRow(data as Row) : null;
@@ -835,7 +822,7 @@ export async function getCheckInsInRange(
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to load daily check-ins range from Supabase.', error);
-    return [];
+    throw error;
   }
 
   if (!data?.length) return [];
@@ -853,7 +840,7 @@ export async function getCheckInCount(chartId: string): Promise<number> {
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to count daily check-ins from Supabase.', error);
-    return 0;
+    throw error;
   }
 
   return count ?? 0;
@@ -869,7 +856,7 @@ export async function getTotalCheckInCount(): Promise<number> {
 
   if (error) {
     logger.warn('[SupabaseDb] Failed to count all daily check-ins from Supabase.', error);
-    return 0;
+    throw error;
   }
 
   return count ?? 0;
@@ -883,19 +870,20 @@ export async function saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
 
   const userId = await getUserId();
   const row = checkInToRow(checkIn, userId);
+  let rowToSave = row;
 
   try {
-    const existing = await getExistingCheckInIdentity(userId, checkIn);
-    const rowToSave = existing?.id
-      ? {
-          ...row,
-          id: existing.id,
-          created_at: existing.createdAt ?? row.created_at,
-        }
-      : row;
-
     await withRetry(
       async () => {
+        const existing = await getExistingCheckInIdentity(userId, checkIn);
+        rowToSave = existing?.id
+          ? {
+              ...row,
+              id: existing.id,
+              created_at: existing.createdAt ?? row.created_at,
+            }
+          : row;
+
         const { error } = await supabase
           .from('daily_check_ins')
           .upsert(rowToSave, { onConflict: 'id' });
@@ -907,12 +895,7 @@ export async function saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
     );
   } catch (error) {
     if (isLikelyNetworkError(error)) {
-      await offlineQueue.enqueue({
-        type: 'checkin',
-        payload: { userId, checkIn: row },
-      });
-      logger.warn('[SupabaseDb] Daily check-in queued for offline sync', { id: checkIn.id });
-      return;
+      logger.warn('[SupabaseDb] Daily check-in was not saved because Supabase is unreachable.', { id: checkIn.id });
     }
 
     logger.warn('[SupabaseDb] Failed to save daily check-in to Supabase.', {

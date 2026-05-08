@@ -336,7 +336,7 @@ function getHouseStelliumFlavor(house: number): { short: string; subtitle: strin
     8: {
       short: 'Life may initiate you into depth earlier than expected — repeated encounters with emotional intensity, vulnerability, and change.',
       subtitle: 'A life shaped by depth and transformation',
-      narrative: 'This stellium brings repeated encounters with emotional intensity, vulnerability, and change. Life may initiate you into depth earlier than expected.\n\nYou may sense undercurrents others avoid — feeling drawn toward truth, repair, or intimacy. Surface-level engagement can feel unsatisfying.\n\nEarlier in life, this emphasis can feel overwhelming or isolating. Over time, it becomes resilience — the ability to sit with discomfort without losing yourself.\n\nThe deeper invitation is realizing that transformation doesn\'t require constant crisis.',
+      narrative: 'This stellium brings repeated encounters with emotional intensity, vulnerability, and change. Life may initiate you into depth earlier than expected.\n\nYou may sense undercurrents others avoid — feeling drawn toward truth, repair, or intimacy. Surface-level engagement can feel unsatisfying.\n\nEarlier in life, this emphasis can feel overwhelming or isolating. Over time, it becomes resilience — the ability to sit with discomfort without losing yourself.\n\nThe deeper invitation is realizing that transformation does not require constant intensity.',
     },
     9: {
       short: 'Growth often comes through exploration — intellectual, spiritual, or literal. Life invites you to expand your worldview repeatedly.',
@@ -396,7 +396,7 @@ function getSignStelliumFlavor(sign: string): { short: string; subtitle: string;
     Virgo: {
       short: 'Life often meets you through responsibility, problem-solving, and noticing what others overlook.',
       subtitle: 'A life shaped by discernment and service',
-      narrative: 'This stellium brings focus to analysis, care, and refinement. Life often meets you through responsibility, problem-solving, and noticing what others overlook.\n\nYou may feel safest when things make sense or serve a purpose. Disorder can feel personal, even when it isn\'t.\n\nEarlier in life, this emphasis may feel like pressure to be useful or perfect. Over time, it becomes a gift for clarity, humility, and meaningful contribution.\n\nWhen supported, this stellium offers precision and care. Under strain, it may express as self-criticism or anxiety.\n\nThe deeper invitation is learning that worth doesn\'t depend on usefulness — and that rest is also a form of service.',
+      narrative: 'This stellium brings focus to analysis, care, and refinement. Life often meets you through responsibility, problem-solving, and noticing what others overlook.\n\nYou may feel safest when things make sense or serve a purpose. Disorder can feel personal, even when it isn\'t.\n\nEarlier in life, this emphasis may feel like pressure to be useful or perfect. Over time, it becomes a gift for clarity, humility, and meaningful contribution.\n\nWhen supported, this stellium offers precision and care. Under strain, it may express as self-criticism or worry.\n\nThe deeper invitation is learning that worth doesn\'t depend on usefulness — and that rest is also a form of service.',
     },
     Libra: {
       short: 'You often learn who you are through interaction with others.',

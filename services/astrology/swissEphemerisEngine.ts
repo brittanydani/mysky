@@ -290,7 +290,7 @@ export function calcHouses(
     throw new Error('Swiss Ephemeris not available');
   }
 
-  const hsysChar = HOUSE_SYSTEM_MAP[houseSystem] || 'P'; // default Placidus
+  const hsysChar = HOUSE_SYSTEM_MAP[houseSystem] || HOUSE_SYSTEM_MAP['whole-sign'];
   const result = swe.sweHouses(julianDay, 0, latitude, longitude, hsysChar);
 
   // result.cusp is 1-indexed (cusp[0] is unused) in the C library;

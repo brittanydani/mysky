@@ -121,7 +121,7 @@ const SOUTH_NODE_BY_HOUSE: Record<number, NodeHouseContent> = {
   8: {
     house: 8,
     title: 'Emotional Intensity',
-    theme: 'Defaulting to depth, control, or crisis mode.',
+    theme: 'Defaulting to depth, control, or high-intensity mode.',
     description: 'Intensity feels normal to you. Under stress, emotional merging or power dynamics replace simpler exchanges. The instinct is to go deep — even when the moment is surface-level.',
     journalPrompts: [
       'Where am I creating intensity that the situation doesn\'t require?',

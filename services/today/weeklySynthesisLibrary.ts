@@ -78,7 +78,7 @@ function buildAttunedWeeklyNarrative(ctx: WeeklySynthesisContext): string | null
       : '.';
     const interpretation = lowerBaseline || limitedSleep
       ? 'That combination matters. When dreams increase during emotionally thinner weeks, MySky reads it as your mind continuing the conversation after the day is over. Something may not have felt fully processed while awake, so it kept returning in symbolic form at night.'
-      : 'That combination suggests your mind kept processing after the day ended. The dreams were not random background detail; they were part of how your inner world stayed active.';
+      : 'That combination suggests your mind kept processing after the day ended. The dreams may be part of how your inner world stayed active.';
     const meaning = deepReflection
       ? `The story of this week is not just that you had dreams. It is that your inner world stayed active enough to leave a trace, and you kept recording it through ${pluralize(ctx.journalCount, 'journal entry')}.`
       : 'The story of this week is not just that you had dreams. It is that your inner world stayed active, even when the week may have felt harder to carry.';
@@ -126,7 +126,7 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
   
   if (ctx.moodTrend === 'rising' && ctx.avgSleep >= 7) {
     narratives.push(
-      `Your mood climbed this week, averaging ${ctx.avgMood.toFixed(1)}, and your sleep held steady at ${ctx.avgSleep.toFixed(1)} hours. That combination isn't random — when your body gets what it needs, your emotional weather shifts. The ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} you wrote captured this lift in real time, giving you a record of what rising feels like from the inside.`,
+      `Your mood climbed this week, averaging ${ctx.avgMood.toFixed(1)}, and your sleep held steady at ${ctx.avgSleep.toFixed(1)} hours. That pairing suggests rest may be supporting your emotional weather. The ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} you wrote captured this lift in real time, giving you a record of what rising feels like from the inside.`,
       
       `This week brought ${ctx.highDays} brighter days, and your sleep averaged ${ctx.avgSleep.toFixed(1)} hours — enough to let your system recover and your mood rise to ${ctx.avgMood.toFixed(1)}. The ${ctx.journalCount} times you reflected in writing helped anchor these shifts, making them easier to recognize and trust. Something in your rhythm is working.`,
       
@@ -148,7 +148,7 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
       
       `Sleep stayed generous at ${ctx.avgSleep.toFixed(1)} hours this week, and your mood climbed to ${ctx.avgMood.toFixed(1)}. You logged ${ctx.highDays} elevated days — evidence that rest is doing more than just preventing exhaustion. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} captured the texture of this lift, giving you a record of what support looks like.`,
       
-      `This week brought ${ctx.avgSleep.toFixed(1)} hours of sleep on average and a mood lift to ${ctx.avgMood.toFixed(1)}. The ${ctx.highDays} brighter days you experienced weren't random — they're what happens when your nervous system gets consistent care. Your ${ctx.journalCount} written reflections documented this shift in real time.`,
+      `This week brought ${ctx.avgSleep.toFixed(1)} hours of sleep on average and a mood lift to ${ctx.avgMood.toFixed(1)}. The ${ctx.highDays} brighter days you experienced may be connected to more consistent care. Your ${ctx.journalCount} written reflections documented this shift in real time.`,
       
       `Your mood rose to ${ctx.avgMood.toFixed(1)} while sleep averaged ${ctx.avgSleep.toFixed(1)} hours — a week where the fundamentals aligned. You had ${ctx.highDays} elevated days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that climb felt like from the inside. This is the kind of pattern worth protecting.`,
       
@@ -180,11 +180,11 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
       
       `Your mood dropped to ${ctx.avgMood.toFixed(1)} while sleep averaged ${ctx.avgSleep.toFixed(1)} hours — not enough for your nervous system to reset. You logged ${ctx.lowDays} difficult days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that feels like from the inside. Sleep might be the lever that changes everything else.`,
       
-      `Sleep averaged just ${ctx.avgSleep.toFixed(1)} hours this week, and your mood fell to ${ctx.avgMood.toFixed(1)}. The ${ctx.lowDays} heavier days you experienced aren't failures — they're signals that your body needs more recovery time. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} this strain, making it easier to see what needs attention.`,
+      `Sleep averaged just ${ctx.avgSleep.toFixed(1)} hours this week, and your mood fell to ${ctx.avgMood.toFixed(1)}. The ${ctx.lowDays} heavier days you experienced aren't failures; they may point to a need for more recovery time. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} this strain, making it easier to see what may need attention.`,
       
-      `Your mood softened to ${ctx.avgMood.toFixed(1)} this week while sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours. That pairing suggests your system is running on fumes. You had ${ctx.lowDays} difficult days, and your ${ctx.journalCount} written reflections captured the weight of that deficit. Rest isn't optional — it's foundational.`,
+      `Your mood softened to ${ctx.avgMood.toFixed(1)} this week while sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours. That pairing suggests your system may be under-resourced. You had ${ctx.lowDays} difficult days, and your ${ctx.journalCount} written reflections captured the weight of that deficit. Rest may be foundational here.`,
       
-      `This week your mood averaged ${ctx.avgMood.toFixed(1)}, down from where you've been, and sleep held at just ${ctx.avgSleep.toFixed(1)} hours. Your body is asking for more recovery time, and the ${ctx.lowDays} heavier days you logged show what happens when it doesn't get it. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} captured this strain in real time.`,
+      `This week your mood averaged ${ctx.avgMood.toFixed(1)}, down from where you've been, and sleep held at just ${ctx.avgSleep.toFixed(1)} hours. Your body may be asking for more recovery time, and the ${ctx.lowDays} heavier days you logged show how that strain felt. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} captured this in real time.`,
       
       `With only ${ctx.avgSleep.toFixed(1)} hours of sleep on average, your mood dropped to ${ctx.avgMood.toFixed(1)} this week. You logged ${ctx.lowDays} difficult days — evidence that sleep debt compounds emotionally. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that deficit feels like, making it easier to prioritize rest.`,
       
@@ -192,23 +192,23 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
       
       `Your mood softened to ${ctx.avgMood.toFixed(1)} while sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours this week. That's not enough for your nervous system to fully reset, and the ${ctx.lowDays} difficult days you logged show the impact. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what this feels like — rest might be the most direct path forward.`,
       
-      `Sleep averaged just ${ctx.avgSleep.toFixed(1)} hours this week, and your mood dropped to ${ctx.avgMood.toFixed(1)}. You had ${ctx.lowDays} heavier days — not random, but a clear signal that your body needs more recovery time. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} documented this deficit, making it easier to see what's asking for attention.`,
+      `Sleep averaged just ${ctx.avgSleep.toFixed(1)} hours this week, and your mood dropped to ${ctx.avgMood.toFixed(1)}. You had ${ctx.lowDays} heavier days, which may point toward a need for more recovery time. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} documented this deficit, making it easier to see what may be asking for attention.`,
       
       `Your mood fell to ${ctx.avgMood.toFixed(1)} this week while sleep held at ${ctx.avgSleep.toFixed(1)} hours — not enough for your system to catch up. The ${ctx.lowDays} difficult days you logged show what sleep debt looks like emotionally. Your ${ctx.journalCount} written reflections captured this strain, giving you a record of what needs to shift.`,
       
       `This week brought ${ctx.avgSleep.toFixed(1)} hours of sleep on average and a mood drop to ${ctx.avgMood.toFixed(1)}. Your body is carrying a deficit, and the ${ctx.lowDays} heavier days you experienced show the cost. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that feels like — rest isn't optional, it's foundational.`,
       
-      `With only ${ctx.avgSleep.toFixed(1)} hours of sleep backing you, your mood softened to ${ctx.avgMood.toFixed(1)} this week. You logged ${ctx.lowDays} difficult days — evidence that your nervous system needs more recovery time. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} this strain in real time.`,
+      `With only ${ctx.avgSleep.toFixed(1)} hours of sleep backing you, your mood softened to ${ctx.avgMood.toFixed(1)} this week. You logged ${ctx.lowDays} difficult days, which may point toward a need for more recovery time. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} this strain in real time.`,
       
       `Your sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your mood dropped to ${ctx.avgMood.toFixed(1)} — a week where rest didn't keep pace with demand. The ${ctx.lowDays} heavier days you experienced show what that deficit costs. Your ${ctx.journalCount} written reflections captured this strain, making it easier to prioritize what matters.`,
       
       `Your mood fell to ${ctx.avgMood.toFixed(1)} while sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours this week. That pairing suggests your system is running on empty. You had ${ctx.lowDays} difficult days, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what that feels like. Adding even 30 minutes of sleep could shift everything.`,
       
-      `Sleep averaged just ${ctx.avgSleep.toFixed(1)} hours this week, and your mood softened to ${ctx.avgMood.toFixed(1)}. The ${ctx.lowDays} heavier days you logged aren't failures — they're signals that your body needs more care. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} documented this deficit, giving you clarity on what needs attention.`,
+      `Sleep averaged just ${ctx.avgSleep.toFixed(1)} hours this week, and your mood softened to ${ctx.avgMood.toFixed(1)}. The ${ctx.lowDays} heavier days you logged aren't failures; they may point toward a need for more care. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} documented this deficit, giving you clarity on what may need attention.`,
       
       `Your mood dropped to ${ctx.avgMood.toFixed(1)} this week while sleep held at ${ctx.avgSleep.toFixed(1)} hours — not enough for your nervous system to reset. You logged ${ctx.lowDays} difficult days, and your ${ctx.journalCount} written reflections show what that strain feels like. Rest might be the lever that changes everything else.`,
       
-      `This week your mood averaged ${ctx.avgMood.toFixed(1)}, down from recent weeks, and sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours. Your body is asking for more recovery time, and the ${ctx.lowDays} heavier days you experienced show what happens when it doesn't get it. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} this in real time.`,
+      `This week your mood averaged ${ctx.avgMood.toFixed(1)}, down from recent weeks, and sleep stayed short at ${ctx.avgSleep.toFixed(1)} hours. Your body may be asking for more recovery time, and the ${ctx.lowDays} heavier days you experienced show how that strain felt. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} this in real time.`,
       
       `With ${ctx.avgSleep.toFixed(1)} hours of sleep on average, your mood fell to ${ctx.avgMood.toFixed(1)} this week. You had ${ctx.lowDays} difficult days — evidence that sleep debt compounds emotionally. Your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that deficit feels like, making it easier to see what needs to change.`,
       
@@ -238,7 +238,7 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
       
       `This week you logged ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a mood range that suggests your system is processing something. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} written reflections documented these swings in real time. When emotions move this much, the basics become even more important.`,
       
-      `Your mood swung between ${ctx.moodRange.low.toFixed(1)} and ${ctx.moodRange.high.toFixed(1)} this week, with ${ctx.highDays} brighter days and ${ctx.lowDays} heavier ones. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that range feels like. Volatility isn't random — it's your system telling you something.`,
+      `Your mood swung between ${ctx.moodRange.low.toFixed(1)} and ${ctx.moodRange.high.toFixed(1)} this week, with ${ctx.highDays} brighter days and ${ctx.lowDays} heavier ones. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry shows' : 'entries show'} what that range feels like. Volatility can be useful information about what your system is carrying.`,
       
       `This week brought ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a wide emotional range. Your mood averaged ${ctx.avgMood.toFixed(1)}, but that hides the swings. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} the texture of this volatility. Consistency in rest might help stabilize what's shifting.`,
       
@@ -260,7 +260,7 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
       
       `Your mood ranged from ${ctx.moodRange.low.toFixed(1)} to ${ctx.moodRange.high.toFixed(1)} this week — ${ctx.highDays} brighter days mixed with ${ctx.lowDays} heavier ones. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry documents' : 'entries document'} what that volatility feels like from the inside. When emotions move this much, consistency becomes your anchor.`,
       
-      `This week you logged ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a mood range that suggests something underneath is shifting. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} written reflections captured these swings in real time. Volatility isn't random — it's your system telling you something needs attention.`,
+      `This week you logged ${ctx.highDays} elevated days and ${ctx.lowDays} difficult ones — a mood range that suggests something underneath may be shifting. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} written reflections captured these swings in real time. Volatility can point toward something that needs attention.`,
     );
   }
   
@@ -292,7 +292,7 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
       
       `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — not high, not low, just consistent. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what this steadiness feels like. Stability isn't boring — it's the ground you build from. Your ${ctx.checkIns.length} check-ins document this.`,
       
-      `This week you maintained a mood average of ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep — a week where nothing dramatic happened, and that's actually valuable. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins show what it looks like when your system isn't in crisis mode. This is what sustainable feels like.`,
+      `This week you maintained a mood average of ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep — a week where nothing dramatic happened, and that's actually valuable. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins show what it looks like when your system is not in high-intensity mode. This is what sustainable feels like.`,
       
       `Your mood held at ${ctx.avgMood.toFixed(1)} this week while sleep stayed consistent at ${ctx.avgSleep.toFixed(1)} hours. You logged ${ctx.checkIns.length} check-ins and wrote ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'} — building a record of what steady actually feels like. This kind of consistency is the foundation for everything else.`,
       
@@ -308,7 +308,7 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
       
       `Your mood averaged ${ctx.avgMood.toFixed(1)} this week — not high, not low, just consistent. Sleep held at ${ctx.avgSleep.toFixed(1)} hours, and your ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry captures' : 'entries capture'} what this steadiness feels like. Stability isn't boring — it's the ground you build from.`,
       
-      `This week you maintained a mood average of ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep — a week where nothing dramatic happened, and that's actually valuable. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins show what it looks like when your system isn't in crisis mode.`,
+      `This week you maintained a mood average of ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep — a week where nothing dramatic happened, and that's actually valuable. Your ${ctx.journalCount} written reflections and ${ctx.checkIns.length} check-ins show what it looks like when your system is not in high-intensity mode.`,
     );
   }
   
@@ -440,15 +440,15 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
   
   if (ctx.checkIns.length <= 3 && ctx.journalCount === 0) {
     narratives.push(
-      `You logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week with an average mood of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours. It's early, but you're building something. Each signal you leave makes the next week's reflection more meaningful. Keep going — the patterns will emerge.`,
+      `You logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week with an average mood of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours. It's early, but you're building something. Each signal you leave makes the next week's reflection more meaningful. Over time, patterns can become easier to see.`,
       
-      `This week brought ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} and a mood average of ${ctx.avgMood.toFixed(1)}. Sleep held at ${ctx.avgSleep.toFixed(1)} hours. You're in the early stages of building your pattern history. Right now it feels like data, but soon the repetition will start showing you patterns you couldn't see before. Every entry matters.`,
+      `This week brought ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} and a mood average of ${ctx.avgMood.toFixed(1)}. Sleep held at ${ctx.avgSleep.toFixed(1)} hours. You're in the early stages of building your pattern history. Right now it feels like data, but repetition can make patterns easier to see. Every entry matters.`,
       
-      `You've logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week — a starting point. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. The first few weeks are about building the habit, not finding perfect insights. You're doing exactly what you need to do. The depth will come.`,
+      `You've logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week — a starting point. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. The first few weeks are about building the habit, not finding perfect insights. More depth can come with more history.`,
       
-      `This week you checked in ${ctx.checkIns.length} time${ctx.checkIns.length === 1 ? '' : 's'}, averaging ${ctx.avgMood.toFixed(1)} mood and ${ctx.avgSleep.toFixed(1)} hours of sleep. It's early, but you're creating a foundation. Each signal you leave is a data point your future self will thank you for. Keep showing up — the patterns will reveal themselves.`,
+      `This week you checked in ${ctx.checkIns.length} time${ctx.checkIns.length === 1 ? '' : 's'}, averaging ${ctx.avgMood.toFixed(1)} mood and ${ctx.avgSleep.toFixed(1)} hours of sleep. It's early, but you're creating a foundation. Each signal you leave is a data point your future self may appreciate. Keep showing up so patterns have enough history to appear.`,
       
-      `You logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week with a mood average of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours. Right now you're building the pattern history that will eventually show you what you can't see yet. The first few weeks are about consistency, not perfection. You're on the right path.`,
+      `You logged ${ctx.checkIns.length} check-in${ctx.checkIns.length === 1 ? '' : 's'} this week with a mood average of ${ctx.avgMood.toFixed(1)}. Sleep averaged ${ctx.avgSleep.toFixed(1)} hours. Right now you're building the pattern history that can make subtle shifts easier to notice. The first few weeks are about consistency, not perfection.`,
     );
   }
   
@@ -458,13 +458,13 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
   
   if (ctx.dreamCount >= 4) {
     narratives.push(
-      `You recorded ${ctx.dreamCount} dreams this week — more than usual. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. High dream recall often signals that your subconscious is processing something significant. The fact that you're capturing these patterns gives you access to a layer most people never see.`,
+      `You recorded ${ctx.dreamCount} dreams this week — more than usual. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. High dream recall can add another layer of reflection. Capturing these patterns gives you more material to compare over time.`,
       
-      `This week brought ${ctx.dreamCount} recorded dreams alongside a mood average of ${ctx.avgMood.toFixed(1)} and ${ctx.avgSleep.toFixed(1)} hours of sleep. When dream frequency increases, it's usually because your subconscious is working through something important. You're keeping that processing visible, which makes it easier to understand what's shifting beneath the surface.`,
+      `This week brought ${ctx.dreamCount} recorded dreams alongside a mood average of ${ctx.avgMood.toFixed(1)} and ${ctx.avgSleep.toFixed(1)} hours of sleep. When dream frequency increases, it can be useful to compare themes gently. You're keeping that material visible, which makes it easier to notice what may be shifting beneath the surface.`,
       
-      `You logged ${ctx.dreamCount} dreams this week — a significant amount of subconscious activity. Your mood held at ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. Dreams are how your mind processes what your waking consciousness can't fully hold. The fact that you're recording them means you're paying attention to a layer most people ignore.`,
+      `You logged ${ctx.dreamCount} dreams this week — a significant amount of dream material. Your mood held at ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. Recording them gives you another way to notice repeated symbols, feelings, and themes.`,
       
-      `This week you captured ${ctx.dreamCount} dreams, which is notable. Your mood averaged ${ctx.avgMood.toFixed(1)}, and sleep stayed at ${ctx.avgSleep.toFixed(1)} hours. High dream recall often correlates with deeper processing — your subconscious is active, and you're giving it space to work. That level of engagement with your inner world is rare.`,
+      `This week you captured ${ctx.dreamCount} dreams, which is notable. Your mood averaged ${ctx.avgMood.toFixed(1)}, and sleep stayed at ${ctx.avgSleep.toFixed(1)} hours. High dream recall can give you more symbols and feelings to compare. That level of engagement gives your reflections more texture.`,
       
       `You recorded ${ctx.dreamCount} dreams this week alongside ${ctx.journalCount} journal ${ctx.journalCount === 1 ? 'entry' : 'entries'}. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. When you track both dreams and waking reflections, you're building a multi-layered understanding of what's happening beneath the surface. That kind of depth compounds over time.`,
     );
@@ -476,13 +476,13 @@ function selectNarratives(ctx: WeeklySynthesisContext): string[] {
   
   if (ctx.checkIns.length === 7) {
     narratives.push(
-      `You checked in every day this week — seven consecutive signals. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. That level of consistency is rare and valuable. You're not just tracking data; you're building a practice of self-awareness that most people never develop. This is how real insight happens.`,
+      `You checked in every day this week — seven consecutive signals. Your mood averaged ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. That level of consistency is valuable. You're not just tracking data; you're building a practice of self-awareness with enough history to support real insight.`,
       
       `This week brought seven check-ins — a full week of consistent reflection. Your mood averaged ${ctx.avgMood.toFixed(1)}, and sleep held at ${ctx.avgSleep.toFixed(1)} hours. When you show up every day, patterns become visible that would otherwise stay hidden. You're building something real here, and it shows.`,
       
-      `You logged check-ins every single day this week — seven in a row. Your mood held at ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. That kind of consistency is what separates people who track from people who truly understand themselves. You're in the second category now.`,
+      `You logged check-ins every single day this week — seven in a row. Your mood held at ${ctx.avgMood.toFixed(1)} with ${ctx.avgSleep.toFixed(1)} hours of sleep. That kind of consistency gives the app stronger evidence to work with.`,
       
-      `This week you checked in all seven days, averaging ${ctx.avgMood.toFixed(1)} mood and ${ctx.avgSleep.toFixed(1)} hours of sleep. Daily consistency like this is how you build real self-knowledge. You're not just collecting data — you're creating a practice that will show you patterns you couldn't see before. Keep going.`,
+      `This week you checked in all seven days, averaging ${ctx.avgMood.toFixed(1)} mood and ${ctx.avgSleep.toFixed(1)} hours of sleep. Daily consistency like this helps build real self-knowledge. You're not just collecting data; you're creating a practice that can make patterns easier to see.`,
       
       `You maintained a seven-day check-in streak this week with a mood average of ${ctx.avgMood.toFixed(1)} and ${ctx.avgSleep.toFixed(1)} hours of sleep. That level of engagement is what makes the difference between surface-level tracking and genuine insight. You're doing the work that matters.`,
     );

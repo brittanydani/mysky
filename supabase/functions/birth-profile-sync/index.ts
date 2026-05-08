@@ -57,6 +57,24 @@ function validateProfile(profile: BirthProfilePayload | undefined): BirthProfile
   if (!profile.chartId || !profile.birthDate || !profile.birthPlace) {
     throw new Error("Birth profile is missing required fields");
   }
+  const match = profile.birthDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) throw new Error("Birth date is invalid");
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const birthDate = new Date(year, month, day);
+  birthDate.setFullYear(year);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (
+    Number.isNaN(birthDate.getTime()) ||
+    birthDate.getFullYear() !== year ||
+    birthDate.getMonth() !== month ||
+    birthDate.getDate() !== day ||
+    birthDate > today
+  ) {
+    throw new Error("Birth date is invalid");
+  }
   if (!Number.isFinite(profile.latitude) || !Number.isFinite(profile.longitude)) {
     throw new Error("Birth profile coordinates are invalid");
   }
@@ -211,6 +229,12 @@ serve(async (req: Request) => {
         deletedAt: body.deletedAt ?? new Date().toISOString(),
       };
 
+      if (!existing) {
+        return new Response(JSON.stringify({ profile: tombstone }), {
+          headers: { ...corsHeaders, "content-type": "application/json" },
+        });
+      }
+
       const { error } = await admin.from("birth_profiles").upsert(
         {
           id: user.id,
@@ -248,9 +272,17 @@ serve(async (req: Request) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
     const status =
-      message === "Unauthorized" || message === "Missing authorization header" ? 401 : 500;
+      message === "Unauthorized" || message === "Missing authorization header" ? 401 :
+      message === "Missing profile" ||
+      message === "Birth profile is missing required fields" ||
+      message === "Birth date is invalid" ||
+      message === "Birth profile coordinates are invalid" ? 400 :
+      500;
+    const responseMessage = status === 500
+      ? "Birth profile sync failed. Please try again."
+      : message;
 
-    return new Response(JSON.stringify({ error: message }), {
+    return new Response(JSON.stringify({ error: responseMessage }), {
       status,
       headers: { ...corsHeaders, "content-type": "application/json" },
     });

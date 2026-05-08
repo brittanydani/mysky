@@ -175,6 +175,7 @@ export default function HomeScreen() {
 
   const [loading, setLoading] = useState(true);
   const [todayDataReady, setTodayDataReady] = useState(false);
+  const [todayLoadError, setTodayLoadError] = useState<string | null>(null);
   const recordedTodayInsightKeysRef = useRef<Set<string>>(new Set());
   const consumedTodayInsightRefreshRevisionRef = useRef(0);
 
@@ -270,6 +271,7 @@ export default function HomeScreen() {
           setLoading(true);
         }
         setTodayDataReady(false);
+        setTodayLoadError(null);
       }
 
       const isCurrentLoad = () => isScreenActiveRef.current && loadSequenceRef.current === loadId;
@@ -457,6 +459,7 @@ export default function HomeScreen() {
         }
 
         if (opts.markReady) {
+          setIfActive(setTodayLoadError, null);
           setIfActive(setTodayDataReady, true);
           todayDataReadyRef.current = true;
           lastLoadedDayRef.current = todayKey;
@@ -515,6 +518,12 @@ export default function HomeScreen() {
             })();
           } catch (err) {
             logger.error('Failed to load check-ins, sleep, or self-knowledge:', err);
+            setIfActive(setTodayLoadError, 'Could not load today\'s saved signals. Check your connection and try again.');
+            setIfActive(setKnowledgeInsight, null);
+            setIfActive(setKnowledgeInsights, []);
+            setIfActive(setTodayInsightSignalCount, 0);
+            setIfActive(setSleepSignalCount, 0);
+            setIfActive(setDreamSignalCount, 0);
             setIfActive(setTodayDataReady, true);
           }
         } else {
@@ -525,6 +534,7 @@ export default function HomeScreen() {
           setIfActive(setKnowledgeInsight, null);
           setIfActive(setKnowledgeInsights, []);
           setIfActive(setMoodInsightsEnabled, true);
+          setIfActive(setTodayLoadError, null);
           setIfActive(setTodayInsightSignalCount, 0);
           setIfActive(setSleepSignalCount, 0);
           setIfActive(setDreamSignalCount, 0);
@@ -543,6 +553,7 @@ export default function HomeScreen() {
         setIfActive(setKnowledgeInsight, null);
         setIfActive(setKnowledgeInsights, []);
         setIfActive(setMoodInsightsEnabled, true);
+        setIfActive(setTodayLoadError, 'Could not load your saved profile. Check your connection and try again.');
         setIfActive(setTodayInsightSignalCount, 0);
         setIfActive(setSleepSignalCount, 0);
         setIfActive(setDreamSignalCount, 0);
@@ -714,6 +725,14 @@ export default function HomeScreen() {
       };
     }
 
+    if (todayLoadError) {
+      return {
+        icon: 'alert-circle-outline',
+        label: 'TODAY',
+        text: todayLoadError,
+      };
+    }
+
     if (!moodInsightsEnabled) {
       return {
         icon: 'eye-off-outline',
@@ -729,7 +748,7 @@ export default function HomeScreen() {
         ? 'Your signal is saved. MySky will name a pattern here once there is enough fresh evidence.'
         : 'Log a check-in, reflection, journal note, or sleep entry to see your personalized daily reflection.',
     };
-  }, [hasInsightDataToday, moodInsightsEnabled, todayDataReady]);
+  }, [hasInsightDataToday, moodInsightsEnabled, todayDataReady, todayLoadError]);
 
   const availableKnowledgeInsights = useMemo(
     () => knowledgeInsights.length ? knowledgeInsights : knowledgeInsight ? [knowledgeInsight] : [],
@@ -934,7 +953,11 @@ export default function HomeScreen() {
               <View style={styles.scoreHeader}>
                 <Text style={styles.cardLabel}>TODAY'S BALANCE</Text>
               </View>
-              {!todayDataReady ? (
+              {todayLoadError ? (
+                <View style={styles.scoreMain}>
+                  <Text style={styles.noDataText}>Could not load today's signals</Text>
+                </View>
+              ) : !todayDataReady ? (
                 <View style={styles.scoreMain}>
                   <Text style={styles.noDataText}>Loading today's signals</Text>
                 </View>

@@ -103,7 +103,8 @@ export default function OnboardingConsentScreen() {
             <Text style={styles.title}>Accept Terms & Privacy</Text>
             <Text style={styles.body}>
               To use MySky, please review and accept the Terms of Use and Privacy Policy.
-              Your data stays on your device by default, with encryption at rest.
+              Supabase is the source of truth for your account data, protected by user-level access controls.
+              This device may keep local cache for responsiveness.
             </Text>
 
             <View style={styles.linkRow}>

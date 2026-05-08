@@ -53,7 +53,7 @@ type BirthDataModalInitial = Partial<BirthData> & { chartName?: string };
 interface BirthDataModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (data: BirthData, extra?: { chartName?: string }) => void;
+  onSave: (data: BirthData, extra?: { chartName?: string }) => void | Promise<void>;
   initialData?: BirthDataModalInitial;
   hideClose?: boolean;
   title?: string;
@@ -118,6 +118,7 @@ export default function BirthDataModal({
   const [searchingLocation, setSearchingLocation] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [locationSelected, setLocationSelected] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -136,6 +137,7 @@ export default function BirthDataModal({
       setLocationSelected(!!(initialData?.place && initialData?.latitude != null));
       setLocationSuggestions([]);
       setShowSuggestions(false);
+      setLocationError(null);
       setShowDatePicker(false);
       setSaveError(null);
       setIsSaving(false);
@@ -164,10 +166,12 @@ export default function BirthDataModal({
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
 
     setLocationSelected(false);
+    setLocationError(null);
 
     const q = query.trim();
     if (q.length < 3) {
       setShowSuggestions(false);
+      setLocationSuggestions([]);
       return;
     }
 
@@ -186,16 +190,28 @@ export default function BirthDataModal({
         );
         if (!response.ok) {
           setShowSuggestions(false);
+          setLocationSuggestions([]);
+          setLocationError('Location lookup is unavailable. Check your connection and try again.');
           return;
         }
         const data = await response.json();
 
         if (!controller.signal.aborted) {
-          setLocationSuggestions(Array.isArray(data) ? data : []);
-          setShowSuggestions(true);
+          const suggestions = Array.isArray(data) ? data : [];
+          setLocationSuggestions(suggestions);
+          setShowSuggestions(suggestions.length > 0);
+          setLocationError(
+            suggestions.length === 0
+              ? 'No matching locations found. Try a nearby city or a more specific search.'
+              : null,
+          );
         }
       } catch {
-        setShowSuggestions(false);
+        if (!controller.signal.aborted) {
+          setShowSuggestions(false);
+          setLocationSuggestions([]);
+          setLocationError('Location lookup failed. Check your connection and try again.');
+        }
       } finally {
         setSearchingLocation(false);
       }
@@ -263,7 +279,7 @@ export default function BirthDataModal({
                   </Pressable>
                 )}
               </View>
-              <Text style={styles.subtitle}>Your data stays private and encrypted on your device.</Text>
+              <Text style={styles.subtitle}>Saved securely to your account so your chart can sync across app restarts.</Text>
             </Animated.View>
 
             {/* Name */}
@@ -377,7 +393,7 @@ export default function BirthDataModal({
 
               {hasUnknownTime && (
                 <View style={styles.unknownTimeNote}>
-                  <Text style={styles.unknownTimeNoteText}>Chart will use solar noon. House cusps less precise.</Text>
+                  <Text style={styles.unknownTimeNoteText}>Chart will use solar noon. Rising sign and houses stay hidden until a birth time is added.</Text>
                 </View>
               )}
             </Animated.View>
@@ -416,6 +432,7 @@ export default function BirthDataModal({
                         setLatitude(parseFloat(s.lat));
                         setLongitude(parseFloat(s.lon));
                         setLocationSelected(true);
+                        setLocationError(null);
                         setShowSuggestions(false);
                         Haptics.selectionAsync().catch(() => {});
                       }}
@@ -424,6 +441,9 @@ export default function BirthDataModal({
                     </Pressable>
                   ))}
                 </View>
+              )}
+              {locationError && (
+                <Text style={styles.locationErrorText}>{locationError}</Text>
               )}
             </Animated.View>
 
@@ -461,7 +481,7 @@ export default function BirthDataModal({
               )}
             </Animated.View>
 
-            <Text style={styles.privacyNote}>Stored locally. Never shared.</Text>
+            <Text style={styles.privacyNote}>Saved to your MySky account. Used only for your chart and profile calculations.</Text>
 
             {onRestore && (
               <Pressable style={styles.restoreBtn} onPress={onRestore}>
@@ -708,6 +728,12 @@ const createStyles = (theme: AppTheme) => {
   suggestionText: {
     color: theme.textSecondary,
     fontSize: 14,
+  },
+  locationErrorText: {
+    color: theme.error,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 8,
   },
   errorBox: {
     flexDirection: 'row',

@@ -245,7 +245,7 @@ const CHAKRA_HEALING: Record<number, Record<ChakraState, string>> = {
     'Flowing':          'Speak your truth to someone today — even a small honest statement counts.',
     'Sensitive':        'Hum for 30 seconds. The vibration loosens throat tension without forcing words.',
     'Grounding Needed': 'Write what you need to say before you say it. Let ink carry the first draft.',
-    'Quiet':            'Listen more today. Your voice will come when it has something real to say.',
+    'Quiet':            'Listen more today. Your voice can come when it has something real to say.',
   },
   5: {
     'Flowing':          'Trust the first answer that arrives — before your mind starts editing it.',
@@ -410,7 +410,7 @@ const DOMAIN_STATES: Record<string, Record<EnergyDomainName, { state: string; fe
     'Mental':              { state: 'Steady',                feeling: 'Thinking is deliberate; rushing decisions feels wrong.', why: 'Taurus Moon is exalted — the mind slows into a grounded, reliable rhythm that resists pressure.', suggestion: 'Trust the slower pace. Sleep on any decision that feels forced.' },
     'Emotional':           { state: 'Settled',               feeling: 'Emotions seek comfort and predictability.', why: 'Venus-ruled Moon craves emotional security; familiar routines become anchors.', suggestion: 'Wrap yourself in something comforting — a ritual, a texture, a familiar meal.' },
     'Physical':            { state: 'Grounded',              feeling: 'Body wants rest, nourishment, and sensory pleasure.', why: 'Earth Moon deepens body awareness; the physical senses become primary channels of information.', suggestion: 'Eat something nourishing and eat it slowly. Let your body receive instead of perform.' },
-    'Relational':          { state: 'Warm but Cautious',     feeling: 'Trust builds slowly; loyalty runs deep when earned.', why: 'Fixed earth in the Moon creates strong attachment patterns — opening up requires safety first.', suggestion: 'Show up consistently for someone. Taurus love is demonstrated through presence, not grand gestures.' },
+    'Relational':          { state: 'Warm but Cautious',     feeling: 'Trust builds slowly; loyalty runs deep when earned.', why: 'Fixed earth in the Moon can create strong connection patterns — opening up often requires safety first.', suggestion: 'Show up consistently for someone. Taurus love is demonstrated through presence, not grand gestures.' },
     'Creative / Spiritual': { state: 'Sensory',              feeling: 'Beauty, texture, and craft feel more alive than abstraction.', why: 'Venus-ruled Moon channels creativity through the physical — touch, sound, and material beauty.', suggestion: 'Work with your hands. Cook, arrange, draw, build — let the senses guide the process.' },
   },
   Gemini: {
@@ -423,7 +423,7 @@ const DOMAIN_STATES: Record<string, Record<EnergyDomainName, { state: string; fe
   Cancer: {
     'Mental':              { state: 'Reflective',            feeling: 'Mind drifts inward; memories surface unbidden.', why: 'Moon is domicile in Cancer — the mind turns toward the inner world, memory, and emotional processing.', suggestion: 'Journal for five minutes. Let the pen follow wherever your mind already wants to go.' },
     'Emotional':           { state: 'Open & Porous',         feeling: 'You may feel things more quickly today.', why: 'The Moon in its home sign amplifies emotional receptivity — everything registers more deeply.', suggestion: 'Check: is this feeling yours? Cancer Moon absorbs. Name what belongs to you and release the rest.' },
-    'Physical':            { state: 'Sensitive',             feeling: 'Body absorbs atmosphere; comfort is medicine.', why: 'Water Moon heightens somatic sensitivity — the body feels environments before the mind processes them.', suggestion: 'Create physical comfort. Soft lighting, warm drinks, clean space — your body is listening.' },
+    'Physical':            { state: 'Sensitive',             feeling: 'Body absorbs atmosphere; comfort can help.', why: 'Water Moon heightens somatic sensitivity — the body feels environments before the mind processes them.', suggestion: 'Create physical comfort. Soft lighting, warm drinks, clean space — your body is listening.' },
     'Relational':          { state: 'Nurturing',             feeling: 'Need for closeness rises; rejection stings more.', why: 'Cancer Moon\'s cardinal water initiates emotional bonding — the desire to care and be cared for deepens.', suggestion: 'Reach out to someone you trust. You do not have to explain — just connect.' },
     'Creative / Spiritual': { state: 'Intuitive',            feeling: 'Inner knowing speaks louder than logic.', why: 'Moon in domicile opens direct access to the subconscious — creativity arrives through feeling, not thinking.', suggestion: 'Follow an intuitive impulse without analyzing it first. Let art come from the body.' },
   },
@@ -473,7 +473,7 @@ const DOMAIN_STATES: Record<string, Record<EnergyDomainName, { state: string; fe
     'Mental':              { state: 'Innovative',            feeling: 'Thinking is unconventional; new solutions surface.', why: 'Uranus and Saturn co-rule this Moon — the mind oscillates between radical innovation and structured logic.', suggestion: 'Approach a familiar problem from a completely new angle. Ask: what would I try if nothing was at stake?' },
     'Emotional':           { state: 'Detached',              feeling: 'Emotions are observed more than felt; objectivity rises.', why: 'Air Moon in fixed mode creates emotional distance — feelings are analyzed from above, not entered.', suggestion: 'Put your hand on your heart and ask: what am I actually feeling right now? Let the body answer, not the mind.' },
     'Physical':            { state: 'Electric',              feeling: 'Nervous system is alert; overstimulation is possible.', why: 'Uranus activates the nervous system — the body runs on electrical sensitivity and can overload.', suggestion: 'Limit sensory input for 20 minutes. Quiet, dim light, no screens — let the nervous system recalibrate.' },
-    'Relational':          { state: 'Independent',           feeling: 'Need for space without losing connection.', why: 'Aquarius Moon values autonomy within belonging — closeness without freedom creates anxiety.', suggestion: 'Take space if you need it, but tell the person why. Disappearing creates the disconnection you are trying to avoid.' },
+    'Relational':          { state: 'Independent',           feeling: 'Need for space without losing connection.', why: 'Aquarius Moon values autonomy within belonging — closeness without freedom can create unease.', suggestion: 'Take space if you need it, but tell the person why. Disappearing creates the disconnection you are trying to avoid.' },
     'Creative / Spiritual': { state: 'Experimental',         feeling: 'Rules feel breakable; originality is the path.', why: 'Uranus Moon channels creativity through disruption — the muse lives outside convention.', suggestion: 'Break a rule in your creative process. Use the wrong tool, the wrong format, the wrong approach.' },
   },
   Pisces: {
@@ -528,7 +528,7 @@ const GUIDANCE: Record<string, EnergyGuidance> = {
     leanInto: 'Conversation, learning, and mental flexibility.',
     leanIntoContext: 'Your mind is your greatest tool today. Ideas are arriving faster than usual — the skill is catching the right ones and letting the rest pass.',
     moveGentlyAround: 'Over-explaining and information overload.',
-    moveGentlyContext: 'More input is not more clarity. At some point today, you will know enough — the risk is continuing to research instead of deciding.',
+    moveGentlyContext: 'More input is not more clarity. At some point today, you may already know enough — the risk is continuing to research instead of deciding.',
     bestUseOfEnergy: 'One meaningful exchange of ideas.',
     bestUseContext: 'Find someone who thinks differently from you and have a real conversation. Not to convince — to understand.',
     ritual: 'Write three sentences about what is on your mind. Not a journal entry — just three honest sentences. Then close the notebook.',
@@ -555,7 +555,7 @@ const GUIDANCE: Record<string, EnergyGuidance> = {
     leanInto: 'Refining one system, practical self-care, and clarity.',
     leanIntoContext: 'Your eye for what needs fixing is exceptionally sharp. Use it wisely — channel precision into improvement, not criticism.',
     moveGentlyAround: 'Perfectionism and self-criticism loops.',
-    moveGentlyContext: 'The voice telling you it is not good enough may feel like high standards, but it is actually anxiety wearing a productive mask.',
+    moveGentlyContext: 'The voice telling you it is not good enough may feel like high standards, but it may also be worry wearing a productive mask.',
     bestUseOfEnergy: 'Fixing the one thing that has been nagging you.',
     bestUseContext: 'You know what it is. The drawer, the email, the habit, the conversation. Do it and feel the weight lift.',
     ritual: 'Clean one surface completely. Wipe it, clear it, make it empty. Let the outer order settle the inner noise.',

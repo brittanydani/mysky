@@ -47,7 +47,7 @@ export const NS_BRANCH_LABELS: Record<NervousSystemBranch, string> = {
 export const NS_STATE_FULL_LABELS: Record<NervousSystemBranch, string> = {
   ventral_safety: 'Safe & Connected',
   fight:          'Fight Activation',
-  flight:         'Flight Anxiety',
+  flight:         'Flight/Worry',
   freeze:         'Freeze Response',
   collapse:       'Collapse',
   mixed:          'Mixed States',
@@ -56,7 +56,7 @@ export const NS_STATE_FULL_LABELS: Record<NervousSystemBranch, string> = {
 export const NS_STATE_DESCRIPTIONS: Record<NervousSystemBranch, string> = {
   ventral_safety: 'regulation · connection · presence',
   fight:          'boundary activation · power · anger',
-  flight:         'avoidance · anxiety · urgency',
+  flight:         'avoidance · worry · urgency',
   freeze:         'shutdown · overwhelm · voicelessness',
   collapse:       'hopelessness · depletion · grief',
   mixed:          'inner conflict · dual activation',

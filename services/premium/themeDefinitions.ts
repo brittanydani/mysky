@@ -175,7 +175,7 @@ function buildVariants(def: TriggerDefinition): ThemeDefinition[] {
       attachmentPreferred: [],
     },
 
-    // ── Relational (attachment-focused) variant ──────────────────────────
+    // ── Relational variant ───────────────────────────────────────────────
     {
       id: `${def.id}_relational`,
       trigger: def.id,

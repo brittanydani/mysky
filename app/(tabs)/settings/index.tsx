@@ -56,7 +56,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Where is my data stored?',
     answer:
-      'Supabase is the source of truth for your core app data. Birth data, journal entries, check-ins, sleep logs, and charts are stored in your account and protected by row-level access controls. This device may keep local cache and draft data to improve responsiveness and support queued offline writes.',
+      'Supabase is the source of truth for your core app data. Birth data, journal entries, check-ins, sleep logs, and charts are stored in your account and protected by row-level access controls. This device may keep local cache and draft data to improve responsiveness, but completed core saves are confirmed by Supabase before success is shown.',
   },
   {
     question: 'Where does my backup go?',
@@ -71,7 +71,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'What does Deeper Sky include?',
     answer:
-      'Deeper Sky unlocks portable backup files, the full personal story (10 chapters), attachment and inner-work reflections, up to 10 relationship charts, journal pattern analysis, deeper insight summaries, Chiron & Node depth mapping, reflective daily guidance with action prompts, extended pattern analysis, full energy chakra mapping, and symbolic dream reflections.',
+      'Deeper Sky unlocks portable backup files, the full personal story (10 chapters), relationship and inner-work reflections, up to 10 relationship charts, journal pattern analysis, deeper insight summaries, Chiron & Node depth mapping, reflective daily guidance with action prompts, extended pattern analysis, full energy chakra mapping, and symbolic dream reflections.',
   },
   {
     question: 'How does mood and energy tracking work?',
@@ -106,7 +106,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'What house system does MySky use?',
     answer:
-      'MySky defaults to Placidus. You can change the house system in the chart view settings. We support Placidus, Koch, Whole Sign, Equal House, Campanus, Regiomontanus, and Topocentric.',
+      'MySky defaults to Whole Sign houses. You can change the house system in the chart view settings. We support Placidus, Koch, Whole Sign, Equal House, Campanus, Regiomontanus, and Topocentric.',
   },
   {
     question: 'Is my journal private?',

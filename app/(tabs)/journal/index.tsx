@@ -1100,7 +1100,7 @@ function JournalContent() {
       await loadEntries(true);
     } catch (error) {
       logger.error('Failed to save journal entry:', error);
-      Alert.alert('Error', 'Could not save this entry. Please try again.');
+      throw error;
     }
   };
 

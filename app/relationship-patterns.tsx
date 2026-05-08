@@ -5,7 +5,7 @@
 // 1. Purged "goldenish" mud from visualization and submit buttons.
 // 2. Implemented "Midnight Slate" for the Relational Gravity anchor card.
 // 3. Implemented "Tactile Hardware" pattern tags (Recessed Void vs. Icy Glow).
-// 4. Mapped attachment styles to Lunar Sky semantic washes (Nebula, Stratosphere, Ember, Sage).
+// 4. Mapped relationship styles to Lunar Sky semantic washes (Nebula, Stratosphere, Ember, Sage).
 // 5. Integrated "Velvet Glass" 1px directional light-catch borders.
 
 import React, { useCallback, useMemo, useState } from 'react';
@@ -537,7 +537,7 @@ export default function RelationshipPatternsScreen() {
             </View>
           )}
 
-          <ReflectionDisclaimer body="These patterns are for noticing and reflection — not clinical diagnosis or attachment assessment." />
+          <ReflectionDisclaimer body="These patterns are for noticing and reflection — not clinical diagnosis or relationship assessment." />
 
           <View style={styles.scrollEndSpacer} />
         </KeyboardAwareScrollView>

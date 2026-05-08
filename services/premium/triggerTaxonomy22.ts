@@ -412,7 +412,7 @@ export const TRIGGER_TAXONOMY_22: Record<ShadowTrigger, TriggerDefinition> = {
     defaultActivation: "high",
     typicalAttachment: ["anxious", "avoidant"],
     typicalNervousSystem: ["flight", "freeze"],
-    subThemes: ["performance anxiety", "perfectionism", "imposter fear", "punitive standards", "catastrophizing"],
+    subThemes: ["performance pressure", "perfectionism", "imposter fear", "punitive standards", "catastrophizing"],
     interpretationFrame:
       "May reflect pressure, fear of judgment, or unrealistic standards that are exhausting your system.",
   },

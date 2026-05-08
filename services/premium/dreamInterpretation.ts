@@ -141,7 +141,7 @@ function labelWithDeterminer(label: string): string {
 
 // ─── Grounding Lines (high-distress close) ────────────────────────────────────
 // Somatic, regulating, non-clinical. One is selected deterministically per dream.
-// Voice: co-reflective, parts-aware, trauma-informed. Never instructional.
+// Voice: co-reflective, parts-aware, gentle. Never instructional.
 
 const GROUNDING_LINES: readonly string[] = [
   // ── Breath-anchored ──
@@ -458,7 +458,7 @@ function buildParagraph(
       const personScenarioVariants = [
         `Having ${dl} there changes the emotional weight of what happened. ${scenarioMeaning}`,
         `With ${dl} in the scene, the dream takes on a more personal quality. ${scenarioMeaning}`,
-        `${capitalize(dl)} showing up here isn’t random — they seem to be part of whatever your mind is working through. ${scenarioMeaning}`,
+        `${capitalize(dl)} showing up here may be part of whatever your mind is working through. ${scenarioMeaning}`,
       ] as const;
       sections.push(pickVariant(personScenarioVariants, seed, 19));
     } else if (personMatch) {
@@ -591,7 +591,7 @@ function buildParagraph(
       const vividHighVariants = [
         'The vividness of this dream is striking — your mind turned up the volume on purpose, as if it needed you to really feel this one.',
         'This dream was unusually vivid, which usually means something emotional was pressing hard enough to make itself impossible to ignore.',
-        'The sharpness of the imagery here isn’t random. When dreams are this vivid, it’s often because something inside needs your full attention.',
+        'The sharpness of the imagery here stands out. When dreams are this vivid, it may be worth noticing what feelings or themes asked for attention.',
       ] as const;
       detailBlock.push(pickVariant(vividHighVariants, seed, 9));
     } else if (metadata.vividness <= 2) {

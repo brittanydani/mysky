@@ -78,7 +78,7 @@ Example:
 You often stay capable after strain has already started building. From the outside, you may still look clear and functional. Internally, your system may already be paying a cost.
 
 Why this matters:
-If your stress stays hidden behind capability, you may notice your limits later than you should.
+If your stress stays hidden behind capability, you may notice your limits later than you want.
 
 Reflection:
 What are the earliest signs that you are still functioning, but no longer truly resourced?

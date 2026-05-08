@@ -327,7 +327,7 @@ const PERSONA_PROFILE_SOURCES: PersonaProfileSource[] = [
       'body_heaviness',
     ],
     intro: [
-      `This person may want rest, but not always know how to actually receive it. Pausing can bring relief, guilt, boredom, anxiety, or a sudden awareness of everything they have been holding.`,
+      `This person may want rest, but not always know how to actually receive it. Pausing can bring relief, guilt, boredom, worry, or a sudden awareness of everything they have been holding.`,
     ],
     sentences: [
       `Rest may not feel simple for you. Even when your body is tired, your mind may keep scanning for what still needs to be done, decided, answered, or prepared.`,

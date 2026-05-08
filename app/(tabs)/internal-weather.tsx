@@ -360,6 +360,7 @@ export default function MoodCheckIn() {
   const [recentCheckIns, setRecentCheckIns] = useState<DailyCheckIn[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [completedSlots, setCompletedSlots] = useState<string[]>([]);
   const [isEditingExisting, setIsEditingExisting] = useState(false);
@@ -447,6 +448,7 @@ export default function MoodCheckIn() {
       const load = async () => {
         try {
           if (!hasLoadedCheckInContextRef.current) setIsLoading(true);
+          setLoadError(null);
           const charts = await supabaseDb.getCharts();
           if (canceled || !charts || charts.length === 0) {
             setIsLoading(false);
@@ -478,6 +480,7 @@ export default function MoodCheckIn() {
           }
         } catch (e) {
           logger.error('[MoodCheckIn] Load failed:', e);
+          if (!canceled) setLoadError('Could not load your check-in history. Check your connection and try again.');
         } finally {
           if (!canceled) setIsLoading(false);
         }
@@ -499,6 +502,7 @@ export default function MoodCheckIn() {
 
     const loadSlot = async () => {
       try {
+        setLoadError(null);
         const navKey = `${chartId}::${selectedDate}`;
         const dateChanged = prevNavKeyRef.current !== navKey;
         prevNavKeyRef.current = navKey;
@@ -605,6 +609,7 @@ export default function MoodCheckIn() {
         }
       } catch (e) {
         logger.error('[MoodCheckIn] Slot load failed:', e);
+        if (!canceled) setLoadError('Could not load this check-in slot. Check your connection and try again.');
       }
     };
 
@@ -791,12 +796,12 @@ export default function MoodCheckIn() {
       setIsSaving(false);
 
       const encouragement = [
-        "Beautiful insight. You're building a powerful map of your inner world.",
-        "Recorded. Every entry brings you closer to deep self-mastery.",
-        "Safely sealed. Your dedication to your own growth is inspiring.",
-        "Well done. You're showing up for yourself today.",
-        "Brilliant. Another piece of your cosmic puzzle is in place.",
-        "Your internal weather has been mapped. See how the storm clears."
+        'Recorded. Your check-in is saved.',
+        'Saved. This signal is now part of your pattern history.',
+        'Check-in saved. Today has one more real data point.',
+        'Saved. Your archive is a little clearer now.',
+        'Recorded. You can come back and update it today if needed.',
+        'Saved. MySky will use this only where check-ins are part of the evidence.'
       ][Math.floor(Math.random() * 6)];
       Alert.alert("Recorded", encouragement);
       return true;
@@ -912,7 +917,11 @@ export default function MoodCheckIn() {
             <Text style={[styles.trendLabel]}>7-DAY MOOD TREND</Text>
             <MetallicText style={styles.trendStatus} variant="gold">{isLoading ? '…' : trendLabel}</MetallicText>
           </View>
-          {isLoading ? (
+          {loadError ? (
+            <View style={styles.trendPlaceholder}>
+              <Text style={styles.trendEmptyText}>{loadError}</Text>
+            </View>
+          ) : isLoading ? (
             <View style={styles.trendPlaceholder}>
               <View style={styles.trendSkeletonBars}>
                 {[64, 112, 86, 148, 104, 134, 92].map((height, index) => (

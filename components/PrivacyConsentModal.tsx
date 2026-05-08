@@ -115,7 +115,7 @@ export default function PrivacyConsentModal({
                   <Text style={[styles.sectionTitle, { marginTop: 24 }]}>How We Protect It</Text>
                   <View style={styles.dataRow}>
                     <MetallicIcon name="lock-closed-outline" size={18} color={PALETTE.atmosphere} />
-                    <Text style={styles.dataText}>Core reflections stay encrypted on your device</Text>
+                    <Text style={styles.dataText}>Core reflections are protected in your account with user-level access controls</Text>
                   </View>
                   <View style={styles.dataRow}>
                     <MetallicIcon name="hardware-chip-outline" size={18} color={PALETTE.atmosphere} />

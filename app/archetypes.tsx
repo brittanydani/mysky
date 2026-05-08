@@ -237,7 +237,7 @@ export default function ArchetypesScreen() {
 
         <View style={styles.titleArea}>
           <Text style={styles.headerTitle}>Archetypes</Text>
-          <GoldSubtitle style={styles.headerSubtitle}>The recurring patterns of your psyche</GoldSubtitle>
+          <GoldSubtitle style={styles.headerSubtitle}>The recurring patterns of your inner world</GoldSubtitle>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

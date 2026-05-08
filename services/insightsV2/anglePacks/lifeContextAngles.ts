@@ -78,9 +78,9 @@ export const LIFE_CONTEXT_ANGLES: DailyAngle[] = [
     observation:
       'Money, housing, work, energy, or stability may be taking up real background attention.',
     pattern:
-      'Recent signals point toward security scanning: bills, rent, job stability, time, energy, support, or the possibility of losing what finally feels steady. That scanning can look like anxiety while still tracking real context.',
+      'Recent signals point toward security scanning: bills, rent, job stability, time, energy, support, or the possibility of losing what finally feels steady. That scanning can look like worry while still tracking real context.',
     reframe:
-      'This does not read as being anxious or ungrateful. It reads as a system tracking what has not always felt secure.',
+      'This does not read as being ungrateful. It reads as a system tracking what has not always felt secure.',
     question:
       'Which security concern needs a concrete next step, and which one only needs to be named?',
     tone: 'direct',

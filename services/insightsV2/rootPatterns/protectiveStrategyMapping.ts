@@ -73,7 +73,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Protecting the truth from being misunderstood',
     protectiveMove: 'protecting the truth from being misunderstood',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: protecting the truth from being misunderstood.',
+      'This pattern seems organized around one protective move: protecting the truth from being misunderstood.',
     protects:
       'It protects the part of you that needs the real meaning to land, not a distorted version of it.',
     costs:
@@ -109,7 +109,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Catching danger before it lands',
     protectiveMove: 'catching danger before it lands',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: catching danger before it lands.',
+      'This pattern seems organized around one protective move: catching danger before it lands.',
     protects:
       'It protects your ability to respond early instead of being surprised by something that feels unsafe.',
     costs:
@@ -146,7 +146,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Getting relief from something too heavy',
     protectiveMove: 'getting short-term relief from something that feels too heavy',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: getting short-term relief from something that feels too heavy.',
+      'This pattern seems organized around one protective move: getting short-term relief from something that feels too heavy.',
     protects:
       'It protects you from having to enter the full weight of the task, feeling, or conversation all at once.',
     costs:
@@ -185,7 +185,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Preserving connection by reducing friction',
     protectiveMove: 'preserving connection by reducing friction',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: preserving connection by reducing friction.',
+      'This pattern seems organized around one protective move: preserving connection by reducing friction.',
     protects:
       'It protects closeness by making the room easier to stay in, even when something true needs space.',
     costs:
@@ -224,7 +224,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Keeping feeling from becoming too much at once',
     protectiveMove: 'keeping you from feeling too much at once',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: keeping you from feeling too much at once.',
+      'This pattern seems organized around one protective move: keeping you from feeling too much at once.',
     protects:
       'It protects functioning when the feeling may be too big, too fast, or too exposed for the moment you are in.',
     costs:
@@ -262,7 +262,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Preventing exposure, criticism, or loss of control',
     protectiveMove: 'preventing exposure, criticism, or loss of control',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: preventing exposure, criticism, or loss of control.',
+      'This pattern seems organized around one protective move: preventing exposure, criticism, or loss of control.',
     protects:
       'It protects you from the vulnerability of being seen before something feels ready, correct, or defensible.',
     costs:
@@ -300,7 +300,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Preventing disconnection before it happens',
     protectiveMove: 'preventing disconnection before it happens',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: preventing disconnection before it happens.',
+      'This pattern seems organized around one protective move: preventing disconnection before it happens.',
     protects:
       'It protects the bond by trying to notice distance before it becomes a break.',
     costs:
@@ -337,7 +337,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Carrying before it falls apart',
     protectiveMove: 'carrying the loose end before it falls apart',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: carrying the loose end before it falls apart.',
+      'This pattern seems organized around one protective move: carrying the loose end before it falls apart.',
     protects:
       'It protects stability by making sure something important does not drop while everyone else is still noticing.',
     costs:
@@ -375,7 +375,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Protecting choice from pressure',
     protectiveMove: 'protecting your choice from being swallowed by pressure',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: protecting your choice from being swallowed by pressure.',
+      'This pattern seems organized around one protective move: protecting your choice from being swallowed by pressure.',
     protects:
       'It protects the part of you that needs room to decide, not just comply quickly.',
     costs:
@@ -413,7 +413,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Earning safety through usefulness',
     protectiveMove: 'earning safety through usefulness',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: earning safety through usefulness.',
+      'This pattern seems organized around one protective move: earning safety through usefulness.',
     protects:
       'It protects belonging by making care, approval, or support feel less likely to disappear.',
     costs:
@@ -451,7 +451,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Making uncertainty trackable',
     protectiveMove: 'making uncertainty trackable before it gets too big',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: making uncertainty trackable before it gets too big.',
+      'This pattern seems organized around one protective move: making uncertainty trackable before it gets too big.',
     protects:
       'It protects steadiness by turning ambiguity into language, plans, timing, or a next visible step.',
     costs:
@@ -490,7 +490,7 @@ const PROTECTIVE_STRATEGY_DEFINITIONS: readonly ProtectiveStrategyDefinition[] =
     name: 'Keeping meaning from being lost',
     protectiveMove: 'keeping meaning from being lost in the practical answer',
     insightLine:
-      'This pattern is not random. It seems organized around one protective move: keeping meaning from being lost in the practical answer.',
+      'This pattern seems organized around one protective move: keeping meaning from being lost in the practical answer.',
     protects:
       'It protects the deeper value, grief, identity, or purpose that would be easy to skip over if the moment became only practical.',
     costs:

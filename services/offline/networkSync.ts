@@ -27,6 +27,43 @@ function assertPayload<T extends Record<string, unknown>>(payload: unknown): T {
   return payload as T;
 }
 
+function asString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value : null;
+}
+
+async function buildCheckInRetryRow(
+  userId: string,
+  checkIn: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const logDate = asString(checkIn.log_date);
+  const timeOfDay = asString(checkIn.time_of_day);
+  if (!logDate || !timeOfDay) {
+    return { ...checkIn, user_id: userId };
+  }
+
+  const { data, error } = await supabase
+    .from('daily_check_ins')
+    .select('id, created_at')
+    .eq('user_id', userId)
+    .eq('log_date', logDate)
+    .eq('time_of_day', timeOfDay)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const existing = isRecord(data) ? data : null;
+  return existing?.id
+    ? {
+        ...checkIn,
+        user_id: userId,
+        id: existing.id,
+        created_at: existing.created_at ?? checkIn.created_at,
+      }
+    : { ...checkIn, user_id: userId };
+}
+
 async function executeOperation(op: QueuedOperation): Promise<void> {
   switch (op.type) {
     case 'journal_entry': {
@@ -39,9 +76,10 @@ async function executeOperation(op: QueuedOperation): Promise<void> {
     }
     case 'checkin': {
       const { userId, checkIn } = assertPayload<CheckInPayload>(op.payload);
+      const row = await buildCheckInRetryRow(userId, checkIn);
       const { error } = await supabase
         .from('daily_check_ins')
-        .upsert({ ...checkIn, user_id: userId }, { onConflict: 'id' });
+        .upsert(row, { onConflict: 'id' });
       if (error) throw error;
       return;
     }

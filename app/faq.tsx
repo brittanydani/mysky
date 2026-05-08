@@ -86,7 +86,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
             <View style={styles.faqContent}>
               <Text style={styles.question}>Do I need an account to use MySky?</Text>
               <Text style={styles.answer}>
-                Yes. A free account is required. Supabase is the source of truth for your data, and this device may keep local cache or queued offline writes to support responsiveness. All core features — mood tracking, journaling, sleep, AI dream interpretation, and birth charts — are available for free.
+                Yes. A free account is required. Supabase is the source of truth for your data, and this device may keep local cache for display. Core saves are confirmed by Supabase before the app reports success. All core features — mood tracking, journaling, sleep, AI dream interpretation, and birth charts — are available for free.
               </Text>
 
               <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>
@@ -177,7 +177,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
               <Text style={styles.question}>What if I don't know my birth time?</Text>
               <Text style={styles.answer}>
-                Check "I don't know" when entering birth details. MySky will use solar noon as a placeholder. Your Sun, Moon, and most planetary signs will still be accurate. Your Ascendant, Midheaven, and house placements will be approximate. The Moon sign may also be uncertain if you were born near a Moon sign change.
+                Check "I don't know" when entering birth details. MySky will use solar noon as a placeholder. Your Sun and most planetary signs will still be available. Your Ascendant, Midheaven, and house placements will stay hidden until you add a birth time. The Moon sign may also be uncertain if you were born near a Moon sign change.
               </Text>
 
               <Text style={styles.question}>What is somatic body mapping?</Text>

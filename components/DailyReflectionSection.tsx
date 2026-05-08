@@ -214,16 +214,16 @@ export default function DailyReflectionSection({
 
       const allWillBeSealed = CATEGORIES.every(c => (c === category ? true : categorySealed[c]));
       if (allWillBeSealed) {
-        Alert.alert("All Sets Complete", "Beautiful. Your reflections for today are securely sealed.");
+        Alert.alert('All Sets Complete', 'Your reflections for today are saved.');
       } else {
         const encouragement = [
-          "Beautiful insight. You're building a powerful map of your inner world.",
-          "Recorded. Every entry brings you closer to deep self-mastery.",
-          "Safely sealed. Your dedication to your own growth is inspiring.",
-          "Well done. You're showing up for yourself today.",
-          "Brilliant. Another piece of your cosmic puzzle is in place."
+          'Recorded. Your reflection is saved.',
+          'Saved. This gives MySky one more real signal.',
+          'Reflection saved. You can add more when you want.',
+          'Saved. Your archive now has one more data point.',
+          'Recorded. Today has a little more context.'
         ][Math.floor(Math.random() * 5)];
-        Alert.alert("Recorded", encouragement);
+        Alert.alert('Recorded', encouragement);
       }
     } catch {
       Alert.alert('Error', 'Could not save your reflections. Please try again.');

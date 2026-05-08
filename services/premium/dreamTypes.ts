@@ -18,7 +18,7 @@
 export type NervousSystemBranch =
   | 'ventral_safety'  // integration, connection, healing
   | 'fight'           // boundary activation, power struggle, anger
-  | 'flight'          // anxiety, avoidance, fear of loss
+  | 'flight'          // worry, avoidance, fear of loss
   | 'freeze'          // voice suppression, overwhelm, shame
   | 'collapse'        // hopelessness, depletion, grief
   | 'mixed';          // inner conflict or dual states
@@ -84,7 +84,7 @@ export type FeelingTier =
  * Production-ready 60-feeling set for dream work.
  *
  * Grouped by activation × valence × nervous system state.
- * Covers all 22 shadow triggers, all attachment styles, and all NS branches.
+ * Covers all 22 shadow triggers, all relationship styles, and all NS branches.
  * Designed for a tiered selector: Mostly Negative → Mostly Positive → Mixed → Hard to name.
  */
 export const DREAM_FEELINGS: DreamFeelingDef[] = [
@@ -3089,7 +3089,7 @@ export interface DreamAggregates {
   valenceScore: number;
   /** Overall arousal: 'low' | 'moderate' | 'high' */
   activationScore: 'low' | 'moderate' | 'high';
-  /** Distribution across attachment styles (sums to ~1.0) */
+  /** Distribution across relationship styles (sums to ~1.0) */
   attachmentProfile: Record<AttachmentStyle, number>;
   /** Distribution across nervous system branches (sums to ~1.0) */
   nervousSystemProfile: Record<NervousSystemBranch, number>;

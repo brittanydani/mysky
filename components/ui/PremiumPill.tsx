@@ -3,7 +3,7 @@
 // Animated toggle pill for multi-select or single-select tag grids.
 //
 // Visual behavior:
-//   • Press-in  → spring scale to 0.92 (feels like a physical button depression).
+//   • Press-in  → spring scale to 0.92 (feels like a physical button press).
 //   • Press-out → spring returns to 1.0.
 //   • Toggle    → 200ms color interpolation from ghost styles to a 13%-opacity
 //                 wash of the accentColor, with a matching border brightening.

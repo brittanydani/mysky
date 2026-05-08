@@ -97,7 +97,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Internal Weather & Journal</Text>
-              <Text style={styles.paragraph}>Mood scores, tags, and free-text entries are stored in your Supabase account and isolated per user with Row Level Security. Devices may keep local cache and queued offline writes, but the cloud account remains canonical.</Text>
+              <Text style={styles.paragraph}>Mood scores, tags, and free-text entries are stored in your Supabase account and isolated per user with Row Level Security. Devices may keep local cache for display, but core saves are confirmed by Supabase before the app reports success.</Text>
             </View>
 
             <View style={styles.dataBlock}>
@@ -124,10 +124,10 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
               <LinearGradient colors={['rgba(110, 191, 139, 0.12)', 'rgba(110, 191, 139, 0.04)']} style={StyleSheet.absoluteFill} />
               <View style={styles.securityHeader}>
                 <MetallicIcon name="cloud-offline-outline" size={18} color={PALETTE.emerald} />
-                <Text style={styles.securityTitle}>Cache & Queueing</Text>
+                <Text style={styles.securityTitle}>Cache & Drafts</Text>
               </View>
               <Text style={styles.paragraph}>
-                Devices may keep local cache and queued offline writes so recent data stays available and pending updates can sync later. Those local copies are not treated as the source of truth.
+                Devices may keep local cache and unsaved drafts so recent data stays available while you use the app. Those local copies are not treated as the source of truth for completed core saves.
               </Text>
             </View>
           </View>

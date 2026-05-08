@@ -338,7 +338,7 @@ const POINT_INTERPRETATIONS: Record<string, (sign: string, house: number | undef
   'Part of Fortune': (s, h) =>
     `Your Part of Fortune in ${s}${h ? ` (${h}${getOrdinal(h)} house)` : ''} indicates where you find natural flow and a felt sense of alignment. The combination of your Sun, Moon, and Ascendant converges here, suggesting ease in ${HOUSE_AREAS[h ?? 0] ?? 'this area'}.`,
   'Vertex': (s, h) =>
-    `Your Vertex in ${s}${h ? ` (${h}${getOrdinal(h)} house)` : ''} is sometimes called a "fated point" — it marks encounters and experiences that feel destined or transformative, often through others.`,
+    `Your Vertex in ${s}${h ? ` (${h}${getOrdinal(h)} house)` : ''} marks encounters and experiences that may feel especially significant or transformative, often through others.`,
 };
 
 export function generatePointInterpretations(chart: NatalChart): PointInterpretation[] {

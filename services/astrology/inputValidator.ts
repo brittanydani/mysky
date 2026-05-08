@@ -14,20 +14,21 @@ export interface ParsedTime {
 const MIN_YEAR = 1900;
 
 const getMaxYear = () => {
-  const currentYear = new Date().getFullYear();
-  return currentYear + 100;
+  return new Date().getFullYear();
 };
 
-const isValidDate = (dateString: string): boolean => {
+const parseValidDate = (dateString: string): Date | null => {
   const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) return false;
+  if (!match) return null;
   const [_, yearStr, monthStr, dayStr] = match;
   const year = parseInt(yearStr, 10);
   const month = parseInt(monthStr, 10) - 1;
   const day = parseInt(dayStr, 10);
   const date = new Date(year, month, day);
   date.setFullYear(year);
-  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day;
+  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day
+    ? date
+    : null;
 };
 
 const parseTimeString = (value: string): ParsedTime | null => {
@@ -71,13 +72,20 @@ export class InputValidator {
       errors.push('Birth location is required.');
     }
 
-    if (!isValidDate(birthData.date)) {
+    const parsedDate = parseValidDate(birthData.date);
+    if (!parsedDate) {
       errors.push('Birth date must be a valid date.');
     } else {
       const year = Number(birthData.date.slice(0, 4));
       const maxYear = getMaxYear();
       if (year < MIN_YEAR || year > maxYear) {
         errors.push(`Birth year must be between ${MIN_YEAR} and ${maxYear}.`);
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (parsedDate.getTime() > today.getTime()) {
+        errors.push('Birth date cannot be in the future.');
       }
     }
 

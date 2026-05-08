@@ -116,6 +116,19 @@ describe('InputValidator.validateBirthData — date errors', () => {
     const result = InputValidator.validateBirthData(validBirthData({ date: '1900-01-01' }));
     expect(result.valid).toBe(true);
   });
+
+  it('fails for a future birth date', () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 1);
+    const yyyy = future.getFullYear();
+    const mm = String(future.getMonth() + 1).padStart(2, '0');
+    const dd = String(future.getDate()).padStart(2, '0');
+
+    const result = InputValidator.validateBirthData(validBirthData({ date: `${yyyy}-${mm}-${dd}` }));
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('Birth date cannot be in the future.');
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
