@@ -455,7 +455,11 @@ export default function TriggerLogScreen() {
       const updated = [entry, ...existing];
       await addTriggerEvent(entry);
       setHistory(updated);
-    } catch {}
+    } catch {
+      setSaving(false);
+      Alert.alert('Could not save', 'Check your connection and try again.');
+      return;
+    }
 
     setSaving(false);
     setSaved(true);

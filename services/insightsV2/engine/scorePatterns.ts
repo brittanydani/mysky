@@ -77,21 +77,32 @@ export function scoreArchivePattern(
   const primarySourceScore = relevantSignals.length
     ? Math.max(...relevantSignals.map(s => sourcePriorityScore(s.source)))
     : 0;
+  const evidenceMomentCount = new Set(
+    relevantSignals.map(signal => `${signal.source}:${signal.date.slice(0, 10)}`),
+  ).size;
   
   const conflictPenalty = Math.min(conflictingMatches.length * 0.2, 0.4);
 
-  const score = Math.max(0,
+  const rawScore = Math.max(0,
     (requiredScore * 0.35 +
     frequencyScore * 0.25 +
     sourceScore * 0.18 +
     strengthScore * 0.17 +
     primarySourceScore * 0.05) - conflictPenalty
   );
+  const hasEnoughEvidence =
+    relevantSignals.length >= pattern.minEvidenceCount &&
+    evidenceMomentCount >= Math.min(2, pattern.minEvidenceCount);
+  const score = hasEnoughEvidence
+    ? rawScore
+    : Math.min(rawScore, 0.49);
 
   let confidence: PatternConfidence = 'emerging';
-  if (score > 0.85) confidence = 'veryStrong';
-  else if (score > 0.7) confidence = 'strong';
-  else if (score > 0.55) confidence = 'moderate';
+  if (hasEnoughEvidence) {
+    if (score > 0.85) confidence = 'veryStrong';
+    else if (score > 0.7) confidence = 'strong';
+    else if (score > 0.55) confidence = 'moderate';
+  }
 
   // Movement Detection
   let movement: PatternMovement = 'new';

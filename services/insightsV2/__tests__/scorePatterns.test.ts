@@ -77,4 +77,18 @@ describe('scoreArchivePattern', () => {
 
     expect(score.lastSeenAt).toBe('2026-04-22');
   });
+
+  it('caps score and confidence when evidence is below the pattern minimum', () => {
+    const score = scoreArchivePattern(
+      { ...pattern, minScore: 0.5 },
+      [
+        signal('low_energy', '2026-04-22', 1),
+      ],
+      '2026-04-24T12:00:00Z',
+    );
+
+    expect(score.score).toBeLessThan(0.5);
+    expect(score.confidence).toBe('emerging');
+    expect(score.evidence).toHaveLength(1);
+  });
 });

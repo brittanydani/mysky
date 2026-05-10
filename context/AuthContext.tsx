@@ -25,6 +25,7 @@ import { useSceneStore } from '../store/sceneStore';
 import { useCircadianStore } from '../store/circadianStore';
 import { useCorrelationStore } from '../store/correlationStore';
 import { useCheckInStore } from '../store/checkInStore';
+import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import * as Haptics from '../utils/haptics';
 
 interface AuthContextValue {
@@ -35,6 +36,50 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const AUTH_SESSION_RESTORE_TIMEOUT_MS = 8_000;
+const AUTH_USER_VALIDATION_TIMEOUT_MS = 8_000;
+const AUTH_FOREGROUND_SYNC_TIMEOUT_MS = 8_000;
+
+async function withAuthTimeout<T>(
+  label: string,
+  operation: Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
+function isRecoverableAuthValidationError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /timeout|network|fetch|abort|offline|failed to fetch|network request failed/i.test(message);
+}
+
+async function clearInvalidLocalAuthState(): Promise<void> {
+  try {
+    await supabase.auth.signOut({ scope: 'local' });
+  } catch (error) {
+    logger.warn('[AuthContext] Failed to clear invalid local Supabase session:', error);
+  }
+
+  try {
+    await revenueCatService.logOut();
+  } catch (error) {
+    logger.warn('[AuthContext] Failed to clear RevenueCat identity after invalid session:', error);
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -68,15 +113,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const {
             data: { session: restored },
             error,
-          } = await supabase.auth.getSession();
+          } = await withAuthTimeout(
+            'Supabase session restore',
+            supabase.auth.getSession(),
+            AUTH_SESSION_RESTORE_TIMEOUT_MS,
+          );
 
           if (error) throw error;
 
-          setSessionIfChanged(restored);
+          let verifiedSession = restored ?? null;
 
           if (restored?.user) {
+            try {
+              const {
+                data: { user },
+                error: userError,
+              } = await withAuthTimeout(
+                'Supabase restored user validation',
+                supabase.auth.getUser(),
+                AUTH_USER_VALIDATION_TIMEOUT_MS,
+              );
+
+              if (userError) throw userError;
+              if (!user || user.id !== restored.user.id) {
+                throw new Error('Restored session user could not be verified');
+              }
+            } catch (validationError) {
+              if (isRecoverableAuthValidationError(validationError)) {
+                logger.warn('[AuthContext] Restored session validation deferred:', validationError);
+              } else {
+                logger.warn('[AuthContext] Restored session is invalid; clearing local session:', validationError);
+                await clearInvalidLocalAuthState();
+                verifiedSession = null;
+              }
+            }
+          }
+
+          setSessionIfChanged(verifiedSession);
+
+          if (verifiedSession?.user) {
             void revenueCatService
-              .logIn(restored.user.id)
+              .logIn(verifiedSession.user.id)
               .catch((e) => logger.error('[AuthContext] RC logIn failed:', e));
           }
 
@@ -136,7 +213,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const {
               data: { session: hydratedSession },
               error,
-            } = await supabase.auth.getSession();
+            } = await withAuthTimeout(
+              'Supabase foreground session sync',
+              supabase.auth.getSession(),
+              AUTH_FOREGROUND_SYNC_TIMEOUT_MS,
+            );
 
             if (error) throw error;
 
@@ -151,7 +232,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               expiresAtMs <= Date.now() + 60_000;
 
             if (shouldRefresh) {
-              const { data, error: refreshError } = await supabase.auth.refreshSession();
+              const { data, error: refreshError } = await withAuthTimeout(
+                'Supabase foreground token refresh',
+                supabase.auth.refreshSession(),
+                AUTH_FOREGROUND_SYNC_TIMEOUT_MS,
+              );
               if (refreshError) throw refreshError;
               nextSession = data.session ?? hydratedSession;
             }
@@ -159,6 +244,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSessionIfChanged(nextSession ?? null);
           } catch (e) {
             logger.warn('[AuthContext] Failed to sync session on foreground:', e);
+            if (!isRecoverableAuthValidationError(e)) {
+              await clearInvalidLocalAuthState();
+              setSessionIfChanged(null);
+            }
           }
         })();
       } else {
@@ -177,6 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useCircadianStore.getState().clearCache();
     useCorrelationStore.getState().clearCache();
     useCheckInStore.getState().resetStatus();
+    useSubscriptionStore.getState().reset();
     if (isMounted.current) {
       setSession(null);
     }

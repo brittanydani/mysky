@@ -149,7 +149,7 @@ describe('selfKnowledgeStore daily reflections', () => {
     expect(rows[0].id).toBe('2026-05-03:12:values');
   });
 
-  it('merges cached daily reflection answers when Supabase returns partial history', async () => {
+  it('uses Supabase daily reflection rows instead of cached fallback data', async () => {
     const remoteAnswer = makeReflectionAnswer({
       questionId: 12,
       answer: 'Somewhat',
@@ -192,14 +192,12 @@ describe('selfKnowledgeStore daily reflections', () => {
     await expect(loadDailyReflectionData()).resolves.toMatchObject({
       totalDaysCompleted: 1,
       answers: [
-        expect.objectContaining({ questionId: 12, answer: 'Very True' }),
-        expect.objectContaining({ questionId: 13, answer: 'True' }),
+        expect.objectContaining({ questionId: 12, answer: 'Somewhat' }),
       ],
     });
     expect(mockUserPreferences.get(DAILY_REFLECTIONS_CACHE_KEY)).toMatchObject({
       answers: [
-        expect.objectContaining({ questionId: 12, answer: 'Very True' }),
-        expect.objectContaining({ questionId: 13, answer: 'True' }),
+        expect.objectContaining({ questionId: 12, answer: 'Somewhat' }),
       ],
     });
   });

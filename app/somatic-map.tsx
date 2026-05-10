@@ -79,9 +79,15 @@ export default function SomaticMapScreen() {
     const entry = { id: Date.now().toString(), date: new Date().toISOString(), region: selectedRegion, side, gender, emotion: selectedEmotion, sensation: selectedSensation, intensity };
     const updated = [entry, ...entries];
     setEntries(updated);
-    await addSomaticEntry(entry);
-    setSelectedRegion(null); setSelectedEmotion(null); setSelectedSensation(null);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try {
+      await addSomaticEntry(entry);
+      setSelectedRegion(null); setSelectedEmotion(null); setSelectedSensation(null);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      logger.warn('[SomaticMap] Failed to save entry', error);
+      setEntries(entries);
+      Alert.alert('Could not save', 'Check your connection and try again.');
+    }
   };
 
   const deleteEntry = (id: string) => {
@@ -91,8 +97,14 @@ export default function SomaticMapScreen() {
         text: 'Delete', style: 'destructive', onPress: async () => {
           const updated = entries.filter(e => e.id !== id);
           setEntries(updated);
-          await deleteSomaticEntry(id);
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          try {
+            await deleteSomaticEntry(id);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          } catch (error) {
+            logger.warn('[SomaticMap] Failed to delete entry', error);
+            setEntries(entries);
+            Alert.alert('Could not delete', 'Check your connection and try again.');
+          }
         },
       },
     ]);

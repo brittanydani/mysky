@@ -129,7 +129,8 @@ function weeklyPatternBadgeLabel(pattern: PremiumThisWeekPatternItem): string {
 export default function PatternsScreen() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
-  const { isPremium } = usePremium();
+  const { isPremium, isReady: premiumReady } = usePremium();
+  const effectiveIsPremium = premiumReady && isPremium;
   const router = useRouter();
   const [snapshot, setSnapshot] = useState({ avgMood: 0, avgStress: 0, checkInCount: 0 });
   const [archiveDepthCounts, setArchiveDepthCounts] = useState<ArchiveDepthCounts>({});
@@ -231,10 +232,18 @@ export default function PatternsScreen() {
         const canUseFocusCache =
           !forcedRefresh &&
           hasLoadedSurfaceRef.current &&
-          lastSurfacePremiumRef.current === isPremium &&
+          lastSurfacePremiumRef.current === effectiveIsPremium &&
           Date.now() - lastSurfaceLoadedAtRef.current < PATTERNS_FOCUS_REFRESH_CACHE_MS;
 
         if (canUseFocusCache) {
+          trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
+          return;
+        }
+
+        if (!premiumReady) {
+          if (!hasLoadedSurfaceRef.current) {
+            setLoading(true);
+          }
           trackGrowthEvent('analytics_screen_viewed', { screen: 'patterns' }).catch(() => {});
           return;
         }
@@ -260,9 +269,9 @@ export default function PatternsScreen() {
               includeKnowledgeInsight: insightsEnabled,
               insightFeedbackProfile,
               insightMemoryProfile,
-              includePremiumPatterns: isPremium,
+              includePremiumPatterns: effectiveIsPremium,
               knowledgeAiEnabled: aiInsightRefinementEnabled,
-              knowledgeAiModelTier: isPremium ? 'premium' : 'free',
+              knowledgeAiModelTier: effectiveIsPremium ? 'premium' : 'free',
               knowledgeAiSurface: 'patterns',
             });
             if (!active) return;
@@ -279,8 +288,8 @@ export default function PatternsScreen() {
             setWeeklyNarrative(surface.weeklyNarrative);
             hasLoadedSurfaceRef.current = true;
             lastSurfaceLoadedAtRef.current = Date.now();
-            lastSurfacePremiumRef.current = isPremium;
-            if (isPremium) {
+            lastSurfacePremiumRef.current = effectiveIsPremium;
+            if (effectiveIsPremium) {
               recordPatternMemory(
                 [surface.thisWeeksV2Pattern
                   ? insightMemorySnapshotFromThisWeekPattern(surface.thisWeeksV2Pattern)
@@ -313,7 +322,7 @@ export default function PatternsScreen() {
         active = false;
         focusTask.cancel?.();
       };
-    }, [isPremium, recordPatternMemory, refreshKey])
+    }, [effectiveIsPremium, premiumReady, recordPatternMemory, refreshKey])
   );
 
   const libraryState = useMemo(
@@ -370,8 +379,8 @@ export default function PatternsScreen() {
     [thisWeeksV2Pattern],
   );
   const visiblePatternRows = useMemo(
-    () => (isPremium ? patternRows : []),
-    [isPremium, patternRows],
+    () => (effectiveIsPremium ? patternRows : []),
+    [effectiveIsPremium, patternRows],
   );
   const premiumTeaser = useMemo(
     () => getPersonalizedPremiumTeaser(archiveDepthCounts, {
@@ -380,8 +389,8 @@ export default function PatternsScreen() {
     }),
     [archiveDepthCounts, premiumPatterns.length, thisWeeksV2Pattern],
   );
-  const showFreePremiumPatternTeaser = moodInsightsEnabled && !isPremium && !loading && snapshot.checkInCount >= 5;
-  const showFreeBuildingArchive = moodInsightsEnabled && !isPremium && !loading && snapshot.checkInCount >= 3 && snapshot.checkInCount < 5;
+  const showFreePremiumPatternTeaser = premiumReady && moodInsightsEnabled && !effectiveIsPremium && !loading && snapshot.checkInCount >= 5;
+  const showFreeBuildingArchive = premiumReady && moodInsightsEnabled && !effectiveIsPremium && !loading && snapshot.checkInCount >= 3 && snapshot.checkInCount < 5;
 
   return (
     <View style={styles.container}>
@@ -422,7 +431,7 @@ export default function PatternsScreen() {
               </VelvetGlassSurface>
 
               {/* Premium: Full Analysis CTA */}
-              {isPremium ? (
+              {effectiveIsPremium ? (
                 <Pressable
                   onPress={() => {
                     Haptics.selectionAsync().catch(() => {});
@@ -480,14 +489,14 @@ export default function PatternsScreen() {
                 <MetricCard label="Logged" value={snapshot.checkInCount.toString()} wash={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} />
               </View>
 
-              {isPremium && premiumPersonaProfile ? (
+              {effectiveIsPremium && premiumPersonaProfile ? (
                 <>
                   <SectionHeader label="A PART OF YOU" icon="person-circle-outline" />
                   <PersonaProfileCard profile={premiumPersonaProfile} />
                 </>
               ) : null}
 
-              {isPremium && weeklyNarrative ? (
+              {effectiveIsPremium && weeklyNarrative ? (
                 <>
                   <SectionHeader label="ACTIVE WEEKLY THEME" icon="git-network-outline" />
                   <VelvetGlassSurface style={styles.activeThemeCard} intensity={25}>
@@ -593,7 +602,7 @@ export default function PatternsScreen() {
             <Pressable
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
-                if (!isPremium) {
+                if (!effectiveIsPremium) {
                   router.push('/(tabs)/premium' as Href);
                   return;
                 }
@@ -613,12 +622,12 @@ export default function PatternsScreen() {
               }}
               style={styles.libraryButton}
               accessibilityRole="button"
-              accessibilityLabel={isPremium ? 'View pattern profile' : 'Unlock pattern profile'}
+              accessibilityLabel={effectiveIsPremium ? 'View pattern profile' : 'Unlock pattern profile'}
             >
               <LinearGradient colors={['rgba(44, 54, 69, 0.85)', 'rgba(26, 30, 41, 0.40)']} style={StyleSheet.absoluteFill} />
-              <MetallicIcon name={isPremium ? 'library-outline' : 'lock-closed-outline'} size={16} variant="gold" />
+              <MetallicIcon name={effectiveIsPremium ? 'library-outline' : 'lock-closed-outline'} size={16} variant="gold" />
               <MetallicText style={styles.libraryButtonText} variant="gold">
-                {isPremium ? 'Open Pattern Profile' : 'Unlock Pattern Profile'}
+                {effectiveIsPremium ? 'Open Pattern Profile' : 'Unlock Pattern Profile'}
               </MetallicText>
             </Pressable>
           ) : null}
@@ -634,7 +643,7 @@ export default function PatternsScreen() {
       <Modal
         animationType="slide"
         transparent
-        visible={isPremium && showDeepDiveModal}
+        visible={effectiveIsPremium && showDeepDiveModal}
         onRequestClose={() => setShowDeepDiveModal(false)}
       >
         <View style={styles.modalBackdrop}>
@@ -704,7 +713,7 @@ export default function PatternsScreen() {
       <Modal
         animationType="fade"
         transparent
-        visible={isPremium && showLibraryModal}
+        visible={effectiveIsPremium && showLibraryModal}
         onRequestClose={() => setShowLibraryModal(false)}
       >
         <View style={[styles.modalBackdrop, styles.libraryModalBackdrop]}>
@@ -909,7 +918,7 @@ export default function PatternsScreen() {
       <Modal
         animationType="fade"
         transparent
-        visible={isPremium && !!selectedPatternItem}
+        visible={effectiveIsPremium && !!selectedPatternItem}
         onRequestClose={() => setSelectedPatternItem(null)}
       >
         <View style={styles.modalBackdrop}>

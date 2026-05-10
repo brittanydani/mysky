@@ -155,4 +155,22 @@ describe('useSubscriptionStore', () => {
       expect(getStore().isPurchasing).toBe(false);
     });
   });
+
+  describe('reset()', () => {
+    it('clears user-bound entitlement state without changing configuration status', () => {
+      useSubscriptionStore.setState({
+        isPro: true,
+        isConfigured: true,
+        packages: [{ identifier: '$rc_monthly' } as any],
+        isPurchasing: true,
+      });
+
+      getStore().reset();
+
+      expect(getStore().isPro).toBe(false);
+      expect(getStore().packages).toEqual([]);
+      expect(getStore().isPurchasing).toBe(false);
+      expect(getStore().isConfigured).toBe(true);
+    });
+  });
 });

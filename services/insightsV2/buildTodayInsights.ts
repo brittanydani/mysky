@@ -3,6 +3,7 @@ import type {
   ArchivePatternScore,
   BuildTodayInsightsArgs,
   BuildTodayInsightsResult,
+  EvidenceAnchor,
   GeneratedInsight,
   InsightDeliveryMode,
   InsightDepthLevel,
@@ -20,7 +21,7 @@ import { selectPrimaryFeeling } from './engine/selectPrimaryFeeling';
 import { selectPrimaryPersona } from './engine/selectPrimaryPersona';
 import { normalizeInsightInputsV2 } from './normalizers';
 import { hasSignalRole } from './signalTaxonomy';
-import { generateId } from '../storage/models';
+import { createEvidenceHash } from './insightFreshness';
 import {
   filterSignalsForInsightSurface,
   isArchivePatternAllowedOnSurface,
@@ -53,6 +54,34 @@ const SLOT_PRIORITY: Record<InsightSlot, number> = {
   weeklyStory: 10,
   monthlyTheme: 11,
 };
+
+function stableHash(value: string): string {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+function stableInsightId(input: {
+  dateKey: string;
+  slot: InsightSlot;
+  patternKey: string;
+  angleKey?: string;
+  paragraphId?: string;
+  evidence: EvidenceAnchor[];
+}): string {
+  const evidenceHash = createEvidenceHash(input.evidence) ?? 'no_evidence';
+  return `today_${stableHash([
+    input.dateKey,
+    input.slot,
+    input.patternKey,
+    input.angleKey ?? 'no_angle',
+    input.paragraphId ?? 'no_paragraph',
+    evidenceHash,
+  ].join('|'))}`;
+}
 
 function dedupeSentences(text: string): string {
   const polished = polishGeneratedRepetition(text);
@@ -643,9 +672,17 @@ export async function buildTodayInsights({
     recentParagraphIds.push(paragraph.id);
 
     const reframe = polishReframeText(angle.reframe?.trim() || patternReframe(pattern));
+    const evidence = patternScore.evidence;
 
     insights.push({
-      id: generateId(),
+      id: stableInsightId({
+        dateKey: todayDateStr,
+        slot: 'whatMySkyNoticed',
+        patternKey: pattern.key,
+        angleKey: angle.key,
+        paragraphId: paragraph.id,
+        evidence,
+      }),
       slot: 'whatMySkyNoticed' as const,
       surface: 'today' as const,
       title: angle.title,
@@ -658,7 +695,7 @@ export async function buildTodayInsights({
       angleKey: angle.key,
       confidence: patternScore.confidence,
       movement: patternScore.movement,
-      evidence: patternScore.evidence,
+      evidence,
       createdAt,
     });
   }
@@ -678,6 +715,8 @@ export async function buildTodayInsights({
       : strongestTodaySignal.evidence;
     const relatedPattern = relatedPatternForSignal(displaySignalKey);
     if (relatedPattern) usedPatternKeys.add(relatedPattern.key);
+    const patternKey = relatedPattern?.key || (primaryFeelingMatchesStrongest ? `feeling_${primaryFeeling.key}` : strongestTodaySignal.key);
+    const evidence = todaySignalEvidence ? [todaySignalEvidence] : [];
 
     const title = primaryFeelingMatchesStrongest
       ? `Today's ${primaryFeeling.title}`
@@ -692,7 +731,12 @@ export async function buildTodayInsights({
         : '';
 
     insights.push({
-      id: generateId(),
+      id: stableInsightId({
+        dateKey: todayDateStr,
+        slot: 'todaySignal',
+        patternKey,
+        evidence,
+      }),
       slot: 'todaySignal' as const,
       surface: 'today' as const,
       title,
@@ -702,18 +746,24 @@ export async function buildTodayInsights({
       reflectionPrompt: primaryFeelingMatchesStrongest
         ? `What does ${primaryFeeling.title.toLowerCase()} need from you today?`
         : undefined,
-      patternKey: relatedPattern?.key || (primaryFeelingMatchesStrongest ? `feeling_${primaryFeeling.key}` : strongestTodaySignal.key),
+      patternKey,
       category: relatedPattern?.category,
       confidence: 'moderate',
       movement: 'new',
-      evidence: todaySignalEvidence ? [todaySignalEvidence] : [],
+      evidence,
       createdAt,
     });
   }
 
   if (primaryPersona && isAtLeastModerate(primaryPersona.confidence) && !timingDecision.suppressDeepContext) {
+    const evidence = primaryPersona.evidence;
     insights.push({
-      id: generateId(),
+      id: stableInsightId({
+        dateKey: todayDateStr,
+        slot: 'primaryPersona',
+        patternKey: primaryPersona.key,
+        evidence,
+      }),
       slot: 'primaryPersona' as const,
       surface: 'today' as const,
       title: primaryPersona.title,
@@ -723,7 +773,7 @@ export async function buildTodayInsights({
       patternKey: primaryPersona.key,
       confidence: primaryPersona.confidence,
       movement: 'cross_source_match',
-      evidence: primaryPersona.evidence,
+      evidence,
       createdAt,
     });
   }
@@ -740,10 +790,16 @@ export async function buildTodayInsights({
     usedSignalKeys.add(signalDedupeKey(whatHelpedSignal));
     const relatedPattern = relatedPatternForSignal(whatHelpedSignal.key);
     const patternKey = relatedPattern?.key ?? whatHelpedSignal.key;
+    const evidence = evidenceForSignal(whatHelpedSignal);
     usedPatternKeys.add(patternKey);
 
     insights.push({
-      id: generateId(),
+      id: stableInsightId({
+        dateKey: todayDateStr,
+        slot: 'whatHelped',
+        patternKey,
+        evidence,
+      }),
       slot: 'whatHelped' as const,
       surface: 'today' as const,
       title: 'What helped',
@@ -755,7 +811,7 @@ export async function buildTodayInsights({
       category: relatedPattern?.category,
       confidence: confidenceFromSignalStrength(whatHelpedSignal.strength),
       movement: 'softening',
-      evidence: evidenceForSignal(whatHelpedSignal),
+      evidence,
       createdAt,
     });
   }
@@ -769,10 +825,16 @@ export async function buildTodayInsights({
     usedSignalKeys.add(signalDedupeKey(bodySignal));
     const relatedPattern = relatedPatternForSignal(bodySignal.key);
     const patternKey = relatedPattern?.key ?? bodySignal.key;
+    const evidence = evidenceForSignal(bodySignal);
     usedPatternKeys.add(patternKey);
 
     insights.push({
-      id: generateId(),
+      id: stableInsightId({
+        dateKey: todayDateStr,
+        slot: 'bodySignal',
+        patternKey,
+        evidence,
+      }),
       slot: 'bodySignal' as const,
       surface: 'today' as const,
       title: 'What your body noticed',
@@ -784,7 +846,7 @@ export async function buildTodayInsights({
       category: relatedPattern?.category,
       confidence: confidenceFromSignalStrength(bodySignal.strength),
       movement: 'new',
-      evidence: evidenceForSignal(bodySignal),
+      evidence,
       createdAt,
     });
   }
@@ -798,10 +860,16 @@ export async function buildTodayInsights({
     usedSignalKeys.add(signalDedupeKey(relationshipSignal));
     const relatedPattern = relatedPatternForSignal(relationshipSignal.key);
     const patternKey = relatedPattern?.key ?? relationshipSignal.key;
+    const evidence = evidenceForSignal(relationshipSignal);
     usedPatternKeys.add(patternKey);
 
     insights.push({
-      id: generateId(),
+      id: stableInsightId({
+        dateKey: todayDateStr,
+        slot: 'relationshipMirror',
+        patternKey,
+        evidence,
+      }),
       slot: 'relationshipMirror' as const,
       surface: 'today' as const,
       title: relationshipThreadTitle(relationshipSignal),
@@ -813,7 +881,7 @@ export async function buildTodayInsights({
       category: relatedPattern?.category,
       confidence: confidenceFromSignalStrength(relationshipSignal.strength),
       movement: 'new',
-      evidence: evidenceForSignal(relationshipSignal),
+      evidence,
       createdAt,
     });
   }
@@ -836,9 +904,16 @@ export async function buildTodayInsights({
         })
       : null;
     if (paragraph) recentParagraphIds.push(paragraph.id);
+    const evidence = growthPattern.evidence;
 
     insights.push({
-      id: generateId(),
+      id: stableInsightId({
+        dateKey: todayDateStr,
+        slot: 'growthEdge',
+        patternKey: growthPattern.patternKey,
+        paragraphId: paragraph?.id,
+        evidence,
+      }),
       slot: 'growthEdge' as const,
       surface: 'today' as const,
       title: 'A growth edge',
@@ -850,7 +925,7 @@ export async function buildTodayInsights({
       patternKey: growthPattern.patternKey,
       confidence: growthPattern.confidence,
       movement: growthPattern.movement,
-      evidence: growthPattern.evidence,
+      evidence,
       createdAt,
     });
   }

@@ -44,6 +44,9 @@ interface SubscriptionState {
 
   /** Returns true when at least one active entitlement is restored. */
   restorePurchases: () => Promise<boolean>;
+
+  /** Clears user-bound entitlement state after logout or account switch. */
+  reset: () => void;
 }
 
 export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
@@ -51,6 +54,14 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   isConfigured: false,
   packages: [],
   isPurchasing: false,
+
+  reset: () => {
+    set({
+      isPro: false,
+      packages: [],
+      isPurchasing: false,
+    });
+  },
 
   initialize: async () => {
     if (get().isConfigured) return;

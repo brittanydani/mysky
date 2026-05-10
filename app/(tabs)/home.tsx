@@ -61,6 +61,7 @@ import { getDisplayName, getUserPreference } from '../../services/storage/userPr
 import { getPersonalizedPremiumTeaser } from '../../utils/archiveDepth';
 import { hasDreamContent } from '../../utils/dreamArchiveSummary';
 import { usePremium } from '../../context/PremiumContext';
+import { useAuth } from '../../context/AuthContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -161,7 +162,9 @@ export default function HomeScreen() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
-  const { isPremium } = usePremium();
+  const { session, loading: authLoading } = useAuth();
+  const { isPremium, isReady: premiumReady } = usePremium();
+  const effectiveIsPremium = premiumReady && isPremium;
   const warpRef = useRef<WarpRef>(null);
   const isScreenActiveRef = useRef(false);
   const loadSequenceRef = useRef(0);
@@ -250,7 +253,28 @@ export default function HomeScreen() {
   const loadUserChart = useCallback(
     async (opts?: { silent?: boolean; force?: boolean }) => {
       const silent = opts?.silent ?? false;
-      const currentDayKey = getLogicalToday();
+      if (authLoading) return;
+
+      if (!session) {
+        hasRenderedChartRef.current = false;
+        todayDataReadyRef.current = false;
+        setUserChart(null);
+        setKnowledgeInsight(null);
+        setKnowledgeInsights([]);
+        setTodayDataReady(false);
+        setTodayLoadError(null);
+        if (!silent) setLoading(false);
+        return;
+      }
+
+      if (!premiumReady) {
+        if (!silent && isScreenActiveRef.current && !hasRenderedChartRef.current) {
+          setLoading(true);
+        }
+        return;
+      }
+
+      const currentDayKey = toLocalDateString();
       const refreshState = getTodayInsightRefreshState();
       const canUseFocusCache =
         !opts?.force &&
@@ -294,7 +318,7 @@ export default function HomeScreen() {
         chartId: string,
         includeDailyReflections: boolean,
       ): Promise<SurfaceLoad> => {
-        const todayKey = getLogicalToday();
+        const todayKey = toLocalDateString();
         const refreshState = getTodayInsightRefreshState();
         const hasUnconsumedRefresh = refreshState.revision > consumedTodayInsightRefreshRevisionRef.current;
         const shouldUseSameDayHistory = hasUnconsumedRefresh && includeDailyReflections;
@@ -326,9 +350,9 @@ export default function HomeScreen() {
           insightFeedbackProfile,
           insightMemoryProfile,
           includeDailyReflections,
-          includePremiumPatterns: isPremium,
+          includePremiumPatterns: effectiveIsPremium,
           knowledgeAiEnabled: aiInsightRefinementEnabled && includeDailyReflections,
-          knowledgeAiModelTier: isPremium ? 'premium' : 'free',
+          knowledgeAiModelTier: effectiveIsPremium ? 'premium' : 'free',
           knowledgeAiSurface: 'today',
         });
 
@@ -365,7 +389,7 @@ export default function HomeScreen() {
             : surface.knowledgeInsight
               ? [surface.knowledgeInsight]
               : [];
-          const shownKnowledgeInsights = isPremium ? kInsights : kInsights.slice(0, 1);
+          const shownKnowledgeInsights = effectiveIsPremium ? kInsights : kInsights.slice(0, 1);
           setIfActive(setKnowledgeInsight, kInsights[0] ?? null);
           setIfActive(setKnowledgeInsights, kInsights);
           if (shownKnowledgeInsights.length && todayInsightSignals > 0) {
@@ -563,7 +587,7 @@ export default function HomeScreen() {
         if (!silent && isCurrentLoad()) setLoading(false);
       }
     },
-    [isPremium],
+    [authLoading, effectiveIsPremium, premiumReady, session],
   );
 
   useFocusEffect(
@@ -755,8 +779,8 @@ export default function HomeScreen() {
     [knowledgeInsight, knowledgeInsights],
   );
   const visibleKnowledgeInsights = useMemo(
-    () => availableKnowledgeInsights.slice(0, isPremium ? 2 : 1),
-    [availableKnowledgeInsights, isPremium],
+    () => availableKnowledgeInsights.slice(0, effectiveIsPremium ? 2 : 1),
+    [availableKnowledgeInsights, effectiveIsPremium],
   );
   const visibleKnowledgeInsightItems = useMemo(() => {
     const seenThemes = new Set<string>();
@@ -790,10 +814,10 @@ export default function HomeScreen() {
   // ── Loading / Onboarding Gates ──
 
   useEffect(() => {
-    if (userChart === null && !loading) {
+    if (!authLoading && session && userChart === null && !loading) {
       router.replace('/onboarding/birth' as Href);
     }
-  }, [userChart, loading, router]);
+  }, [authLoading, session, userChart, loading, router]);
 
   if (loading) {
     return (
@@ -1104,7 +1128,7 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
-          {!isPremium && dailyLoop?.weeklyReflection?.hasEnoughData && (
+          {premiumReady && !effectiveIsPremium && dailyLoop?.weeklyReflection?.hasEnoughData && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
               <Pressable
                 onPress={() => router.push('/(tabs)/premium' as Href)}
@@ -1135,7 +1159,7 @@ export default function HomeScreen() {
               </Pressable>
             </Animated.View>
           )}
-          {!isPremium && !dailyLoop?.weeklyReflection?.hasEnoughData && (
+          {premiumReady && !effectiveIsPremium && !dailyLoop?.weeklyReflection?.hasEnoughData && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
               <Pressable
                 onPress={() => router.push('/(tabs)/premium' as Href)}

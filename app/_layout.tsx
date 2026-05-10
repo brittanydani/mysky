@@ -385,6 +385,8 @@ function AppShell() {
     () => readRootInitSnapshot()?.onboardingComplete ?? false,
   );
   const [sessionDataReady, setSessionDataReady] = useState(false);
+  const [sessionBootstrapError, setSessionBootstrapError] = useState<string | null>(null);
+  const [sessionBootstrapAttempt, setSessionBootstrapAttempt] = useState(0);
   // Suppresses AuthRequiredModal during the window between onboardingComplete
   // becoming true and the Supabase SIGNED_IN event updating session in AuthContext.
   const [completingOnboarding, setCompletingOnboarding] = useState(false);
@@ -432,7 +434,10 @@ function AppShell() {
   const hasExistingChart = async () => {
     const {
       data: { session: currentSession },
-    } = await supabase.auth.getSession();
+    } = await withBootstrapTimeout(
+      'Read onboarding session',
+      supabase.auth.getSession(),
+    );
 
     if (!currentSession) {
       return false;
@@ -495,9 +500,12 @@ function AppShell() {
       // Only run this check when a live session exists, otherwise startup can hit
       // auth-protected chart queries too early and log noisy "Not authenticated" errors.
       if (termsAccepted) {
-        const {
-          data: { session: currentSession },
-        } = await supabase.auth.getSession();
+          const {
+            data: { session: currentSession },
+          } = await withBootstrapTimeout(
+            'Read post-consent session',
+            supabase.auth.getSession(),
+          );
 
         if (currentSession) {
           const canSkip = await checkIfOnboardingCanBeSkipped();
@@ -594,7 +602,10 @@ function AppShell() {
           // capture time since this effect runs once with [] deps.
           const {
             data: { session: initLiveSession },
-          } = await supabase.auth.getSession();
+          } = await withBootstrapTimeout(
+            'Read startup session',
+            supabase.auth.getSession(),
+          );
 
           if (consentStatus.required && initLiveSession) {
             logger.info('[init] session present — auto-restoring privacy consent');
@@ -742,6 +753,12 @@ function AppShell() {
     retryInitializeApp();
   };
 
+  const retrySessionBootstrap = () => {
+    setSessionBootstrapError(null);
+    setSessionDataReady(false);
+    setSessionBootstrapAttempt((attempt) => attempt + 1);
+  };
+
   // Listen for consent withdrawal from settings — immediately re-gate the session
   useEffect(() => {
     const consentSub = DeviceEventEmitter.addListener('CONSENT_WITHDRAWN', () => {
@@ -872,6 +889,8 @@ function AppShell() {
       didNavigatePostOnboarding.current = false;
       setCompletingOnboarding(false);
       setSessionDataReady(false);
+      setSessionBootstrapError(null);
+      setSessionBootstrapAttempt(0);
       authEntryIntentRef.current = null;
     }
   }, [session]);
@@ -881,10 +900,12 @@ function AppShell() {
     if (!session) return;
     const bootstrapId = ++sessionBootstrapRef.current;
     setSessionDataReady(false);
+    setSessionBootstrapError(null);
 
     const isStale = () => bootstrapId !== sessionBootstrapRef.current;
 
     (async () => {
+      let bootstrapFailed = false;
       if (isStale()) return;
       await withBootstrapTimeout(
         'Bind local settings',
@@ -913,19 +934,21 @@ function AppShell() {
         }
         setOnboardingComplete(canSkip);
       } catch (e) {
-        logger.warn('[auth] Onboarding state check failed or timed out; continuing to home:', e);
+        bootstrapFailed = true;
+        logger.warn('[auth] Onboarding state check failed or timed out:', e);
         if (rootInitSnapshot) {
-          rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: true };
+          rootInitSnapshot = { ...rootInitSnapshot, onboardingComplete: false };
         }
-        setOnboardingComplete(true);
+        setOnboardingComplete(false);
+        setSessionBootstrapError('Could not load your saved profile. Check your connection and try again.');
       } finally {
         if (!isStale()) {
-          setSessionDataReady(true);
+          setSessionDataReady(!bootstrapFailed);
         }
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id]);
+  }, [session?.user?.id, sessionBootstrapAttempt]);
 
   // Navigate to home once both onboarding is complete and session is confirmed.
   // Using an effect avoids a race where handleOnboardingComplete fires before
@@ -1036,6 +1059,12 @@ function AppShell() {
     return null;
   }
 
+  if (authLoading) {
+    return null;
+  }
+
+  const shouldRenderAppStack = Boolean(session);
+
   return (
     <PremiumProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -1051,45 +1080,62 @@ function AppShell() {
 
             <SafeAreaProvider style={{ flex: 1 }}>
               <StatusBar style={theme.statusBarStyle} />
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: 'transparent' },
-                  animation: 'fade',
-                }}
-              >
-                <Stack.Screen name="(tabs)" />
+              {shouldRenderAppStack ? (
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: 'transparent' },
+                    animation: 'fade',
+                  }}
+                >
+                  <Stack.Screen name="(tabs)" />
 
-                <Stack.Screen
-                  name="checkin"
-                  options={{
-                    presentation: 'modal',
-                    contentStyle: { backgroundColor: theme.background },
-                  }}
-                />
-                <Stack.Screen
-                  name="daily-reflection"
-                  options={{
-                    presentation: 'modal',
-                    contentStyle: { backgroundColor: theme.background },
-                  }}
-                />
-                <Stack.Screen
-                  name="sanctuary"
-                  options={{
-                    presentation: 'fullScreenModal',
-                    animation: 'fade_from_bottom',
-                  }}
-                />
-                <Stack.Screen name="astrology-context" options={{ animation: 'slide_from_bottom' }} />
+                  <Stack.Screen
+                    name="checkin"
+                    options={{
+                      presentation: 'modal',
+                      contentStyle: { backgroundColor: theme.background },
+                    }}
+                  />
+                  <Stack.Screen
+                    name="daily-reflection"
+                    options={{
+                      presentation: 'modal',
+                      contentStyle: { backgroundColor: theme.background },
+                    }}
+                  />
+                  <Stack.Screen
+                    name="sanctuary"
+                    options={{
+                      presentation: 'fullScreenModal',
+                      animation: 'fade_from_bottom',
+                    }}
+                  />
+                  <Stack.Screen name="astrology-context" options={{ animation: 'slide_from_bottom' }} />
 
-                <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
-              </Stack>
+                  <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
+                </Stack>
+              ) : (
+                <View style={{ flex: 1 }} />
+              )}
 
               <React.Suspense fallback={null}>
-                {session && !sessionDataReady && (
+                {session && sessionBootstrapError && (
+                  <View style={styles.postAuthLoadingOverlay}>
+                    <Ionicons name="cloud-offline-outline" size={24} color={theme.primary} style={{ marginBottom: 10 }} />
+                    <Text style={styles.postAuthLoadingText}>{sessionBootstrapError}</Text>
+                    <TouchableOpacity activeOpacity={0.8} onPress={retrySessionBootstrap} style={{ marginTop: 16 }}>
+                      <View style={styles.errorButtonGradient}>
+                        <Ionicons name="refresh-outline" size={16} color="#E8D6AE" style={{ marginRight: 8 }} />
+                        <Text style={styles.errorButtonText}>Retry</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {session && !sessionBootstrapError && !sessionDataReady && (
                   <View style={styles.postAuthLoadingOverlay}>
                     <ActivityIndicator color={theme.primary} />
                     <Text style={styles.postAuthLoadingText}>Preparing your profile...</Text>

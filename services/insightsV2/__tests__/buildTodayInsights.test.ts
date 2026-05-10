@@ -26,12 +26,11 @@ describe('Knowledge Engine V2', () => {
     }
   ];
 
-  it('generates a valid insight based on Phase 1 patterns', async () => {
+  it('generates a valid low-data insight without overstating a pattern', async () => {
     const result = await buildTodayInsights({
       date: now,
       rawInputs: {
         dailyCheckIns: mockCheckIns,
-        journals: mockJournals,
       },
       history: [],
     });
@@ -40,26 +39,40 @@ describe('Knowledge Engine V2', () => {
     expect(result.signals.length).toBeGreaterThan(0);
     expect(result.insights.length).toBeGreaterThan(0);
     
-    const insight = result.insights.find(i => i.slot === 'whatMySkyNoticed');
+    const insight = result.insights.find(i => i.slot === 'todaySignal');
     expect(insight).toBeDefined();
     if (insight) {
-        expect(insight.patternKey).toBe('timeRhythms_lowCapacityPatterns');
         expect(insight.title).toBeDefined();
-        expect(sentenceCount(insight.body)).toBeGreaterThanOrEqual(4);
-        expect(sentenceCount(insight.body)).toBeLessThanOrEqual(5);
+        expect(sentenceCount(insight.body)).toBeGreaterThanOrEqual(1);
         expect(insight.body).not.toMatch(/Low-capacity states are repeating enough to notice|This pattern appears/i);
-        expect(insight.reframe).toBe('This may need rhythm-aware planning, not more self-criticism.');
-        expect(insight.paragraphId).toBeDefined();
-        expect(insight.majorDomain).toBeDefined();
-        expect(insight.insightSubcategory).toBeDefined();
-        expect(insight.patternType).toMatch(/highTracking|lowAccess|pushPull|delayedActivation/);
-        expect(insight.writerShape).toBeDefined();
         expect(insight.currentState).toBeDefined();
         expect(insight.deliveryMode).toBeDefined();
         expect(insight.depthLevel).toBeGreaterThanOrEqual(1);
     }
+    expect(result.insights.some(i => i.slot === 'whatMySkyNoticed')).toBe(false);
     expect(result.currentState).toBeDefined();
     expect(result.deliveryMode).toBeDefined();
+  });
+
+  it('keeps generated insight ids stable for the same day and evidence', async () => {
+    const first = await buildTodayInsights({
+      date: now,
+      rawInputs: {
+        dailyCheckIns: mockCheckIns,
+      },
+      history: [],
+    });
+    const second = await buildTodayInsights({
+      date: now,
+      rawInputs: {
+          dailyCheckIns: mockCheckIns,
+        },
+        history: [],
+      });
+
+    expect(second.insights.map(insight => insight.id)).toEqual(
+      first.insights.map(insight => insight.id),
+    );
   });
 
   it('detects intensifying movement', async () => {
@@ -81,47 +94,48 @@ describe('Knowledge Engine V2', () => {
     const result = await buildTodayInsights({
       date: now,
       rawInputs: {
-        dailyCheckIns: mockCheckIns,
-        journals: mockJournals,
+        dailyCheckIns: [
+          ...mockCheckIns,
+          { date: '2026-04-23', mood: 2, energy: 1, stress: 4, tags: ['rest'] },
+        ],
+        journals: [
+          ...mockJournals,
+          { date: '2026-04-23', text: 'My capacity was low yesterday too.' },
+        ],
       },
       history: [],
       previousPatternScores,
     });
 
-    const insight = result.insights.find(i => i.slot === 'whatMySkyNoticed');
-    expect(insight?.movement).toBe('intensifying');
-    expect(insight?.body).not.toContain('appears louder than it has been recently');
-    expect(sentenceCount(insight?.body ?? '')).toBeGreaterThanOrEqual(4);
+    const score = result.patternScores.find(item => item.patternKey === 'timeRhythms_lowCapacityPatterns');
+    expect(score?.movement).toBe('intensifying');
   });
 
-  it('detects cross-source match score impact', async () => {
+  it('keeps sparse pattern scores below the primary daily read threshold', async () => {
      const result = await buildTodayInsights({
       date: now,
       rawInputs: {
         dailyCheckIns: mockCheckIns,
-        journals: mockJournals,
       },
       history: [],
     });
 
-    const insight = result.insights.find(i => i.slot === 'whatMySkyNoticed');
-    expect(insight?.angleKey).toBe('timeRhythms_repeatingLowCapacity');
+    expect(result.patternScores.every(score => score.score < 0.5)).toBe(true);
+    expect(result.insights.some(i => i.slot === 'whatMySkyNoticed')).toBe(false);
   });
 
-  it('populates multiple evidence-gated slots beyond the primary daily read', async () => {
+  it('keeps low-data daily output to signal-level slots', async () => {
     const result = await buildTodayInsights({
         date: now,
         rawInputs: {
           dailyCheckIns: mockCheckIns,
-          journals: mockJournals,
         },
         history: [],
       });
 
-      expect(result.insights.length).toBeGreaterThanOrEqual(2);
       const slots = result.insights.map(i => i.slot);
-      expect(slots).toContain('whatMySkyNoticed');
-      expect(slots.some(slot => slot !== 'whatMySkyNoticed')).toBe(true);
+      expect(slots).toContain('todaySignal');
+      expect(slots).not.toContain('whatMySkyNoticed');
   });
 
   it('caps the live today surface while keeping expanded V2 slots evidence-gated', async () => {
@@ -241,6 +255,25 @@ describe('Knowledge Engine V2', () => {
     expect(todaySignal?.body).toBe(result.primaryFeeling?.selectedSentence);
     expect(todaySignal?.reframe).toBe(result.primaryFeeling?.reframeSentence);
     expect(todaySignal?.body).not.toMatch(/Your archive|MySky is noticing/i);
+  });
+
+  it('does not promote one strong signal into a long-term pattern read', async () => {
+    const result = await buildTodayInsights({
+      date: now,
+      rawInputs: {
+        dailyCheckIns: [{
+          date: today,
+          moodScore: 2,
+          energyLevel: 'low',
+          stressLevel: 'high',
+          tags: ['rest'],
+        }],
+      },
+      history: [],
+    });
+
+    expect(result.insights.some(insight => insight.slot === 'whatMySkyNoticed')).toBe(false);
+    expect(result.insights.some(insight => insight.slot === 'todaySignal')).toBe(true);
   });
 
   it('treats ISO timestamps as the local insight day near UTC midnight', async () => {

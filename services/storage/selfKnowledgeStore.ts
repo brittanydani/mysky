@@ -155,6 +155,14 @@ export async function savePlainAccountScopedJson<T>(key: string, value: T): Prom
   await saveUserPreference(key, value);
 }
 
+async function mirrorAccountScopedJson<T>(key: string, value: T): Promise<void> {
+  try {
+    await savePlainAccountScopedJson(key, value);
+  } catch (error) {
+    logger.warn('[SelfKnowledgeStore] Failed to mirror account-scoped data', { key, error });
+  }
+}
+
 async function loadExistingReflectionRowIds(
   userId: string,
   answers: ReflectionAnswer[],
@@ -227,13 +235,8 @@ async function upsertReflectionRows(answers: ReflectionAnswer[]): Promise<void> 
 }
 
 export async function loadDailyReflectionData(): Promise<DailyReflectionData> {
-  const fallback = await loadPlainAccountScopedJson<DailyReflectionData>(
-    CACHE_KEYS.dailyReflections,
-    EMPTY_REFLECTION_DATA,
-    LEGACY_KEYS.dailyReflections,
-  );
   const userId = await getUserId();
-  if (!userId) return fallback;
+  if (!userId) return EMPTY_REFLECTION_DATA;
 
   try {
     const { data, error } = await supabase
@@ -287,19 +290,12 @@ export async function loadDailyReflectionData(): Promise<DailyReflectionData> {
       });
     }
 
-    if (answers.length === 0 && fallback.answers.length > 0) {
-      upsertReflectionRows(fallback.answers).catch((upsertError) => {
-        logger.warn('[SelfKnowledgeStore] Failed to backfill daily reflections to Supabase', upsertError);
-      });
-      return fallback;
-    }
-
-    const resolved = buildReflectionData(mergeReflectionAnswers(answers, fallback.answers));
-    await savePlainAccountScopedJson(CACHE_KEYS.dailyReflections, resolved);
+    const resolved = buildReflectionData(answers);
+    await mirrorAccountScopedJson(CACHE_KEYS.dailyReflections, resolved);
     return resolved;
   } catch (error) {
-    logger.warn('[SelfKnowledgeStore] Falling back to cached daily reflections', error);
-    return fallback;
+    logger.warn('[SelfKnowledgeStore] Failed to load daily reflections from Supabase', error);
+    throw error;
   }
 }
 
@@ -307,13 +303,14 @@ export async function persistDailyReflectionData(
   data: DailyReflectionData,
   changedAnswers: ReflectionAnswer[],
 ): Promise<void> {
-  await savePlainAccountScopedJson(CACHE_KEYS.dailyReflections, data);
-
   try {
     await upsertReflectionRows(changedAnswers);
   } catch (error) {
     logger.warn('[SelfKnowledgeStore] Failed to persist daily reflections to Supabase', error);
+    throw error;
   }
+
+  await mirrorAccountScopedJson(CACHE_KEYS.dailyReflections, data);
 }
 
 async function upsertSomaticRows(entries: SomaticEntryRecord[]): Promise<void> {
@@ -343,13 +340,8 @@ async function upsertSomaticRows(entries: SomaticEntryRecord[]): Promise<void> {
 }
 
 export async function loadSomaticEntries(): Promise<SomaticEntryRecord[]> {
-  const fallback = await loadPlainAccountScopedJson<SomaticEntryRecord[]>(
-    CACHE_KEYS.somaticEntries,
-    [],
-    LEGACY_KEYS.somaticEntries,
-  );
   const userId = await getUserId();
-  if (!userId) return fallback;
+  if (!userId) return [];
 
   try {
     const { data, error } = await supabase
@@ -379,48 +371,32 @@ export async function loadSomaticEntries(): Promise<SomaticEntryRecord[]> {
       });
     }
 
-    if (entries.length === 0 && fallback.length > 0) {
-      upsertSomaticRows(fallback).catch((upsertError) => {
-        logger.warn('[SelfKnowledgeStore] Failed to backfill somatic entries to Supabase', upsertError);
-      });
-      return fallback;
-    }
-
-    await savePlainAccountScopedJson(CACHE_KEYS.somaticEntries, entries);
+    await mirrorAccountScopedJson(CACHE_KEYS.somaticEntries, entries);
     return entries;
   } catch (error) {
-    logger.warn('[SelfKnowledgeStore] Falling back to cached somatic entries', error);
-    return fallback;
+    logger.warn('[SelfKnowledgeStore] Failed to load somatic entries from Supabase', error);
+    throw error;
   }
 }
 
 export async function addSomaticEntry(entry: SomaticEntryRecord): Promise<void> {
-  const existing = await loadPlainAccountScopedJson<SomaticEntryRecord[]>(
-    CACHE_KEYS.somaticEntries,
-    [],
-    LEGACY_KEYS.somaticEntries,
-  );
-  const next = [entry, ...existing.filter((candidate) => candidate.id !== entry.id)];
-  await savePlainAccountScopedJson(CACHE_KEYS.somaticEntries, next);
-
   try {
     await upsertSomaticRows([entry]);
   } catch (error) {
     logger.warn('[SelfKnowledgeStore] Failed to persist somatic entry to Supabase', error);
+    throw error;
   }
-}
 
-export async function deleteSomaticEntry(entryId: string): Promise<void> {
   const existing = await loadPlainAccountScopedJson<SomaticEntryRecord[]>(
     CACHE_KEYS.somaticEntries,
     [],
     LEGACY_KEYS.somaticEntries,
-  );
-  await savePlainAccountScopedJson(
-    CACHE_KEYS.somaticEntries,
-    existing.filter((entry) => entry.id !== entryId),
-  );
+  ).catch(() => []);
+  const next = [entry, ...existing.filter((candidate) => candidate.id !== entry.id)];
+  await mirrorAccountScopedJson(CACHE_KEYS.somaticEntries, next);
+}
 
+export async function deleteSomaticEntry(entryId: string): Promise<void> {
   const userId = await getUserId();
   if (!userId) return;
 
@@ -437,7 +413,18 @@ export async function deleteSomaticEntry(entryId: string): Promise<void> {
     if (error) throw error;
   } catch (error) {
     logger.warn('[SelfKnowledgeStore] Failed to delete somatic entry in Supabase', error);
+    throw error;
   }
+
+  const existing = await loadPlainAccountScopedJson<SomaticEntryRecord[]>(
+    CACHE_KEYS.somaticEntries,
+    [],
+    LEGACY_KEYS.somaticEntries,
+  ).catch(() => []);
+  await mirrorAccountScopedJson(
+    CACHE_KEYS.somaticEntries,
+    existing.filter((entry) => entry.id !== entryId),
+  );
 }
 
 function parseStringArray(value: unknown): string[] {
@@ -609,18 +596,8 @@ async function upsertTriggerRows(events: TriggerEvent[]): Promise<void> {
 }
 
 export async function loadTriggerEvents(): Promise<TriggerEvent[]> {
-  const cachedFallback = await loadPlainAccountScopedJson<TriggerEvent[]>(
-    CACHE_KEYS.triggerEvents,
-    [],
-    LEGACY_KEYS.triggerEvents,
-  );
-  const { changed: fallbackChanged, events: fallback } = normalizeTriggerEvents(cachedFallback);
-  if (fallbackChanged) {
-    await savePlainAccountScopedJson(CACHE_KEYS.triggerEvents, fallback);
-  }
-
   const userId = await getUserId();
-  if (!userId) return fallback;
+  if (!userId) return [];
 
   try {
     const { data, error } = await supabase
@@ -665,18 +642,11 @@ export async function loadTriggerEvents(): Promise<TriggerEvent[]> {
       });
     }
 
-    if (events.length === 0 && fallback.length > 0) {
-      upsertTriggerRows(fallback).catch((upsertError) => {
-        logger.warn('[SelfKnowledgeStore] Failed to backfill trigger events to Supabase', upsertError);
-      });
-      return fallback;
-    }
-
-    await savePlainAccountScopedJson(CACHE_KEYS.triggerEvents, events);
+    await mirrorAccountScopedJson(CACHE_KEYS.triggerEvents, events);
     return events;
   } catch (error) {
-    logger.warn('[SelfKnowledgeStore] Falling back to cached trigger events', error);
-    return fallback;
+    logger.warn('[SelfKnowledgeStore] Failed to load trigger events from Supabase', error);
+    throw error;
   }
 }
 
@@ -685,22 +655,25 @@ export async function addTriggerEvent(event: TriggerEvent): Promise<void> {
     ...event,
     timestamp: normalizeTriggerTimestamp(event, Date.now()),
   };
-  const existing = await loadPlainAccountScopedJson<TriggerEvent[]>(
-    CACHE_KEYS.triggerEvents,
-    [],
-    LEGACY_KEYS.triggerEvents,
-  );
-  const next = [
-    normalizedEvent,
-    ...existing.filter((candidate) => candidate.id !== normalizedEvent.id),
-  ];
-  await savePlainAccountScopedJson(CACHE_KEYS.triggerEvents, next);
 
   try {
     await upsertTriggerRows([normalizedEvent]);
   } catch (error) {
     logger.warn('[SelfKnowledgeStore] Failed to persist trigger event to Supabase', error);
+    throw error;
   }
+
+  const existing = await loadPlainAccountScopedJson<TriggerEvent[]>(
+    CACHE_KEYS.triggerEvents,
+    [],
+    LEGACY_KEYS.triggerEvents,
+  ).catch(() => []);
+  const { events: normalizedExisting } = normalizeTriggerEvents(existing);
+  const next = [
+    normalizedEvent,
+    ...normalizedExisting.filter((candidate) => candidate.id !== normalizedEvent.id),
+  ];
+  await mirrorAccountScopedJson(CACHE_KEYS.triggerEvents, next);
 }
 
 function buildRelationshipPatternRows(
@@ -788,13 +761,14 @@ async function loadRelationshipPatternRows(userId: string): Promise<{
 }
 
 export async function loadRelationshipPatterns(): Promise<RelationshipPatternRecord[]> {
+  const userId = await getUserId();
+  if (!userId) return [];
+
   const fallback = await loadPlainAccountScopedJson<RelationshipPatternRecord[]>(
     CACHE_KEYS.relationshipPatterns,
     [],
     LEGACY_KEYS.relationshipPatterns,
-  );
-  const userId = await getUserId();
-  if (!userId) return fallback;
+  ).catch(() => []);
 
   try {
     const { hasBridgeColumns, rows } = await loadRelationshipPatternRows(userId);
@@ -831,33 +805,27 @@ export async function loadRelationshipPatterns(): Promise<RelationshipPatternRec
       });
     }
 
-    if (entries.length === 0 && fallback.length > 0) {
-      upsertRelationshipPatternRows(fallback).catch((upsertError) => {
-        logger.warn('[SelfKnowledgeStore] Failed to backfill relationship patterns to Supabase', upsertError);
-      });
-      return fallback;
-    }
-
-    await savePlainAccountScopedJson(CACHE_KEYS.relationshipPatterns, entries);
+    await mirrorAccountScopedJson(CACHE_KEYS.relationshipPatterns, entries);
     return entries;
   } catch (error) {
-    logger.warn('[SelfKnowledgeStore] Falling back to cached relationship patterns', error);
-    return fallback;
+    logger.warn('[SelfKnowledgeStore] Failed to load relationship patterns from Supabase', error);
+    throw error;
   }
 }
 
 export async function addRelationshipPattern(entry: RelationshipPatternRecord): Promise<void> {
-  const existing = await loadPlainAccountScopedJson<RelationshipPatternRecord[]>(
-    CACHE_KEYS.relationshipPatterns,
-    [],
-    LEGACY_KEYS.relationshipPatterns,
-  );
-  const next = [entry, ...existing.filter((candidate) => candidate.id !== entry.id)];
-  await savePlainAccountScopedJson(CACHE_KEYS.relationshipPatterns, next);
-
   try {
     await upsertRelationshipPatternRows([entry]);
   } catch (error) {
     logger.warn('[SelfKnowledgeStore] Failed to persist relationship pattern to Supabase', error);
+    throw error;
   }
+
+  const existing = await loadPlainAccountScopedJson<RelationshipPatternRecord[]>(
+    CACHE_KEYS.relationshipPatterns,
+    [],
+    LEGACY_KEYS.relationshipPatterns,
+  ).catch(() => []);
+  const next = [entry, ...existing.filter((candidate) => candidate.id !== entry.id)];
+  await mirrorAccountScopedJson(CACHE_KEYS.relationshipPatterns, next);
 }

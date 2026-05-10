@@ -207,7 +207,7 @@ function summarizeTriggerEvents(events: TriggerEvent[]): TriggerData | null {
 }
 
 async function loadTriggerPayload(): Promise<{ events: TriggerEvent[]; summary: TriggerData | null }> {
-  const events = await loadTriggerEvents().catch(() => []);
+  const events = await loadTriggerEvents();
   return {
     events,
     summary: summarizeTriggerEvents(events),
