@@ -26,6 +26,7 @@ import { KeyboardProvider } from '../components/keyboard/KeyboardControllerCompa
 import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { useLogAppUsage } from '../lib/appUsage';
 import { StarNotificationProvider } from '../context/StarNotificationContext';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { getUserPreference, saveUserPreference } from '../services/storage/userProfileService';
@@ -322,6 +323,10 @@ function AppShell() {
   const router = useRouter();
   const { session, loading: authLoading } = useAuth();
   useNetworkRecoverySync();
+
+  // Record one usage row per local day this account opens the app (and on each
+  // foreground return). Idle while signed out.
+  useLogAppUsage(session?.user?.id ?? null);
 
   // Ref so the initializeApp closure always reads the current authLoading value
   // without needing authLoading in the effect dependency array.
