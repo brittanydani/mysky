@@ -13,6 +13,12 @@ import {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// Numeric, low-detail sources. A pattern resting solely on these from a single
+// moment should not be promoted to a primary daily read; richer qualitative
+// sources (journal, glimmer, trigger, body map, relationship mirror, etc.) can
+// carry a single-moment observation on their own.
+const LOW_DATA_SOURCES = new Set(['dailyCheckIn', 'sleep']);
+
 function dateKeyToTime(value: string): number {
   const key = value.slice(0, 10);
   const parsed = new Date(`${key}T00:00:00Z`).getTime();
@@ -53,10 +59,6 @@ export function scoreArchivePattern(
     pattern.requiredSignals.includes(s.key),
   );
 
-  const supportingMatches = relevantSignals.filter(s =>
-    pattern.supportingSignals.includes(s.key),
-  );
-
   const conflictingMatches = signals.filter(s => {
     const sTime = dateKeyToTime(s.date);
     return (
@@ -90,15 +92,43 @@ export function scoreArchivePattern(
     strengthScore * 0.17 +
     primarySourceScore * 0.05) - conflictPenalty
   );
-  const hasEnoughEvidence =
+  // A single rich qualitative entry (journal, glimmer, trigger, body map,
+  // relationship mirror, reflection, etc.) that satisfies the pattern's required
+  // signal is enough to surface a daily observation on its own. Patterns resting
+  // only on numeric check-in/sleep data must repeat across multiple distinct
+  // moments before they count. Higher confidence always requires multiple
+  // distinct moments (source + day), so one-off entries can surface but never
+  // over-claim a long-term pattern.
+  // Count how many distinct signals each moment (source + day) produced overall,
+  // to tell a substantive qualitative entry from a thin one-off data point.
+  const momentSignalTotals = new Map<string, number>();
+  for (const s of signals) {
+    const sTime = dateKeyToTime(s.date);
+    if (!Number.isFinite(sTime) || sTime < cutoff) continue;
+    const momentKey = `${s.source}:${s.date.slice(0, 10)}`;
+    momentSignalTotals.set(momentKey, (momentSignalTotals.get(momentKey) ?? 0) + 1);
+  }
+  // A single substantive qualitative entry (rich source whose moment produced
+  // multiple signals) that satisfies the pattern's required signal can surface a
+  // daily observation on its own. A thin one-off (one signal) or numeric
+  // check-in/sleep data must repeat across distinct moments first. Higher
+  // confidence always needs multiple distinct moments, so one-off rich entries
+  // surface but never over-claim a long-term pattern.
+  const hasRichSingleEntry = requiredMatches.some((s) => {
+    if (LOW_DATA_SOURCES.has(s.source)) return false;
+    const momentKey = `${s.source}:${s.date.slice(0, 10)}`;
+    return (momentSignalTotals.get(momentKey) ?? 0) >= 2;
+  });
+  const hasMultiMomentEvidence =
     relevantSignals.length >= pattern.minEvidenceCount &&
     evidenceMomentCount >= Math.min(2, pattern.minEvidenceCount);
+  const hasEnoughEvidence = hasMultiMomentEvidence || hasRichSingleEntry;
   const score = hasEnoughEvidence
     ? rawScore
     : Math.min(rawScore, 0.49);
 
   let confidence: PatternConfidence = 'emerging';
-  if (hasEnoughEvidence) {
+  if (hasMultiMomentEvidence) {
     if (score > 0.85) confidence = 'veryStrong';
     else if (score > 0.7) confidence = 'strong';
     else if (score > 0.55) confidence = 'moderate';

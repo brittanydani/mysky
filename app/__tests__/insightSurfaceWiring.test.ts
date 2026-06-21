@@ -13,7 +13,7 @@ describe('insight surface wiring', () => {
     expect(homeSource).toContain("import { buildInsightSurface } from '../../services/insights/buildInsightSurface'");
     expect(homeSource).toContain("import { countTodayInsightInputs } from '../../services/insights/todayInsightInputs'");
     expect(homeSource).toContain('includeKnowledgeInsight: moodInsightsEnabled && includeDailyReflections');
-    expect(homeSource).toContain('includePremiumPatterns: isPremium');
+    expect(homeSource).toContain('includePremiumPatterns: effectiveIsPremium');
     expect(homeSource).toContain('InteractionManager.runAfterInteractions');
     expect(homeSource).toContain('surface.knowledgeInsights');
     expect(homeSource).toContain('countTodayInsightInputs(surface, todayKey)');
@@ -24,7 +24,7 @@ describe('insight surface wiring', () => {
     expect(homeSource).toContain('Mood pattern insights are turned off');
     expect(homeSource).toContain('visibleKnowledgeInsights.map');
     expect(homeSource).toContain('<KnowledgeInsightCard');
-    expect(homeSource).toContain('availableKnowledgeInsights.slice(0, isPremium ? 2 : 1)');
+    expect(homeSource).toContain('availableKnowledgeInsights.slice(0, effectiveIsPremium ? 2 : 1)');
     expect(homeSource).toContain('hasInsightDataToday && visibleKnowledgeInsights.length > 0');
     expect(homeSource).not.toContain('knowledgeEngineV2');
     expect(homeSource).not.toContain('runActiveKnowledgeInsight(');
@@ -54,7 +54,7 @@ describe('insight surface wiring', () => {
 
     expect(patternsSource).toContain("import { buildInsightSurface } from '../../services/insights/buildInsightSurface'");
     expect(patternsSource).toContain('includeKnowledgeInsight: insightsEnabled');
-    expect(patternsSource).toContain('includePremiumPatterns: isPremium');
+    expect(patternsSource).toContain('includePremiumPatterns: effectiveIsPremium');
     expect(patternsSource).toContain('InteractionManager.runAfterInteractions');
     expect(patternsSource).toContain('setPremiumPatterns(surface.premiumPatterns)');
     expect(patternsSource).toContain('setPremiumPatternProfile(surface.premiumPatternProfile)');
@@ -65,8 +65,8 @@ describe('insight surface wiring', () => {
     expect(patternsSource).toContain('buildPatternLibraryState(premiumPatterns)');
     expect(patternsSource).toContain('fullLibrarySections.map');
     expect(patternsSource).toContain('data={visiblePatternRows}');
-    expect(patternsSource).toContain('visible={isPremium && showDeepDiveModal}');
-    expect(patternsSource).toContain('visible={isPremium && showLibraryModal}');
+    expect(patternsSource).toContain('visible={effectiveIsPremium && showDeepDiveModal}');
+    expect(patternsSource).toContain('visible={effectiveIsPremium && showLibraryModal}');
     expect(patternsSource).toContain("router.push('/(tabs)/premium' as Href);");
     expect(patternsSource).toContain("'Unlock Pattern Profile'");
     expect(patternsSource).toContain("recordPatternMemory(");
